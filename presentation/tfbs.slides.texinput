@@ -1,0 +1,343 @@
+% -*- mode: latex -*-
+%
+\providecommand{\Dir}{\ensuremath{\mathrm{Dir}}}
+\providecommand{\Beta}{\ensuremath{\mathrm{Beta}}}
+
+\maketitle
+
+\begin{slide}{ Outline }
+  \begin{itemize}
+  \item Brief introduction to gene regulation:
+    \begin{itemize}
+    \item Transcription factor binding sites (TFBS)
+    \item ChIP-on-Chip and ChIP-Seq experiments
+    \end{itemize}
+  \item Statistical analysis and modeling
+    \begin{itemize}
+    \item Issues that we need to address
+    \item Current inference methods and models for TFBS
+    \end{itemize}
+  \item Bayesian nonparametrics
+    \begin{itemize}
+    \item Dirichlet processes, mixtures and hierarchical models
+    \item Inference for Dirichlet process mixtures
+    \end{itemize}
+  \end{itemize}
+\end{slide}
+
+\begin{slide}{ Transcription factor binding sites }
+    Transcription factors (TFs) bind to specific sites
+    (transcription-factor binding sites; TFBS) that are either proximal or
+    distal to a transcription start site.  Sets of TFs can operate in
+    functional cis-regulatory modules (CRMs) to achieve specific
+    regulatory properties.\\
+    \begin{minipage}[c][][t]{0.4\textwidth}
+      Interactions between bound TFs and cofactors stabilize the
+      transcription-initiation machinery to enable gene expression. The
+      regulation that is conferred by sequence-specific binding TFs is
+      highly dependent on the three-dimensional structure of chromatin
+  \end{minipage}
+  \begin{minipage}[c][][t]{0.59\textwidth}
+    \begin{center}
+      \includegraphics[width=0.95\textwidth]{tfbs_pic1.eps}
+    \end{center}
+  \end{minipage}
+\end{slide}
+
+\begin{slide}{ ChIP-on-Chip and ChIP-Seq Experiments }
+  \begin{center}
+    \includegraphics[width=0.95\textwidth]{tfbs_pic2.eps}
+  \end{center}
+  \begin{center}
+    In ChIP-Seq experiments DNA-fragments are sequenced
+  \end{center}
+\end{slide}
+
+\begin{slide}{ Identification of TFBS }
+  \begin{center}
+    \begin{itemize}
+    \item Given:
+      \begin{itemize}
+      \item A set of sequences that are thought to contain TFBS,
+        e.g. from ChIP-on-Chip or ChIP-Seq experiments
+      \item Sequences may come from different but related species
+        (phylogenetic footprinting), where we assume that TFBS are
+        unaffected by mutations
+      \end{itemize}
+    \item Our task:
+      \begin{itemize}
+      \item Find whatever is conserved across sequences
+      \item Infer a model for TFBS
+      \item Predict locations and occurrences
+      \item Incorporate phylogenetic information
+      \end{itemize}
+    \item Main issues that we need to address:
+      \begin{itemize}
+      \item transcription factors have multiple targets (TFBS)
+      \item each target may occur zero or multiple times per sequence
+      \end{itemize}
+    \end{itemize}
+  \end{center}
+\end{slide}
+
+\begin{slide}{ Current approaches: MEME (Multiple EM For Motif Elicitation) }
+  \begin{itemize}
+  \item Sequences $(X_i)_{i=1}^L$ are modeled as a two-component
+    mixture of motif and background models with mixing parameter
+    $\lambda$
+  \item TFBS motifs are modeled as position weight matrices
+    \begin{equation}
+      \vec{\theta}_w =
+      \begin{pmatrix}
+        p_{A,1} & p_{A,2} & \cdots & p_{A,n} \\
+        p_{C,1} & p_{C,2} & \cdots & p_{C,n} \\
+        p_{G,1} & p_{G,2} & \cdots & p_{G,n} \\
+        p_{T,1} & p_{T,2} & \cdots & p_{T,n} \\
+      \end{pmatrix}
+    \end{equation}
+    with fixed $n$ (independence assumption).
+  \item the random variable $Z_{i,j}$ (latent variable or missing
+    information) indicates whether a motif starts at position $j$ in
+    sequence $X_i$.
+  \item Expectation maximization is used to find ML estimations for $\lambda$
+    and $\vec{\theta}_w$
+  \item Three modes:
+    \begin{itemize}
+    \item OOPS: only one motif per sequence model
+    \item ZOOPS: zero or one motif per sequence model
+    \item TCM: two-component mixture (zero or more motifs)
+    \end{itemize}
+  \end{itemize}
+\end{slide}
+
+\definecolor{darkgreen}{rgb}{0.9,0.0,0}
+\newcommand{\cmt}[1]{{\color{red}#1}}
+
+\begin{slide}{ Drawbacks of current approaches }
+  \begin{itemize}
+  \item Current methods to account for multiple occurences of a single
+    motif type are not well justified:\\
+    \vspace{0.5cm}
+  \cquote{\cmt{MEME gets around this problem in a simple way. Instead of
+    normalizing the reestimated offset probabilities to sum to $1.0$
+    for each sequence, all offset probabilities are normalized to sum
+    to a user-supplied value MAXP.}}{}\\
+  $\Rightarrow$ you need to know how many occurrences you want to observe
+  \item Actual implementations of existing methods contain hidden
+    assumptions about the underlying stochastic process
+  \item Convergence depends on initial conditions
+  \item MEME cannot cope with different targets of a transcription
+    factor
+  \item The independence assumption for motifs is too strong
+  \end{itemize}
+%  \begin{algorithm}
+%    {\small
+%      \caption{MEME(X: dataset of sequences)}
+      % \begin{algorithmic}[1]
+      %   \State MEME(X: dataset of sequences)
+      %   \For{ $pass = 1$ to $pass_{max}$}
+      %     \For{ $W = W_{min}$ to $W_{max}$ by $\sqrt{2}$ }
+      %       \For{ $\lambda^{(0)} = \lambda_{min}$ to $\lambda_{max}$ by $2$ }
+      %         \State Choose good $\theta^{(0)}$ given $W$ and $\lambda^{(0)}$
+      %         \State Run EM to convergence
+      %         \State \cmt{Remove outer columns of motif}
+      %       \EndFor
+      %     \EndFor
+      %   \EndFor
+      % \end{algorithmic}
+%    }
+%  \end{algorithm}
+\end{slide}
+
+\begin{slide}{ Goals of our project }
+  \begin{itemize}
+  \item We want the probability of a set of models M multiple TFBS that
+    occur at positions S given a set of sequences D
+    \begin{equation}
+      P(M,S|D)
+    \end{equation}
+  \item Approach:
+    \begin{itemize}
+    \item Model the random process (occurences of motifs on the
+      sequences) based on Dirichlet processes and/or the PB-process
+      (all assumptions will be explicitly represented in the choices
+      of our model and the priors)
+    \item Development of inference methods based on Monte Carlo
+      sampling schemes
+    \end{itemize}
+  \end{itemize}
+  \vspace{0.2cm}
+  In MEME we have a two-component mixture (motif and background), but
+  we want a mixture with an \cmt{arbitrary number} (countably
+  infinite) of components.
+\end{slide}
+
+\begin{slide}{ Bayesian Nonparametrics and Dirichlet Processes }
+  \begin{itemize}
+  \item Nonparametric statistics: the number of parameters grows with
+    sample size
+  \item Dirichlet processes are use in Bayesian nonparametrics as
+    prior distribution over mixing proportions for countably infinite
+    mixture models
+  \end{itemize}
+  (Hierarchical) Dirichlet Process (Mixture):\\
+  \vspace{0.5cm}
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{tfbs_dpf.eps}
+  \end{center}
+  % \begin{itemize}
+  % \item The Dirichlet process was first described with the notion of tail-free
+  %   measures (cf. Fabius (1964)) by Freedman (1963) and it was
+  %    analyzed in detail by Ferguson (1973) and Blackwell (1973).
+  %  \item Antoniak (1974) introduced Dirichlet process mixtures that
+  %   convolve the random measure with a continuous distribution.
+  % \end{itemize}
+\end{slide}
+
+\begin{slide}{ Dirichlet Processes }
+  A not very intuitive definition:\\\vspace{0.5cm}
+  \begin{definition}[Dirichlet Process]
+    Let $\Theta$ denote a measurable set, $\mathcal{F}$ a
+    $\sigma$-algebra of subsets of $\Theta$, and let $G_0$ be a
+    probability measure on $(\Theta, \mathcal{F})$. A random probability
+    measure $G$ is drawn from a Dirichlet process $\DP(G_0, \alpha)$
+    with parameter $\alpha \in \mathbb{R}$ if for any finite partition
+    $A_1, \dots, A_K$ of $\Theta$
+    \begin{equation}
+      (G(A_1), \dots, G(A_K)) \sim \Dir(\alpha G_0(A_1), \dots, \alpha G_0(A_K)).
+    \end{equation}
+  \end{definition}
+  \begin{itemize}
+  \item $G_0$ is the prior distribution with strength parameter $\alpha$
+  \end{itemize}
+\end{slide}
+
+\begin{slide}{ Dirichlet Processes }
+  How does $G$ look like? Stick breaking construction by
+  Sethuraman (1994):
+  \begin{equation}
+    \begin{split}
+      \nu_k      &\sim \Beta(1, \alpha)\\
+      \theta^*_k &\sim G_0\\
+      \pi_k(\vec{\nu}) &= \nu_k \prod_{i=1}^{k-1}(1-\nu_i)\\
+      G(\theta) &= \sum_{k=1}^{\infty} \pi_k(\vec{\nu})\delta_{\theta_k^*}(\theta)
+    \end{split}
+  \end{equation}
+  we say that $(\pi_k)_{k=1}^\infty = \vec{\pi} \sim \GEM(\alpha)$,
+  after Griffiths, Engen and McCloskey.\\
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{tfbs_pic3.eps}
+  \end{center}
+\end{slide}
+
+\begin{slide}{ Dirichlet Process }
+  \begin{itemize}
+  \item The random distribution $G$ consists of countably infinite
+    singletons $\delta_{\theta_k^*}$ with weights
+    $(\pi_k)_{k=1}^\infty$.
+  \item Two important aspects:
+    \begin{itemize}
+    \item There is a strictly positive probability that if we draw
+      values from $G$ that we will see reoccurences
+    \item We can take $\pi_k$ as the weight for the $k$th component
+      of an infinite mixture model with parameter $\theta_k^*$
+    \end{itemize}
+  \item We will however never work with $G$ itself
+  \end{itemize}
+\end{slide}
+
+\begin{slide}{ Dirichlet Process }
+  $\theta_{m_T} ~ | ~ \theta_1, \dots, \theta_{m_T-1}, G$
+  can be representet as a mixture of $G_0$ and empirical measure
+  {\small
+  \begin{equation}
+    \begin{split}
+      \theta_{m_T} ~ | ~ \theta_1, \dots, \theta_{m_T-1}, \exists i < m_T ~ \theta_{m_T} = \theta_i &\sim
+      \underbrace{\frac{1}{m_T - 1} \sum_{j=1}^{m_T-1}
+        \delta_{\theta_j}}_{\text{empirical measure}}\\
+      % 
+      \theta_{m_T} ~ | ~ \theta_1, \dots, \theta_{m_T-1}, \forall i <
+      m_T ~ \theta_{m_T} \neq \theta_i, G_0 &\sim
+      G_0\\
+      % 
+      \Rightarrow ~
+      \theta_{m_T} ~ | ~ \theta_1, \dots, \theta_{m_T-1}, G_0, \alpha &\sim
+      \frac{1}{m_T-1+\alpha} \sum_{j=1}^{m_T-1} \delta_{\theta_j} +\\
+      &\quad
+      \frac{\alpha}{m_T-1+\alpha} G_0\\
+      % 
+      \text{with} ~
+      P(\exists i ~ \theta_{m_T} = \theta_i    ~ | ~ \theta_1, \dots, \theta_{m_T-1}) &= \frac{m_T - 1}{m_T - 1 + \alpha}\\
+      P(\forall i ~ \theta_{m_T} \neq \theta_i ~ | ~ \theta_1, \dots, \theta_{m_T-1}) &= \frac{\alpha }{m_T - 1 + \alpha},\\
+    \end{split}
+  \end{equation}
+  }
+  by ``integrating out'' $G$ (Blackwell and MacQueen P\'olya urn (1973))
+\end{slide}
+
+\begin{slide}{ Chinese Restaurant Process }
+  Because we have reoccurences, we can rewrite it as
+  \begin{equation}
+    \begin{aligned}
+      \theta_{m_T} ~ | ~ \theta_1, \dots, \theta_{m_T-1} &\sim
+      \sum_{k=1}^{K} \underbrace{\frac{n_{\theta^*_k}(\theta_1,\dots,
+          \theta_{m_T-1})}{m_T-1+\alpha}}_{\pi_k ~ \text{as} ~ m_T
+        \rightarrow \infty}\delta_{\theta^*_k} +
+      \frac{\alpha}{m_T-1+\alpha} G_0,\\
+    \end{aligned}
+  \end{equation}
+  with
+  \begin{equation}
+    \begin{aligned}
+      P(            &\theta_{m_T} = \theta^*_k    ~ | ~ \theta_1, \dots, \theta_{m_T-1}) &=& ~\frac{n_{\theta^*_k}(\theta_1,\dots, \theta_{m_T-1})}{m_T - 1 + \alpha},\\
+      P(\forall k ~ &\theta_{m_T} \neq \theta^*_k ~ | ~ \theta_1, \dots, \theta_{m_T-1}) &=& ~\frac{\alpha}{m_T - 1 + \alpha},\\
+    \end{aligned}
+  \end{equation}
+  An intuitive description is given by the Chinese restaurant process,
+  where $\theta_i$ is interpreted as a customer who sits at table $\theta^*_k$.
+\end{slide}
+
+\begin{slide}{ Dirichlet Process Mixtures }
+  Mixtures of Dirichlet processes were introduced by Antoniak (1974),
+  where $x_i$ will be interpreted as our data
+  \begin{equation}
+    \begin{aligned}
+      x_i ~ &| ~ \theta_i  &\sim& ~ F(\theta_i)\\
+      \theta_i ~ &| ~ G    &\sim& ~ G \\
+      G ~ &| ~ G_0, \alpha &\sim& ~ \DP(G_0, \alpha)
+    \end{aligned}
+  \end{equation}
+  We can represent it as the limit of a finite mixture model
+  \begin{equation}
+    \begin{aligned}
+      x_i ~ &| ~ c_i, \vec{\theta}^* &\sim& ~ F(\theta^*_{c_i})\\
+      c_i ~ &| ~ \vec{\pi} &\sim& ~ \Dis(\pi_1, \dots, \pi_K)\\
+      \theta^*_k &&\sim& ~ G_0\\
+      (\pi_k)_{k=1}^K &&\sim& ~ \Dir(\alpha/K, \dots, \alpha/K)
+    \end{aligned}
+  \end{equation}
+  with $K \rightarrow \infty$, that is, we draw $K$ distinct values
+  $(\theta^*_k)_{k=1}^K$ from $G_0$ and $c_i$ indicates which of them we
+  use to generate $x_i$.
+\end{slide}
+
+\begin{slide}{ Clustering with Dirichlet Process Mixtures }
+  Example with $F = \mathcal{N}(?, \Sigma)$ and $G_0 =
+  \mathcal{N}(\mu_0, \Sigma_0)$ where we use Gibbs sampling to
+  generate class belongings\\
+  \vspace{1cm}
+  \begin{center}
+    \includegraphics[width=0.6\textwidth]{tfbs_pic4.eps}
+  \end{center}
+\end{slide}
+
+\begin{slide}{ Applications of Hierarchical Dirichlet Processes }
+  \begin{itemize}
+  \item Phylogeny: TFBS across species are (almost) preserved, so they
+    should share statistical strength
+  \item Proteins and nucleic acids have a secondary and tertiary
+    structure that causes geometric proximity of distal sites (with
+    respect to the primary structure) that can cause thos patterns to
+    covary across species
+  \end{itemize}
+\end{slide}
