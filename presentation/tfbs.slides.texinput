@@ -298,6 +298,20 @@
 \end{slide}
 
 \begin{slide}{ Dirichlet Process Mixtures }
+  \begin{center}
+    \begin{tabular}{c c}
+      Dirichlet  $K = \mathcal{O}(\alpha \log(n))$ &
+      Pitman-Yor $K = \mathcal{O}(\alpha n ^d)$\\
+      \includegraphics[width=0.42\textwidth]{tfbs_dp.eps}&
+      \includegraphics[width=0.42\textwidth]{tfbs_pyor.eps}\\
+      TFBS ? & Word counts\\
+      &
+      \includegraphics[width=0.42\textwidth]{tfbs_words.eps}\\
+    \end{tabular}
+  \end{center}
+\end{slide}
+
+\begin{slide}{ Dirichlet Process Mixtures }
   Mixtures of Dirichlet processes were introduced by Antoniak (1974),
   where $x_i$ will be interpreted as our data
   \begin{equation}
@@ -328,6 +342,215 @@
   \vspace{1cm}
   \begin{center}
     \includegraphics[width=0.6\textwidth]{tfbs_pic4.eps}
+  \end{center}
+\end{slide}
+
+\begin{slide}{ Applications of Dirichlet Processes }
+  empty restaurant with an countably infinite number of tables:\\
+  \begin{center}
+    \includegraphics[width=0.7\textwidth]{tfbs_rest01.eps}\\
+  \end{center}
+  customers (sites) enter the restaurant and choose to sit at a
+  specific table:\\
+  \begin{center}
+    \includegraphics[width=0.7\textwidth]{tfbs_rest02.eps}
+  \end{center}
+  \begin{center}
+    \begin{tabular}{ l l }
+      $sites$ : & $i = 1, 2, \dots, 12 $\\
+      & \includegraphics[width=0.25\textwidth, height=20px]{wauthier-jordan-jojic-recomb11-000.eps}\\
+      & \includegraphics[width=0.25\textwidth, height=20px]{wauthier-jordan-jojic-recomb11-001.eps}\\
+      & \includegraphics[width=0.25\textwidth, height=20px]{wauthier-jordan-jojic-recomb11-002.eps}\\
+      & \includegraphics[width=0.25\textwidth, height=20px]{wauthier-jordan-jojic-recomb11-003.eps}\\
+      $z_{site}(i)$ : & \includegraphics[width=0.275\textwidth]{tfbs_seq.eps}
+    \end{tabular}
+    $z_{site}(i) = t \in \{1, 2, \dots, c_{site} \}$
+  \end{center}
+\end{slide}
+
+\begin{slide}{ Hierarchical Dirichlet Processes (Mixtures) }
+  \begin{equation}
+    \begin{aligned}
+      \theta_{ji} ~ &| ~ G_j      &\sim& ~ G_j \\
+      G_j ~ &| ~ G_0, \alpha      &\sim& ~ \DP(G_0, \alpha)\\
+      G_0 ~ &| ~ \gamma, H       &\sim& ~ \DP(\gamma, H)
+    \end{aligned}
+  \end{equation}
+  Mixtures:
+  \begin{equation}
+    \begin{aligned}
+      x_{ji} ~ &| ~ \theta_{ji}    &\sim& ~ F(\theta_{ji})\\
+      \theta_{ji} ~ &| ~ G_j      &\sim& ~ G_j \\
+      G_j ~ &| ~ G_0, \alpha      &\sim& ~ \DP(G_0, \alpha)\\
+      G_0 ~ &| ~ \gamma, H       &\sim& ~ \DP(\gamma, H)
+    \end{aligned}
+  \end{equation}
+\end{slide}
+
+\begin{slide}{ Applications of Hierarchical Dirichlet Processes }
+  \begin{center}
+    \begin{minipage}[c][][c]{0.59\textwidth}
+      \vspace{0.5cm}
+      \includegraphics[width=0.95\textwidth]{tfbs_rest1.eps}\\
+    \end{minipage}
+    \begin{minipage}[c][][c]{0.39\textwidth}
+    \begin{tabular}{ l l }
+      sequences & profiles\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
+    \end{tabular}
+    \end{minipage}\\
+    \begin{equation*}
+      \begin{aligned}
+        z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
+      \end{aligned}
+    \end{equation*}
+  \end{center}
+\end{slide}
+
+\begin{slide}{ Applications of Hierarchical Dirichlet Processes }
+  \begin{center}
+    \begin{minipage}[c][][c]{0.59\textwidth}
+      \vspace{0.5cm}
+      \includegraphics[width=0.95\textwidth]{tfbs_rest2.eps}\\
+    \end{minipage}
+    \begin{minipage}[c][][c]{0.39\textwidth}
+    \begin{tabular}{ l l }
+      sequences & profiles\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
+    \end{tabular}
+    \end{minipage}
+    \begin{equation*}
+      \begin{aligned}
+        z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
+        z_{clust}(1,1) = 1 &\\
+      \end{aligned}
+    \end{equation*}
+  \end{center}
+\end{slide}
+
+\begin{slide}{ Applications of Hierarchical Dirichlet Processes }
+  \begin{center}
+    \begin{minipage}[c][][c]{0.59\textwidth}
+      \vspace{0.5cm}
+      \includegraphics[width=0.95\textwidth]{tfbs_rest3.eps}\\
+    \end{minipage}
+    \begin{minipage}[c][][c]{0.39\textwidth}
+    \begin{tabular}{ l l }
+      sequences & profiles\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
+    \end{tabular}
+    \end{minipage}
+    \begin{equation*}
+      \begin{aligned}
+        z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
+        z_{clust}(1,1) = 1 & ~ ~ ~ z_{prof}(1,1) = 2\\
+      \end{aligned}
+    \end{equation*}
+  \end{center}
+\end{slide}
+
+\begin{slide}{ Applications of Hierarchical Dirichlet Processes }
+  \begin{center}
+    \begin{minipage}[c][][c]{0.59\textwidth}
+      \vspace{0.5cm}
+      \includegraphics[width=0.95\textwidth]{tfbs_rest4.eps}\\
+    \end{minipage}
+    \begin{minipage}[c][][c]{0.39\textwidth}
+    \begin{tabular}{ l l }
+      sequences & profiles\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
+    \end{tabular}
+    \end{minipage}
+    \begin{equation*}
+      \begin{aligned}
+        z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
+        z_{clust}(1,1) = 1 & ~ ~ ~ z_{prof}(1,1) = 2\\
+        z_{clust}(1,2) = 2 & ~ ~ ~ z_{prof}(1,1) = 1\\
+      \end{aligned}
+    \end{equation*}
+  \end{center}
+\end{slide}
+
+\begin{slide}{ Applications of Hierarchical Dirichlet Processes }
+  \begin{center}
+    \begin{minipage}[c][][c]{0.59\textwidth}
+      \vspace{0.5cm}
+      \includegraphics[width=0.95\textwidth]{tfbs_rest5.eps}\\
+    \end{minipage}
+    \begin{minipage}[c][][c]{0.39\textwidth}
+    \begin{tabular}{ l l }
+      sequences & profiles\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
+    \end{tabular}
+    \end{minipage}
+    \begin{equation*}
+      \begin{aligned}
+        z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
+        z_{clust}(1,1) = 1 & ~ ~ ~ z_{prof}(1,1) = 2\\
+        z_{clust}(1,2) = 2 & ~ ~ ~ z_{prof}(1,1) = 1\\
+        z_{clust}(1,3) = 3 & ~ ~ ~ z_{prof}(1,1) = 3\\
+      \end{aligned}
+    \end{equation*}
+  \end{center}
+\end{slide}
+
+\begin{slide}{ Applications of Hierarchical Dirichlet Processes }
+  \begin{center}
+    \begin{minipage}[c][][c]{0.59\textwidth}
+      \vspace{0.5cm}
+      \includegraphics[width=0.95\textwidth]{tfbs_rest6.eps}\\
+    \end{minipage}
+    \begin{minipage}[c][][c]{0.39\textwidth}
+    \begin{tabular}{ l l }
+      sequences & profiles\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
+    \end{tabular}
+    \end{minipage}
+    \begin{equation*}
+      \begin{aligned}
+        z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
+        z_{clust}(1,1) = 1 & ~ ~ ~ z_{prof}(1,1) = 2\\
+        z_{clust}(1,2) = 2 & ~ ~ ~ z_{prof}(1,1) = 1\\
+        z_{clust}(1,2) = 3 & ~ ~ ~ z_{prof}(1,1) = 3\\
+        z_{clust}(2,1) = 1 & ~ ~ ~ z_{prof}(2,1) = 1\\
+      \end{aligned}
+    \end{equation*}
   \end{center}
 \end{slide}
 
