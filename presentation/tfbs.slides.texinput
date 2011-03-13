@@ -19,8 +19,10 @@
     \end{itemize}
   \item Bayesian nonparametrics
     \begin{itemize}
-    \item Dirichlet processes, mixtures and hierarchical models
-    \item Inference for Dirichlet process mixtures
+    \item Dirichlet processes and mixtures
+    \item Example 1: Searching for conserved structures (primary structure)
+    \item Hierarchical Dirichlet Processes
+    \item Example 2: Finding patterns of covariations (secondary structures)
     \end{itemize}
   \end{itemize}
 \end{slide}
@@ -115,20 +117,22 @@
 
 \begin{slide}{ Drawbacks of current approaches }
   \begin{itemize}
-  \item Current methods to account for multiple occurences of a single
-    motif type are not well justified:\\
-    \vspace{0.5cm}
-  \cquote{\cmt{MEME gets around this problem in a simple way. Instead of
-    normalizing the reestimated offset probabilities to sum to $1.0$
-    for each sequence, all offset probabilities are normalized to sum
-    to a user-supplied value MAXP.}}{}\\
-  $\Rightarrow$ you need to know how many occurrences you want to observe
+  % \item Current methods to account for multiple occurences of a single
+  %   motif type are not well justified:\\
+  %   \vspace{0.5cm}
+  % \cquote{\cmt{MEME gets around this problem in a simple way. Instead of
+  %   normalizing the reestimated offset probabilities to sum to $1.0$
+  %   for each sequence, all offset probabilities are normalized to sum
+  %   to a user-supplied value MAXP.}}{}\\
+  % $\Rightarrow$ you need to know how many occurrences you want to observe
   \item Actual implementations of existing methods contain hidden
     assumptions about the underlying stochastic process
   \item Convergence depends on initial conditions
   \item MEME cannot cope with different targets of a transcription
     factor
   \item The independence assumption for motifs is too strong
+  \item Effects of secondary and tertiary structures are not taken
+    into account
   \end{itemize}
 %  \begin{algorithm}
 %    {\small
@@ -149,13 +153,8 @@
 %  \end{algorithm}
 \end{slide}
 
-\begin{slide}{ Goals of our project }
+\begin{slide}{ Approach }
   \begin{itemize}
-  \item We want the probability of a set of models M multiple TFBS that
-    occur at positions S given a set of sequences D
-    \begin{equation}
-      P(M,S|D)
-    \end{equation}
   \item Approach:
     \begin{itemize}
     \item Model the random process (occurences of motifs on the
@@ -165,11 +164,10 @@
     \item Development of inference methods based on Monte Carlo
       sampling schemes
     \end{itemize}
+  \item In MEME we have a two-component mixture (motif and
+    background), but we want a mixture with an \cmt{arbitrary number}
+    (countably infinite) of components.
   \end{itemize}
-  \vspace{0.2cm}
-  In MEME we have a two-component mixture (motif and background), but
-  we want a mixture with an \cmt{arbitrary number} (countably
-  infinite) of components.
 \end{slide}
 
 \begin{slide}{ Bayesian Nonparametrics and Dirichlet Processes }
@@ -228,13 +226,20 @@
   \begin{center}
     \includegraphics[width=0.5\textwidth]{tfbs_pic3.eps}
   \end{center}
+  $G$ is a singular distribution and therefore does not have a
+  representation as a density function.
 \end{slide}
 
-\begin{slide}{ Dirichlet Process }
+\begin{slide}{ Dirichlet Processes }
   \begin{itemize}
-  \item The random distribution $G$ consists of countably infinite
-    singletons $\delta_{\theta_k^*}$ with weights
-    $(\pi_k)_{k=1}^\infty$.
+  \item G consists of
+    \begin{itemize}
+    \item countably infinite singletons $\{ \delta_{\theta^*_k} \}_{k=1}^\infty$
+    \item the positions of $\delta_{\theta^*_k}$ are distributed in
+      space according to $G_0$
+    \item singletons are weighted by $(\pi_k)_{k=1}^\infty$
+    \item $(\pi_k)_{k=1}^\infty$ are drawn from a Dirichlet distribution
+    \end{itemize}
   \item Two important aspects:
     \begin{itemize}
     \item There is a strictly positive probability that if we draw
@@ -243,10 +248,12 @@
       of an infinite mixture model with parameter $\theta_k^*$
     \end{itemize}
   \item We will however never work with $G$ itself
+  \item If we only care about class labels then we do not need to
+    specify $G_0$
   \end{itemize}
 \end{slide}
 
-\begin{slide}{ Dirichlet Process }
+\begin{slide}{ Dirichlet Processes (P\'olya Urn Scheme) }
   $\theta_{m_T} ~ | ~ \theta_1, \dots, \theta_{m_T-1}, G$
   can be representet as a mixture of $G_0$ and empirical measure
   {\small
@@ -275,7 +282,7 @@
   by ``integrating out'' $G$ (Blackwell and MacQueen P\'olya urn (1973))
 \end{slide}
 
-\begin{slide}{ Chinese Restaurant Process }
+\begin{slide}{ Dirichlet Processes (Chinese Restaurant Process) }
   Because we have reoccurences, we can rewrite it as
   \begin{equation}
     \begin{aligned}
@@ -297,45 +304,76 @@
   where $\theta_i$ is interpreted as a customer who sits at table $\theta^*_k$.
 \end{slide}
 
-\begin{slide}{ Dirichlet Process Mixtures }
+\begin{slide}{ Applications of Dirichlet Processes }
+  \begin{itemize}
+  \item Sequences $(X_i)_{i=1}^L$ are modeled as an infinite
+    mixture of background and motif models with misture weights
+    $(\pi_k)_{k=1}^\infty$
+  \item TFBS motifs are modeled as position weight matrices
+    \begin{equation}
+      \vec{\theta}_w =
+      \begin{pmatrix}
+        p_{A,1} & p_{A,2} & \cdots & p_{A,n} \\
+        p_{C,1} & p_{C,2} & \cdots & p_{C,n} \\
+        p_{G,1} & p_{G,2} & \cdots & p_{G,n} \\
+        p_{T,1} & p_{T,2} & \cdots & p_{T,n} \\
+      \end{pmatrix}
+    \end{equation}
+    with fixed $n$, drawn from Dirichlet distributions.
+  \item the random variable $Z_{i,j}$ (latent variable or missing
+    information) indicates whether position $j$ is background or
+    whether motif $k$ starts in sequence $X_i$, generated by the
+    Dirichlet process.
+  \item The posterior is Gibbs sampled
+  \end{itemize}
+\end{slide}
+
+\begin{slide}{ Dirichlet Processes (Limiting behaviour) }
   \begin{center}
     \begin{tabular}{c c}
       Dirichlet  $K = \mathcal{O}(\alpha \log(n))$ &
       Pitman-Yor $K = \mathcal{O}(\alpha n ^d)$\\
-      \includegraphics[width=0.42\textwidth]{tfbs_dp.eps}&
-      \includegraphics[width=0.42\textwidth]{tfbs_pyor.eps}\\
+      \includegraphics[width=0.42\textwidth]{tfbs_counts-dp.eps}&
+      \includegraphics[width=0.42\textwidth]{tfbs_counts-pyor.eps}\\
       TFBS ? & Word counts\\
       &
-      \includegraphics[width=0.42\textwidth]{tfbs_words.eps}\\
+      \includegraphics[width=0.42\textwidth]{tfbs_counts-words.eps}\\
     \end{tabular}
   \end{center}
 \end{slide}
 
 \begin{slide}{ Dirichlet Process Mixtures }
   Mixtures of Dirichlet processes were introduced by Antoniak (1974),
-  where $x_i$ will be interpreted as our data
-  \begin{equation}
-    \begin{aligned}
-      x_i ~ &| ~ \theta_i  &\sim& ~ F(\theta_i)\\
-      \theta_i ~ &| ~ G    &\sim& ~ G \\
-      G ~ &| ~ G_0, \alpha &\sim& ~ \DP(G_0, \alpha)
-    \end{aligned}
-  \end{equation}
-  We can represent it as the limit of a finite mixture model
-  \begin{equation}
-    \begin{aligned}
-      x_i ~ &| ~ c_i, \vec{\theta}^* &\sim& ~ F(\theta^*_{c_i})\\
-      c_i ~ &| ~ \vec{\pi} &\sim& ~ \Dis(\pi_1, \dots, \pi_K)\\
-      \theta^*_k &&\sim& ~ G_0\\
-      (\pi_k)_{k=1}^K &&\sim& ~ \Dir(\alpha/K, \dots, \alpha/K)
-    \end{aligned}
-  \end{equation}
+  where $x_i$ will be interpreted as our data\\
+  \begin{minipage}[c]{0.70\textwidth}
+    \begin{equation*}
+      \begin{aligned}
+        x_i ~ &| ~ \theta_i  &\sim& ~ F(\theta_i)\\
+        \theta_i ~ &| ~ G    &\sim& ~ G \\
+        G ~ &| ~ G_0, \alpha &\sim& ~ \DP(G_0, \alpha)
+      \end{aligned}
+    \end{equation*}
+    We can represent it as the limit of a finite mixture model
+    \begin{equation*}
+      \begin{aligned}
+        x_i ~ &| ~ c_i, \vec{\theta}^* &\sim& ~ F(\theta^*_{c_i})\\
+        c_i ~ &| ~ \vec{\pi} &\sim& ~ \Dis(\pi_1, \dots, \pi_K)\\
+        \theta^*_k &&\sim& ~ G_0\\
+        (\pi_k)_{k=1}^K &&\sim& ~ \Dir(\alpha/K, \dots, \alpha/K)
+      \end{aligned}
+    \end{equation*}
+  \end{minipage}
+  \begin{minipage}[c]{0.28\textwidth}
+    \begin{center}
+      \includegraphics[width=0.3\textwidth]{tfbs_dp.eps}
+    \end{center}
+  \end{minipage}\\
   with $K \rightarrow \infty$, that is, we draw $K$ distinct values
   $(\theta^*_k)_{k=1}^K$ from $G_0$ and $c_i$ indicates which of them we
   use to generate $x_i$.
 \end{slide}
 
-\begin{slide}{ Clustering with Dirichlet Process Mixtures }
+\begin{slide}{ Applications of Dirichlet Process Mixtures }
   Example with $F = \mathcal{N}(?, \Sigma)$ and $G_0 =
   \mathcal{N}(\mu_0, \Sigma_0)$ where we use Gibbs sampling to
   generate class belongings\\
@@ -345,7 +383,68 @@
   \end{center}
 \end{slide}
 
-\begin{slide}{ Applications of Dirichlet Processes }
+\begin{slide}{ Hierarchical Dirichlet Processes (Mixtures) }
+  \begin{minipage}[c]{0.59\textwidth}
+    \begin{equation*}
+      \begin{aligned}
+        x_{ji} ~ &| ~ \theta_{ji}    &\sim& ~ F(\theta_{ji})\\
+        \theta_{ji} ~ &| ~ G_j      &\sim& ~ G_j \\
+        G_j ~ &| ~ G_0, \alpha      &\sim& ~ \DP(G_0, \alpha)\\
+        G_0 ~ &| ~ \gamma, H       &\sim& ~ \DP(\gamma, H)
+      \end{aligned}
+    \end{equation*}
+  \end{minipage}
+  \begin{minipage}[c]{0.39\textwidth}
+    \includegraphics[width=0.85\textwidth]{tfbs_hdp.eps}
+  \end{minipage}
+  \vspace{0.2cm}
+  \begin{center}
+    For the statistical analysis $G_0$ and $G_j$ will be integrated out.
+  \end{center}
+\end{slide}
+
+\begin{slide}{ Hierarchical Dirichlet Processes (Chinese Restaurant Franchise) }
+  \begin{center}
+    \begin{minipage}[c]{0.59\textwidth}
+      \includegraphics[width=0.95\textwidth]{tfbs_crf.eps}
+    \end{minipage}
+    \begin{minipage}[c]{0.39\textwidth}
+      \begin{center}
+        \includegraphics[width=0.95\textwidth]{tfbs_hdp2.eps}
+      \end{center}
+    \end{minipage}    
+  \end{center}
+  \vspace{0.2cm}
+  \begin{itemize}
+  \item mixture components (dishes) are shared, which strengthens
+    statistical power
+  \end{itemize}
+\end{slide}
+
+\begin{slide}{ Applications of Hierarchical Dirichlet Processes }
+  \begin{itemize}
+  \item Phylogeny: TFBS across species are (almost) preserved, so they
+    should share statistical strength
+  \item Proteins and nucleic acids have a secondary and tertiary
+    structure that causes geometric proximity of distal sites (with
+    respect to the primary structure) that can cause thos patterns to
+    covary across species
+  \end{itemize}
+  \begin{center}
+    \begin{tabular}{ l l }
+      sequences & profiles\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
+      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
+    \end{tabular}
+  \end{center}
+\end{slide}
+
+\begin{slide}{ Applications of Hierarchical Dirichlet Processes }
   empty restaurant with an countably infinite number of tables:\\
   \begin{center}
     \includegraphics[width=0.7\textwidth]{tfbs_rest01.eps}\\
@@ -368,199 +467,274 @@
   \end{center}
 \end{slide}
 
-\begin{slide}{ Hierarchical Dirichlet Processes (Mixtures) }
-  \begin{equation}
-    \begin{aligned}
-      \theta_{ji} ~ &| ~ G_j      &\sim& ~ G_j \\
-      G_j ~ &| ~ G_0, \alpha      &\sim& ~ \DP(G_0, \alpha)\\
-      G_0 ~ &| ~ \gamma, H       &\sim& ~ \DP(\gamma, H)
-    \end{aligned}
-  \end{equation}
-  Mixtures:
-  \begin{equation}
-    \begin{aligned}
-      x_{ji} ~ &| ~ \theta_{ji}    &\sim& ~ F(\theta_{ji})\\
-      \theta_{ji} ~ &| ~ G_j      &\sim& ~ G_j \\
-      G_j ~ &| ~ G_0, \alpha      &\sim& ~ \DP(G_0, \alpha)\\
-      G_0 ~ &| ~ \gamma, H       &\sim& ~ \DP(\gamma, H)
-    \end{aligned}
-  \end{equation}
-\end{slide}
-
 \begin{slide}{ Applications of Hierarchical Dirichlet Processes }
   \begin{center}
-    \begin{minipage}[c][][c]{0.59\textwidth}
-      \vspace{0.5cm}
+    \begin{minipage}[t]{0.59\textwidth}
       \includegraphics[width=0.95\textwidth]{tfbs_rest1.eps}\\
+      \begin{equation*}
+        \begin{aligned}
+          z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
+          \quad & \quad
+        \end{aligned}
+      \end{equation*}
     \end{minipage}
-    \begin{minipage}[c][][c]{0.39\textwidth}
-    \begin{tabular}{ l l }
-      sequences & profiles\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
-    \end{tabular}
-    \end{minipage}\\
-    \begin{equation*}
-      \begin{aligned}
-        z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
-      \end{aligned}
-    \end{equation*}
+    \begin{minipage}[c]{0.39\textwidth}
+      \begin{tabular}{ l l }
+        sequences & profiles\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
+      \end{tabular}
+      \begin{equation*}
+        \begin{aligned}
+          \theta_p &=
+          \begin{pmatrix}
+            p^1_A & p^2_A & \cdots & p^I_A \\
+            p^1_G & p^2_G & \cdots & p^I_G \\
+            p^1_C & p^2_C & \cdots & p^I_C \\
+            p^1_T & p^2_T & \cdots & p^I_T \\
+          \end{pmatrix}\\
+          &\sim Dir(\vec{\alpha}_1), \dots,
+          Dir(\vec{\alpha}_I)
+        \end{aligned}
+      \end{equation*}
+    \end{minipage}
   \end{center}
 \end{slide}
 
 \begin{slide}{ Applications of Hierarchical Dirichlet Processes }
   \begin{center}
-    \begin{minipage}[c][][c]{0.59\textwidth}
-      \vspace{0.5cm}
+    \begin{minipage}[t]{0.59\textwidth}
       \includegraphics[width=0.95\textwidth]{tfbs_rest2.eps}\\
+      \begin{equation*}
+        \begin{aligned}
+          z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
+          z_{clust}(1,1) = 1 &\\
+        \end{aligned}
+      \end{equation*}
     \end{minipage}
-    \begin{minipage}[c][][c]{0.39\textwidth}
-    \begin{tabular}{ l l }
-      sequences & profiles\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
-    \end{tabular}
+    \begin{minipage}[c]{0.39\textwidth}
+      \begin{tabular}{ l l }
+        sequences & profiles\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
+      \end{tabular}
+      \begin{equation*}
+        \begin{aligned}
+          \theta_p &=
+          \begin{pmatrix}
+            p^1_A & p^2_A & \cdots & p^I_A \\
+            p^1_G & p^2_G & \cdots & p^I_G \\
+            p^1_C & p^2_C & \cdots & p^I_C \\
+            p^1_T & p^2_T & \cdots & p^I_T \\
+          \end{pmatrix}\\
+          &\sim Dir(\vec{\alpha}_1), \dots,
+          Dir(\vec{\alpha}_I)
+        \end{aligned}
+      \end{equation*}
     \end{minipage}
-    \begin{equation*}
-      \begin{aligned}
-        z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
-        z_{clust}(1,1) = 1 &\\
-      \end{aligned}
-    \end{equation*}
   \end{center}
 \end{slide}
 
 \begin{slide}{ Applications of Hierarchical Dirichlet Processes }
   \begin{center}
-    \begin{minipage}[c][][c]{0.59\textwidth}
-      \vspace{0.5cm}
+    \begin{minipage}[t]{0.59\textwidth}
       \includegraphics[width=0.95\textwidth]{tfbs_rest3.eps}\\
+      \begin{equation*}
+        \begin{aligned}
+          z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
+          z_{clust}(1,1) = 1 & ~ ~ ~ z_{prof}(1,1) = 2\\
+        \end{aligned}
+      \end{equation*}
     \end{minipage}
-    \begin{minipage}[c][][c]{0.39\textwidth}
-    \begin{tabular}{ l l }
-      sequences & profiles\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
-    \end{tabular}
+    \begin{minipage}[c]{0.39\textwidth}
+      \begin{tabular}{ l l }
+        sequences & profiles\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
+      \end{tabular}
+      \begin{equation*}
+        \begin{aligned}
+          \theta_p &=
+          \begin{pmatrix}
+            p^1_A & p^2_A & \cdots & p^I_A \\
+            p^1_G & p^2_G & \cdots & p^I_G \\
+            p^1_C & p^2_C & \cdots & p^I_C \\
+            p^1_T & p^2_T & \cdots & p^I_T \\
+          \end{pmatrix}\\
+          &\sim Dir(\vec{\alpha}_1), \dots,
+          Dir(\vec{\alpha}_I)
+        \end{aligned}
+      \end{equation*}
     \end{minipage}
-    \begin{equation*}
-      \begin{aligned}
-        z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
-        z_{clust}(1,1) = 1 & ~ ~ ~ z_{prof}(1,1) = 2\\
-      \end{aligned}
-    \end{equation*}
   \end{center}
 \end{slide}
 
 \begin{slide}{ Applications of Hierarchical Dirichlet Processes }
   \begin{center}
-    \begin{minipage}[c][][c]{0.59\textwidth}
-      \vspace{0.5cm}
+    \begin{minipage}[t]{0.59\textwidth}
       \includegraphics[width=0.95\textwidth]{tfbs_rest4.eps}\\
+      \begin{equation*}
+        \begin{aligned}
+          z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
+          z_{clust}(1,1) = 1 & ~ ~ ~ z_{prof}(1,1) = 2\\
+          z_{clust}(1,2) = 2 & ~ ~ ~ z_{prof}(1,1) = 1\\
+        \end{aligned}
+      \end{equation*}
     \end{minipage}
-    \begin{minipage}[c][][c]{0.39\textwidth}
-    \begin{tabular}{ l l }
-      sequences & profiles\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
-    \end{tabular}
+    \begin{minipage}[c]{0.39\textwidth}
+      \begin{tabular}{ l l }
+        sequences & profiles\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
+      \end{tabular}
+      \begin{equation*}
+        \begin{aligned}
+          \theta_p &=
+          \begin{pmatrix}
+            p^1_A & p^2_A & \cdots & p^I_A \\
+            p^1_G & p^2_G & \cdots & p^I_G \\
+            p^1_C & p^2_C & \cdots & p^I_C \\
+            p^1_T & p^2_T & \cdots & p^I_T \\
+          \end{pmatrix}\\
+          &\sim Dir(\vec{\alpha}_1), \dots,
+          Dir(\vec{\alpha}_I)
+        \end{aligned}
+      \end{equation*}
     \end{minipage}
-    \begin{equation*}
-      \begin{aligned}
-        z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
-        z_{clust}(1,1) = 1 & ~ ~ ~ z_{prof}(1,1) = 2\\
-        z_{clust}(1,2) = 2 & ~ ~ ~ z_{prof}(1,1) = 1\\
-      \end{aligned}
-    \end{equation*}
   \end{center}
 \end{slide}
 
 \begin{slide}{ Applications of Hierarchical Dirichlet Processes }
   \begin{center}
-    \begin{minipage}[c][][c]{0.59\textwidth}
-      \vspace{0.5cm}
+    \begin{minipage}[t]{0.59\textwidth}
       \includegraphics[width=0.95\textwidth]{tfbs_rest5.eps}\\
+      \begin{equation*}
+        \begin{aligned}
+          z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
+          z_{clust}(1,1) = 1 & ~ ~ ~ z_{prof}(1,1) = 2\\
+          z_{clust}(1,2) = 2 & ~ ~ ~ z_{prof}(1,1) = 1\\
+          z_{clust}(1,3) = 3 & ~ ~ ~ z_{prof}(1,1) = 3\\
+        \end{aligned}
+      \end{equation*}
     \end{minipage}
-    \begin{minipage}[c][][c]{0.39\textwidth}
-    \begin{tabular}{ l l }
-      sequences & profiles\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
-    \end{tabular}
+    \begin{minipage}[c]{0.39\textwidth}
+      \begin{tabular}{ l l }
+        sequences & profiles\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
+      \end{tabular}
+      \begin{equation*}
+        \begin{aligned}
+          \theta_p &=
+          \begin{pmatrix}
+            p^1_A & p^2_A & \cdots & p^I_A \\
+            p^1_G & p^2_G & \cdots & p^I_G \\
+            p^1_C & p^2_C & \cdots & p^I_C \\
+            p^1_T & p^2_T & \cdots & p^I_T \\
+          \end{pmatrix}\\
+          &\sim Dir(\vec{\alpha}_1), \dots,
+          Dir(\vec{\alpha}_I)
+        \end{aligned}
+      \end{equation*}
     \end{minipage}
-    \begin{equation*}
-      \begin{aligned}
-        z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
-        z_{clust}(1,1) = 1 & ~ ~ ~ z_{prof}(1,1) = 2\\
-        z_{clust}(1,2) = 2 & ~ ~ ~ z_{prof}(1,1) = 1\\
-        z_{clust}(1,3) = 3 & ~ ~ ~ z_{prof}(1,1) = 3\\
-      \end{aligned}
-    \end{equation*}
   \end{center}
 \end{slide}
 
 \begin{slide}{ Applications of Hierarchical Dirichlet Processes }
   \begin{center}
-    \begin{minipage}[c][][c]{0.59\textwidth}
-      \vspace{0.5cm}
+    \begin{minipage}[t]{0.59\textwidth}
       \includegraphics[width=0.95\textwidth]{tfbs_rest6.eps}\\
+      \begin{equation*}
+        \begin{aligned}
+          z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
+          z_{clust}(1,1) = 1 & ~ ~ ~ z_{prof}(1,1) = 2\\
+          z_{clust}(1,2) = 2 & ~ ~ ~ z_{prof}(1,1) = 1\\
+          z_{clust}(1,2) = 3 & ~ ~ ~ z_{prof}(1,1) = 3\\
+          z_{clust}(2,1) = 1 & ~ ~ ~ z_{prof}(2,1) = 1\\
+        \end{aligned}
+      \end{equation*}
     \end{minipage}
-    \begin{minipage}[c][][c]{0.39\textwidth}
-    \begin{tabular}{ l l }
-      sequences & profiles\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
-      \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
-    \end{tabular}
+    \begin{minipage}[c]{0.39\textwidth}
+      \begin{tabular}{ l l }
+        sequences & profiles\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-000.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-004.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-001.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-005.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-002.eps}&
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-006.eps}\\
+        \includegraphics[width=0.45\textwidth, height=15px]{wauthier-jordan-jojic-recomb11-003.eps}&
+      \end{tabular}
+      \begin{equation*}
+        \begin{aligned}
+          \theta_p &=
+          \begin{pmatrix}
+            p^1_A & p^2_A & \cdots & p^I_A \\
+            p^1_G & p^2_G & \cdots & p^I_G \\
+            p^1_C & p^2_C & \cdots & p^I_C \\
+            p^1_T & p^2_T & \cdots & p^I_T \\
+          \end{pmatrix}\\
+          &\sim Dir(\vec{\alpha}_1), \dots,
+          Dir(\vec{\alpha}_I)
+        \end{aligned}
+      \end{equation*}
     \end{minipage}
-    \begin{equation*}
-      \begin{aligned}
-        z_{clust}(s,t) = u & ~ ~ ~ z_{prof}(s,u) = p\\
-        z_{clust}(1,1) = 1 & ~ ~ ~ z_{prof}(1,1) = 2\\
-        z_{clust}(1,2) = 2 & ~ ~ ~ z_{prof}(1,1) = 1\\
-        z_{clust}(1,2) = 3 & ~ ~ ~ z_{prof}(1,1) = 3\\
-        z_{clust}(2,1) = 1 & ~ ~ ~ z_{prof}(2,1) = 1\\
-      \end{aligned}
-    \end{equation*}
   \end{center}
 \end{slide}
 
-\begin{slide}{ Applications of Hierarchical Dirichlet Processes }
+\begin{slide}{ Drawbacks of the Dirichlet Process }
   \begin{itemize}
-  \item Phylogeny: TFBS across species are (almost) preserved, so they
-    should share statistical strength
-  \item Proteins and nucleic acids have a secondary and tertiary
-    structure that causes geometric proximity of distal sites (with
-    respect to the primary structure) that can cause thos patterns to
-    covary across species
+  \item We do not make use of the base measure
+  \item Measures drawn from a DP never occur in our analysis
+  \item All we need is a label generating mechanism
   \end{itemize}
+\end{slide}
+
+\begin{slide}{ Intuition behind the DP definition }
+  \begin{equation*}
+    \begin{aligned}
+      &(\pi_k)^K_{k=1} &\sim& ~ ~ \Dir(\alpha/K, \dots, \alpha/K)\\
+      &\theta^*_1, \dots \theta^*_K &\sim& ~ ~ G_0\\
+      \text{suppose} ~
+      & G &=& ~ ~ \{ \pi_k \delta_{\theta^*_k} \}^K_{k=1}\\
+      %
+      &\left(\pi_1, \dots, \pi_K \right) &\sim& ~ ~ \Dir(\alpha/K, \dots, \alpha/K)\\
+      \Leftrightarrow
+      &\left(G(\theta^*_1), \dots, G(\theta^*_K) \right) &\sim& ~ ~ \Dir(\alpha/K, \dots, \alpha/K)\\
+      \Rightarrow
+      &\left(G(A_1), \dots, G(A_n) \right) &\sim& ~ ~ \Dir(\alpha G_0(A_1), \dots, \alpha G_0(A_n))\\
+    \end{aligned}
+  \end{equation*}
+  where $A_1 \cup \dots \cup A_n = \Theta$.
+  Aggregation property of the Dirichlet distribution: If $r_1, \dots,
+  r_n$ are integers with $0 < r_1 < \dots < r_k = m_T$, then
+  \begin{equation*}
+    \left(\sum_{i=1}^{r_1}X_1, \dots, \sum_{i=r_{n-1}+1}^{r_n}X_{m_T}\right) \sim
+    \Dir\left(\sum_{i=1}^{r_1}\alpha_1, \dots, \sum_{i=r_{n-1}+1}^{r_n}\alpha_{m_T}\right)
+  \end{equation*}
 \end{slide}
