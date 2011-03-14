@@ -93,8 +93,8 @@
       \end{pmatrix}
     \end{equation}
     with fixed $n$ (independence assumption).
-  \item latent variable $Z_{i,j}$
-  \item Expectation maximization: ML estimations for $\pi$ and $\vec{\theta}_w$
+  \item latent variable $Z_{i,j}$, with $P(Z_{i,j} = 1) = \pi$
+  \item Expectation maximization: ML estimate of $\vec{\theta}_w$
   \item Three modes:
     \begin{itemize}
     \item OOPS: only one motif per sequence model
