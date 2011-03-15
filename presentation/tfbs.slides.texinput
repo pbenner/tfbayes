@@ -84,7 +84,7 @@
   \item mixing parameter $\pi$
   \item TFBS motifs:
     \begin{equation}
-      \vec{\theta}_w =
+      \vec{\theta} =
       \begin{pmatrix}
         p_{A,1} & p_{A,2} & \cdots & p_{A,n} \\
         p_{C,1} & p_{C,2} & \cdots & p_{C,n} \\
@@ -94,7 +94,7 @@
     \end{equation}
     with fixed $n$ (independence assumption).
   \item latent variable $Z_{i,j}$, with $P(Z_{i,j} = 1) = \pi$
-  \item Expectation maximization: ML estimate of $\vec{\theta}_w$
+  \item Expectation maximization: ML estimate of $\vec{\theta}$
   \item Three modes:
     \begin{itemize}
     \item OOPS: only one motif per sequence model
@@ -234,6 +234,34 @@
 
 \begin{slide}{ Dirichlet Processes }
   \begin{center}
+    \includegraphics[width=0.35\textwidth]{tfbs_dpdef1.eps}
+    \includegraphics[width=0.35\textwidth]{tfbs_dpdef2.eps}
+  \end{center}
+  \begin{equation*}
+    \begin{aligned}
+      &(\pi_k)^K_{k=1} &\sim& ~ ~ \Dir(\alpha/K, \dots, \alpha/K)\\
+      &\theta^*_1, \dots \theta^*_K &\sim& ~ ~ G_0\\
+      \text{suppose} ~
+      & G &=& ~ ~ \sum_{k=1}^K \pi_k \delta_{\theta^*_k}\\
+      %
+      &\left(\pi_1, \dots, \pi_K \right) &\sim& ~ ~ \Dir(\alpha/K, \dots, \alpha/K)\\
+      \Leftrightarrow
+      &\left(G(\theta^*_1), \dots, G(\theta^*_K) \right) &\sim& ~ ~ \Dir(\alpha/K, \dots, \alpha/K)\\
+      \Rightarrow
+      &\left(G(A_1), \dots, G(A_n) \right) &\sim& ~ ~ \Dir(\alpha G_0(A_1), \dots, \alpha G_0(A_n))\\
+    \end{aligned}
+  \end{equation*}
+  % where $A_1 \cup \dots \cup A_n = \Theta$.
+  % Aggregation property of the Dirichlet distribution: If $r_1, \dots,
+  % r_n$ are integers with $0 < r_1 < \dots < r_k = m_T$, then
+  \begin{equation*}
+    \left(\sum_{i=1}^{r_1}\pi_1, \dots, \sum_{i=r_{n-1}+1}^{r_n}\pi_{m_T}\right) \sim
+    \Dir\left(\sum_{i=1}^{r_1}\alpha_1, \dots, \sum_{i=r_{n-1}+1}^{r_n}\alpha_{m_T}\right)
+  \end{equation*}
+\end{slide}
+
+\begin{slide}{ Dirichlet Processes }
+  \begin{center}
     \begin{equation*}
       \begin{aligned}
         \theta_i ~ &| ~ G    &\sim& ~ G \\
@@ -244,8 +272,8 @@
   \begin{itemize}
   \item Important aspects:
     \begin{itemize}
-    \item Certain $\theta_i ~ \sim ~ G = \{ \pi_k \delta_{\theta^*_k}
-      \}^K_{k=1} $ will reoccur
+    \item Certain $\theta_i ~ \sim ~ G = \sum^K_{k=1} \pi_k
+      \delta_{\theta^*_k} $ will reoccur
     \item $\pi_k$ is the weight of the $k$th mixture component
     \end{itemize}
   \item We will however never work with $G$ itself
@@ -310,7 +338,7 @@
   \item mixture weights:  $(\pi_k)_{k=1}^\infty$
   \item TFBS motifs are modeled as position weight matrices
     \begin{equation}
-      \vec{\theta}_w =
+      \vec{\theta} =
       \begin{pmatrix}
         p_{A,1} & p_{A,2} & \cdots & p_{A,n} \\
         p_{C,1} & p_{C,2} & \cdots & p_{C,n} \\
@@ -698,28 +726,4 @@
   \item Measures drawn from a DP never occur in our analysis
   \item All we need is a label generating mechanism
   \end{itemize}
-\end{slide}
-
-\begin{slide}{ Intuition behind the DP definition }
-  \begin{equation*}
-    \begin{aligned}
-      &(\pi_k)^K_{k=1} &\sim& ~ ~ \Dir(\alpha/K, \dots, \alpha/K)\\
-      &\theta^*_1, \dots \theta^*_K &\sim& ~ ~ G_0\\
-      \text{suppose} ~
-      & G &=& ~ ~ \{ \pi_k \delta_{\theta^*_k} \}^K_{k=1}\\
-      %
-      &\left(\pi_1, \dots, \pi_K \right) &\sim& ~ ~ \Dir(\alpha/K, \dots, \alpha/K)\\
-      \Leftrightarrow
-      &\left(G(\theta^*_1), \dots, G(\theta^*_K) \right) &\sim& ~ ~ \Dir(\alpha/K, \dots, \alpha/K)\\
-      \Rightarrow
-      &\left(G(A_1), \dots, G(A_n) \right) &\sim& ~ ~ \Dir(\alpha G_0(A_1), \dots, \alpha G_0(A_n))\\
-    \end{aligned}
-  \end{equation*}
-  where $A_1 \cup \dots \cup A_n = \Theta$.
-  Aggregation property of the Dirichlet distribution: If $r_1, \dots,
-  r_n$ are integers with $0 < r_1 < \dots < r_k = m_T$, then
-  \begin{equation*}
-    \left(\sum_{i=1}^{r_1}X_1, \dots, \sum_{i=r_{n-1}+1}^{r_n}X_{m_T}\right) \sim
-    \Dir\left(\sum_{i=1}^{r_1}\alpha_1, \dots, \sum_{i=r_{n-1}+1}^{r_n}\alpha_{m_T}\right)
-  \end{equation*}
 \end{slide}
