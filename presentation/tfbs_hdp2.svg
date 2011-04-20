@@ -9,13 +9,14 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="744.09448819"
-   height="1052.3622047"
+   width="556.48224"
+   height="759.88226"
    id="svg2"
    sodipodi:version="0.32"
    inkscape:version="0.46"
    sodipodi:docname="tfbs_hdp2.svg"
-   inkscape:output_extension="org.inkscape.output.svg.inkscape">
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   version="1.0">
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -28,12 +29,12 @@
      inkscape:pageshadow="2"
      inkscape:zoom="1"
      inkscape:cx="360.00262"
-     inkscape:cy="563.31916"
+     inkscape:cy="758.68402"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
-     inkscape:window-width="1280"
-     inkscape:window-height="953"
+     inkscape:window-width="1278"
+     inkscape:window-height="948"
      inkscape:window-x="0"
      inkscape:window-y="25">
     <inkscape:grid
@@ -47,28 +48,28 @@
     <marker
        inkscape:stockid="Arrow1Lend"
        orient="auto"
-       refY="0.0"
-       refX="0.0"
+       refY="0"
+       refX="0"
        id="Arrow1Lend"
-       style="overflow:visible;">
+       style="overflow:visible">
       <path
          id="path3198"
-         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
-         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none;"
-         transform="scale(0.8) rotate(180) translate(12.5,0)" />
+         d="M 0,0 L 5,-5 L -12.5,0 L 5,5 L 0,0 z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
     </marker>
     <marker
        inkscape:stockid="Arrow2Lend"
        orient="auto"
-       refY="0.0"
-       refX="0.0"
+       refY="0"
+       refX="0"
        id="Arrow2Lend"
-       style="overflow:visible;">
+       style="overflow:visible">
       <path
          id="path3216"
-         style="font-size:12.0;fill-rule:evenodd;stroke-width:0.62500000;stroke-linejoin:round;"
-         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "
-         transform="scale(1.1) rotate(180) translate(1,0)" />
+         style="font-size:12px;fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.97309,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z"
+         transform="matrix(-1.1,0,0,-1.1,-1.1,0)" />
     </marker>
     <inkscape:perspective
        id="perspective10"
@@ -92,14 +93,15 @@
   <g
      id="layer1"
      inkscape:groupmode="layer"
-     inkscape:label="Layer 1">
+     inkscape:label="Layer 1"
+     transform="translate(-108.9,-103.57991)">
     <rect
        y="132.36218"
        x="270"
        height="80"
        width="90"
        id="rect3193"
-       style="fill:none;fill-opacity:1;stroke:#000000;stroke-opacity:1;stroke-linejoin:round;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none" />
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <text
        id="text3195"
        y="200.36218"
@@ -117,15 +119,19 @@
        width="8in"
        id="body"
        baseProfile="full"
-       version="1.1" />
+       version="1.0"
+       sodipodi:version="0.32"
+       inkscape:version="0.46" />
     <svg
-       version="1.1"
+       version="1.0"
        baseProfile="full"
        id="svg3233"
        width="8in"
        height="8in"
        viewBox="0 0 1 1"
-       preserveAspectRatio="none" />
+       preserveAspectRatio="none"
+       sodipodi:version="0.32"
+       inkscape:version="0.46" />
     <g
        ns0:preamble=""
        ns0:text="$G_0$"
@@ -161,7 +167,7 @@
        d="M 420,317.36218 A 50,45 0 1 1 320,317.36218 A 50,45 0 1 1 420,317.36218 z"
        transform="matrix(0.8990258,0,0,1.0011398,-17.739547,0.638277)" />
     <path
-       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.225;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow2Lend);stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.2249999;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow2Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="M 316,212.36218 L 316,272.20578"
        id="path2420" />
     <path
@@ -212,7 +218,6 @@
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;letter-spacing:normal;word-spacing:normal;text-anchor:start;fill:none;fill-opacity:1;stroke:#000000;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10.43299961;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        ns0:preamble=""
        ns0:text="$G_2$"
-       text-anchor="start"
        word-spacing="normal"
        letter-spacing="normal"
        font-size-adjust="none"
@@ -220,29 +225,19 @@
        font-weight="normal"
        font-variant="normal"
        font-style="normal"
-       fill-opacity="1"
        fill-rule="even-odd"
-       fill="none"
-       stroke-opacity="1"
-       stroke-dashoffset="0"
-       stroke-dasharray="none"
        stroke-miterlimit="10.433"
-       stroke-linejoin="miter"
-       stroke-linecap="butt"
-       stroke="black"
        xml:space="preserve"
        transform="matrix(5.4397525,0,0,-5.531579,-796.81871,4384.6942)"
        id="g4065">
 <path
    id="path4067"
-   fill="black"
-   stroke-width="0"
-   d="M231,714.05 L231,714.05 L231,714.05 L231,714.06 L231,714.06 L231,714.06 L231,714.07 L231,714.07 L231,714.07 L231,714.08 L231,714.08 L230.99,714.09 L230.99,714.09 L230.99,714.1 L230.99,714.1 L230.99,714.1 L230.98,714.11 L230.98,714.11 L230.98,714.12 L230.97,714.12 L230.97,714.12 L230.96,714.13 L230.96,714.13 L230.95,714.13 L230.95,714.13 L230.94,714.14 L230.94,714.14 L230.94,714.14 L230.93,714.14 L230.93,714.14 L230.93,714.14 L230.92,714.14 L230.92,714.14 L230.92,714.14 L230.91,714.14 L230.91,714.15 L230.91,714.15 L230.9,714.15 L230.9,714.15 L230.89,714.15 C230.87,714.15,230.85,714.14,230.74,714.03 L230.05,713.26 C229.96,713.4,229.5,714.15,228.39,714.15 C226.17,714.15,223.93,711.94,223.93,709.63 C223.93,708.05,225.04,706.9,226.65,706.9 C227.09,706.9,227.54,706.99,227.9,707.14 C228.39,707.34,228.58,707.55,228.76,707.75 C228.85,707.5,229.11,707.13,229.21,707.13 C229.26,707.13,229.28,707.16,229.28,707.17 C229.3,707.19,229.4,707.57,229.45,707.78 L229.64,708.55 C229.68,708.72,229.73,708.89,229.77,709.05 C229.88,709.5,229.89,709.52,230.46,709.53 C230.51,709.53,230.62,709.54,230.62,709.73 C230.62,709.8,230.57,709.84,230.49,709.84 C230.26,709.84,229.67,709.81,229.44,709.81 C229.13,709.81,228.35,709.84,228.04,709.84 C227.96,709.84,227.84,709.84,227.84,709.64 C227.84,709.53,227.92,709.53,228.13,709.53 C228.15,709.53,228.43,709.53,228.66,709.51 C228.92,709.48,228.97,709.45,228.97,709.32 C228.97,709.23,228.86,708.79,228.76,708.42 C228.48,707.32,227.19,707.21,226.84,707.21 C225.88,707.21,224.84,707.78,224.84,709.3 C224.84,709.61,224.94,711.26,225.98,712.55 C226.52,713.23,227.49,713.84,228.47,713.84 C229.49,713.84,230.08,713.07,230.08,711.91 C230.08,711.52,230.05,711.51,230.05,711.41 C230.05,711.31,230.16,711.31,230.2,711.31 C230.33,711.31,230.33,711.33,230.38,711.51 Z " />
+   d="M 231,714.05 L 231,714.05 L 231,714.05 L 231,714.06 L 231,714.06 L 231,714.06 L 231,714.07 L 231,714.07 L 231,714.07 L 231,714.08 L 231,714.08 L 230.99,714.09 L 230.99,714.09 L 230.99,714.1 L 230.99,714.1 L 230.99,714.1 L 230.98,714.11 L 230.98,714.11 L 230.98,714.12 L 230.97,714.12 L 230.97,714.12 L 230.96,714.13 L 230.96,714.13 L 230.95,714.13 L 230.95,714.13 L 230.94,714.14 L 230.94,714.14 L 230.94,714.14 L 230.93,714.14 L 230.93,714.14 L 230.93,714.14 L 230.92,714.14 L 230.92,714.14 L 230.92,714.14 L 230.91,714.14 L 230.91,714.15 L 230.91,714.15 L 230.9,714.15 L 230.9,714.15 L 230.89,714.15 C 230.87,714.15 230.85,714.14 230.74,714.03 L 230.05,713.26 C 229.96,713.4 229.5,714.15 228.39,714.15 C 226.17,714.15 223.93,711.94 223.93,709.63 C 223.93,708.05 225.04,706.9 226.65,706.9 C 227.09,706.9 227.54,706.99 227.9,707.14 C 228.39,707.34 228.58,707.55 228.76,707.75 C 228.85,707.5 229.11,707.13 229.21,707.13 C 229.26,707.13 229.28,707.16 229.28,707.17 C 229.3,707.19 229.4,707.57 229.45,707.78 L 229.64,708.55 C 229.68,708.72 229.73,708.89 229.77,709.05 C 229.88,709.5 229.89,709.52 230.46,709.53 C 230.51,709.53 230.62,709.54 230.62,709.73 C 230.62,709.8 230.57,709.84 230.49,709.84 C 230.26,709.84 229.67,709.81 229.44,709.81 C 229.13,709.81 228.35,709.84 228.04,709.84 C 227.96,709.84 227.84,709.84 227.84,709.64 C 227.84,709.53 227.92,709.53 228.13,709.53 C 228.15,709.53 228.43,709.53 228.66,709.51 C 228.92,709.48 228.97,709.45 228.97,709.32 C 228.97,709.23 228.86,708.79 228.76,708.42 C 228.48,707.32 227.19,707.21 226.84,707.21 C 225.88,707.21 224.84,707.78 224.84,709.3 C 224.84,709.61 224.94,711.26 225.98,712.55 C 226.52,713.23 227.49,713.84 228.47,713.84 C 229.49,713.84 230.08,713.07 230.08,711.91 C 230.08,711.52 230.05,711.51 230.05,711.41 C 230.05,711.31 230.16,711.31 230.2,711.31 C 230.33,711.31 230.33,711.33 230.38,711.51 L 231,714.05 z"
+   style="fill:#000000;stroke-width:0" />
 <path
    id="path4069"
-   fill="black"
-   stroke-width="0"
-   d="M234.78,706.9 H234.55 C234.53,706.75,234.46,706.33,234.37,706.27 C234.31,706.22,233.77,706.22,233.68,706.22 H232.39 C233.12,706.87,233.37,707.07,233.79,707.39 C234.3,707.81,234.78,708.24,234.78,708.9 C234.78,709.74,234.04,710.26,233.15,710.26 C232.29,710.26,231.7,709.65,231.7,709.01 C231.7,708.66,232,708.62,232.07,708.62 C232.24,708.62,232.44,708.74,232.44,708.99 C232.44,709.12,232.39,709.36,232.03,709.36 C232.25,709.86,232.72,710.01,233.05,710.01 C233.74,710.01,234.11,709.47,234.11,708.9 C234.11,708.29,233.68,707.81,233.45,707.56 L231.77,705.9 C231.7,705.84,231.7,705.83,231.7,705.63 H234.57 Z " />
+   d="M 234.78,706.9 L 234.55,706.9 C 234.53,706.75 234.46,706.33 234.37,706.27 C 234.31,706.22 233.77,706.22 233.68,706.22 L 232.39,706.22 C 233.12,706.87 233.37,707.07 233.79,707.39 C 234.3,707.81 234.78,708.24 234.78,708.9 C 234.78,709.74 234.04,710.26 233.15,710.26 C 232.29,710.26 231.7,709.65 231.7,709.01 C 231.7,708.66 232,708.62 232.07,708.62 C 232.24,708.62 232.44,708.74 232.44,708.99 C 232.44,709.12 232.39,709.36 232.03,709.36 C 232.25,709.86 232.72,710.01 233.05,710.01 C 233.74,710.01 234.11,709.47 234.11,708.9 C 234.11,708.29 233.68,707.81 233.45,707.56 L 231.77,705.9 C 231.7,705.84 231.7,705.83 231.7,705.63 L 234.57,705.63 L 234.78,706.9 z"
+   style="fill:#000000;stroke-width:0" />
 </g>    <path
        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.20000005;stroke-linecap:butt;stroke-linejoin:miter;marker-start:none;marker-end:url(#Arrow2Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="M 280,348.36218 L 217,421.36218"
@@ -269,7 +264,7 @@
        transform="matrix(0.8990258,0,0,1.0011398,112.40916,311.68956)" />
     <path
        sodipodi:type="arc"
-       style="fill:#000000;fill-opacity:0.39484978;stroke:#000000;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;opacity:1"
+       style="opacity:1;fill:#000000;fill-opacity:0.39484977;stroke:#000000;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="path6719"
        sodipodi:cx="370"
        sodipodi:cy="317.36218"
@@ -279,7 +274,7 @@
        transform="matrix(0.8990258,0,0,1.0011398,-147.68826,483.58698)" />
     <path
        sodipodi:type="arc"
-       style="fill:#000000;fill-opacity:0.39484978;stroke:#000000;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#000000;fill-opacity:0.39484977;stroke:#000000;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="path6727"
        sodipodi:cx="370"
        sodipodi:cy="317.36218"
@@ -424,7 +419,7 @@
        d="M 446,502.83195 L 446,580.36218"
        id="path7165" />
     <path
-       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.2;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none;marker-end:url(#Arrow2Lend)"
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.20000005;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow2Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="M 348,348.36218 L 418,421.36218"
        id="path7171" />
     <path
@@ -436,7 +431,7 @@
        d="M 446,674.36218 L 446,751.89241"
        id="path7696" />
     <rect
-       style="opacity:1;fill:none;fill-opacity:0.39484976999999999;stroke:#000000;stroke-width:2.20000004999999987;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="opacity:1;fill:none;fill-opacity:0.39484977;stroke:#000000;stroke-width:2.20000005;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect7698"
        width="150"
        height="320"
@@ -480,7 +475,7 @@
          style="font-size:32px;font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#ff0000;font-family:URW Chancery L;-inkscape-font-specification:URW Chancery L Bold Italic">global</tspan><tspan
          sodipodi:role="line"
          x="72.519302"
-         y="547.25299"
+         y="547.25293"
          style="font-size:32px;font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#ff0000;font-family:URW Chancery L;-inkscape-font-specification:URW Chancery L Bold Italic"
          id="tspan2559">menu</tspan></text>
     <text
@@ -519,12 +514,12 @@
     <flowRoot
        xml:space="preserve"
        id="flowRoot2577"
-       style="fill:black;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;font-family:Bitstream Vera Sans;font-style:normal;font-weight:normal;font-size:40px"><flowRegion
+       style="font-size:40px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"><flowRegion
          id="flowRegion2579"><rect
            id="rect2581"
            width="91"
            height="41"
            x="217"
            y="414.36218" /></flowRegion><flowPara
-         id="flowPara2583"></flowPara></flowRoot>  </g>
+         id="flowPara2583" /></flowRoot>  </g>
 </svg>
