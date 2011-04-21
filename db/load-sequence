@@ -25,7 +25,6 @@ import math
 import random
 import pickle
 
-import config
 import interface
 
 # global options
