@@ -58,7 +58,7 @@ void hdb_set_error_file_pointer(FILE* error_file_pointer)
         _error_file_pointer = error_file_pointer;
 }
 
-int hdb_open(DB** _dbp, const char* db_name)
+int hdb_open(DB** _dbp, const char* db_file_name, const char* db_name)
 {
         DB* dbp;
         int ret;
@@ -77,18 +77,21 @@ int hdb_open(DB** _dbp, const char* db_name)
 
         open_flags = DB_CREATE;
 
+        /* page size in bytes */
         dbp->set_pagesize(dbp, HUMANDB_PAGE_SIZE);
-        dbp->set_re_len(dbp, HUMANDB_PAGE_SIZE);
-        ret = dbp->open(dbp,        /* Pointer to the database */
-                        NULL,       /* Txn pointer */
-                        db_name,    /* File name */
-                        NULL,       /* Logical db name */
-                        DB_RECNO,   /* Database type (using recno) */
-                        open_flags, /* Open flags */
-                        0);         /* File mode. Using defaults */
+        /* record length in bytes */
+        dbp->set_re_len(dbp, HUMANDB_RECORD_LENGTH);
+        dbp->set_re_pad(dbp, '\0');
+        ret = dbp->open(dbp,          /* Pointer to the database */
+                        NULL,         /* Txn pointer */
+                        db_file_name, /* File name */
+                        db_name,      /* Logical db name */
+                        DB_RECNO,     /* Database type (using recno) */
+                        open_flags,   /* Open flags */
+                        0);           /* File mode. Using defaults */
 
         if (ret != 0) {
-                dbp->err(dbp, ret, "Database '%s' open failed.", db_name);
+                dbp->err(dbp, ret, "Database '%s:%s' open failed.", db_file_name, db_name);
                 return ret;
         }
 
@@ -127,8 +130,13 @@ int hdb_load_maf(DB *dbp, const char* maf)
                 return -1;
         }
 
+        db_recno_t page = 1;
         while (fgets(buf, HUMANDB_NUCLEOTIDES_PER_PAGE+1, ifp) != NULL) {
-                db_recno_t page = (db_recno_t)ftell(ifp)/HUMANDB_NUCLEOTIDES_PER_PAGE;
+                size_t len = strlen(buf);
+
+                if (buf[len-1] == '\n') {
+                        len--;
+                }
 
                 memset(&key,  0, sizeof(DBT));
                 memset(&data, 0, sizeof(DBT));
@@ -137,13 +145,14 @@ int hdb_load_maf(DB *dbp, const char* maf)
                 key.size  = sizeof(db_recno_t);
 
                 data.data = buf;
-                data.size = strlen(buf);
+                data.size = len;
 
                 ret = dbp->put(dbp, 0, &key, &data, 0);
                 if (ret != 0) {
                         dbp->err(dbp, ret, "Error inserting: '%s'", buf);
                         return ret;
                 }
+                page++;
         }
 
         dbp->sync(dbp, 0);
@@ -176,8 +185,7 @@ int hdb_get_sequence(DB *dbp, long pos_from, long pos_to, char* buf)
                 ret = dbp->get(dbp, NULL, &key, &data, 0);
 
                 if (ret != 0) {
-                        dbp->err(dbp, ret, "Error retrieving page '%d'", i_page);
-                        return ret;
+                        return 0;
                 }
                 
                 if (i_page == from_page) {
@@ -187,12 +195,13 @@ int hdb_get_sequence(DB *dbp, long pos_from, long pos_to, char* buf)
                         i_page_offset = 0;
                 }
                 for(;
-                    (i_page <  to_page && i_page_offset <  HUMANDB_NUCLEOTIDES_PER_PAGE) ||
-                            (i_page == to_page && i_page_offset <= to_page_offset);
+                    (i_page <  to_page && i_page_offset <  data.size) ||
+                    (i_page == to_page && i_page_offset <= to_page_offset);
                     i_page_offset++) {
                         buf[pos++] = ((char *)data.data)[i_page_offset];
                 }
         }
+        buf[pos] = '\0';
 
         return 0;
 }

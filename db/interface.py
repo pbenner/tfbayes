@@ -125,9 +125,10 @@ def hdb_init(program_name):
 def hdb_free():
      _lib._hdb_free()
 
-def hdb_open(db_name):
-     c_db_name = c_char_p(db_name)
-     return _lib._hdb_open(c_db_name)
+def hdb_open(db_file_name, db_name):
+     c_db_file_name = c_char_p(db_file_name)
+     c_db_name      = c_char_p(db_name)
+     return _lib._hdb_open(c_db_file_name, c_db_name)
 
 def hdb_close(dbp):
      _lib._hdb_close(dbp)

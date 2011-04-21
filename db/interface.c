@@ -48,11 +48,11 @@ void _hdb_free()
         hdb_free_program_name();
 }
 
-DB* _hdb_open(const char* db_name)
+DB* _hdb_open(const char* db_file_name, const char* db_name)
 {
         DB* dbp;
 
-        hdb_open(&dbp, db_name);
+        hdb_open(&dbp, db_file_name, db_name);
 
         return dbp;
 }
@@ -68,5 +68,5 @@ void _hdb_load_maf(DB* dbp, const char* maf)
 }
 
 void _hdb_get_sequence(DB* dbp, size_t pos, size_t n_nucleotides, char* buf) {
-        hdb_get_sequence(dbp, pos, pos+n_nucleotides, buf);
+        hdb_get_sequence(dbp, pos, pos+n_nucleotides-1, buf);
 }
