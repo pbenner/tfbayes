@@ -68,5 +68,6 @@ void _hdb_load_maf(DB* dbp, const char* maf)
 }
 
 void _hdb_get_sequence(DB* dbp, size_t pos, size_t n_nucleotides, char* buf) {
+        memset(buf, 0, n_nucleotides);
         hdb_get_sequence(dbp, pos, pos+n_nucleotides-1, buf);
 }
