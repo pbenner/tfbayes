@@ -247,33 +247,36 @@ err:
 }
 
 typedef struct {
-        DB* dba;
+        DB* dbp;
         const char* pattern;
         int pattern_n;
         int thread_id;
 } pthread_data;
 
-void* hdb_search_thread(void* data_)
+static void* hdb_search_thread(void* data_)
 {
         pthread_data* data  = (pthread_data*)data_;
-        DB* dba             = data->dba;
+        DB* dbp             = data->dbp;
         const char* pattern = data->pattern;
         int pattern_n       = data->pattern_n;
         int thread_id       = data->thread_id;
+        char buf[HUMANDB_RECORD_LENGTH+1];
 
-        printf("Hello %d\n", thread_id);
+        hdb_get_sequence_pure(dbp, 0, HUMANDB_RECORD_LENGTH, buf);
+
+        printf("%d: %s\n", thread_id, buf);
 
         return NULL;
 }
 
-int hdb_search(DB* dba[], int dba_n, const char* pattern, int pattern_n)
+int hdb_search(DB* dbp_list[], int dbp_list_n, const char* pattern, int pattern_n)
 {
-        pthread_t threads[dba_n];
-        pthread_data data[dba_n];
+        pthread_t threads[dbp_list_n];
+        pthread_data data[dbp_list_n];
         int i, rc;
 
-        for (i = 0; i < dba_n; i++) {
-                data[i].dba       = dba[i];
+        for (i = 0; i < dbp_list_n; i++) {
+                data[i].dbp       = dbp_list[i];
                 data[i].pattern   = pattern;
                 data[i].pattern_n = pattern_n;
                 data[i].thread_id = i;
@@ -282,7 +285,7 @@ int hdb_search(DB* dba[], int dba_n, const char* pattern, int pattern_n)
                         std_err(NONE, "Couldn't create thread.");
                 }
         }
-        for (i = 0; i < dba_n; i++) {
+        for (i = 0; i < dbp_list_n; i++) {
                 rc = pthread_join(threads[i], NULL);
                 if (rc) {
                         std_err(NONE, "Couldn't join thread.");

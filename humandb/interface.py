@@ -56,12 +56,6 @@ class MATRIX(Structure):
 # function prototypes
 # ------------------------------------------------------------------------------
 
-_lib._hdb_alloc_dbp_array.restype  = POINTER(POINTER(None))
-_lib._hdb_alloc_dbp_array.argtypes = [c_int]
-
-_lib._hdb_set_dbp_array.restype  = POINTER(POINTER(None))
-_lib._hdb_set_dbp_array.argtypes = [POINTER(POINTER(None)), c_int, POINTER(None)]
-
 _lib._allocVector.restype       = POINTER(VECTOR)
 _lib._allocVector.argtypes      = [c_int]
 
@@ -100,10 +94,6 @@ _lib._hdb_search.argtypes       = [POINTER(POINTER(None)), c_int, c_char_p]
 
 # convert datatypes
 # ------------------------------------------------------------------------------
-
-def copyToDBPArray(dbp, c_dbp, size):
-     for i in range(0, size):
-          _lib._hdb_set_dbp_array(c_dbp, c_int(i), dbp[i])
 
 def copyVectorToC(v, c_v):
      for i in range(0, c_v.contents.size):
@@ -165,9 +155,10 @@ def hdb_get_sequence_pure(dbp, pos, num):
      return c_buf.value
 
 def hdb_search(dbp_list, sequence):
-     c_dbp_list_n = c_int(len(dbp_list))
-     c_dbp_list   = _lib._hdb_alloc_dbp_array(c_dbp_list_n)
-     copyToDBPArray(dbp_list, c_dbp_list, len(dbp_list))
+     dbp_list_n   = len(dbp_list)
+     c_dbp_list_n = c_int(dbp_list_n)
+     c_dbp_list   = (c_void_p*dbp_list_n)()
+     for i in range(0, dbp_list_n):
+          c_dbp_list[i] = dbp_list[i]
      c_sequence   = c_char_p(sequence)
      _lib._hdb_search(c_dbp_list, c_dbp_list_n, c_sequence)
-     _lib.free(c_dbp_list)

@@ -75,16 +75,6 @@ void _hdb_get_sequence_pure(DB* dbp, size_t pos, size_t n_nucleotides, char* buf
         hdb_get_sequence_pure(dbp, pos, n_nucleotides, buf);
 }
 
-DB** _hdb_alloc_dbp_array(int n)
-{
-        return (DB**)malloc(n*sizeof(DB*));
-}
-
-void _hdb_set_dbp_array(DB** dbp_list, int i, DB* dbp)
-{
-        dbp_list[i] = dbp;
-}
-
 void _hdb_search(DB* dbp_list[], size_t dbp_list_n, char* sequence) {
         int sequence_n = strlen(sequence);
         hdb_search(dbp_list, dbp_list_n, sequence, sequence_n);
