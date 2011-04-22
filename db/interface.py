@@ -143,3 +143,10 @@ def hdb_get_sequence(dbp, pos, num):
      c_num = c_int(num)
      _lib._hdb_get_sequence(dbp, c_pos, c_num, c_buf)
      return c_buf.value
+
+def hdb_get_sequence_pure(dbp, pos, num):
+     c_buf = c_char_p(''.join([ str(0) for i in range(0, num) ]))
+     c_pos = c_int(pos)
+     c_num = c_int(num)
+     _lib._hdb_get_sequence_pure(dbp, c_pos, c_num, c_buf)
+     return c_buf.value

@@ -116,7 +116,7 @@ int hdb_close(DB* dbp)
 int hdb_load_maf(DB *dbp, const char* maf)
 {
         DBT key, data;
-        char buf[HUMANDB_NUCLEOTIDES_PER_PAGE+1];
+        char buf[HUMANDB_RECORD_LENGTH+1];
         int ret;
 
         if (num_records(dbp) > 0) {
@@ -131,7 +131,7 @@ int hdb_load_maf(DB *dbp, const char* maf)
         }
 
         db_recno_t page = 1;
-        while (fgets(buf, HUMANDB_NUCLEOTIDES_PER_PAGE+1, ifp) != NULL) {
+        while (fgets(buf, HUMANDB_RECORD_LENGTH+1, ifp) != NULL) {
                 size_t len = strlen(buf);
 
                 if (buf[len-1] == '\n') {
@@ -160,48 +160,85 @@ int hdb_load_maf(DB *dbp, const char* maf)
         return 0;
 }
 
-int hdb_get_sequence(DB *dbp, long pos_from, long pos_to, char* buf)
+int hdb_get_sequence(DB *dbp, long pos_from, long n_nucleotides, char* buf)
 {
         DBT key, data;
         long pos;
         db_recno_t from_page, from_page_offset; 
-        db_recno_t to_page, to_page_offset;
         db_recno_t i_page, i_page_offset;
-        int ret;
 
         memset(&key,  0, sizeof(DBT));
         memset(&data, 0, sizeof(DBT));
 
         /* logical record numbers start at 1 */
-        from_page        = pos_from/HUMANDB_NUCLEOTIDES_PER_PAGE + 1;
-        from_page_offset = pos_from%HUMANDB_NUCLEOTIDES_PER_PAGE;
-        to_page          = pos_to  /HUMANDB_NUCLEOTIDES_PER_PAGE + 1;
-        to_page_offset   = pos_to  %HUMANDB_NUCLEOTIDES_PER_PAGE;
+        from_page        = pos_from/HUMANDB_RECORD_LENGTH + 1;
+        from_page_offset = pos_from%HUMANDB_RECORD_LENGTH;
 
-        pos = 0;
-        for(i_page = from_page; i_page <= to_page; i_page++) {
+        /* loop through the database */
+        pos           = 0;
+        i_page_offset = from_page_offset;
+        for(i_page = from_page; pos < n_nucleotides; i_page++) {
+                /* initialize key */
                 key.data = &i_page;
                 key.size = sizeof(db_recno_t);
-                ret = dbp->get(dbp, NULL, &key, &data, 0);
 
-                if (ret != 0) {
-                        return 0;
+                /* retreive the next page */
+                if (dbp->get(dbp, NULL, &key, &data, 0) != 0) {
+                        goto err;
                 }
-                
-                if (i_page == from_page) {
-                        i_page_offset = from_page_offset;
+
+                while (pos < n_nucleotides && i_page_offset < data.size)
+                {
+                        buf[pos++] = ((char *)data.data)[i_page_offset++];
                 }
-                else {
-                        i_page_offset = 0;
-                }
-                for(;
-                    (i_page <  to_page && i_page_offset <  data.size) ||
-                    (i_page == to_page && i_page_offset <= to_page_offset);
-                    i_page_offset++) {
-                        buf[pos++] = ((char *)data.data)[i_page_offset];
-                }
+                /* reset pointer */
+                i_page_offset = 0;
         }
+err:
         buf[pos] = '\0';
+        return 0;
+}
 
+int hdb_get_sequence_pure(DB *dbp, long pos_from, long n_nucleotides, char* buf)
+{
+        DBT key, data;
+        long pos;
+        db_recno_t from_page, from_page_offset; 
+        db_recno_t i_page, i_page_offset;
+
+        memset(&key,  0, sizeof(DBT));
+        memset(&data, 0, sizeof(DBT));
+
+        /* logical record numbers start at 1 */
+        from_page        = pos_from/HUMANDB_RECORD_LENGTH + 1;
+        from_page_offset = pos_from%HUMANDB_RECORD_LENGTH;
+
+        /* loop through the database */
+        pos           = 0;
+        i_page_offset = from_page_offset;
+        for(i_page = from_page; pos < n_nucleotides; i_page++) {
+                /* initialize key */
+                key.data = &i_page;
+                key.size = sizeof(db_recno_t);
+
+                /* retreive the next page */
+                if (dbp->get(dbp, NULL, &key, &data, 0) != 0) {
+                        goto err;
+                }
+
+                while (pos < n_nucleotides && i_page_offset < data.size)
+                {
+                        if (is_nucleotide(((char *)data.data)[i_page_offset])) {
+                                buf[pos++] = ((char *)data.data)[i_page_offset++];
+                        }
+                        else {
+                                i_page_offset++;
+                        }
+                }
+                /* reset pointer */
+                i_page_offset = 0;
+        }
+err:
+        buf[pos] = '\0';
         return 0;
 }

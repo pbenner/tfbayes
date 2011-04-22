@@ -28,7 +28,6 @@
 
 #define HUMANDB_PAGE_SIZE 1024
 #define HUMANDB_RECORD_LENGTH 128
-#define HUMANDB_NUCLEOTIDES_PER_PAGE 128
 
 void hdb_set_program_name(const char* program_name);
 void hdb_free_program_name();
@@ -37,5 +36,17 @@ int  hdb_open(DB** _dbp, const char* db_file_name, const char* db_name);
 int  hdb_close(DB* dbp);
 int  hdb_load_maf(DB *dbp, const char* maf);
 int  hdb_get_sequence(DB *dbp, long pos_from, long pos_to, char* buf);
+int  hdb_get_sequence_pure(DB *dbp, long pos_from, long n_nucleotides, char* buf);
+
+static inline
+int is_nucleotide(char S) {
+        if (S == 'A' || S == 'C' || S == 'G' || S == 'T' ||
+            S == 'a' || S == 'c' || S == 'g' || S == 't') {
+                return 1;
+        }
+        else {
+                return 0;
+        }
+}
 
 #endif /* HUMANDB_H */
