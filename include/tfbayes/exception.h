@@ -74,44 +74,6 @@ __attribute__ ((format(printf,2,0), noreturn));
 #  define print_debug(fmt, args...)
 #endif
 
-#ifdef SYSLOG
-static int use_syslog = 0;
-
-#  define err(mode, fmt, args...)		\
-	if(use_syslog == 0) {			\
-		std_err(mode, fmt, ## args);	\
-	} else {				\
-		log_err(mode, fmt, ## args);	\
-	}
-
-#  define warn(mode, fmt, args...)		\
-	if(use_syslog == 0) {			\
-		std_warn(mode, fmt, ## args);	\
-	} else {				\
-		log_warn(mode, fmt, ## args);	\
-	}
-
-#  define notice(mode, fmt, args...)		\
-        if(verbose == 1) {                      \
-                if(use_syslog == 0) {           \
-                        std_notice(mode, fmt, ## args);	\
-                } else {				\
-                        log_notice(mode, fmt, ## args);	\
-                }                                       \
-        }
-
-#else
-
-#  define err(mode, fmt, args...) std_err(mode, fmt, ## args);
-#  define warn(mode, fmt, args...) std_warn(mode, fmt, ## args);
-#  define notice(mode, fmt, args...)            \
-        if(verbose == 1) {                      \
-                std_notice(mode, fmt, ## args); \
-        }
-
-#endif
-
-
 /* do exit(EXIT_CODE); for *_err functions*/
 
 #define EXIT_CODE(a)	(a<<2)

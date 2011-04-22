@@ -12,7 +12,7 @@ libhumandb_la_LDFLAGS = -no-undefined -version-info 0:0:0
 pkgpythondir = $(pyexecdir)/humandb
 
 ## compile python files
-pkgpython_PYTHON = __init__.py hdb_load_seq.py hdb_read_seq.py interface.py
+pkgpython_PYTHON = __init__.py hdb_load_seq.py hdb_read_seq.py hdb_search_seq.py config.py interface.py
 
 ## clean python files
 clean-local:

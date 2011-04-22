@@ -56,6 +56,12 @@ class MATRIX(Structure):
 # function prototypes
 # ------------------------------------------------------------------------------
 
+_lib._hdb_alloc_dbp_array.restype  = POINTER(POINTER(None))
+_lib._hdb_alloc_dbp_array.argtypes = [c_int]
+
+_lib._hdb_set_dbp_array.restype  = POINTER(POINTER(None))
+_lib._hdb_set_dbp_array.argtypes = [POINTER(POINTER(None)), c_int, POINTER(None)]
+
 _lib._allocVector.restype       = POINTER(VECTOR)
 _lib._allocVector.argtypes      = [c_int]
 
@@ -89,8 +95,15 @@ _lib._hdb_load_maf.argtypes     = [POINTER(None), c_char_p]
 _lib._hdb_get_sequence.restype  = None
 _lib._hdb_get_sequence.argtypes = [POINTER(None), c_int, c_int, c_char_p]
 
+_lib._hdb_search.restype        = None
+_lib._hdb_search.argtypes       = [POINTER(POINTER(None)), c_int, c_char_p]
+
 # convert datatypes
 # ------------------------------------------------------------------------------
+
+def copyToDBPArray(dbp, c_dbp, size):
+     for i in range(0, size):
+          _lib._hdb_set_dbp_array(c_dbp, c_int(i), dbp[i])
 
 def copyVectorToC(v, c_v):
      for i in range(0, c_v.contents.size):
@@ -138,15 +151,23 @@ def hdb_load_maf(dbp, maf):
      _lib._hdb_load_maf(dbp, c_maf)
 
 def hdb_get_sequence(dbp, pos, num):
-     c_buf = c_char_p(''.join([ str(0) for i in range(0, num) ]))
+     c_buf = create_string_buffer(num)
      c_pos = c_int(pos)
      c_num = c_int(num)
      _lib._hdb_get_sequence(dbp, c_pos, c_num, c_buf)
      return c_buf.value
 
 def hdb_get_sequence_pure(dbp, pos, num):
-     c_buf = c_char_p(''.join([ str(0) for i in range(0, num) ]))
+     c_buf = create_string_buffer(num)
      c_pos = c_int(pos)
      c_num = c_int(num)
      _lib._hdb_get_sequence_pure(dbp, c_pos, c_num, c_buf)
      return c_buf.value
+
+def hdb_search(dbp_list, sequence):
+     c_dbp_list_n = c_int(len(dbp_list))
+     c_dbp_list   = _lib._hdb_alloc_dbp_array(c_dbp_list_n)
+     copyToDBPArray(dbp_list, c_dbp_list, len(dbp_list))
+     c_sequence   = c_char_p(sequence)
+     _lib._hdb_search(c_dbp_list, c_dbp_list_n, c_sequence)
+     _lib.free(c_dbp_list)

@@ -38,7 +38,7 @@ verbose = False
 def usage():
     """Print usage."""
     print
-    print "read-sequence [option]... DATABASE_CONFIG SEQUENCE_NUMBER POSITION NUCLEOTIDES"
+    print "hdb-read-seq [option]... DATABASE_CONFIG SEQUENCE_NUMBER POSITION NUCLEOTIDES"
     print
     print "Options:"
     print "   -p, --pure                     - strip all alignment specific characters"
@@ -73,7 +73,7 @@ def loadConfig(config_file, seq, pos, num):
     if not int(seq) > 0 and int(seq) > database['sequences']:
         raise IOError("Invalid sequence number.")
 
-    interface.hdb_init('load-sequence')
+    interface.hdb_init('hdb-read-seq')
     dbp = interface.hdb_open(database['database'], seq)
     if options['pure']:
         print interface.hdb_get_sequence_pure(dbp, pos, num)

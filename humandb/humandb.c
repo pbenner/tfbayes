@@ -23,7 +23,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pthread.h>
 #include <db.h>
+
+#include <tfbayes/exception.h>
 
 #include "humandb.h"
 
@@ -164,35 +167,35 @@ int hdb_get_sequence(DB *dbp, long pos_from, long n_nucleotides, char* buf)
 {
         DBT key, data;
         long pos;
-        db_recno_t from_page, from_page_offset; 
-        db_recno_t i_page, i_page_offset;
+        db_recno_t from_rec, from_rec_offset; 
+        db_recno_t i_rec, i_rec_offset;
 
         memset(&key,  0, sizeof(DBT));
         memset(&data, 0, sizeof(DBT));
 
         /* logical record numbers start at 1 */
-        from_page        = pos_from/HUMANDB_RECORD_LENGTH + 1;
-        from_page_offset = pos_from%HUMANDB_RECORD_LENGTH;
+        from_rec        = pos_from/HUMANDB_RECORD_LENGTH + 1;
+        from_rec_offset = pos_from%HUMANDB_RECORD_LENGTH;
 
         /* loop through the database */
-        pos           = 0;
-        i_page_offset = from_page_offset;
-        for(i_page = from_page; pos < n_nucleotides; i_page++) {
+        pos          = 0;
+        i_rec_offset = from_rec_offset;
+        for(i_rec = from_rec; pos < n_nucleotides; i_rec++) {
                 /* initialize key */
-                key.data = &i_page;
+                key.data = &i_rec;
                 key.size = sizeof(db_recno_t);
 
-                /* retreive the next page */
+                /* retreive the next rec */
                 if (dbp->get(dbp, NULL, &key, &data, 0) != 0) {
                         goto err;
                 }
 
-                while (pos < n_nucleotides && i_page_offset < data.size)
+                while (pos < n_nucleotides && i_rec_offset < data.size)
                 {
-                        buf[pos++] = ((char *)data.data)[i_page_offset++];
+                        buf[pos++] = ((char *)data.data)[i_rec_offset++];
                 }
                 /* reset pointer */
-                i_page_offset = 0;
+                i_rec_offset = 0;
         }
 err:
         buf[pos] = '\0';
@@ -203,42 +206,88 @@ int hdb_get_sequence_pure(DB *dbp, long pos_from, long n_nucleotides, char* buf)
 {
         DBT key, data;
         long pos;
-        db_recno_t from_page, from_page_offset; 
-        db_recno_t i_page, i_page_offset;
+        db_recno_t from_rec, from_rec_offset; 
+        db_recno_t i_rec, i_rec_offset;
 
         memset(&key,  0, sizeof(DBT));
         memset(&data, 0, sizeof(DBT));
 
         /* logical record numbers start at 1 */
-        from_page        = pos_from/HUMANDB_RECORD_LENGTH + 1;
-        from_page_offset = pos_from%HUMANDB_RECORD_LENGTH;
+        from_rec        = pos_from/HUMANDB_RECORD_LENGTH + 1;
+        from_rec_offset = pos_from%HUMANDB_RECORD_LENGTH;
 
         /* loop through the database */
-        pos           = 0;
-        i_page_offset = from_page_offset;
-        for(i_page = from_page; pos < n_nucleotides; i_page++) {
+        pos          = 0;
+        i_rec_offset = from_rec_offset;
+        for(i_rec = from_rec; pos < n_nucleotides; i_rec++) {
                 /* initialize key */
-                key.data = &i_page;
+                key.data = &i_rec;
                 key.size = sizeof(db_recno_t);
 
-                /* retreive the next page */
+                /* retreive the next rec */
                 if (dbp->get(dbp, NULL, &key, &data, 0) != 0) {
                         goto err;
                 }
 
-                while (pos < n_nucleotides && i_page_offset < data.size)
+                while (pos < n_nucleotides && i_rec_offset < data.size)
                 {
-                        if (is_nucleotide(((char *)data.data)[i_page_offset])) {
-                                buf[pos++] = ((char *)data.data)[i_page_offset++];
+                        if (is_nucleotide(((char *)data.data)[i_rec_offset])) {
+                                buf[pos++] = ((char *)data.data)[i_rec_offset++];
                         }
                         else {
-                                i_page_offset++;
+                                i_rec_offset++;
                         }
                 }
                 /* reset pointer */
-                i_page_offset = 0;
+                i_rec_offset = 0;
         }
 err:
         buf[pos] = '\0';
+        return 0;
+}
+
+typedef struct {
+        DB* dba;
+        const char* pattern;
+        int pattern_n;
+        int thread_id;
+} pthread_data;
+
+void* hdb_search_thread(void* data_)
+{
+        pthread_data* data  = (pthread_data*)data_;
+        DB* dba             = data->dba;
+        const char* pattern = data->pattern;
+        int pattern_n       = data->pattern_n;
+        int thread_id       = data->thread_id;
+
+        printf("Hello %d\n", thread_id);
+
+        return NULL;
+}
+
+int hdb_search(DB* dba[], int dba_n, const char* pattern, int pattern_n)
+{
+        pthread_t threads[dba_n];
+        pthread_data data[dba_n];
+        int i, rc;
+
+        for (i = 0; i < dba_n; i++) {
+                data[i].dba       = dba[i];
+                data[i].pattern   = pattern;
+                data[i].pattern_n = pattern_n;
+                data[i].thread_id = i;
+                rc = pthread_create(&threads[i], NULL, hdb_search_thread, (void *)&data[i]);
+                if (rc) {
+                        std_err(NONE, "Couldn't create thread.");
+                }
+        }
+        for (i = 0; i < dba_n; i++) {
+                rc = pthread_join(threads[i], NULL);
+                if (rc) {
+                        std_err(NONE, "Couldn't join thread.");
+                }
+        }
+
         return 0;
 }

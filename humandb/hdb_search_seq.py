@@ -25,6 +25,7 @@ import math
 import random
 import pickle
 
+import humandb.config    as config
 import humandb.interface as interface
 
 # global options
@@ -38,7 +39,7 @@ verbose = False
 def usage():
     """Print usage."""
     print
-    print "hdb-load-seq [option]... DATABASE_CONFIG INPUT_FILE SEQUENCE_NUMBER"
+    print "hdb-search-seq [option]... DATABASE_BUNDLE SEQUENCE SEQUENCE_NUMBER"
     print
     print "Options:"
     print "   -h, --help                     - print help"
@@ -49,46 +50,31 @@ def usage():
 # load results from file
 # ------------------------------------------------------------------------------
 
-def loadConfig(config_file, input_file, seq):
-    global database
-    if os.path.isfile(config_file+'.pkl'):
-        fp = open(config_file+'.pkl', 'r')
-        database = pickle.load(fp)
-        fp.close()
-    else:
-        config_parser = ConfigParser.RawConfigParser()
-        config_parser.read(config_file)
-        if not config_parser.has_section('Database'):
-            raise IOError("Invalid configuration file.")
-        section = 'Database'
-        database['identifier'] = config_parser.get(section, 'identifier')
-        database['database']   = config_parser.get(section, 'database')
-        database['sequences']  = config_parser.get(section, 'sequences')
-        fp = open(config_file+'.pkl', 'wb')
-        pickle.dump(database, fp)
-        fp.close()
+def loadConfig(config_file, sequence, seq_num):
+    config_parser = ConfigParser.RawConfigParser()
+    config_parser.read(config_file)
+    if not config_parser.has_section('Database Bundle'):
+        raise IOError("Invalid configuration file.")
 
-    if not int(seq) > 0 and int(seq) > database['sequences']:
-        raise IOError("Invalid sequence number.")
+    databases = config.readMatrix(config_parser, 'Database Bundle', 'databases', str)
+    dbp_list  = []
 
-    interface.hdb_init('hdb-load-seq')
-    dbp = interface.hdb_open(database['database'], seq)
-    interface.hdb_load_maf(dbp, input_file)
-    interface.hdb_close(dbp)
+    interface.hdb_init('hdb-search-seq')
+    for database_id, database_file in databases:
+        dbp_list.append(interface.hdb_open(database_file, seq_num))
+
+    interface.hdb_search(dbp_list, sequence)
+
+    for dbp in dbp_list:
+        interface.hdb_close(dbp)
+
     interface.hdb_free()
 
 # main
 # ------------------------------------------------------------------------------
 
-database = {
-    'identifier' : None,
-    'basedir'    : None,
-    'db'         : None,
-    'maf'        : None
-    }
-
 options = {
-    'verbose'    : False
+    'verbose'  : False
     }
 
 def main():

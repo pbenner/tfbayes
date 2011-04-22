@@ -35,8 +35,9 @@ void hdb_set_error_file_pointer(FILE* error_file_pointer);
 int  hdb_open(DB** _dbp, const char* db_file_name, const char* db_name);
 int  hdb_close(DB* dbp);
 int  hdb_load_maf(DB *dbp, const char* maf);
-int  hdb_get_sequence(DB *dbp, long pos_from, long pos_to, char* buf);
+int  hdb_get_sequence(DB *dbp, long pos_from, long n_nucleotides, char* buf);
 int  hdb_get_sequence_pure(DB *dbp, long pos_from, long n_nucleotides, char* buf);
+int  hdb_search(DB* dba[], int dba_n, const char* pattern, int pattern_n);
 
 static inline
 int is_nucleotide(char S) {

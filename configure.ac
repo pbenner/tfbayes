@@ -1,4 +1,3 @@
-
 [1]dnl -- configure.ac --
 dnl
 dnl Copyright (C) 2010 Philipp Benner
@@ -89,6 +88,8 @@ AC_CHECK_LIB([gsl], [gsl_blas_dgemm],,
   AC_MSG_ERROR([this library is required]))
 AC_CHECK_LIB([db], [db_env_set_func_exists],,
   AC_MSG_ERROR([this library is required]))
+AC_CHECK_LIB([pthread], [pthread_create],,
+  AC_MSG_ERROR([this library is required]))
 
 dnl ,---------------------------- 
 dnl | GETOPT_LONG
@@ -152,7 +153,7 @@ dnl | HEADERS
 dnl `----------------------------
 
 HEADERS_TO_CHECK="stdarg.h dlfcn.h dirent.h netinet/in.h sys/ioctl.h
-									arpa/inet.h netdb.h syslog.h signal.h"
+									arpa/inet.h netdb.h syslog.h signal.h pthread.h"
 
 AC_CHECK_HEADERS($HEADERS_TO_CHECK,,
 	AC_MSG_ERROR([this header is required]))
