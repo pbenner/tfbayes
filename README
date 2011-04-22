@@ -1,1 +1,15 @@
+- Installation
+--------------------------------------------------------------------------------
 
+autoreconf
+./configure --prefix=$HOME/usr
+
+make install
+
+- Human Upstream Database
+--------------------------------------------------------------------------------
+
+hdb-load-seq upstream5000.hg18.chr1.cfg sequence.tmp 1
+
+hdb-read-seq    upstream5000.hg18.chr1.cfg 1 10 100
+hdb-read-seq -p upstream5000.hg18.chr1.cfg 1 10 100

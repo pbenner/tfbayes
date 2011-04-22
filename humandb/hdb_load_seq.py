@@ -25,7 +25,7 @@ import math
 import random
 import pickle
 
-import interface
+import humandb.interface as interface
 
 # global options
 # ------------------------------------------------------------------------------
@@ -38,11 +38,9 @@ verbose = False
 def usage():
     """Print usage."""
     print
-    print "read-sequence [option]... DATABASE_CONFIG SEQUENCE_NUMBER POSITION NUCLEOTIDES"
+    print "load-sequence [option]... DATABASE_CONFIG INPUT_FILE SEQUENCE_NUMBER"
     print
     print "Options:"
-    print "   -p, --pure                     - strip all alignment specific characters"
-    print
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
     print
@@ -51,7 +49,7 @@ def usage():
 # load results from file
 # ------------------------------------------------------------------------------
 
-def loadConfig(config_file, seq, pos, num):
+def loadConfig(config_file, input_file, seq):
     global database
     if os.path.isfile(config_file+'.pkl'):
         fp = open(config_file+'.pkl', 'r')
@@ -75,10 +73,7 @@ def loadConfig(config_file, seq, pos, num):
 
     interface.hdb_init('load-sequence')
     dbp = interface.hdb_open(database['database'], seq)
-    if options['pure']:
-        print interface.hdb_get_sequence_pure(dbp, pos, num)
-    else:
-        print interface.hdb_get_sequence(dbp, pos, num)
+    interface.hdb_load_maf(dbp, input_file)
     interface.hdb_close(dbp)
     interface.hdb_free()
 
@@ -93,33 +88,30 @@ database = {
     }
 
 options = {
-    'verbose'    : False,
-    'pure'       : False
+    'dbpath'     : None
     }
 
 def main():
     global options
     try:
-        longopts   = ['help', 'verbose']
-        opts, tail = getopt.getopt(sys.argv[1:], "p", longopts)
+        longopts   = ["help", "verbose"]
+        opts, tail = getopt.getopt(sys.argv[1:], "", longopts)
     except getopt.GetoptError:
         usage()
         return 2
     output = None
     for o, a in opts:
-        if o in ('-v', '--verbose'):
-            sys.stderr.write('Verbose mode turned on.\n')
-            options['verbose'] = True
-        if o in ('-h', '--help'):
+        if o in ("-v", "--verbose"):
+            sys.stderr.write("Verbose mode turned on.\n")
+            options["verbose"] = True
+        if o in ("-h", "--help"):
             usage()
             return 0
-        if o in ('-p', '--pure'):
-            options['pure'] = True
-    if len(tail) != 4:
+    if len(tail) != 3:
         usage()
         return 1
-    loadConfig(tail[0], tail[1], int(tail[2]), int(tail[3]))
+    loadConfig(tail[0], tail[1], tail[2])
     return 0
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

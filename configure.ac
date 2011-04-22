@@ -264,7 +264,7 @@ AC_CONFIG_FILES([
 	version.h
 	libexception/Makefile
 	include/Makefile
-	db/Makefile
+	humandb/Makefile
  	])
 
 AC_OUTPUT
