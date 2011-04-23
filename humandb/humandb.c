@@ -61,11 +61,10 @@ void hdb_set_error_file_pointer(FILE* error_file_pointer)
         _error_file_pointer = error_file_pointer;
 }
 
-int hdb_open(DB** _dbp, const char* db_file_name, const char* db_name)
+int hdb_open(DB** _dbp, const char* db_file_name, const char* db_name, u_int32_t open_flags)
 {
         DB* dbp;
         int ret;
-        u_int32_t open_flags;
 
         ret = db_create(&dbp, NULL, 0);
         if (ret != 0) {
@@ -77,8 +76,6 @@ int hdb_open(DB** _dbp, const char* db_file_name, const char* db_name)
         /* Set up error handling for this database */
         dbp->set_errfile(dbp, _error_file_pointer);
         dbp->set_errpfx(dbp, _program_name);
-
-        open_flags = DB_CREATE;
 
         /* page size in bytes */
         dbp->set_pagesize(dbp, HUMANDB_PAGE_SIZE);
@@ -95,6 +92,7 @@ int hdb_open(DB** _dbp, const char* db_file_name, const char* db_name)
 
         if (ret != 0) {
                 dbp->err(dbp, ret, "Database '%s:%s' open failed.", db_file_name, db_name);
+                (*_dbp) = NULL;
                 return ret;
         }
 

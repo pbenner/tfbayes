@@ -32,7 +32,7 @@
 void hdb_set_program_name(const char* program_name);
 void hdb_free_program_name();
 void hdb_set_error_file_pointer(FILE* error_file_pointer);
-int  hdb_open(DB** _dbp, const char* db_file_name, const char* db_name);
+int  hdb_open(DB** _dbp, const char* db_file_name, const char* db_name, u_int32_t open_flags);
 int  hdb_close(DB* dbp);
 int  hdb_load_maf(DB *dbp, const char* maf);
 int  hdb_get_sequence(DB *dbp, long pos_from, long n_nucleotides, char* buf);

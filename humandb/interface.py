@@ -77,8 +77,14 @@ _lib._hdb_init.argtypes         = [c_char_p]
 _lib._hdb_free.restype          = None
 _lib._hdb_free.argtypes         = []
 
+_lib._hdb_create.restype        = POINTER(None)
+_lib._hdb_create.argtypes       = [c_char_p]
+
 _lib._hdb_open.restype          = POINTER(None)
 _lib._hdb_open.argtypes         = [c_char_p]
+
+_lib._hdb_open_ro.restype       = POINTER(None)
+_lib._hdb_open_ro.argtypes      = [c_char_p]
 
 _lib._hdb_close.restype         = None
 _lib._hdb_close.argtypes        = [POINTER(None)]
@@ -128,10 +134,29 @@ def hdb_init(program_name):
 def hdb_free():
      _lib._hdb_free()
 
+def hdb_create(db_file_name, db_name):
+     c_db_file_name = c_char_p(db_file_name)
+     c_db_name      = c_char_p(db_name)
+     ret = _lib._hdb_open_ro(c_db_file_name, c_db_name)
+     if ret == None:
+          raise IOError("Opening database failed.")
+     return ret
+
 def hdb_open(db_file_name, db_name):
      c_db_file_name = c_char_p(db_file_name)
      c_db_name      = c_char_p(db_name)
-     return _lib._hdb_open(c_db_file_name, c_db_name)
+     ret = _lib._hdb_open_ro(c_db_file_name, c_db_name)
+     if ret == None:
+          raise IOError("Opening database failed.")
+     return ret
+
+def hdb_open_ro(db_file_name, db_name):
+     c_db_file_name = c_char_p(db_file_name)
+     c_db_name      = c_char_p(db_name)
+     ret = _lib._hdb_open_ro(c_db_file_name, c_db_name)
+     if ret == None:
+          raise IOError("Opening database failed.")
+     return ret
 
 def hdb_close(dbp):
      _lib._hdb_close(dbp)

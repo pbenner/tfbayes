@@ -48,11 +48,29 @@ void _hdb_free()
         hdb_free_program_name();
 }
 
+DB* _hdb_create(const char* db_file_name, const char* db_name)
+{
+        DB* dbp;
+
+        hdb_open(&dbp, db_file_name, db_name, DB_CREATE);
+
+        return dbp;
+}
+
+DB* _hdb_open_ro(const char* db_file_name, const char* db_name)
+{
+        DB* dbp;
+
+        hdb_open(&dbp, db_file_name, db_name, DB_RDONLY);
+
+        return dbp;
+}
+
 DB* _hdb_open(const char* db_file_name, const char* db_name)
 {
         DB* dbp;
 
-        hdb_open(&dbp, db_file_name, db_name);
+        hdb_open(&dbp, db_file_name, db_name, 0);
 
         return dbp;
 }
