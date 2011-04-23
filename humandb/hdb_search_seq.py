@@ -31,7 +31,9 @@ import humandb.interface as interface
 # global options
 # ------------------------------------------------------------------------------
 
-verbose = False
+options = {
+    'verbose'  : False
+    }
 
 # usage
 # ------------------------------------------------------------------------------
@@ -72,10 +74,6 @@ def loadConfig(config_file, sequence, seq_num):
 
 # main
 # ------------------------------------------------------------------------------
-
-options = {
-    'verbose'  : False
-    }
 
 def main():
     global options

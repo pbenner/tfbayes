@@ -141,14 +141,14 @@ def hdb_load_maf(dbp, maf):
      _lib._hdb_load_maf(dbp, c_maf)
 
 def hdb_get_sequence(dbp, pos, num):
-     c_buf = create_string_buffer(num)
+     c_buf = create_string_buffer(num+1)
      c_pos = c_int(pos)
      c_num = c_int(num)
      _lib._hdb_get_sequence(dbp, c_pos, c_num, c_buf)
      return c_buf.value
 
 def hdb_get_sequence_pure(dbp, pos, num):
-     c_buf = create_string_buffer(num)
+     c_buf = create_string_buffer(num+1)
      c_pos = c_int(pos)
      c_num = c_int(num)
      _lib._hdb_get_sequence_pure(dbp, c_pos, c_num, c_buf)

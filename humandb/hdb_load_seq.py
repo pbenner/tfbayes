@@ -30,7 +30,16 @@ import humandb.interface as interface
 # global options
 # ------------------------------------------------------------------------------
 
-verbose = False
+database = {
+    'identifier' : None,
+    'basedir'    : None,
+    'db'         : None,
+    'maf'        : None
+    }
+
+options = {
+    'verbose'    : False
+    }
 
 # usage
 # ------------------------------------------------------------------------------
@@ -79,17 +88,6 @@ def loadConfig(config_file, input_file, seq):
 
 # main
 # ------------------------------------------------------------------------------
-
-database = {
-    'identifier' : None,
-    'basedir'    : None,
-    'db'         : None,
-    'maf'        : None
-    }
-
-options = {
-    'verbose'    : False
-    }
 
 def main():
     global options
