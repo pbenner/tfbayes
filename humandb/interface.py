@@ -137,7 +137,7 @@ def hdb_free():
 def hdb_create(db_file_name, db_name):
      c_db_file_name = c_char_p(db_file_name)
      c_db_name      = c_char_p(db_name)
-     ret = _lib._hdb_open_ro(c_db_file_name, c_db_name)
+     ret = _lib._hdb_create(c_db_file_name, c_db_name)
      if ret == None:
           raise IOError("Opening database failed.")
      return ret
@@ -145,7 +145,7 @@ def hdb_create(db_file_name, db_name):
 def hdb_open(db_file_name, db_name):
      c_db_file_name = c_char_p(db_file_name)
      c_db_name      = c_char_p(db_name)
-     ret = _lib._hdb_open_ro(c_db_file_name, c_db_name)
+     ret = _lib._hdb_open(c_db_file_name, c_db_name)
      if ret == None:
           raise IOError("Opening database failed.")
      return ret
