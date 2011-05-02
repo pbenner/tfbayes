@@ -266,6 +266,7 @@ AC_CONFIG_FILES([
 	libexception/Makefile
 	include/Makefile
 	humandb/Makefile
+	dpm/Makefile
  	])
 
 AC_OUTPUT

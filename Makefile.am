@@ -2,7 +2,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = libexception include humandb
+SUBDIRS = libexception include humandb dpm
 
 EXTRA_DIST = hdb-load-seq.in hdb-read-seq.in hdb-search-seq.in
 
