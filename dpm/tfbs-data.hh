@@ -22,6 +22,9 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <string>
+#include <vector>
+
 #include <gsl/gsl_matrix.h>
 
 #include "data.hh"
@@ -33,8 +36,16 @@ public:
         TfbsData(int n, int m, char *sequences[], int *clusters[]);
         ~TfbsData();
 
+        friend ostream& operator<< (std::ostream& o, TfbsData const& data);
+
+        char get_nucleotide(const Data::element& e) const {
+                return sequences[e.x[0]][e.x[1]];
+        }
+
 private:
-        size_t k;
+        vector<string> sequences;
+        size_t n_sequences;
+        size_t sequence_length;
 };
 
 #endif /* TFBS_DATA_HH */

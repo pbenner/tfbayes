@@ -30,7 +30,7 @@ using namespace std;
 #include "data.hh"
 
 Data::Data() {
-//        shuffle();
+        shuffle();
 }
 
 Data::~Data() {
@@ -47,27 +47,4 @@ const Data::element& Data::operator[](size_t i) const {
 
 Data::element& Data::operator[](size_t i) {
         return elements[i];
-}
-
-ostream& operator<< (ostream& o, Data::element const& element) {
-        if (element.x == '\0') {
-                o << "\n";
-        }
-        else {
-                o << element.tag << ":" << element.x;
-                o << "@" << element.original_cluster;
-        }
-
-        return o;
-}
-
-ostream& operator<< (ostream& o, Data const& data) {
-        for (Data::const_iterator it = data.begin(); it != data.end(); it++) {
-                if (it != data.begin()) {
-                        o << ", ";
-                }
-                o << *it;
-        }
-
-        return o;
 }

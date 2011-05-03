@@ -34,8 +34,8 @@ public:
         ~Data();
 
         // type definitions
-        typedef char type;
-        typedef type x_t;
+        typedef size_t type;
+        typedef vector<type> x_t;
         typedef struct {
                 x_t x;                // value of the element
                 int tag;              // tag to identify the element
@@ -58,8 +58,6 @@ public:
         // operators
               element& operator[](size_type i);
         const element& operator[](size_type i) const;
-
-        friend ostream& operator<< (std::ostream& o, Data const& data);
 
         // methods
         size_type size() { return elements.size(); }

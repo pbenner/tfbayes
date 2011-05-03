@@ -52,9 +52,33 @@ def usage():
 # Tfbs DPM
 # ------------------------------------------------------------------------------
 
+def cluster_colors(c):
+    return {
+        0 : 'black',
+        1 : 'red',
+        2 : 'green',
+        3 : 'blue',
+        4 : 'yellow'
+        }[c]
+
+def plot_sequences(ax, sequences, clusters):
+    ax.set_frame_on(False)
+    yn    = len(sequences)
+    yfrom = 0.90
+    yto   = yfrom-yn*0.07
+    x, y = np.meshgrid(np.arange(0.01, 1.00,  0.99/len(sequences[0])),
+                       np.arange(yfrom, yto, -(yfrom-yto)/len(sequences)))
+    for sl, cl, p1l, p2l in zip(sequences, clusters, x, y):
+        for s, c, p1, p2 in zip(sl, cl, p1l, p2l):
+            ax.text(p1, p2, str(s), size=10, rotation=0,
+                    ha="center", va="bottom", color=cluster_colors(c))
+
 class TfbsDPM():
-    def __init__(self, sequences, classes):
-        dpm_init(sequences, classes)
+    def __init__(self, sequences, clusters):
+        self.sequences = sequences
+        self.clusters  = clusters
+#        self.cluster_colors = [ tuple(rd.rand(3)) for i in range(0, 15) ]
+        dpm_init(sequences, clusters)
     def print_clusters(self):
         dpm_print()
     def num_clusters(self):
@@ -63,9 +87,16 @@ class TfbsDPM():
         dpm_sample(n)
         self.steps += 10
     def plotData(self, ax):
-        return None
+        ax.set_xticks([]); ax.set_yticks([])
+        plot_sequences(ax, self.sequences, self.clusters)
     def plotResult(self, ax):
-        return None
+        ax.set_xticks([]); ax.set_yticks([])
+        num_clusters = dpm_num_clusters()
+        for c in range(0, num_clusters):
+            seq, pos = zip(*dpm_cluster(c))
+            print seq
+            print pos
+#            ax.scatter(x, y, c=self.cluster_colors[c])
     def plotStatistics(self, ax1):
         ax2 = ax1.twinx()
         p1  = ax1.plot(dpm_hist_switches())
@@ -78,8 +109,8 @@ class TfbsDPM():
 class InteractiveTDPM(TfbsDPM):
     def __init__(self, sequences, classes, ax):
         TfbsDPM.__init__(self, sequences, classes)
-        self.plotResult(ax)
-        manager = get_current_fig_manager()
+#        self.plotResult(ax)
+#        manager = get_current_fig_manager()
         def updatefig(*args):
             try:
                 ax.cla()
@@ -89,7 +120,7 @@ class InteractiveTDPM(TfbsDPM):
                 return True
             except StopIteration:
                 return False
-        gobject.idle_add(updatefig)
+#        gobject.idle_add(updatefig)
     def sampleInteractively(self, n, ax):
 #        self.sample(n)
         return None
@@ -105,7 +136,7 @@ def readSequences(seq_file):
     for line in li:
         sequences.append('')
         classes.append([])
-        for m in re.finditer(r'\(([1-9]):([ACGT]+)\)|[acgt]+', line):
+        for m in re.finditer(r'\(([1-9]):([ACGT]+)\)|[ACGT]+', line):
             if m.group(2):
                 classes[-1].extend([ int(m.group(1)) for i in range(0, len(m.group(2))) ])
                 sequences[-1] = sequences[-1] + m.group(2)
@@ -116,12 +147,13 @@ def readSequences(seq_file):
     return sequences, classes
 
 def sample(sequences, classes):
-    fig1  = figure()
-    ax1   = fig1.add_subplot(2,1,1, title="Data")
-    ax2   = fig1.add_subplot(2,1,2)
+    fig1  = figure(linewidth=0,facecolor='white',edgecolor='white')
+    ax1   = fig1.add_subplot(2,1,1, title='Sequences')
+    ax2   = fig1.add_subplot(2,1,2, title='Gibbs Sampling')
     dpm   = InteractiveTDPM(sequences, classes, ax2)
     dpm.plotData(ax1)
     dpm.plotResult(ax2)
+    dpm.print_clusters()
     show()
 
     fig2 = figure()

@@ -58,10 +58,7 @@ void _dpm_init(int n, int m, char *sequences[], int *clusters[])
         }
 
         TfbsData* data = new TfbsData(n, m, sequences, clusters);
-
-        cout << *data << endl;
-
-//        _gdpm = new TfbsDPM(data, cov, cov_0, mu_0);
+        _gdpm = new TfbsDPM(data);
 }
 
 unsigned int _dpm_num_clusters() {
@@ -77,6 +74,8 @@ Bayes::Matrix* _dpm_cluster(unsigned int c) {
         int i = 0;
         for (Cluster::elements_t::iterator it = cl.elements.begin();
              it != cl.elements.end(); it++) {
+                result->mat[i][0] = (*it)->x[0];
+                result->mat[i][1] = (*it)->x[1];
                 i++;
         }
 

@@ -37,23 +37,41 @@ using namespace std;
 #include "statistics.hh"
 
 TfbsData::TfbsData(int n, int m, char *sequences[], int *clusters[])
-        : Data(), k(1)
+        : Data(), n_sequences(n), sequence_length(m)
 {
         int tag = 0;
 
         for(int i = 0; i < n; i++) {
+                this->sequences.push_back(sequences[i]);
                 for(int j = 0; j < m; j++) {
+                        Data::x_t x;
+                        x.push_back(i);
+                        x.push_back(j);
                         Data::element e = {
-                                sequences[i][j],
-                                tag++,
+                                x, tag++,
                                 clusters[i][j] };
                         elements.push_back(e);
                 }
-                Data::element e = {
-                        '\0', 0, 0 };
-                elements.push_back(e);
         }
 }
 
 TfbsData::~TfbsData() {
+}
+
+ostream& operator<< (ostream& o, Data::element const& element) {
+        o << element.tag << ":(" << element.x[0] << ","
+          << element.x[1] << ")@" << element.original_cluster;
+
+        return o;
+}
+
+ostream& operator<< (ostream& o, TfbsData const& data) {
+        for (Data::const_iterator it = data.begin(); it != data.end(); it++) {
+                if (it != data.begin()) {
+                        o << ", ";
+                }
+                o << *it;
+        }
+
+        return o;
 }
