@@ -28,6 +28,8 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_matrix.h>
 
+#include <data.hh>
+
 using namespace std;
 
 extern gsl_rng* _r;
@@ -38,53 +40,21 @@ public:
         Distribution() {}
         virtual ~Distribution() {}
 
-        virtual double pdf(vector<double> x) { return 0.0; }
-        virtual double pdf(double x, double y) { return 0.0; }
-        virtual void sample(vector<double>& x) {}
-        virtual void sample(double* x, double* y) {}
-        virtual void update(const gsl_matrix* cov,
-                            const gsl_vector* mu) {}
-        virtual void update(const vector<double>& mu, 
-                            const vector<double>& sigma,
-                            double rho) {}
-        virtual void update(double mu_x, double mu_y,
-                            double sigma_x, double sigma_y,
-                            double rho) {}
+        void update(gsl_matrix* x);
+        virtual double ln_pdf(Data::x_t x) { return 0.0; }
 };
 
-class BivariateNormal : public Distribution {
+class ProductDirichlet : public Distribution {
 public:
-        BivariateNormal();
-        BivariateNormal(const gsl_matrix* cov,
-                        const gsl_vector* mu);
-        BivariateNormal(const vector<double>& mu, 
-                        const vector<double>& sigma,
-                        double rho);
-        BivariateNormal(double mu_x, double mu_y,
-                        double sigma_x, double sigma_y,
-                        double rho);
-        ~BivariateNormal();
+        ProductDirichlet();
+        ProductDirichlet(gsl_matrix* counts);
+        ~ProductDirichlet();
 
-        void update(const gsl_matrix* cov,
-                    const gsl_vector* mu);
-        void update(const vector<double>& mu, 
-                    const vector<double>& sigma,
-                    double rho);
-        void update(double mu_x, double mu_y,
-                    double sigma_x, double sigma_y,
-                    double rho);
-
-        double pdf(vector<double> x);
-        double pdf(double x, double y);
-        void sample(vector<double>& x);
-        void sample(double* x, double* y);
+        void update(gsl_matrix* counts);
+        double ln_pdf(Data::x_t x);
 
 private:
-        double mu_x;
-        double mu_y;
-        double sigma_x;
-        double sigma_y;
-        double rho;
+        gsl_matrix* alpha;
 };
 
 #endif /* STATISTICS_HH */

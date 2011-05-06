@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2010 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +15,24 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef INTERFACE_HH
-#define INTERFACE_HH
+#ifndef _LOGARITHMETIC_H_
+#define _LOGARITHMETIC_H_
 
-#include <gsl/gsl_errno.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_odeiv.h>
+#include <math.h>
 
-#include <tfbayes/linalg.h>
+/* Log Sum of Exponentials Algorithm */
 
-#define __BEGIN_C_REGION extern "C" {
-#define __END_C_REGION }
+static inline
+double logadd(double a, double b)
+{
+        if (a < b) return a == -HUGE_VAL ? b : b + log1pl(expl(a-b));
+        else       return b == -HUGE_VAL ? a : a + log1pl(expl(b-a));
+}
 
-#endif /* INTERFACE_HH */
+static inline
+double logsub(double a, double b)
+{
+        return b == -HUGE_VAL ? a : a + logl(1-expl(b-a));
+}
+
+#endif /* _LOGARITHMETIC_H_ */

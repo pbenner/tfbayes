@@ -41,6 +41,16 @@ public:
         char get_nucleotide(const Data::element& e) const {
                 return sequences[e.x[0]][e.x[1]];
         }
+        void get_nucleotide(const Data::element& e, int n, char *buf) const {
+                for (int i = 0; i < n; i++) {
+                        if (e.x[1]+i < sequence_length) {
+                                buf[i] = sequences[e.x[0]][e.x[1]+i];
+                        }
+                        else {
+                                buf[i] = '\0';
+                        }
+                }
+        }
 
 private:
         vector<string> sequences;

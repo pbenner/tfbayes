@@ -35,7 +35,7 @@ namespace Bayes {
 
 static TfbsDPM* _gdpm;
 
-extern "C" {
+__BEGIN_C_REGION;
 
 Bayes::Vector * _allocVector(int size)              { return Bayes::allocVector(size); }
 void            _freeVector(Bayes::Vector *v)       { Bayes::freeVector(v); }
@@ -133,4 +133,4 @@ void _dpm_free() {
         delete(_gdpm);
 }
 
-}
+__END_C_REGION;

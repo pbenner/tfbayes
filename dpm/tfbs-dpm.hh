@@ -49,11 +49,17 @@ public:
         }
 
 private:
-        // predictive distribution
-        gsl_matrix* predictive_cov;
+        // parameters
+        double alpha;
+        double lambda;
 
-        // posterior predictive distribution
+        // distributions
+        Distribution* predictiveDist_tfbs;
+        Distribution* posteriorPredictiveDist_tfbs;
+        Distribution* posteriorPredictiveDist_bg;
 
+        // private methods
+        void count_statistic(const Cluster::cluster& cluster, gsl_matrix* counts);
 };
 
 #endif /* TFBS_DPM_HH */

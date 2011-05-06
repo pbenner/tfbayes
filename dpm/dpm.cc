@@ -19,6 +19,8 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <tfbayes/logarithmetic.h>
+
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_randist.h>
 
@@ -43,6 +45,7 @@ bool DPM::sample(Data::element& element) {
         cl.release(element);
         Distribution& pred = predictive();
         Cluster::size_type num_clusters = cl.size();
+        double ln_weights[num_clusters+1];
         double weights[num_clusters+1];
         Cluster::cluster_tag_t tags[num_clusters+1];
         double sum = 0;
@@ -52,20 +55,20 @@ bool DPM::sample(Data::element& element) {
         for (Cluster::iterator it = cl.begin(); it != cl.end(); it++) {
                 Distribution& postPred = posteriorPredictive(**it);
                 double num_elements    = (double)(*it)->elements.size();
-//                weights[i] = num_elements*postPred.pdf(element.x);
-                tags[i]    = (*it)->tag;
+                ln_weights[i] = num_elements*postPred.ln_pdf(element.x);
+                tags[i]       = (*it)->tag;
                 // normalization constant
-                sum       += weights[i];
+                sum = logadd(sum, ln_weights[i]);
                 i++;
         }
         // add the tag of a new class and compute their weight
-//        weights[num_clusters] = alpha*pred.pdf(element.x);
+        weights[num_clusters] = alpha*pred.ln_pdf(element.x);
         tags[num_clusters]    = cl.next_free_cluster()->tag;
-        sum += weights[num_clusters];
+        sum = logadd(sum, ln_weights[num_clusters]);
 
         // normalize
         for (i = 0; i < num_clusters+1; i++) {
-                weights[i] /= sum;
+                weights[i] = expl(logsub(ln_weights[i], sum));
         }
 
         // draw a new cluster for the element

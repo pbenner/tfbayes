@@ -77,7 +77,6 @@ class TfbsDPM():
     def __init__(self, sequences, clusters):
         self.sequences = sequences
         self.clusters  = clusters
-#        self.cluster_colors = [ tuple(rd.rand(3)) for i in range(0, 15) ]
         dpm_init(sequences, clusters)
     def print_clusters(self):
         dpm_print()
@@ -91,12 +90,13 @@ class TfbsDPM():
         plot_sequences(ax, self.sequences, self.clusters)
     def plotResult(self, ax):
         ax.set_xticks([]); ax.set_yticks([])
+        sequences = self.sequences[:]
+        clusters  = self.clusters[:]
         num_clusters = dpm_num_clusters()
         for c in range(0, num_clusters):
-            seq, pos = zip(*dpm_cluster(c))
-            print seq
-            print pos
-#            ax.scatter(x, y, c=self.cluster_colors[c])
+            for seq, pos in dpm_cluster(c):
+                clusters[int(seq)][int(pos)] = c
+        plot_sequences(ax, sequences, clusters)
     def plotStatistics(self, ax1):
         ax2 = ax1.twinx()
         p1  = ax1.plot(dpm_hist_switches())

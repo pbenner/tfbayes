@@ -28,11 +28,19 @@
 using namespace std;
 
 TfbsDPM::TfbsDPM(TfbsData* data)
-        : DPM(data)
+        : DPM(data), alpha(1.0), lambda(0.1)
 {
+        gsl_matrix* pd_alpha = gsl_matrix_alloc(10, 4);
+        for (int i = 0; i < 10; i++) {
+                for (int j = 0; j < 4; j++) {
+                        gsl_matrix_set(pd_alpha, i, j, 1);
+                }
+        }
+
         // initialize distributions
-//        predictiveDist          = new BivariateNormal(predictive_cov, mu_0);
-//        posteriorPredictiveDist = new BivariateNormal();
+        predictiveDist_tfbs          = new ProductDirichlet(pd_alpha);
+        posteriorPredictiveDist_tfbs = new ProductDirichlet();
+        posteriorPredictiveDist_bg   = new ProductDirichlet();
 }
 
 TfbsDPM::~TfbsDPM() {
@@ -40,18 +48,75 @@ TfbsDPM::~TfbsDPM() {
         delete(posteriorPredictiveDist);
 }
 
-Distribution& TfbsDPM::posteriorPredictive(const Cluster::cluster& cluster) {
+void
+TfbsDPM::count_statistic(const Cluster::cluster& cluster, gsl_matrix* counts) {
+        int len = counts->size1;
+
+        // reset counts
+        for (int i = 0; i < len; i++) {
+                gsl_matrix_set(counts, i, 0, 0);
+                gsl_matrix_set(counts, i, 1, 0);
+                gsl_matrix_set(counts, i, 2, 0);
+                gsl_matrix_set(counts, i, 3, 0);
+        }
+        // compute count statistic
+        for (Cluster::elements_t::const_iterator it  = cluster.elements.begin();
+             it != cluster.elements.end(); it++) {
+                char buf[len];
+                ((TfbsData*)da)->get_nucleotide(**it, len, buf);
+                for (int i = 0; i < len; i++) {
+                        switch (buf[i]) {
+                        case 'A':
+                        case 'a':
+                                gsl_matrix_set(counts, i, 0,
+                                               gsl_matrix_get(counts, i, 0)+1);
+                        break;
+                        case 'C':
+                        case 'c':
+                                gsl_matrix_set(counts, i, 1,
+                                               gsl_matrix_get(counts, i, 1)+1);
+                        break;
+                        case 'G':
+                        case 'g':
+                                gsl_matrix_set(counts, i, 2,
+                                               gsl_matrix_get(counts, i, 2)+1);
+                        break;
+                        case 'T':
+                        case 't':
+                                gsl_matrix_set(counts, i, 3,
+                                               gsl_matrix_get(counts, i, 3)+1);
+                        break;
+                        }
+                }
+        }
+}
+
+Distribution&
+TfbsDPM::posteriorPredictive(const Cluster::cluster& cluster) {
+        if (cluster.tag == 0) {
+                // background model
+                gsl_matrix* counts = gsl_matrix_alloc(1, 4);
+                count_statistic(cluster, counts);
+        }
+        else {
+                // motif model
+                gsl_matrix* counts = gsl_matrix_alloc(10, 4);
+                count_statistic(cluster, counts);
+        }
 
         return *posteriorPredictiveDist;
 }
 
-Distribution& TfbsDPM::predictive() {
-        return *predictiveDist;
+Distribution&
+TfbsDPM::predictive() {
+        return *predictiveDist_tfbs;
 }
 
-double TfbsDPM::likelihood() {
+double
+TfbsDPM::likelihood() {
         return 0.0;
 }
 
-void TfbsDPM::compute_statistics() {
+void
+TfbsDPM::compute_statistics() {
 }
