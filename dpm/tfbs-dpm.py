@@ -53,13 +53,16 @@ def usage():
 # ------------------------------------------------------------------------------
 
 def cluster_colors(c):
-    return {
-        0 : 'black',
-        1 : 'red',
-        2 : 'green',
-        3 : 'blue',
-        4 : 'yellow'
-        }[c]
+    if c < 5:
+        return {
+            0 : 'black',
+            1 : 'red',
+            2 : 'green',
+            3 : 'blue',
+            4 : 'yellow'
+            }[c]
+    else:
+        return 'magenta'
 
 def plot_sequences(ax, sequences, clusters):
     ax.set_frame_on(False)
@@ -77,6 +80,7 @@ class TfbsDPM():
     def __init__(self, sequences, clusters):
         self.sequences = sequences
         self.clusters  = clusters
+        self.steps     = 0
         dpm_init(sequences, clusters)
     def print_clusters(self):
         dpm_print()
@@ -84,7 +88,7 @@ class TfbsDPM():
         return dpm_num_clusters()
     def sample(self, n):
         dpm_sample(n)
-        self.steps += 10
+        self.steps += n
     def plotData(self, ax):
         ax.set_xticks([]); ax.set_yticks([])
         plot_sequences(ax, self.sequences, self.clusters)
@@ -109,8 +113,8 @@ class TfbsDPM():
 class InteractiveTDPM(TfbsDPM):
     def __init__(self, sequences, classes, ax):
         TfbsDPM.__init__(self, sequences, classes)
-#        self.plotResult(ax)
-#        manager = get_current_fig_manager()
+        self.plotResult(ax)
+        manager = get_current_fig_manager()
         def updatefig(*args):
             try:
                 ax.cla()
@@ -120,9 +124,9 @@ class InteractiveTDPM(TfbsDPM):
                 return True
             except StopIteration:
                 return False
-#        gobject.idle_add(updatefig)
+        gobject.idle_add(updatefig)
     def sampleInteractively(self, n, ax):
-#        self.sample(n)
+        self.sample(n)
         return None
 
 # main
@@ -153,13 +157,14 @@ def sample(sequences, classes):
     dpm   = InteractiveTDPM(sequences, classes, ax2)
     dpm.plotData(ax1)
     dpm.plotResult(ax2)
-    dpm.print_clusters()
-    show()
+    dpm.sampleInteractively(1, ax2)
+#    show()
 
-    fig2 = figure()
-    ax3  = fig2.add_subplot(1,1,1, title="Statistics")
-    dpm.plotStatistics(ax3)
-    show()
+#    fig2 = figure()
+#    ax3  = fig2.add_subplot(1,1,1, title="Statistics")
+#    dpm.plotStatistics(ax3)
+#    show()
+    dpm.print_clusters()
 
 def main():
     global options

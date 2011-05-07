@@ -28,17 +28,23 @@
 using namespace std;
 
 TfbsDPM::TfbsDPM(TfbsData* data)
-        : DPM(data), alpha(1.0), lambda(0.1)
+        : DPM(data), lambda(0.99),
+          pd_tfbs_alpha(gsl_matrix_alloc(10, 4)),
+          pd_bg_alpha(gsl_matrix_alloc(1, 4))
 {
-        gsl_matrix* pd_alpha = gsl_matrix_alloc(10, 4);
+        alpha = 0.01;
+
         for (int i = 0; i < 10; i++) {
                 for (int j = 0; j < 4; j++) {
-                        gsl_matrix_set(pd_alpha, i, j, 1);
+                        gsl_matrix_set(pd_tfbs_alpha, i, j, 1);
                 }
+        }
+        for (int j = 0; j < 4; j++) {
+                gsl_matrix_set(pd_bg_alpha, 0, j, 10);
         }
 
         // initialize distributions
-        predictiveDist_tfbs          = new ProductDirichlet(pd_alpha);
+        predictiveDist_tfbs          = new ProductDirichlet(lambda, pd_tfbs_alpha);
         posteriorPredictiveDist_tfbs = new ProductDirichlet();
         posteriorPredictiveDist_bg   = new ProductDirichlet();
 }
@@ -49,15 +55,15 @@ TfbsDPM::~TfbsDPM() {
 }
 
 void
-TfbsDPM::count_statistic(const Cluster::cluster& cluster, gsl_matrix* counts) {
+TfbsDPM::count_statistic(const Cluster::cluster& cluster, gsl_matrix* alpha, gsl_matrix* counts) {
         int len = counts->size1;
 
         // reset counts
         for (int i = 0; i < len; i++) {
-                gsl_matrix_set(counts, i, 0, 0);
-                gsl_matrix_set(counts, i, 1, 0);
-                gsl_matrix_set(counts, i, 2, 0);
-                gsl_matrix_set(counts, i, 3, 0);
+                gsl_matrix_set(counts, i, 0, gsl_matrix_get(alpha, i, 0));
+                gsl_matrix_set(counts, i, 1, gsl_matrix_get(alpha, i, 1));
+                gsl_matrix_set(counts, i, 2, gsl_matrix_get(alpha, i, 2));
+                gsl_matrix_set(counts, i, 3, gsl_matrix_get(alpha, i, 3));
         }
         // compute count statistic
         for (Cluster::elements_t::const_iterator it  = cluster.elements.begin();
@@ -96,15 +102,17 @@ TfbsDPM::posteriorPredictive(const Cluster::cluster& cluster) {
         if (cluster.tag == 0) {
                 // background model
                 gsl_matrix* counts = gsl_matrix_alloc(1, 4);
-                count_statistic(cluster, counts);
+                count_statistic(cluster, pd_bg_alpha, counts);
+                ((ProductDirichlet *)posteriorPredictiveDist_bg)->update(1-lambda, counts);
+                return *posteriorPredictiveDist_bg;
         }
         else {
                 // motif model
                 gsl_matrix* counts = gsl_matrix_alloc(10, 4);
-                count_statistic(cluster, counts);
+                count_statistic(cluster, pd_tfbs_alpha, counts);
+                ((ProductDirichlet *)posteriorPredictiveDist_tfbs)->update(lambda, counts);
+                return *posteriorPredictiveDist_tfbs;
         }
-
-        return *posteriorPredictiveDist;
 }
 
 Distribution&

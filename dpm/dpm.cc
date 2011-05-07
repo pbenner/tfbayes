@@ -48,27 +48,31 @@ bool DPM::sample(Data::element& element) {
         double ln_weights[num_clusters+1];
         double weights[num_clusters+1];
         Cluster::cluster_tag_t tags[num_clusters+1];
-        double sum = 0;
+        double log_sum = -HUGE_VAL;
 
         // compute weights of existing clusters
         Cluster::cluster_tag_t i = 0;
         for (Cluster::iterator it = cl.begin(); it != cl.end(); it++) {
                 Distribution& postPred = posteriorPredictive(**it);
                 double num_elements    = (double)(*it)->elements.size();
-                ln_weights[i] = num_elements*postPred.ln_pdf(element.x);
+                ln_weights[i] = log(num_elements) + postPred.ln_pdf(element.x);
                 tags[i]       = (*it)->tag;
                 // normalization constant
-                sum = logadd(sum, ln_weights[i]);
+                log_sum = logadd(ln_weights[i], log_sum);
                 i++;
         }
         // add the tag of a new class and compute their weight
-        weights[num_clusters] = alpha*pred.ln_pdf(element.x);
-        tags[num_clusters]    = cl.next_free_cluster()->tag;
-        sum = logadd(sum, ln_weights[num_clusters]);
+        printf("alpha: %f\n", alpha);
+        ln_weights[num_clusters] = log(alpha) + pred.ln_pdf(element.x);
+        tags[num_clusters]       = cl.next_free_cluster()->tag;
+        log_sum = logadd(ln_weights[num_clusters], log_sum);
 
         // normalize
         for (i = 0; i < num_clusters+1; i++) {
-                weights[i] = expl(logsub(ln_weights[i], sum));
+                printf("ln_weights[%ld]: %f\n", i, ln_weights[i]);
+                printf("log_sum: %f\n", log_sum);
+                weights[i] = expl(ln_weights[i] - log_sum);
+                printf("weights[%ld]: %f\n", i, weights[i]);
         }
 
         // draw a new cluster for the element
@@ -77,6 +81,7 @@ bool DPM::sample(Data::element& element) {
         gsl_ran_discrete_free(gdd);
 
         cl.assign(element, tags[i]);
+        printf("\n\n");
 
         return old_cluster_tag != tags[i];
 }

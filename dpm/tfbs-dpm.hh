@@ -50,8 +50,11 @@ public:
 
 private:
         // parameters
-        double alpha;
         double lambda;
+
+        // priors
+        gsl_matrix* pd_tfbs_alpha;
+        gsl_matrix* pd_bg_alpha;
 
         // distributions
         Distribution* predictiveDist_tfbs;
@@ -59,7 +62,7 @@ private:
         Distribution* posteriorPredictiveDist_bg;
 
         // private methods
-        void count_statistic(const Cluster::cluster& cluster, gsl_matrix* counts);
+        void count_statistic(const Cluster::cluster& cluster, gsl_matrix* alpha, gsl_matrix* counts);
 };
 
 #endif /* TFBS_DPM_HH */
