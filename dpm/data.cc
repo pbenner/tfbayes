@@ -30,7 +30,6 @@ using namespace std;
 #include "data.hh"
 
 Data::Data() {
-        shuffle();
 }
 
 Data::~Data() {
@@ -38,7 +37,7 @@ Data::~Data() {
 }
 
 void Data::shuffle() {
-        random_shuffle(elements.begin(), elements.end());
+        random_shuffle(elements_randomized.begin(), elements_randomized.end());
 }
 
 const Data::element& Data::operator[](size_t i) const {

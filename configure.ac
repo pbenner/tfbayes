@@ -86,10 +86,13 @@ AC_CHECK_LIB([gslcblas],[cblas_dgemm],,
   AC_MSG_ERROR([this library is required]))
 AC_CHECK_LIB([gsl], [gsl_blas_dgemm],,
   AC_MSG_ERROR([this library is required]))
-AC_CHECK_LIB([db], [db_env_set_func_exists],,
+AC_CHECK_LIB([db], [db_env_set_func_exists], LIB_DB="-ldb",
   AC_MSG_ERROR([this library is required]))
-AC_CHECK_LIB([pthread], [pthread_create],,
+AC_CHECK_LIB([pthread], [pthread_create], LIB_PTHREAD="-lpthread",
   AC_MSG_ERROR([this library is required]))
+
+AC_SUBST(LIB_DB)
+AC_SUBST(LIB_PTHREAD)
 
 dnl ,---------------------------- 
 dnl | GETOPT_LONG

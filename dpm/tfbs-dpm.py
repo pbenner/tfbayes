@@ -164,7 +164,7 @@ def sample(sequences, classes):
 #    ax3  = fig2.add_subplot(1,1,1, title="Statistics")
 #    dpm.plotStatistics(ax3)
 #    show()
-    dpm.print_clusters()
+#    dpm.print_clusters()
 
 def main():
     global options

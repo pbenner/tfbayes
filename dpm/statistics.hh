@@ -40,20 +40,19 @@ public:
         Distribution() {}
         virtual ~Distribution() {}
 
-        virtual double ln_pdf(Data::x_t x) { return 0.0; }
+        virtual double log_pdf(Data::x_t x) { return 0.0; }
 };
 
 class ProductDirichlet : public Distribution {
 public:
         ProductDirichlet();
-        ProductDirichlet(double lambda, gsl_matrix* counts);
+        ProductDirichlet(gsl_matrix* counts);
         ~ProductDirichlet();
 
-        void update(double lambda, gsl_matrix* counts);
-        double ln_pdf(Data::x_t x);
+        void update(gsl_matrix* counts);
+        double log_pdf(Data::x_t x);
 
 private:
-        double lambda;
         gsl_matrix* alpha;
 };
 

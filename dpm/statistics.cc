@@ -37,13 +37,13 @@ gsl_rng* _r;
 
 ProductDirichlet::ProductDirichlet()
 {
-        update(0, NULL);
+        update(NULL);
 }
 
 ProductDirichlet::ProductDirichlet(
-        double lambda, gsl_matrix* alpha)
+        gsl_matrix* alpha)
 {
-        update(lambda, alpha);
+        update(alpha);
 }
 
 ProductDirichlet::~ProductDirichlet() {
@@ -53,10 +53,8 @@ ProductDirichlet::~ProductDirichlet() {
 }
 
 void ProductDirichlet::update(
-        double lambda, gsl_matrix* alpha)
+        gsl_matrix* alpha)
 {
-        this->lambda = lambda;
-
         if (this->alpha) {
                 gsl_matrix_free(this->alpha);
         }
@@ -64,7 +62,7 @@ void ProductDirichlet::update(
         this->alpha = alpha;
 }
 
-double ProductDirichlet::ln_pdf(Data::x_t x) {
+double ProductDirichlet::log_pdf(Data::x_t x) {
         double result = 0;
 
         for (unsigned int i = 0; i < this->alpha->size1; i++) {
@@ -76,5 +74,5 @@ double ProductDirichlet::ln_pdf(Data::x_t x) {
                 }
                 result += sum2 - gsl_sf_lngamma(sum1);
         }
-        return log(lambda) + result;
+        return result;
 }

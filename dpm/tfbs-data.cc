@@ -53,6 +53,10 @@ TfbsData::TfbsData(int n, int m, char *sequences[], int *clusters[])
                         elements.push_back(e);
                 }
         }
+        for (Data::iterator it = this->begin(); it != this->end(); it++) {
+                elements_randomized.push_back(&(*it));
+        }
+        shuffle();
 }
 
 TfbsData::~TfbsData() {

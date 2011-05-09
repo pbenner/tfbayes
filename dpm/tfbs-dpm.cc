@@ -19,6 +19,10 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <tfbayes/logarithmetic.h>
+
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_randist.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_blas.h>
@@ -44,7 +48,7 @@ TfbsDPM::TfbsDPM(TfbsData* data)
         }
 
         // initialize distributions
-        predictiveDist_tfbs          = new ProductDirichlet(lambda, pd_tfbs_alpha);
+        predictiveDist_tfbs          = new ProductDirichlet(pd_tfbs_alpha);
         posteriorPredictiveDist_tfbs = new ProductDirichlet();
         posteriorPredictiveDist_bg   = new ProductDirichlet();
 }
@@ -103,14 +107,14 @@ TfbsDPM::posteriorPredictive(const Cluster::cluster& cluster) {
                 // background model
                 gsl_matrix* counts = gsl_matrix_alloc(1, 4);
                 count_statistic(cluster, pd_bg_alpha, counts);
-                ((ProductDirichlet *)posteriorPredictiveDist_bg)->update(1-lambda, counts);
+                ((ProductDirichlet *)posteriorPredictiveDist_bg)->update(counts);
                 return *posteriorPredictiveDist_bg;
         }
         else {
                 // motif model
                 gsl_matrix* counts = gsl_matrix_alloc(10, 4);
                 count_statistic(cluster, pd_tfbs_alpha, counts);
-                ((ProductDirichlet *)posteriorPredictiveDist_tfbs)->update(lambda, counts);
+                ((ProductDirichlet *)posteriorPredictiveDist_tfbs)->update(counts);
                 return *posteriorPredictiveDist_tfbs;
         }
 }
@@ -127,4 +131,82 @@ TfbsDPM::likelihood() {
 
 void
 TfbsDPM::compute_statistics() {
+}
+
+bool TfbsDPM::sample(Data::element& element) {
+        Cluster::cluster_tag_t old_cluster_tag = cl.getClusterTag(element);
+        cl.release(element);
+        Distribution& pred = predictive();
+        Cluster::size_type num_clusters = cl.size();
+        double weights[num_clusters+1];
+        Cluster::cluster_tag_t tags[num_clusters+1];
+
+        {
+                Data::iterator it = ++(da->find(element));
+                for (int i = 0; i < 9; i++) {
+                        if (cl.getClusterTag(*it) > 0) {
+                                cl.assign(element, 0);
+                                return false;
+                        }
+                }
+        }
+        ////////////////////////////////////////////////////////////////////////
+        // mixture component 1: background model
+        Cluster::iterator it = cl.begin();
+        {
+                Distribution& postPred = posteriorPredictive(**it);
+                weights[0] = (1-lambda)*exp(postPred.log_pdf(element.x));
+                tags[0]    = (*it)->tag;
+                printf("weights[%ld]: %f\n", 0, weights[0]);
+        }
+
+        ////////////////////////////////////////////////////////////////////////
+        // mixture component 2: dirichlet process for tfbs models
+        double log_sum = -HUGE_VAL;
+        double log_weights[num_clusters];
+        for (Cluster::cluster_tag_t i = 1; it != cl.end(); i++) {
+                Distribution& postPred = posteriorPredictive(**it);
+                double num_elements    = (double)(*it)->elements.size();
+                log_weights[i-1] = log(num_elements) + postPred.log_pdf(element.x);
+                tags[i]          = (*it)->tag;
+                // normalization constant
+                log_sum = logadd(log_weights[i-1], log_sum);
+                it++;
+        }
+        // add the tag of a new class and compute their weight
+//        printf("alpha: %f\n", alpha);
+        log_weights[num_clusters] = log(alpha) + pred.log_pdf(element.x);
+        tags[num_clusters]        = cl.next_free_cluster()->tag;
+        log_sum = logadd(log_weights[num_clusters], log_sum);
+
+        // normalize
+        for (Cluster::cluster_tag_t i = 1; i < num_clusters+1; i++) {
+//                printf("log_weights[%ld]: %f\n", i, log_weights[i]);
+//                printf("log_sum: %f\n", log_sum);
+                weights[i] = lambda*expl(log_weights[i-1] - log_sum);
+                printf("weights[%ld]: %f\n", i, weights[i]);
+        }
+
+        // draw a new cluster for the element
+        gsl_ran_discrete_t* gdd  = gsl_ran_discrete_preproc(num_clusters+1, weights);
+        Cluster::cluster_tag_t i = gsl_ran_discrete(_r, gdd);
+        gsl_ran_discrete_free(gdd);
+
+        cl.assign(element, tags[i]);
+        printf("\n\n");
+
+        return old_cluster_tag != tags[i];
+}
+
+void TfbsDPM::gibbsSample(unsigned int steps) {
+        for (unsigned int i = 0; i < steps; i++) {
+                double sum = 0;
+                for (Data::iterator_randomized it = da->begin_randomized();
+                     it != da->end_randomized(); it++) {
+                        bool switched = sample(**it);
+                        if (switched) sum+=1;
+                }
+                hist_switches.push_back(sum/da->size());
+                compute_statistics();
+        }
 }

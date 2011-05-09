@@ -47,16 +47,6 @@ void _dpm_init(int n, int m, char *sequences[], int *clusters[])
 {
         __dpm_init__();
 
-        for(int i = 0; i < n; i++) {
-                printf("%s\n", sequences[i]);
-        }
-        for(int i = 0; i < n; i++) {
-                for(int j = 0; j < m; j++) {
-                        printf("%d ", clusters[i][j]);
-                }
-                printf("\n");
-        }
-
         TfbsData* data = new TfbsData(n, m, sequences, clusters);
         _gdpm = new TfbsDPM(data);
 }

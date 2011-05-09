@@ -45,8 +45,11 @@ public:
         } element;
         typedef vector<element>::size_type size_type;
 
-        typedef vector<element>::iterator iterator;
-        typedef vector<element>::const_iterator const_iterator;
+        typedef vector<element >::iterator iterator;
+        typedef vector<element >::const_iterator const_iterator;
+
+        typedef vector<element*>::iterator iterator_randomized;
+        typedef vector<element*>::const_iterator const_iterator_randomized;
 
         // iterators
         iterator begin() { return elements.begin(); }
@@ -54,6 +57,22 @@ public:
 
         const_iterator begin() const { return elements.begin(); }
         const_iterator end()   const { return elements.end(); }
+
+        iterator_randomized begin_randomized() { return elements_randomized.begin(); }
+        iterator_randomized end_randomized()   { return elements_randomized.end(); }
+
+        const_iterator_randomized begin_randomized() const
+                { return elements_randomized.begin(); }
+        const_iterator_randomized end_randomized()   const
+                { return elements_randomized.end(); }
+
+        iterator find(const element elem) {
+                for (iterator it = begin(); it != end(); it++) {
+                        if ((*it).tag == elem.tag)
+                                return it;
+                }
+                return end();
+        }
 
         // operators
               element& operator[](size_type i);
@@ -64,7 +83,8 @@ public:
         void shuffle();
 
 protected:
-        vector<element> elements;
+        vector<element > elements;
+        vector<element*> elements_randomized;
 };
 
 ostream& operator<< (ostream& o, Data::element const& element);

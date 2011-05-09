@@ -40,9 +40,22 @@ public:
         const Cluster::cluster& operator[](int c) const { return cl[c]; }
 
         // methods
-        bool sample(Data::element& element);
-        void gibbsSample(unsigned int steps);
-        Cluster::size_type num_clusters() { return cl.size(); }
+        Cluster::size_type num_clusters() {
+                return cl.size();
+        }
+        Cluster& get_clusters() {
+                return cl;
+        }
+        vector<double>& get_hist_switches() {
+                return hist_switches;
+        }
+        vector<double>& get_hist_likelihood() {
+                return hist_likelihood;
+        }
+
+        // virtual methods
+        virtual bool sample(Data::element& element) { return true; };
+        virtual void gibbsSample(unsigned int steps) {};
 
         virtual Distribution& posteriorPredictive(const Cluster::cluster& cluster) {
                 return *posteriorPredictiveDist;
@@ -59,15 +72,6 @@ public:
         }
         virtual Data& get_data() {
                 return *da;
-        }
-        Cluster& get_clusters() {
-                return cl;
-        }
-        vector<double>& get_hist_switches() {
-                return hist_switches;
-        }
-        vector<double>& get_hist_likelihood() {
-                return hist_likelihood;
         }
 
 protected:

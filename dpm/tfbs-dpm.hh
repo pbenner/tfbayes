@@ -48,6 +48,9 @@ public:
                 return *static_cast<TfbsData *>(da);
         }
 
+        bool sample(Data::element& element);
+        void gibbsSample(unsigned int steps);
+
 private:
         // parameters
         double lambda;
