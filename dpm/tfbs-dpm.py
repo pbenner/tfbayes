@@ -81,7 +81,7 @@ class TfbsDPM():
         self.sequences = sequences
         self.clusters  = clusters
         self.steps     = 0
-        dpm_init(sequences, clusters)
+        dpm_init(sequences[:][:], clusters[:][:])
     def print_clusters(self):
         dpm_print()
     def num_clusters(self):
@@ -94,8 +94,8 @@ class TfbsDPM():
         plot_sequences(ax, self.sequences, self.clusters)
     def plotResult(self, ax):
         ax.set_xticks([]); ax.set_yticks([])
-        sequences = self.sequences[:]
-        clusters  = self.clusters[:]
+        sequences = np.array(self.sequences)
+        clusters  = np.zeros_like(self.clusters)
         num_clusters = dpm_num_clusters()
         for c in range(0, num_clusters):
             for seq, pos in dpm_cluster(c):
@@ -111,8 +111,8 @@ class TfbsDPM():
         ax1.legend([p1, p2], ["Mean class switches", "Mean likelihood"])
 
 class InteractiveTDPM(TfbsDPM):
-    def __init__(self, sequences, classes, ax):
-        TfbsDPM.__init__(self, sequences, classes)
+    def __init__(self, sequences, clusters, ax):
+        TfbsDPM.__init__(self, sequences, clusters[:][:])
         self.plotResult(ax)
         manager = get_current_fig_manager()
         def updatefig(*args):
@@ -136,29 +136,32 @@ def readSequences(seq_file):
     fh = open(seq_file,'r')
     li = fh.readlines()
     sequences = []
-    classes   = []
+    clusters  = []
     for line in li:
         sequences.append('')
-        classes.append([])
+        clusters.append([])
         for m in re.finditer(r'\(([1-9]):([ACGT]+)\)|[ACGT]+', line):
             if m.group(2):
-                classes[-1].extend([ int(m.group(1)) for i in range(0, len(m.group(2))) ])
+                clusters[-1].extend([ int(m.group(1)) for i in range(0, len(m.group(2))) ])
                 sequences[-1] = sequences[-1] + m.group(2)
             else:
-                classes[-1].extend([ 0 for i in range(0, len(m.group(0))) ])
+                clusters[-1].extend([ 0 for i in range(0, len(m.group(0))) ])
                 sequences[-1] = sequences[-1] + m.group(0)
     fh.close()
-    return sequences, classes
+    return sequences, clusters
 
-def sample(sequences, classes):
+def sample(sequences, clusters):
     fig1  = figure(linewidth=0,facecolor='white',edgecolor='white')
     ax1   = fig1.add_subplot(2,1,1, title='Sequences')
     ax2   = fig1.add_subplot(2,1,2, title='Gibbs Sampling')
-    dpm   = InteractiveTDPM(sequences, classes, ax2)
+    dpm   = InteractiveTDPM(sequences, clusters[:][:], ax2)
     dpm.plotData(ax1)
     dpm.plotResult(ax2)
-    dpm.sampleInteractively(1, ax2)
-#    show()
+#    dpm.sampleInteractively(1, ax2)
+#    dpm.plotResult(ax2)
+#    print "-------------------------"
+#    dpm.sampleInteractively(10000, ax2)
+    show()
 
 #    fig2 = figure()
 #    ax3  = fig2.add_subplot(1,1,1, title="Statistics")
@@ -185,8 +188,8 @@ def main():
     if len(tail) != 1:
         usage()
         return 1
-    sequences, classes = readSequences(tail[0])
-    sample(sequences, classes)
+    sequences, clusters = readSequences(tail[0])
+    sample(sequences, clusters)
     return 0
 
 if __name__ == "__main__":

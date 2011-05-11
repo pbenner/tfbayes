@@ -51,6 +51,9 @@ public:
                         }
                 }
         }
+        int num_successors(const Data::element& e) {
+                return sequence_length-e.x[1]-1;
+        }
 
 private:
         vector<string> sequences;

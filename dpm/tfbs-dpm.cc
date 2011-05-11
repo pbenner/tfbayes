@@ -32,7 +32,7 @@
 using namespace std;
 
 TfbsDPM::TfbsDPM(TfbsData* data)
-        : DPM(data), lambda(0.99),
+        : DPM(data), lambda(0.1),
           pd_tfbs_alpha(gsl_matrix_alloc(10, 4)),
           pd_bg_alpha(gsl_matrix_alloc(1, 4))
 {
@@ -133,31 +133,90 @@ void
 TfbsDPM::compute_statistics() {
 }
 
-bool TfbsDPM::sample(Data::element& element) {
+bool
+TfbsDPM::check_element(Data::element& element)
+{
+        // check if there is enough space for the binding site
+        if (((TfbsData*)da)->num_successors(element) < 9) {
+                return false;
+        }
+        if (cl.getClusterTag(element) > 0) {
+                // this is alreade a binding site, continue
+                return true;
+        }
+        if (cl.getClusterTag(element) == 0) {
+                Data::iterator it = da->find(element);
+                // check if all successing nucleotides belong to the background
+                for (int i = 0; i < 9 && it != da->end(); i++) {
+                        it++;
+//                        printf("neighbours: %d\n", cl.getClusterTag(*it));
+                        if (cl.getClusterTag(*it) != 0) {
+                                return false;
+                        }
+                }
+                // check if all previous nucleotides belong to the background
+                it = da->find(element);
+                for (int i = 0; i < 9 && it != da->begin(); i++) {
+                        it--;
+//                        printf("neighbours: %d\n", cl.getClusterTag(*it));
+                        if (cl.getClusterTag(*it) != 0) {
+                                return false;
+                        }
+                }
+                // there is enough space to the left and right, continue
+                return true;
+        }
+        // this element is within a binding site, abort
+        return false;
+}
+
+void
+TfbsDPM::release_block(Data::element& element) {
+        Data::iterator it = da->find(element);
+        for (int i = 0; i < 10; i++) {
+                if (cl.getClusterTag(*it) != -1) {
+                        cl.release(*it);
+                }
+                it++;
+        }
+}
+
+void
+TfbsDPM::assign_block(Data::element& element, Cluster::cluster_tag_t c) {
+        if (c == 0) {
+                Data::iterator it = da->find(element);
+                for (int i = 0; i < 10; i++) {
+                        cl.assign(*it, 0);
+                        it++;
+                }
+        }
+        else {
+                cl.assign(element, c);
+        }
+}
+
+bool
+TfbsDPM::sample(Data::element& element) {
+        if (check_element(element) == false) {
+                return false;
+        }
+
         Cluster::cluster_tag_t old_cluster_tag = cl.getClusterTag(element);
-        cl.release(element);
+        release_block(element);
         Distribution& pred = predictive();
         Cluster::size_type num_clusters = cl.size();
         double weights[num_clusters+1];
         Cluster::cluster_tag_t tags[num_clusters+1];
 
-        {
-                Data::iterator it = ++(da->find(element));
-                for (int i = 0; i < 9; i++) {
-                        if (cl.getClusterTag(*it) > 0) {
-                                cl.assign(element, 0);
-                                return false;
-                        }
-                }
-        }
         ////////////////////////////////////////////////////////////////////////
         // mixture component 1: background model
         Cluster::iterator it = cl.begin();
         {
                 Distribution& postPred = posteriorPredictive(**it);
-                weights[0] = (1-lambda)*exp(postPred.log_pdf(element.x));
+//                weights[0] = (1-lambda)*exp(postPred.log_pdf(element.x));
+                weights[0] = (1-lambda);
                 tags[0]    = (*it)->tag;
-                printf("weights[%ld]: %f\n", 0, weights[0]);
+//                printf("weights[%ld]: %f\n", 0, weights[0]);
         }
 
         ////////////////////////////////////////////////////////////////////////
@@ -175,16 +234,18 @@ bool TfbsDPM::sample(Data::element& element) {
         }
         // add the tag of a new class and compute their weight
 //        printf("alpha: %f\n", alpha);
-        log_weights[num_clusters] = log(alpha) + pred.log_pdf(element.x);
-        tags[num_clusters]        = cl.next_free_cluster()->tag;
-        log_sum = logadd(log_weights[num_clusters], log_sum);
+        log_weights[num_clusters-1] = log(alpha) + pred.log_pdf(element.x);
+        tags[num_clusters]          = cl.next_free_cluster()->tag;
+        log_sum = logadd(log_weights[num_clusters-1], log_sum);
 
         // normalize
         for (Cluster::cluster_tag_t i = 1; i < num_clusters+1; i++) {
 //                printf("log_weights[%ld]: %f\n", i, log_weights[i]);
 //                printf("log_sum: %f\n", log_sum);
                 weights[i] = lambda*expl(log_weights[i-1] - log_sum);
-                printf("weights[%ld]: %f\n", i, weights[i]);
+//                printf("log_weights[%ld]: %f\n", i, log_weights[i-1]);
+//                printf("log_weights[%ld]: %f\n", i, log_weights[i-1]-log_sum);
+//                printf("weights[%ld]: %f\n", i, weights[i]);
         }
 
         // draw a new cluster for the element
@@ -192,8 +253,8 @@ bool TfbsDPM::sample(Data::element& element) {
         Cluster::cluster_tag_t i = gsl_ran_discrete(_r, gdd);
         gsl_ran_discrete_free(gdd);
 
-        cl.assign(element, tags[i]);
-        printf("\n\n");
+        assign_block(element, tags[i]);
+//        printf("\n\n");
 
         return old_cluster_tag != tags[i];
 }

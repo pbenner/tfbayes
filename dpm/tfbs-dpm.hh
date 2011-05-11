@@ -66,6 +66,9 @@ private:
 
         // private methods
         void count_statistic(const Cluster::cluster& cluster, gsl_matrix* alpha, gsl_matrix* counts);
+        bool check_element(Data::element& element);
+        void assign_block(Data::element& element, Cluster::cluster_tag_t c);
+        void release_block(Data::element& element);
 };
 
 #endif /* TFBS_DPM_HH */
