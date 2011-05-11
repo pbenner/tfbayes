@@ -32,11 +32,11 @@
 using namespace std;
 
 TfbsDPM::TfbsDPM(TfbsData* data)
-        : DPM(data), lambda(0.1),
+        : DPM(data), lambda(0.4),
           pd_tfbs_alpha(gsl_matrix_alloc(10, 4)),
           pd_bg_alpha(gsl_matrix_alloc(1, 4))
 {
-        alpha = 0.01;
+        alpha = 1;
 
         for (int i = 0; i < 10; i++) {
                 for (int j = 0; j < 4; j++) {
@@ -207,45 +207,50 @@ TfbsDPM::sample(Data::element& element) {
         Cluster::size_type num_clusters = cl.size();
         double weights[num_clusters+1];
         Cluster::cluster_tag_t tags[num_clusters+1];
+        double sum = 0;
+
+        char buf[10];
+        ((TfbsData*)da)->get_nucleotide(element, 10, buf);
 
         ////////////////////////////////////////////////////////////////////////
         // mixture component 1: background model
         Cluster::iterator it = cl.begin();
         {
                 Distribution& postPred = posteriorPredictive(**it);
-//                weights[0] = (1-lambda)*exp(postPred.log_pdf(element.x));
-                weights[0] = (1-lambda);
-                tags[0]    = (*it)->tag;
-//                printf("weights[%ld]: %f\n", 0, weights[0]);
+                weights[0] = 1;
+                for (int i = 0; i < 10; i++) {
+                        weights[0] *= postPred.pdf(buf+i);
+                }
+                weights[0] *= (1-lambda);
+                tags[0]     = (*it)->tag;
+                sum = weights[0];
+//                printf("_weights[%ld]: %.10f\n", 0, weights[0]);
         }
 
         ////////////////////////////////////////////////////////////////////////
         // mixture component 2: dirichlet process for tfbs models
-        double log_sum = -HUGE_VAL;
-        double log_weights[num_clusters];
+        it++;
         for (Cluster::cluster_tag_t i = 1; it != cl.end(); i++) {
                 Distribution& postPred = posteriorPredictive(**it);
                 double num_elements    = (double)(*it)->elements.size();
-                log_weights[i-1] = log(num_elements) + postPred.log_pdf(element.x);
-                tags[i]          = (*it)->tag;
+                weights[i] = lambda*num_elements*postPred.pdf(buf);
+                tags[i]    = (*it)->tag;
                 // normalization constant
-                log_sum = logadd(log_weights[i-1], log_sum);
+                sum += weights[i];
                 it++;
         }
         // add the tag of a new class and compute their weight
 //        printf("alpha: %f\n", alpha);
-        log_weights[num_clusters-1] = log(alpha) + pred.log_pdf(element.x);
-        tags[num_clusters]          = cl.next_free_cluster()->tag;
-        log_sum = logadd(log_weights[num_clusters-1], log_sum);
+        weights[num_clusters] = alpha*pred.pdf(buf);
+        tags[num_clusters]    = cl.next_free_cluster()->tag;
+        sum += weights[num_clusters];
 
         // normalize
-        for (Cluster::cluster_tag_t i = 1; i < num_clusters+1; i++) {
-//                printf("log_weights[%ld]: %f\n", i, log_weights[i]);
-//                printf("log_sum: %f\n", log_sum);
-                weights[i] = lambda*expl(log_weights[i-1] - log_sum);
-//                printf("log_weights[%ld]: %f\n", i, log_weights[i-1]);
-//                printf("log_weights[%ld]: %f\n", i, log_weights[i-1]-log_sum);
-//                printf("weights[%ld]: %f\n", i, weights[i]);
+//        printf("sum: %.10f\n", sum);
+        for (Cluster::cluster_tag_t i = 0; i < num_clusters+1; i++) {
+//                printf("weights[%ld]: %.10f\n", i, weights[i]);
+                weights[i] /=  sum;
+//                printf("weights[%ld]: %.10f\n", i, weights[i]);
         }
 
         // draw a new cluster for the element
@@ -254,7 +259,7 @@ TfbsDPM::sample(Data::element& element) {
         gsl_ran_discrete_free(gdd);
 
         assign_block(element, tags[i]);
-//        printf("\n\n");
+        printf("\n\n");
 
         return old_cluster_tag != tags[i];
 }

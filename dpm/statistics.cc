@@ -62,17 +62,32 @@ void ProductDirichlet::update(
         this->alpha = alpha;
 }
 
-double ProductDirichlet::log_pdf(Data::x_t x) {
-        double result = 0;
+double ProductDirichlet::pdf(char *buf) {
+        double result = 1;
 
         for (unsigned int i = 0; i < this->alpha->size1; i++) {
-                double sum1 = 0, sum2 = 0;
+                double sum = 0;
                 for (unsigned int j = 0; j < this->alpha->size2; j++) {
-                        double tmp = gsl_matrix_get(this->alpha, i, j);
-                        sum1 += tmp;
-                        sum2 += gsl_sf_lngamma(tmp);
+                        sum += gsl_matrix_get(this->alpha, i, j);
                 }
-                result += sum2 - gsl_sf_lngamma(sum1);
+                switch (buf[i]) {
+                case 'A':
+                case 'a':
+                        result *= gsl_matrix_get(this->alpha, i, 0)/sum;
+                break;
+                case 'C':
+                case 'c':
+                        result *= gsl_matrix_get(this->alpha, i, 1)/sum;
+                break;
+                case 'G':
+                case 'g':
+                        result *= gsl_matrix_get(this->alpha, i, 2)/sum;
+                break;
+                case 'T':
+                case 't':
+                        result *= gsl_matrix_get(this->alpha, i, 3)/sum;
+                break;
+                }
         }
         return result;
 }

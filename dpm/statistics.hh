@@ -40,7 +40,7 @@ public:
         Distribution() {}
         virtual ~Distribution() {}
 
-        virtual double log_pdf(Data::x_t x) { return 0.0; }
+        virtual double pdf(char *buf) { return 0.0; }
 };
 
 class ProductDirichlet : public Distribution {
@@ -50,7 +50,7 @@ public:
         ~ProductDirichlet();
 
         void update(gsl_matrix* counts);
-        double log_pdf(Data::x_t x);
+        double pdf(char *buf);
 
 private:
         gsl_matrix* alpha;

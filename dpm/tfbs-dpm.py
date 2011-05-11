@@ -55,6 +55,7 @@ def usage():
 def cluster_colors(c):
     if c < 5:
         return {
+           -1 : 'black',
             0 : 'black',
             1 : 'red',
             2 : 'green',
@@ -95,7 +96,7 @@ class TfbsDPM():
     def plotResult(self, ax):
         ax.set_xticks([]); ax.set_yticks([])
         sequences = np.array(self.sequences)
-        clusters  = np.zeros_like(self.clusters)
+        clusters  = -np.ones_like(self.clusters)
         num_clusters = dpm_num_clusters()
         for c in range(0, num_clusters):
             for seq, pos in dpm_cluster(c):
@@ -160,13 +161,13 @@ def sample(sequences, clusters):
 #    dpm.sampleInteractively(1, ax2)
 #    dpm.plotResult(ax2)
 #    print "-------------------------"
-#    dpm.sampleInteractively(10000, ax2)
-    show()
+    dpm.sampleInteractively(1000, ax2)
+#    show()
 
 #    fig2 = figure()
 #    ax3  = fig2.add_subplot(1,1,1, title="Statistics")
 #    dpm.plotStatistics(ax3)
-#    show()
+    show()
 #    dpm.print_clusters()
 
 def main():
