@@ -52,7 +52,7 @@ DPM::DPM(Data* data)
         }
 
         // initialize posterior predictive distributions for each cluster
-        for (Cluster::iterator_all it = cl.begin_all(); it != cl.end_all(); it++) {
+        for (Clusters::iterator_all it = cl.begin_all(); it != cl.end_all(); it++) {
                 if ((*it).tag == DPM::BG_CLUSTER) {
                         // background model
                         gsl_matrix* counts = gsl_matrix_alloc(DPM::BG_LENGTH, DPM::NUCLEOTIDES);
@@ -75,13 +75,13 @@ DPM::DPM(Data* data)
 DPM::~DPM() {
         delete(da);
 
-        for (Cluster::iterator_all it = cl.begin_all(); it != cl.end_all(); it++) {
+        for (Clusters::iterator_all it = cl.begin_all(); it != cl.end_all(); it++) {
                 delete((*it).dist);
         }
 }
 
 void
-DPM::count_statistic(const Cluster::cluster& cluster, gsl_matrix* alpha, gsl_matrix* counts) {
+DPM::count_statistic(const Clusters::cluster& cluster, gsl_matrix* alpha, gsl_matrix* counts) {
         int len = counts->size1;
 
         // reset counts
@@ -92,7 +92,7 @@ DPM::count_statistic(const Cluster::cluster& cluster, gsl_matrix* alpha, gsl_mat
                 gsl_matrix_set(counts, i, 3, gsl_matrix_get(alpha, i, 3));
         }
         // compute count statistic
-        for (Cluster::elements_t::const_iterator it  = cluster.elements.begin();
+        for (Clusters::elements_t::const_iterator it  = cluster.elements.begin();
              it != cluster.elements.end(); it++) {
                 char buf[len];
                 da->get_nucleotide(**it, len, buf);
@@ -168,7 +168,7 @@ DPM::check_element(Data::element& element)
 }
 
 void
-DPM::release_block(char* nucleotides, Data::element& element, Cluster::cluster& c) {
+DPM::release_block(char* nucleotides, Data::element& element, Clusters::cluster& c) {
         // release a block of nucleotides from its clusters
         Data::iterator it = da->find(element);
         for (int i = 0; i < DPM::TFBS_LENGTH; i++) {
@@ -186,7 +186,7 @@ DPM::release_block(char* nucleotides, Data::element& element, Cluster::cluster& 
 }
 
 void
-DPM::assign_block(char* nucleotides, Data::element& element, Cluster::cluster& c) {
+DPM::assign_block(char* nucleotides, Data::element& element, Clusters::cluster& c) {
         if (c.tag == DPM::BG_CLUSTER) {
                 // assign all nucleotides to the background cluster
                 Data::iterator it = da->find(element);
@@ -220,15 +220,15 @@ DPM::sample(Data::element& element) {
 
         ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
-        Cluster::cluster_tag_t old_cluster_tag = cl.getClusterTag(element);
+        Clusters::cluster_tag_t old_cluster_tag = cl.getClusterTag(element);
         release_block(nucleotides, element, cl[old_cluster_tag]);
-        Cluster::size_type num_clusters = cl.size();
+        Clusters::size_type num_clusters = cl.size();
         double weights[num_clusters+1];
-        Cluster::cluster_tag_t tags[num_clusters+1];
+        Clusters::cluster_tag_t tags[num_clusters+1];
         double sum = 0;
 
-        Cluster::cluster_tag_t i = 0;
-        for (Cluster::iterator it = cl.begin(); it != cl.end(); it++) {
+        Clusters::cluster_tag_t i = 0;
+        for (Clusters::iterator it = cl.begin(); it != cl.end(); it++) {
                 tags[i] = (*it)->tag;
                 ////////////////////////////////////////////////////////////////
                 // mixture component 1: background model
@@ -258,7 +258,7 @@ DPM::sample(Data::element& element) {
 
         ////////////////////////////////////////////////////////////////////////
         // normalize
-        for (Cluster::cluster_tag_t i = 0; i < (Cluster::cluster_tag_t)num_clusters+1; i++) {
+        for (Clusters::cluster_tag_t i = 0; i < (Clusters::cluster_tag_t)num_clusters+1; i++) {
                 weights[i] /= sum;
         }
 

@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef CLUSTER_HH
-#define CLUSTER_HH
+#ifndef CLUSTERS_HH
+#define CLUSTERS_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -29,11 +29,11 @@ using namespace std;
 #include "data.hh"
 #include "statistics.hh"
 
-class Cluster {
+class Clusters {
 public:
         // constructors and destructors
-        Cluster(Data& data);
-        ~Cluster();
+        Clusters(Data& data);
+        ~Clusters();
 
         // type definitions
         typedef vector<Data::element *>::size_type size_type;
@@ -70,7 +70,7 @@ public:
               cluster& operator[](int c);
         const cluster& operator[](int c) const;
 
-        friend ostream& operator<< (std::ostream& o, Cluster const& cluster);
+        friend ostream& operator<< (std::ostream& o, Clusters const& cluster);
 
         // methods
         ////////////////////////////////////////////////////////////////////////
@@ -107,4 +107,4 @@ private:
         size_type total_elements;
 };
 
-#endif /* CLUSTER_HH */
+#endif /* CLUSTERS_HH */

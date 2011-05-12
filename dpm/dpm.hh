@@ -27,7 +27,7 @@
 
 #include "data.hh"
 #include "dpm.hh"
-#include "cluster.hh"
+#include "clusters.hh"
 #include "statistics.hh"
 
 using namespace std;
@@ -50,15 +50,15 @@ public:
         // operators
         ////////////////////////////////////////////////////////////////////////
         friend ostream& operator<<(std::ostream& o, DPM const& dpm);
-              Cluster::cluster& operator[](int c)       { return cl[c]; }
-        const Cluster::cluster& operator[](int c) const { return cl[c]; }
+              Clusters::cluster& operator[](int c)       { return cl[c]; }
+        const Clusters::cluster& operator[](int c) const { return cl[c]; }
 
         // methods
         ////////////////////////////////////////////////////////////////////////
-        Cluster::size_type num_clusters() {
+        Clusters::size_type num_clusters() {
                 return cl.size();
         }
-        Cluster& get_clusters() {
+        Clusters& get_clusters() {
                 return cl;
         }
         vector<double>& get_hist_switches() {
@@ -78,7 +78,7 @@ public:
 private:
         // data and clusters
         Data* da;
-        Cluster cl;
+        Clusters cl;
 
         // parameters
         double alpha;
@@ -91,13 +91,13 @@ private:
         // gibbs sampler history
         vector<double> hist_switches;
         vector<double> hist_likelihood;
-        vector<Cluster::size_type> hist_num_clusters;
+        vector<Clusters::size_type> hist_num_clusters;
 
         // private methods
-        void count_statistic(const Cluster::cluster& cluster, gsl_matrix* alpha, gsl_matrix* counts);
+        void count_statistic(const Clusters::cluster& cluster, gsl_matrix* alpha, gsl_matrix* counts);
         bool check_element(Data::element& element);
-        void assign_block(char* nucleotides, Data::element& element, Cluster::cluster& c);
-        void release_block(char* nucleotides, Data::element& element, Cluster::cluster& c);
+        void assign_block(char* nucleotides, Data::element& element, Clusters::cluster& c);
+        void release_block(char* nucleotides, Data::element& element, Clusters::cluster& c);
 };
 
 #endif /* DPM_HH */

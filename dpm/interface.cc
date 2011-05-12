@@ -28,7 +28,7 @@ namespace Bayes {
 }
 
 #include "init.hh"
-#include "cluster.hh"
+#include "clusters.hh"
 #include "data.hh"
 #include "dpm.hh"
 #include "interface.hh"
@@ -56,17 +56,17 @@ unsigned int _dpm_num_clusters() {
 }
 
 Bayes::Matrix* _dpm_cluster(unsigned int c) {
-        Cluster::iterator it = (*_gdpm).get_clusters().begin();
+        Clusters::iterator it = (*_gdpm).get_clusters().begin();
         for (unsigned int i = 0; i < c; i++) {
                 it++;
         }
-        Cluster::cluster& cl = **it;
+        Clusters::cluster& cl = **it;
         int n = cl.elements.size();
         int m = 2;
 
         Bayes::Matrix* result = Bayes::allocMatrix(n, m);
         int i = 0;
-        for (Cluster::elements_t::iterator it = cl.elements.begin();
+        for (Clusters::elements_t::iterator it = cl.elements.begin();
              it != cl.elements.end(); it++) {
                 result->mat[i][0] = (*it)->x[0];
                 result->mat[i][1] = (*it)->x[1];
@@ -77,12 +77,12 @@ Bayes::Matrix* _dpm_cluster(unsigned int c) {
 }
 
 Bayes::Vector* _dpm_original_tags(unsigned int c) {
-        Cluster::cluster& cl = (*_gdpm)[c];
+        Clusters::cluster& cl = (*_gdpm)[c];
         int n = cl.elements.size();
 
         Bayes::Vector* result = Bayes::allocVector(n);
         int i = 0;
-        for (Cluster::elements_t::iterator it = cl.elements.begin();
+        for (Clusters::elements_t::iterator it = cl.elements.begin();
              it != cl.elements.end(); it++) {
                 result->vec[i] = (double)((*it)->original_cluster);
                 i++;
