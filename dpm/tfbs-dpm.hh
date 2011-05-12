@@ -51,6 +51,11 @@ public:
         bool sample(Data::element& element);
         void gibbsSample(unsigned int steps);
 
+        // constants
+        static const int BG_LENGTH   = 1;
+        static const int TFBS_LENGTH = 10;
+        static const int NUCLEOTIDES = 4;
+
 private:
         // parameters
         double lambda;

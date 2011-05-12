@@ -29,8 +29,10 @@ using namespace std;
 
 Cluster::Cluster(Data& data)
         : clusters(data.size()),
-          assignments(data.size())
+          assignments(data.size()),
+          total_elements(0)
 {
+        // initialize clusters
         for (Cluster::size_type i = 0; i < data.size(); i++) {
                 clusters[i].tag = i;
                 free_clusters.push_back(&clusters[i]);
@@ -45,7 +47,6 @@ Cluster::Cluster(Data& data)
 }
 
 Cluster::~Cluster() {
-
 }
 
 Cluster::cluster& Cluster::operator[](int c) {
@@ -67,13 +68,16 @@ Cluster::cluster_tag_t Cluster::getClusterTag(const Data::element& element) cons
 }
 
 void Cluster::release(Data::element& element) {
-        Cluster::size_type old_cluster_tag = assignments[element.tag];
-        Cluster::elements_t::iterator it = clusters[old_cluster_tag].elements.begin();
-        clusters[old_cluster_tag].elements.remove(&element);
-        assignments[element.tag] = -1;
-        if (clusters[old_cluster_tag].elements.size() == 0) {
-                used_clusters.remove(&clusters[old_cluster_tag]);
-                free_clusters.push_back(&clusters[old_cluster_tag]);
+        Cluster::cluster_tag_t old_cluster_tag = assignments[element.tag];
+        if (old_cluster_tag != -1) {
+                Cluster::elements_t::iterator it = clusters[old_cluster_tag].elements.begin();
+                clusters[old_cluster_tag].elements.remove(&element);
+                assignments[element.tag] = -1;
+                if (clusters[old_cluster_tag].elements.size() == 0) {
+                        used_clusters.remove(&clusters[old_cluster_tag]);
+                        free_clusters.push_back(&clusters[old_cluster_tag]);
+                }
+                total_elements--;
         }
 }
 
@@ -84,6 +88,7 @@ void Cluster::assign(Data::element& element, Cluster::cluster_tag_t cluster_tag)
         }
         assignments[element.tag] = cluster_tag;
         clusters[cluster_tag].elements.push_back(&element);
+        total_elements++;
 }
 
 void Cluster::reassign(Data::element& element, Cluster::cluster_tag_t cluster_tag) {

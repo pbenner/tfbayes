@@ -48,10 +48,10 @@ public:
 
         // iterators
         iterator begin() { return used_clusters.begin(); }
-        iterator end()   { return used_clusters.end(); }
+        iterator end()   { return used_clusters.end();   }
 
         const_iterator begin() const { return used_clusters.begin(); }
-        const_iterator end()   const { return used_clusters.end(); }
+        const_iterator end()   const { return used_clusters.end();   }
 
         // operators
               cluster& operator[](int c);
@@ -74,7 +74,13 @@ public:
                 }
         }
 
-        size_type size() { return used_clusters.size(); }
+        size_type size() {
+                return used_clusters.size();
+        }
+
+        size_type get_total_elements() {
+                return total_elements;
+        }
 
 private:
         static const int _INIT_NUM_CLASSES = 1;
@@ -83,6 +89,8 @@ private:
         vector<size_type> assignments;
         list<cluster*> used_clusters;
         list<cluster*> free_clusters;
+
+        size_type total_elements;
 };
 
 #endif /* CLUSTER_HH */
