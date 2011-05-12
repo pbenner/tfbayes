@@ -98,6 +98,9 @@ _lib._dpm_sample.argtypes  = []
 _lib._dpm_free.restype     = None
 _lib._dpm_free.argtypes    = []
 
+_lib._dpm_get_posterior.restype  = POINTER(MATRIX)
+_lib._dpm_get_posterior.argtypes = []
+
 # convert datatypes
 # ------------------------------------------------------------------------------
 
@@ -176,3 +179,6 @@ def dpm_sample(n):
 
 def dpm_free():
      _lib._dpm_free()
+
+def dpm_get_posterior():
+     return getMatrix(_lib._dpm_get_posterior())

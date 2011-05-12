@@ -32,11 +32,14 @@ using namespace std;
 DPM::DPM(Data* data)
         : da(data), cl(*da),
           // strength parameter for the dirichlet process
-          alpha(1.0),
+          alpha(0.1),
           // mixture weight for the dirichlet process
-          lambda(0.1),
+          lambda(0.001),
           tfbs_alpha(gsl_matrix_alloc(DPM::TFBS_LENGTH, DPM::NUCLEOTIDES)),
-          bg_alpha(gsl_matrix_alloc(DPM::BG_LENGTH, DPM::NUCLEOTIDES))
+          bg_alpha(gsl_matrix_alloc(DPM::BG_LENGTH, DPM::NUCLEOTIDES)),
+          // sampling history and posterior distribution
+          total_sampling_steps(0),
+          posterior(gsl_matrix_alloc(da->get_n_sequences(), da->get_sequence_length()))
 {
         // initialize prior for the tfbs
         for (int i = 0; i < DPM::TFBS_LENGTH; i++) {
@@ -44,10 +47,18 @@ DPM::DPM(Data* data)
                         gsl_matrix_set(tfbs_alpha, i, j, 1);
                 }
         }
+
         // initialize prior for the background model
         for (int i = 0; i < DPM::BG_LENGTH; i++) {
                 for (int j = 0; j < DPM::NUCLEOTIDES; j++) {
                         gsl_matrix_set(bg_alpha, i, j, DPM::TFBS_LENGTH);
+                }
+        }
+
+        // initialize posterior
+        for (unsigned int i = 0; i < da->get_n_sequences(); i++) {
+                for (unsigned int j = 0; j < da->get_sequence_length(); j++) {
+                        gsl_matrix_set(posterior, i, j, 0);
                 }
         }
 
@@ -73,6 +84,9 @@ DPM::DPM(Data* data)
 }
 
 DPM::~DPM() {
+        gsl_matrix_free(bg_alpha);
+        gsl_matrix_free(tfbs_alpha);
+        gsl_matrix_free(posterior);
         delete(da);
 
         for (Clusters::iterator_all it = cl.begin_all(); it != cl.end_all(); it++) {
@@ -121,15 +135,6 @@ DPM::count_statistic(const Clusters::cluster& cluster, gsl_matrix* alpha, gsl_ma
                         }
                 }
         }
-}
-
-double
-DPM::likelihood() {
-        return 0.0;
-}
-
-void
-DPM::compute_statistics() {
 }
 
 bool
@@ -283,6 +288,32 @@ DPM::sample(Data::element& element) {
         return old_cluster_tag != tags[i];
 }
 
+// sampling methods
+////////////////////////////////////////////////////////////////////////////////
+
+double
+DPM::likelihood() {
+        return 0.0;
+}
+
+void
+DPM::compute_statistics() {
+        for (Data::iterator_randomized it = da->begin_randomized();
+             it != da->end_randomized(); it++) {
+                if (cl.getClusterTag(**it) != -1) {
+                        const int i = (**it).x[0];
+                        const int j = (**it).x[1];
+                        if (cl.getClusterTag(**it) != DPM::BG_CLUSTER) {
+                                for (int k = 0; k < DPM::TFBS_LENGTH; k++) {
+                                        double tmp   = gsl_matrix_get(posterior, i, j+k);
+                                        double value = (total_sampling_steps*tmp+1.0)/(total_sampling_steps+1.0);
+                                        gsl_matrix_set(posterior, i, j+k, value);
+                                }
+                        }
+                }
+        }
+}
+
 void
 DPM::gibbsSample(unsigned int n) {
         // sample `n' times
@@ -296,8 +327,12 @@ DPM::gibbsSample(unsigned int n) {
                 }
                 hist_switches.push_back(sum/da->size());
                 compute_statistics();
+                total_sampling_steps++;
         }
 }
+
+// misc methods
+////////////////////////////////////////////////////////////////////////////////
 
 ostream& operator<< (ostream& o, DPM const& dpm)
 {

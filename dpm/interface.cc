@@ -55,6 +55,10 @@ unsigned int _dpm_num_clusters() {
         return _gdpm->num_clusters();
 }
 
+Bayes::Matrix* _dpm_get_posterior() {
+        return Bayes::fromGslMatrix((*_gdpm).get_posterior());
+}
+
 Bayes::Matrix* _dpm_cluster(unsigned int c) {
         Clusters::iterator it = (*_gdpm).get_clusters().begin();
         for (unsigned int i = 0; i < c; i++) {

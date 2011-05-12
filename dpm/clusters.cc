@@ -50,19 +50,11 @@ Clusters::~Clusters() {
 }
 
 Clusters::cluster& Clusters::operator[](int c) {
-        // Clusters::iterator it = begin();
-        // for (int i = 0; i < c; i++) { it++; }
-
-        // return **it;
         return clusters[c];
 }
 
 const Clusters::cluster& 
 Clusters::operator[](int c) const {
-        // Clusters::const_iterator it = begin();
-        // for (int i = 0; i < c; i++) { it++; }
-
-        // return **it;
         return clusters[c];
 }
 

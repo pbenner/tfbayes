@@ -94,6 +94,7 @@ class TfbsDPM():
         ax.set_xticks([]); ax.set_yticks([])
         plot_sequences(ax, self.sequences, self.clusters)
     def plotResult(self, ax):
+        ax.set_title('Gibbs Sampling')
         ax.set_xticks([]); ax.set_yticks([])
         sequences = np.array(self.sequences)
         clusters  = -np.ones_like(self.clusters)
@@ -102,6 +103,11 @@ class TfbsDPM():
             for seq, pos in dpm_cluster(c):
                 clusters[int(seq)][int(pos)] = c
         plot_sequences(ax, sequences, clusters)
+    def plotPosterior(self, ax):
+        ax.set_title('Posterior')
+        ax.set_xticks([]); ax.set_yticks([])
+        X = dpm_get_posterior()
+        ax.imshow(X, cmap=cm.jet, interpolation='nearest')
     def plotStatistics(self, ax1):
         ax2 = ax1.twinx()
         p1  = ax1.plot(dpm_hist_switches())
@@ -112,23 +118,25 @@ class TfbsDPM():
         ax1.legend([p1, p2], ["Mean class switches", "Mean likelihood"])
 
 class InteractiveTDPM(TfbsDPM):
-    def __init__(self, sequences, clusters, ax):
+    def __init__(self, sequences, clusters, ax2, ax3):
         TfbsDPM.__init__(self, sequences, clusters[:][:])
-        self.plotResult(ax)
+        self.plotResult(ax2)
+        self.plotPosterior(ax3)
         manager = get_current_fig_manager()
         def updatefig(*args):
             try:
-                ax.cla()
-                self.sampleInteractively(1, ax)
-                self.plotResult(ax)
+                ax2.cla()
+                ax3.cla()
+                self.sampleInteractively(1)
+                self.plotResult(ax2)
+                self.plotPosterior(ax3)
                 manager.canvas.draw()
                 return True
             except StopIteration:
                 return False
         gobject.idle_add(updatefig)
-    def sampleInteractively(self, n, ax):
+    def sampleInteractively(self, n):
         self.sample(n)
-        return None
 
 # main
 # ------------------------------------------------------------------------------
@@ -153,15 +161,12 @@ def readSequences(seq_file):
 
 def sample(sequences, clusters):
     fig1  = figure(linewidth=0,facecolor='white',edgecolor='white')
-    ax1   = fig1.add_subplot(2,1,1, title='Sequences')
-    ax2   = fig1.add_subplot(2,1,2, title='Gibbs Sampling')
-    dpm   = InteractiveTDPM(sequences, clusters[:][:], ax2)
+    ax1   = fig1.add_subplot(3,1,1, title='Sequences')
+    ax2   = fig1.add_subplot(3,1,2, title='Gibbs Sampling')
+    ax3   = fig1.add_subplot(3,1,3, title='Posterior')
+    dpm   = InteractiveTDPM(sequences, clusters[:][:], ax2, ax3)
     dpm.plotData(ax1)
-    dpm.plotResult(ax2)
-#    dpm.sampleInteractively(1, ax2)
-#    dpm.plotResult(ax2)
-#    print "-------------------------"
-#    dpm.sampleInteractively(10, ax2)
+    dpm.sampleInteractively(100)
     show()
 
 #    fig2 = figure()

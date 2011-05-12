@@ -67,6 +67,9 @@ public:
         vector<double>& get_hist_likelihood() {
                 return hist_likelihood;
         }
+        gsl_matrix* get_posterior() {
+                return posterior;
+        }
 
         // constants
         ////////////////////////////////////////////////////////////////////////
@@ -89,9 +92,11 @@ private:
         gsl_matrix* bg_alpha;
 
         // gibbs sampler history
+        unsigned int total_sampling_steps;
         vector<double> hist_switches;
         vector<double> hist_likelihood;
         vector<Clusters::size_type> hist_num_clusters;
+        gsl_matrix* posterior;
 
         // private methods
         void count_statistic(const Clusters::cluster& cluster, gsl_matrix* alpha, gsl_matrix* counts);

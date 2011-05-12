@@ -88,13 +88,20 @@ public:
         void get_nucleotide(const element& e, int n, char *buf) const;
         int num_successors(const element& e);
 
+        size_t get_n_sequences() {
+                return n_sequences;
+        }
+        size_t get_sequence_length() {
+                return sequence_length;
+        }
 private:
+        size_t n_sequences;
+        size_t sequence_length;
+
         vector<element > elements;
         vector<element*> elements_randomized;
 
         vector<string> sequences;
-        size_t n_sequences;
-        size_t sequence_length;
 };
 
 ostream& operator<< (ostream& o, Data::element const& element);
