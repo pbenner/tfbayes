@@ -240,53 +240,55 @@ DPM::assign_block(char* nucleotides, Data::element& element, Cluster::cluster& c
 
 bool
 DPM::sample(Data::element& element) {
+        ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
         if (check_element(element) == false) {
                 return false;
         }
 
+        ////////////////////////////////////////////////////////////////////////
         // buffer to store the sequence of nucleotides, starting at `element'
         char nucleotides[DPM::TFBS_LENGTH];
         da->get_nucleotide(element, DPM::TFBS_LENGTH, nucleotides);
 
+        ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
         Cluster::cluster_tag_t old_cluster_tag = cl.getClusterTag(element);
         release_block(nucleotides, element, cl[old_cluster_tag]);
-        Distribution& pred = predictive();
         Cluster::size_type num_clusters = cl.size();
         double weights[num_clusters+1];
         Cluster::cluster_tag_t tags[num_clusters+1];
         double sum = 0;
 
-        ////////////////////////////////////////////////////////////////////////
-        // mixture component 1: background model
-        Cluster::iterator it = cl.begin();
-        {
-                Distribution& postPred = posteriorPredictive(**it);
-                weights[0] = 1;
-                for (int i = 0; i < DPM::TFBS_LENGTH; i++) {
-                        weights[0] *= postPred.pdf(nucleotides+i);
+        Cluster::cluster_tag_t i = 0;
+        for (Cluster::iterator it = cl.begin(); it != cl.end(); it++) {
+                Cluster::cluster_tag_t tag = (*it)->tag;
+                ////////////////////////////////////////////////////////////////
+                // mixture component 1: background model
+                if (tag == DPM::BG_CLUSTER) {
+                        weights[i] = 1;
+                        for (int j = 0; j < DPM::TFBS_LENGTH; j++) {
+                                weights[i] *= (*it)->dist->pdf(nucleotides+j);
+                        }
+                        weights[i] *= (1-lambda);
+                        tags[i]     = tag;
+                        sum += weights[i];
                 }
-                weights[0] *= (1-lambda);
-                tags[0]     = (*it)->tag;
-                sum = weights[0];
+                ////////////////////////////////////////////////////////////////
+                // mixture component 2: dirichlet process for tfbs models
+                else {
+                        double num_elements = (double)(*it)->elements.size();
+                        weights[i] = lambda*num_elements*(*it)->dist->pdf(nucleotides);
+                        tags[i]    = tag;
+                        // normalization constant
+                        sum += weights[i];
+                }
+                i++;
         }
-
         ////////////////////////////////////////////////////////////////////////
-        // mixture component 2: dirichlet process for tfbs models
-        it++;
-        for (Cluster::cluster_tag_t i = 1; it != cl.end(); i++) {
-                Distribution& postPred = posteriorPredictive(**it);
-                double num_elements    = (double)(*it)->elements.size();
-                weights[i] = lambda*num_elements*postPred.pdf(nucleotides);
-                tags[i]    = (*it)->tag;
-                // normalization constant
-                sum += weights[i];
-                it++;
-        }
         // add the tag of a new class and compute their weight
-        weights[num_clusters] = alpha*pred.pdf(nucleotides);
         tags[num_clusters]    = cl.next_free_cluster()->tag;
+        weights[num_clusters] = alpha*cl[tags[num_clusters]].dist->pdf(nucleotides);
         sum += weights[num_clusters];
 
         ////////////////////////////////////////////////////////////////////////
@@ -296,13 +298,15 @@ DPM::sample(Data::element& element) {
         }
 
         ////////////////////////////////////////////////////////////////////////
-        // draw a new cluster for the element
+        // draw a new cluster for the element and assign the element
+        // to that cluster
         gsl_ran_discrete_t* gdd  = gsl_ran_discrete_preproc(num_clusters+1, weights);
-        Cluster::cluster_tag_t i = gsl_ran_discrete(_r, gdd);
+        i = gsl_ran_discrete(_r, gdd);
         gsl_ran_discrete_free(gdd);
-
         assign_block(nucleotides, element, cl[tags[i]]);
 
+        ////////////////////////////////////////////////////////////////////////
+        // return true if the cluster assignment has changed
         return old_cluster_tag != tags[i];
 }
 
