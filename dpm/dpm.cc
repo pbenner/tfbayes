@@ -205,6 +205,13 @@ DPM::assign_block(char* nucleotides, Data::element& element, Clusters::cluster& 
         }
 }
 
+int
+DPM::num_tfbs() {
+        Clusters::cluster c = cl[DPM::BG_CLUSTER];
+
+        return cl.get_total_elements() - c.elements.size();
+}
+
 bool
 DPM::sample(Data::element& element) {
         ////////////////////////////////////////////////////////////////////////
@@ -225,6 +232,7 @@ DPM::sample(Data::element& element) {
         Clusters::size_type num_clusters = cl.size();
         double weights[num_clusters+1];
         Clusters::cluster_tag_t tags[num_clusters+1];
+        double dp_norm = num_tfbs() + alpha;
         double sum = 0;
 
         Clusters::cluster_tag_t i = 0;
@@ -244,7 +252,7 @@ DPM::sample(Data::element& element) {
                 // mixture component 2: dirichlet process for tfbs models
                 else {
                         double num_elements = (double)(*it)->elements.size();
-                        weights[i] = lambda*num_elements*(*it)->dist->pdf(nucleotides);
+                        weights[i] = lambda*num_elements/dp_norm*(*it)->dist->pdf(nucleotides);
                         // normalization constant
                         sum += weights[i];
                 }
@@ -253,7 +261,7 @@ DPM::sample(Data::element& element) {
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         tags[num_clusters]    = cl.next_free_cluster()->tag;
-        weights[num_clusters] = alpha*cl[tags[num_clusters]].dist->pdf(nucleotides);
+        weights[num_clusters] = alpha/dp_norm*cl[tags[num_clusters]].dist->pdf(nucleotides);
         sum += weights[num_clusters];
 
         ////////////////////////////////////////////////////////////////////////

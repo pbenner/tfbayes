@@ -98,6 +98,7 @@ private:
         bool check_element(Data::element& element);
         void assign_block(char* nucleotides, Data::element& element, Clusters::cluster& c);
         void release_block(char* nucleotides, Data::element& element, Clusters::cluster& c);
+        int num_tfbs();
 };
 
 #endif /* DPM_HH */
