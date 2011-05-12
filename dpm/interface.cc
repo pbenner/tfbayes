@@ -29,11 +29,11 @@ namespace Bayes {
 
 #include "init.hh"
 #include "cluster.hh"
-#include "tfbs-data.hh"
-#include "tfbs-dpm.hh"
+#include "data.hh"
+#include "dpm.hh"
 #include "interface.hh"
 
-static TfbsDPM* _gdpm;
+static DPM* _gdpm;
 
 __BEGIN_C_REGION;
 
@@ -47,8 +47,8 @@ void _dpm_init(int n, int m, char *sequences[], int *clusters[])
 {
         __dpm_init__();
 
-        TfbsData* data = new TfbsData(n, m, sequences, clusters);
-        _gdpm = new TfbsDPM(data);
+        Data* data = new Data(n, m, sequences, clusters);
+        _gdpm = new DPM(data);
 }
 
 unsigned int _dpm_num_clusters() {

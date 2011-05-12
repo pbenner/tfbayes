@@ -27,23 +27,104 @@
 
 using namespace std;
 
-#include "data.hh"
+#include <string.h>
 
-Data::Data() {
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+#include <gsl/gsl_matrix.h>
+
+#include "data.hh"
+#include "statistics.hh"
+
+Data::Data(int n, int m, char *sequences[], int *clusters[])
+        : n_sequences(n), sequence_length(m)
+{
+        int tag = 0;
+
+        for(int i = 0; i < n; i++) {
+                this->sequences.push_back(sequences[i]);
+                for(int j = 0; j < m; j++) {
+                        Data::x_t x;
+                        x.push_back(i);
+                        x.push_back(j);
+                        Data::element e = {
+                                x, tag++,
+                                clusters[i][j]
+                        };
+                        elements.push_back(e);
+                }
+        }
+        for (Data::iterator it = this->begin(); it != this->end(); it++) {
+                elements_randomized.push_back(&(*it));
+        }
+        shuffle();
 }
 
 Data::~Data() {
-
 }
 
-void Data::shuffle() {
+void
+Data::shuffle() {
         random_shuffle(elements_randomized.begin(), elements_randomized.end());
 }
 
-const Data::element& Data::operator[](size_t i) const {
+const Data::element&
+Data::operator[](size_t i) const {
         return elements[i];
 }
 
-Data::element& Data::operator[](size_t i) {
+Data::element&
+Data::operator[](size_t i) {
         return elements[i];
+}
+
+Data::iterator
+Data::find(const element& elem) {
+        for (iterator it = begin(); it != end(); it++) {
+                if ((*it).tag == elem.tag)
+                        return it;
+        }
+        return end();
+}
+
+char
+Data::get_nucleotide(const Data::element& e) const {
+        return sequences[e.x[0]][e.x[1]];
+}
+
+void
+Data::get_nucleotide(const Data::element& e, int n, char *buf) const {
+        for (int i = 0; i < n; i++) {
+                if (e.x[1]+i < sequence_length) {
+                        buf[i] = sequences[e.x[0]][e.x[1]+i];
+                }
+                else {
+                        buf[i] = '\0';
+                }
+        }
+}
+
+int
+Data::num_successors(const Data::element& e) {
+        return sequence_length-e.x[1]-1;
+}
+
+ostream&
+operator<< (ostream& o, Data::element const& element) {
+        o << element.tag << ":(" << element.x[0] << ","
+          << element.x[1] << ")@" << element.original_cluster;
+
+        return o;
+}
+
+ostream&
+operator<< (ostream& o, Data const& data) {
+        for (Data::const_iterator it = data.begin(); it != data.end(); it++) {
+                if (it != data.begin()) {
+                        o << ", ";
+                }
+                o << *it;
+        }
+
+        return o;
 }

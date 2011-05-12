@@ -22,15 +22,18 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <iostream>
+#include <string>
 #include <vector>
+
+#include <gsl/gsl_matrix.h>
+
+#include "data.hh"
 
 using namespace std;
 
 class Data {
 public:
-        // constructors and destructors
-        Data();
+        Data(int n, int m, char *sequences[], int *clusters[]);
         ~Data();
 
         // type definitions
@@ -52,6 +55,7 @@ public:
         typedef vector<element*>::const_iterator const_iterator_randomized;
 
         // iterators
+        ////////////////////////////////////////////////////////////////////////
         iterator begin() { return elements.begin(); }
         iterator end()   { return elements.end(); }
 
@@ -66,25 +70,31 @@ public:
         const_iterator_randomized end_randomized()   const
                 { return elements_randomized.end(); }
 
-        iterator find(const element elem) {
-                for (iterator it = begin(); it != end(); it++) {
-                        if ((*it).tag == elem.tag)
-                                return it;
-                }
-                return end();
-        }
 
         // operators
+        ////////////////////////////////////////////////////////////////////////
               element& operator[](size_type i);
         const element& operator[](size_type i) const;
 
+        friend ostream& operator<< (std::ostream& o, Data const& data);
+
         // methods
+        ////////////////////////////////////////////////////////////////////////
         size_type size() { return elements.size(); }
         void shuffle();
 
-protected:
+        iterator find(const element& elem);
+        char get_nucleotide(const element& e) const;
+        void get_nucleotide(const element& e, int n, char *buf) const;
+        int num_successors(const element& e);
+
+private:
         vector<element > elements;
         vector<element*> elements_randomized;
+
+        vector<string> sequences;
+        size_t n_sequences;
+        size_t sequence_length;
 };
 
 ostream& operator<< (ostream& o, Data::element const& element);

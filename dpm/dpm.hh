@@ -22,24 +22,42 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-using namespace std;
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_matrix.h>
 
 #include "data.hh"
+#include "dpm.hh"
 #include "cluster.hh"
 #include "statistics.hh"
 
+using namespace std;
+
 class DPM {
 public:
-        // constructors and destructors
         DPM(Data* data);
-        virtual ~DPM();
+        ~DPM();
+
+        Distribution& posteriorPredictive(const Cluster::cluster& cluster);
+        Distribution& predictive();
+
+        double likelihood();
+        void compute_statistics();
+
+        Data& get_data() {
+                return *static_cast<Data *>(da);
+        }
+
+        bool sample(Data::element& element);
+        void gibbsSample(unsigned int steps);
 
         // operators
+        ////////////////////////////////////////////////////////////////////////
         friend ostream& operator<<(std::ostream& o, DPM const& dpm);
               Cluster::cluster& operator[](int c)       { return cl[c]; }
         const Cluster::cluster& operator[](int c) const { return cl[c]; }
 
         // methods
+        ////////////////////////////////////////////////////////////////////////
         Cluster::size_type num_clusters() {
                 return cl.size();
         }
@@ -53,40 +71,40 @@ public:
                 return hist_likelihood;
         }
 
-        // virtual methods
-        virtual bool sample(Data::element& element) { return true; };
-        virtual void gibbsSample(unsigned int steps) {};
+        // constants
+        ////////////////////////////////////////////////////////////////////////
+        static const int BG_LENGTH   = 1;
+        static const int TFBS_LENGTH = 10;
+        static const int NUCLEOTIDES = 4;
 
-        virtual Distribution& posteriorPredictive(const Cluster::cluster& cluster) {
-                return *posteriorPredictiveDist;
-        }
-        virtual Distribution& predictive() {
-                return *predictiveDist;
-        }
-        virtual double likelihood() {
-                return 0;
-        }
-        virtual void compute_statistics() {
-                hist_likelihood.push_back(likelihood());
-                hist_num_clusters.push_back(cl.size());
-        }
-        virtual Data& get_data() {
-                return *da;
-        }
-
-protected:
+private:
+        // data and clusters
         Data* da;
         Cluster cl;
+
+        // parameters
         double alpha;
+        double lambda;
+
+        // priors
+        gsl_matrix* pd_tfbs_alpha;
+        gsl_matrix* pd_bg_alpha;
 
         // distributions
-        Distribution* predictiveDist;
-        Distribution* posteriorPredictiveDist;
+        Distribution* predictiveDist_tfbs;
+        Distribution* posteriorPredictiveDist_tfbs;
+        Distribution* posteriorPredictiveDist_bg;
 
         // gibbs sampler history
         vector<double> hist_switches;
         vector<double> hist_likelihood;
         vector<Cluster::size_type> hist_num_clusters;
+
+        // private methods
+        void count_statistic(const Cluster::cluster& cluster, gsl_matrix* alpha, gsl_matrix* counts);
+        bool check_element(Data::element& element);
+        void assign_block(Data::element& element, Cluster::cluster_tag_t c);
+        void release_block(Data::element& element);
 };
 
 #endif /* DPM_HH */
