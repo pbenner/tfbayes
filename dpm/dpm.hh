@@ -37,9 +37,6 @@ public:
         DPM(Data* data);
         ~DPM();
 
-        Distribution& posteriorPredictive(const Cluster::cluster& cluster);
-        Distribution& predictive();
-
         double likelihood();
         void compute_statistics();
 
@@ -90,11 +87,6 @@ private:
         // priors
         gsl_matrix* tfbs_alpha;
         gsl_matrix* bg_alpha;
-
-        // distributions
-        Distribution* predictiveDist_tfbs;
-        Distribution* posteriorPredictiveDist_tfbs;
-        Distribution* posteriorPredictiveDist_bg;
 
         // gibbs sampler history
         vector<double> hist_switches;

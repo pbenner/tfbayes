@@ -34,32 +34,13 @@ using namespace std;
 
 gsl_rng* _r;
 
-ProductDirichlet::ProductDirichlet()
-        : counts(NULL)
+ProductDirichlet::ProductDirichlet(gsl_matrix* c)
+        : counts(c)
 {
-        update(NULL);
-}
-
-ProductDirichlet::ProductDirichlet(gsl_matrix* counts)
-        : counts(NULL)
-{
-        update(counts);
 }
 
 ProductDirichlet::~ProductDirichlet() {
-        if (this->counts) {
-                gsl_matrix_free(this->counts);
-        }
-}
-
-void ProductDirichlet::update(
-        gsl_matrix* counts)
-{
-        if (this->counts) {
-                gsl_matrix_free(this->counts);
-        }
-
-        this->counts = counts;
+        gsl_matrix_free(this->counts);
 }
 
 void

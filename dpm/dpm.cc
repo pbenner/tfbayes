@@ -35,7 +35,6 @@ DPM::DPM(Data* data)
           alpha(1.0),
           // mixture weight for the dirichlet process
           lambda(0.1),
-          // distributions
           tfbs_alpha(gsl_matrix_alloc(DPM::TFBS_LENGTH, DPM::NUCLEOTIDES)),
           bg_alpha(gsl_matrix_alloc(DPM::BG_LENGTH, DPM::NUCLEOTIDES))
 {
@@ -68,11 +67,6 @@ DPM::DPM(Data* data)
                 }
         }
 
-        // initialize distributions
-        predictiveDist_tfbs          = new ProductDirichlet(tfbs_alpha);
-        posteriorPredictiveDist_tfbs = new ProductDirichlet();
-        posteriorPredictiveDist_bg   = new ProductDirichlet();
-
         // for sampling statistics
         hist_switches.push_back(0);
         hist_likelihood.push_back(likelihood());
@@ -84,10 +78,6 @@ DPM::~DPM() {
         for (Cluster::iterator_all it = cl.begin_all(); it != cl.end_all(); it++) {
                 delete((*it).dist);
         }
-
-        delete(predictiveDist_tfbs);
-        delete(posteriorPredictiveDist_tfbs);
-        delete(posteriorPredictiveDist_bg);
 }
 
 void
@@ -131,29 +121,6 @@ DPM::count_statistic(const Cluster::cluster& cluster, gsl_matrix* alpha, gsl_mat
                         }
                 }
         }
-}
-
-Distribution&
-DPM::posteriorPredictive(const Cluster::cluster& cluster) {
-        if (cluster.tag == 0) {
-                // background model
-                gsl_matrix* counts = gsl_matrix_alloc(DPM::BG_LENGTH, DPM::NUCLEOTIDES);
-                count_statistic(cluster, bg_alpha, counts);
-                ((ProductDirichlet *)posteriorPredictiveDist_bg)->update(counts);
-                return *posteriorPredictiveDist_bg;
-        }
-        else {
-                // motif model
-                gsl_matrix* counts = gsl_matrix_alloc(DPM::TFBS_LENGTH, DPM::NUCLEOTIDES);
-                count_statistic(cluster, tfbs_alpha, counts);
-                ((ProductDirichlet *)posteriorPredictiveDist_tfbs)->update(counts);
-                return *posteriorPredictiveDist_tfbs;
-        }
-}
-
-Distribution&
-DPM::predictive() {
-        return *predictiveDist_tfbs;
 }
 
 double
@@ -262,16 +229,15 @@ DPM::sample(Data::element& element) {
 
         Cluster::cluster_tag_t i = 0;
         for (Cluster::iterator it = cl.begin(); it != cl.end(); it++) {
-                Cluster::cluster_tag_t tag = (*it)->tag;
+                tags[i] = (*it)->tag;
                 ////////////////////////////////////////////////////////////////
                 // mixture component 1: background model
-                if (tag == DPM::BG_CLUSTER) {
+                if (tags[i] == DPM::BG_CLUSTER) {
                         weights[i] = 1;
                         for (int j = 0; j < DPM::TFBS_LENGTH; j++) {
                                 weights[i] *= (*it)->dist->pdf(nucleotides+j);
                         }
                         weights[i] *= (1-lambda);
-                        tags[i]     = tag;
                         sum += weights[i];
                 }
                 ////////////////////////////////////////////////////////////////
@@ -279,7 +245,6 @@ DPM::sample(Data::element& element) {
                 else {
                         double num_elements = (double)(*it)->elements.size();
                         weights[i] = lambda*num_elements*(*it)->dist->pdf(nucleotides);
-                        tags[i]    = tag;
                         // normalization constant
                         sum += weights[i];
                 }
