@@ -19,9 +19,8 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <vector>
-
 #include <math.h>
+#include <vector>
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -36,56 +35,117 @@ using namespace std;
 gsl_rng* _r;
 
 ProductDirichlet::ProductDirichlet()
+        : counts(NULL)
 {
         update(NULL);
 }
 
-ProductDirichlet::ProductDirichlet(
-        gsl_matrix* alpha)
+ProductDirichlet::ProductDirichlet(gsl_matrix* counts)
+        : counts(NULL)
 {
-        update(alpha);
+        update(counts);
 }
 
 ProductDirichlet::~ProductDirichlet() {
-        if (this->alpha) {
-                gsl_matrix_free(this->alpha);
+        if (this->counts) {
+                gsl_matrix_free(this->counts);
         }
 }
 
 void ProductDirichlet::update(
-        gsl_matrix* alpha)
+        gsl_matrix* counts)
 {
-        if (this->alpha) {
-                gsl_matrix_free(this->alpha);
+        if (this->counts) {
+                gsl_matrix_free(this->counts);
         }
 
-        this->alpha = alpha;
+        this->counts = counts;
+}
+
+void
+ProductDirichlet::remove_from_count_statistic(const char *nucleotides) {
+        int len = counts->size1;
+
+        for (int i = 0; i < len; i++) {
+                switch (nucleotides[i]) {
+                case 'A':
+                case 'a':
+                        gsl_matrix_set(counts, i, 0,
+                                       gsl_matrix_get(counts, i, 0)-1);
+                        break;
+                case 'C':
+                case 'c':
+                        gsl_matrix_set(counts, i, 1,
+                                       gsl_matrix_get(counts, i, 1)-1);
+                        break;
+                case 'G':
+                case 'g':
+                        gsl_matrix_set(counts, i, 2,
+                                       gsl_matrix_get(counts, i, 2)-1);
+                        break;
+                case 'T':
+                case 't':
+                        gsl_matrix_set(counts, i, 3,
+                                       gsl_matrix_get(counts, i, 3)-1);
+                        break;
+                }
+        }
+}
+
+void
+ProductDirichlet::add_to_count_statistic(const char *nucleotides) {
+        int len = counts->size1;
+
+        for (int i = 0; i < len; i++) {
+                switch (nucleotides[i]) {
+                case 'A':
+                case 'a':
+                        gsl_matrix_set(counts, i, 0,
+                                       gsl_matrix_get(counts, i, 0)+1);
+                        break;
+                case 'C':
+                case 'c':
+                        gsl_matrix_set(counts, i, 1,
+                                       gsl_matrix_get(counts, i, 1)+1);
+                        break;
+                case 'G':
+                case 'g':
+                        gsl_matrix_set(counts, i, 2,
+                                       gsl_matrix_get(counts, i, 2)+1);
+                        break;
+                case 'T':
+                case 't':
+                        gsl_matrix_set(counts, i, 3,
+                                       gsl_matrix_get(counts, i, 3)+1);
+                        break;
+                }
+        }
 }
 
 double ProductDirichlet::pdf(char *buf) {
         double result = 1;
 
-        for (unsigned int i = 0; i < this->alpha->size1; i++) {
+        for (unsigned int i = 0; i < this->counts->size1; i++) {
                 double sum = 0;
-                for (unsigned int j = 0; j < this->alpha->size2; j++) {
-                        sum += gsl_matrix_get(this->alpha, i, j);
+                for (unsigned int j = 0; j < this->counts->size2; j++) {
+                        sum += gsl_matrix_get(this->counts, i, j);
                 }
                 switch (buf[i]) {
                 case 'A':
                 case 'a':
-                        result *= gsl_matrix_get(this->alpha, i, 0)/sum;
+                        result *= gsl_matrix_get(this->counts, i, 0)/sum;
                 break;
                 case 'C':
                 case 'c':
-                        result *= gsl_matrix_get(this->alpha, i, 1)/sum;
+                        result *= gsl_matrix_get(this->counts, i, 1)/sum;
                 break;
                 case 'G':
                 case 'g':
-                        result *= gsl_matrix_get(this->alpha, i, 2)/sum;
+                        result *= gsl_matrix_get(this->counts, i, 2)/sum;
                 break;
                 case 'T':
                 case 't':
-                        result *= gsl_matrix_get(this->alpha, i, 3)/sum;
+                        result *= gsl_matrix_get(this->counts, i, 3)/sum;
                 break;
                 }
         }

@@ -56,7 +56,11 @@ unsigned int _dpm_num_clusters() {
 }
 
 Bayes::Matrix* _dpm_cluster(unsigned int c) {
-        Cluster::cluster& cl = (*_gdpm)[c];
+        Cluster::iterator it = (*_gdpm).get_clusters().begin();
+        for (unsigned int i = 0; i < c; i++) {
+                it++;
+        }
+        Cluster::cluster& cl = **it;
         int n = cl.elements.size();
         int m = 2;
 

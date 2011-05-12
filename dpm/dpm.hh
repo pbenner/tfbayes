@@ -73,6 +73,7 @@ public:
 
         // constants
         ////////////////////////////////////////////////////////////////////////
+        static const int BG_CLUSTER  = 0;
         static const int BG_LENGTH   = 1;
         static const int TFBS_LENGTH = 10;
         static const int NUCLEOTIDES = 4;
@@ -87,8 +88,8 @@ private:
         double lambda;
 
         // priors
-        gsl_matrix* pd_tfbs_alpha;
-        gsl_matrix* pd_bg_alpha;
+        gsl_matrix* tfbs_alpha;
+        gsl_matrix* bg_alpha;
 
         // distributions
         Distribution* predictiveDist_tfbs;
@@ -103,8 +104,8 @@ private:
         // private methods
         void count_statistic(const Cluster::cluster& cluster, gsl_matrix* alpha, gsl_matrix* counts);
         bool check_element(Data::element& element);
-        void assign_block(Data::element& element, Cluster::cluster_tag_t c);
-        void release_block(Data::element& element);
+        void assign_block(char* nucleotides, Data::element& element, Cluster::cluster& c);
+        void release_block(char* nucleotides, Data::element& element, Cluster::cluster& c);
 };
 
 #endif /* DPM_HH */

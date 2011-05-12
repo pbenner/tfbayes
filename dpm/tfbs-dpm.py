@@ -161,13 +161,13 @@ def sample(sequences, clusters):
 #    dpm.sampleInteractively(1, ax2)
 #    dpm.plotResult(ax2)
 #    print "-------------------------"
-    dpm.sampleInteractively(1000, ax2)
-#    show()
+#    dpm.sampleInteractively(10, ax2)
+    show()
 
 #    fig2 = figure()
 #    ax3  = fig2.add_subplot(1,1,1, title="Statistics")
 #    dpm.plotStatistics(ax3)
-    show()
+#    show()
 #    dpm.print_clusters()
 
 def main():

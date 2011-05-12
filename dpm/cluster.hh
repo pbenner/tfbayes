@@ -27,6 +27,7 @@
 using namespace std;
 
 #include "data.hh"
+#include "statistics.hh"
 
 class Cluster {
 public:
@@ -41,25 +42,38 @@ public:
         typedef struct {
                 elements_t elements;
                 cluster_tag_t tag;
-        } cluster; 
+                Distribution* dist;
+        } cluster;
 
+        // iterators
+        ////////////////////////////////////////////////////////////////////////
         typedef list<cluster*>::iterator iterator;
         typedef list<cluster*>::const_iterator const_iterator;
 
-        // iterators
         iterator begin() { return used_clusters.begin(); }
         iterator end()   { return used_clusters.end();   }
 
         const_iterator begin() const { return used_clusters.begin(); }
         const_iterator end()   const { return used_clusters.end();   }
 
+        typedef vector<cluster>::iterator iterator_all;
+        typedef vector<cluster>::const_iterator const_iterator_all;
+
+        iterator_all begin_all() { return clusters.begin(); }
+        iterator_all end_all()   { return clusters.end();   }
+
+        const_iterator_all begin_all() const { return clusters.begin(); }
+        const_iterator_all end_all()   const { return clusters.end();   }
+
         // operators
+        ////////////////////////////////////////////////////////////////////////
               cluster& operator[](int c);
         const cluster& operator[](int c) const;
 
         friend ostream& operator<< (std::ostream& o, Cluster const& cluster);
 
         // methods
+        ////////////////////////////////////////////////////////////////////////
         cluster_tag_t getClusterTag(const Data::element& element) const;
         void release (Data::element& element);
         void assign  (Data::element& element, cluster_tag_t cluster_tag);

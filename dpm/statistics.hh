@@ -49,11 +49,14 @@ public:
         ProductDirichlet(gsl_matrix* counts);
         ~ProductDirichlet();
 
+        void add_to_count_statistic(const char *nucleotides);
+        void remove_from_count_statistic(const char *nucleotides);
+
         void update(gsl_matrix* counts);
         double pdf(char *buf);
 
+        gsl_matrix* counts;
 private:
-        gsl_matrix* alpha;
 };
 
 #endif /* STATISTICS_HH */
