@@ -166,7 +166,11 @@ def sample(sequences, clusters):
     ax3   = fig1.add_subplot(3,1,3, title='Posterior')
     dpm   = InteractiveTDPM(sequences, clusters[:][:], ax2, ax3)
     dpm.plotData(ax1)
-    dpm.sampleInteractively(100)
+#    print dpm_get_posterior()
+    dpm.sampleInteractively(4000)
+#    print dpm_get_posterior()
+#    dpm.sampleInteractively(10)
+#    print dpm_get_posterior()
     show()
 
 #    fig2 = figure()

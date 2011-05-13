@@ -32,9 +32,9 @@ using namespace std;
 DPM::DPM(Data* data)
         : da(data), cl(*da),
           // strength parameter for the dirichlet process
-          alpha(0.1),
+          alpha(0.07),
           // mixture weight for the dirichlet process
-          lambda(0.001),
+          lambda(0.05),
           tfbs_alpha(gsl_matrix_alloc(DPM::TFBS_LENGTH, DPM::NUCLEOTIDES)),
           bg_alpha(gsl_matrix_alloc(DPM::BG_LENGTH, DPM::NUCLEOTIDES)),
           // sampling history and posterior distribution
@@ -163,6 +163,10 @@ DPM::check_element(Data::element& element)
                         it--;
                         if (cl.getClusterTag(*it) != 0) {
                                 return false;
+                        }
+                        // check if the beginning of the sequence is reached
+                        if ((*it).x[1] == 0) {
+                                break;
                         }
                 }
                 // there is enough space to the left and right, continue
@@ -303,7 +307,12 @@ DPM::compute_statistics() {
                 if (cl.getClusterTag(**it) != -1) {
                         const int i = (**it).x[0];
                         const int j = (**it).x[1];
-                        if (cl.getClusterTag(**it) != DPM::BG_CLUSTER) {
+                        if (cl.getClusterTag(**it) == DPM::BG_CLUSTER) {
+                                double tmp   = gsl_matrix_get(posterior, i, j);
+                                double value = (total_sampling_steps*tmp)/(total_sampling_steps+1.0);
+                                gsl_matrix_set(posterior, i, j, value);
+                        }
+                        else {
                                 for (int k = 0; k < DPM::TFBS_LENGTH; k++) {
                                         double tmp   = gsl_matrix_get(posterior, i, j+k);
                                         double value = (total_sampling_steps*tmp+1.0)/(total_sampling_steps+1.0);
