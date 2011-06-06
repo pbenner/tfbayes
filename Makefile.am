@@ -4,9 +4,9 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = libexception include humandb dpm
 
-EXTRA_DIST = hdb-load-seq.in hdb-read-seq.in hdb-search-seq.in
+EXTRA_DIST = hdb-load-seq.in hdb-load-chrom.in hdb-read-seq.in hdb-read-chrom.in hdb-search-seq.in
 
-dist_bin_SCRIPTS = hdb-load-seq hdb-read-seq hdb-search-seq
+dist_bin_SCRIPTS = hdb-load-seq hdb-load-chrom hdb-read-seq hdb-read-chrom hdb-search-seq
 
 do_subst = sed -e 's,[@]pythondir[@],$(pythondir),g'
 
@@ -14,9 +14,17 @@ hdb-load-seq: hdb-load-seq.in Makefile
 	$(do_subst) < $(srcdir)/hdb-load-seq.in > hdb-load-seq
 	chmod +x hdb-load-seq
 
+hdb-load-chrom: hdb-load-chrom.in Makefile
+	$(do_subst) < $(srcdir)/hdb-load-chrom.in > hdb-load-chrom
+	chmod +x hdb-load-chrom
+
 hdb-read-seq: hdb-read-seq.in Makefile
 	$(do_subst) < $(srcdir)/hdb-read-seq.in > hdb-read-seq
 	chmod +x hdb-read-seq
+
+hdb-read-chrom: hdb-read-chrom.in Makefile
+	$(do_subst) < $(srcdir)/hdb-read-chrom.in > hdb-read-chrom
+	chmod +x hdb-read-chrom
 
 hdb-search-seq: hdb-search-seq.in Makefile
 	$(do_subst) < $(srcdir)/hdb-search-seq.in > hdb-search-seq

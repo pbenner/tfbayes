@@ -34,7 +34,7 @@ DPM::DPM(Data* data)
           // strength parameter for the dirichlet process
           alpha(0.07),
           // mixture weight for the dirichlet process
-          lambda(0.05),
+          lambda(0.02),
           tfbs_alpha(gsl_matrix_alloc(DPM::TFBS_LENGTH, DPM::NUCLEOTIDES)),
           bg_alpha(gsl_matrix_alloc(DPM::BG_LENGTH, DPM::NUCLEOTIDES)),
           // sampling history and posterior distribution
