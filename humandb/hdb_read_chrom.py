@@ -86,8 +86,9 @@ def loadConfig(config_file, chrom_name, pos, num):
         print "Unknown chromosome."
         exit(1)
 
+    directory = os.path.dirname(config_file)
     interface.hdb_init('hdb-read-chrom')
-    dbp = interface.hdb_open_ro(database['database'], chrom_name)
+    dbp = interface.hdb_open_ro(os.path.join(directory, database['database']), chrom_name)
     if options['pure']:
         print interface.hdb_get_sequence_pure(dbp, pos, num)
     else:

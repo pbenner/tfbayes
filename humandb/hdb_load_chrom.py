@@ -83,8 +83,9 @@ def loadConfig(config_file, input_file, chrom_name):
         print "Unknown chromosome."
         exit(1)
 
+    directory = os.path.dirname(config_file)
     interface.hdb_init('hdb-load-chrom')
-    dbp = interface.hdb_create(database['database'], chrom_name)
+    dbp = interface.hdb_create(os.path.join(directory, database['database']), chrom_name)
     interface.hdb_load_maf(dbp, input_file)
     interface.hdb_close(dbp)
     interface.hdb_free()
