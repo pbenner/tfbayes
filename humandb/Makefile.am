@@ -4,7 +4,7 @@ INCLUDES = -I$(top_srcdir)/include
 
 ## Berkeley DB for the human genome data
 lib_LTLIBRARIES  = libhumandb.la
-libhumandb_la_SOURCES = humandb.c humandb.h interface.c interface.h
+libhumandb_la_SOURCES = humandb.c humandb.h statistics-codons.c statistics-codons.h interface.c interface.h
 libhumandb_la_LIBADD  = $(LIB_DB) $(LIB_PTHREAD) $(top_builddir)/libexception/libexception.la
 libhumandb_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
@@ -12,7 +12,7 @@ libhumandb_la_LDFLAGS = -no-undefined -version-info 0:0:0
 pkgpythondir = $(pyexecdir)/humandb
 
 ## compile python files
-pkgpython_PYTHON = __init__.py hdb_load_seq.py hdb_load_chrom.py hdb_read_seq.py hdb_read_chrom.py hdb_search_seq.py config.py interface.py
+pkgpython_PYTHON = __init__.py hdb_load_seq.py hdb_load_chrom.py hdb_read_seq.py hdb_read_chrom.py hdb_statistics_chrom.py hdb_statistics_seq.py hdb_search_seq.py config.py interface.py statistics.py
 
 ## clean python files
 clean-local:

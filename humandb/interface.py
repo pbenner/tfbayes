@@ -98,6 +98,12 @@ _lib._hdb_get_sequence.argtypes = [POINTER(None), c_int, c_int, c_char_p]
 _lib._hdb_search.restype        = None
 _lib._hdb_search.argtypes       = [POINTER(POINTER(None)), c_int, c_char_p]
 
+_lib._hdb_count_codons.restype  = None
+_lib._hdb_count_codons.argtypes = [POINTER(None), POINTER(c_long), c_long, POINTER(c_long)]
+
+_lib._hdb_count_codons_upstream.restype  = None
+_lib._hdb_count_codons_upstream.argtypes = [POINTER(None), c_long, POINTER(c_long)]
+
 # convert datatypes
 # ------------------------------------------------------------------------------
 
@@ -187,3 +193,24 @@ def hdb_search(dbp_list, sequence):
           c_dbp_list[i] = dbp_list[i]
      c_sequence   = c_char_p(sequence)
      _lib._hdb_search(c_dbp_list, c_dbp_list_n, c_sequence)
+
+def hdb_count_codons(dbp, positions):
+     c_result    = (c_long*64)(0)
+     c_positions = (c_long*len(positions))()
+     c_len       = c_long(len(positions))
+     for i in range(0, len(positions)):
+          c_positions[i] = positions[i]
+     _lib._hdb_count_codons(dbp, c_positions, c_len, c_result)
+     result = []
+     for i in c_result:
+          result.append(i)
+     return np.array(result)
+
+def hdb_count_codons_upstream(dbp, length):
+     c_result = (c_long*64)(0)
+     c_length = c_long(length)
+     _lib._hdb_count_codons_upstream(dbp, c_length, c_result)
+     result = []
+     for i in c_result:
+          result.append(i)
+     return np.array(result)

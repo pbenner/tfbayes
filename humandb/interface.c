@@ -28,6 +28,7 @@
 #include <tfbayes/linalg.h>
 
 #include "humandb.h"
+#include "statistics-codons.h"
 #include "interface.h"
 
 // export functions for interface.py
@@ -96,4 +97,12 @@ void _hdb_get_sequence_pure(DB* dbp, size_t pos, size_t n_nucleotides, char* buf
 void _hdb_search(DB* dbp_list[], size_t dbp_list_n, char* sequence) {
         int sequence_n = strlen(sequence);
         hdb_search(dbp_list, dbp_list_n, sequence, sequence_n);
+}
+
+void _hdb_count_codons(DB *dbp, long positions[], size_t n, long result[]) {
+        hdb_count_codons(dbp, positions, n, result);
+}
+
+void _hdb_count_codons_upstream(DB *dbp, size_t len, long result[]) {
+        hdb_count_codons_upstream(dbp, len, result);
 }
