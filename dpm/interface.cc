@@ -43,11 +43,11 @@ Bayes::Matrix * _allocMatrix(int rows, int columns) { return Bayes::allocMatrix(
 void            _freeMatrix(Bayes::Matrix *m)       { Bayes::freeMatrix(m); }
 void            _free(void *ptr)                    { free(ptr); }
 
-void _dpm_init(int n, int m, char *sequences[], int *clusters[])
+void _dpm_init(int n, char *sequences[], int *clusters[])
 {
         __dpm_init__();
 
-        Data* data = new Data(n, m, sequences, clusters);
+        Data* data = new Data(n, sequences, clusters);
         _gdpm = new DPM(data);
 }
 

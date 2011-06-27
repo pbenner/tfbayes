@@ -33,7 +33,7 @@ using namespace std;
 
 class Data {
 public:
-        Data(int n, int m, char *sequences[], int *clusters[]);
+         Data(size_t n, char *sequences[], int *clusters[]);
         ~Data();
 
         // type definitions
@@ -85,23 +85,33 @@ public:
 
         iterator find(const element& elem);
         char get_nucleotide(const element& e) const;
-        void get_nucleotide(const element& e, int n, char *buf) const;
+        void get_nucleotide(const element& e, size_t n, char *buf) const;
         int num_successors(const element& e);
 
         size_t get_n_sequences() {
                 return n_sequences;
         }
-        size_t get_sequence_length() {
-                return sequence_length;
+        size_t get_sequence_length(size_t i) {
+                return sequences_length[i];
+        }
+        size_t get_max_sequence_length() {
+                size_t max_length = 0;
+                for (size_t i = 0; i < n_sequences; i++) {
+                        if (max_length < sequences_length[i]) {
+                                max_length = sequences_length[i];
+                        }
+                }
+
+                return max_length;
         }
 private:
         size_t n_sequences;
-        size_t sequence_length;
 
         vector<element > elements;
         vector<element*> elements_randomized;
 
         vector<string> sequences;
+        vector<size_t> sequences_length;
 };
 
 ostream& operator<< (ostream& o, Data::element const& element);

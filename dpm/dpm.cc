@@ -39,7 +39,7 @@ DPM::DPM(Data* data)
           bg_alpha(gsl_matrix_alloc(DPM::BG_LENGTH, DPM::NUCLEOTIDES)),
           // sampling history and posterior distribution
           total_sampling_steps(0),
-          posterior(gsl_matrix_alloc(da->get_n_sequences(), da->get_sequence_length()))
+          posterior(gsl_matrix_alloc(da->get_n_sequences(), da->get_max_sequence_length()))
 {
         // initialize prior for the tfbs
         for (int i = 0; i < DPM::TFBS_LENGTH; i++) {
@@ -56,9 +56,15 @@ DPM::DPM(Data* data)
         }
 
         // initialize posterior
+        size_t max_sequence_length = da->get_max_sequence_length();
         for (unsigned int i = 0; i < da->get_n_sequences(); i++) {
-                for (unsigned int j = 0; j < da->get_sequence_length(); j++) {
-                        gsl_matrix_set(posterior, i, j, 0);
+                for (unsigned int j = 0; j < da->get_sequence_length(i); j++) {
+                        if (da->get_sequence_length(i) > max_sequence_length) {
+                                gsl_matrix_set(posterior, i, j, -1);
+                        }
+                        else {
+                                gsl_matrix_set(posterior, i, j, 0);
+                        }
                 }
         }
 

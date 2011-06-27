@@ -132,17 +132,16 @@ def getMatrix(c_m):
 
 def dpm_init(sequences, clusters):
      n   = len(sequences)
-     m   = len(sequences[0])
      c_n = c_int(n)
-     c_m = c_int(m)
      c_sequences = (n*c_char_p)()
      c_clusters  = (n*POINTER(c_int))()
      for i in range(0, n):
+          m = len(sequences[i])
           c_sequences[i] = c_char_p(sequences[i])
           c_clusters[i]  = (m*c_int)()
           for j in range(0, m):
                c_clusters[i][j] = clusters[i][j]
-     _lib._dpm_init(c_n, c_m, c_sequences, c_clusters)
+     _lib._dpm_init(c_n, c_sequences, c_clusters)
 
 def dpm_print():
      _lib._dpm_print()

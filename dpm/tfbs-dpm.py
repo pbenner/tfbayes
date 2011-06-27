@@ -67,10 +67,11 @@ def cluster_colors(c):
 
 def plot_sequences(ax, sequences, clusters):
     ax.set_frame_on(False)
+    xn    = max(map(len, sequences))
     yn    = len(sequences)
     yfrom = 0.90
     yto   = yfrom-yn*0.07
-    x, y = np.meshgrid(np.arange(0.01, 1.00,  0.99/len(sequences[0])),
+    x, y = np.meshgrid(np.arange(0.01, 1.00,  0.99/xn),
                        np.arange(yfrom, yto, -(yfrom-yto)/len(sequences)))
     for sl, cl, p1l, p2l in zip(sequences, clusters, x, y):
         for s, c, p1, p2 in zip(sl, cl, p1l, p2l):
@@ -97,7 +98,9 @@ class TfbsDPM():
         ax.set_title('Gibbs Sampling')
         ax.set_xticks([]); ax.set_yticks([])
         sequences = np.array(self.sequences)
-        clusters  = -np.ones_like(self.clusters)
+        clusters = []
+        for i in self.clusters:
+            clusters.append(-np.ones_like(i))
         num_clusters = dpm_num_clusters()
         for c in range(0, num_clusters):
             for seq, pos in dpm_cluster(c):
@@ -167,7 +170,7 @@ def sample(sequences, clusters):
     dpm   = InteractiveTDPM(sequences, clusters[:][:], ax2, ax3)
     dpm.plotData(ax1)
 #    print dpm_get_posterior()
-    dpm.sampleInteractively(4000)
+    dpm.sampleInteractively(500)
 #    print dpm_get_posterior()
 #    dpm.sampleInteractively(10)
 #    print dpm_get_posterior()

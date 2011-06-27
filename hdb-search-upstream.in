@@ -21,7 +21,7 @@
 import sys
 sys.path.append('@pythondir@')
 
-from humandb.hdb_search_seq import main
+from humandb.hdb_search_upstream import main
 
 if __name__ == "__main__":
     sys.exit(main())

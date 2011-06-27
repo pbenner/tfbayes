@@ -36,14 +36,16 @@ using namespace std;
 #include "data.hh"
 #include "statistics.hh"
 
-Data::Data(int n, int m, char *sequences[], int *clusters[])
-        : n_sequences(n), sequence_length(m)
+Data::Data(size_t n, char *sequences[], int *clusters[])
+        : n_sequences(n)
 {
         int tag = 0;
 
-        for(int i = 0; i < n; i++) {
+        for(size_t i = 0; i < n; i++) {
+                size_t m = strlen(sequences[i]);
                 this->sequences.push_back(sequences[i]);
-                for(int j = 0; j < m; j++) {
+                this->sequences_length.push_back(m);
+                for(size_t j = 0; j < m; j++) {
                         Data::x_t x;
                         x.push_back(i);
                         x.push_back(j);
@@ -93,9 +95,10 @@ Data::get_nucleotide(const Data::element& e) const {
 }
 
 void
-Data::get_nucleotide(const Data::element& e, int n, char *buf) const {
-        for (int i = 0; i < n; i++) {
-                if (e.x[1]+i < sequence_length) {
+Data::get_nucleotide(const Data::element& e, size_t n, char *buf) const {
+        size_t m = sequences_length[e.x[0]];
+        for (size_t i = 0; i < n; i++) {
+                if (e.x[1]+i < m) {
                         buf[i] = sequences[e.x[0]][e.x[1]+i];
                 }
                 else {
@@ -106,7 +109,7 @@ Data::get_nucleotide(const Data::element& e, int n, char *buf) const {
 
 int
 Data::num_successors(const Data::element& e) {
-        return sequence_length-e.x[1]-1;
+        return sequences_length[e.x[0]]-e.x[1]-1;
 }
 
 ostream&
