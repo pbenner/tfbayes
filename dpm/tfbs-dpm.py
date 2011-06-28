@@ -27,13 +27,16 @@ import matplotlib.path     as     path
 # local imports
 # ------------------------------------------------------------------------------
 
-from interface  import *
+from interface import *
 
 # global options
 # ------------------------------------------------------------------------------
 
 options = {
-    'verbose' : False
+    'samples'     : (100,1000),
+    'save'        : None,
+    'interactive' : False,
+    'verbose'     : False,
     }
 
 # usage
@@ -42,9 +45,13 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "hdb-load-seq [option]... DATABASE_CONFIG INPUT_FILE SEQUENCE_NUMBER"
+    print "tfbs-dpm.py [option]... SEQUENCES"
     print
     print "Options:"
+    print "   -i                             - interactive mode"
+    print "   -s, --save=FILE                - save posterior to FILE"
+    print "       --samples=BURN_IN:SAMPLES  - number of samples [default: 100:1000]"
+    print
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
     print
@@ -88,8 +95,8 @@ class TfbsDPM():
         dpm_print()
     def num_clusters(self):
         return dpm_num_clusters()
-    def sample(self, n):
-        dpm_sample(n)
+    def sample(self, n, burnin):
+        dpm_sample(n, burnin)
         self.steps += n
     def plotData(self, ax):
         ax.set_xticks([]); ax.set_yticks([])
@@ -139,7 +146,7 @@ class InteractiveTDPM(TfbsDPM):
                 return False
         gobject.idle_add(updatefig)
     def sampleInteractively(self, n):
-        self.sample(n)
+        self.sample(n, 0)
 
 # main
 # ------------------------------------------------------------------------------
@@ -162,31 +169,38 @@ def readSequences(seq_file):
     fh.close()
     return sequences, clusters
 
+def save_posterior(dpm):
+    fp = open(options['save'], 'w')
+    fp.write(str(dpm_get_posterior()))
+    fp.close()
+
 def sample(sequences, clusters):
     fig1  = figure(linewidth=0,facecolor='white',edgecolor='white')
     ax1   = fig1.add_subplot(3,1,1, title='Sequences')
     ax2   = fig1.add_subplot(3,1,2, title='Gibbs Sampling')
     ax3   = fig1.add_subplot(3,1,3, title='Posterior')
-    dpm   = InteractiveTDPM(sequences, clusters[:][:], ax2, ax3)
-    dpm.plotData(ax1)
-#    print dpm_get_posterior()
-    dpm.sampleInteractively(500)
-#    print dpm_get_posterior()
-#    dpm.sampleInteractively(10)
-#    print dpm_get_posterior()
-    show()
-
-#    fig2 = figure()
-#    ax3  = fig2.add_subplot(1,1,1, title="Statistics")
-#    dpm.plotStatistics(ax3)
-#    show()
-#    dpm.print_clusters()
+    if options['interactive']:
+        dpm = InteractiveTDPM(sequences, clusters[:][:], ax2, ax3)
+        dpm.plotData(ax1)
+        dpm.sample(0, options['samples'][0])
+        dpm.sampleInteractively(options['samples'][1])
+        show()
+    else:
+        dpm = TfbsDPM(sequences, clusters[:][:])
+        dpm.sample(options['samples'][1], options['samples'][0])
+        if options['save']:
+            save_posterior(dpm)
+        else:
+            dpm.plotData(ax1)
+            dpm.plotResult(ax2)
+            dpm.plotPosterior(ax3)
+            show()
 
 def main():
     global options
     try:
-        longopts   = ["help", "verbose"]
-        opts, tail = getopt.getopt(sys.argv[1:], "", longopts)
+        longopts   = ["help", "verbose", "save=", "samples="]
+        opts, tail = getopt.getopt(sys.argv[1:], "is:", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -195,9 +209,15 @@ def main():
         if o in ("-v", "--verbose"):
             sys.stderr.write("Verbose mode turned on.\n")
             options["verbose"] = True
+        if o == "-i":
+            options["interactive"] = True
         if o in ("-h", "--help"):
             usage()
             return 0
+        if o in ("-s", "--save"):
+            options['save'] = a
+        if o == "--samples":
+            options["samples"] = tuple(map(int, a.split(":")))
     if len(tail) != 1:
         usage()
         return 1

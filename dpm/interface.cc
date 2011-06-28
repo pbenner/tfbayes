@@ -123,8 +123,8 @@ void _dpm_print() {
         cout << *_gdpm << endl;
 }
 
-void _dpm_sample(unsigned int n) {
-        _gdpm->gibbsSample(n);
+void _dpm_sample(unsigned int n, unsigned int burnin) {
+        _gdpm->gibbsSample(n, burnin);
 }
 
 void _dpm_free() {

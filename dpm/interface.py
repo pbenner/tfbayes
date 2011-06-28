@@ -173,8 +173,10 @@ def dpm_hist_switches():
      _lib._freeVector(result)
      return switches
 
-def dpm_sample(n):
-     _lib._dpm_sample(n)
+def dpm_sample(n, burnin):
+     c_n      = c_int(n)
+     c_burnin = c_int(burnin)
+     _lib._dpm_sample(c_n, c_burnin)
 
 def dpm_free():
      _lib._dpm_free()

@@ -45,7 +45,7 @@ public:
         }
 
         bool sample(Data::element& element);
-        void gibbsSample(unsigned int steps);
+        void gibbsSample(unsigned int n, unsigned int burnin);
 
         // operators
         ////////////////////////////////////////////////////////////////////////

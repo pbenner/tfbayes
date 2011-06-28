@@ -58,8 +58,8 @@ DPM::DPM(Data* data)
         // initialize posterior
         size_t max_sequence_length = da->get_max_sequence_length();
         for (unsigned int i = 0; i < da->get_n_sequences(); i++) {
-                for (unsigned int j = 0; j < da->get_sequence_length(i); j++) {
-                        if (da->get_sequence_length(i) > max_sequence_length) {
+                for (unsigned int j = 0; j < max_sequence_length; j++) {
+                        if (j > da->get_sequence_length(i)) {
                                 gsl_matrix_set(posterior, i, j, -1);
                         }
                         else {
@@ -330,10 +330,18 @@ DPM::compute_statistics() {
 }
 
 void
-DPM::gibbsSample(unsigned int n) {
+DPM::gibbsSample(unsigned int n, unsigned int burnin) {
+        // burn in sampling
+        for (unsigned int i = 0; i < burnin; i++) {
+                for (Data::iterator_randomized it = da->begin_randomized();
+                     it != da->end_randomized(); it++) {
+                        sample(**it);
+                }
+        }
         // sample `n' times
         for (unsigned int i = 0; i < n; i++) {
                 // loop through all elements
+                printf("Sampling... [%u]\n", i+1);
                 double sum = 0;
                 for (Data::iterator_randomized it = da->begin_randomized();
                      it != da->end_randomized(); it++) {
