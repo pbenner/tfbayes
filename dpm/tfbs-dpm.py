@@ -11,18 +11,24 @@ import gtk
 import sys
 import getopt
 import os
+import cProfile
 
 import numpy               as     np
 import numpy.random.mtrand as     mt
 import numpy.random        as     rd
 
-from   matplotlib          import *
-use('GTKAgg')
-
-from   matplotlib.pyplot   import *
-from   matplotlib.image    import NonUniformImage
-import matplotlib.patches  as     patches
-import matplotlib.path     as     path
+def importMatplotlib(backend=None):
+    global pyplot
+    global NonUniformImage
+    global patches
+    global path
+    from matplotlib import use
+    if backend:
+        use(backend)
+    import matplotlib.pyplot   as     pyplot
+    from   matplotlib.image    import NonUniformImage
+    import matplotlib.patches  as     patches
+    import matplotlib.path     as     path
 
 # local imports
 # ------------------------------------------------------------------------------
@@ -117,7 +123,7 @@ class TfbsDPM():
         ax.set_title('Posterior')
         ax.set_xticks([]); ax.set_yticks([])
         X = dpm_get_posterior()
-        ax.imshow(X, cmap=cm.jet, interpolation='nearest')
+        ax.imshow(X, cmap=pyplot.cm.jet, interpolation='nearest')
     def plotStatistics(self, ax1):
         ax2 = ax1.twinx()
         p1  = ax1.plot(dpm_hist_switches())
@@ -132,7 +138,7 @@ class InteractiveTDPM(TfbsDPM):
         TfbsDPM.__init__(self, sequences, clusters[:][:])
         self.plotResult(ax2)
         self.plotPosterior(ax3)
-        manager = get_current_fig_manager()
+        manager = pyplot.get_current_fig_manager()
         def updatefig(*args):
             try:
                 ax2.cla()
@@ -174,27 +180,35 @@ def save_posterior(dpm):
     fp.write(str(dpm_get_posterior()))
     fp.close()
 
-def sample(sequences, clusters):
-    fig1  = figure(linewidth=0,facecolor='white',edgecolor='white')
+def prepare_plot():
+    importMatplotlib('GTKAgg')
+    fig1  = pyplot.figure(linewidth=0,facecolor='white',edgecolor='white')
     ax1   = fig1.add_subplot(3,1,1, title='Sequences')
     ax2   = fig1.add_subplot(3,1,2, title='Gibbs Sampling')
     ax3   = fig1.add_subplot(3,1,3, title='Posterior')
+    return ax1, ax2, ax3
+
+def sample(sequences, clusters):
     if options['interactive']:
+        ax1, ax2, ax3 = prepare_plot()
         dpm = InteractiveTDPM(sequences, clusters[:][:], ax2, ax3)
         dpm.plotData(ax1)
         dpm.sample(0, options['samples'][0])
         dpm.sampleInteractively(options['samples'][1])
-        show()
+        pyplot.show()
     else:
+        burnin  = options['samples'][0]
+        samples = options['samples'][1]
         dpm = TfbsDPM(sequences, clusters[:][:])
-        dpm.sample(options['samples'][1], options['samples'][0])
+        dpm.sample(samples, burnin)
         if options['save']:
             save_posterior(dpm)
         else:
+            ax1, ax2, ax3 = prepare_plot()
             dpm.plotData(ax1)
             dpm.plotResult(ax2)
             dpm.plotPosterior(ax3)
-            show()
+            pyplot.show()
 
 def main():
     global options
