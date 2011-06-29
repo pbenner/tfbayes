@@ -97,7 +97,7 @@ public:
         }
 
 private:
-        static const int _INIT_NUM_CLASSES = 1;
+        static const int _INIT_NUM_CLUSTERS = 1;
 
         vector<cluster> clusters;
         vector<size_type> assignments;

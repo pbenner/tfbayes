@@ -40,7 +40,7 @@ Clusters::Clusters(Data& data)
 
         // assign the data to some random clusters
         for (Clusters::size_type i = 0; i < data.size(); i++) {
-                Clusters::cluster_tag_t c = rand() % _INIT_NUM_CLASSES;
+                Clusters::cluster_tag_t c = rand() % _INIT_NUM_CLUSTERS;
                 Data::element& e = data[i];
                 assign(e, c);
         }

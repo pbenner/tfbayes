@@ -333,8 +333,10 @@ void
 DPM::gibbsSample(unsigned int n, unsigned int burnin) {
         // burn in sampling
         for (unsigned int i = 0; i < burnin; i++) {
+                printf("Burn in... [%u]\n", i+1);
                 for (Data::iterator_randomized it = da->begin_randomized();
                      it != da->end_randomized(); it++) {
+                        printf("Burn in... [%u:%lu:%lu:%lu]\n", i+1, (*it)->x[0], (*it)->x[1], cl.size());
                         sample(**it);
                 }
         }

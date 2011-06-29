@@ -75,7 +75,7 @@ public:
         ////////////////////////////////////////////////////////////////////////
         static const int BG_CLUSTER  = 0;
         static const int BG_LENGTH   = 1;
-        static const int TFBS_LENGTH = 10;
+        static const int TFBS_LENGTH = 42;
         static const int NUCLEOTIDES = 4;
 
 private:
