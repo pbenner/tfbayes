@@ -24,48 +24,13 @@
 
 #include <list>
 #include <vector>
-using namespace std;
+#include <iostream>
 
-#include "data.hh"
-#include "statistics.hh"
+#include <datatypes.hh>
+#include <observer.hh>
+#include <statistics.hh>
 
 ////////////////////////////////////////////////////////////////////////////////
-
-typedef size_t cluster_tag_t;
-
-typedef enum {
-        cluster_event_empty, cluster_event_nonempty
-} cluster_event_t;
-
-template <class E> class Observer;
-template <class E> class Observed;
-
-template <class E>
-class Observer {
-public:
-        virtual void update(Observed<E>* observed, E event) = 0;
-};
-
-template <class E>
-class Observed {
-public:
-        Observed() : observer(NULL) {};
-
-        void set_observer(Observer<E>* observer) {
-                this->observer = observer;
-        }
-
-protected:
-        void notify(E event) {
-                if (observer) {
-                        observer->update(this, event);
-                }
-        }
-
-private:
-        Observer<E>* observer;
-};
-
 // This class represents a single cluster for the dirichlet process
 // mixture. Each cluster is linked to a probability distribution and
 // keeps track of the sufficient statistics assiciated to each cluster.
@@ -77,7 +42,11 @@ public:
          Cluster(Distribution* distribution, cluster_tag_t tag, bool destructible);
          Cluster(Distribution* distribution, cluster_tag_t tag, Observer<cluster_event_t>* observer);
          Cluster(Distribution* distribution, cluster_tag_t tag, bool destructible, Observer<cluster_event_t>* observer);
+         Cluster(const Cluster& cluster);
         ~Cluster();
+
+        // friends
+        friend std::ostream& operator<< (std::ostream& o, const Cluster& cluster);
 
         // methods
         void add_word(const word_t& word);

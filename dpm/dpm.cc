@@ -27,7 +27,7 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_blas.h>
 
-#include "dpm.hh"
+#include <dpm.hh>
 
 using namespace std;
 
@@ -44,8 +44,6 @@ DPM::DPM(size_t n, char *sequences[])
           // number of transcription factor binding sites
           num_tfbs(0)
 {
-        data = new Data(n, sequences);
-
         // initialize prior for the tfbs
         for (size_t i = 0; i < DPM::TFBS_LENGTH; i++) {
                 for (size_t j = 0; j < DPM::NUCLEOTIDES; j++) {
@@ -71,6 +69,7 @@ DPM::DPM(size_t n, char *sequences[])
         ProductDirichlet* bg_product_dirichlet   = new ProductDirichlet(bg_alpha);
         cluster_manager = new ClusterManager(tfbs_product_dirichlet);
         bg_cluster_tag  = cluster_manager->add_cluster(bg_product_dirichlet);
+        data            = new Data(n, sequences, bg_cluster_tag);
 
         // for sampling statistics
         hist_switches.push_back(0);
@@ -99,6 +98,8 @@ DPM::sample(const element_t& element) {
         cluster_tag_t old_cluster_tag = data->get_cluster_tag(element);
         (*cluster_manager)[old_cluster_tag].remove_word(word);
         size_t num_clusters = cluster_manager->size();
+        printf("num_tfbs: %d\n", (int)num_tfbs);
+        printf("num_clusters: %d\n", (int)num_clusters);
         double weights[num_clusters+1];
         cluster_tag_t tags[num_clusters+1];
         double dp_norm = num_tfbs + alpha;
@@ -112,6 +113,7 @@ DPM::sample(const element_t& element) {
                 // mixture component 1: background model
                 if (tags[i] == bg_cluster_tag) {
                         weights[i] = (1-lambda)*cluster.distribution->pdf(word);
+                        printf("weight[%d](bg): %f\n", (int)i, (float)weights[i]);
                         // normalization constant
                         sum += weights[i];
                 }
@@ -120,6 +122,7 @@ DPM::sample(const element_t& element) {
                 else {
                         double num_elements = (double)cluster.size();
                         weights[i] = lambda*num_elements/dp_norm*cluster.distribution->pdf(word);
+                        printf("weight[%d](tfbs): %f\n", (int)i, (float)weights[i]);
                         // normalization constant
                         sum += weights[i];
                 }
@@ -152,11 +155,11 @@ DPM::sample(const element_t& element) {
                 return false;
         }
         else {
-                if (new_cluster_tag == bg_cluster_tag) {
-                        num_tfbs--;
-                }
-                else {
+                if (old_cluster_tag == bg_cluster_tag && new_cluster_tag != bg_cluster_tag) {
                         num_tfbs++;
+                }
+                if (old_cluster_tag != bg_cluster_tag && new_cluster_tag == bg_cluster_tag) {
+                        num_tfbs--;
                 }
                 (*cluster_manager)[new_cluster_tag].add_word(word);
                 data->record_cluster_assignment(word, new_cluster_tag);
@@ -174,9 +177,9 @@ DPM::compute_likelihood() {
 
 void
 DPM::update_posterior() {
-        for (Data::iterator_randomized it = data->begin_randomized();
-             it != data->end_randomized(); it++) {
-                const element_t& element = **it;
+        for (Data::iterator it = data->begin();
+             it != data->end(); it++) {
+                const element_t& element = *it;
                 const size_t sequence    = element.sequence;
                 const size_t position    = element.position;
                 if (data->get_cluster_tag(element) == bg_cluster_tag) {

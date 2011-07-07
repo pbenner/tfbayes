@@ -48,6 +48,12 @@ Cluster::Cluster(Distribution* distribution, cluster_tag_t tag, bool destructibl
         set_observer(observer);
 }
 
+Cluster::Cluster(const Cluster& cluster)
+        : tag(cluster.tag), destructible(cluster.destructible), _size(cluster._size)
+{
+        set_observer(cluster.observer);
+}
+
 Cluster::~Cluster() {
         delete(distribution);
 }
@@ -67,9 +73,13 @@ Cluster::add_word(const word_t& word)
 void
 Cluster::remove_word(const word_t& word)
 {
-        _size -= distribution->remove_observations(word);
-        if (_size == 0) {
-                notify(cluster_event_empty);
+        size_t observations = distribution->count_observations(word);
+
+        if (_size >= observations) {
+                _size -= distribution->remove_observations(word);
+                if (_size == 0) {
+                        notify(cluster_event_empty);
+                }
         }
 }
 
@@ -77,4 +87,10 @@ size_t
 Cluster::size() const
 {
         return _size;
+}
+
+ostream&
+operator<< (ostream& o, const Cluster& cluster)
+{
+        return o << cluster.tag << "@" << cluster.size();
 }

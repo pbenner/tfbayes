@@ -27,35 +27,19 @@
 
 #include <gsl/gsl_matrix.h>
 
-//#include <cluster.hh>
-
-using namespace std;
-
-// efficient representation of words (nucleotide sequences)
-// of variable length
-typedef struct {
-        size_t sequence;
-        size_t position;
-        size_t length;
-        vector<string> *sequences;
-} word_t;
-
-typedef struct {
-        size_t sequence;
-        size_t position;
-} element_t;
+#include <datatypes.hh>
 
 class Data {
 public:
-         Data(size_t n, char *sequences[]);
+        Data(size_t n, char *sequences[], cluster_tag_t default_tag);
         ~Data();
 
         // type definitions
-        typedef vector<element_t >::iterator iterator;
-        typedef vector<element_t >::const_iterator const_iterator;
+        typedef std::vector<element_t >::iterator iterator;
+        typedef std::vector<element_t >::const_iterator const_iterator;
 
-        typedef vector<element_t*>::iterator iterator_randomized;
-        typedef vector<element_t*>::const_iterator const_iterator_randomized;
+        typedef std::vector<element_t*>::iterator iterator_randomized;
+        typedef std::vector<element_t*>::const_iterator const_iterator_randomized;
 
         // iterators
         ////////////////////////////////////////////////////////////////////////
@@ -72,8 +56,6 @@ public:
                 { return elements_randomized.begin(); }
         const_iterator_randomized end_randomized() const
                 { return elements_randomized.end(); }
-
-        typedef size_t cluster_tag_t;
 
         // operators
         ////////////////////////////////////////////////////////////////////////
@@ -97,16 +79,6 @@ public:
         size_t get_sequence_length(size_t i) {
                 return sequences_length[i];
         }
-        size_t get_max_sequence_length() {
-                size_t max_length = 0;
-                for (size_t i = 0; i < n_sequences; i++) {
-                        if (max_length < sequences_length[i]) {
-                                max_length = sequences_length[i];
-                        }
-                }
-
-                return max_length;
-        }
 
         void record_cluster_assignment(const word_t& word, cluster_tag_t tag) {
                 for (size_t i = 0; i < word.length; i++) {
@@ -120,16 +92,16 @@ public:
 
 private:
         // all nucleotide positions in a vector (used for the gibbs sampler)
-        vector<element_t > elements;
-        vector<element_t*> elements_randomized;
+        std::vector<element_t > elements;
+        std::vector<element_t*> elements_randomized;
 
         // the raw nucleotide sequences
-        vector<string> sequences;
-        vector<size_t> sequences_length;
+        std::vector<std::string> sequences;
+        std::vector<size_t> sequences_length;
         size_t n_sequences;
 
         // assignments to clusters
-        vector<vector<cluster_tag_t> > cluster_assignments;
+        std::vector<std::vector<cluster_tag_t> > cluster_assignments;
 };
 
 //ostream& operator<< (ostream& o, element_t const& element);

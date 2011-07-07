@@ -15,13 +15,39 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef INIT_HH
-#define INIT_HH
+#ifndef OBSERVER_HH
+#define OBSERVER_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-void __dpm_init__();
+template <class E> class Observer;
+template <class E> class Observed;
 
-#endif /* INIT_HH */
+template <class E>
+class Observer {
+public:
+        virtual void update(Observed<E>* observed, E event) = 0;
+};
+
+template <class E>
+class Observed {
+public:
+        Observed() : observer(NULL) {};
+
+        void set_observer(Observer<E>* observer) {
+                this->observer = observer;
+        }
+
+protected:
+        void notify(E event) {
+                if (observer) {
+                        observer->update(this, event);
+                }
+        }
+
+        Observer<E>* observer;
+};
+
+#endif /* OBSERVER_HH */

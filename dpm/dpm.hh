@@ -25,19 +25,8 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>
 
-#include <data.hh>
-#include <dpm.hh>
 #include <clustermanager.hh>
 #include <statistics.hh>
-
-using namespace std;
-
-typedef struct {
-        vector<double>* switches;
-        vector<double>* likelihood;
-        vector<size_t>* clusters;
-        gsl_matrix* posterior;
-} sampling_history;
 
 class DPM {
 public:
@@ -52,13 +41,13 @@ public:
 
         // methods
         ////////////////////////////////////////////////////////////////////////
-        vector<double>& get_hist_switches() {
+        std::vector<double>& get_hist_switches() {
                 return hist_switches;
         }
-        vector<double>& get_hist_likelihood() {
+        std::vector<double>& get_hist_likelihood() {
                 return hist_likelihood;
         }
-        const vector<vector<double> >& get_posterior() const {
+        const std::vector<std::vector<double> >& get_posterior() const {
                 return posterior;
         }
 
@@ -94,10 +83,10 @@ private:
 
         // gibbs sampler history
         size_t total_sampling_steps;
-        vector<double> hist_switches;
-        vector<double> hist_likelihood;
-        vector<size_t> hist_num_clusters;
-        vector<vector<double> > posterior;
+        std::vector<double> hist_switches;
+        std::vector<double> hist_likelihood;
+        std::vector<size_t> hist_num_clusters;
+        std::vector<std::vector<double> > posterior;
 
         // keep track of the number of transcription factor binding sites
         size_t num_tfbs;

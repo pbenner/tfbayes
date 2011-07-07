@@ -15,13 +15,42 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef INIT_HH
-#define INIT_HH
+#ifndef DATATYPES_HH
+#define DATATYPES_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-void __dpm_init__();
+#include <string>
 
-#endif /* INIT_HH */
+#include <gsl/gsl_matrix.h>
+
+// efficient representation of words (nucleotide sequences)
+// of variable length
+typedef struct {
+        size_t sequence;
+        size_t position;
+        size_t length;
+        std::vector<std::string> *sequences;
+} word_t;
+
+typedef struct {
+        size_t sequence;
+        size_t position;
+} element_t;
+
+typedef size_t cluster_tag_t;
+
+typedef enum {
+        cluster_event_empty, cluster_event_nonempty
+} cluster_event_t;
+
+typedef struct {
+        std::vector<double>* switches;
+        std::vector<double>* likelihood;
+        std::vector<size_t>* clusters;
+        gsl_matrix* posterior;
+} sampling_history_t;
+
+#endif /* DATATYPES_HH */

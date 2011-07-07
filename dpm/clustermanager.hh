@@ -29,8 +29,6 @@
 #include <data.hh>
 #include <statistics.hh>
 
-using namespace std;
-
 // ClusterManager
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -44,8 +42,8 @@ public:
 
         // iterators
         ////////////////////////////////////////////////////////////////////////
-        typedef list<Cluster*>::iterator iterator;
-        typedef list<Cluster*>::const_iterator const_iterator;
+        typedef std::list<Cluster*>::iterator iterator;
+        typedef std::list<Cluster*>::const_iterator const_iterator;
 
         iterator begin() { return used_clusters.begin(); }
         iterator end()   { return used_clusters.end();   }
@@ -53,8 +51,8 @@ public:
         const_iterator begin() const { return used_clusters.begin(); }
         const_iterator end()   const { return used_clusters.end();   }
 
-        typedef vector<Cluster>::iterator iterator_all;
-        typedef vector<Cluster>::const_iterator const_iterator_all;
+        typedef std::vector<Cluster*>::iterator iterator_all;
+        typedef std::vector<Cluster*>::const_iterator const_iterator_all;
 
         iterator_all begin_all() { return clusters.begin(); }
         iterator_all end_all()   { return clusters.end();   }
@@ -82,9 +80,9 @@ public:
 
 
 private:
-        vector<Cluster> clusters;
-        list<Cluster*> used_clusters;
-        list<Cluster*> free_clusters;
+        std::vector<Cluster*> clusters;
+        std::list<Cluster*> used_clusters;
+        std::list<Cluster*> free_clusters;
 
         // list.size() is inefficient, so keep track of
         // the number of elements

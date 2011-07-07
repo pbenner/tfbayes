@@ -37,19 +37,21 @@
 
 using namespace std;
 
-Data::Data(size_t n, char *sequences[])
+Data::Data(size_t n, char *sequences[], cluster_tag_t default_tag)
         : n_sequences(n)
 {
         for(size_t i = 0; i < n; i++) {
                 size_t m = strlen(sequences[i]);
                 this->sequences.push_back(sequences[i]);
                 this->sequences_length.push_back(m);
-                this->cluster_assignments.push_back(vector<cluster_tag_t>(m, 0));
+                this->cluster_assignments.push_back(vector<cluster_tag_t>(m, default_tag));
                 for(size_t j = 0; j < m; j++) {
                         element_t e = {i, j};
                         elements.push_back(e);
-                        elements_randomized.push_back(&elements.back());
                 }
+        }
+        for (Data::iterator it = begin(); it != end(); it++) {
+                elements_randomized.push_back(&(*it));
         }
         shuffle();
 }

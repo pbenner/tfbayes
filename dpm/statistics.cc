@@ -27,8 +27,8 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_sf_gamma.h>
 
-#include "data.hh"
-#include "statistics.hh"
+#include <data.hh>
+#include <statistics.hh>
 
 using namespace std;
 
@@ -48,12 +48,12 @@ ProductDirichlet::ProductDirichlet(gsl_matrix* alpha)
 
 ProductDirichlet::ProductDirichlet(const ProductDirichlet& distribution)
 {
-        this->counts = gsl_matrix_alloc(distribution.counts->size1, distribution.counts->size2);
-        gsl_matrix_memcpy(this->counts, distribution.counts);
+        counts = gsl_matrix_alloc(distribution.counts->size1, distribution.counts->size2);
+        gsl_matrix_memcpy(counts, distribution.counts);
 }
 
 ProductDirichlet::~ProductDirichlet() {
-        gsl_matrix_free(this->counts);
+        gsl_matrix_free(counts);
 }
 
 ProductDirichlet*
@@ -68,27 +68,32 @@ ProductDirichlet::remove_observations(const word_t& word) {
                         switch ((*word.sequences)[word.sequence][word.position+i+j]) {
                         case 'A':
                         case 'a':
-                                gsl_matrix_set(counts, i, 0,
-                                               gsl_matrix_get(counts, i, 0)-1);
+                                gsl_matrix_set(counts, j, 0,
+                                               gsl_matrix_get(counts, j, 0)-1);
                         break;
                         case 'C':
                         case 'c':
-                                gsl_matrix_set(counts, i, 1,
-                                               gsl_matrix_get(counts, i, 1)-1);
+                                gsl_matrix_set(counts, j, 1,
+                                               gsl_matrix_get(counts, j, 1)-1);
                         break;
                         case 'G':
                         case 'g':
-                                gsl_matrix_set(counts, i, 2,
-                                               gsl_matrix_get(counts, i, 2)-1);
+                                gsl_matrix_set(counts, j, 2,
+                                               gsl_matrix_get(counts, j, 2)-1);
                         break;
                         case 'T':
                         case 't':
-                                gsl_matrix_set(counts, i, 3,
-                                               gsl_matrix_get(counts, i, 3)-1);
+                                gsl_matrix_set(counts, j, 3,
+                                               gsl_matrix_get(counts, j, 3)-1);
                         break;
                         }
                 }
         }
+        return word.length/counts->size1;
+}
+
+size_t
+ProductDirichlet::count_observations(const word_t& word) {
         return word.length/counts->size1;
 }
 
@@ -99,23 +104,23 @@ ProductDirichlet::add_observations(const word_t& word) {
                         switch ((*word.sequences)[word.sequence][word.position+i+j]) {
                         case 'A':
                         case 'a':
-                                gsl_matrix_set(counts, i, 0,
-                                               gsl_matrix_get(counts, i, 0)+1);
+                                gsl_matrix_set(counts, j, 0,
+                                               gsl_matrix_get(counts, j, 0)+1);
                         break;
                         case 'C':
                         case 'c':
-                                gsl_matrix_set(counts, i, 1,
-                                               gsl_matrix_get(counts, i, 1)+1);
+                                gsl_matrix_set(counts, j, 1,
+                                               gsl_matrix_get(counts, j, 1)+1);
                         break;
                         case 'G':
                         case 'g':
-                                gsl_matrix_set(counts, i, 2,
-                                               gsl_matrix_get(counts, i, 2)+1);
+                                gsl_matrix_set(counts, j, 2,
+                                               gsl_matrix_get(counts, j, 2)+1);
                         break;
                         case 'T':
                         case 't':
-                                gsl_matrix_set(counts, i, 3,
-                                               gsl_matrix_get(counts, i, 3)+1);
+                                gsl_matrix_set(counts, j, 3,
+                                               gsl_matrix_get(counts, j, 3)+1);
                         break;
                         }
                 }
@@ -135,19 +140,19 @@ double ProductDirichlet::pdf(const word_t& word) const {
                         switch ((*word.sequences)[word.sequence][word.position+i+j]) {
                         case 'A':
                         case 'a':
-                                result *= gsl_matrix_get(this->counts, i, 0)/sum;
+                                result *= gsl_matrix_get(this->counts, j, 0)/sum;
                         break;
                         case 'C':
                         case 'c':
-                                result *= gsl_matrix_get(this->counts, i, 1)/sum;
+                                result *= gsl_matrix_get(this->counts, j, 1)/sum;
                         break;
                         case 'G':
                         case 'g':
-                                result *= gsl_matrix_get(this->counts, i, 2)/sum;
+                                result *= gsl_matrix_get(this->counts, j, 2)/sum;
                         break;
                         case 'T':
                         case 't':
-                                result *= gsl_matrix_get(this->counts, i, 3)/sum;
+                                result *= gsl_matrix_get(this->counts, j, 3)/sum;
                         break;
                         }
                 }

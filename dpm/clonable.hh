@@ -15,13 +15,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef INIT_HH
-#define INIT_HH
+#ifndef CLONABLE_HH
+#define CLONABLE_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-void __dpm_init__();
+struct clonable {
+    virtual ~clonable() {}
+    virtual clonable* clone() const = 0;
+};
 
-#endif /* INIT_HH */
+#endif /* CLONABLE_HH */

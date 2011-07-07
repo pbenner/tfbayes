@@ -29,13 +29,16 @@
 using namespace std;
 
 ClusterManager::ClusterManager(Distribution* distribution)
-        : clusters(),
-          used_clusters_size(0), free_clusters_size(0),
+        : used_clusters_size(0), free_clusters_size(0),
           default_distribution(distribution)
 {
 }
 
 ClusterManager::~ClusterManager() {
+        for (ClusterManager::iterator_all it = begin_all();
+             it != end_all(); it++) {
+                delete(*it);
+        }
         delete(default_distribution);
 }
 
@@ -51,10 +54,12 @@ ClusterManager::add_cluster(Distribution* distribution)
         // of free clusters, so we do not need to observe it
         // and we can simply push it to the list of used
         // clusters
-        Cluster c = Cluster(distribution, tag, false);
+        Cluster* c = new Cluster(distribution, tag, false);
         clusters.push_back(c);
-        used_clusters.push_back(&clusters.back());
+        used_clusters.push_back(clusters.back());
         used_clusters_size++;
+
+        cout << *(clusters[0]) << endl;
 
         return tag;
 }
@@ -65,11 +70,11 @@ ClusterManager::add_cluster()
 {
         cluster_tag_t tag = clusters.size();
 
-        Cluster c = Cluster(default_distribution->clone(), tag, true, this);
+        Cluster* c = new Cluster(default_distribution->clone(), tag, true, this);
         clusters.push_back(c);
         // this cluster is empty, so place it into the list
         // of free clusters
-        free_clusters.push_back(&clusters.back());
+        free_clusters.push_back(clusters.back());
         free_clusters_size++;
 
         return tag;
@@ -108,12 +113,12 @@ ClusterManager::update(Observed<cluster_event_t>* observed, cluster_event_t even
 
 Cluster&
 ClusterManager::operator[](cluster_tag_t c) {
-        return clusters[c];
+        return *clusters[c];
 }
 
 const Cluster&
 ClusterManager::operator[](cluster_tag_t c) const {
-        return clusters[c];
+        return *clusters[c];
 }
 
 // ostream&
