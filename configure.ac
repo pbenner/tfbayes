@@ -200,17 +200,29 @@ dnl | GCC_OPTIONS
 dnl `----------------------------
 
 CFLAGS=""
+CXXFLAGS=""
 AC_ARG_ENABLE([debug],
 	[AS_HELP_STRING([--enable-debug],
 								[turn on debugging @<:@default=no@:>@])],
 	[],
 	[enable_debug=no])
 AS_IF([test "x$enable_debug" = "xyes"],
-  [AX_CFLAGS_GCC_OPTION([-g])
+  [AX_CFLAGS_GCC_OPTION([-O0])
+   AX_CFLAGS_GCC_OPTION([-g])
    AX_CFLAGS_GCC_OPTION([-ggdb])
-	 CFLAGS="$CFLAGS -DDEBUG"],
+   AX_CFLAGS_GCC_OPTION([-pg])
+	 dnl
+	 AX_CXXFLAGS_GCC_OPTION([-O0])
+	 AX_CXXFLAGS_GCC_OPTION([-g])
+   AX_CXXFLAGS_GCC_OPTION([-ggdb])
+   AX_CXXFLAGS_GCC_OPTION([-pg])
+	 CFLAGS="$CFLAGS -DDEBUG"
+	 CXXFLAGS="$CXXFLAGS -DDEBUG"],
   [AX_CFLAGS_GCC_OPTION([-O3])
-   AX_CFLAGS_GCC_OPTION([-ffast-math])])
+   AX_CFLAGS_GCC_OPTION([-ffast-math])
+	 dnl
+	 AX_CXXFLAGS_GCC_OPTION([-O3])
+   AX_CXXFLAGS_GCC_OPTION([-ffast-math])])
 
 AX_CFLAGS_GCC_OPTION([-Wall])
 AX_CFLAGS_GCC_OPTION([-Wwrite-strings])

@@ -25,39 +25,31 @@
 #include <cstdlib>
 #include <ctime>
 
-using namespace std;
-
 #include <string.h>
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_matrix.h>
 
-#include "data.hh"
-#include "statistics.hh"
+#include <clustermanager.hh>
+#include <data.hh>
+#include <statistics.hh>
 
-Data::Data(size_t n, char *sequences[], int *clusters[])
+using namespace std;
+
+Data::Data(size_t n, char *sequences[])
         : n_sequences(n)
 {
-        int tag = 0;
-
         for(size_t i = 0; i < n; i++) {
                 size_t m = strlen(sequences[i]);
                 this->sequences.push_back(sequences[i]);
                 this->sequences_length.push_back(m);
+                this->cluster_assignments.push_back(vector<cluster_tag_t>(m, 0));
                 for(size_t j = 0; j < m; j++) {
-                        Data::x_t x;
-                        x.push_back(i);
-                        x.push_back(j);
-                        Data::element e = {
-                                x, tag++,
-                                clusters[i][j]
-                        };
+                        element_t e = {i, j};
                         elements.push_back(e);
+                        elements_randomized.push_back(&elements.back());
                 }
-        }
-        for (Data::iterator it = this->begin(); it != this->end(); it++) {
-                elements_randomized.push_back(&(*it));
         }
         shuffle();
 }
@@ -70,64 +62,56 @@ Data::shuffle() {
         random_shuffle(elements_randomized.begin(), elements_randomized.end());
 }
 
-const Data::element&
+const element_t&
 Data::operator[](size_t i) const {
         return elements[i];
 }
 
-Data::element&
+element_t&
 Data::operator[](size_t i) {
         return elements[i];
 }
 
-Data::iterator
-Data::find(const element& elem) {
-        for (iterator it = begin(); it != end(); it++) {
-                if ((*it).tag == elem.tag)
-                        return it;
+bool
+Data::valid_for_sampling(const element_t& element, size_t length, word_t& word)
+{
+        const size_t sequence   = element.sequence;
+        const size_t position   = element.position;
+        const cluster_tag_t tag = cluster_assignments[sequence][position];
+
+        // check if there is enough space
+        if (sequences_length[sequence] - position < length) {
+                return false;
         }
-        return end();
-}
-
-char
-Data::get_nucleotide(const Data::element& e) const {
-        return sequences[e.x[0]][e.x[1]];
-}
-
-void
-Data::get_nucleotide(const Data::element& e, size_t n, char *buf) const {
-        size_t m = sequences_length[e.x[0]];
-        for (size_t i = 0; i < n; i++) {
-                if (e.x[1]+i < m) {
-                        buf[i] = sequences[e.x[0]][e.x[1]+i];
-                }
-                else {
-                        buf[i] = '\0';
+        // check if all successive elements belong to the same class
+        for (size_t i = 1; i < length; i++) {
+                if (cluster_assignments[sequence][position+i] != tag) {
+                        return false;
                 }
         }
+        word.sequence  = sequence;
+        word.position  = position;
+        word.length    = length;
+        word.sequences = &sequences;
+        return true;
 }
 
-int
-Data::num_successors(const Data::element& e) {
-        return sequences_length[e.x[0]]-e.x[1]-1;
-}
+// ostream&
+// operator<< (ostream& o, element_t const& element) {
+//         o << element.tag << ":(" << element.x[0] << ","
+//           << element.x[1] << ")@" << element.original_cluster;
 
-ostream&
-operator<< (ostream& o, Data::element const& element) {
-        o << element.tag << ":(" << element.x[0] << ","
-          << element.x[1] << ")@" << element.original_cluster;
+//         return o;
+// }
 
-        return o;
-}
+// ostream&
+// operator<< (ostream& o, Data const& data) {
+//         for (Data::const_iterator it = data.begin(); it != data.end(); it++) {
+//                 if (it != data.begin()) {
+//                         o << ", ";
+//                 }
+//                 o << *it;
+//         }
 
-ostream&
-operator<< (ostream& o, Data const& data) {
-        for (Data::const_iterator it = data.begin(); it != data.end(); it++) {
-                if (it != data.begin()) {
-                        o << ", ";
-                }
-                o << *it;
-        }
-
-        return o;
-}
+//         return o;
+// }

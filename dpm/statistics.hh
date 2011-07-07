@@ -22,6 +22,9 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <iostream>
 #include <vector>
 
@@ -34,27 +37,42 @@ using namespace std;
 
 extern gsl_rng* _r;
 
-class Distribution {
+struct clonable {
+    virtual ~clonable() {}
+    virtual clonable* clone() const = 0;
+};
+
+class Distribution : public clonable {
 
 public:
         Distribution() {}
-        virtual ~Distribution() {}
+        Distribution(const Distribution& distribution) {
+                cout << "Distribution copy constructor called." << endl;
+                exit(EXIT_FAILURE);
+        }
 
-        virtual double pdf(char *buf) { return 0.0; }
+        // purely virtual functions
+        virtual size_t add_observations(const word_t& word) = 0;
+        virtual size_t remove_observations(const word_t& word) = 0;
+        virtual double pdf(const word_t& word) const = 0;
+
+        virtual Distribution* clone() const = 0;
 };
 
 class ProductDirichlet : public Distribution {
 public:
-        ProductDirichlet(gsl_matrix* counts);
+         ProductDirichlet(gsl_matrix* alpha);
+         ProductDirichlet(const ProductDirichlet& distribution);
         ~ProductDirichlet();
 
-        void add_to_count_statistic(const char *nucleotides);
-        void remove_from_count_statistic(const char *nucleotides);
+        size_t add_observations(const word_t& word);
+        size_t remove_observations(const word_t& word);
+        double pdf(const word_t& word) const;
 
-        double pdf(char *buf);
+        ProductDirichlet* clone() const;
 
-        gsl_matrix* counts;
 private:
+        gsl_matrix* counts;
 };
 
 #endif /* STATISTICS_HH */

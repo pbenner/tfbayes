@@ -25,85 +25,82 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>
 
-#include "data.hh"
-#include "dpm.hh"
-#include "clusters.hh"
-#include "statistics.hh"
+#include <data.hh>
+#include <dpm.hh>
+#include <clustermanager.hh>
+#include <statistics.hh>
 
 using namespace std;
 
+typedef struct {
+        vector<double>* switches;
+        vector<double>* likelihood;
+        vector<size_t>* clusters;
+        gsl_matrix* posterior;
+} sampling_history;
+
 class DPM {
 public:
-        DPM(Data* data);
+         DPM(size_t n, char *sequences[]);
         ~DPM();
-
-        double likelihood();
-        void compute_statistics();
-
-        Data& get_data() {
-                return *static_cast<Data *>(da);
-        }
-
-        bool sample(Data::element& element);
-        void gibbsSample(unsigned int n, unsigned int burnin);
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-        friend ostream& operator<<(std::ostream& o, DPM const& dpm);
-              Clusters::cluster& operator[](int c)       { return cl[c]; }
-        const Clusters::cluster& operator[](int c) const { return cl[c]; }
+//        friend ostream& operator<<(std::ostream& o, DPM const& dpm);
+              Cluster& operator[](cluster_tag_t c)       { return (*cluster_manager)[c]; }
+        const Cluster& operator[](cluster_tag_t c) const { return (*cluster_manager)[c]; }
 
         // methods
         ////////////////////////////////////////////////////////////////////////
-        Clusters::size_type num_clusters() {
-                return cl.size();
-        }
-        Clusters& get_clusters() {
-                return cl;
-        }
         vector<double>& get_hist_switches() {
                 return hist_switches;
         }
         vector<double>& get_hist_likelihood() {
                 return hist_likelihood;
         }
-        gsl_matrix* get_posterior() {
+        const vector<vector<double> >& get_posterior() const {
                 return posterior;
         }
 
+        double compute_likelihood();
+        void update_posterior();
+
+        bool sample(const element_t& element);
+        void gibbs_sample(size_t n, size_t burnin);
+
         // constants
         ////////////////////////////////////////////////////////////////////////
-        static const int BG_CLUSTER  = 0;
-        static const int BG_LENGTH   = 1;
-        static const int TFBS_LENGTH = 42;
-        static const int NUCLEOTIDES = 4;
+        static const size_t BG_CLUSTER  = 0;
+        static const size_t BG_LENGTH   = 1;
+//        static const int TFBS_LENGTH = 42;
+        static const size_t TFBS_LENGTH = 10;
+        static const size_t NUCLEOTIDES = 4;
 
 private:
         // data and clusters
-        Data* da;
-        Clusters cl;
+        Data* data;
+        ClusterManager* cluster_manager;
+
+        // tags of special clusters
+        cluster_tag_t bg_cluster_tag;
 
         // parameters
         double alpha;
         double lambda;
 
         // priors
-        gsl_matrix* tfbs_alpha;
         gsl_matrix* bg_alpha;
+        gsl_matrix* tfbs_alpha;
 
         // gibbs sampler history
-        unsigned int total_sampling_steps;
+        size_t total_sampling_steps;
         vector<double> hist_switches;
         vector<double> hist_likelihood;
-        vector<Clusters::size_type> hist_num_clusters;
-        gsl_matrix* posterior;
+        vector<size_t> hist_num_clusters;
+        vector<vector<double> > posterior;
 
-        // private methods
-        void count_statistic(const Clusters::cluster& cluster, gsl_matrix* alpha, gsl_matrix* counts);
-        bool check_element(Data::element& element);
-        void assign_block(char* nucleotides, Data::element& element, Clusters::cluster& c);
-        void release_block(char* nucleotides, Data::element& element, Clusters::cluster& c);
-        int num_tfbs();
+        // keep track of the number of transcription factor binding sites
+        size_t num_tfbs;
 };
 
 #endif /* DPM_HH */

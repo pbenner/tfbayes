@@ -77,9 +77,6 @@ _lib._free.argtypes        = [POINTER(None)]
 _lib._dpm_num_clusters.restype  = c_uint
 _lib._dpm_num_clusters.argtypes = []
 
-_lib._dpm_original_tags.restype  = POINTER(VECTOR)
-_lib._dpm_original_tags.argtypes = [c_uint]
-
 _lib._dpm_cluster.restype  = POINTER(MATRIX)
 _lib._dpm_cluster.argtypes = [c_uint]
 
@@ -154,12 +151,6 @@ def dpm_cluster(c):
      cluster = getMatrix(result)
      _lib._freeMatrix(result)
      return cluster
-
-def dpm_original_tags(c):
-     result = _lib._dpm_original_tags(c)
-     tags   = map(int, getVector(result))
-     _lib._freeVector(result)
-     return tags
 
 def dpm_hist_likelihood():
      result     = _lib._dpm_hist_likelihood()

@@ -19,6 +19,8 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <string.h>
+
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_linalg.h>
@@ -29,245 +31,95 @@
 
 using namespace std;
 
-DPM::DPM(Data* data)
-        : da(data), cl(*da),
-          // strength parameter for the dirichlet process
+DPM::DPM(size_t n, char *sequences[])
+        : // strength parameter for the dirichlet process
           alpha(0.07),
           // mixture weight for the dirichlet process
           lambda(0.02),
-          tfbs_alpha(gsl_matrix_alloc(DPM::TFBS_LENGTH, DPM::NUCLEOTIDES)),
+          // priors
           bg_alpha(gsl_matrix_alloc(DPM::BG_LENGTH, DPM::NUCLEOTIDES)),
+          tfbs_alpha(gsl_matrix_alloc(DPM::TFBS_LENGTH, DPM::NUCLEOTIDES)),
           // sampling history and posterior distribution
           total_sampling_steps(0),
-          posterior(gsl_matrix_alloc(da->get_n_sequences(), da->get_max_sequence_length()))
+          // number of transcription factor binding sites
+          num_tfbs(0)
 {
+        data = new Data(n, sequences);
+
         // initialize prior for the tfbs
-        for (int i = 0; i < DPM::TFBS_LENGTH; i++) {
-                for (int j = 0; j < DPM::NUCLEOTIDES; j++) {
+        for (size_t i = 0; i < DPM::TFBS_LENGTH; i++) {
+                for (size_t j = 0; j < DPM::NUCLEOTIDES; j++) {
                         gsl_matrix_set(tfbs_alpha, i, j, 1);
                 }
         }
 
         // initialize prior for the background model
-        for (int i = 0; i < DPM::BG_LENGTH; i++) {
-                for (int j = 0; j < DPM::NUCLEOTIDES; j++) {
-                        gsl_matrix_set(bg_alpha, i, j, DPM::TFBS_LENGTH);
+        for (size_t i = 0; i < DPM::BG_LENGTH; i++) {
+                for (size_t j = 0; j < DPM::NUCLEOTIDES; j++) {
+                        gsl_matrix_set(bg_alpha, i, j, 1);
                 }
         }
 
-        // initialize posterior
-        size_t max_sequence_length = da->get_max_sequence_length();
-        for (unsigned int i = 0; i < da->get_n_sequences(); i++) {
-                for (unsigned int j = 0; j < max_sequence_length; j++) {
-                        if (j > da->get_sequence_length(i)) {
-                                gsl_matrix_set(posterior, i, j, -1);
-                        }
-                        else {
-                                gsl_matrix_set(posterior, i, j, 0);
-                        }
-                }
+        // initialize joint posterior
+        for (size_t i = 0; i < n; i++) {
+                const size_t length = strlen(sequences[i]);
+                posterior.push_back(vector<double>(length, 0.0));
         }
 
-        // initialize posterior predictive distributions for each cluster
-        for (Clusters::iterator_all it = cl.begin_all(); it != cl.end_all(); it++) {
-                if ((*it).tag == DPM::BG_CLUSTER) {
-                        // background model
-                        gsl_matrix* counts = gsl_matrix_alloc(DPM::BG_LENGTH, DPM::NUCLEOTIDES);
-                        count_statistic(*it, bg_alpha, counts);
-                        (*it).dist = new ProductDirichlet(counts);
-                }
-                else {
-                        // tfbs models
-                        gsl_matrix* counts = gsl_matrix_alloc(DPM::TFBS_LENGTH, DPM::NUCLEOTIDES);
-                        count_statistic(*it, tfbs_alpha, counts);
-                        (*it).dist = new ProductDirichlet(counts);
-                }
-        }
+        // initialize cluster manager
+        ProductDirichlet* tfbs_product_dirichlet = new ProductDirichlet(tfbs_alpha);
+        ProductDirichlet* bg_product_dirichlet   = new ProductDirichlet(bg_alpha);
+        cluster_manager = new ClusterManager(tfbs_product_dirichlet);
+        bg_cluster_tag  = cluster_manager->add_cluster(bg_product_dirichlet);
 
         // for sampling statistics
         hist_switches.push_back(0);
-        hist_likelihood.push_back(likelihood());
+        hist_likelihood.push_back(compute_likelihood());
 }
 
 DPM::~DPM() {
-        gsl_matrix_free(bg_alpha);
         gsl_matrix_free(tfbs_alpha);
-        gsl_matrix_free(posterior);
-        delete(da);
+        gsl_matrix_free(bg_alpha);
 
-        for (Clusters::iterator_all it = cl.begin_all(); it != cl.end_all(); it++) {
-                delete((*it).dist);
-        }
-}
-
-void
-DPM::count_statistic(const Clusters::cluster& cluster, gsl_matrix* alpha, gsl_matrix* counts) {
-        int len = counts->size1;
-
-        // reset counts
-        for (int i = 0; i < len; i++) {
-                gsl_matrix_set(counts, i, 0, gsl_matrix_get(alpha, i, 0));
-                gsl_matrix_set(counts, i, 1, gsl_matrix_get(alpha, i, 1));
-                gsl_matrix_set(counts, i, 2, gsl_matrix_get(alpha, i, 2));
-                gsl_matrix_set(counts, i, 3, gsl_matrix_get(alpha, i, 3));
-        }
-        // compute count statistic
-        for (Clusters::elements_t::const_iterator it  = cluster.elements.begin();
-             it != cluster.elements.end(); it++) {
-                char buf[len];
-                da->get_nucleotide(**it, len, buf);
-                for (int i = 0; i < len; i++) {
-                        switch (buf[i]) {
-                        case 'A':
-                        case 'a':
-                                gsl_matrix_set(counts, i, 0,
-                                               gsl_matrix_get(counts, i, 0)+1);
-                        break;
-                        case 'C':
-                        case 'c':
-                                gsl_matrix_set(counts, i, 1,
-                                               gsl_matrix_get(counts, i, 1)+1);
-                        break;
-                        case 'G':
-                        case 'g':
-                                gsl_matrix_set(counts, i, 2,
-                                               gsl_matrix_get(counts, i, 2)+1);
-                        break;
-                        case 'T':
-                        case 't':
-                                gsl_matrix_set(counts, i, 3,
-                                               gsl_matrix_get(counts, i, 3)+1);
-                        break;
-                        }
-                }
-        }
+        delete(data);
+        delete(cluster_manager);
 }
 
 bool
-DPM::check_element(Data::element& element)
-{
-        // check if there is enough space for the binding site
-        if (da->num_successors(element) < DPM::TFBS_LENGTH-1) {
-                return false;
-        }
-        // check if this is alreade a binding site
-        if (cl.getClusterTag(element) > 0) {
-                return true;
-        }
-        if (cl.getClusterTag(element) == 0) {
-                Data::iterator it = da->find(element);
-                // check if all successing nucleotides belong to the background
-                for (int i = 0; i < DPM::TFBS_LENGTH-1 && it != da->end(); i++) {
-                        it++;
-                        if (cl.getClusterTag(*it) != 0) {
-                                return false;
-                        }
-                }
-                // check if all previous nucleotides belong to the background
-                it = da->find(element);
-                for (int i = 0; i < DPM::TFBS_LENGTH-1 && it != da->begin(); i++) {
-                        it--;
-                        if (cl.getClusterTag(*it) != 0) {
-                                return false;
-                        }
-                        // check if the beginning of the sequence is reached
-                        if ((*it).x[1] == 0) {
-                                break;
-                        }
-                }
-                // there is enough space to the left and right, continue
-                return true;
-        }
-        // this element is within a binding site, abort
-        return false;
-}
-
-void
-DPM::release_block(char* nucleotides, Data::element& element, Clusters::cluster& c) {
-        // release a block of nucleotides from its clusters
-        Data::iterator it = da->find(element);
-        for (int i = 0; i < DPM::TFBS_LENGTH; i++) {
-                cl.release(*it);
-                it++;
-        }
-        if (c.tag == DPM::BG_CLUSTER) {
-                for (int i = 0; i < DPM::TFBS_LENGTH; i++) {
-                        ((ProductDirichlet*)c.dist)->remove_from_count_statistic(nucleotides+i);
-                }
-        }
-        else {
-                ((ProductDirichlet*)c.dist)->remove_from_count_statistic(nucleotides);
-        }
-}
-
-void
-DPM::assign_block(char* nucleotides, Data::element& element, Clusters::cluster& c) {
-        if (c.tag == DPM::BG_CLUSTER) {
-                // assign all nucleotides to the background cluster
-                Data::iterator it = da->find(element);
-                for (int i = 0; i < DPM::TFBS_LENGTH; i++) {
-                        cl.assign(*it, DPM::BG_CLUSTER);
-                        ((ProductDirichlet*)c.dist)->add_to_count_statistic(nucleotides+i);
-                        it++;
-                }
-        }
-        else {
-                // this is a binding site:
-                // assign this element to its class and leave
-                // all remaining nucleotides unassigned
-                cl.assign(element, c.tag);
-                ((ProductDirichlet*)c.dist)->add_to_count_statistic(nucleotides);
-        }
-}
-
-int
-DPM::num_tfbs() {
-        Clusters::cluster c = cl[DPM::BG_CLUSTER];
-
-        return cl.get_total_elements() - c.elements.size();
-}
-
-bool
-DPM::sample(Data::element& element) {
+DPM::sample(const element_t& element) {
+        word_t word;
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
-        if (check_element(element) == false) {
+        if (!data->valid_for_sampling(element, DPM::TFBS_LENGTH, word)) {
                 return false;
         }
-
-        ////////////////////////////////////////////////////////////////////////
-        // buffer to store the sequence of nucleotides, starting at `element'
-        char nucleotides[DPM::TFBS_LENGTH];
-        da->get_nucleotide(element, DPM::TFBS_LENGTH, nucleotides);
 
         ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
-        Clusters::cluster_tag_t old_cluster_tag = cl.getClusterTag(element);
-        release_block(nucleotides, element, cl[old_cluster_tag]);
-        Clusters::size_type num_clusters = cl.size();
+        cluster_tag_t old_cluster_tag = data->get_cluster_tag(element);
+        (*cluster_manager)[old_cluster_tag].remove_word(word);
+        size_t num_clusters = cluster_manager->size();
         double weights[num_clusters+1];
-        Clusters::cluster_tag_t tags[num_clusters+1];
-        double dp_norm = num_tfbs() + alpha;
+        cluster_tag_t tags[num_clusters+1];
+        double dp_norm = num_tfbs + alpha;
         double sum = 0;
 
-        Clusters::cluster_tag_t i = 0;
-        for (Clusters::iterator it = cl.begin(); it != cl.end(); it++) {
-                tags[i] = (*it)->tag;
+        cluster_tag_t i = 0;
+        for (ClusterManager::iterator it = cluster_manager->begin(); it != cluster_manager->end(); it++) {
+                Cluster& cluster = **it;
+                tags[i] = cluster.tag;
                 ////////////////////////////////////////////////////////////////
                 // mixture component 1: background model
-                if (tags[i] == DPM::BG_CLUSTER) {
-                        weights[i] = 1;
-                        for (int j = 0; j < DPM::TFBS_LENGTH; j++) {
-                                weights[i] *= (*it)->dist->pdf(nucleotides+j);
-                        }
-                        weights[i] *= (1-lambda);
+                if (tags[i] == bg_cluster_tag) {
+                        weights[i] = (1-lambda)*cluster.distribution->pdf(word);
+                        // normalization constant
                         sum += weights[i];
                 }
                 ////////////////////////////////////////////////////////////////
                 // mixture component 2: dirichlet process for tfbs models
                 else {
-                        double num_elements = (double)(*it)->elements.size();
-                        weights[i] = lambda*num_elements/dp_norm*(*it)->dist->pdf(nucleotides);
+                        double num_elements = (double)cluster.size();
+                        weights[i] = lambda*num_elements/dp_norm*cluster.distribution->pdf(word);
                         // normalization constant
                         sum += weights[i];
                 }
@@ -275,13 +127,13 @@ DPM::sample(Data::element& element) {
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
-        tags[num_clusters]    = cl.next_free_cluster()->tag;
-        weights[num_clusters] = alpha/dp_norm*cl[tags[num_clusters]].dist->pdf(nucleotides);
+        tags[num_clusters]    = cluster_manager->get_free_cluster().tag;
+        weights[num_clusters] = alpha/dp_norm*(*cluster_manager)[tags[num_clusters]].distribution->pdf(word);
         sum += weights[num_clusters];
 
         ////////////////////////////////////////////////////////////////////////
         // normalize
-        for (Clusters::cluster_tag_t i = 0; i < (Clusters::cluster_tag_t)num_clusters+1; i++) {
+        for (size_t i = 0; i < num_clusters+1; i++) {
                 weights[i] /= sum;
         }
 
@@ -291,67 +143,78 @@ DPM::sample(Data::element& element) {
         gsl_ran_discrete_t* gdd  = gsl_ran_discrete_preproc(num_clusters+1, weights);
         i = gsl_ran_discrete(_r, gdd);
         gsl_ran_discrete_free(gdd);
-        assign_block(nucleotides, element, cl[tags[i]]);
+        cluster_tag_t new_cluster_tag = tags[i];
 
         ////////////////////////////////////////////////////////////////////////
-        // return true if the cluster assignment has changed
-        return old_cluster_tag != tags[i];
+        // if the cluster assignment has changes, record it and return true
+        if (old_cluster_tag == new_cluster_tag) {
+                (*cluster_manager)[old_cluster_tag].add_word(word);
+                return false;
+        }
+        else {
+                if (new_cluster_tag == bg_cluster_tag) {
+                        num_tfbs--;
+                }
+                else {
+                        num_tfbs++;
+                }
+                (*cluster_manager)[new_cluster_tag].add_word(word);
+                data->record_cluster_assignment(word, new_cluster_tag);
+                return true;
+        }
 }
 
 // sampling methods
 ////////////////////////////////////////////////////////////////////////////////
 
 double
-DPM::likelihood() {
+DPM::compute_likelihood() {
         return 0.0;
 }
 
 void
-DPM::compute_statistics() {
-        for (Data::iterator_randomized it = da->begin_randomized();
-             it != da->end_randomized(); it++) {
-                if (cl.getClusterTag(**it) != -1) {
-                        const int i = (**it).x[0];
-                        const int j = (**it).x[1];
-                        if (cl.getClusterTag(**it) == DPM::BG_CLUSTER) {
-                                double tmp   = gsl_matrix_get(posterior, i, j);
-                                double value = (total_sampling_steps*tmp)/(total_sampling_steps+1.0);
-                                gsl_matrix_set(posterior, i, j, value);
-                        }
-                        else {
-                                for (int k = 0; k < DPM::TFBS_LENGTH; k++) {
-                                        double tmp   = gsl_matrix_get(posterior, i, j+k);
-                                        double value = (total_sampling_steps*tmp+1.0)/(total_sampling_steps+1.0);
-                                        gsl_matrix_set(posterior, i, j+k, value);
-                                }
-                        }
+DPM::update_posterior() {
+        for (Data::iterator_randomized it = data->begin_randomized();
+             it != data->end_randomized(); it++) {
+                const element_t& element = **it;
+                const size_t sequence    = element.sequence;
+                const size_t position    = element.position;
+                if (data->get_cluster_tag(element) == bg_cluster_tag) {
+                        double tmp   = posterior[sequence][position];
+                        double value = (total_sampling_steps*tmp)/(total_sampling_steps+1.0);
+                        posterior[sequence][position] = value;
+                }
+                else {
+                        double tmp   = posterior[sequence][position];
+                        double value = (total_sampling_steps*tmp+1.0)/(total_sampling_steps+1.0);
+                        posterior[sequence][position] = value;
                 }
         }
 }
 
 void
-DPM::gibbsSample(unsigned int n, unsigned int burnin) {
+DPM::gibbs_sample(size_t n, size_t burnin) {
         // burn in sampling
-        for (unsigned int i = 0; i < burnin; i++) {
-                printf("Burn in... [%u]\n", i+1);
-                for (Data::iterator_randomized it = da->begin_randomized();
-                     it != da->end_randomized(); it++) {
-                        printf("Burn in... [%u:%lu:%lu:%lu]\n", i+1, (*it)->x[0], (*it)->x[1], cl.size());
+        for (size_t i = 0; i < burnin; i++) {
+                printf("Burn in... [%u]\n", (unsigned int)i+1);
+                for (Data::iterator_randomized it = data->begin_randomized();
+                     it != data->end_randomized(); it++) {
+//                        printf("Burn in... [%u:%lu:%lu:%lu]\n", i+1, (*it)->x[0], (*it)->x[1], cl.size());
                         sample(**it);
                 }
         }
         // sample `n' times
-        for (unsigned int i = 0; i < n; i++) {
+        for (size_t i = 0; i < n; i++) {
                 // loop through all elements
-                printf("Sampling... [%u]\n", i+1);
+                printf("Sampling... [%u]\n", (unsigned int)i+1);
                 double sum = 0;
-                for (Data::iterator_randomized it = da->begin_randomized();
-                     it != da->end_randomized(); it++) {
+                for (Data::iterator_randomized it = data->begin_randomized();
+                     it != data->end_randomized(); it++) {
                         bool switched = sample(**it);
                         if (switched) sum+=1;
                 }
-                hist_switches.push_back(sum/da->size());
-                compute_statistics();
+                hist_switches.push_back(sum/data->size());
+                update_posterior();
                 total_sampling_steps++;
         }
 }
@@ -359,7 +222,7 @@ DPM::gibbsSample(unsigned int n, unsigned int burnin) {
 // misc methods
 ////////////////////////////////////////////////////////////////////////////////
 
-ostream& operator<< (ostream& o, DPM const& dpm)
-{
-        return o << dpm.cl;
-}
+// ostream& operator<< (ostream& o, DPM const& dpm)
+// {
+//         return o << dpm.cl;
+// }

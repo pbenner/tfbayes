@@ -27,37 +27,40 @@
 
 #include <gsl/gsl_matrix.h>
 
-#include "data.hh"
+//#include <cluster.hh>
 
 using namespace std;
 
+// efficient representation of words (nucleotide sequences)
+// of variable length
+typedef struct {
+        size_t sequence;
+        size_t position;
+        size_t length;
+        vector<string> *sequences;
+} word_t;
+
+typedef struct {
+        size_t sequence;
+        size_t position;
+} element_t;
+
 class Data {
 public:
-         Data(size_t n, char *sequences[], int *clusters[]);
+         Data(size_t n, char *sequences[]);
         ~Data();
 
         // type definitions
-        typedef size_t type;
-        typedef vector<type> x_t;
-        typedef struct {
-                x_t x;                // value of the element
-                int tag;              // tag to identify the element
-                                      // (used for cluster assignments)
-                int original_cluster; // from which cluster this
-                                      // elemenent was originally sampled
-        } element;
-        typedef vector<element>::size_type size_type;
+        typedef vector<element_t >::iterator iterator;
+        typedef vector<element_t >::const_iterator const_iterator;
 
-        typedef vector<element >::iterator iterator;
-        typedef vector<element >::const_iterator const_iterator;
-
-        typedef vector<element*>::iterator iterator_randomized;
-        typedef vector<element*>::const_iterator const_iterator_randomized;
+        typedef vector<element_t*>::iterator iterator_randomized;
+        typedef vector<element_t*>::const_iterator const_iterator_randomized;
 
         // iterators
         ////////////////////////////////////////////////////////////////////////
         iterator begin() { return elements.begin(); }
-        iterator end()   { return elements.end(); }
+        iterator end()   { return elements.end();   }
 
         const_iterator begin() const { return elements.begin(); }
         const_iterator end()   const { return elements.end(); }
@@ -67,26 +70,26 @@ public:
 
         const_iterator_randomized begin_randomized() const
                 { return elements_randomized.begin(); }
-        const_iterator_randomized end_randomized()   const
+        const_iterator_randomized end_randomized() const
                 { return elements_randomized.end(); }
 
+        typedef size_t cluster_tag_t;
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-              element& operator[](size_type i);
-        const element& operator[](size_type i) const;
+              element_t& operator[](size_t i);
+        const element_t& operator[](size_t i) const;
 
-        friend ostream& operator<< (std::ostream& o, Data const& data);
+//        friend ostream& operator<< (std::ostream& o, Data const& data);
 
         // methods
         ////////////////////////////////////////////////////////////////////////
-        size_type size() { return elements.size(); }
+        size_t size() { return elements.size(); }
         void shuffle();
 
-        iterator find(const element& elem);
-        char get_nucleotide(const element& e) const;
-        void get_nucleotide(const element& e, size_t n, char *buf) const;
-        int num_successors(const element& e);
+        int  num_successors(const element_t& e) const;
+
+        bool valid_for_sampling(const element_t& element, size_t length, word_t& word);
 
         size_t get_n_sequences() {
                 return n_sequences;
@@ -104,16 +107,31 @@ public:
 
                 return max_length;
         }
+
+        void record_cluster_assignment(const word_t& word, cluster_tag_t tag) {
+                for (size_t i = 0; i < word.length; i++) {
+                        cluster_assignments[word.sequence][word.position+i] = tag;
+                }
+        }
+
+        cluster_tag_t get_cluster_tag(const element_t& element) const {
+                return cluster_assignments[element.sequence][element.position];
+        }
+
 private:
-        size_t n_sequences;
+        // all nucleotide positions in a vector (used for the gibbs sampler)
+        vector<element_t > elements;
+        vector<element_t*> elements_randomized;
 
-        vector<element > elements;
-        vector<element*> elements_randomized;
-
+        // the raw nucleotide sequences
         vector<string> sequences;
         vector<size_t> sequences_length;
+        size_t n_sequences;
+
+        // assignments to clusters
+        vector<vector<cluster_tag_t> > cluster_assignments;
 };
 
-ostream& operator<< (ostream& o, Data::element const& element);
+//ostream& operator<< (ostream& o, element_t const& element);
 
 #endif /* DATA_HH */

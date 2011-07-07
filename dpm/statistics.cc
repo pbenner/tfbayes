@@ -34,100 +34,122 @@ using namespace std;
 
 gsl_rng* _r;
 
-ProductDirichlet::ProductDirichlet(gsl_matrix* c)
-        : counts(c)
+ProductDirichlet::ProductDirichlet(gsl_matrix* alpha)
 {
+        counts = gsl_matrix_alloc(alpha->size1, 4);
+
+        for (size_t i = 0; i < alpha->size1; i++) {
+                gsl_matrix_set(counts, i, 0, gsl_matrix_get(alpha, i, 0));
+                gsl_matrix_set(counts, i, 1, gsl_matrix_get(alpha, i, 1));
+                gsl_matrix_set(counts, i, 2, gsl_matrix_get(alpha, i, 2));
+                gsl_matrix_set(counts, i, 3, gsl_matrix_get(alpha, i, 3));
+        }
+}
+
+ProductDirichlet::ProductDirichlet(const ProductDirichlet& distribution)
+{
+        this->counts = gsl_matrix_alloc(distribution.counts->size1, distribution.counts->size2);
+        gsl_matrix_memcpy(this->counts, distribution.counts);
 }
 
 ProductDirichlet::~ProductDirichlet() {
         gsl_matrix_free(this->counts);
 }
 
-void
-ProductDirichlet::remove_from_count_statistic(const char *nucleotides) {
-        int len = counts->size1;
-
-        for (int i = 0; i < len; i++) {
-                switch (nucleotides[i]) {
-                case 'A':
-                case 'a':
-                        gsl_matrix_set(counts, i, 0,
-                                       gsl_matrix_get(counts, i, 0)-1);
-                        break;
-                case 'C':
-                case 'c':
-                        gsl_matrix_set(counts, i, 1,
-                                       gsl_matrix_get(counts, i, 1)-1);
-                        break;
-                case 'G':
-                case 'g':
-                        gsl_matrix_set(counts, i, 2,
-                                       gsl_matrix_get(counts, i, 2)-1);
-                        break;
-                case 'T':
-                case 't':
-                        gsl_matrix_set(counts, i, 3,
-                                       gsl_matrix_get(counts, i, 3)-1);
-                        break;
-                }
-        }
+ProductDirichlet*
+ProductDirichlet::clone() const {
+        return new ProductDirichlet(*this);
 }
 
-void
-ProductDirichlet::add_to_count_statistic(const char *nucleotides) {
-        int len = counts->size1;
-
-        for (int i = 0; i < len; i++) {
-                switch (nucleotides[i]) {
-                case 'A':
-                case 'a':
-                        gsl_matrix_set(counts, i, 0,
-                                       gsl_matrix_get(counts, i, 0)+1);
+size_t
+ProductDirichlet::remove_observations(const word_t& word) {
+        for (size_t i = 0; i < word.length; i += counts->size1) {
+                for (size_t j = 0; j < counts->size1; j++) {
+                        switch ((*word.sequences)[word.sequence][word.position+i+j]) {
+                        case 'A':
+                        case 'a':
+                                gsl_matrix_set(counts, i, 0,
+                                               gsl_matrix_get(counts, i, 0)-1);
                         break;
-                case 'C':
-                case 'c':
-                        gsl_matrix_set(counts, i, 1,
-                                       gsl_matrix_get(counts, i, 1)+1);
+                        case 'C':
+                        case 'c':
+                                gsl_matrix_set(counts, i, 1,
+                                               gsl_matrix_get(counts, i, 1)-1);
                         break;
-                case 'G':
-                case 'g':
-                        gsl_matrix_set(counts, i, 2,
-                                       gsl_matrix_get(counts, i, 2)+1);
+                        case 'G':
+                        case 'g':
+                                gsl_matrix_set(counts, i, 2,
+                                               gsl_matrix_get(counts, i, 2)-1);
                         break;
-                case 'T':
-                case 't':
-                        gsl_matrix_set(counts, i, 3,
-                                       gsl_matrix_get(counts, i, 3)+1);
+                        case 'T':
+                        case 't':
+                                gsl_matrix_set(counts, i, 3,
+                                               gsl_matrix_get(counts, i, 3)-1);
                         break;
+                        }
                 }
         }
+        return word.length/counts->size1;
 }
 
-double ProductDirichlet::pdf(char *buf) {
+size_t
+ProductDirichlet::add_observations(const word_t& word) {
+        for (size_t i = 0; i < word.length; i += counts->size1) {
+                for (size_t j = 0; j < counts->size1; j++) {
+                        switch ((*word.sequences)[word.sequence][word.position+i+j]) {
+                        case 'A':
+                        case 'a':
+                                gsl_matrix_set(counts, i, 0,
+                                               gsl_matrix_get(counts, i, 0)+1);
+                        break;
+                        case 'C':
+                        case 'c':
+                                gsl_matrix_set(counts, i, 1,
+                                               gsl_matrix_get(counts, i, 1)+1);
+                        break;
+                        case 'G':
+                        case 'g':
+                                gsl_matrix_set(counts, i, 2,
+                                               gsl_matrix_get(counts, i, 2)+1);
+                        break;
+                        case 'T':
+                        case 't':
+                                gsl_matrix_set(counts, i, 3,
+                                               gsl_matrix_get(counts, i, 3)+1);
+                        break;
+                        }
+                }
+        }
+        return word.length/counts->size1;
+}
+
+double ProductDirichlet::pdf(const word_t& word) const {
         double result = 1;
 
-        for (unsigned int i = 0; i < this->counts->size1; i++) {
-                double sum = 0;
-                for (unsigned int j = 0; j < this->counts->size2; j++) {
-                        sum += gsl_matrix_get(this->counts, i, j);
-                }
-                switch (buf[i]) {
-                case 'A':
-                case 'a':
-                        result *= gsl_matrix_get(this->counts, i, 0)/sum;
-                break;
-                case 'C':
-                case 'c':
-                        result *= gsl_matrix_get(this->counts, i, 1)/sum;
-                break;
-                case 'G':
-                case 'g':
-                        result *= gsl_matrix_get(this->counts, i, 2)/sum;
-                break;
-                case 'T':
-                case 't':
-                        result *= gsl_matrix_get(this->counts, i, 3)/sum;
-                break;
+        for (size_t i = 0; i < word.length; i += counts->size1) {
+                for (size_t j = 0; j < counts->size1; j++) {
+                        double sum = 0;
+                        for (size_t k = 0; k < this->counts->size2; k++) {
+                                sum += gsl_matrix_get(this->counts, j, k);
+                        }
+                        switch ((*word.sequences)[word.sequence][word.position+i+j]) {
+                        case 'A':
+                        case 'a':
+                                result *= gsl_matrix_get(this->counts, i, 0)/sum;
+                        break;
+                        case 'C':
+                        case 'c':
+                                result *= gsl_matrix_get(this->counts, i, 1)/sum;
+                        break;
+                        case 'G':
+                        case 'g':
+                                result *= gsl_matrix_get(this->counts, i, 2)/sum;
+                        break;
+                        case 'T':
+                        case 't':
+                                result *= gsl_matrix_get(this->counts, i, 3)/sum;
+                        break;
+                        }
                 }
         }
         return result;
