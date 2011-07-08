@@ -64,6 +64,12 @@ DPM::DPM(size_t n, char *sequences[])
                 posterior.push_back(vector<double>(length, 0.0));
         }
 
+        // initialize data structures for the gibbs sampler
+        for(size_t i = 0; i < n; i++) {
+                size_t m = strlen(sequences[i]);
+                this->blocked_for_sampling.push_back(vector<bool>(m, false));
+        }
+
         // initialize cluster manager
         ProductDirichlet* tfbs_product_dirichlet = new ProductDirichlet(tfbs_alpha);
         ProductDirichlet* bg_product_dirichlet   = new ProductDirichlet(bg_alpha);
@@ -84,18 +90,71 @@ DPM::~DPM() {
         delete(cluster_manager);
 }
 
+void
+DPM::block_for_sampling(const word_t& word)
+{
+        const size_t sequence = word.sequence;
+        const size_t position = word.position;
+        const size_t length   = word.length;
+
+        for (size_t i = 1; i < length; i++) {
+                blocked_for_sampling[sequence][position+i] = true;
+        }
+}
+
+void
+DPM::unblock_for_sampling(const word_t& word)
+{
+        const size_t sequence = word.sequence;
+        const size_t position = word.position;
+        const size_t length   = word.length;
+
+        for (size_t i = 1; i < length; i++) {
+                blocked_for_sampling[sequence][position+i] = false;
+        }
+}
+
+bool
+DPM::valid_for_sampling(const word_t& word)
+{
+        const size_t sequence = word.sequence;
+        const size_t position = word.position;
+        const size_t length   = word.length;
+
+        // check if there is enough space
+        if (data->length(sequence) - position < length) {
+                return false;
+        }
+        // check if a position within the word is blocked
+        for (size_t i = 0; i < length; i++) {
+                if (blocked_for_sampling[sequence][position+i]) {
+                        return false;
+                }
+        }
+
+        return true;
+}
+
 bool
 DPM::sample(const element_t& element) {
         word_t word;
+        data->get_word(element, DPM::TFBS_LENGTH, word);
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
-        if (!data->valid_for_sampling(element, DPM::TFBS_LENGTH, word)) {
+        if (!valid_for_sampling(word)) {
                 return false;
         }
-
+        cout << word << endl;
+        cout << *data << endl;
         ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
         cluster_tag_t old_cluster_tag = data->get_cluster_tag(element);
+        if (old_cluster_tag == bg_cluster_tag) {
+                printf("Sampling background\n");
+        }
+        else {
+                printf("Sampling tfbs\n");
+        }
         (*cluster_manager)[old_cluster_tag].remove_word(word);
         size_t num_clusters = cluster_manager->size();
         printf("num_tfbs: %d\n", (int)num_tfbs);
@@ -113,7 +172,6 @@ DPM::sample(const element_t& element) {
                 // mixture component 1: background model
                 if (tags[i] == bg_cluster_tag) {
                         weights[i] = (1-lambda)*cluster.distribution->pdf(word);
-                        printf("weight[%d](bg): %f\n", (int)i, (float)weights[i]);
                         // normalization constant
                         sum += weights[i];
                 }
@@ -121,8 +179,8 @@ DPM::sample(const element_t& element) {
                 // mixture component 2: dirichlet process for tfbs models
                 else {
                         double num_elements = (double)cluster.size();
+                        printf("num_elements: %d\n", (int)num_elements);
                         weights[i] = lambda*num_elements/dp_norm*cluster.distribution->pdf(word);
-                        printf("weight[%d](tfbs): %f\n", (int)i, (float)weights[i]);
                         // normalization constant
                         sum += weights[i];
                 }
@@ -131,13 +189,26 @@ DPM::sample(const element_t& element) {
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         tags[num_clusters]    = cluster_manager->get_free_cluster().tag;
+        printf("free cluster tag: %d\n", (int)tags[num_clusters]);
         weights[num_clusters] = alpha/dp_norm*(*cluster_manager)[tags[num_clusters]].distribution->pdf(word);
         sum += weights[num_clusters];
 
         ////////////////////////////////////////////////////////////////////////
         // normalize
         for (size_t i = 0; i < num_clusters+1; i++) {
+                if (tags[i] == bg_cluster_tag) {
+                        printf("     weight[%d](bg): %f\n", (int)i, (float)weights[i]);
+                }
+                else {
+                        printf("     weight[%d](tfbs): %f\n", (int)i, (float)weights[i]);
+                }
                 weights[i] /= sum;
+                if (tags[i] == bg_cluster_tag) {
+                        printf("NORM weight[%d](bg): %f\n", (int)i, (float)weights[i]);
+                }
+                else {
+                        printf("NORM weight[%d](tfbs): %f\n", (int)i, (float)weights[i]);
+                }
         }
 
         ////////////////////////////////////////////////////////////////////////
@@ -152,14 +223,26 @@ DPM::sample(const element_t& element) {
         // if the cluster assignment has changes, record it and return true
         if (old_cluster_tag == new_cluster_tag) {
                 (*cluster_manager)[old_cluster_tag].add_word(word);
+                cout << "Keeping cluster assignment" << endl;
+                cout << endl << endl;
                 return false;
         }
         else {
                 if (old_cluster_tag == bg_cluster_tag && new_cluster_tag != bg_cluster_tag) {
+                        block_for_sampling(word);
                         num_tfbs++;
+                        cout << "BG -> TFBS" << endl;
+                        cout << endl << endl;
                 }
-                if (old_cluster_tag != bg_cluster_tag && new_cluster_tag == bg_cluster_tag) {
+                else if (old_cluster_tag != bg_cluster_tag && new_cluster_tag == bg_cluster_tag) {
+                        unblock_for_sampling(word);
                         num_tfbs--;
+                        cout << "TFBS -> BG" << endl;
+                        cout << endl << endl;
+                }
+                else {
+                        cout << "TFBS -> TFBS" << endl;
+                        cout << endl << endl;
                 }
                 (*cluster_manager)[new_cluster_tag].add_word(word);
                 data->record_cluster_assignment(word, new_cluster_tag);
@@ -216,7 +299,7 @@ DPM::gibbs_sample(size_t n, size_t burnin) {
                         bool switched = sample(**it);
                         if (switched) sum+=1;
                 }
-                hist_switches.push_back(sum/data->size());
+                hist_switches.push_back(sum);
                 update_posterior();
                 total_sampling_steps++;
         }
@@ -225,7 +308,13 @@ DPM::gibbs_sample(size_t n, size_t burnin) {
 // misc methods
 ////////////////////////////////////////////////////////////////////////////////
 
-// ostream& operator<< (ostream& o, DPM const& dpm)
-// {
-//         return o << dpm.cl;
-// }
+ostream& operator<< (ostream& o, const DPM& dpm)
+{
+        for (size_t i = 0; i < dpm.data->length(); i++) {
+                for (size_t j = 0; j < dpm.data->length(i); j++) {
+                        o << dpm.blocked_for_sampling[i][j] << " ";
+                }
+                o << endl;
+        }
+        return o;
+}

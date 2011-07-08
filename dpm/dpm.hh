@@ -35,9 +35,10 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-//        friend ostream& operator<<(std::ostream& o, DPM const& dpm);
               Cluster& operator[](cluster_tag_t c)       { return (*cluster_manager)[c]; }
         const Cluster& operator[](cluster_tag_t c) const { return (*cluster_manager)[c]; }
+
+        friend std::ostream& operator<<(std::ostream& o, const DPM& dpm);
 
         // methods
         ////////////////////////////////////////////////////////////////////////
@@ -54,6 +55,9 @@ public:
         double compute_likelihood();
         void update_posterior();
 
+        bool valid_for_sampling(const word_t& word);
+        void block_for_sampling(const word_t& word);
+        void unblock_for_sampling(const word_t& word);
         bool sample(const element_t& element);
         void gibbs_sample(size_t n, size_t burnin);
 
@@ -80,6 +84,9 @@ private:
         // priors
         gsl_matrix* bg_alpha;
         gsl_matrix* tfbs_alpha;
+
+        // gibbs sampler
+        std::vector<std::vector<bool> > blocked_for_sampling;
 
         // gibbs sampler history
         size_t total_sampling_steps;

@@ -38,7 +38,7 @@
 using namespace std;
 
 Data::Data(size_t n, char *sequences[], cluster_tag_t default_tag)
-        : n_sequences(n)
+        : n_sequences(n), default_tag(default_tag)
 {
         for(size_t i = 0; i < n; i++) {
                 size_t m = strlen(sequences[i]);
@@ -74,46 +74,68 @@ Data::operator[](size_t i) {
         return elements[i];
 }
 
-bool
-Data::valid_for_sampling(const element_t& element, size_t length, word_t& word)
-{
-        const size_t sequence   = element.sequence;
-        const size_t position   = element.position;
-        const cluster_tag_t tag = cluster_assignments[sequence][position];
+char
+Data::operator[](element_t element) const {
+        return sequences[element.sequence][element.position];
+}
 
-        // check if there is enough space
-        if (sequences_length[sequence] - position < length) {
-                return false;
-        }
-        // check if all successive elements belong to the same class
-        for (size_t i = 1; i < length; i++) {
-                if (cluster_assignments[sequence][position+i] != tag) {
-                        return false;
-                }
-        }
+void
+Data::get_word(const element_t& element, size_t length, word_t& word) {
+        const size_t sequence = element.sequence;
+        const size_t position = element.position;
+
         word.sequence  = sequence;
         word.position  = position;
         word.length    = length;
         word.sequences = &sequences;
-        return true;
 }
 
-// ostream&
-// operator<< (ostream& o, element_t const& element) {
-//         o << element.tag << ":(" << element.x[0] << ","
-//           << element.x[1] << ")@" << element.original_cluster;
+void
+Data::record_cluster_assignment(const word_t& word, cluster_tag_t tag) {
+        for (size_t i = 0; i < word.length; i++) {
+                cluster_assignments[word.sequence][word.position+i] = tag;
+        }
+}
 
-//         return o;
-// }
+cluster_tag_t
+Data::get_cluster_tag(const element_t& element) const {
+        return cluster_assignments[element.sequence][element.position];
+}
 
-// ostream&
-// operator<< (ostream& o, Data const& data) {
-//         for (Data::const_iterator it = data.begin(); it != data.end(); it++) {
-//                 if (it != data.begin()) {
-//                         o << ", ";
-//                 }
-//                 o << *it;
-//         }
+size_t
+Data::length() {
+        return n_sequences;
+}
 
-//         return o;
-// }
+size_t
+Data::length(size_t i) {
+        if (i < n_sequences) {
+                return sequences_length[i];
+        }
+        else {
+                return 0;
+        }
+}
+
+ostream&
+operator<< (ostream& o, const word_t& word) {
+        o << "(" << word.sequence << ":" << word.position << ":";
+        for (size_t i = 0; i < word.length; i++) {
+                o << (*word.sequences)[word.sequence][word.position+i];
+        }
+        o << ")";
+
+        return o;
+}
+
+ostream&
+operator<< (ostream& o, const Data& data) {
+        for (size_t i = 0; i < data.n_sequences; i++) {
+                for (size_t j = 0; j < data.sequences_length[i]; j++) {
+                        o << data.cluster_assignments[i][j] << " ";
+                }
+                o << endl;
+        }
+
+        return o;
+}

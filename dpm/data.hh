@@ -22,8 +22,9 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <string>
+#include <iostream>
 #include <vector>
+#include <string>
 
 #include <gsl/gsl_matrix.h>
 
@@ -31,7 +32,7 @@
 
 class Data {
 public:
-        Data(size_t n, char *sequences[], cluster_tag_t default_tag);
+         Data(size_t n, char *sequences[], cluster_tag_t default_tag);
         ~Data();
 
         // type definitions
@@ -61,34 +62,20 @@ public:
         ////////////////////////////////////////////////////////////////////////
               element_t& operator[](size_t i);
         const element_t& operator[](size_t i) const;
+                   char  operator[](element_t element) const;
 
-//        friend ostream& operator<< (std::ostream& o, Data const& data);
+        friend std::ostream& operator<< (std::ostream& o, const Data& data);
 
         // methods
         ////////////////////////////////////////////////////////////////////////
-        size_t size() { return elements.size(); }
+        void get_word(const element_t& element, size_t length, word_t& word);
+        size_t get_n_sequences();
+        size_t get_sequence_length(size_t i);
+        void record_cluster_assignment(const word_t& word, cluster_tag_t tag);
+        cluster_tag_t get_cluster_tag(const element_t& element) const;
+        size_t length();
+        size_t length(size_t i);
         void shuffle();
-
-        int  num_successors(const element_t& e) const;
-
-        bool valid_for_sampling(const element_t& element, size_t length, word_t& word);
-
-        size_t get_n_sequences() {
-                return n_sequences;
-        }
-        size_t get_sequence_length(size_t i) {
-                return sequences_length[i];
-        }
-
-        void record_cluster_assignment(const word_t& word, cluster_tag_t tag) {
-                for (size_t i = 0; i < word.length; i++) {
-                        cluster_assignments[word.sequence][word.position+i] = tag;
-                }
-        }
-
-        cluster_tag_t get_cluster_tag(const element_t& element) const {
-                return cluster_assignments[element.sequence][element.position];
-        }
 
 private:
         // all nucleotide positions in a vector (used for the gibbs sampler)
@@ -100,10 +87,13 @@ private:
         std::vector<size_t> sequences_length;
         size_t n_sequences;
 
+        // default cluster tag (background model)
+        cluster_tag_t default_tag;
+
         // assignments to clusters
         std::vector<std::vector<cluster_tag_t> > cluster_assignments;
 };
 
-//ostream& operator<< (ostream& o, element_t const& element);
+std::ostream& operator<< (std::ostream& o, const word_t& word);
 
 #endif /* DATA_HH */

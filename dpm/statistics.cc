@@ -62,7 +62,13 @@ ProductDirichlet::clone() const {
 }
 
 size_t
+ProductDirichlet::count_observations(const word_t& word) {
+        return word.length/counts->size1;
+}
+
+size_t
 ProductDirichlet::remove_observations(const word_t& word) {
+        printf("DIST: removing %d observations\n", (int)(word.length/counts->size1));
         for (size_t i = 0; i < word.length; i += counts->size1) {
                 for (size_t j = 0; j < counts->size1; j++) {
                         switch ((*word.sequences)[word.sequence][word.position+i+j]) {
@@ -93,12 +99,8 @@ ProductDirichlet::remove_observations(const word_t& word) {
 }
 
 size_t
-ProductDirichlet::count_observations(const word_t& word) {
-        return word.length/counts->size1;
-}
-
-size_t
 ProductDirichlet::add_observations(const word_t& word) {
+        printf("DIST: adding %d observations\n", (int)(word.length/counts->size1));
         for (size_t i = 0; i < word.length; i += counts->size1) {
                 for (size_t j = 0; j < counts->size1; j++) {
                         switch ((*word.sequences)[word.sequence][word.position+i+j]) {
