@@ -131,6 +131,11 @@ DPM::valid_for_sampling(const word_t& word)
                         return false;
                 }
         }
+        if (data->length(sequence) - position < length-1) {
+                if (blocked_for_sampling[sequence][position+length]) {
+                        return false;
+                }
+        }
 
         return true;
 }
