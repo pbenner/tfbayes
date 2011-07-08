@@ -20,12 +20,13 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <iostream>
+#include <fstream>
 #include <iterator>
 #include <algorithm>
-#include <cstdlib>
+//#include <cstdlib>
 #include <ctime>
 
-#include <string.h>
+//#include <string.h>
 #include <getopt.h>
 #include <tfbayes/exception.h>
 
@@ -95,21 +96,14 @@ int is_nucleotide(char S) {
 static
 void get_max_length(const char* file_name, size_t *lines, size_t *max_len)
 {
-        FILE * fp;
-        char * line = NULL;
-        size_t len  = 0;
-        ssize_t read;
+        string line;
+        ifstream file(file_name);
 
         *max_len = 0;
         *lines   = 0;
 
-        fp = fopen(file_name, "r");
-        if (fp == NULL) {
-                fprintf(stderr, "Could not open file '%s'.\n", file_name);
-                exit(EXIT_FAILURE);
-        }
-
-        while ((read = getline(&line, &len, fp)) != -1) {
+        while (getline(file, line)) {
+                size_t read = line.size();
                 if (line[read-1] == '\n') {
                         read--;
                 }
@@ -121,29 +115,17 @@ void get_max_length(const char* file_name, size_t *lines, size_t *max_len)
                 }
         }
 
-        if (line) {
-                free(line);
-        }
-
-        fclose(fp);
 }
 
 static
 char * readfile(const char* file_name, char *sequences[])
 {
-        FILE * fp;
-        char * line = NULL;
-        size_t len  = 0;
-        ssize_t read;
-
-        fp = fopen(file_name, "r");
-        if (fp == NULL) {
-                fprintf(stderr, "Could not open file '%s'.\n", file_name);
-                exit(EXIT_FAILURE);
-        }
+        ifstream file(file_name);
+        string line;
 
         size_t i = 0;
-        while ((read = getline(&line, &len, fp)) != -1) {
+        while (getline(file, line)) {
+                size_t read = line.size();
                 if (read > 1) {
                         size_t pos = 0;
                         for (size_t j = 0; j < (size_t)read && line[j] != '\n'; j++) {
@@ -156,12 +138,6 @@ char * readfile(const char* file_name, char *sequences[])
                         i++;
                 }
         }
-
-        if (line) {
-                free(line);
-        }
-
-        fclose(fp);
 
         return NULL;
 }
@@ -202,7 +178,7 @@ void run_dpm(const char* file_name)
 
         DPM*  gdpm = new DPM(lines, sequences);
 
-        gdpm->gibbs_sample(100, 100);
+        gdpm->gibbs_sample(10, 0);
         const vector<vector<double> >& posterior = gdpm->get_posterior();
         for (size_t i = 0; i < posterior.size(); i++) {
                 for (size_t j = 0; j < posterior[i].size(); j++) {
