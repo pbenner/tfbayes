@@ -27,11 +27,13 @@ namespace Bayes {
         }
 }
 
-#include "init.hh"
-#include "clusters.hh"
-#include "data.hh"
-#include "dpm.hh"
-#include "interface.hh"
+#include <init.hh>
+#include <clustermanager.hh>
+#include <data.hh>
+#include <dpm.hh>
+#include <interface.hh>
+
+using namespace std;
 
 static DPM* _gdpm;
 
@@ -59,12 +61,12 @@ Bayes::Matrix* _dpm_get_posterior() {
         Bayes::Matrix* result;
         const vector<vector<double> >& posterior = _gdpm->get_posterior();
         size_t n = posterior.size();
-        size_t length = 0;
+        size_t m = 0;
 
         // compute maximum length
         for (size_t i = 0; i < n; i++) {
-                if (length < posterior[i].size()) {
-                        length = posterior[i].size();
+                if (m < posterior[i].size()) {
+                        m = posterior[i].size();
                 }
         }
 
@@ -72,7 +74,7 @@ Bayes::Matrix* _dpm_get_posterior() {
         result = Bayes::allocMatrix(n, m);
         // copy posterior
         for (size_t i = 0; i < n; i++) {
-                for (size_t j = 0; j < length; j++) {
+                for (size_t j = 0; j < m; j++) {
                         if (j < posterior[i].size()) {
                                 result->mat[i][j] = posterior[i][j];
                         }
