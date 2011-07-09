@@ -29,57 +29,59 @@
 using namespace std;
 
 Cluster::Cluster(Distribution* distribution, cluster_tag_t tag)
-        : distribution(distribution), tag(tag), destructible(true), _size(0)
+        : _distribution(distribution), _tag(tag), _destructible(true), _size(0)
 { }
 
 Cluster::Cluster(Distribution* distribution, cluster_tag_t tag, bool destructible)
-        : distribution(distribution), tag(tag), destructible(destructible), _size(0)
+        : _distribution(distribution), _tag(tag), _destructible(destructible), _size(0)
 { }
 
 Cluster::Cluster(Distribution* distribution, cluster_tag_t tag, Observer<cluster_event_t>* observer)
-        : distribution(distribution), tag(tag), destructible(true), _size(0)
+        : _distribution(distribution), _tag(tag), _destructible(true), _size(0)
 {
         set_observer(observer);
 }
 
-Cluster::Cluster(Distribution* distribution, cluster_tag_t tag, bool destructible, Observer<cluster_event_t>* observer)
-        : distribution(distribution), tag(tag), destructible(destructible), _size(0)
+Cluster::Cluster(Distribution* distribution, cluster_tag_t tag, Observer<cluster_event_t>* observer, bool destructible)
+        : _distribution(distribution), _tag(tag), _destructible(destructible), _size(0)
 {
         set_observer(observer);
 }
 
 Cluster::Cluster(const Cluster& cluster)
-        : tag(cluster.tag), destructible(cluster.destructible), _size(cluster._size)
+        : _distribution(cluster._distribution->clone()), _tag(cluster._tag), _size(cluster._size)
 {
         set_observer(cluster.observer);
 }
 
 Cluster::~Cluster() {
-        delete(distribution);
+        delete(_distribution);
 }
 
 void
 Cluster::add_word(const word_t& word)
 {
         if (_size == 0) {
-                _size += distribution->add_observations(word);
+                _size += _distribution->add_observations(word);
                 notify(cluster_event_nonempty);
         }
         else {
-                _size += distribution->add_observations(word);
+                _size += _distribution->add_observations(word);
         }
+        notify(cluster_event_add_word, word);
 }
 
 void
 Cluster::remove_word(const word_t& word)
 {
-        size_t observations = distribution->count_observations(word);
+        size_t observations = _distribution->count_observations(word);
 
         if (_size >= observations) {
-                _size -= distribution->remove_observations(word);
+                _size -= _distribution->remove_observations(word);
                 if (_size == 0) {
                         notify(cluster_event_empty);
                 }
+                notify(cluster_event_remove_word, word);
         }
 }
 
@@ -89,8 +91,26 @@ Cluster::size() const
         return _size;
 }
 
+cluster_tag_t
+Cluster::tag() const
+{
+        return _tag;
+}
+
+bool
+Cluster::destructible() const
+{
+        return _destructible;
+}
+
+const Distribution&
+Cluster::distribution() const
+{
+        return *_distribution;
+}
+
 ostream&
 operator<< (ostream& o, const Cluster& cluster)
 {
-        return o << cluster.tag << "@" << cluster.size();
+        return o << cluster._tag << "@" << cluster._size;
 }

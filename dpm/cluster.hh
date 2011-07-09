@@ -41,7 +41,7 @@ public:
          Cluster(Distribution* distribution, cluster_tag_t tag);
          Cluster(Distribution* distribution, cluster_tag_t tag, bool destructible);
          Cluster(Distribution* distribution, cluster_tag_t tag, Observer<cluster_event_t>* observer);
-         Cluster(Distribution* distribution, cluster_tag_t tag, bool destructible, Observer<cluster_event_t>* observer);
+         Cluster(Distribution* distribution, cluster_tag_t tag, Observer<cluster_event_t>* observer, bool destructible);
          Cluster(const Cluster& cluster);
         ~Cluster();
 
@@ -51,16 +51,16 @@ public:
         // methods
         void add_word(const word_t& word);
         void remove_word(const word_t& word);
-
         size_t size() const;
+        cluster_tag_t tag() const;
+        bool destructible() const;
+        const Distribution& distribution() const;
 
-        // public variables
-        Distribution* distribution;
-        cluster_tag_t tag;
-        // is this cluster essential for the mixture?
-        // i.e. for the background model
-        bool destructible;
 private:
+        Distribution* _distribution;
+        cluster_tag_t _tag;
+        bool _destructible;
+        // number of elements in the cluster
         size_t _size;
 };
 

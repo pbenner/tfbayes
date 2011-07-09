@@ -37,14 +37,13 @@
 
 using namespace std;
 
-Data::Data(size_t n, char *sequences[], cluster_tag_t default_tag)
-        : n_sequences(n), default_tag(default_tag)
+Data::Data(size_t n, char *sequences[])
+        : n_sequences(n)
 {
         for(size_t i = 0; i < n; i++) {
                 size_t m = strlen(sequences[i]);
                 this->sequences.push_back(sequences[i]);
                 this->sequences_length.push_back(m);
-                this->cluster_assignments.push_back(vector<cluster_tag_t>(m, default_tag));
                 for(size_t j = 0; j < m; j++) {
                         element_t e = {i, j};
                         elements.push_back(e);
@@ -79,8 +78,9 @@ Data::operator[](element_t element) const {
         return sequences[element.sequence][element.position];
 }
 
-void
-Data::get_word(const element_t& element, size_t length, word_t& word) {
+const word_t
+Data::get_word(const element_t& element, size_t length) {
+        word_t word;
         const size_t sequence = element.sequence;
         const size_t position = element.position;
 
@@ -88,27 +88,17 @@ Data::get_word(const element_t& element, size_t length, word_t& word) {
         word.position  = position;
         word.length    = length;
         word.sequences = &sequences;
-}
 
-void
-Data::record_cluster_assignment(const word_t& word, cluster_tag_t tag) {
-        for (size_t i = 0; i < word.length; i++) {
-                cluster_assignments[word.sequence][word.position+i] = tag;
-        }
-}
-
-cluster_tag_t
-Data::get_cluster_tag(const element_t& element) const {
-        return cluster_assignments[element.sequence][element.position];
+        return word;
 }
 
 size_t
-Data::length() {
+Data::length() const {
         return n_sequences;
 }
 
 size_t
-Data::length(size_t i) {
+Data::length(size_t i) const {
         if (i < n_sequences) {
                 return sequences_length[i];
         }
@@ -128,14 +118,10 @@ operator<< (ostream& o, const word_t& word) {
         return o;
 }
 
-ostream&
-operator<< (ostream& o, const Data& data) {
-        for (size_t i = 0; i < data.n_sequences; i++) {
-                for (size_t j = 0; j < data.sequences_length[i]; j++) {
-                        o << data.cluster_assignments[i][j] << " ";
-                }
-                o << endl;
+ostream& operator<< (ostream& o, const Data& data)
+{
+        for (size_t i = 0; i < data.length(); i++) {
+                o << data.sequences[i] << endl;
         }
-
         return o;
 }

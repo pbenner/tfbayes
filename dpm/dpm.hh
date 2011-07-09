@@ -55,9 +55,7 @@ public:
         double compute_likelihood();
         void update_posterior();
 
-        bool valid_for_sampling(const word_t& word);
-        void block_for_sampling(const word_t& word);
-        void unblock_for_sampling(const word_t& word);
+        bool valid_for_sampling(const element_t& element, const word_t& word);
         bool sample(const element_t& element);
         void gibbs_sample(size_t n, size_t burnin);
 
@@ -86,7 +84,7 @@ private:
         gsl_matrix* tfbs_alpha;
 
         // gibbs sampler
-        std::vector<std::vector<bool> > blocked_for_sampling;
+        std::vector<std::vector<bool> > tfbs_start_positions;
 
         // gibbs sampler history
         size_t total_sampling_steps;

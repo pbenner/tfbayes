@@ -37,7 +37,7 @@
 
 class ClusterManager : public Observer<cluster_event_t> {
 public:
-         ClusterManager(Distribution* distribution);
+         ClusterManager(const Data& data, Distribution* distribution);
         ~ClusterManager();
 
         // iterators
@@ -64,20 +64,19 @@ public:
         ////////////////////////////////////////////////////////////////////////
               Cluster& operator[](cluster_tag_t c);
         const Cluster& operator[](cluster_tag_t c) const;
+         cluster_tag_t operator[](element_t element) const;
 
-//        friend ostream& operator<< (std::ostream& o, ClusterManager const& cluster);
+        friend std::ostream& operator<< (std::ostream& o, const ClusterManager& data);
 
         // methods
         ////////////////////////////////////////////////////////////////////////
         void update(Observed<cluster_event_t>* cluster, cluster_event_t event);
+        void update(Observed<cluster_event_t>* cluster, cluster_event_t event, const word_t& word);
         cluster_tag_t add_cluster();
         cluster_tag_t add_cluster(Distribution* distribution);
+        cluster_tag_t get_cluster_tag(const element_t& element) const;
         Cluster& get_free_cluster();
-
-        size_t size() {
-                return used_clusters_size;
-        }
-
+        size_t size();
 
 private:
         std::vector<Cluster*> clusters;
@@ -88,6 +87,12 @@ private:
         // the number of elements
         size_t used_clusters_size;
         size_t free_clusters_size;
+
+        // keep track of cluster assignments
+        void record_cluster_assignment(const word_t& word, cluster_tag_t tag);
+
+        // assignments to clusters
+        std::vector<std::vector<ssize_t> > cluster_assignments;
 
         // default distribution for the dirichlet process
         Distribution* default_distribution;

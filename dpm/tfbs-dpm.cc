@@ -172,8 +172,6 @@ void run_dpm(const char* file_name)
         get_max_length(file_name, &lines, &max_len);
         sequences = alloc_sequences(lines, max_len);
 
-        fprintf(stderr, "max length: %lu, lines: %lu\n", (unsigned long)max_len, (unsigned long)lines);
-
         readfile(file_name, sequences);
 
         DPM*  gdpm = new DPM(lines, sequences);

@@ -22,6 +22,8 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <datatypes.hh>
+
 template <class E> class Observer;
 template <class E> class Observed;
 
@@ -29,6 +31,7 @@ template <class E>
 class Observer {
 public:
         virtual void update(Observed<E>* observed, E event) = 0;
+        virtual void update(Observed<E>* observed, E event, const word_t& word) = 0;
 };
 
 template <class E>
@@ -44,6 +47,11 @@ protected:
         void notify(E event) {
                 if (observer) {
                         observer->update(this, event);
+                }
+        }
+        void notify(E event, const word_t& word) {
+                if (observer) {
+                        observer->update(this, event, word);
                 }
         }
 

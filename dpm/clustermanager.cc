@@ -28,10 +28,14 @@
 
 using namespace std;
 
-ClusterManager::ClusterManager(Distribution* distribution)
+ClusterManager::ClusterManager(const Data& data, Distribution* distribution)
         : used_clusters_size(0), free_clusters_size(0),
           default_distribution(distribution)
 {
+        for(size_t i = 0; i < data.length(); i++) {
+                const size_t m = data.length(i);
+                cluster_assignments.push_back(vector<ssize_t>(m, -1));
+        }
 }
 
 ClusterManager::~ClusterManager() {
@@ -54,12 +58,10 @@ ClusterManager::add_cluster(Distribution* distribution)
         // of free clusters, so we do not need to observe it
         // and we can simply push it to the list of used
         // clusters
-        Cluster* c = new Cluster(distribution, tag, false);
+        Cluster* c = new Cluster(distribution, tag, this, false);
         clusters.push_back(c);
         used_clusters.push_back(clusters.back());
         used_clusters_size++;
-
-        cout << *(clusters[0]) << endl;
 
         return tag;
 }
@@ -70,7 +72,7 @@ ClusterManager::add_cluster()
 {
         cluster_tag_t tag = clusters.size();
 
-        Cluster* c = new Cluster(default_distribution->clone(), tag, true, this);
+        Cluster* c = new Cluster(default_distribution->clone(), tag, this);
         clusters.push_back(c);
         // this cluster is empty, so place it into the list
         // of free clusters
@@ -82,7 +84,6 @@ ClusterManager::add_cluster()
 
 Cluster&
 ClusterManager::get_free_cluster() {
-        // TODO: don't call free_clusters.size()
         if (free_clusters_size == 0) {
                 // create new cluster
                 add_cluster();
@@ -97,16 +98,43 @@ ClusterManager::update(Observed<cluster_event_t>* observed, cluster_event_t even
 
         switch (event) {
         case cluster_event_empty:
-                used_clusters.remove(cluster);
-                free_clusters.push_back(cluster);
-                used_clusters_size--;
-                free_clusters_size++;
-                break;
+                if (cluster->destructible()) {
+                        used_clusters.remove(cluster);
+                        free_clusters.push_back(cluster);
+                        used_clusters_size--;
+                        free_clusters_size++;
+                        break;
+                }
         case cluster_event_nonempty:
-                used_clusters.push_back(cluster);
-                free_clusters.remove(cluster);
-                used_clusters_size++;
-                free_clusters_size--;
+                if (cluster->destructible()) {
+                        used_clusters.push_back(cluster);
+                        free_clusters.remove(cluster);
+                        used_clusters_size++;
+                        free_clusters_size--;
+                        break;
+                }
+        default:
+                break;
+        }
+}
+
+void
+ClusterManager::update(Observed<cluster_event_t>* observed, cluster_event_t event, const word_t& word)
+{
+        Cluster* cluster = (Cluster*)observed;
+
+        switch (event) {
+        case cluster_event_add_word:
+                for (size_t i = 0; i < word.length; i++) {
+                        cluster_assignments[word.sequence][word.position+i] = cluster->tag();
+                }
+                break;
+        case cluster_event_remove_word:
+                for (size_t i = 0; i < word.length; i++) {
+                        cluster_assignments[word.sequence][word.position+i] = -1;
+                }
+                break;
+        default:
                 break;
         }
 }
@@ -121,41 +149,29 @@ ClusterManager::operator[](cluster_tag_t c) const {
         return *clusters[c];
 }
 
-// ostream&
-// operator<< (ostream& o, ClusterManager const& clusters)
-// {
-//         for (ClusterManager::const_iterator it1 = clusters.begin();
-//              it1 != clusters.end(); it1++) {
-//                 o << "ClusterManager: " << (*it1)->tag << endl;
-//                 // for (ClusterManager::elements_t::const_iterator it2 = (*it1)->elements.begin();
-//                 //      it2 != (*it1)->elements.end(); it2++) {
-//                 //         if (it2 != (*it1)->elements.begin()) {
-//                 //                 o << ", ";
-//                 //         }
-//                 //         o << **it2;
-//                 // }
-//                 o << endl << endl;
-//         }
+cluster_tag_t
+ClusterManager::operator[](element_t element) const {
+        return cluster_assignments[element.sequence][element.position];
+}
 
-//         o << "Used clusters: ";
-//         for (list<ClusterManager::cluster*>::const_iterator it = clusters.used_clusters.begin();
-//              it != clusters.used_clusters.end(); it++) {
-//                 if (it != clusters.used_clusters.begin()) {
-//                         o << ", ";
-//                 }
-//                 o << (*it)->tag;
-//         }
-//         o << endl;
+size_t
+ClusterManager::size() {
+        return used_clusters_size;
+}
 
-//         o << "Free clusters: ";
-//         for (list<ClusterManager::cluster*>::const_iterator it = clusters.free_clusters.begin();
-//              it != clusters.free_clusters.end(); it++) {
-//                 if (it != clusters.free_clusters.begin()) {
-//                         o << ", ";
-//                 }
-//                 o << (*it)->tag;
-//         }
-//         o << endl;
+cluster_tag_t
+ClusterManager::get_cluster_tag(const element_t& element) const {
+        return (cluster_tag_t)cluster_assignments[element.sequence][element.position];
+}
 
-//         return o;
-// }
+ostream&
+operator<< (ostream& o, const ClusterManager& cm) {
+        for (size_t i = 0; i < cm.cluster_assignments.size(); i++) {
+                for (size_t j = 0; j < cm.cluster_assignments[i].size(); j++) {
+                        o << cm.cluster_assignments[i][j] << " ";
+                }
+                o << endl;
+        }
+
+        return o;
+}

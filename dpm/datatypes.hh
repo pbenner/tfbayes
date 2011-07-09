@@ -43,7 +43,8 @@ typedef struct {
 typedef size_t cluster_tag_t;
 
 typedef enum {
-        cluster_event_empty, cluster_event_nonempty
+        cluster_event_empty, cluster_event_nonempty,
+        cluster_event_add_word, cluster_event_remove_word
 } cluster_event_t;
 
 typedef struct {

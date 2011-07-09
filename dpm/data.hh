@@ -32,7 +32,7 @@
 
 class Data {
 public:
-         Data(size_t n, char *sequences[], cluster_tag_t default_tag);
+         Data(size_t n, char *sequences[]);
         ~Data();
 
         // type definitions
@@ -68,13 +68,9 @@ public:
 
         // methods
         ////////////////////////////////////////////////////////////////////////
-        void get_word(const element_t& element, size_t length, word_t& word);
-        size_t get_n_sequences();
-        size_t get_sequence_length(size_t i);
-        void record_cluster_assignment(const word_t& word, cluster_tag_t tag);
-        cluster_tag_t get_cluster_tag(const element_t& element) const;
-        size_t length();
-        size_t length(size_t i);
+        const word_t get_word(const element_t& element, size_t length);
+        size_t length() const;
+        size_t length(size_t i) const;
         void shuffle();
 
 private:
@@ -86,12 +82,6 @@ private:
         std::vector<std::string> sequences;
         std::vector<size_t> sequences_length;
         size_t n_sequences;
-
-        // default cluster tag (background model)
-        cluster_tag_t default_tag;
-
-        // assignments to clusters
-        std::vector<std::vector<cluster_tag_t> > cluster_assignments;
 };
 
 std::ostream& operator<< (std::ostream& o, const word_t& word);
