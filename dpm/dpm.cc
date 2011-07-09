@@ -127,6 +127,26 @@ DPM::valid_for_sampling(const element_t& element, const word_t& word)
         return true;
 }
 
+void
+DPM::add_word(const word_t& word, cluster_tag_t tag)
+{
+        (*_cluster_manager)[tag].add_word(word);
+        if (tag != bg_cluster_tag) {
+                num_tfbs++;
+                tfbs_start_positions[word.sequence][word.position] = 1;
+        }
+}
+
+void
+DPM::remove_word(const word_t& word, cluster_tag_t tag)
+{
+        (*_cluster_manager)[tag].remove_word(word);
+        if (tag != bg_cluster_tag) {
+                num_tfbs--;
+                tfbs_start_positions[word.sequence][word.position] = 0;
+        }
+}
+
 bool
 DPM::sample(const element_t& element) {
         const word_t word = _data->get_word(element, DPM::TFBS_LENGTH);
@@ -138,7 +158,7 @@ DPM::sample(const element_t& element) {
         ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
         cluster_tag_t old_cluster_tag = _cluster_manager->get_cluster_tag(element);
-        (*_cluster_manager)[old_cluster_tag].remove_word(word);
+        remove_word(word, old_cluster_tag);
         size_t num_clusters = _cluster_manager->size();
         double weights[num_clusters+1];
         cluster_tag_t tags[num_clusters+1];
@@ -187,23 +207,9 @@ DPM::sample(const element_t& element) {
         cluster_tag_t new_cluster_tag = tags[i];
 
         ////////////////////////////////////////////////////////////////////////
-        // if the cluster assignment has changes, record it and return true
-        if (old_cluster_tag == new_cluster_tag) {
-                (*_cluster_manager)[old_cluster_tag].add_word(word);
-                return false;
-        }
-        else {
-                if (old_cluster_tag == bg_cluster_tag && new_cluster_tag != bg_cluster_tag) {
-                        num_tfbs++;
-                        tfbs_start_positions[element.sequence][element.position] = 1;
-                }
-                if (old_cluster_tag != bg_cluster_tag && new_cluster_tag == bg_cluster_tag) {
-                        num_tfbs--;
-                        tfbs_start_positions[element.sequence][element.position] = 0;
-                }
-                (*_cluster_manager)[new_cluster_tag].add_word(word);
-                return true;
-        }
+        add_word(word, new_cluster_tag);
+
+        return old_cluster_tag != new_cluster_tag;
 }
 
 // sampling methods
@@ -241,7 +247,6 @@ DPM::gibbs_sample(size_t n, size_t burnin) {
                 printf("Burn in... [%u]\n", (unsigned int)i+1);
                 for (Data::iterator_randomized it = _data->begin_randomized();
                      it != _data->end_randomized(); it++) {
-//                        printf("Burn in... [%u:%lu:%lu:%lu]\n", i+1, (*it)->x[0], (*it)->x[1], cl.size());
                         sample(**it);
                 }
         }

@@ -58,10 +58,6 @@ public:
                 return *_cluster_manager;
         }
 
-        double compute_likelihood();
-        void update_posterior();
-
-        bool valid_for_sampling(const element_t& element, const word_t& word);
         bool sample(const element_t& element);
         void gibbs_sample(size_t n, size_t burnin);
 
@@ -101,6 +97,13 @@ private:
 
         // keep track of the number of transcription factor binding sites
         size_t num_tfbs;
+
+        // private methods
+        void add_word(const word_t& word, cluster_tag_t tag);
+        void remove_word(const word_t& word, cluster_tag_t tag);
+        double compute_likelihood();
+        void update_posterior();
+        bool valid_for_sampling(const element_t& element, const word_t& word);
 };
 
 #endif /* DPM_HH */
