@@ -35,8 +35,8 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-              Cluster& operator[](cluster_tag_t c)       { return (*cluster_manager)[c]; }
-        const Cluster& operator[](cluster_tag_t c) const { return (*cluster_manager)[c]; }
+              Cluster& operator[](cluster_tag_t c)       { return (*_cluster_manager)[c]; }
+        const Cluster& operator[](cluster_tag_t c) const { return (*_cluster_manager)[c]; }
 
         friend std::ostream& operator<<(std::ostream& o, const DPM& dpm);
 
@@ -48,8 +48,14 @@ public:
         std::vector<double>& get_hist_likelihood() {
                 return hist_likelihood;
         }
-        const std::vector<std::vector<double> >& get_posterior() const {
-                return posterior;
+        const std::vector<std::vector<double> >& posterior() const {
+                return _posterior;
+        }
+        const Data& data() const {
+                return *_data;
+        }
+        const ClusterManager& cluster_manager() const {
+                return *_cluster_manager;
         }
 
         double compute_likelihood();
@@ -69,8 +75,8 @@ public:
 
 private:
         // data and clusters
-        Data* data;
-        ClusterManager* cluster_manager;
+        Data* _data;
+        ClusterManager* _cluster_manager;
 
         // tags of special clusters
         cluster_tag_t bg_cluster_tag;
@@ -91,7 +97,7 @@ private:
         std::vector<double> hist_switches;
         std::vector<double> hist_likelihood;
         std::vector<size_t> hist_num_clusters;
-        std::vector<std::vector<double> > posterior;
+        std::vector<std::vector<double> > _posterior;
 
         // keep track of the number of transcription factor binding sites
         size_t num_tfbs;

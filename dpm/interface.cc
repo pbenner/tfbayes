@@ -59,7 +59,7 @@ unsigned int _dpm_num_clusters() {
 
 Bayes::Matrix* _dpm_get_posterior() {
         Bayes::Matrix* result;
-        const vector<vector<double> >& posterior = _gdpm->get_posterior();
+        const vector<vector<double> >& posterior = _gdpm->posterior();
         size_t n = posterior.size();
         size_t m = 0;
 
@@ -87,26 +87,27 @@ Bayes::Matrix* _dpm_get_posterior() {
         return result;
 }
 
-Bayes::Matrix* _dpm_cluster(unsigned int c) {
-        // Clusters::iterator it = (*_gdpm).get_clusters().begin();
-        // for (size_t i = 0; i < c; i++) {
-        //         it++;
-        // }
-        // Cluster::cluster& cl = **it;
-        // int n = cl.elements.size();
-        // int m = 2;
+Bayes::Matrix* _dpm_cluster_assignments() {
+        Bayes::Matrix* result;
+        size_t n = _gdpm->data().length();
+        size_t m = 0;
 
-        // Bayes::Matrix* result = Bayes::allocMatrix(n, m);
-        // int i = 0;
-        // for (Clusters::elements_t::iterator it = cl.elements.begin();
-        //      it != cl.elements.end(); it++) {
-        //         result->mat[i][0] = (*it)->x[0];
-        //         result->mat[i][1] = (*it)->x[1];
-        //         i++;
-        // }
+        // compute maximum length
+        for (size_t i = 0; i < n; i++) {
+                if (m < _gdpm->data().length(i)) {
+                        m = _gdpm->data().length(i);
+                }
+        }
 
-        // return result;
-        return NULL;
+        // allocate matrix
+        result = Bayes::allocMatrix(n, m);
+        // copy posterior
+        for (Data::const_iterator it = _gdpm->data().begin();
+             it != _gdpm->data().end(); it++) {
+                const element_t& element = *it;
+                result->mat[element.sequence][element.position] = _gdpm->cluster_manager()[element];
+        }
+        return result;
 }
 
 Bayes::Vector* _dpm_hist_likelihood() {

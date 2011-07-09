@@ -111,13 +111,7 @@ class TfbsDPM():
         ax.set_title('Gibbs Sampling')
         ax.set_xticks([]); ax.set_yticks([])
         sequences = np.array(self.sequences)
-        clusters = []
-        for i in self.clusters:
-            clusters.append(-np.ones_like(i))
-        num_clusters = dpm_num_clusters()
-        for c in range(0, num_clusters):
-            for seq, pos in dpm_cluster(c):
-                clusters[int(seq)][int(pos)] = c
+        clusters = dpm_cluster_assignments()
         plot_sequences(ax, sequences, clusters)
     def plotPosterior(self, ax):
         ax.set_title('Posterior')
@@ -163,15 +157,16 @@ def readSequences(seq_file):
     sequences = []
     clusters  = []
     for line in li:
-        sequences.append('')
-        clusters.append([])
-        for m in re.finditer(r'\(([1-9]):([ACGT]+)\)|[ACGT]+', line):
-            if m.group(2):
-                clusters[-1].extend([ int(m.group(1)) for i in range(0, len(m.group(2))) ])
-                sequences[-1] = sequences[-1] + m.group(2)
-            else:
-                clusters[-1].extend([ 0 for i in range(0, len(m.group(0))) ])
-                sequences[-1] = sequences[-1] + m.group(0)
+        if line != "\n":
+            sequences.append('')
+            clusters.append([])
+            for m in re.finditer(r'\(([1-9]):([ACGT]+)\)|[ACGT]+', line):
+                if m.group(2):
+                    clusters[-1].extend([ int(m.group(1)) for i in range(0, len(m.group(2))) ])
+                    sequences[-1] = sequences[-1] + m.group(2)
+                else:
+                    clusters[-1].extend([ 0 for i in range(0, len(m.group(0))) ])
+                    sequences[-1] = sequences[-1] + m.group(0)
     fh.close()
     return sequences, clusters
 

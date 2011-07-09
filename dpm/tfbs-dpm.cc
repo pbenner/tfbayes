@@ -177,7 +177,7 @@ void run_dpm(const char* file_name)
         DPM*  gdpm = new DPM(lines, sequences);
 
         gdpm->gibbs_sample(1000, 100);
-        const vector<vector<double> >& posterior = gdpm->get_posterior();
+        const vector<vector<double> >& posterior = gdpm->posterior();
         for (size_t i = 0; i < posterior.size(); i++) {
                 for (size_t j = 0; j < posterior[i].size(); j++) {
                         printf("%f ", (float)posterior[i][j]);

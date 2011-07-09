@@ -61,7 +61,7 @@ DPM::DPM(size_t n, char *sequences[])
         // initialize joint posterior
         for (size_t i = 0; i < n; i++) {
                 const size_t length = strlen(sequences[i]);
-                posterior.push_back(vector<double>(length, 0.0));
+                _posterior.push_back(vector<double>(length, 0.0));
         }
 
         // initialize data structures for the gibbs sampler
@@ -73,15 +73,15 @@ DPM::DPM(size_t n, char *sequences[])
         // initialize cluster manager
         ProductDirichlet* tfbs_product_dirichlet = new ProductDirichlet(tfbs_alpha);
         ProductDirichlet* bg_product_dirichlet   = new ProductDirichlet(bg_alpha);
-        data            = new Data(n, sequences);
-        cluster_manager = new ClusterManager(*data, tfbs_product_dirichlet);
-        bg_cluster_tag  = cluster_manager->add_cluster(bg_product_dirichlet);
+        _data            = new Data(n, sequences);
+        _cluster_manager = new ClusterManager(*_data, tfbs_product_dirichlet);
+        bg_cluster_tag   = _cluster_manager->add_cluster(bg_product_dirichlet);
 
         // assign all elements to the background
-        for (Data::iterator it = data->begin();
-             it != data->end(); it++) {
-                const word_t word = data->get_word(*it, DPM::BG_LENGTH);
-                (*cluster_manager)[bg_cluster_tag].add_word(word);
+        for (Data::iterator it = _data->begin();
+             it != _data->end(); it++) {
+                const word_t word = _data->get_word(*it, DPM::BG_LENGTH);
+                (*_cluster_manager)[bg_cluster_tag].add_word(word);
         }
 
         // for sampling statistics
@@ -93,8 +93,8 @@ DPM::~DPM() {
         gsl_matrix_free(tfbs_alpha);
         gsl_matrix_free(bg_alpha);
 
-        delete(data);
-        delete(cluster_manager);
+        delete(_data);
+        delete(_cluster_manager);
 }
 
 bool
@@ -105,7 +105,7 @@ DPM::valid_for_sampling(const element_t& element, const word_t& word)
         const size_t length   = word.length;
 
         // check if there is enough space
-        if (data->length(sequence) - position < length) {
+        if (_data->length(sequence) - position < length) {
                 return false;
         }
         // check if there is a tfbs starting here, if not check
@@ -113,7 +113,7 @@ DPM::valid_for_sampling(const element_t& element, const word_t& word)
         if (tfbs_start_positions[element.sequence][element.position] == 0) {
                 // check if this element belongs to a tfbs that starts
                 // earlier in the sequence
-                if ((*cluster_manager)[element] != bg_cluster_tag) {
+                if ((*_cluster_manager)[element] != bg_cluster_tag) {
                         return false;
                 }
                 // check if there is a tfbs starting within the word
@@ -129,7 +129,7 @@ DPM::valid_for_sampling(const element_t& element, const word_t& word)
 
 bool
 DPM::sample(const element_t& element) {
-        const word_t word = data->get_word(element, DPM::TFBS_LENGTH);
+        const word_t word = _data->get_word(element, DPM::TFBS_LENGTH);
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
         if (!valid_for_sampling(element, word)) {
@@ -137,16 +137,16 @@ DPM::sample(const element_t& element) {
         }
         ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
-        cluster_tag_t old_cluster_tag = cluster_manager->get_cluster_tag(element);
-        (*cluster_manager)[old_cluster_tag].remove_word(word);
-        size_t num_clusters = cluster_manager->size();
+        cluster_tag_t old_cluster_tag = _cluster_manager->get_cluster_tag(element);
+        (*_cluster_manager)[old_cluster_tag].remove_word(word);
+        size_t num_clusters = _cluster_manager->size();
         double weights[num_clusters+1];
         cluster_tag_t tags[num_clusters+1];
         double dp_norm = num_tfbs + alpha;
         double sum = 0;
 
         cluster_tag_t i = 0;
-        for (ClusterManager::iterator it = cluster_manager->begin(); it != cluster_manager->end(); it++) {
+        for (ClusterManager::iterator it = _cluster_manager->begin(); it != _cluster_manager->end(); it++) {
                 Cluster& cluster = **it;
                 tags[i] = cluster.tag();
                 ////////////////////////////////////////////////////////////////
@@ -168,8 +168,8 @@ DPM::sample(const element_t& element) {
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
-        tags[num_clusters] = cluster_manager->get_free_cluster().tag();
-        weights[num_clusters] = alpha/dp_norm*(*cluster_manager)[tags[num_clusters]].distribution().pdf(word);
+        tags[num_clusters] = _cluster_manager->get_free_cluster().tag();
+        weights[num_clusters] = alpha/dp_norm*(*_cluster_manager)[tags[num_clusters]].distribution().pdf(word);
         sum += weights[num_clusters];
 
         ////////////////////////////////////////////////////////////////////////
@@ -189,7 +189,7 @@ DPM::sample(const element_t& element) {
         ////////////////////////////////////////////////////////////////////////
         // if the cluster assignment has changes, record it and return true
         if (old_cluster_tag == new_cluster_tag) {
-                (*cluster_manager)[old_cluster_tag].add_word(word);
+                (*_cluster_manager)[old_cluster_tag].add_word(word);
                 return false;
         }
         else {
@@ -201,7 +201,7 @@ DPM::sample(const element_t& element) {
                         num_tfbs--;
                         tfbs_start_positions[element.sequence][element.position] = 0;
                 }
-                (*cluster_manager)[new_cluster_tag].add_word(word);
+                (*_cluster_manager)[new_cluster_tag].add_word(word);
                 return true;
         }
 }
@@ -216,20 +216,20 @@ DPM::compute_likelihood() {
 
 void
 DPM::update_posterior() {
-        for (Data::iterator it = data->begin();
-             it != data->end(); it++) {
+        for (Data::iterator it = _data->begin();
+             it != _data->end(); it++) {
                 const element_t& element = *it;
                 const size_t sequence    = element.sequence;
                 const size_t position    = element.position;
-                if (cluster_manager->get_cluster_tag(element) == bg_cluster_tag) {
-                        double tmp   = posterior[sequence][position];
+                if (_cluster_manager->get_cluster_tag(element) == bg_cluster_tag) {
+                        double tmp   = _posterior[sequence][position];
                         double value = (total_sampling_steps*tmp)/(total_sampling_steps+1.0);
-                        posterior[sequence][position] = value;
+                        _posterior[sequence][position] = value;
                 }
                 else {
-                        double tmp   = posterior[sequence][position];
+                        double tmp   = _posterior[sequence][position];
                         double value = (total_sampling_steps*tmp+1.0)/(total_sampling_steps+1.0);
-                        posterior[sequence][position] = value;
+                        _posterior[sequence][position] = value;
                 }
         }
 }
@@ -239,8 +239,8 @@ DPM::gibbs_sample(size_t n, size_t burnin) {
         // burn in sampling
         for (size_t i = 0; i < burnin; i++) {
                 printf("Burn in... [%u]\n", (unsigned int)i+1);
-                for (Data::iterator_randomized it = data->begin_randomized();
-                     it != data->end_randomized(); it++) {
+                for (Data::iterator_randomized it = _data->begin_randomized();
+                     it != _data->end_randomized(); it++) {
 //                        printf("Burn in... [%u:%lu:%lu:%lu]\n", i+1, (*it)->x[0], (*it)->x[1], cl.size());
                         sample(**it);
                 }
@@ -250,8 +250,8 @@ DPM::gibbs_sample(size_t n, size_t burnin) {
                 // loop through all elements
                 printf("Sampling... [%u]\n", (unsigned int)i+1);
                 double sum = 0;
-                for (Data::iterator_randomized it = data->begin_randomized();
-                     it != data->end_randomized(); it++) {
+                for (Data::iterator_randomized it = _data->begin_randomized();
+                     it != _data->end_randomized(); it++) {
                         bool switched = sample(**it);
                         if (switched) sum+=1;
                 }
@@ -266,8 +266,8 @@ DPM::gibbs_sample(size_t n, size_t burnin) {
 
 ostream& operator<< (ostream& o, const DPM& dpm)
 {
-        for (size_t i = 0; i < dpm.data->length(); i++) {
-                for (size_t j = 0; j < dpm.data->length(i); j++) {
+        for (size_t i = 0; i < dpm._data->length(); i++) {
+                for (size_t j = 0; j < dpm._data->length(i); j++) {
                         o << dpm.tfbs_start_positions[i][j] << " ";
                 }
                 o << endl;

@@ -77,8 +77,8 @@ _lib._free.argtypes        = [POINTER(None)]
 _lib._dpm_num_clusters.restype  = c_uint
 _lib._dpm_num_clusters.argtypes = []
 
-_lib._dpm_cluster.restype  = POINTER(MATRIX)
-_lib._dpm_cluster.argtypes = [c_uint]
+_lib._dpm_cluster_assignments.restype  = POINTER(MATRIX)
+_lib._dpm_cluster_assignments.argtypes = []
 
 _lib._dpm_hist_likelihood.restype  = POINTER(VECTOR)
 _lib._dpm_hist_likelihood.argtypes = []
@@ -146,8 +146,8 @@ def dpm_print():
 def dpm_num_clusters():
      return _lib._dpm_num_clusters()
 
-def dpm_cluster(c):
-     result  = _lib._dpm_cluster(c)
+def dpm_cluster_assignments():
+     result  = _lib._dpm_cluster_assignments()
      cluster = getMatrix(result)
      _lib._freeMatrix(result)
      return cluster
