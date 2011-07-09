@@ -33,7 +33,7 @@
 
 #include <clustermanager.hh>
 #include <data.hh>
-#include <statistics.hh>
+#include <distribution.hh>
 
 using namespace std;
 

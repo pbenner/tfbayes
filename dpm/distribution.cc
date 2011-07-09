@@ -28,7 +28,7 @@
 #include <gsl/gsl_sf_gamma.h>
 
 #include <data.hh>
-#include <statistics.hh>
+#include <distribution.hh>
 
 using namespace std;
 

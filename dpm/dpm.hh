@@ -26,7 +26,7 @@
 #include <gsl/gsl_matrix.h>
 
 #include <clustermanager.hh>
-#include <statistics.hh>
+#include <distribution.hh>
 
 class DPM {
 public:

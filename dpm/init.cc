@@ -27,7 +27,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-#include "statistics.hh"
+#include <distribution.hh>
 
 using namespace std;
 

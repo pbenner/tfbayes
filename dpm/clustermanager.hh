@@ -27,7 +27,7 @@
 
 #include <cluster.hh>
 #include <data.hh>
-#include <statistics.hh>
+#include <distribution.hh>
 
 // ClusterManager
 ////////////////////////////////////////////////////////////////////////////////

@@ -27,8 +27,8 @@
 #include <iostream>
 
 #include <datatypes.hh>
+#include <distribution.hh>
 #include <observer.hh>
-#include <statistics.hh>
 
 ////////////////////////////////////////////////////////////////////////////////
 // This class represents a single cluster for the dirichlet process
