@@ -43,14 +43,14 @@ typedef struct _options_t {
         size_t tfbs_length;
         double alpha;
         double lambda;
-        string* save;
+        string save;
         _options_t()
                 : samples(1000),
                   burnin(100),
                   tfbs_length(10),
                   alpha(0.05),
                   lambda(0.01),
-                  save(NULL)
+                  save()
                 { }
 } options_t;
 
@@ -170,7 +170,6 @@ char * readfile(const char* file_name, char *sequences[])
                                         pos++;
                                 }
                         }
-                        printf("%s\n", sequences[i]);
                         i++;
                 }
         }
@@ -217,7 +216,7 @@ void run_dpm(const char* file_name)
         sampler->sample(options.samples, options.burnin);
         const vector<vector<double> >& posterior = gdpm->posterior();
 
-        if (options.save == NULL) {
+        if (options.save == "") {
                 for (size_t i = 0; i < posterior.size(); i++) {
                         for (size_t j = 0; j < posterior[i].size(); j++) {
                                 printf("%f ", (float)posterior[i][j]);
@@ -227,7 +226,7 @@ void run_dpm(const char* file_name)
         }
         else {
                 ofstream file;
-                file.open(options.save->c_str());
+                file.open(options.save.c_str());
                 file.setf(ios::showpoint); 
                 for (size_t i = 0; i < posterior.size(); i++) {
                         for (size_t j = 0; j < posterior[i].size(); j++) {
@@ -293,7 +292,7 @@ int main(int argc, char *argv[])
                         options.lambda = atof(optarg);
                         break;
                 case 'e':
-                        options.save = new string(optarg);
+                        options.save = string(optarg);
                         break;
                 case 's':
                         options.samples = atoi(token(string(optarg), 0).c_str());
