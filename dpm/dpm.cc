@@ -147,23 +147,18 @@ DPM::remove_word(const word_t& word, cluster_tag_t tag)
         }
 }
 
-bool
-DPM::sample(const element_t& element) {
-        const word_t word = _data->get_word(element, DPM::TFBS_LENGTH);
-        ////////////////////////////////////////////////////////////////////////
-        // check if we can sample this element
-        if (!valid_for_sampling(element, word)) {
-                return false;
-        }
-        ////////////////////////////////////////////////////////////////////////
-        // release the element from its cluster
-        cluster_tag_t old_cluster_tag = _cluster_manager->get_cluster_tag(element);
-        remove_word(word, old_cluster_tag);
-        size_t num_clusters = _cluster_manager->size();
-        double weights[num_clusters+1];
-        cluster_tag_t tags[num_clusters+1];
-        double dp_norm = num_tfbs + alpha;
-        double sum = 0;
+size_t
+DPM::mixture_components() const
+{
+        return _cluster_manager->size() + 1;
+}
+
+void
+DPM::mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[]) const
+{
+        size_t components = mixture_components();
+        double dp_norm    = num_tfbs + alpha;
+        double sum        = 0;
 
         cluster_tag_t i = 0;
         for (ClusterManager::iterator it = _cluster_manager->begin(); it != _cluster_manager->end(); it++) {
@@ -188,21 +183,39 @@ DPM::sample(const element_t& element) {
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
-        tags[num_clusters] = _cluster_manager->get_free_cluster().tag();
-        weights[num_clusters] = alpha/dp_norm*(*_cluster_manager)[tags[num_clusters]].distribution().pdf(word);
-        sum += weights[num_clusters];
+        tags[components-1] = _cluster_manager->get_free_cluster().tag();
+        weights[components-1] = alpha/dp_norm*(*_cluster_manager)[tags[components-1]].distribution().pdf(word);
+        sum += weights[components-1];
 
         ////////////////////////////////////////////////////////////////////////
         // normalize
-        for (size_t i = 0; i < num_clusters+1; i++) {
+        for (size_t i = 0; i < components; i++) {
                 weights[i] /= sum;
         }
+}
+
+bool
+DPM::sample(const element_t& element) {
+        const word_t word = _data->get_word(element, DPM::TFBS_LENGTH);
+        ////////////////////////////////////////////////////////////////////////
+        // check if we can sample this element
+        if (!valid_for_sampling(element, word)) {
+                return false;
+        }
+        ////////////////////////////////////////////////////////////////////////
+        // release the element from its cluster
+        cluster_tag_t old_cluster_tag = _cluster_manager->get_cluster_tag(element);
+        remove_word(word, old_cluster_tag);
+        size_t components = mixture_components();
+        double weights[components];
+        cluster_tag_t tags[components];
+        mixture_weights(word, weights, tags);
 
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
         // to that cluster
-        gsl_ran_discrete_t* gdd  = gsl_ran_discrete_preproc(num_clusters+1, weights);
-        i = gsl_ran_discrete(_r, gdd);
+        gsl_ran_discrete_t* gdd  = gsl_ran_discrete_preproc(components, weights);
+        cluster_tag_t i = gsl_ran_discrete(_r, gdd);
         gsl_ran_discrete_free(gdd);
         cluster_tag_t new_cluster_tag = tags[i];
 

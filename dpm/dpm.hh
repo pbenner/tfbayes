@@ -42,6 +42,8 @@ public:
 
         // methods
         ////////////////////////////////////////////////////////////////////////
+        size_t mixture_components() const;
+        void mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[]) const;
         std::vector<double>& get_hist_switches() {
                 return hist_switches;
         }
