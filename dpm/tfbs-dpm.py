@@ -39,7 +39,9 @@ from interface import *
 # ------------------------------------------------------------------------------
 
 options = {
-    'samples'     : (100,1000),
+    'alpha'       : 0.05,
+    'lambda'      : 0.01,
+    'samples'     : (1000,100),
     'save'        : None,
     'interactive' : False,
     'verbose'     : False,
@@ -54,9 +56,11 @@ def usage():
     print "tfbs-dpm.py [option]... SEQUENCES"
     print
     print "Options:"
+    print "       --alpha=ALPHA              - alpha parameter for the dirichlet process"
+    print "       --lambda=LAMBDA            - lambda mixture weight"
     print "   -i                             - interactive mode"
     print "   -s, --save=FILE                - save posterior to FILE"
-    print "       --samples=BURN_IN:SAMPLES  - number of samples [default: 100:1000]"
+    print "       --samples=SAMPLES:BURN_IN  - number of samples [default: 1000:100]"
     print
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
@@ -96,7 +100,7 @@ class TfbsDPM():
         self.sequences = sequences
         self.clusters  = clusters
         self.steps     = 0
-        dpm_init(sequences[:][:], clusters[:][:])
+        dpm_init(options['alpha'], options['lambda'], sequences[:][:])
     def print_clusters(self):
         dpm_print()
     def num_clusters(self):
@@ -188,12 +192,12 @@ def sample(sequences, clusters):
         ax1, ax2, ax3 = prepare_plot()
         dpm = InteractiveTDPM(sequences, clusters[:][:], ax2, ax3)
         dpm.plotData(ax1)
-        dpm.sample(0, options['samples'][0])
-        dpm.sampleInteractively(options['samples'][1])
+        dpm.sample(0, options['samples'][1])
+        dpm.sampleInteractively(options['samples'][0])
         pyplot.show()
     else:
-        burnin  = options['samples'][0]
-        samples = options['samples'][1]
+        samples = options['samples'][0]
+        burnin  = options['samples'][1]
         dpm = TfbsDPM(sequences, clusters[:][:])
         dpm.sample(samples, burnin)
         if options['save']:
@@ -208,7 +212,7 @@ def sample(sequences, clusters):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "save=", "samples="]
+        longopts   = ["help", "verbose", "alpha=", "lambda=", "save=", "samples="]
         opts, tail = getopt.getopt(sys.argv[1:], "is:", longopts)
     except getopt.GetoptError:
         usage()
@@ -223,6 +227,10 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
+        if o == "--alpha":
+            options['alpha'] = float(a)
+        if o == "--lambda":
+            options['lambda'] = float(a)
         if o in ("-s", "--save"):
             options['save'] = a
         if o == "--samples":

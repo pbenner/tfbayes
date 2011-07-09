@@ -45,12 +45,12 @@ Bayes::Matrix * _allocMatrix(int rows, int columns) { return Bayes::allocMatrix(
 void            _freeMatrix(Bayes::Matrix *m)       { Bayes::freeMatrix(m); }
 void            _free(void *ptr)                    { free(ptr); }
 
-void _dpm_init(int n, char *sequences[])
+void _dpm_init(double alpha, double lambda, int n, char *sequences[])
 {
         __dpm_init__();
 
         _data = new Data(n, sequences);
-        _gdpm = new DPM(*_data);
+        _gdpm = new DPM(alpha, lambda, *_data);
         _sampler = new GibbsSampler(*_gdpm, *_data);
 }
 

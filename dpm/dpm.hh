@@ -30,7 +30,7 @@
 
 class DPM {
 public:
-         DPM(const Data& data);
+         DPM(double alpha, double lambda, const Data& data);
         ~DPM();
 
         // operators

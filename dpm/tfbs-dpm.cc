@@ -19,16 +19,13 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <ctime>
 #include <iostream>
 #include <fstream>
 #include <iterator>
-#include <algorithm>
-//#include <cstdlib>
-#include <ctime>
+#include <sstream>
 
-//#include <string.h>
 #include <getopt.h>
-#include <tfbayes/exception.h>
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -36,8 +33,37 @@
 
 #include <sampler.hh>
 #include <init.hh>
+#include <tfbayes/exception.h>
 
 using namespace std;
+
+typedef struct _options_t {
+        size_t samples;
+        size_t burnin;
+        size_t tfbs_length;
+        double alpha;
+        double lambda;
+        _options_t()
+                : samples(1000),
+                  burnin(100),
+                  tfbs_length(10),
+                  alpha(0.05),
+                  lambda(0.01)
+                { }
+} options_t;
+
+ostream&
+operator<<(std::ostream& o, const _options_t& options) {
+        o << "Options:"          << endl
+          << "-> samples     = " << options.samples     << endl
+          << "-> burnin      = " << options.burnin      << endl
+          << "-> tfbs_length = " << options.tfbs_length << endl
+          << "-> alpha       = " << options.alpha       << endl
+          << "-> lambda      = " << options.lambda      << endl;
+        return o;
+}
+
+static options_t options;
 
 static
 void print_usage(char *pname, FILE *fp)
@@ -47,8 +73,14 @@ void print_usage(char *pname, FILE *fp)
                       "\nUsage: %s [OPTION]... FILE\n\n", pname);
 	(void)fprintf(fp,
                       "Options:\n"
-                      "   --help	print help and exit\n"
-                      "   --version	print version information and exit\n\n");
+                      "   --alpha=ALPHA             - alpha parameter for the dirichlet process\n"
+                      "   --lambda=LAMBDA           - lambda mixture weight\n"
+                      "   --tfbs-length=TFBS_LENGTH - length of the tfbs\n"
+                      "\n"
+                      "   --samples=SAMPLES:BURN_IN - number of samples\n"
+                      "\n"
+                      "   --help	            - print help and exit\n"
+                      "   --version	            - print version information and exit\n\n");
 
 	return;
 
@@ -175,10 +207,10 @@ void run_dpm(const char* file_name)
         readfile(file_name, sequences);
 
         Data* data = new Data(lines, sequences);
-        DPM*  gdpm = new DPM(*data);
+        DPM*  gdpm = new DPM(options.alpha, options.lambda, *data);
         GibbsSampler* sampler = new GibbsSampler(*gdpm, *data);
 
-        sampler->sample(1000, 100);
+        sampler->sample(options.samples, options.burnin);
         const vector<vector<double> >& posterior = gdpm->posterior();
         for (size_t i = 0; i < posterior.size(); i++) {
                 for (size_t j = 0; j < posterior[i].size(); j++) {
@@ -189,6 +221,17 @@ void run_dpm(const char* file_name)
 
         free(gdpm);
         free_sequences(sequences);
+}
+
+static
+string token(const string& str, size_t i) {
+        string token;
+        vector<string> tokens;
+        istringstream iss(str);
+        while (getline(iss, token, ':')) {
+                tokens.push_back(token);
+        }
+        return tokens[i];
 }
 
 int main(int argc, char *argv[])
@@ -205,8 +248,12 @@ int main(int argc, char *argv[])
 	for(;;) {
 		int c, option_index = 0;
 		static struct option long_options[] = {
-			{ "help",	0, 0, 'h' },
-			{ "version",	0, 0, 'v' }
+                        { "alpha",       1, 0, 'a' },
+                        { "lambda",      1, 0, 'l' },
+                        { "samples",     1, 0, 's' },
+                        { "tfbs-length", 1, 0, 't' },
+			{ "help",	 0, 0, 'h' },
+			{ "version",	 0, 0, 'v' }
 		};
 
 		c = getopt_long(argc, argv, "",
@@ -217,6 +264,19 @@ int main(int argc, char *argv[])
 		}
 
 		switch(c) {
+                case 'a':
+                        options.alpha = atof(optarg);
+                        break;
+                case 'l':
+                        options.lambda = atof(optarg);
+                        break;
+                case 's':
+                        options.samples = atoi(token(string(optarg), 0).c_str());
+                        options.burnin  = atoi(token(string(optarg), 1).c_str());
+                        break;
+                case 't':
+                        options.tfbs_length = atoi(optarg);
+                        break;
                 case 'h':
 			print_usage(argv[0], stdout);
 			exit(EXIT_SUCCESS);
@@ -228,6 +288,7 @@ int main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 	}
+        cout << options << endl;
 
 	file_name = argv[optind];
 

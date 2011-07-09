@@ -30,12 +30,12 @@
 
 using namespace std;
 
-DPM::DPM(const Data& data)
+DPM::DPM(double alpha, double lambda, const Data& data)
         : _data(data),
           // strength parameter for the dirichlet process
-          alpha(0.07),
+          alpha(alpha),
           // mixture weight for the dirichlet process
-          lambda(0.02),
+          lambda(lambda),
           // priors
           bg_alpha(gsl_matrix_alloc(DPM::BG_LENGTH, DPM::NUCLEOTIDES)),
           tfbs_alpha(gsl_matrix_alloc(DPM::TFBS_LENGTH, DPM::NUCLEOTIDES)),
