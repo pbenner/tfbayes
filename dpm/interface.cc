@@ -145,7 +145,9 @@ void _dpm_sample(unsigned int n, unsigned int burnin) {
 }
 
 void _dpm_free() {
+        delete(_data);
         delete(_gdpm);
+        delete(_sampler);
 }
 
 __END_C_REGION;

@@ -43,12 +43,14 @@ typedef struct _options_t {
         size_t tfbs_length;
         double alpha;
         double lambda;
+        string* save;
         _options_t()
                 : samples(1000),
                   burnin(100),
                   tfbs_length(10),
                   alpha(0.05),
-                  lambda(0.01)
+                  lambda(0.01),
+                  save(NULL)
                 { }
 } options_t;
 
@@ -59,7 +61,8 @@ operator<<(std::ostream& o, const _options_t& options) {
           << "-> burnin      = " << options.burnin      << endl
           << "-> tfbs_length = " << options.tfbs_length << endl
           << "-> alpha       = " << options.alpha       << endl
-          << "-> lambda      = " << options.lambda      << endl;
+          << "-> lambda      = " << options.lambda      << endl
+          << "-> save        = " << options.save        << endl;
         return o;
 }
 
@@ -78,6 +81,7 @@ void print_usage(char *pname, FILE *fp)
                       "   --tfbs-length=TFBS_LENGTH - length of the tfbs\n"
                       "\n"
                       "   --samples=SAMPLES:BURN_IN - number of samples\n"
+                      "   --save=FILE_NAME          - save posterior to file\n"
                       "\n"
                       "   --help	            - print help and exit\n"
                       "   --version	            - print version information and exit\n\n");
@@ -212,14 +216,31 @@ void run_dpm(const char* file_name)
 
         sampler->sample(options.samples, options.burnin);
         const vector<vector<double> >& posterior = gdpm->posterior();
-        for (size_t i = 0; i < posterior.size(); i++) {
-                for (size_t j = 0; j < posterior[i].size(); j++) {
-                        printf("%f ", (float)posterior[i][j]);
+
+        if (options.save == NULL) {
+                for (size_t i = 0; i < posterior.size(); i++) {
+                        for (size_t j = 0; j < posterior[i].size(); j++) {
+                                printf("%f ", (float)posterior[i][j]);
+                        }
+                        cout << endl;
                 }
-                cout << endl;
+        }
+        else {
+                ofstream file;
+                file.open(options.save->c_str());
+                file.setf(ios::showpoint); 
+                for (size_t i = 0; i < posterior.size(); i++) {
+                        for (size_t j = 0; j < posterior[i].size(); j++) {
+                                file << (float)posterior[i][j] << " ";
+                        }
+                        file << endl;
+                }
+                file.close();
         }
 
+        free(data);
         free(gdpm);
+        free(sampler);
         free_sequences(sequences);
 }
 
@@ -252,6 +273,7 @@ int main(int argc, char *argv[])
                         { "lambda",      1, 0, 'l' },
                         { "samples",     1, 0, 's' },
                         { "tfbs-length", 1, 0, 't' },
+                        { "save",        1, 0, 'e' },
 			{ "help",	 0, 0, 'h' },
 			{ "version",	 0, 0, 'v' }
 		};
@@ -269,6 +291,9 @@ int main(int argc, char *argv[])
                         break;
                 case 'l':
                         options.lambda = atof(optarg);
+                        break;
+                case 'e':
+                        options.save = new string(optarg);
                         break;
                 case 's':
                         options.samples = atoi(token(string(optarg), 0).c_str());
