@@ -22,7 +22,6 @@
 #include <string.h>
 
 #include <gsl/gsl_vector.h>
-#include <gsl/gsl_randist.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_blas.h>
@@ -31,16 +30,15 @@
 
 using namespace std;
 
-DPM::DPM(size_t n, char *sequences[])
-        : // strength parameter for the dirichlet process
+DPM::DPM(const Data& data)
+        : _data(data),
+          // strength parameter for the dirichlet process
           alpha(0.07),
           // mixture weight for the dirichlet process
           lambda(0.02),
           // priors
           bg_alpha(gsl_matrix_alloc(DPM::BG_LENGTH, DPM::NUCLEOTIDES)),
           tfbs_alpha(gsl_matrix_alloc(DPM::TFBS_LENGTH, DPM::NUCLEOTIDES)),
-          // sampling history and posterior distribution
-          total_sampling_steps(0),
           // number of transcription factor binding sites
           num_tfbs(0)
 {
@@ -59,41 +57,33 @@ DPM::DPM(size_t n, char *sequences[])
         }
 
         // initialize joint posterior
-        for (size_t i = 0; i < n; i++) {
-                const size_t length = strlen(sequences[i]);
-                _posterior.push_back(vector<double>(length, 0.0));
+        for (size_t i = 0; i < data.length(); i++) {
+                _posterior.push_back(vector<double>(data.length(i), 0.0));
         }
 
-        // initialize data structures for the gibbs sampler
-        for(size_t i = 0; i < n; i++) {
-                size_t m = strlen(sequences[i]);
-                this->tfbs_start_positions.push_back(vector<bool>(m, false));
+        // starting positions of tfbs
+        for(size_t i = 0; i < data.length(); i++) {
+                this->tfbs_start_positions.push_back(vector<bool>(data.length(i), false));
         }
 
         // initialize cluster manager
         ProductDirichlet* tfbs_product_dirichlet = new ProductDirichlet(tfbs_alpha);
         ProductDirichlet* bg_product_dirichlet   = new ProductDirichlet(bg_alpha);
-        _data            = new Data(n, sequences);
-        _cluster_manager = new ClusterManager(*_data, tfbs_product_dirichlet);
+        _cluster_manager = new ClusterManager(_data, tfbs_product_dirichlet);
         bg_cluster_tag   = _cluster_manager->add_cluster(bg_product_dirichlet);
 
         // assign all elements to the background
-        for (Data::iterator it = _data->begin();
-             it != _data->end(); it++) {
-                const word_t word = _data->get_word(*it, DPM::BG_LENGTH);
+        for (Data::const_iterator it = _data.begin();
+             it != _data.end(); it++) {
+                const word_t word = _data.get_word(*it, DPM::BG_LENGTH);
                 (*_cluster_manager)[bg_cluster_tag].add_word(word);
         }
-
-        // for sampling statistics
-        hist_switches.push_back(0);
-        hist_likelihood.push_back(compute_likelihood());
 }
 
 DPM::~DPM() {
         gsl_matrix_free(tfbs_alpha);
         gsl_matrix_free(bg_alpha);
 
-        delete(_data);
         delete(_cluster_manager);
 }
 
@@ -105,7 +95,7 @@ DPM::valid_for_sampling(const element_t& element, const word_t& word)
         const size_t length   = word.length;
 
         // check if there is enough space
-        if (_data->length(sequence) - position < length) {
+        if (_data.length(sequence) - position < length) {
                 return false;
         }
         // check if there is a tfbs starting here, if not check
@@ -194,88 +184,28 @@ DPM::mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[])
         }
 }
 
-bool
-DPM::sample(const element_t& element) {
-        const word_t word = _data->get_word(element, DPM::TFBS_LENGTH);
-        ////////////////////////////////////////////////////////////////////////
-        // check if we can sample this element
-        if (!valid_for_sampling(element, word)) {
-                return false;
-        }
-        ////////////////////////////////////////////////////////////////////////
-        // release the element from its cluster
-        cluster_tag_t old_cluster_tag = _cluster_manager->get_cluster_tag(element);
-        remove_word(word, old_cluster_tag);
-        size_t components = mixture_components();
-        double weights[components];
-        cluster_tag_t tags[components];
-        mixture_weights(word, weights, tags);
-
-        ////////////////////////////////////////////////////////////////////////
-        // draw a new cluster for the element and assign the element
-        // to that cluster
-        gsl_ran_discrete_t* gdd  = gsl_ran_discrete_preproc(components, weights);
-        cluster_tag_t i = gsl_ran_discrete(_r, gdd);
-        gsl_ran_discrete_free(gdd);
-        cluster_tag_t new_cluster_tag = tags[i];
-
-        ////////////////////////////////////////////////////////////////////////
-        add_word(word, new_cluster_tag);
-
-        return old_cluster_tag != new_cluster_tag;
-}
-
-// sampling methods
-////////////////////////////////////////////////////////////////////////////////
-
 double
 DPM::compute_likelihood() {
         return 0.0;
 }
 
 void
-DPM::update_posterior() {
-        for (Data::iterator it = _data->begin();
-             it != _data->end(); it++) {
+DPM::update_posterior(size_t sampling_steps) {
+        for (Data::const_iterator it = _data.begin();
+             it != _data.end(); it++) {
                 const element_t& element = *it;
                 const size_t sequence    = element.sequence;
                 const size_t position    = element.position;
                 if (_cluster_manager->get_cluster_tag(element) == bg_cluster_tag) {
                         double tmp   = _posterior[sequence][position];
-                        double value = (total_sampling_steps*tmp)/(total_sampling_steps+1.0);
+                        double value = (sampling_steps*tmp)/(sampling_steps+1.0);
                         _posterior[sequence][position] = value;
                 }
                 else {
                         double tmp   = _posterior[sequence][position];
-                        double value = (total_sampling_steps*tmp+1.0)/(total_sampling_steps+1.0);
+                        double value = (sampling_steps*tmp+1.0)/(sampling_steps+1.0);
                         _posterior[sequence][position] = value;
                 }
-        }
-}
-
-void
-DPM::gibbs_sample(size_t n, size_t burnin) {
-        // burn in sampling
-        for (size_t i = 0; i < burnin; i++) {
-                printf("Burn in... [%u]\n", (unsigned int)i+1);
-                for (Data::iterator_randomized it = _data->begin_randomized();
-                     it != _data->end_randomized(); it++) {
-                        sample(**it);
-                }
-        }
-        // sample `n' times
-        for (size_t i = 0; i < n; i++) {
-                // loop through all elements
-                printf("Sampling... [%u]\n", (unsigned int)i+1);
-                double sum = 0;
-                for (Data::iterator_randomized it = _data->begin_randomized();
-                     it != _data->end_randomized(); it++) {
-                        bool switched = sample(**it);
-                        if (switched) sum+=1;
-                }
-                hist_switches.push_back(sum);
-                update_posterior();
-                total_sampling_steps++;
         }
 }
 
@@ -284,8 +214,8 @@ DPM::gibbs_sample(size_t n, size_t burnin) {
 
 ostream& operator<< (ostream& o, const DPM& dpm)
 {
-        for (size_t i = 0; i < dpm._data->length(); i++) {
-                for (size_t j = 0; j < dpm._data->length(i); j++) {
+        for (size_t i = 0; i < dpm._data.length(); i++) {
+                for (size_t j = 0; j < dpm._data.length(i); j++) {
                         o << dpm.tfbs_start_positions[i][j] << " ";
                 }
                 o << endl;

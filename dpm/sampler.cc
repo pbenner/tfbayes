@@ -1,0 +1,89 @@
+/* Copyright (C) 2011 Philipp Benner
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+
+#include <gsl/gsl_randist.h>
+
+#include <sampler.hh>
+
+GibbsSampler::GibbsSampler(DPM& dpm, const Data& data)
+        : _dpm(dpm), _data(data), _sampling_steps(0)
+{
+        // for sampling statistics
+        hist_switches.push_back(0);
+        hist_likelihood.push_back(dpm.compute_likelihood());
+}
+
+bool
+GibbsSampler::_sample(const element_t& element) {
+        const word_t word = _data.get_word(element, DPM::TFBS_LENGTH);
+        ////////////////////////////////////////////////////////////////////////
+        // check if we can sample this element
+        if (!_dpm.valid_for_sampling(element, word)) {
+                return false;
+        }
+        ////////////////////////////////////////////////////////////////////////
+        // release the element from its cluster
+        cluster_tag_t old_cluster_tag = _dpm.cluster_manager().get_cluster_tag(element);
+        _dpm.remove_word(word, old_cluster_tag);
+        size_t components = _dpm.mixture_components();
+        double weights[components];
+        cluster_tag_t tags[components];
+        _dpm.mixture_weights(word, weights, tags);
+
+        ////////////////////////////////////////////////////////////////////////
+        // draw a new cluster for the element and assign the element
+        // to that cluster
+        gsl_ran_discrete_t* gdd  = gsl_ran_discrete_preproc(components, weights);
+        cluster_tag_t i = gsl_ran_discrete(_r, gdd);
+        gsl_ran_discrete_free(gdd);
+        cluster_tag_t new_cluster_tag = tags[i];
+
+        ////////////////////////////////////////////////////////////////////////
+        _dpm.add_word(word, new_cluster_tag);
+
+        return old_cluster_tag != new_cluster_tag;
+}
+
+void
+GibbsSampler::sample(size_t n, size_t burnin) {
+        // burn in sampling
+        for (size_t i = 0; i < burnin; i++) {
+                printf("Burn in... [%u]\n", (unsigned int)i+1);
+                for (Data::const_iterator_randomized it = _data.begin_randomized();
+                     it != _data.end_randomized(); it++) {
+                        _sample(**it);
+                }
+        }
+        // sample `n' times
+        for (size_t i = 0; i < n; i++) {
+                // loop through all elements
+                printf("Sampling... [%u]\n", (unsigned int)i+1);
+                double sum = 0;
+                for (Data::const_iterator_randomized it = _data.begin_randomized();
+                     it != _data.end_randomized(); it++) {
+                        bool switched = _sample(**it);
+                        if (switched) sum+=1;
+                }
+                hist_switches.push_back(sum);
+                _dpm.update_posterior(_sampling_steps);
+                _sampling_steps++;
+        }
+}

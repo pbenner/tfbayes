@@ -15,43 +15,40 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DATATYPES_HH
-#define DATATYPES_HH
+#ifndef SAMPLER_HH
+#define SAMPLER_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <string>
+#include <dpm.hh>
 
-#include <gsl/gsl_matrix.h>
+class GibbsSampler {
+public:
+        GibbsSampler(DPM& dpm, const Data& data);
 
-// efficient representation of words (nucleotide sequences)
-// of variable length
-typedef struct {
-        size_t sequence;
-        size_t position;
-        size_t length;
-        const std::vector<std::string>& sequences;
-} word_t;
+        std::vector<double>& get_hist_switches() {
+                return hist_switches;
+        }
+        std::vector<double>& get_hist_likelihood() {
+                return hist_likelihood;
+        }
 
-typedef struct {
-        size_t sequence;
-        size_t position;
-} element_t;
+        void sample(size_t n, size_t burnin);
+private:
+        // private methods
+        bool _sample(const element_t& element);
 
-typedef size_t cluster_tag_t;
+        // the mixture model
+        DPM& _dpm;
+        const Data& _data;
 
-typedef enum {
-        cluster_event_empty, cluster_event_nonempty,
-        cluster_event_add_word, cluster_event_remove_word
-} cluster_event_t;
+        // gibbs sampler history
+        size_t _sampling_steps;
+        std::vector<double> hist_switches;
+        std::vector<double> hist_likelihood;
+        std::vector<size_t> hist_num_clusters;
+};
 
-typedef struct {
-        std::vector<double>* switches;
-        std::vector<double>* likelihood;
-        std::vector<size_t>* clusters;
-        gsl_matrix* posterior;
-} sampling_history_t;
-
-#endif /* DATATYPES_HH */
+#endif /* SAMPLER_HH */

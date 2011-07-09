@@ -28,14 +28,14 @@ namespace Bayes {
 }
 
 #include <init.hh>
-#include <clustermanager.hh>
-#include <data.hh>
-#include <dpm.hh>
 #include <interface.hh>
+#include <sampler.hh>
 
 using namespace std;
 
 static DPM* _gdpm;
+static Data* _data;
+static GibbsSampler* _sampler;
 
 __BEGIN_C_REGION;
 
@@ -49,7 +49,9 @@ void _dpm_init(int n, char *sequences[])
 {
         __dpm_init__();
 
-        _gdpm = new DPM((size_t)n, sequences);
+        _data = new Data(n, sequences);
+        _gdpm = new DPM(*_data);
+        _sampler = new GibbsSampler(*_gdpm, *_data);
 }
 
 unsigned int _dpm_num_clusters() {
@@ -111,7 +113,7 @@ Bayes::Matrix* _dpm_cluster_assignments() {
 }
 
 Bayes::Vector* _dpm_hist_likelihood() {
-        vector<double>& likelihood = _gdpm->get_hist_likelihood();
+        vector<double>& likelihood = _sampler->get_hist_likelihood();
         size_t length = likelihood.size();
         Bayes::Vector* result = Bayes::allocVector(length);
 
@@ -123,7 +125,7 @@ Bayes::Vector* _dpm_hist_likelihood() {
 }
 
 Bayes::Vector* _dpm_hist_switches() {
-        vector<double>& switches = _gdpm->get_hist_switches();
+        vector<double>& switches = _sampler->get_hist_switches();
         size_t length = switches.size();
         Bayes::Vector* result = Bayes::allocVector(length);
 
@@ -139,7 +141,7 @@ void _dpm_print() {
 }
 
 void _dpm_sample(unsigned int n, unsigned int burnin) {
-        _gdpm->gibbs_sample((size_t)n, (size_t)burnin);
+        _sampler->sample((size_t)n, (size_t)burnin);
 }
 
 void _dpm_free() {

@@ -68,7 +68,7 @@ public:
 
         // methods
         ////////////////////////////////////////////////////////////////////////
-        const word_t get_word(const element_t& element, size_t length);
+        const word_t get_word(const element_t& element, size_t length) const;
         size_t length() const;
         size_t length(size_t i) const;
         void shuffle();

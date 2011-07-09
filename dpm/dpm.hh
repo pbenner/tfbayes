@@ -30,7 +30,7 @@
 
 class DPM {
 public:
-         DPM(size_t n, char *sequences[]);
+         DPM(const Data& data);
         ~DPM();
 
         // operators
@@ -44,24 +44,20 @@ public:
         ////////////////////////////////////////////////////////////////////////
         size_t mixture_components() const;
         void mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[]) const;
-        std::vector<double>& get_hist_switches() {
-                return hist_switches;
-        }
-        std::vector<double>& get_hist_likelihood() {
-                return hist_likelihood;
-        }
         const std::vector<std::vector<double> >& posterior() const {
                 return _posterior;
         }
         const Data& data() const {
-                return *_data;
+                return _data;
         }
         const ClusterManager& cluster_manager() const {
                 return *_cluster_manager;
         }
-
-        bool sample(const element_t& element);
-        void gibbs_sample(size_t n, size_t burnin);
+        void add_word(const word_t& word, cluster_tag_t tag);
+        void remove_word(const word_t& word, cluster_tag_t tag);
+        void update_posterior(size_t sampling_steps);
+        double compute_likelihood();
+        bool valid_for_sampling(const element_t& element, const word_t& word);
 
         // constants
         ////////////////////////////////////////////////////////////////////////
@@ -73,7 +69,7 @@ public:
 
 private:
         // data and clusters
-        Data* _data;
+        const Data& _data;
         ClusterManager* _cluster_manager;
 
         // tags of special clusters
@@ -87,25 +83,14 @@ private:
         gsl_matrix* bg_alpha;
         gsl_matrix* tfbs_alpha;
 
-        // gibbs sampler
+        // record start positions of tfbs
         std::vector<std::vector<bool> > tfbs_start_positions;
 
-        // gibbs sampler history
-        size_t total_sampling_steps;
-        std::vector<double> hist_switches;
-        std::vector<double> hist_likelihood;
-        std::vector<size_t> hist_num_clusters;
+        // posterior distribution
         std::vector<std::vector<double> > _posterior;
 
         // keep track of the number of transcription factor binding sites
         size_t num_tfbs;
-
-        // private methods
-        void add_word(const word_t& word, cluster_tag_t tag);
-        void remove_word(const word_t& word, cluster_tag_t tag);
-        double compute_likelihood();
-        void update_posterior();
-        bool valid_for_sampling(const element_t& element, const word_t& word);
 };
 
 #endif /* DPM_HH */

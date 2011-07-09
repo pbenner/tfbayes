@@ -70,7 +70,7 @@ size_t
 ProductDirichlet::remove_observations(const word_t& word) {
         for (size_t i = 0; i < word.length; i += counts->size1) {
                 for (size_t j = 0; j < counts->size1; j++) {
-                        switch ((*word.sequences)[word.sequence][word.position+i+j]) {
+                        switch (word.sequences[word.sequence][word.position+i+j]) {
                         case 'A':
                         case 'a':
                                 gsl_matrix_set(counts, j, 0,
@@ -101,7 +101,7 @@ size_t
 ProductDirichlet::add_observations(const word_t& word) {
         for (size_t i = 0; i < word.length; i += counts->size1) {
                 for (size_t j = 0; j < counts->size1; j++) {
-                        switch ((*word.sequences)[word.sequence][word.position+i+j]) {
+                        switch (word.sequences[word.sequence][word.position+i+j]) {
                         case 'A':
                         case 'a':
                                 gsl_matrix_set(counts, j, 0,
@@ -137,7 +137,7 @@ double ProductDirichlet::pdf(const word_t& word) const {
                         for (size_t k = 0; k < this->counts->size2; k++) {
                                 sum += gsl_matrix_get(this->counts, j, k);
                         }
-                        switch ((*word.sequences)[word.sequence][word.position+i+j]) {
+                        switch (word.sequences[word.sequence][word.position+i+j]) {
                         case 'A':
                         case 'a':
                                 result *= gsl_matrix_get(this->counts, j, 0)/sum;

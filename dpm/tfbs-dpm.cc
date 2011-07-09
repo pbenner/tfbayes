@@ -34,7 +34,7 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_matrix.h>
 
-#include <dpm.hh>
+#include <sampler.hh>
 #include <init.hh>
 
 using namespace std;
@@ -174,9 +174,11 @@ void run_dpm(const char* file_name)
 
         readfile(file_name, sequences);
 
-        DPM*  gdpm = new DPM(lines, sequences);
+        Data* data = new Data(lines, sequences);
+        DPM*  gdpm = new DPM(*data);
+        GibbsSampler* sampler = new GibbsSampler(*gdpm, *data);
 
-        gdpm->gibbs_sample(1000, 100);
+        sampler->sample(1000, 100);
         const vector<vector<double> >& posterior = gdpm->posterior();
         for (size_t i = 0; i < posterior.size(); i++) {
                 for (size_t j = 0; j < posterior[i].size(); j++) {

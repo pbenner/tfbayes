@@ -79,15 +79,10 @@ Data::operator[](element_t element) const {
 }
 
 const word_t
-Data::get_word(const element_t& element, size_t length) {
-        word_t word;
+Data::get_word(const element_t& element, size_t length) const {
         const size_t sequence = element.sequence;
         const size_t position = element.position;
-
-        word.sequence  = sequence;
-        word.position  = position;
-        word.length    = length;
-        word.sequences = &sequences;
+        word_t word = {sequence, position, length, sequences};
 
         return word;
 }
@@ -111,7 +106,7 @@ ostream&
 operator<< (ostream& o, const word_t& word) {
         o << "(" << word.sequence << ":" << word.position << ":";
         for (size_t i = 0; i < word.length; i++) {
-                o << (*word.sequences)[word.sequence][word.position+i];
+                o << word.sequences[word.sequence][word.position+i];
         }
         o << ")";
 
