@@ -159,3 +159,35 @@ double ProductDirichlet::pdf(const word_t& word) const {
         }
         return result;
 }
+
+double ProductDirichlet::log_pdf(const word_t& word) const {
+        double result = 0;
+
+        for (size_t i = 0; i < word.length; i += counts->size1) {
+                for (size_t j = 0; j < counts->size1; j++) {
+                        double sum = 0;
+                        for (size_t k = 0; k < this->counts->size2; k++) {
+                                sum += gsl_matrix_get(this->counts, j, k);
+                        }
+                        switch (word.sequences[word.sequence][word.position+i+j]) {
+                        case 'A':
+                        case 'a':
+                                result += logl(gsl_matrix_get(this->counts, j, 0)/sum);
+                        break;
+                        case 'C':
+                        case 'c':
+                                result += logl(gsl_matrix_get(this->counts, j, 1)/sum);
+                        break;
+                        case 'G':
+                        case 'g':
+                                result += logl(gsl_matrix_get(this->counts, j, 2)/sum);
+                        break;
+                        case 'T':
+                        case 't':
+                                result += logl(gsl_matrix_get(this->counts, j, 3)/sum);
+                        break;
+                        }
+                }
+        }
+        return result;
+}

@@ -27,6 +27,7 @@
 #include <gsl/gsl_blas.h>
 
 #include <dpm.hh>
+#include <tfbayes/logarithmetic.h>
 
 using namespace std;
 
@@ -151,7 +152,7 @@ DPM::mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[])
 {
         size_t components = mixture_components();
         double dp_norm    = num_tfbs + alpha;
-        double sum        = 0;
+        double sum        = -HUGE_VAL;
 
         cluster_tag_t i = 0;
         for (ClusterManager::iterator it = _cluster_manager->begin(); it != _cluster_manager->end(); it++) {
@@ -160,35 +161,35 @@ DPM::mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[])
                 ////////////////////////////////////////////////////////////////
                 // mixture component 1: background model
                 if (tags[i] == bg_cluster_tag) {
-                        weights[i] = (1-lambda)*cluster.distribution().pdf(word);
+                        weights[i] = logl(1-lambda) + cluster.distribution().log_pdf(word);
                         // normalization constant
-                        sum += weights[i];
+                        sum = logadd(sum, weights[i]);
                 }
                 ////////////////////////////////////////////////////////////////
                 // mixture component 2: dirichlet process for tfbs models
                 else {
                         double num_elements = (double)cluster.size();
-                        weights[i] = lambda*num_elements/dp_norm*cluster.distribution().pdf(word);
+                        weights[i] = logl(lambda*num_elements/dp_norm) + cluster.distribution().log_pdf(word);
                         // normalization constant
-                        sum += weights[i];
+                        sum = logadd(sum, weights[i]);
                 }
                 i++;
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
-        tags[components-1] = _cluster_manager->get_free_cluster().tag();
-        weights[components-1] = alpha/dp_norm*(*_cluster_manager)[tags[components-1]].distribution().pdf(word);
-        sum += weights[components-1];
+        tags[components-1]    = _cluster_manager->get_free_cluster().tag();
+        weights[components-1] = logl(alpha/dp_norm) + (*_cluster_manager)[tags[components-1]].distribution().log_pdf(word);
+        sum = logadd(sum, weights[components-1]);
 
         ////////////////////////////////////////////////////////////////////////
         // normalize
         for (size_t i = 0; i < components; i++) {
-                weights[i] /= sum;
+                weights[i] = expl(weights[i] - sum);
         }
 }
 
 double
-DPM::compute_likelihood() {
+DPM::likelihood() const {
         return 0.0;
 }
 

@@ -32,7 +32,7 @@ GibbsSampler::GibbsSampler(DPM& dpm, const Data& data)
         // for sampling statistics
         _sampling_history.switches.push_back(0);
         _sampling_history.components.push_back(0);
-        _sampling_history.likelihood.push_back(dpm.compute_likelihood());
+        _sampling_history.likelihood.push_back(dpm.likelihood());
 }
 
 GibbsSampler::~GibbsSampler()
@@ -98,8 +98,9 @@ GibbsSampler::sample(size_t n, size_t burnin) {
                         bool switched = _sample(**it);
                         if (switched) sum+=1;
                 }
-                _sampling_history.switches.push_back(sum/(double)_data.size());
+                _sampling_history.likelihood.push_back(_dpm.likelihood());
                 _sampling_history.components.push_back(_dpm.mixture_components());
+                _sampling_history.switches.push_back(sum/(double)_data.size());
                 _dpm.update_posterior(_sampling_steps);
                 _sampling_steps++;
         }

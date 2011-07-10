@@ -50,6 +50,7 @@ public:
         virtual size_t remove_observations(const word_t& word) = 0;
         virtual size_t count_observations(const word_t& word) const = 0;
         virtual double pdf(const word_t& word) const = 0;
+        virtual double log_pdf(const word_t& word) const = 0;
 
         virtual Distribution* clone() const = 0;
 };
@@ -64,6 +65,7 @@ public:
         size_t remove_observations(const word_t& word);
         size_t count_observations(const word_t& word) const;
         double pdf(const word_t& word) const;
+        double log_pdf(const word_t& word) const;
 
         ProductDirichlet* clone() const;
 

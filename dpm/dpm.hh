@@ -61,7 +61,7 @@ public:
         void add_word(const word_t& word, cluster_tag_t tag);
         void remove_word(const word_t& word, cluster_tag_t tag);
         void update_posterior(size_t sampling_steps);
-        double compute_likelihood();
+        double likelihood() const;
         bool valid_for_sampling(const element_t& element, const word_t& word);
 
         // constants
