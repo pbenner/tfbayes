@@ -23,8 +23,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <string>
-
-#include <gsl/gsl_matrix.h>
+#include <vector>
 
 // efficient representation of words (nucleotide sequences)
 // of variable length
@@ -48,10 +47,9 @@ typedef enum {
 } cluster_event_t;
 
 typedef struct {
-        std::vector<double>* switches;
-        std::vector<double>* likelihood;
-        std::vector<size_t>* clusters;
-        gsl_matrix* posterior;
+        std::vector<double> switches;
+        std::vector<double> likelihood;
+        std::vector<size_t> components;
 } sampling_history_t;
 
 #endif /* DATATYPES_HH */

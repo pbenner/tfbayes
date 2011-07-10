@@ -30,28 +30,31 @@
 
 using namespace std;
 
-DPM::DPM(double alpha, double lambda, const Data& data)
-        : _data(data),
+DPM::DPM(double alpha, double lambda, size_t tfbs_length, const Data& data)
+        : // length of tfbs
+          TFBS_LENGTH(tfbs_length),
+          // raw sequences
+          _data(data),
           // strength parameter for the dirichlet process
           alpha(alpha),
           // mixture weight for the dirichlet process
           lambda(lambda),
           // priors
-          bg_alpha(gsl_matrix_alloc(DPM::BG_LENGTH, DPM::NUCLEOTIDES)),
-          tfbs_alpha(gsl_matrix_alloc(DPM::TFBS_LENGTH, DPM::NUCLEOTIDES)),
+          bg_alpha(gsl_matrix_alloc(BG_LENGTH, NUCLEOTIDES)),
+          tfbs_alpha(gsl_matrix_alloc(TFBS_LENGTH, NUCLEOTIDES)),
           // number of transcription factor binding sites
           num_tfbs(0)
 {
         // initialize prior for the tfbs
-        for (size_t i = 0; i < DPM::TFBS_LENGTH; i++) {
-                for (size_t j = 0; j < DPM::NUCLEOTIDES; j++) {
+        for (size_t i = 0; i < TFBS_LENGTH; i++) {
+                for (size_t j = 0; j < NUCLEOTIDES; j++) {
                         gsl_matrix_set(tfbs_alpha, i, j, 1);
                 }
         }
 
         // initialize prior for the background model
-        for (size_t i = 0; i < DPM::BG_LENGTH; i++) {
-                for (size_t j = 0; j < DPM::NUCLEOTIDES; j++) {
+        for (size_t i = 0; i < BG_LENGTH; i++) {
+                for (size_t j = 0; j < NUCLEOTIDES; j++) {
                         gsl_matrix_set(bg_alpha, i, j, 1);
                 }
         }
@@ -75,7 +78,7 @@ DPM::DPM(double alpha, double lambda, const Data& data)
         // assign all elements to the background
         for (Data::const_iterator it = _data.begin();
              it != _data.end(); it++) {
-                const word_t word = _data.get_word(*it, DPM::BG_LENGTH);
+                const word_t word = _data.get_word(*it, BG_LENGTH);
                 (*_cluster_manager)[bg_cluster_tag].add_word(word);
         }
 }

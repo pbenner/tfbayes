@@ -69,6 +69,7 @@ public:
         // methods
         ////////////////////////////////////////////////////////////////////////
         const word_t get_word(const element_t& element, size_t length) const;
+        size_t size() const;
         size_t length() const;
         size_t length(size_t i) const;
         void shuffle();
@@ -82,6 +83,9 @@ private:
         std::vector<std::string> sequences;
         std::vector<size_t> sequences_length;
         size_t n_sequences;
+
+        // number of elements
+        size_t _size;
 };
 
 std::ostream& operator<< (std::ostream& o, const word_t& word);

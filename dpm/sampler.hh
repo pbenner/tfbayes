@@ -22,18 +22,15 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <datatypes.hh>
 #include <dpm.hh>
 
 class GibbsSampler {
 public:
-        GibbsSampler(DPM& dpm, const Data& data);
+         GibbsSampler(DPM& dpm, const Data& data);
+        ~GibbsSampler();
 
-        std::vector<double>& get_hist_switches() {
-                return hist_switches;
-        }
-        std::vector<double>& get_hist_likelihood() {
-                return hist_likelihood;
-        }
+        const sampling_history_t& sampling_history() const;
 
         void sample(size_t n, size_t burnin);
 private:
@@ -46,9 +43,7 @@ private:
 
         // gibbs sampler history
         size_t _sampling_steps;
-        std::vector<double> hist_switches;
-        std::vector<double> hist_likelihood;
-        std::vector<size_t> hist_num_clusters;
+        sampling_history_t& _sampling_history;
 };
 
 #endif /* SAMPLER_HH */

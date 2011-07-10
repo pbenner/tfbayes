@@ -199,44 +199,69 @@ void free_sequences(char **sequences)
 }
 
 static
+void save_result(ostream& file, const DPM& gdpm, const GibbsSampler& sampler)
+{
+        const DPM::posterior_t& posterior = gdpm.posterior();
+        const sampling_history_t& history = sampler.sampling_history();
+        file.setf(ios::showpoint);
+
+        file << "[Result]" << endl;
+        file << "posterior =" << endl;
+        for (size_t i = 0; i < posterior.size(); i++) {
+                file << "\t";
+                for (size_t j = 0; j < posterior[i].size(); j++) {
+                        file << (float)posterior[i][j] << " ";
+                }
+                file << endl;
+        }
+        file << "components =" << endl << "\t";
+        for (size_t i = 0; i < history.components.size(); i++) {
+                file << history.components[i] << " ";
+        }
+        file << endl;
+        file << "switches =" << endl << "\t";
+        for (size_t i = 0; i < history.switches.size(); i++) {
+                file << history.switches[i] << " ";
+        }
+        file << endl;
+        file << "likelihood =" << endl << "\t";
+        for (size_t i = 0; i < history.likelihood.size(); i++) {
+                file << history.likelihood[i] << " ";
+        }
+        file << endl;
+}
+
+static
 void run_dpm(const char* file_name)
 {
         size_t lines, max_len;
         char **sequences;
 
+        // read sequences
         get_max_length(file_name, &lines, &max_len);
         sequences = alloc_sequences(lines, max_len);
-
         readfile(file_name, sequences);
 
+        // create data, dpm, and sampler objects
         Data* data = new Data(lines, sequences);
-        DPM*  gdpm = new DPM(options.alpha, options.lambda, *data);
+        DPM*  gdpm = new DPM(options.alpha, options.lambda, options.tfbs_length, *data);
         GibbsSampler* sampler = new GibbsSampler(*gdpm, *data);
 
+        // execute the sampler
         sampler->sample(options.samples, options.burnin);
-        const vector<vector<double> >& posterior = gdpm->posterior();
 
+        // save result
         if (options.save == "") {
-                for (size_t i = 0; i < posterior.size(); i++) {
-                        for (size_t j = 0; j < posterior[i].size(); j++) {
-                                printf("%f ", (float)posterior[i][j]);
-                        }
-                        cout << endl;
-                }
+                save_result(cout, *gdpm, *sampler);
         }
         else {
                 ofstream file;
                 file.open(options.save.c_str());
-                file.setf(ios::showpoint); 
-                for (size_t i = 0; i < posterior.size(); i++) {
-                        for (size_t j = 0; j < posterior[i].size(); j++) {
-                                file << (float)posterior[i][j] << " ";
-                        }
-                        file << endl;
-                }
+                save_result(file, *gdpm, *sampler);
                 file.close();
         }
 
+        // free memory
         free(data);
         free(gdpm);
         free(sampler);

@@ -42,6 +42,7 @@ options = {
     'alpha'       : 0.05,
     'lambda'      : 0.01,
     'samples'     : (1000,100),
+    'tfbs_length' : 10,
     'save'        : None,
     'interactive' : False,
     'verbose'     : False,
@@ -58,6 +59,7 @@ def usage():
     print "Options:"
     print "       --alpha=ALPHA              - alpha parameter for the dirichlet process"
     print "       --lambda=LAMBDA            - lambda mixture weight"
+    print "       --tfbs-length=LENGTH       - length of the tfbs"
     print "   -i                             - interactive mode"
     print "   -s, --save=FILE                - save posterior to FILE"
     print "       --samples=SAMPLES:BURN_IN  - number of samples [default: 1000:100]"
@@ -100,7 +102,7 @@ class TfbsDPM():
         self.sequences = sequences
         self.clusters  = clusters
         self.steps     = 0
-        dpm_init(options['alpha'], options['lambda'], sequences[:][:])
+        dpm_init(options['alpha'], options['lambda'], options['tfbs_length'], sequences[:][:])
     def print_clusters(self):
         dpm_print()
     def num_clusters(self):
@@ -212,7 +214,7 @@ def sample(sequences, clusters):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "alpha=", "lambda=", "save=", "samples="]
+        longopts   = ["help", "verbose", "alpha=", "lambda=", "tfbs-length=", "save=", "samples="]
         opts, tail = getopt.getopt(sys.argv[1:], "is:", longopts)
     except getopt.GetoptError:
         usage()
@@ -231,6 +233,8 @@ def main():
             options['alpha'] = float(a)
         if o == "--lambda":
             options['lambda'] = float(a)
+        if o == "--tfbs-length":
+            options['tfbs_length'] = int(a)
         if o in ("-s", "--save"):
             options['save'] = a
         if o == "--samples":

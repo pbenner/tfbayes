@@ -30,8 +30,13 @@
 
 class DPM {
 public:
-         DPM(double alpha, double lambda, const Data& data);
+         DPM(double alpha, double lambda, size_t tfbs_length, const Data& data);
         ~DPM();
+
+        // type definitions
+        ////////////////////////////////////////////////////////////////////////
+        typedef std::vector<std::vector<double> > posterior_t;
+        typedef std::vector<std::vector<bool>   > tfbs_start_positions_t;
 
         // operators
         ////////////////////////////////////////////////////////////////////////
@@ -61,10 +66,8 @@ public:
 
         // constants
         ////////////////////////////////////////////////////////////////////////
-        static const size_t BG_CLUSTER  = 0;
         static const size_t BG_LENGTH   = 1;
-//        static const int TFBS_LENGTH = 42;
-        static const size_t TFBS_LENGTH = 10;
+               const size_t TFBS_LENGTH;
         static const size_t NUCLEOTIDES = 4;
 
 private:
@@ -84,10 +87,10 @@ private:
         gsl_matrix* tfbs_alpha;
 
         // record start positions of tfbs
-        std::vector<std::vector<bool> > tfbs_start_positions;
+        tfbs_start_positions_t tfbs_start_positions;
 
         // posterior distribution
-        std::vector<std::vector<double> > _posterior;
+        posterior_t _posterior;
 
         // keep track of the number of transcription factor binding sites
         size_t num_tfbs;

@@ -23,17 +23,26 @@
 
 #include <sampler.hh>
 
+using namespace std;
+
 GibbsSampler::GibbsSampler(DPM& dpm, const Data& data)
-        : _dpm(dpm), _data(data), _sampling_steps(0)
+        : _dpm(dpm), _data(data), _sampling_steps(0),
+          _sampling_history(*new sampling_history_t())
 {
         // for sampling statistics
-        hist_switches.push_back(0);
-        hist_likelihood.push_back(dpm.compute_likelihood());
+        _sampling_history.switches.push_back(0);
+        _sampling_history.components.push_back(0);
+        _sampling_history.likelihood.push_back(dpm.compute_likelihood());
+}
+
+GibbsSampler::~GibbsSampler()
+{
+        delete(&_sampling_history);
 }
 
 bool
 GibbsSampler::_sample(const element_t& element) {
-        const word_t word = _data.get_word(element, DPM::TFBS_LENGTH);
+        const word_t word = _data.get_word(element, _dpm.TFBS_LENGTH);
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
         if (!_dpm.valid_for_sampling(element, word)) {
@@ -62,11 +71,17 @@ GibbsSampler::_sample(const element_t& element) {
         return old_cluster_tag != new_cluster_tag;
 }
 
+const sampling_history_t&
+GibbsSampler::sampling_history() const {
+        return _sampling_history;
+}
+
 void
 GibbsSampler::sample(size_t n, size_t burnin) {
         // burn in sampling
         for (size_t i = 0; i < burnin; i++) {
                 printf("Burn in... [%u]\n", (unsigned int)i+1);
+                fflush(stdout);
                 for (Data::const_iterator_randomized it = _data.begin_randomized();
                      it != _data.end_randomized(); it++) {
                         _sample(**it);
@@ -76,13 +91,15 @@ GibbsSampler::sample(size_t n, size_t burnin) {
         for (size_t i = 0; i < n; i++) {
                 // loop through all elements
                 printf("Sampling... [%u]\n", (unsigned int)i+1);
+                fflush(stdout);
                 double sum = 0;
                 for (Data::const_iterator_randomized it = _data.begin_randomized();
                      it != _data.end_randomized(); it++) {
                         bool switched = _sample(**it);
                         if (switched) sum+=1;
                 }
-                hist_switches.push_back(sum);
+                _sampling_history.switches.push_back(sum/(double)_data.size());
+                _sampling_history.components.push_back(_dpm.mixture_components());
                 _dpm.update_posterior(_sampling_steps);
                 _sampling_steps++;
         }

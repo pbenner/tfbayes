@@ -45,12 +45,12 @@ Bayes::Matrix * _allocMatrix(int rows, int columns) { return Bayes::allocMatrix(
 void            _freeMatrix(Bayes::Matrix *m)       { Bayes::freeMatrix(m); }
 void            _free(void *ptr)                    { free(ptr); }
 
-void _dpm_init(double alpha, double lambda, int n, char *sequences[])
+void _dpm_init(double alpha, double lambda, int tfbs_length, int n, char *sequences[])
 {
         __dpm_init__();
 
         _data = new Data(n, sequences);
-        _gdpm = new DPM(alpha, lambda, *_data);
+        _gdpm = new DPM(alpha, lambda, (size_t)tfbs_length, *_data);
         _sampler = new GibbsSampler(*_gdpm, *_data);
 }
 
@@ -113,7 +113,7 @@ Bayes::Matrix* _dpm_cluster_assignments() {
 }
 
 Bayes::Vector* _dpm_hist_likelihood() {
-        vector<double>& likelihood = _sampler->get_hist_likelihood();
+        const vector<double>& likelihood = _sampler->sampling_history().likelihood;
         size_t length = likelihood.size();
         Bayes::Vector* result = Bayes::allocVector(length);
 
@@ -125,7 +125,7 @@ Bayes::Vector* _dpm_hist_likelihood() {
 }
 
 Bayes::Vector* _dpm_hist_switches() {
-        vector<double>& switches = _sampler->get_hist_switches();
+        const vector<double>& switches = _sampler->sampling_history().switches;
         size_t length = switches.size();
         Bayes::Vector* result = Bayes::allocVector(length);
 

@@ -38,7 +38,7 @@
 using namespace std;
 
 Data::Data(size_t n, char *sequences[])
-        : n_sequences(n)
+        : n_sequences(n), _size(0)
 {
         for(size_t i = 0; i < n; i++) {
                 size_t m = strlen(sequences[i]);
@@ -47,6 +47,7 @@ Data::Data(size_t n, char *sequences[])
                 for(size_t j = 0; j < m; j++) {
                         element_t e = {i, j};
                         elements.push_back(e);
+                        _size++;
                 }
         }
         for (Data::iterator it = begin(); it != end(); it++) {
@@ -85,6 +86,11 @@ Data::get_word(const element_t& element, size_t length) const {
         word_t word = {sequence, position, length, sequences};
 
         return word;
+}
+
+size_t
+Data::size() const {
+        return _size;
 }
 
 size_t
