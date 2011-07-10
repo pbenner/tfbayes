@@ -80,7 +80,7 @@ void
 GibbsSampler::sample(size_t n, size_t burnin) {
         // burn in sampling
         for (size_t i = 0; i < burnin; i++) {
-                printf("Burn in... [%u]\n", (unsigned int)i+1);
+                printf("Burn in... [%u][Components: %02d]\n", (unsigned int)i+1, (int)_dpm.mixture_components());
                 fflush(stdout);
                 for (Data::const_iterator_randomized it = _data.begin_randomized();
                      it != _data.end_randomized(); it++) {
@@ -90,7 +90,7 @@ GibbsSampler::sample(size_t n, size_t burnin) {
         // sample `n' times
         for (size_t i = 0; i < n; i++) {
                 // loop through all elements
-                printf("Sampling... [%u]\n", (unsigned int)i+1);
+                printf("Sampling... [%u][Components: %02d]\n", (unsigned int)i+1, (int)_dpm.mixture_components());
                 fflush(stdout);
                 double sum = 0;
                 for (Data::const_iterator_randomized it = _data.begin_randomized();
