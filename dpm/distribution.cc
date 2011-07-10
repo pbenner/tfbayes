@@ -36,23 +36,24 @@ gsl_rng* _r;
 
 ProductDirichlet::ProductDirichlet(gsl_matrix* _alpha)
 {
-        alpha  = gsl_matrix_alloc (_alpha->size1, _alpha->size2);
-        counts = gsl_matrix_calloc(_alpha->size1, _alpha->size2);
-
-        gsl_matrix_memcpy(alpha, _alpha);
+        for (size_t i = 0; i < _alpha->size1; i++) {
+                double sum = 0;
+                alpha.push_back (vector<double>(_alpha->size2+1, 0));
+                counts.push_back(vector<size_t>(_alpha->size2+1, 0));
+                for (size_t j = 0; j < _alpha->size2; j++) {
+                        alpha[i][j] = gsl_matrix_get(_alpha, i, j);
+                        sum += alpha[i][j];
+                }
+                alpha[i][_alpha->size2] = sum;
+        }
 }
 
 ProductDirichlet::ProductDirichlet(const ProductDirichlet& distribution)
+        : alpha(distribution.alpha), counts(distribution.counts)
 {
-        alpha  = gsl_matrix_alloc(distribution.alpha->size1, distribution.alpha->size2);
-        counts = gsl_matrix_alloc(distribution.counts->size1, distribution.counts->size2);
-        gsl_matrix_memcpy(alpha, distribution.alpha);
-        gsl_matrix_memcpy(counts, distribution.counts);
 }
 
 ProductDirichlet::~ProductDirichlet() {
-        gsl_matrix_free(alpha);
-        gsl_matrix_free(counts);
 }
 
 ProductDirichlet*
@@ -62,101 +63,86 @@ ProductDirichlet::clone() const {
 
 size_t
 ProductDirichlet::count_observations(const word_t& word) const {
-        return word.length/counts->size1;
+        return word.length/counts.size();
 }
 
 size_t
 ProductDirichlet::remove_observations(const word_t& word) {
-        for (size_t i = 0; i < word.length; i += counts->size1) {
-                for (size_t j = 0; j < counts->size1; j++) {
+        for (size_t i = 0; i < word.length; i += counts.size()) {
+                for (size_t j = 0; j < counts.size(); j++) {
                         switch (word.sequences[word.sequence][word.position+i+j]) {
                         case 'A':
                         case 'a':
-                                gsl_matrix_set(counts, j, 0,
-                                               gsl_matrix_get(counts, j, 0)-1);
+                                counts[j][0]--;
                         break;
                         case 'C':
                         case 'c':
-                                gsl_matrix_set(counts, j, 1,
-                                               gsl_matrix_get(counts, j, 1)-1);
+                                counts[j][1]--;
                         break;
                         case 'G':
                         case 'g':
-                                gsl_matrix_set(counts, j, 2,
-                                               gsl_matrix_get(counts, j, 2)-1);
+                                counts[j][2]--;
                         break;
                         case 'T':
                         case 't':
-                                gsl_matrix_set(counts, j, 3,
-                                               gsl_matrix_get(counts, j, 3)-1);
+                                counts[j][3]--;
                         break;
                         }
+                        counts[j][4]--;
                 }
         }
-        return word.length/counts->size1;
+        return word.length/counts.size();
 }
 
 size_t
 ProductDirichlet::add_observations(const word_t& word) {
-        for (size_t i = 0; i < word.length; i += counts->size1) {
-                for (size_t j = 0; j < counts->size1; j++) {
+        for (size_t i = 0; i < word.length; i += counts.size()) {
+                for (size_t j = 0; j < counts.size(); j++) {
                         switch (word.sequences[word.sequence][word.position+i+j]) {
                         case 'A':
                         case 'a':
-                                gsl_matrix_set(counts, j, 0,
-                                               gsl_matrix_get(counts, j, 0)+1);
+                                counts[j][0]++;
                         break;
                         case 'C':
                         case 'c':
-                                gsl_matrix_set(counts, j, 1,
-                                               gsl_matrix_get(counts, j, 1)+1);
+                                counts[j][1]++;
                         break;
                         case 'G':
                         case 'g':
-                                gsl_matrix_set(counts, j, 2,
-                                               gsl_matrix_get(counts, j, 2)+1);
+                                counts[j][2]++;
                         break;
                         case 'T':
                         case 't':
-                                gsl_matrix_set(counts, j, 3,
-                                               gsl_matrix_get(counts, j, 3)+1);
+                                counts[j][3]++;
                         break;
                         }
+                        counts[j][4]++;
                 }
         }
-        return word.length/counts->size1;
+        return word.length/counts.size();
 }
 
 double ProductDirichlet::pdf(const word_t& word) const {
         double result = 1;
 
-        for (size_t i = 0; i < word.length; i += counts->size1) {
-                for (size_t j = 0; j < counts->size1; j++) {
-                        double sum = 0;
-                        for (size_t k = 0; k < this->counts->size2; k++) {
-                                sum += gsl_matrix_get(this->counts, j, k)
-                                     + gsl_matrix_get(this->alpha,  j, k);
-                        }
+        for (size_t i = 0; i < word.length; i += counts.size()) {
+                for (size_t j = 0; j < counts.size(); j++) {
                         switch (word.sequences[word.sequence][word.position+i+j]) {
                         case 'A':
                         case 'a':
-                                result *= (gsl_matrix_get(this->counts, j, 0)
-                                         + gsl_matrix_get(this->alpha,  j, 0))/sum;
+                                result *= (counts[j][0]+alpha[j][0])/(counts[j][4]+alpha[j][4]);
                         break;
                         case 'C':
                         case 'c':
-                                result *= (gsl_matrix_get(this->counts, j, 1)
-                                         + gsl_matrix_get(this->alpha,  j, 1))/sum;
+                                result *= (counts[j][1]+alpha[j][1])/(counts[j][4]+alpha[j][4]);
                         break;
                         case 'G':
                         case 'g':
-                                result *= (gsl_matrix_get(this->counts, j, 2)
-                                         + gsl_matrix_get(this->alpha,  j, 2))/sum;
+                                result *= (counts[j][2]+alpha[j][2])/(counts[j][4]+alpha[j][4]);
                         break;
                         case 'T':
                         case 't':
-                                result *= (gsl_matrix_get(this->counts, j, 3)
-                                         + gsl_matrix_get(this->alpha,  j, 3))/sum;
+                                result *= (counts[j][3]+alpha[j][3])/(counts[j][4]+alpha[j][4]);
                         break;
                         }
                 }
@@ -167,33 +153,24 @@ double ProductDirichlet::pdf(const word_t& word) const {
 double ProductDirichlet::log_pdf(const word_t& word) const {
         double result = 0;
 
-        for (size_t i = 0; i < word.length; i += counts->size1) {
-                for (size_t j = 0; j < counts->size1; j++) {
-                        double sum = 0;
-                        for (size_t k = 0; k < this->counts->size2; k++) {
-                                sum += gsl_matrix_get(this->counts, j, k)
-                                     + gsl_matrix_get(this->alpha,  j, k);
-                        }
+        for (size_t i = 0; i < word.length; i += counts.size()) {
+                for (size_t j = 0; j < counts.size(); j++) {
                         switch (word.sequences[word.sequence][word.position+i+j]) {
                         case 'A':
                         case 'a':
-                                result += logl((gsl_matrix_get(this->counts, j, 0)
-                                              + gsl_matrix_get(this->alpha,  j, 0))/sum);
+                                result += logl((counts[j][0]+alpha[j][0])/(counts[j][4]+alpha[j][4]));
                         break;
                         case 'C':
                         case 'c':
-                                result += logl((gsl_matrix_get(this->counts, j, 1)
-                                              + gsl_matrix_get(this->alpha,  j, 1))/sum);
+                                result += logl((counts[j][1]+alpha[j][1])/(counts[j][4]+alpha[j][4]));
                         break;
                         case 'G':
                         case 'g':
-                                result += logl((gsl_matrix_get(this->counts, j, 2)
-                                              + gsl_matrix_get(this->alpha,  j, 2))/sum);
+                                result += logl((counts[j][2]+alpha[j][2])/(counts[j][4]+alpha[j][4]));
                         break;
                         case 'T':
                         case 't':
-                                result += logl((gsl_matrix_get(this->counts, j, 3)
-                                              + gsl_matrix_get(this->alpha,  j, 3))/sum);
+                                result += logl((counts[j][3]+alpha[j][3])/(counts[j][4]+alpha[j][4]));
                         break;
                         }
                 }
@@ -207,15 +184,9 @@ double ProductDirichlet::log_pdf(const word_t& word) const {
 double ProductDirichlet::log_likelihood() const {
         double result = 0;
 
-        for (size_t j = 0; j < counts->size1; j++) {
-                double sum = 0;
-                for (size_t k = 0; k < this->counts->size2; k++) {
-                        sum += gsl_matrix_get(this->counts, j, k);
-                }
-                for (size_t k = 0; k < this->counts->size2; k++) {
-                        result += gsl_matrix_get(this->counts, j, k)
-                                * logl((gsl_matrix_get(this->counts, j, k)
-                                      + gsl_matrix_get(this->alpha,  j, k))/sum);
+        for (size_t j = 0; j < counts.size(); j++) {
+                for (size_t k = 0; k < counts[j].size(); k++) {
+                        result += counts[j][k]*logl((counts[j][k]+alpha[j][k])/(counts[j][4]+alpha[j][4]));
                 }
         }
         return result;

@@ -45,6 +45,10 @@ public:
                 exit(EXIT_FAILURE);
         }
 
+        // datatypes
+        typedef std::vector<std::vector<double> > alpha_t;
+        typedef std::vector<std::vector<size_t> > counts_t;
+
         // purely virtual functions
         virtual size_t add_observations(const word_t& word) = 0;
         virtual size_t remove_observations(const word_t& word) = 0;
@@ -72,8 +76,8 @@ public:
         ProductDirichlet* clone() const;
 
 private:
-        gsl_matrix* alpha;
-        gsl_matrix* counts;
+        alpha_t alpha;
+        counts_t counts;
 };
 
 #endif /* STATISTICS_HH */
