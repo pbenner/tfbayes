@@ -106,6 +106,10 @@ def readMatrix(config, section, option, converter):
             matrix.append([converter(a) for a in line.split(' ')])
     return matrix
 
+def normalize(matrix):
+    m = max(map(max, matrix))
+    return map(lambda l: map(lambda x: x/m, l), matrix)
+
 def parseConfig(config_file):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
@@ -114,7 +118,7 @@ def parseConfig(config_file):
     likelihood = readVector(config_parser, 'Result', 'likelihood', float)
     components = readVector(config_parser, 'Result', 'components', int)
 
-    return posterior, likelihood, components
+    return normalize(posterior), likelihood, components
 
 # plot
 # ------------------------------------------------------------------------------
