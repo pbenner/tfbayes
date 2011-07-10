@@ -51,6 +51,7 @@ public:
         virtual size_t count_observations(const word_t& word) const = 0;
         virtual double pdf(const word_t& word) const = 0;
         virtual double log_pdf(const word_t& word) const = 0;
+        virtual double log_likelihood() const = 0;
 
         virtual Distribution* clone() const = 0;
 };
@@ -66,10 +67,12 @@ public:
         size_t count_observations(const word_t& word) const;
         double pdf(const word_t& word) const;
         double log_pdf(const word_t& word) const;
+        double log_likelihood() const;
 
         ProductDirichlet* clone() const;
 
 private:
+        gsl_matrix* alpha;
         gsl_matrix* counts;
 };
 

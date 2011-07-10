@@ -34,25 +34,24 @@ using namespace std;
 
 gsl_rng* _r;
 
-ProductDirichlet::ProductDirichlet(gsl_matrix* alpha)
+ProductDirichlet::ProductDirichlet(gsl_matrix* _alpha)
 {
-        counts = gsl_matrix_alloc(alpha->size1, 4);
+        alpha  = gsl_matrix_alloc (_alpha->size1, _alpha->size2);
+        counts = gsl_matrix_calloc(_alpha->size1, _alpha->size2);
 
-        for (size_t i = 0; i < alpha->size1; i++) {
-                gsl_matrix_set(counts, i, 0, gsl_matrix_get(alpha, i, 0));
-                gsl_matrix_set(counts, i, 1, gsl_matrix_get(alpha, i, 1));
-                gsl_matrix_set(counts, i, 2, gsl_matrix_get(alpha, i, 2));
-                gsl_matrix_set(counts, i, 3, gsl_matrix_get(alpha, i, 3));
-        }
+        gsl_matrix_memcpy(alpha, _alpha);
 }
 
 ProductDirichlet::ProductDirichlet(const ProductDirichlet& distribution)
 {
+        alpha  = gsl_matrix_alloc(distribution.alpha->size1, distribution.alpha->size2);
         counts = gsl_matrix_alloc(distribution.counts->size1, distribution.counts->size2);
+        gsl_matrix_memcpy(alpha, distribution.alpha);
         gsl_matrix_memcpy(counts, distribution.counts);
 }
 
 ProductDirichlet::~ProductDirichlet() {
+        gsl_matrix_free(alpha);
         gsl_matrix_free(counts);
 }
 
@@ -135,24 +134,29 @@ double ProductDirichlet::pdf(const word_t& word) const {
                 for (size_t j = 0; j < counts->size1; j++) {
                         double sum = 0;
                         for (size_t k = 0; k < this->counts->size2; k++) {
-                                sum += gsl_matrix_get(this->counts, j, k);
+                                sum += gsl_matrix_get(this->counts, j, k)
+                                     + gsl_matrix_get(this->alpha,  j, k);
                         }
                         switch (word.sequences[word.sequence][word.position+i+j]) {
                         case 'A':
                         case 'a':
-                                result *= gsl_matrix_get(this->counts, j, 0)/sum;
+                                result *= (gsl_matrix_get(this->counts, j, 0)
+                                         + gsl_matrix_get(this->alpha,  j, 0))/sum;
                         break;
                         case 'C':
                         case 'c':
-                                result *= gsl_matrix_get(this->counts, j, 1)/sum;
+                                result *= (gsl_matrix_get(this->counts, j, 1)
+                                         + gsl_matrix_get(this->alpha,  j, 1))/sum;
                         break;
                         case 'G':
                         case 'g':
-                                result *= gsl_matrix_get(this->counts, j, 2)/sum;
+                                result *= (gsl_matrix_get(this->counts, j, 2)
+                                         + gsl_matrix_get(this->alpha,  j, 2))/sum;
                         break;
                         case 'T':
                         case 't':
-                                result *= gsl_matrix_get(this->counts, j, 3)/sum;
+                                result *= (gsl_matrix_get(this->counts, j, 3)
+                                         + gsl_matrix_get(this->alpha,  j, 3))/sum;
                         break;
                         }
                 }
@@ -167,26 +171,51 @@ double ProductDirichlet::log_pdf(const word_t& word) const {
                 for (size_t j = 0; j < counts->size1; j++) {
                         double sum = 0;
                         for (size_t k = 0; k < this->counts->size2; k++) {
-                                sum += gsl_matrix_get(this->counts, j, k);
+                                sum += gsl_matrix_get(this->counts, j, k)
+                                     + gsl_matrix_get(this->alpha,  j, k);
                         }
                         switch (word.sequences[word.sequence][word.position+i+j]) {
                         case 'A':
                         case 'a':
-                                result += logl(gsl_matrix_get(this->counts, j, 0)/sum);
+                                result += logl((gsl_matrix_get(this->counts, j, 0)
+                                              + gsl_matrix_get(this->alpha,  j, 0))/sum);
                         break;
                         case 'C':
                         case 'c':
-                                result += logl(gsl_matrix_get(this->counts, j, 1)/sum);
+                                result += logl((gsl_matrix_get(this->counts, j, 1)
+                                              + gsl_matrix_get(this->alpha,  j, 1))/sum);
                         break;
                         case 'G':
                         case 'g':
-                                result += logl(gsl_matrix_get(this->counts, j, 2)/sum);
+                                result += logl((gsl_matrix_get(this->counts, j, 2)
+                                              + gsl_matrix_get(this->alpha,  j, 2))/sum);
                         break;
                         case 'T':
                         case 't':
-                                result += logl(gsl_matrix_get(this->counts, j, 3)/sum);
+                                result += logl((gsl_matrix_get(this->counts, j, 3)
+                                              + gsl_matrix_get(this->alpha,  j, 3))/sum);
                         break;
                         }
+                }
+        }
+        return result;
+}
+
+//
+// \sum_{x \in X} n_x log(\frac{n_x + \alpha_x}{\sum_{x' \in X} n_{x'} + \alpha_{x'}})
+//
+double ProductDirichlet::log_likelihood() const {
+        double result = 0;
+
+        for (size_t j = 0; j < counts->size1; j++) {
+                double sum = 0;
+                for (size_t k = 0; k < this->counts->size2; k++) {
+                        sum += gsl_matrix_get(this->counts, j, k);
+                }
+                for (size_t k = 0; k < this->counts->size2; k++) {
+                        result += gsl_matrix_get(this->counts, j, k)
+                                * logl((gsl_matrix_get(this->counts, j, k)
+                                      + gsl_matrix_get(this->alpha,  j, k))/sum);
                 }
         }
         return result;

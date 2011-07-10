@@ -190,7 +190,14 @@ DPM::mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[])
 
 double
 DPM::likelihood() const {
-        return 0.0;
+        double result = 0;
+
+        for (ClusterManager::const_iterator it = _cluster_manager->begin();
+             it != _cluster_manager->end(); it++) {
+                Cluster& cluster = **it;
+                result += cluster.distribution().log_likelihood();
+        }
+        return result;
 }
 
 void
