@@ -148,18 +148,18 @@ def plot_sequence(sequence, _posterior, n, pp):
     xn    = max(map(len, sequences))
     yn    = len(sequences)
     yfrom = 0.90
-    yto   = yfrom-yn*0.07
+    yto   = yfrom-yn*0.04
     x, y = np.meshgrid(np.arange(0.01, 1.00,  0.99/xn),
                        np.arange(yfrom, yto, -(yfrom-yto)/len(sequences)))
     for sl, po, p1l, p2l in zip(sequences, posterior, x, y):
         for s, p, p1, p2 in zip(sl, po, p1l, p2l):
             ax.text(p1, p2, str(s), size=10, rotation=0,
-                    ha="center", va="bottom", color=pyplot.cm.jet(p))
+                    ha="center", va="bottom", color=pyplot.cm.jet(p), weight='bold')
     pp.savefig()
 
 def plot_sequences(sequences, posterior, pp):
     for i in range(0, len(sequences)):
-        plot_sequence(sequences[i], posterior[i], i, pp)
+        plot_sequence(sequences[i], posterior[i], i+1, pp)
 
 def plot_result(results_file, sequences_file):
     posterior, likelihood, components = parseConfig(results_file)
