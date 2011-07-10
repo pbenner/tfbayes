@@ -81,6 +81,7 @@ private:
 
         // the raw nucleotide sequences
         std::vector<std::string> sequences;
+        std::vector<std::vector<char> > sequences_coded;
         std::vector<size_t> sequences_length;
         size_t n_sequences;
 

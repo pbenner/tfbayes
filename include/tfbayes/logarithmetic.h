@@ -25,14 +25,14 @@
 static inline
 double logadd(double a, double b)
 {
-        if (a < b) return a == -HUGE_VAL ? b : b + log1pl(expl(a-b));
-        else       return b == -HUGE_VAL ? a : a + log1pl(expl(b-a));
+        if (a < b) return a == -HUGE_VAL ? b : b + log1p(exp(a-b));
+        else       return b == -HUGE_VAL ? a : a + log1p(exp(b-a));
 }
 
 static inline
 double logsub(double a, double b)
 {
-        return b == -HUGE_VAL ? a : a + logl(1-expl(b-a));
+        return b == -HUGE_VAL ? a : a + log(1-exp(b-a));
 }
 
 #endif /* _LOGARITHMETIC_H_ */

@@ -42,11 +42,13 @@ Data::Data(size_t n, char *sequences[])
 {
         for(size_t i = 0; i < n; i++) {
                 size_t m = strlen(sequences[i]);
-                this->sequences.push_back(sequences[i]);
+                this->sequences.push_back(string(sequences[i]));
+                this->sequences_coded.push_back(vector<char>(m, 0));
                 this->sequences_length.push_back(m);
                 for(size_t j = 0; j < m; j++) {
                         element_t e = {i, j};
-                        elements.push_back(e);
+                        this->elements.push_back(e);
+                        this->sequences_coded[i][j] = code_nucleotide(this->sequences[i][j]);
                         _size++;
                 }
         }
@@ -83,7 +85,7 @@ const word_t
 Data::get_word(const element_t& element, size_t length) const {
         const size_t sequence = element.sequence;
         const size_t position = element.position;
-        word_t word = {sequence, position, length, sequences};
+        word_t word = {sequence, position, length, sequences_coded};
 
         return word;
 }
@@ -112,7 +114,7 @@ ostream&
 operator<< (ostream& o, const word_t& word) {
         o << "(" << word.sequence << ":" << word.position << ":";
         for (size_t i = 0; i < word.length; i++) {
-                o << word.sequences[word.sequence][word.position+i];
+                o << decode_nucleotide(word.sequences[word.sequence][word.position+i]);
         }
         o << ")";
 

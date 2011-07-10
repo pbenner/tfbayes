@@ -161,7 +161,7 @@ DPM::mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[])
                 ////////////////////////////////////////////////////////////////
                 // mixture component 1: background model
                 if (tags[i] == bg_cluster_tag) {
-                        weights[i] = logl(1-lambda) + cluster.distribution().log_pdf(word);
+                        weights[i] = log(1-lambda) + cluster.distribution().log_pdf(word);
                         // normalization constant
                         sum = logadd(sum, weights[i]);
                 }
@@ -169,7 +169,7 @@ DPM::mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[])
                 // mixture component 2: dirichlet process for tfbs models
                 else {
                         double num_elements = (double)cluster.size();
-                        weights[i] = logl(lambda*num_elements/dp_norm) + cluster.distribution().log_pdf(word);
+                        weights[i] = log(lambda*num_elements/dp_norm) + cluster.distribution().log_pdf(word);
                         // normalization constant
                         sum = logadd(sum, weights[i]);
                 }
@@ -178,13 +178,13 @@ DPM::mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[])
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         tags[components-1]    = _cluster_manager->get_free_cluster().tag();
-        weights[components-1] = logl(alpha/dp_norm) + (*_cluster_manager)[tags[components-1]].distribution().log_pdf(word);
+        weights[components-1] = log(alpha/dp_norm) + (*_cluster_manager)[tags[components-1]].distribution().log_pdf(word);
         sum = logadd(sum, weights[components-1]);
 
         ////////////////////////////////////////////////////////////////////////
         // normalize
         for (size_t i = 0; i < components; i++) {
-                weights[i] = expl(weights[i] - sum);
+                weights[i] = exp(weights[i] - sum);
         }
 }
 

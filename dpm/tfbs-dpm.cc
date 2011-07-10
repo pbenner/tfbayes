@@ -118,17 +118,6 @@ void wrong_usage(const char *msg)
 
 }
 
-static inline
-int is_nucleotide(char S) {
-        if (S == 'A' || S == 'C' || S == 'G' || S == 'T' ||
-            S == 'a' || S == 'c' || S == 'g' || S == 't') {
-                return 1;
-        }
-        else {
-                return 0;
-        }
-}
-
 static
 void get_max_length(const char* file_name, size_t *lines, size_t *max_len)
 {

@@ -70,24 +70,8 @@ size_t
 ProductDirichlet::remove_observations(const word_t& word) {
         for (size_t i = 0; i < word.length; i += counts.size()) {
                 for (size_t j = 0; j < counts.size(); j++) {
-                        switch (word.sequences[word.sequence][word.position+i+j]) {
-                        case 'A':
-                        case 'a':
-                                counts[j][0]--;
-                        break;
-                        case 'C':
-                        case 'c':
-                                counts[j][1]--;
-                        break;
-                        case 'G':
-                        case 'g':
-                                counts[j][2]--;
-                        break;
-                        case 'T':
-                        case 't':
-                                counts[j][3]--;
-                        break;
-                        }
+                        const char index = word.sequences[word.sequence][word.position+i+j];
+                        counts[j][index]--;
                         counts[j][4]--;
                 }
         }
@@ -98,24 +82,8 @@ size_t
 ProductDirichlet::add_observations(const word_t& word) {
         for (size_t i = 0; i < word.length; i += counts.size()) {
                 for (size_t j = 0; j < counts.size(); j++) {
-                        switch (word.sequences[word.sequence][word.position+i+j]) {
-                        case 'A':
-                        case 'a':
-                                counts[j][0]++;
-                        break;
-                        case 'C':
-                        case 'c':
-                                counts[j][1]++;
-                        break;
-                        case 'G':
-                        case 'g':
-                                counts[j][2]++;
-                        break;
-                        case 'T':
-                        case 't':
-                                counts[j][3]++;
-                        break;
-                        }
+                        const char index = word.sequences[word.sequence][word.position+i+j];
+                        counts[j][index]++;
                         counts[j][4]++;
                 }
         }
@@ -127,24 +95,8 @@ double ProductDirichlet::pdf(const word_t& word) const {
 
         for (size_t i = 0; i < word.length; i += counts.size()) {
                 for (size_t j = 0; j < counts.size(); j++) {
-                        switch (word.sequences[word.sequence][word.position+i+j]) {
-                        case 'A':
-                        case 'a':
-                                result *= (counts[j][0]+alpha[j][0])/(counts[j][4]+alpha[j][4]);
-                        break;
-                        case 'C':
-                        case 'c':
-                                result *= (counts[j][1]+alpha[j][1])/(counts[j][4]+alpha[j][4]);
-                        break;
-                        case 'G':
-                        case 'g':
-                                result *= (counts[j][2]+alpha[j][2])/(counts[j][4]+alpha[j][4]);
-                        break;
-                        case 'T':
-                        case 't':
-                                result *= (counts[j][3]+alpha[j][3])/(counts[j][4]+alpha[j][4]);
-                        break;
-                        }
+                        const char index = word.sequences[word.sequence][word.position+i+j];
+                        result *= (counts[j][index]+alpha[j][index])/(counts[j][4]+alpha[j][4]);
                 }
         }
         return result;
@@ -155,24 +107,8 @@ double ProductDirichlet::log_pdf(const word_t& word) const {
 
         for (size_t i = 0; i < word.length; i += counts.size()) {
                 for (size_t j = 0; j < counts.size(); j++) {
-                        switch (word.sequences[word.sequence][word.position+i+j]) {
-                        case 'A':
-                        case 'a':
-                                result += logl((counts[j][0]+alpha[j][0])/(counts[j][4]+alpha[j][4]));
-                        break;
-                        case 'C':
-                        case 'c':
-                                result += logl((counts[j][1]+alpha[j][1])/(counts[j][4]+alpha[j][4]));
-                        break;
-                        case 'G':
-                        case 'g':
-                                result += logl((counts[j][2]+alpha[j][2])/(counts[j][4]+alpha[j][4]));
-                        break;
-                        case 'T':
-                        case 't':
-                                result += logl((counts[j][3]+alpha[j][3])/(counts[j][4]+alpha[j][4]));
-                        break;
-                        }
+                        const char index = word.sequences[word.sequence][word.position+i+j];
+                        result += log((counts[j][index]+alpha[j][index])/(counts[j][4]+alpha[j][4]));
                 }
         }
         return result;
@@ -186,7 +122,7 @@ double ProductDirichlet::log_likelihood() const {
 
         for (size_t j = 0; j < counts.size(); j++) {
                 for (size_t k = 0; k < counts[j].size(); k++) {
-                        result += counts[j][k]*logl((counts[j][k]+alpha[j][k])/(counts[j][4]+alpha[j][4]));
+                        result += counts[j][k]*log((counts[j][k]+alpha[j][k])/(counts[j][4]+alpha[j][4]));
                 }
         }
         return result;
