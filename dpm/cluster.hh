@@ -26,6 +26,7 @@
 #include <vector>
 #include <iostream>
 
+#include <clonable.hh>
 #include <datatypes.hh>
 #include <distribution.hh>
 #include <observer.hh>

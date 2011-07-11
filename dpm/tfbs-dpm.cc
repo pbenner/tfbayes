@@ -31,8 +31,10 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_matrix.h>
 
-#include <sampler.hh>
 #include <init.hh>
+#include <sampler.hh>
+#include <pmcmc.hh>
+
 #include <tfbayes/exception.h>
 
 using namespace std;
@@ -43,6 +45,7 @@ typedef struct _options_t {
         size_t tfbs_length;
         double alpha;
         double lambda;
+        size_t population_size;
         string save;
         _options_t()
                 : samples(1000),
@@ -50,6 +53,7 @@ typedef struct _options_t {
                   tfbs_length(10),
                   alpha(0.05),
                   lambda(0.01),
+                  population_size(2),
                   save()
                 { }
 } options_t;
@@ -235,9 +239,11 @@ void run_dpm(const char* file_name)
         Data* data = new Data(lines, sequences);
         DPM*  gdpm = new DPM(options.alpha, options.lambda, options.tfbs_length, *data);
         GibbsSampler* sampler = new GibbsSampler(*gdpm, *data);
+        PopulationMCMC* pmcmc = new PopulationMCMC(*sampler, options.population_size);
 
         // execute the sampler
-        sampler->sample(options.samples, options.burnin);
+//        sampler->sample(options.samples, options.burnin);
+        pmcmc->sample(options.samples, options.burnin);
 
         // save result
         if (options.save == "") {
@@ -254,6 +260,7 @@ void run_dpm(const char* file_name)
         free(data);
         free(gdpm);
         free(sampler);
+        free(pmcmc);
         free_sequences(sequences);
 }
 

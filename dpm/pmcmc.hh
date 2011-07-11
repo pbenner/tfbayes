@@ -15,44 +15,33 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef SAMPLER_HH
-#define SAMPLER_HH
+#ifndef PMCMC_HH
+#define PMCMC_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <clonable.hh>
-#include <datatypes.hh>
-#include <dpm.hh>
+#include <vector>
 
-class Sampler : public clonable {
+#include <sampler.hh>
+
+class PopulationMCMC : public Sampler {
 public:
-        virtual const sampling_history_t& sampling_history() const = 0;
-        virtual void sample(size_t n, size_t burnin) = 0;
-};
+         PopulationMCMC(const Sampler& sampler, size_t n);
+         PopulationMCMC(const PopulationMCMC& pmcmc);
+        ~PopulationMCMC();
 
-class GibbsSampler : public Sampler {
-public:
-         GibbsSampler(DPM& dpm, const Data& data);
-         GibbsSampler(const GibbsSampler& sampler);
-        ~GibbsSampler();
+        PopulationMCMC* clone() const;
 
-        GibbsSampler* clone() const;
         const sampling_history_t& sampling_history() const;
         void sample(size_t n, size_t burnin);
+        size_t size() const;
 
 private:
-        // private methods
-        bool _sample(const element_t& element);
-
-        // the mixture model
-        DPM& _dpm;
-        const Data& _data;
-
-        // gibbs sampler history
-        size_t _sampling_steps;
+        std::vector<Sampler*> _population;
+        const size_t _size;
         sampling_history_t& _sampling_history;
 };
 
-#endif /* SAMPLER_HH */
+#endif /* PMCMC_HH */

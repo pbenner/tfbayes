@@ -49,7 +49,10 @@ Cluster::Cluster(Distribution* distribution, cluster_tag_t tag, Observer<cluster
 }
 
 Cluster::Cluster(const Cluster& cluster)
-        : _distribution(cluster._distribution->clone()), _tag(cluster._tag), _size(cluster._size)
+        : _distribution(cluster._distribution->clone()),
+          _tag(cluster._tag),
+          _destructible(cluster._destructible),
+          _size(cluster._size)
 {
         set_observer(cluster.observer);
 }

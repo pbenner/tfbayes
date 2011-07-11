@@ -46,6 +46,25 @@ ClusterManager::~ClusterManager() {
         delete(default_distribution);
 }
 
+ClusterManager::ClusterManager(const ClusterManager& cm)
+        : used_clusters_size(cm.used_clusters_size),
+          free_clusters_size(cm.free_clusters_size),
+          cluster_assignments(cm.cluster_assignments),
+          default_distribution(cm.default_distribution->clone())
+{
+        for (size_t i = 0; i < cm.clusters.size(); i++) {
+                Cluster* c = new Cluster(*cm.clusters[i]);
+                c->set_observer(this);
+                clusters.push_back(c);
+                if (c->size() == 0 && c->destructible()) {
+                        free_clusters.push_back(c);
+                }
+                else {
+                        used_clusters.push_back(c);
+                }
+        }
+}
+
 // add a cluster with specific distribution which will
 // not be destructible (for other components of the mixture model)
 cluster_tag_t
@@ -155,7 +174,7 @@ ClusterManager::operator[](element_t element) const {
 }
 
 size_t
-ClusterManager::size() {
+ClusterManager::size() const {
         return used_clusters_size;
 }
 

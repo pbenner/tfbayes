@@ -26,18 +26,33 @@
 using namespace std;
 
 GibbsSampler::GibbsSampler(DPM& dpm, const Data& data)
-        : _dpm(dpm), _data(data), _sampling_steps(0),
+        : _dpm(*dpm.clone()), _data(data), _sampling_steps(0),
           _sampling_history(*new sampling_history_t())
 {
         // for sampling statistics
         _sampling_history.switches.push_back(0);
         _sampling_history.components.push_back(0);
-        _sampling_history.likelihood.push_back(dpm.likelihood());
+        _sampling_history.likelihood.push_back(_dpm.likelihood());
+}
+
+GibbsSampler::GibbsSampler(const GibbsSampler& sampler)
+        : _dpm(*sampler._dpm.clone()), _data(sampler._data), _sampling_steps(0),
+          _sampling_history(*new sampling_history_t())
+{
+        // for sampling statistics
+        _sampling_history.switches.push_back(0);
+        _sampling_history.components.push_back(0);
+        _sampling_history.likelihood.push_back(_dpm.likelihood());
 }
 
 GibbsSampler::~GibbsSampler()
 {
         delete(&_sampling_history);
+}
+
+GibbsSampler*
+GibbsSampler::clone() const {
+        return new GibbsSampler(*this);
 }
 
 bool

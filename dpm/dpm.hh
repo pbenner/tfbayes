@@ -28,10 +28,13 @@
 #include <clustermanager.hh>
 #include <distribution.hh>
 
-class DPM {
+class DPM : public clonable {
 public:
          DPM(double alpha, double lambda, size_t tfbs_length, const Data& data);
+//         DPM(const DPM& dpm);
         ~DPM();
+
+        DPM* clone() const;
 
         // type definitions
         ////////////////////////////////////////////////////////////////////////
@@ -40,15 +43,15 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-              Cluster& operator[](cluster_tag_t c)       { return (*_cluster_manager)[c]; }
-        const Cluster& operator[](cluster_tag_t c) const { return (*_cluster_manager)[c]; }
+              Cluster& operator[](cluster_tag_t c)       { return _cluster_manager[c]; }
+        const Cluster& operator[](cluster_tag_t c) const { return _cluster_manager[c]; }
 
         friend std::ostream& operator<<(std::ostream& o, const DPM& dpm);
 
         // methods
         ////////////////////////////////////////////////////////////////////////
         size_t mixture_components() const;
-        void mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[]) const;
+        void mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[]);
         const std::vector<std::vector<double> >& posterior() const {
                 return _posterior;
         }
@@ -56,7 +59,7 @@ public:
                 return _data;
         }
         const ClusterManager& cluster_manager() const {
-                return *_cluster_manager;
+                return _cluster_manager;
         }
         void add_word(const word_t& word, cluster_tag_t tag);
         void remove_word(const word_t& word, cluster_tag_t tag);
@@ -71,9 +74,13 @@ public:
         static const size_t NUCLEOTIDES = 4;
 
 private:
+        // priors
+        gsl_matrix* bg_alpha;
+        gsl_matrix* tfbs_alpha;
+
         // data and clusters
         const Data& _data;
-        ClusterManager* _cluster_manager;
+        ClusterManager _cluster_manager;
 
         // tags of special clusters
         cluster_tag_t bg_cluster_tag;
@@ -81,10 +88,6 @@ private:
         // parameters
         double alpha;
         double lambda;
-
-        // priors
-        gsl_matrix* bg_alpha;
-        gsl_matrix* tfbs_alpha;
 
         // record start positions of tfbs
         tfbs_start_positions_t tfbs_start_positions;
@@ -94,6 +97,19 @@ private:
 
         // keep track of the number of transcription factor binding sites
         size_t num_tfbs;
+
+        // standard priors
+        static gsl_matrix* init_alpha(size_t length) {
+                gsl_matrix* bg_alpha = gsl_matrix_alloc(length, DPM::NUCLEOTIDES);
+
+                // initialize prior for the background model
+                for (size_t i = 0; i < length; i++) {
+                        for (size_t j = 0; j < DPM::NUCLEOTIDES; j++) {
+                                gsl_matrix_set(bg_alpha, i, j, 1);
+                        }
+                }
+                return bg_alpha;
+        }
 };
 
 #endif /* DPM_HH */

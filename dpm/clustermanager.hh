@@ -38,6 +38,7 @@
 class ClusterManager : public Observer<cluster_event_t> {
 public:
          ClusterManager(const Data& data, Distribution* distribution);
+         ClusterManager(const ClusterManager& cm);
         ~ClusterManager();
 
         // iterators
@@ -76,7 +77,7 @@ public:
         cluster_tag_t add_cluster(Distribution* distribution);
         cluster_tag_t get_cluster_tag(const element_t& element) const;
         Cluster& get_free_cluster();
-        size_t size();
+        size_t size() const;
 
 private:
         std::vector<Cluster*> clusters;
