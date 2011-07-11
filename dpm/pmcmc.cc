@@ -23,12 +23,13 @@
 
 using namespace std;
 
-PopulationMCMC::PopulationMCMC(const Sampler& sampler, size_t n)
+PopulationMCMC::PopulationMCMC(Sampler* sampler, size_t n)
         : _population(n, NULL), _size(n),
           _sampling_history(*new sampling_history_t())
 {
-        for (size_t i = 0; i < _size; i++) {
-                _population[i] = (Sampler*)sampler.clone();
+        _population[0] = sampler;
+        for (size_t i = 1; i < _size; i++) {
+                _population[i] = (Sampler*)sampler->clone();
         }
 }
 

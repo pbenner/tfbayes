@@ -239,7 +239,7 @@ void run_dpm(const char* file_name)
         Data* data = new Data(lines, sequences);
         DPM*  gdpm = new DPM(options.alpha, options.lambda, options.tfbs_length, *data);
         GibbsSampler* sampler = new GibbsSampler(*gdpm, *data);
-        PopulationMCMC* pmcmc = new PopulationMCMC(*sampler, options.population_size);
+        PopulationMCMC* pmcmc = new PopulationMCMC(sampler, options.population_size);
 
         // execute the sampler
 //        sampler->sample(options.samples, options.burnin);
@@ -258,8 +258,6 @@ void run_dpm(const char* file_name)
 
         // free memory
         free(data);
-        free(gdpm);
-        free(sampler);
         free(pmcmc);
         free_sequences(sequences);
 }

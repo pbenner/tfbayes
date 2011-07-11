@@ -26,7 +26,7 @@
 using namespace std;
 
 GibbsSampler::GibbsSampler(DPM& dpm, const Data& data)
-        : _dpm(*dpm.clone()), _data(data), _sampling_steps(0),
+        : _dpm(dpm), _data(data), _sampling_steps(0),
           _sampling_history(*new sampling_history_t())
 {
         // for sampling statistics
@@ -47,6 +47,7 @@ GibbsSampler::GibbsSampler(const GibbsSampler& sampler)
 
 GibbsSampler::~GibbsSampler()
 {
+        delete(&_dpm);
         delete(&_sampling_history);
 }
 
