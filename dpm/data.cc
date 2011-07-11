@@ -42,7 +42,7 @@ Data::Data(size_t n, char *sequences[])
 {
         for(size_t i = 0; i < n; i++) {
                 size_t m = strlen(sequences[i]);
-                this->sequences.push_back(string(sequences[i]));
+                this->sequences.push_back(sequences[i]);
                 try {
                         this->sequences_coded.push_back(code_nucleotide_sequence(sequences[i]));
                 }
