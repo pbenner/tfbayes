@@ -89,7 +89,7 @@ vector<char> code_nucleotide_sequence(const char* sequence) throw(InvalidNucleot
         for (size_t i = 0; i < n; i++) {
                 char c = code_nucleotide(sequence[i]);
                 if (c == -1) {
-                        throw InvalidNucleotide("code_nucleotide_sequence()", sequence[i], string(sequence));
+                        throw InvalidNucleotide("code_nucleotide_sequence()", sequence[i], sequence);
                 }
                 coded_sequence[i] = c;
         }
