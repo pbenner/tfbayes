@@ -19,6 +19,8 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <assert.h>
+
 #include <pmcmc.hh>
 
 using namespace std;
@@ -27,6 +29,8 @@ PopulationMCMC::PopulationMCMC(Sampler* sampler, size_t n)
         : _population(n, NULL), _size(n),
           _sampling_history(*new sampling_history_t())
 {
+        assert(n >= 1);
+
         _population[0] = sampler;
         for (size_t i = 1; i < _size; i++) {
                 _population[i] = (Sampler*)sampler->clone();
