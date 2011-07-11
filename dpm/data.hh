@@ -28,6 +28,7 @@
 
 #include <gsl/gsl_matrix.h>
 
+#include <code.hh>
 #include <datatypes.hh>
 
 class Data {

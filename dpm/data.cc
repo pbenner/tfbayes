@@ -43,7 +43,14 @@ Data::Data(size_t n, char *sequences[])
         for(size_t i = 0; i < n; i++) {
                 size_t m = strlen(sequences[i]);
                 this->sequences.push_back(string(sequences[i]));
-                this->sequences_coded.push_back(vector<char>(m, 0));
+                try {
+                        this->sequences_coded.push_back(code_nucleotide_sequence(sequences[i]));
+                }
+                catch (const InvalidNucleotide& i) {
+                        cout << "Exception: " << i.what() << " \'" << i.nucleotide() << "\'"
+                             << " in sequence: " << i.sequence() << endl;
+                        exit(EXIT_FAILURE);
+                }
                 this->sequences_length.push_back(m);
                 for(size_t j = 0; j < m; j++) {
                         element_t e = {i, j};

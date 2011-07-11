@@ -172,7 +172,7 @@ char ** alloc_sequences(size_t n, size_t m) {
         size_t i;
 
         for (i = 0; i < n; i++) {
-                sequences[i] = (char *)calloc(m, sizeof(char));
+                sequences[i] = (char *)calloc(m+1, sizeof(char));
         }
         sequences[i] = NULL;
 
