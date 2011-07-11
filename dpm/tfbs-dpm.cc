@@ -239,15 +239,17 @@ void run_dpm(const char* file_name)
         Data* data = new Data(lines, sequences);
         DPM*  gdpm = new DPM(options.alpha, options.lambda, options.tfbs_length, *data);
         GibbsSampler* sampler = new GibbsSampler(*gdpm, *data);
+        sampler->sample(10, 10);
         PopulationMCMC* pmcmc = new PopulationMCMC(sampler, options.population_size);
 
         // execute the sampler
-//        sampler->sample(options.samples, options.burnin);
         pmcmc->sample(options.samples, options.burnin);
 
         // save result
         if (options.save == "") {
-                save_result(cout, *gdpm, *sampler);
+//                save_result(cout, *gdpm, *sampler);
+                save_result(cout, (DPM&)(*pmcmc)[0].model(), (GibbsSampler&)(*pmcmc)[0]);
+                save_result(cout, (DPM&)(*pmcmc)[1].model(), (GibbsSampler&)(*pmcmc)[1]);
         }
         else {
                 ofstream file;

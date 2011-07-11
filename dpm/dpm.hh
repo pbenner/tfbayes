@@ -28,10 +28,12 @@
 #include <clustermanager.hh>
 #include <distribution.hh>
 
-class DPM : public clonable {
+class Model {
+};
+
+class DPM : public Model, public clonable {
 public:
          DPM(double alpha, double lambda, size_t tfbs_length, const Data& data);
-//         DPM(const DPM& dpm);
         ~DPM();
 
         DPM* clone() const;

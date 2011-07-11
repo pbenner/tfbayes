@@ -37,12 +37,8 @@ GibbsSampler::GibbsSampler(DPM& dpm, const Data& data)
 
 GibbsSampler::GibbsSampler(const GibbsSampler& sampler)
         : _dpm(*sampler._dpm.clone()), _data(sampler._data), _sampling_steps(0),
-          _sampling_history(*new sampling_history_t())
+          _sampling_history(*new sampling_history_t(sampler._sampling_history))
 {
-        // for sampling statistics
-        _sampling_history.switches.push_back(0);
-        _sampling_history.components.push_back(0);
-        _sampling_history.likelihood.push_back(_dpm.likelihood());
 }
 
 GibbsSampler::~GibbsSampler()
@@ -85,6 +81,11 @@ GibbsSampler::_sample(const element_t& element) {
         _dpm.add_word(word, new_cluster_tag);
 
         return old_cluster_tag != new_cluster_tag;
+}
+
+const DPM&
+GibbsSampler::model() const {
+        return _dpm;
 }
 
 const sampling_history_t&

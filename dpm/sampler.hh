@@ -28,8 +28,9 @@
 
 class Sampler : public clonable {
 public:
-        virtual const sampling_history_t& sampling_history() const = 0;
         virtual void sample(size_t n, size_t burnin) = 0;
+        virtual const Model& model() const = 0;
+        virtual const sampling_history_t& sampling_history() const = 0;
 };
 
 class GibbsSampler : public Sampler {
@@ -39,8 +40,10 @@ public:
         ~GibbsSampler();
 
         GibbsSampler* clone() const;
-        const sampling_history_t& sampling_history() const;
+
         void sample(size_t n, size_t burnin);
+        const DPM& model() const;
+        const sampling_history_t& sampling_history() const;
 
 private:
         // private methods

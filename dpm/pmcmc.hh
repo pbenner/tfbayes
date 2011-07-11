@@ -34,14 +34,25 @@ public:
 
         PopulationMCMC* clone() const;
 
+        // operators
+        ////////////////////////////////////////////////////////////////////////
+              Sampler& operator[](size_t i)       { return *_population[i]; }
+        const Sampler& operator[](size_t i) const { return *_population[i]; }
+
+        // methods
+        ////////////////////////////////////////////////////////////////////////
         const sampling_history_t& sampling_history() const;
         void sample(size_t n, size_t burnin);
         size_t size() const;
+        const Model& model() const {
+                return _model;
+        }
 
 private:
         std::vector<Sampler*> _population;
         const size_t _size;
         sampling_history_t& _sampling_history;
+        Model _model;
 };
 
 #endif /* PMCMC_HH */
