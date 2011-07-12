@@ -56,8 +56,9 @@ char code_nucleotide(char a)
                 return 3;
         break;
         default:
-                return -1;
+                break;
         }
+        return -1;
 }
 
 char decode_nucleotide(char a)
@@ -75,6 +76,8 @@ char decode_nucleotide(char a)
         case 3:
                 return 't';
         break;
+        default:
+                break;
         }
         std::cerr << "decode_nucleotide(): internal error.\n"
                   << std::endl;

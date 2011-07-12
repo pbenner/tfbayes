@@ -37,9 +37,9 @@
 
 class ClusterManager : public Observer<cluster_event_t> {
 public:
-         ClusterManager(const Data& data, Distribution* distribution);
-         ClusterManager(const ClusterManager& cm);
-        ~ClusterManager();
+        ClusterManager(const Data& data, Distribution* distribution);
+        ClusterManager(const ClusterManager& cm);
+        virtual ~ClusterManager();
 
         // iterators
         ////////////////////////////////////////////////////////////////////////

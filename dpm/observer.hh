@@ -30,6 +30,7 @@ template <class E> class Observed;
 template <class E>
 class Observer {
 public:
+        virtual ~Observer() {}
         virtual void update(Observed<E>* observed, E event) = 0;
         virtual void update(Observed<E>* observed, E event, const word_t& word) = 0;
 };
