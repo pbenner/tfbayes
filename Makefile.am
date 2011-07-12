@@ -4,27 +4,31 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = libexception include humandb dpm
 
-EXTRA_DIST = hdb-load-upstream.in hdb-load-chrom.in hdb-read-upstream.in hdb-read-chrom.in hdb-search-upstream.in hdb-statistics-chrom.in hdb-statistics-upstream.in
+EXTRA_DIST = hdb-load-upstream.in hdb-load-chrom.in hdb-read-upstream.in hdb-read-chrom.in hdb-search-upstream.in hdb-search-chrom.in hdb-statistics-chrom.in hdb-statistics-upstream.in
 
-dist_bin_SCRIPTS = hdb-load-upstream hdb-load-chrom hdb-read-upstream hdb-read-chrom hdb-search-upstream hdb-statistics-chrom hdb-statistics-upstream
+dist_bin_SCRIPTS = hdb-load-upstream hdb-load-chrom hdb-read-upstream hdb-read-chrom hdb-search-upstream hdb-search-chrom hdb-statistics-chrom hdb-statistics-upstream
 
 do_subst = sed -e 's,[@]pythondir[@],$(pythondir),g'
-
-hdb-load-upstream: hdb-load-upstream.in Makefile
-	$(do_subst) < $(srcdir)/hdb-load-upstream.in > hdb-load-upstream
-	chmod +x hdb-load-upstream
 
 hdb-load-chrom: hdb-load-chrom.in Makefile
 	$(do_subst) < $(srcdir)/hdb-load-chrom.in > hdb-load-chrom
 	chmod +x hdb-load-chrom
 
-hdb-read-upstream: hdb-read-upstream.in Makefile
-	$(do_subst) < $(srcdir)/hdb-read-upstream.in > hdb-read-upstream
-	chmod +x hdb-read-upstream
+hdb-load-upstream: hdb-load-upstream.in Makefile
+	$(do_subst) < $(srcdir)/hdb-load-upstream.in > hdb-load-upstream
+	chmod +x hdb-load-upstream
 
 hdb-read-chrom: hdb-read-chrom.in Makefile
 	$(do_subst) < $(srcdir)/hdb-read-chrom.in > hdb-read-chrom
 	chmod +x hdb-read-chrom
+
+hdb-read-upstream: hdb-read-upstream.in Makefile
+	$(do_subst) < $(srcdir)/hdb-read-upstream.in > hdb-read-upstream
+	chmod +x hdb-read-upstream
+
+hdb-search-chrom: hdb-search-chrom.in Makefile
+	$(do_subst) < $(srcdir)/hdb-search-chrom.in > hdb-search-chrom
+	chmod +x hdb-search-chrom
 
 hdb-search-upstream: hdb-search-upstream.in Makefile
 	$(do_subst) < $(srcdir)/hdb-search-upstream.in > hdb-search-upstream
