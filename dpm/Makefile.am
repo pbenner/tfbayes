@@ -10,6 +10,9 @@ tfbs_dpm_LDADD  += libdpm.la
 tfbs_dpm_LDADD  += $(LIB_PTHREAD)
 tfbs_dpm_LDFLAGS = -static
 
+## scripts
+dist_bin_SCRIPTS = tfbs-plot
+
 ## dpm library
 lib_LTLIBRARIES  = libdpm.la
 libdpm_la_SOURCES = code.cc code.hh data.cc data.hh dpm.cc dpm.hh clustermanager.cc clustermanager.hh cluster.cc cluster.hh distribution.cc distribution.hh pmcmc.cc pmcmc.hh sampler.cc sampler.hh init.cc init.hh interface.cc interface.hh
