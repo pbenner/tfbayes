@@ -27,7 +27,7 @@ using namespace std;
 
 PopulationMCMC::PopulationMCMC(Sampler* sampler, size_t n)
         : _population(n, NULL), _size(n),
-          _sampling_history(*new sampling_history_t())
+          _sampling_history(NULL)
 {
         assert(n >= 1);
 
@@ -39,7 +39,7 @@ PopulationMCMC::PopulationMCMC(Sampler* sampler, size_t n)
 
 PopulationMCMC::PopulationMCMC(const PopulationMCMC& pmcmc)
         : _population(pmcmc._size, NULL), _size(pmcmc._size),
-          _sampling_history(*new sampling_history_t())
+          _sampling_history(NULL)
 {
         for (size_t i = 0; i < _size; i++) {
                 _population[i] = (Sampler*)pmcmc._population[i]->clone();
@@ -61,14 +61,36 @@ PopulationMCMC::clone() const {
 void
 PopulationMCMC::sample(size_t n, size_t burnin)
 {
+        // sample
         for (size_t i = 0; i < _size; i++) {
                 _population[i]->sample(n, burnin);
+        }
+
+        // update sampling history
+        if (_sampling_history != NULL) {
+                delete(_sampling_history);
+        }
+        _sampling_history = new sampling_history_t();
+        for (size_t i = 0; i < _size; i++) {
+                _sampling_history->switches.push_back(_population[i]->sampling_history().switches[0]);
+                _sampling_history->likelihood.push_back(_population[i]->sampling_history().likelihood[0]);
+                _sampling_history->components.push_back(_population[i]->sampling_history().components[0]);
         }
 }
 
 const sampling_history_t&
 PopulationMCMC::sampling_history() const {
-        return _sampling_history;
+        return *_sampling_history;
+}
+
+const Model&
+PopulationMCMC::model() const {
+        return _model;
+}
+
+const posterior_t&
+PopulationMCMC::posterior() const {
+        return _population[0]->posterior();
 }
 
 size_t

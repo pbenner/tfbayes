@@ -208,6 +208,21 @@ DPM::update_posterior(size_t sampling_steps) {
         }
 }
 
+const posterior_t&
+DPM::posterior() const {
+        return _posterior;
+}
+
+const Data&
+DPM::data() const {
+        return _data;
+}
+
+const ClusterManager&
+DPM::cluster_manager() const {
+        return _cluster_manager;
+}
+
 // misc methods
 ////////////////////////////////////////////////////////////////////////////////
 

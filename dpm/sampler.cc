@@ -30,9 +30,12 @@ GibbsSampler::GibbsSampler(DPM& dpm, const Data& data)
           _sampling_history(*new sampling_history_t())
 {
         // for sampling statistics
-        _sampling_history.switches.push_back(0);
-        _sampling_history.components.push_back(0);
-        _sampling_history.likelihood.push_back(_dpm.likelihood());
+        _sampling_history.switches.push_back(vector<double>());
+        _sampling_history.likelihood.push_back(vector<double>());
+        _sampling_history.components.push_back(vector<size_t>());
+        _sampling_history.switches[0].push_back(0);
+        _sampling_history.likelihood[0].push_back(_dpm.likelihood());
+        _sampling_history.components[0].push_back(0);
 }
 
 GibbsSampler::GibbsSampler(const GibbsSampler& sampler)
@@ -93,6 +96,11 @@ GibbsSampler::sampling_history() const {
         return _sampling_history;
 }
 
+const posterior_t&
+GibbsSampler::posterior() const {
+        return _dpm.posterior();
+}
+
 void
 GibbsSampler::sample(size_t n, size_t burnin) {
         // burn in sampling
@@ -115,9 +123,9 @@ GibbsSampler::sample(size_t n, size_t burnin) {
                         bool switched = _sample(**it);
                         if (switched) sum+=1;
                 }
-                _sampling_history.likelihood.push_back(_dpm.likelihood());
-                _sampling_history.components.push_back(_dpm.mixture_components());
-                _sampling_history.switches.push_back(sum/(double)_data.size());
+                _sampling_history.likelihood[0].push_back(_dpm.likelihood());
+                _sampling_history.components[0].push_back(_dpm.mixture_components());
+                _sampling_history.switches[0].push_back(sum/(double)_data.size());
                 _dpm.update_posterior(_sampling_steps);
                 _sampling_steps++;
         }

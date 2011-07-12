@@ -27,12 +27,7 @@
 
 #include <getopt.h>
 
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_matrix.h>
-
 #include <init.hh>
-#include <sampler.hh>
 #include <pmcmc.hh>
 
 #include <tfbayes/exception.h>
@@ -53,20 +48,21 @@ typedef struct _options_t {
                   tfbs_length(10),
                   alpha(0.05),
                   lambda(0.01),
-                  population_size(2),
+                  population_size(1),
                   save()
                 { }
 } options_t;
 
 ostream&
 operator<<(std::ostream& o, const _options_t& options) {
-        o << "Options:"          << endl
-          << "-> samples     = " << options.samples     << endl
-          << "-> burnin      = " << options.burnin      << endl
-          << "-> tfbs_length = " << options.tfbs_length << endl
-          << "-> alpha       = " << options.alpha       << endl
-          << "-> lambda      = " << options.lambda      << endl
-          << "-> save        = " << options.save        << endl;
+        o << "Options:"              << endl
+          << "-> samples         = " << options.samples         << endl
+          << "-> burnin          = " << options.burnin          << endl
+          << "-> tfbs_length     = " << options.tfbs_length     << endl
+          << "-> alpha           = " << options.alpha           << endl
+          << "-> population_size = " << options.population_size << endl
+          << "-> lambda          = " << options.lambda          << endl
+          << "-> save            = " << options.save            << endl;
         return o;
 }
 
@@ -75,7 +71,6 @@ static options_t options;
 static
 void print_usage(char *pname, FILE *fp)
 {
-
 	(void)fprintf(fp,
                       "\nUsage: %s [OPTION]... FILE\n\n", pname);
 	(void)fprintf(fp,
@@ -83,29 +78,23 @@ void print_usage(char *pname, FILE *fp)
                       "   --alpha=ALPHA             - alpha parameter for the dirichlet process\n"
                       "   --lambda=LAMBDA           - lambda mixture weight\n"
                       "   --tfbs-length=TFBS_LENGTH - length of the tfbs\n"
+                      "   --population-size=N       - number of parallel samplers\n"
                       "\n"
                       "   --samples=SAMPLES:BURN_IN - number of samples\n"
                       "   --save=FILE_NAME          - save posterior to file\n"
                       "\n"
                       "   --help	            - print help and exit\n"
                       "   --version	            - print version information and exit\n\n");
-
-	return;
-
 }
 
 static
 void print_version(FILE *fp)
 {
-
 	(void)fprintf(fp,
                       "This is free software, and you are welcome to redistribute it\n"
                       "under certain conditions; see the source for copying conditions.\n"
                       "There is NO warranty; not even for MERCHANTABILITY or FITNESS\n"
                       "FOR A PARTICULAR PURPOSE.\n\n");
-
-	return;
-
 }
 
 static
@@ -143,7 +132,6 @@ void get_max_length(const char* file_name, size_t *lines, size_t *max_len)
                         (*lines)++;
                 }
         }
-
 }
 
 static
@@ -192,9 +180,9 @@ void free_sequences(char **sequences)
 }
 
 static
-void save_result(ostream& file, const DPM& gdpm, const GibbsSampler& sampler)
+void save_result(ostream& file, const Sampler& sampler)
 {
-        const DPM::posterior_t& posterior = gdpm.posterior();
+        const posterior_t& posterior      = sampler.posterior();
         const sampling_history_t& history = sampler.sampling_history();
         file.setf(ios::showpoint);
 
@@ -207,19 +195,29 @@ void save_result(ostream& file, const DPM& gdpm, const GibbsSampler& sampler)
                 }
                 file << endl;
         }
-        file << "components =" << endl << "\t";
+        file << "components =" << endl;
         for (size_t i = 0; i < history.components.size(); i++) {
-                file << history.components[i] << " ";
+                file << "\t";
+                for (size_t j = 0; j < history.components[i].size(); j++) {
+                        file << history.components[i][j] << " ";
+                }
+                file << endl;
         }
-        file << endl;
-        file << "switches =" << endl << "\t";
+        file << "switches =" << endl;
         for (size_t i = 0; i < history.switches.size(); i++) {
-                file << history.switches[i] << " ";
+                file << "\t";
+                for (size_t j = 0; j < history.switches[i].size(); j++) {
+                        file << history.switches[i][j] << " ";
+                }
+                file << endl;
         }
-        file << endl;
-        file << "likelihood =" << endl << "\t";
+        file << "likelihood =" << endl;
         for (size_t i = 0; i < history.likelihood.size(); i++) {
-                file << history.likelihood[i] << " ";
+                file << "\t";
+                for (size_t j = 0; j < history.likelihood[i].size(); j++) {
+                        file << history.likelihood[i][j] << " ";
+                }
+                file << endl;
         }
         file << endl;
 }
@@ -239,7 +237,6 @@ void run_dpm(const char* file_name)
         Data* data = new Data(lines, sequences);
         DPM*  gdpm = new DPM(options.alpha, options.lambda, options.tfbs_length, *data);
         GibbsSampler* sampler = new GibbsSampler(*gdpm, *data);
-        sampler->sample(10, 10);
         PopulationMCMC* pmcmc = new PopulationMCMC(sampler, options.population_size);
 
         // execute the sampler
@@ -247,14 +244,12 @@ void run_dpm(const char* file_name)
 
         // save result
         if (options.save == "") {
-//                save_result(cout, *gdpm, *sampler);
-                save_result(cout, (DPM&)(*pmcmc)[0].model(), (GibbsSampler&)(*pmcmc)[0]);
-                save_result(cout, (DPM&)(*pmcmc)[1].model(), (GibbsSampler&)(*pmcmc)[1]);
+                save_result(cout, *pmcmc);
         }
         else {
                 ofstream file;
                 file.open(options.save.c_str());
-                save_result(file, *gdpm, *sampler);
+                save_result(file, *pmcmc);
                 file.close();
         }
 
@@ -265,14 +260,14 @@ void run_dpm(const char* file_name)
 }
 
 static
-string token(const string& str, size_t i) {
+vector<string> token(const string& str, char t) {
         string token;
         vector<string> tokens;
         istringstream iss(str);
-        while (getline(iss, token, ':')) {
+        while (getline(iss, token, t)) {
                 tokens.push_back(token);
         }
-        return tokens[i];
+        return tokens;
 }
 
 int main(int argc, char *argv[])
@@ -289,13 +284,14 @@ int main(int argc, char *argv[])
 	for(;;) {
 		int c, option_index = 0;
 		static struct option long_options[] = {
-                        { "alpha",       1, 0, 'a' },
-                        { "lambda",      1, 0, 'l' },
-                        { "samples",     1, 0, 's' },
-                        { "tfbs-length", 1, 0, 't' },
-                        { "save",        1, 0, 'e' },
-			{ "help",	 0, 0, 'h' },
-			{ "version",	 0, 0, 'v' }
+                        { "alpha",           1, 0, 'a' },
+                        { "lambda",          1, 0, 'l' },
+                        { "samples",         1, 0, 's' },
+                        { "tfbs-length",     1, 0, 't' },
+                        { "population-size", 1, 0, 'p' },
+                        { "save",            1, 0, 'e' },
+			{ "help",	     0, 0, 'h' },
+			{ "version",	     0, 0, 'v' }
 		};
 
 		c = getopt_long(argc, argv, "",
@@ -316,11 +312,17 @@ int main(int argc, char *argv[])
                         options.save = string(optarg);
                         break;
                 case 's':
-                        options.samples = atoi(token(string(optarg), 0).c_str());
-                        options.burnin  = atoi(token(string(optarg), 1).c_str());
+                        if (token(optarg, ':').size() != 2) {
+                                wrong_usage(NULL);
+                        }
+                        options.samples = atoi(token(optarg, ':')[0].c_str());
+                        options.burnin  = atoi(token(optarg, ':')[1].c_str());
                         break;
                 case 't':
                         options.tfbs_length = atoi(optarg);
+                        break;
+                case 'p':
+                        options.population_size = atoi(optarg);
                         break;
                 case 'h':
 			print_usage(argv[0], stdout);

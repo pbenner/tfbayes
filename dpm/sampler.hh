@@ -31,6 +31,7 @@ public:
         virtual void sample(size_t n, size_t burnin) = 0;
         virtual const Model& model() const = 0;
         virtual const sampling_history_t& sampling_history() const = 0;
+        virtual const posterior_t& posterior() const = 0;
 };
 
 class GibbsSampler : public Sampler {
@@ -44,6 +45,7 @@ public:
         void sample(size_t n, size_t burnin);
         const DPM& model() const;
         const sampling_history_t& sampling_history() const;
+        const posterior_t& posterior() const;
 
 private:
         // private methods

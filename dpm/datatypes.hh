@@ -48,9 +48,11 @@ typedef enum {
 } cluster_event_t;
 
 typedef struct {
-        std::vector<double> switches;
-        std::vector<double> likelihood;
-        std::vector<size_t> components;
+        std::vector<std::vector<double> > switches;
+        std::vector<std::vector<double> > likelihood;
+        std::vector<std::vector<size_t> > components;
 } sampling_history_t;
+
+typedef std::vector<std::vector<double> > posterior_t;
 
 #endif /* DATATYPES_HH */

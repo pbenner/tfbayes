@@ -40,7 +40,6 @@ public:
 
         // type definitions
         ////////////////////////////////////////////////////////////////////////
-        typedef std::vector<std::vector<double> > posterior_t;
         typedef std::vector<std::vector<bool>   > tfbs_start_positions_t;
 
         // operators
@@ -53,21 +52,15 @@ public:
         // methods
         ////////////////////////////////////////////////////////////////////////
         size_t mixture_components() const;
-        void mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[]);
-        const std::vector<std::vector<double> >& posterior() const {
-                return _posterior;
-        }
-        const Data& data() const {
-                return _data;
-        }
-        const ClusterManager& cluster_manager() const {
-                return _cluster_manager;
-        }
-        void add_word(const word_t& word, cluster_tag_t tag);
-        void remove_word(const word_t& word, cluster_tag_t tag);
-        void update_posterior(size_t sampling_steps);
+        void   mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[]);
+        void   add_word(const word_t& word, cluster_tag_t tag);
+        void   remove_word(const word_t& word, cluster_tag_t tag);
+        void   update_posterior(size_t sampling_steps);
         double likelihood() const;
-        bool valid_for_sampling(const element_t& element, const word_t& word);
+        bool   valid_for_sampling(const element_t& element, const word_t& word);
+        const posterior_t& posterior() const;
+        const Data& data() const;
+        const ClusterManager& cluster_manager() const;
 
         // constants
         ////////////////////////////////////////////////////////////////////////

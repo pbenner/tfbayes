@@ -113,7 +113,7 @@ Bayes::Matrix* _dpm_cluster_assignments() {
 }
 
 Bayes::Vector* _dpm_hist_likelihood() {
-        const vector<double>& likelihood = _sampler->sampling_history().likelihood;
+        const vector<double>& likelihood = _sampler->sampling_history().likelihood[0];
         size_t length = likelihood.size();
         Bayes::Vector* result = Bayes::allocVector(length);
 
@@ -125,7 +125,7 @@ Bayes::Vector* _dpm_hist_likelihood() {
 }
 
 Bayes::Vector* _dpm_hist_switches() {
-        const vector<double>& switches = _sampler->sampling_history().switches;
+        const vector<double>& switches = _sampler->sampling_history().switches[0];
         size_t length = switches.size();
         Bayes::Vector* result = Bayes::allocVector(length);
 
