@@ -52,7 +52,13 @@ private:
         std::vector<Sampler*> _population;
         const size_t _size;
         sampling_history_t* _sampling_history;
+        posterior_t* _posterior;
         Model _model;
+
+        // private methods
+        ////////////////////////////////////////////////////////////////////////
+        void update_posterior();
+        void update_sampling_history();
 };
 
 #endif /* PMCMC_HH */
