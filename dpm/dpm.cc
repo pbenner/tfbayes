@@ -197,12 +197,12 @@ DPM::update_posterior(size_t sampling_steps) {
                 const size_t position    = element.position;
                 if (_cluster_manager.get_cluster_tag(element) == bg_cluster_tag) {
                         double tmp   = _posterior[sequence][position];
-                        double value = (sampling_steps*tmp)/(sampling_steps+1.0);
+                        double value = ((double)sampling_steps*tmp)/((double)sampling_steps+1.0);
                         _posterior[sequence][position] = value;
                 }
                 else {
                         double tmp   = _posterior[sequence][position];
-                        double value = (sampling_steps*tmp+1.0)/(sampling_steps+1.0);
+                        double value = ((double)sampling_steps*tmp+1.0)/((double)sampling_steps+1.0);
                         _posterior[sequence][position] = value;
                 }
         }

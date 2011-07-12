@@ -7,6 +7,7 @@ bin_PROGRAMS = tfbs-dpm
 tfbs_dpm_SOURCES = tfbs-dpm.cc
 tfbs_dpm_LDADD   = $(top_builddir)/libexception/libexception.la
 tfbs_dpm_LDADD  += libdpm.la
+tfbs_dpm_LDADD  += $(LIB_PTHREAD)
 tfbs_dpm_LDFLAGS = -static
 
 ## dpm library

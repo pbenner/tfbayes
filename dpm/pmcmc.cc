@@ -19,7 +19,11 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <iostream>
+
 #include <assert.h>
+#include <pthread.h>
+#include <unistd.h>
 
 #include <pmcmc.hh>
 
@@ -103,12 +107,53 @@ PopulationMCMC::update_posterior()
         }
 }
 
+typedef struct {
+        Sampler* sampler;
+        size_t n;
+        size_t burnin;
+} pthread_data_t;
+
+static
+void * sample_thread(void* _data)
+{
+        pthread_data_t* data  = (pthread_data_t*)_data;
+        Sampler* sampler      = data->sampler;
+        const size_t n        = data->n;
+        const size_t burnin   = data->burnin;
+
+        sampler->sample(n, burnin);
+
+        return NULL;
+}
+
 void
 PopulationMCMC::sample(size_t n, size_t burnin)
 {
+        pthread_data_t data[_size];
+        pthread_t threads[_size];
+        int rc;
+
+        for (size_t i = 0; i < _size; i++) {
+                data[i].sampler = _population[i];
+                data[i].n       = n;
+                data[i].burnin  = burnin;
+        }
+
         // sample
         for (size_t i = 0; i < _size; i++) {
-                _population[i]->sample(n, burnin);
+                rc = pthread_create(&threads[i], NULL, sample_thread, (void *)&data[i]);
+                if (rc) {
+                        cerr << "Couldn't create thread." << endl;
+                        exit(EXIT_FAILURE);
+                }
+        }
+        // join threads
+        for (size_t i = 0; i < _size; i++) {
+                rc = pthread_join(threads[i], NULL);
+                if (rc) {
+                        cerr << "Couldn't join thread." << endl;
+                        exit(EXIT_FAILURE);
+                }
         }
         update_sampling_history();
         update_posterior();
