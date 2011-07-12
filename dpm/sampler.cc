@@ -68,14 +68,14 @@ GibbsSampler::_sample(const element_t& element) {
         cluster_tag_t old_cluster_tag = _dpm.cluster_manager().get_cluster_tag(element);
         _dpm.remove_word(word, old_cluster_tag);
         size_t components = _dpm.mixture_components();
-        double weights[components];
-        cluster_tag_t tags[components];
+        double weights[components+1];
+        cluster_tag_t tags[components+1];
         _dpm.mixture_weights(word, weights, tags);
 
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
         // to that cluster
-        gsl_ran_discrete_t* gdd  = gsl_ran_discrete_preproc(components, weights);
+        gsl_ran_discrete_t* gdd  = gsl_ran_discrete_preproc(components+1, weights);
         cluster_tag_t i = gsl_ran_discrete(_r, gdd);
         gsl_ran_discrete_free(gdd);
         cluster_tag_t new_cluster_tag = tags[i];

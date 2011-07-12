@@ -132,7 +132,7 @@ DPM::remove_word(const word_t& word, cluster_tag_t tag)
 size_t
 DPM::mixture_components() const
 {
-        return _cluster_manager.size() + 1;
+        return _cluster_manager.size() ;
 }
 
 void
@@ -165,13 +165,13 @@ DPM::mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[])
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
-        tags[components-1]    = _cluster_manager.get_free_cluster().tag();
-        weights[components-1] = log(alpha/dp_norm) + _cluster_manager[tags[components-1]].distribution().log_pdf(word);
-        sum = logadd(sum, weights[components-1]);
+        tags[components]    = _cluster_manager.get_free_cluster().tag();
+        weights[components] = log(lambda*alpha/dp_norm) + _cluster_manager[tags[components]].distribution().log_pdf(word);
+        sum = logadd(sum, weights[components]);
 
         ////////////////////////////////////////////////////////////////////////
         // normalize
-        for (size_t i = 0; i < components; i++) {
+        for (size_t i = 0; i < components+1; i++) {
                 weights[i] = exp(weights[i] - sum);
         }
 }
