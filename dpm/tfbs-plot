@@ -115,8 +115,8 @@ def parseConfig(config_file):
     config_parser.read(config_file)
 
     posterior  = readMatrix(config_parser, 'Result', 'posterior', float)
-    likelihood = readVector(config_parser, 'Result', 'likelihood', float)
-    components = readVector(config_parser, 'Result', 'components', int)
+    likelihood = readMatrix(config_parser, 'Result', 'likelihood', float)
+    components = readMatrix(config_parser, 'Result', 'components', int)
 
     return normalize(posterior), likelihood, components
 
@@ -126,13 +126,15 @@ def parseConfig(config_file):
 def plot_likehood(likelihood, pp):
     fig = pyplot.figure()
     ax  = fig.add_subplot(111, title="Log Likelihood")
-    ax.plot(likelihood)
+    for l in likelihood:
+        ax.plot(l)
     pp.savefig()
 
 def plot_components(components, pp):
     fig = pyplot.figure()
     ax  = fig.add_subplot(111, title="Components")
-    ax.plot(components)
+    for c in components:
+        ax.plot(c)
     pp.savefig()
 
 def split_len(seq, length):
