@@ -96,7 +96,7 @@ _lib._hdb_get_sequence.restype  = None
 _lib._hdb_get_sequence.argtypes = [POINTER(None), c_int, c_int, c_char_p]
 
 _lib._hdb_search.restype        = None
-_lib._hdb_search.argtypes       = [POINTER(POINTER(None)), c_int, c_char_p]
+_lib._hdb_search.argtypes       = [POINTER(POINTER(None)), c_int, POINTER(c_char_p), c_char_p]
 
 _lib._hdb_count_codons.restype  = None
 _lib._hdb_count_codons.argtypes = [POINTER(None), POINTER(c_long), c_long, POINTER(c_long)]
@@ -185,14 +185,16 @@ def hdb_get_sequence_pure(dbp, pos, num):
      _lib._hdb_get_sequence_pure(dbp, c_pos, c_num, c_buf)
      return c_buf.value
 
-def hdb_search(dbp_list, sequence):
+def hdb_search(dbp_list, db_names, sequence):
      dbp_list_n   = len(dbp_list)
      c_dbp_list_n = c_int(dbp_list_n)
      c_dbp_list   = (c_void_p*dbp_list_n)()
+     c_db_names   = (c_char_p*dbp_list_n)()
      for i in range(0, dbp_list_n):
           c_dbp_list[i] = dbp_list[i]
+          c_db_names[i] = c_char_p(db_names[i])
      c_sequence   = c_char_p(sequence)
-     _lib._hdb_search(c_dbp_list, c_dbp_list_n, c_sequence)
+     _lib._hdb_search(c_dbp_list, c_dbp_list_n, c_db_names, c_sequence)
 
 def hdb_count_codons(dbp, positions):
      c_result    = (c_long*64)(0)

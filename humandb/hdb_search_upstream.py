@@ -60,12 +60,14 @@ def loadConfig(config_file, sequence, seq_num):
 
     databases = config.readMatrix(config_parser, 'Database Bundle', 'databases', str)
     dbp_list  = []
+    db_names  = []
 
     interface.hdb_init('hdb-search-seq')
     for database_id, database_file in databases:
         dbp_list.append(interface.hdb_open_ro(database_file, seq_num))
+        db_names.append(database_file)
 
-    interface.hdb_search(dbp_list, sequence)
+    interface.hdb_search(dbp_list, db_names, sequence)
 
     for dbp in dbp_list:
         interface.hdb_close(dbp)

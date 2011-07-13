@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <pthread.h>
 #include <db.h>
@@ -167,6 +168,7 @@ int hdb_get_sequence(DB *dbp, long pos_from, long n_nucleotides, char* buf)
         long pos;
         db_recno_t from_rec, from_rec_offset; 
         db_recno_t i_rec, i_rec_offset;
+        int ret;
 
         memset(&key,  0, sizeof(DBT));
         memset(&data, 0, sizeof(DBT));
@@ -184,8 +186,9 @@ int hdb_get_sequence(DB *dbp, long pos_from, long n_nucleotides, char* buf)
                 key.size = sizeof(db_recno_t);
 
                 /* retreive the next rec */
-                if (dbp->get(dbp, NULL, &key, &data, 0) != 0) {
-                        goto err;
+                if ((ret = dbp->get(dbp, NULL, &key, &data, 0)) != 0) {
+                        buf[pos] = '\0';
+                        return ret;
                 }
 
                 while (pos < n_nucleotides && i_rec_offset < data.size)
@@ -195,8 +198,7 @@ int hdb_get_sequence(DB *dbp, long pos_from, long n_nucleotides, char* buf)
                 /* reset pointer */
                 i_rec_offset = 0;
         }
-err:
-        buf[pos] = '\0';
+
         return 0;
 }
 
@@ -206,6 +208,7 @@ int hdb_get_sequence_pure(DB *dbp, long pos_from, long n_nucleotides, char* buf)
         long pos;
         db_recno_t from_rec, from_rec_offset; 
         db_recno_t i_rec, i_rec_offset;
+        int ret;
 
         memset(&key,  0, sizeof(DBT));
         memset(&data, 0, sizeof(DBT));
@@ -223,8 +226,9 @@ int hdb_get_sequence_pure(DB *dbp, long pos_from, long n_nucleotides, char* buf)
                 key.size = sizeof(db_recno_t);
 
                 /* retreive the next rec */
-                if (dbp->get(dbp, NULL, &key, &data, 0) != 0) {
-                        goto err;
+                if ((ret = dbp->get(dbp, NULL, &key, &data, 0)) != 0) {
+                        buf[pos] = '\0';
+                        return ret;
                 }
 
                 while (pos < n_nucleotides && i_rec_offset < data.size)
@@ -239,35 +243,65 @@ int hdb_get_sequence_pure(DB *dbp, long pos_from, long n_nucleotides, char* buf)
                 /* reset pointer */
                 i_rec_offset = 0;
         }
-err:
-        buf[pos] = '\0';
+
         return 0;
 }
 
 typedef struct {
         DB* dbp;
+        const char* db_name;
         const char* pattern;
         int pattern_n;
         int thread_id;
 } pthread_data;
 
+static inline
+int nucleotide_matches(char a, char b) {
+        if (tolower(a) == tolower(b)) {
+                return 1;
+        }
+        else {
+                return 0;
+        }
+}
+
 static void* hdb_search_thread(void* data_)
 {
         pthread_data* data  = (pthread_data*)data_;
         DB* dbp             = data->dbp;
+        const char* db_name = data->db_name;
         const char* pattern = data->pattern;
         int pattern_n       = data->pattern_n;
-        int thread_id       = data->thread_id;
         char buf[HUMANDB_RECORD_LENGTH+1];
+        size_t pos, i, j;
 
-        hdb_get_sequence_pure(dbp, 0, HUMANDB_RECORD_LENGTH, buf);
-
-        printf("%d: %s\n", thread_id, buf);
+        // get sequence
+        for (pos  = 0; hdb_get_sequence(dbp, pos, HUMANDB_RECORD_LENGTH, buf) == 0;
+             pos += HUMANDB_RECORD_LENGTH - pattern_n + 1)
+        {
+                // loop through sequence
+                for (i = 0; i < HUMANDB_RECORD_LENGTH - pattern_n + 1; i++) {
+                        // test pattern
+                        for (j = 0; j < pattern_n; j++) {
+                                if (buf[i+j] == '\0') {
+                                        // reached end of upstream sequence or chromosome
+                                        return NULL;
+                                }
+                                else if (buf[i+j] != pattern[j]) {
+                                        break;
+                                }
+                                else if (nucleotide_matches(buf[i+j], pattern[j]) && j == pattern_n - 1) {
+                                        printf("%s: %010lu\n", db_name, (unsigned long)pos+i);
+                                        fflush(stdout);
+                                }
+                        }
+                }
+        }
 
         return NULL;
 }
 
-int hdb_search(DB* dbp_list[], int dbp_list_n, const char* pattern, int pattern_n)
+int hdb_search(DB* dbp_list[], int dbp_list_n, const char* db_names[] ,const char* pattern, int pattern_n)
 {
         pthread_t threads[dbp_list_n];
         pthread_data data[dbp_list_n];
@@ -275,6 +309,7 @@ int hdb_search(DB* dbp_list[], int dbp_list_n, const char* pattern, int pattern_
 
         for (i = 0; i < dbp_list_n; i++) {
                 data[i].dbp       = dbp_list[i];
+                data[i].db_name   = db_names[i];
                 data[i].pattern   = pattern;
                 data[i].pattern_n = pattern_n;
                 data[i].thread_id = i;

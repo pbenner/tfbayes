@@ -48,7 +48,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "hdb-read-chrom [option]... DATABASE_CONFIG SEQUENCE_NUMBER POSITION NUCLEOTIDES"
+    print "hdb-read-chrom [option]... DATABASE_CONFIG CHROMOSOME POSITION NUCLEOTIDES"
     print
     print "Options:"
     print "   -p, --pure                     - strip all alignment specific characters"

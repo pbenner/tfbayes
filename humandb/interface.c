@@ -94,9 +94,9 @@ void _hdb_get_sequence_pure(DB* dbp, size_t pos, size_t n_nucleotides, char* buf
         hdb_get_sequence_pure(dbp, pos, n_nucleotides, buf);
 }
 
-void _hdb_search(DB* dbp_list[], size_t dbp_list_n, char* sequence) {
+void _hdb_search(DB* dbp_list[], size_t dbp_list_n, char* db_names[], char* sequence) {
         int sequence_n = strlen(sequence);
-        hdb_search(dbp_list, dbp_list_n, sequence, sequence_n);
+        hdb_search(dbp_list, dbp_list_n, db_names, sequence, sequence_n);
 }
 
 void _hdb_count_codons(DB *dbp, long positions[], size_t n, long result[]) {

@@ -34,11 +34,6 @@ def importMatplotlib(backend=None):
 
 importMatplotlib('Agg')
 
-# local imports
-# ------------------------------------------------------------------------------
-
-from interface import *
-
 # global options
 # ------------------------------------------------------------------------------
 

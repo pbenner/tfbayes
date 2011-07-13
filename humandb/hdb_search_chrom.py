@@ -31,6 +31,13 @@ import humandb.interface as interface
 # global options
 # ------------------------------------------------------------------------------
 
+database = {
+    'identifier' : None,
+    'basedir'    : None,
+    'db'         : None,
+    'maf'        : None
+    }
+
 options = {
     'verbose'  : False
     }
@@ -41,7 +48,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "hdb-search-seq [option]... DATABASE_BUNDLE SEQUENCE SEQUENCE_NUMBER"
+    print "hdb-search-chrom [option]... DATABASE_CONFIG SEQUENCE_STRING"
     print
     print "Options:"
     print "   -h, --help                     - print help"
@@ -52,20 +59,32 @@ def usage():
 # load results from file
 # ------------------------------------------------------------------------------
 
-def loadConfig(config_file, sequence, seq_num):
-    config_parser = ConfigParser.RawConfigParser()
-    config_parser.read(config_file)
-    if not config_parser.has_section('Database Bundle'):
-        raise IOError("Invalid configuration file.")
+def loadConfig(config_file, sequence):
+    global database
+    if os.path.isfile(config_file+'.pkl'):
+        fp = open(config_file+'.pkl', 'r')
+        database = pickle.load(fp)
+        fp.close()
+    else:
+        config_parser = ConfigParser.RawConfigParser()
+        config_parser.read(config_file)
+        if not config_parser.has_section('Database'):
+            raise IOError("Invalid configuration file.")
+        section = 'Database'
+        database['identifier']   = config_parser.get(section, 'identifier')
+        database['database']     = config_parser.get(section, 'database')
+        database['chromosomes']  = config_parser.get(section, 'chromosomes').split(' ')
+        fp = open(config_file+'.pkl', 'wb')
+        pickle.dump(database, fp)
+        fp.close()
 
-    databases = config.readMatrix(config_parser, 'Database Bundle', 'databases', str)
-    dbp_list  = []
+    directory = os.path.dirname(config_file)
+    interface.hdb_init('hdb-search-chrom')
+    dbp_list = []
+    for chrom_name in database['chromosomes']:
+        dbp_list.append(interface.hdb_open_ro(os.path.join(directory, database['database']), chrom_name))
 
-    interface.hdb_init('hdb-search-seq')
-    for database_id, database_file in databases:
-        dbp_list.append(interface.hdb_open_ro(database_file, seq_num))
-
-    interface.hdb_search(dbp_list, sequence)
+    interface.hdb_search(dbp_list, database['chromosomes'], sequence)
 
     for dbp in dbp_list:
         interface.hdb_close(dbp)
@@ -91,10 +110,10 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
-    if len(tail) != 3:
+    if len(tail) != 2:
         usage()
         return 1
-    loadConfig(tail[0], tail[1], tail[2])
+    loadConfig(tail[0], tail[1])
     return 0
 
 if __name__ == "__main__":

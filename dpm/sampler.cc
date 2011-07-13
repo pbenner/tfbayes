@@ -107,10 +107,15 @@ GibbsSampler::sample(size_t n, size_t burnin) {
         for (size_t i = 0; i < burnin; i++) {
                 printf("Burn in... [%u][Components: %02d]\n", (unsigned int)i+1, (int)_dpm.mixture_components());
                 fflush(stdout);
+                double sum = 0;
                 for (Data::const_iterator_randomized it = _data.begin_randomized();
                      it != _data.end_randomized(); it++) {
-                        _sample(**it);
+                        const bool switched =_sample(**it);
+                        if (switched) sum+=1;
                 }
+                _sampling_history.likelihood[0].push_back(_dpm.likelihood());
+                _sampling_history.components[0].push_back(_dpm.mixture_components());
+                _sampling_history.switches[0].push_back(sum/(double)_data.size());
         }
         // sample `n' times
         for (size_t i = 0; i < n; i++) {
@@ -120,7 +125,7 @@ GibbsSampler::sample(size_t n, size_t burnin) {
                 double sum = 0;
                 for (Data::const_iterator_randomized it = _data.begin_randomized();
                      it != _data.end_randomized(); it++) {
-                        bool switched = _sample(**it);
+                        const bool switched = _sample(**it);
                         if (switched) sum+=1;
                 }
                 _sampling_history.likelihood[0].push_back(_dpm.likelihood());
