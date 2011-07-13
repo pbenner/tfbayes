@@ -1,0 +1,10 @@
+# -*- mode: org -*-
+
+* TODO [0/5] Dirichlet Process Mixture for TFBS
+  - [ ] Parsimonious trees for the background model
+  - [ ] Reverse complements
+  - [-] Population MCMC
+	- [X] Parallel samplers
+	- [ ] Sampler interaction
+  - [ ] Extract and analyse TFBS sequences
+  - [ ] Information content of TFBS
