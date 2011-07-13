@@ -143,7 +143,7 @@ DPM::mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[])
         double sum        = -HUGE_VAL;
 
         cluster_tag_t i = 0;
-        for (ClusterManager::iterator it = _cluster_manager.begin(); it != _cluster_manager.end(); it++) {
+        for (ClusterManager::const_iterator it = _cluster_manager.begin(); it != _cluster_manager.end(); it++) {
                 Cluster& cluster = **it;
                 tags[i] = cluster.tag();
                 ////////////////////////////////////////////////////////////////
