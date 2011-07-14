@@ -1,10 +1,14 @@
 # -*- mode: org -*-
 
 * TODO [0/5] Dirichlet Process Mixture for TFBS
-  - [ ] Parsimonious trees for the background model
+  - [ ] Background models
+	- [ ] Parsimonious trees
+	- [ ] Variable length Markov chains
+	- [ ] Polya trees
   - [ ] Reverse complements
   - [-] Population MCMC
 	- [X] Parallel samplers
 	- [ ] Sampler interaction
   - [ ] Extract and analyse TFBS sequences
   - [ ] Information content of TFBS
+  - [ ] Discuss reversible jump / transdimensional MCMC
