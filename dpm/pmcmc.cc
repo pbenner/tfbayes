@@ -29,15 +29,15 @@
 
 using namespace std;
 
-PopulationMCMC::PopulationMCMC(Sampler* sampler, size_t n)
+PopulationMCMC::PopulationMCMC(Sampler& sampler, size_t n)
         : _population(n, NULL), _size(n),
           _sampling_history(NULL), _posterior(NULL)
 {
         assert(n >= 1);
 
-        _population[0] = sampler;
+        _population[0] = &sampler;
         for (size_t i = 1; i < _size; i++) {
-                _population[i] = (Sampler*)sampler->clone();
+                _population[i] = (Sampler*)sampler.clone();
         }
 }
 

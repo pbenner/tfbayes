@@ -19,327 +19,226 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <ctime>
-#include <iostream>
-#include <fstream>
-#include <iterator>
-#include <sstream>
+#include <string.h>
 
-#include <getopt.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_blas.h>
 
-#include <init.hh>
-#include <pmcmc.hh>
-
-#include <tfbayes/exception.h>
+#include <dpm-tfbs.hh>
+#include <tfbayes/logarithmetic.h>
 
 using namespace std;
 
-typedef struct _options_t {
-        size_t samples;
-        size_t burnin;
-        size_t tfbs_length;
-        double alpha;
-        double lambda;
-        size_t population_size;
-        string save;
-        _options_t()
-                : samples(1000),
-                  burnin(100),
-                  tfbs_length(10),
-                  alpha(0.05),
-                  lambda(0.01),
-                  population_size(1),
-                  save()
-                { }
-} options_t;
+DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const Data& data)
+        : // length of tfbs
+          TFBS_LENGTH(tfbs_length),
+          // priors
+          bg_alpha(init_alpha(BG_LENGTH)),
+          tfbs_alpha(init_alpha(TFBS_LENGTH)),
+          // raw sequences
+          _data(data),
+          _cluster_manager(data, new ProductDirichlet(tfbs_alpha)),
+          // strength parameter for the dirichlet process
+          alpha(alpha),
+          // mixture weight for the dirichlet process
+          lambda(lambda),
+          // number of transcription factor binding sites
+          num_tfbs(0)
+{
+        // initialize joint posterior
+        for (size_t i = 0; i < data.length(); i++) {
+                _posterior.push_back(vector<double>(data.length(i), 0.0));
+        }
 
-ostream&
-operator<<(std::ostream& o, const _options_t& options) {
-        o << "Options:"              << endl
-          << "-> samples         = " << options.samples         << endl
-          << "-> burnin          = " << options.burnin          << endl
-          << "-> tfbs_length     = " << options.tfbs_length     << endl
-          << "-> alpha           = " << options.alpha           << endl
-          << "-> population_size = " << options.population_size << endl
-          << "-> lambda          = " << options.lambda          << endl
-          << "-> save            = " << options.save            << endl;
+        // starting positions of tfbs
+        for(size_t i = 0; i < data.length(); i++) {
+                this->tfbs_start_positions.push_back(vector<bool>(data.length(i), false));
+        }
+
+        // initialize cluster manager
+        ProductDirichlet* bg_product_dirichlet   = new ProductDirichlet(bg_alpha);
+        bg_cluster_tag   = _cluster_manager.add_cluster(bg_product_dirichlet);
+
+        // assign all elements to the background
+        for (Data::const_iterator it = _data.begin();
+             it != _data.end(); it++) {
+                const word_t word = _data.get_word(*it, BG_LENGTH);
+                _cluster_manager[bg_cluster_tag].add_word(word);
+        }
+}
+
+DPM_TFBS::~DPM_TFBS() {
+        gsl_matrix_free(tfbs_alpha);
+        gsl_matrix_free(bg_alpha);
+}
+
+DPM_TFBS*
+DPM_TFBS::clone() const {
+        return new DPM_TFBS(*this);
+}
+
+bool
+DPM_TFBS::valid_for_sampling(const element_t& element, const word_t& word)
+{
+        const size_t sequence = word.sequence;
+        const size_t position = word.position;
+        const size_t length   = word.length;
+
+        // check if there is enough space
+        if (_data.length(sequence) - position < length) {
+                return false;
+        }
+        // check if there is a tfbs starting here, if not check
+        // succeeding positions
+        if (tfbs_start_positions[element.sequence][element.position] == 0) {
+                // check if this element belongs to a tfbs that starts
+                // earlier in the sequence
+                if (_cluster_manager[element] != bg_cluster_tag) {
+                        return false;
+                }
+                // check if there is a tfbs starting within the word
+                for (size_t i = 1; i < length; i++) {
+                        if (tfbs_start_positions[sequence][position+i] == 1) {
+                                return false;
+                        }
+                }
+        }
+
+        return true;
+}
+
+void
+DPM_TFBS::add_word(const word_t& word, cluster_tag_t tag)
+{
+        _cluster_manager[tag].add_word(word);
+        if (tag != bg_cluster_tag) {
+                num_tfbs++;
+                tfbs_start_positions[word.sequence][word.position] = 1;
+        }
+}
+
+void
+DPM_TFBS::remove_word(const word_t& word, cluster_tag_t tag)
+{
+        _cluster_manager[tag].remove_word(word);
+        if (tag != bg_cluster_tag) {
+                num_tfbs--;
+                tfbs_start_positions[word.sequence][word.position] = 0;
+        }
+}
+
+size_t
+DPM_TFBS::word_length() const
+{
+        return TFBS_LENGTH;
+}
+
+size_t
+DPM_TFBS::mixture_components() const
+{
+        return _cluster_manager.size() ;
+}
+
+void
+DPM_TFBS::mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[])
+{
+        size_t components = mixture_components();
+        double dp_norm    = num_tfbs + alpha;
+        double sum        = -HUGE_VAL;
+
+        cluster_tag_t i = 0;
+        for (ClusterManager::const_iterator it = _cluster_manager.begin(); it != _cluster_manager.end(); it++) {
+                Cluster& cluster = **it;
+                tags[i] = cluster.tag();
+                ////////////////////////////////////////////////////////////////
+                // mixture component 1: background model
+                if (tags[i] == bg_cluster_tag) {
+                        weights[i] = log(1-lambda) + cluster.distribution().log_pdf(word);
+                        // normalization constant
+                        sum = logadd(sum, weights[i]);
+                }
+                ////////////////////////////////////////////////////////////////
+                // mixture component 2: dirichlet process for tfbs models
+                else {
+                        double num_elements = (double)cluster.size();
+                        weights[i] = log(lambda*num_elements/dp_norm) + cluster.distribution().log_pdf(word);
+                        // normalization constant
+                        sum = logadd(sum, weights[i]);
+                }
+                i++;
+        }
+        ////////////////////////////////////////////////////////////////////////
+        // add the tag of a new class and compute their weight
+        tags[components]    = _cluster_manager.get_free_cluster().tag();
+        weights[components] = log(lambda*alpha/dp_norm) + _cluster_manager[tags[components]].distribution().log_pdf(word);
+        sum = logadd(sum, weights[components]);
+
+        ////////////////////////////////////////////////////////////////////////
+        // normalize
+        for (size_t i = 0; i < components+1; i++) {
+                weights[i] = exp(weights[i] - sum);
+        }
+}
+
+double
+DPM_TFBS::likelihood() const {
+        double result = 0;
+
+        for (ClusterManager::const_iterator it = _cluster_manager.begin();
+             it != _cluster_manager.end(); it++) {
+                Cluster& cluster = **it;
+                result += cluster.distribution().log_likelihood();
+        }
+        return result;
+}
+
+void
+DPM_TFBS::update_posterior(size_t sampling_steps) {
+        for (Data::const_iterator it = _data.begin();
+             it != _data.end(); it++) {
+                const element_t& element = *it;
+                const size_t sequence    = element.sequence;
+                const size_t position    = element.position;
+                if (_cluster_manager.get_cluster_tag(element) == bg_cluster_tag) {
+                        double tmp   = _posterior[sequence][position];
+                        double value = ((double)sampling_steps*tmp)/((double)sampling_steps+1.0);
+                        _posterior[sequence][position] = value;
+                }
+                else {
+                        double tmp   = _posterior[sequence][position];
+                        double value = ((double)sampling_steps*tmp+1.0)/((double)sampling_steps+1.0);
+                        _posterior[sequence][position] = value;
+                }
+        }
+}
+
+const posterior_t&
+DPM_TFBS::posterior() const {
+        return _posterior;
+}
+
+const Data&
+DPM_TFBS::data() const {
+        return _data;
+}
+
+const ClusterManager&
+DPM_TFBS::cluster_manager() const {
+        return _cluster_manager;
+}
+
+// misc methods
+////////////////////////////////////////////////////////////////////////////////
+
+ostream& operator<< (ostream& o, const DPM_TFBS& dpm)
+{
+        for (size_t i = 0; i < dpm._data.length(); i++) {
+                for (size_t j = 0; j < dpm._data.length(i); j++) {
+                        o << dpm.tfbs_start_positions[i][j] << " ";
+                }
+                o << endl;
+        }
         return o;
-}
-
-static options_t options;
-
-static
-void print_usage(char *pname, FILE *fp)
-{
-	(void)fprintf(fp,
-                      "\nUsage: %s [OPTION]... FILE\n\n", pname);
-	(void)fprintf(fp,
-                      "Options:\n"
-                      "   --alpha=ALPHA             - alpha parameter for the dirichlet process\n"
-                      "   --lambda=LAMBDA           - lambda mixture weight\n"
-                      "   --tfbs-length=TFBS_LENGTH - length of the tfbs\n"
-                      "   --population-size=N       - number of parallel samplers\n"
-                      "\n"
-                      "   --samples=SAMPLES:BURN_IN - number of samples\n"
-                      "   --save=FILE_NAME          - save posterior to file\n"
-                      "\n"
-                      "   --help	            - print help and exit\n"
-                      "   --version	            - print version information and exit\n\n");
-}
-
-static
-void print_version(FILE *fp)
-{
-	(void)fprintf(fp,
-                      "This is free software, and you are welcome to redistribute it\n"
-                      "under certain conditions; see the source for copying conditions.\n"
-                      "There is NO warranty; not even for MERCHANTABILITY or FITNESS\n"
-                      "FOR A PARTICULAR PURPOSE.\n\n");
-}
-
-static
-void wrong_usage(const char *msg)
-{
-
-	if(msg != NULL) {
-		(void)fprintf(stderr, "%s\n", msg);
-	}
-	(void)fprintf(stderr,
-		      "Try `dpm-tfbs --help' for more information.\n");
-
-	exit(EXIT_FAILURE);
-
-}
-
-static
-void get_max_length(const char* file_name, size_t *lines, size_t *max_len)
-{
-        string line;
-        ifstream file(file_name);
-
-        *max_len = 0;
-        *lines   = 0;
-
-        while (getline(file, line)) {
-                size_t read = line.size();
-                if (line[read-1] == '\n') {
-                        read--;
-                }
-                if ((size_t)read > *max_len) {
-                        *max_len = (size_t)read;
-                }
-                if (read > 0) {
-                        (*lines)++;
-                }
-        }
-}
-
-static
-char * readfile(const char* file_name, char *sequences[])
-{
-        ifstream file(file_name);
-        string line;
-
-        size_t i = 0;
-        while (getline(file, line)) {
-                size_t read = line.size();
-                if (read > 1) {
-                        size_t pos = 0;
-                        for (size_t j = 0; j < (size_t)read && line[j] != '\n'; j++) {
-                                if (is_nucleotide(line[j])) {
-                                        sequences[i][pos] = line[j];
-                                        pos++;
-                                }
-                        }
-                        i++;
-                }
-        }
-
-        return NULL;
-}
-
-static
-char ** alloc_sequences(size_t n, size_t m) {
-        char **sequences = (char **)malloc((n+1)*sizeof(char *));
-        size_t i;
-
-        for (i = 0; i < n; i++) {
-                sequences[i] = (char *)calloc(m+1, sizeof(char));
-        }
-        sequences[i] = NULL;
-
-        return sequences;
-}
-
-static
-void free_sequences(char **sequences)
-{
-        for (size_t i = 0; sequences[i] != NULL; i++) {
-                free(sequences[i]);
-        }
-}
-
-static
-void save_result(ostream& file, const Sampler& sampler)
-{
-        const posterior_t& posterior      = sampler.posterior();
-        const sampling_history_t& history = sampler.sampling_history();
-        file.setf(ios::showpoint);
-
-        file << "[Result]" << endl;
-        file << "posterior =" << endl;
-        for (size_t i = 0; i < posterior.size(); i++) {
-                file << "\t";
-                for (size_t j = 0; j < posterior[i].size(); j++) {
-                        file << (float)posterior[i][j] << " ";
-                }
-                file << endl;
-        }
-        file << "components =" << endl;
-        for (size_t i = 0; i < history.components.size(); i++) {
-                file << "\t";
-                for (size_t j = 0; j < history.components[i].size(); j++) {
-                        file << history.components[i][j] << " ";
-                }
-                file << endl;
-        }
-        file << "switches =" << endl;
-        for (size_t i = 0; i < history.switches.size(); i++) {
-                file << "\t";
-                for (size_t j = 0; j < history.switches[i].size(); j++) {
-                        file << history.switches[i][j] << " ";
-                }
-                file << endl;
-        }
-        file << "likelihood =" << endl;
-        for (size_t i = 0; i < history.likelihood.size(); i++) {
-                file << "\t";
-                for (size_t j = 0; j < history.likelihood[i].size(); j++) {
-                        file << history.likelihood[i][j] << " ";
-                }
-                file << endl;
-        }
-        file << endl;
-}
-
-static
-void run_dpm(const char* file_name)
-{
-        size_t lines, max_len;
-        char **sequences;
-
-        // read sequences
-        get_max_length(file_name, &lines, &max_len);
-        sequences = alloc_sequences(lines, max_len);
-        readfile(file_name, sequences);
-
-        // create data, dpm, and sampler objects
-        Data* data = new Data(lines, sequences);
-        DPM*  gdpm = new DPM(options.alpha, options.lambda, options.tfbs_length, *data);
-        GibbsSampler* sampler = new GibbsSampler(*gdpm, *data);
-        PopulationMCMC* pmcmc = new PopulationMCMC(sampler, options.population_size);
-
-        // execute the sampler
-        pmcmc->sample(options.samples, options.burnin);
-
-        // save result
-        if (options.save == "") {
-                save_result(cout, *pmcmc);
-        }
-        else {
-                ofstream file;
-                file.open(options.save.c_str());
-                save_result(file, *pmcmc);
-                file.close();
-        }
-
-        // free memory
-        free(data);
-        free(pmcmc);
-        free_sequences(sequences);
-}
-
-static
-vector<string> token(const string& str, char t) {
-        string token;
-        vector<string> tokens;
-        istringstream iss(str);
-        while (getline(iss, token, t)) {
-                tokens.push_back(token);
-        }
-        return tokens;
-}
-
-int main(int argc, char *argv[])
-{
-        __dpm_init__();
-
-	char *file_name;
-
-	if(argc == 1) {
-		wrong_usage("Too few arguments.");
-		exit(EXIT_FAILURE);
-	}
-
-	for(;;) {
-		int c, option_index = 0;
-		static struct option long_options[] = {
-                        { "alpha",           1, 0, 'a' },
-                        { "lambda",          1, 0, 'l' },
-                        { "samples",         1, 0, 's' },
-                        { "tfbs-length",     1, 0, 't' },
-                        { "population-size", 1, 0, 'p' },
-                        { "save",            1, 0, 'e' },
-			{ "help",	     0, 0, 'h' },
-			{ "version",	     0, 0, 'v' }
-		};
-
-		c = getopt_long(argc, argv, "",
-				long_options, &option_index);
-
-		if(c == -1) {
-			break;
-		}
-
-		switch(c) {
-                case 'a':
-                        options.alpha = atof(optarg);
-                        break;
-                case 'l':
-                        options.lambda = atof(optarg);
-                        break;
-                case 'e':
-                        options.save = string(optarg);
-                        break;
-                case 's':
-                        if (token(optarg, ':').size() != 2) {
-                                wrong_usage(NULL);
-                        }
-                        options.samples = atoi(token(optarg, ':')[0].c_str());
-                        options.burnin  = atoi(token(optarg, ':')[1].c_str());
-                        break;
-                case 't':
-                        options.tfbs_length = atoi(optarg);
-                        break;
-                case 'p':
-                        options.population_size = atoi(optarg);
-                        break;
-                case 'h':
-			print_usage(argv[0], stdout);
-			exit(EXIT_SUCCESS);
-                case 'v':
-			print_version(stdout);
-			exit(EXIT_SUCCESS);
-		default:
-			wrong_usage(NULL);
-			exit(EXIT_FAILURE);
-		}
-	}
-        cout << options << endl;
-
-	file_name = argv[optind];
-
-        run_dpm(file_name);
-
-        return 0;
 }

@@ -29,11 +29,12 @@ namespace Bayes {
 
 #include <init.hh>
 #include <interface.hh>
+#include <dpm-tfbs.hh>
 #include <sampler.hh>
 
 using namespace std;
 
-static DPM* _gdpm;
+static DPM_TFBS* _gdpm;
 static Data* _data;
 static GibbsSampler* _sampler;
 
@@ -50,7 +51,7 @@ void _dpm_init(double alpha, double lambda, int tfbs_length, int n, char *sequen
         __dpm_init__();
 
         _data = new Data(n, sequences);
-        _gdpm = new DPM(alpha, lambda, (size_t)tfbs_length, *_data);
+        _gdpm = new DPM_TFBS(alpha, lambda, (size_t)tfbs_length, *_data);
         _sampler = new GibbsSampler(*_gdpm, *_data);
 }
 

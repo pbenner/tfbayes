@@ -57,7 +57,7 @@ GibbsSampler::clone() const {
 
 bool
 GibbsSampler::_sample(const element_t& element) {
-        const word_t word = _data.get_word(element, _dpm.TFBS_LENGTH);
+        const word_t word = _data.get_word(element, _dpm.word_length());
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
         if (!_dpm.valid_for_sampling(element, word)) {

@@ -28,7 +28,7 @@
 
 class PopulationMCMC : public Sampler {
 public:
-         PopulationMCMC(Sampler* sampler, size_t n);
+         PopulationMCMC(Sampler& sampler, size_t n);
          PopulationMCMC(const PopulationMCMC& pmcmc);
         ~PopulationMCMC();
 
