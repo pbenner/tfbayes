@@ -32,8 +32,6 @@ def importMatplotlib(backend=None):
     import matplotlib.patches  as     patches
     import matplotlib.path     as     path
 
-importMatplotlib('Agg')
-
 # global options
 # ------------------------------------------------------------------------------
 
@@ -49,7 +47,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "tfbs-plot.py [option]... RESULT SEQUENCES"
+    print "dpm-tfbs-plot [option]... RESULT SEQUENCES"
     print
     print "Options:"
     print "   -s, --save=FILE                - save plot to FILE"
@@ -118,24 +116,24 @@ def parseConfig(config_file):
 # plot
 # ------------------------------------------------------------------------------
 
-def plot_likehood(likelihood, pp):
+def plot_likehood(likelihood, show):
     fig = pyplot.figure()
     ax  = fig.add_subplot(111, title="Log Likelihood")
     for l in likelihood:
         ax.plot(l)
-    pp.savefig()
+    show()
 
-def plot_components(components, pp):
+def plot_components(components, show):
     fig = pyplot.figure()
     ax  = fig.add_subplot(111, title="Components")
     for c in components:
         ax.plot(c)
-    pp.savefig()
+    show()
 
 def split_len(seq, length):
     return [seq[i:i+length] for i in range(0, len(seq), length)]
 
-def plot_sequence(sequence, _posterior, n, pp):
+def plot_sequence(sequence, _posterior, n, show):
     sequences = split_len(sequence, 50)
     posterior = split_len(_posterior, 50)
     fig = pyplot.figure()
@@ -152,20 +150,29 @@ def plot_sequence(sequence, _posterior, n, pp):
         for s, p, p1, p2 in zip(sl, po, p1l, p2l):
             ax.text(p1, p2, str(s), size=10, rotation=0,
                     ha="center", va="bottom", color=pyplot.cm.jet(p), weight='bold')
-    pp.savefig()
+    show()
 
-def plot_sequences(sequences, posterior, pp):
+def plot_sequences(sequences, posterior, show):
     for i in range(0, len(sequences)):
-        plot_sequence(sequences[i], posterior[i], i+1, pp)
+        plot_sequence(sequences[i], posterior[i], i+1, show)
 
 def plot_result(results_file, sequences_file):
+    if options['save']:
+        importMatplotlib('Agg')
+        pp    = PdfPages(options['save'])
+        show  = pp.savefig
+        close = pp.close
+    else:
+        importMatplotlib()
+        show  = pyplot.show
+        close = None
     posterior, likelihood, components = parseConfig(results_file)
     sequences = readSequences(sequences_file)
-    pp = PdfPages(options['save'])
-    plot_likehood(likelihood, pp)
-    plot_components(components, pp)
-    plot_sequences(sequences, posterior, pp)
-    pp.close()
+    plot_likehood(likelihood, show)
+    plot_components(components, show)
+    plot_sequences(sequences, posterior, show)
+    if close:
+        close()
 
 # main
 # ------------------------------------------------------------------------------

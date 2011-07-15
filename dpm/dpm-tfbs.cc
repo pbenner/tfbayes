@@ -105,7 +105,7 @@ void wrong_usage(const char *msg)
 		(void)fprintf(stderr, "%s\n", msg);
 	}
 	(void)fprintf(stderr,
-		      "Try `tfbs-dpm --help' for more information.\n");
+		      "Try `dpm-tfbs --help' for more information.\n");
 
 	exit(EXIT_FAILURE);
 

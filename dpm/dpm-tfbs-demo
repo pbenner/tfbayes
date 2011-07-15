@@ -54,7 +54,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "tfbs-dpm.py [option]... SEQUENCES"
+    print "dpm-tfbs-demo [option]... SEQUENCES"
     print
     print "Options:"
     print "       --alpha=ALPHA              - alpha parameter for the dirichlet process"
