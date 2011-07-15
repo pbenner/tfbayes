@@ -56,7 +56,7 @@ public:
         size_t word_length() const;
         void   update_posterior(size_t sampling_steps);
         double likelihood() const;
-        bool   valid_for_sampling(const element_t& element, const word_t& word);
+        bool   valid_for_sampling(const element_t& element, const word_t& word) const;
         const posterior_t& posterior() const;
         const Data& data() const;
         const ClusterManager& cluster_manager() const;

@@ -80,7 +80,7 @@ DPM_TFBS::clone() const {
 }
 
 bool
-DPM_TFBS::valid_for_sampling(const element_t& element, const word_t& word)
+DPM_TFBS::valid_for_sampling(const element_t& element, const word_t& word) const
 {
         const size_t sequence = word.sequence;
         const size_t position = word.position;
