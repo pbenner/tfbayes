@@ -29,6 +29,8 @@
 #include <vector>
 
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+#include <gsl/gsl_permutation.h>
 #include <gsl/gsl_matrix.h>
 
 #include <clonable.hh>
@@ -78,6 +80,46 @@ public:
 private:
         alpha_t alpha;
         counts_t counts;
+};
+
+class BivariateNormal : public Distribution {
+public:
+         BivariateNormal();
+         BivariateNormal(const gsl_matrix* Sigma,
+                         const gsl_matrix* Sigma_0,
+                         const gsl_vector* mu_0);
+        ~BivariateNormal();
+
+        size_t add_observations(const std::vector<double>& word);
+        size_t remove_observations(const std::vector<double>& word);
+        size_t count_observations(const std::vector<double>& word) const;
+        double pdf(const std::vector<double>& x) const;
+        double log_pdf(const std::vector<double>& x) const;
+        double log_likelihood() const;
+
+private:
+        // prior
+        gsl_matrix* _Sigma_0_inv;
+        gsl_vector* _mu_0;
+
+        // likelihood
+        gsl_matrix* _Sigma_inv;
+        gsl_vector* _mu;
+        double _N;
+
+        // posterior
+        gsl_matrix* _Sigma_N;
+        gsl_matrix* _Sigma_N_inv;
+        gsl_vector* _mu_N;
+
+        // other
+        const size_t _dimension;
+        gsl_permutation* _inv_perm;
+        gsl_matrix* _inv_tmp;
+        gsl_vector* _tmp1;
+        gsl_vector* _tmp2;
+
+        void inverse(gsl_matrix* dst, gsl_matrix* src);
 };
 
 #endif /* STATISTICS_HH */
