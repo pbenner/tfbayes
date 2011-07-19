@@ -62,29 +62,27 @@ Cluster::~Cluster() {
 }
 
 void
-Cluster::add_word(const word_t& word)
+Cluster::add_observations(const range_t& range)
 {
         if (_size == 0) {
-                _size += _distribution->add_observations(word);
+                _size += _distribution->add(range);
                 notify(cluster_event_nonempty);
         }
         else {
-                _size += _distribution->add_observations(word);
+                _size += _distribution->add(range);
         }
-        notify(cluster_event_add_word, word);
+        notify(cluster_event_add_word, range);
 }
 
 void
-Cluster::remove_word(const word_t& word)
+Cluster::remove_observations(const range_t& range)
 {
-        size_t observations = _distribution->count_observations(word);
-
-        if (_size >= observations) {
-                _size -= _distribution->remove_observations(word);
+        if (_size >= _distribution->count(range)) {
+                _size -= _distribution->remove(range);
                 if (_size == 0) {
                         notify(cluster_event_empty);
                 }
-                notify(cluster_event_remove_word, word);
+                notify(cluster_event_remove_word, range);
         }
 }
 

@@ -31,65 +31,60 @@
 #include <code.hh>
 #include <datatypes.hh>
 
-class Data {
+class Data_TFBS : public sequence_data_t<char> {
 public:
-         Data(size_t n, char *sequences[]);
-        ~Data();
+         Data_TFBS(const std::vector<std::string>& sequences);
+        ~Data_TFBS();
 
         // type definitions
-        typedef std::vector<element_t >::iterator iterator;
-        typedef std::vector<element_t >::const_iterator const_iterator;
+        typedef std::vector<index_t>::iterator iterator;
+        typedef std::vector<index_t>::const_iterator const_iterator;
 
-        typedef std::vector<element_t*>::iterator iterator_randomized;
-        typedef std::vector<element_t*>::const_iterator const_iterator_randomized;
+        typedef std::vector<index_t*>::iterator iterator_randomized;
+        typedef std::vector<index_t*>::const_iterator const_iterator_randomized;
 
         // iterators
         ////////////////////////////////////////////////////////////////////////
-        iterator begin() { return elements.begin(); }
-        iterator end()   { return elements.end();   }
+        iterator begin() { return indices.begin(); }
+        iterator end()   { return indices.end(); }
 
-        const_iterator begin() const { return elements.begin(); }
-        const_iterator end()   const { return elements.end(); }
-
-        iterator_randomized begin_randomized() { return elements_randomized.begin(); }
-        iterator_randomized end_randomized()   { return elements_randomized.end(); }
+        const_iterator begin() const { return indices.begin(); }
+        const_iterator end()   const { return indices.end(); }
 
         const_iterator_randomized begin_randomized() const
-                { return elements_randomized.begin(); }
+                { return indices_randomized.begin(); }
         const_iterator_randomized end_randomized() const
-                { return elements_randomized.end(); }
+                { return indices_randomized.end(); }
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-              element_t& operator[](size_t i);
-        const element_t& operator[](size_t i) const;
-                   char  operator[](element_t element) const;
+        const index_t& operator[](size_t i) const;
+//                char   operator[](const index_t& index) const;
 
-        friend std::ostream& operator<< (std::ostream& o, const Data& data);
+        friend std::ostream& operator<< (std::ostream& o, const Data_TFBS& data);
 
         // methods
         ////////////////////////////////////////////////////////////////////////
-        const word_t get_word(const element_t& element, size_t length) const;
         size_t size() const;
         size_t length() const;
         size_t length(size_t i) const;
+        const std::vector<size_t>& lengths() const;
         void shuffle();
 
 private:
         // all nucleotide positions in a vector (used for the gibbs sampler)
-        std::vector<element_t > elements;
-        std::vector<element_t*> elements_randomized;
+        std::vector<index_t > indices;
+        std::vector<index_t*> indices_randomized;
 
         // the raw nucleotide sequences
-        std::vector<std::string> sequences;
-        std::vector<std::vector<char> > sequences_coded;
-        std::vector<size_t> sequences_length;
-        size_t n_sequences;
+        const std::vector<std::string> sequences;
+              std::vector<size_t     > sequences_length;
 
-        // number of elements
+        // number of sequences and nucleotides
+        size_t _n_sequences;
         size_t _size;
 };
 
-std::ostream& operator<< (std::ostream& o, const word_t& word);
+//std::ostream& operator<< (std::ostream& o, const word_t& word);
 
 #endif /* DATA_HH */

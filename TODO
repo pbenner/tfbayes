@@ -1,6 +1,6 @@
 # -*- mode: org -*-
 
-* TODO [0/5] Dirichlet Process Mixture for TFBS
+* TODO [0/6] Dirichlet Process Mixture for TFBS
   - [ ] Background models
 	- [ ] Parsimonious trees
 	- [ ] Variable length Markov chains
@@ -12,3 +12,6 @@
   - [ ] Extract and analyse TFBS sequences
   - [ ] Information content of TFBS
   - [ ] Discuss reversible jump / transdimensional MCMC
+
+* TODO [0/1] Zincfinger Analysis
+  - [ ] Individual Information Theory and Sequence Walkers

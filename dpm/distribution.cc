@@ -22,6 +22,8 @@
 #include <math.h>
 #include <vector>
 
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_linalg.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_matrix.h>
@@ -34,7 +36,8 @@ using namespace std;
 
 gsl_rng* _r;
 
-ProductDirichlet::ProductDirichlet(gsl_matrix* _alpha)
+ProductDirichlet::ProductDirichlet(gsl_matrix* _alpha, const sequence_data_t<char>& data)
+        : _data(data)
 {
         for (size_t i = 0; i < _alpha->size1; i++) {
                 double sum = 0;
@@ -49,7 +52,7 @@ ProductDirichlet::ProductDirichlet(gsl_matrix* _alpha)
 }
 
 ProductDirichlet::ProductDirichlet(const ProductDirichlet& distribution)
-        : alpha(distribution.alpha), counts(distribution.counts)
+        : alpha(distribution.alpha), counts(distribution.counts), _data(distribution._data)
 {
 }
 
@@ -62,54 +65,56 @@ ProductDirichlet::clone() const {
 }
 
 size_t
-ProductDirichlet::count_observations(const word_t& word) const {
-        return word.length/counts.size();
+ProductDirichlet::add(const range_t& range) {
+        const_iterator_t<char> iterator = _data[range];
+        size_t i;
+
+        for (i = 0;; i++) {
+                counts[i%counts.size()][*iterator]++;
+                counts[i%counts.size()][4]++;
+                if (!iterator++) break;
+        }
+        return i/counts.size();
 }
 
 size_t
-ProductDirichlet::remove_observations(const word_t& word) {
-        for (size_t i = 0; i < word.length; i += counts.size()) {
-                for (size_t j = 0; j < counts.size(); j++) {
-                        const char index = word.sequences[word.sequence][word.position+i+j];
-                        counts[j][index]--;
-                        counts[j][4]--;
-                }
+ProductDirichlet::remove(const range_t& range) {
+        const_iterator_t<char> iterator = _data[range];
+        size_t i;
+
+        for (i = 0;; i++) {
+                counts[i%counts.size()][*iterator]--;
+                counts[i%counts.size()][4]--;
+                if (!iterator++) break;
         }
-        return word.length/counts.size();
+        return i/counts.size();
 }
 
 size_t
-ProductDirichlet::add_observations(const word_t& word) {
-        for (size_t i = 0; i < word.length; i += counts.size()) {
-                for (size_t j = 0; j < counts.size(); j++) {
-                        const char index = word.sequences[word.sequence][word.position+i+j];
-                        counts[j][index]++;
-                        counts[j][4]++;
-                }
-        }
-        return word.length/counts.size();
+ProductDirichlet::count(const range_t& range) {
+        return (range.to[1]-range.from[1]+1)/counts.size();
 }
 
-double ProductDirichlet::pdf(const word_t& word) const {
+double ProductDirichlet::pdf(const range_t& range) const {
+        const_iterator_t<char> iterator = _data[range];
         double result = 1;
+        size_t i;
 
-        for (size_t i = 0; i < word.length; i += counts.size()) {
-                for (size_t j = 0; j < counts.size(); j++) {
-                        const char index = word.sequences[word.sequence][word.position+i+j];
-                        result *= (counts[j][index]+alpha[j][index])/(counts[j][4]+alpha[j][4]);
-                }
+        for (i = 0;; i=(i+1)%counts.size()) {
+                result *= (counts[i][*iterator]+alpha[i][*iterator])/(counts[i][4]+alpha[i][4]);
+                if (!iterator++) break;
         }
         return result;
 }
 
-double ProductDirichlet::log_pdf(const word_t& word) const {
+double ProductDirichlet::log_pdf(const range_t& range) const {
+        const_iterator_t<char> iterator = _data[range];
         double result = 0;
+        size_t i;
 
-        for (size_t i = 0; i < word.length; i += counts.size()) {
-                for (size_t j = 0; j < counts.size(); j++) {
-                        const char index = word.sequences[word.sequence][word.position+i+j];
-                        result += log((counts[j][index]+alpha[j][index])/(counts[j][4]+alpha[j][4]));
-                }
+        for (i = 0;; i=(i+1)%counts.size()) {
+                result += log((counts[i][*iterator]+alpha[i][*iterator])/(counts[i][4]+alpha[i][4]));
+                if (!iterator++) break;
         }
         return result;
 }
@@ -133,8 +138,9 @@ double ProductDirichlet::log_likelihood() const {
 BivariateNormal::BivariateNormal(
         const gsl_matrix* Sigma,
         const gsl_matrix* Sigma_0,
-        const gsl_vector* mu_0)
-        : _N(0), _dimension(2);
+        const gsl_vector* mu_0,
+        const data_t<vector<double> >& data)
+        : _N(0), _dimension(2), _data(data)
 {
         // alloc tmp
         _inv_tmp  = gsl_matrix_alloc(_dimension, _dimension);
@@ -169,7 +175,7 @@ BivariateNormal::BivariateNormal(
 BivariateNormal::~BivariateNormal()
 {
         // tmp
-        gsl_matrix_free(_tmp_env);
+        gsl_matrix_free(_inv_tmp);
         gsl_permutation_free(_inv_perm);
         gsl_vector_free(_tmp1);
         gsl_vector_free(_tmp2);
@@ -189,7 +195,7 @@ BivariateNormal::~BivariateNormal()
 }
 
 void
-BivariateNormal::inverse(gsl_matrix* dst, gsl_matrix* src) {
+BivariateNormal::inverse(gsl_matrix* dst, const gsl_matrix* src) {
         int _inv_s = 0;
         gsl_matrix_memcpy(_inv_tmp, src);
         gsl_linalg_LU_decomp(_inv_tmp, _inv_perm, &_inv_s);
@@ -209,59 +215,75 @@ BivariateNormal::update()
 
         // compute posterior mean _mu_N
         // tmp1 = Sigma^-1 mu
-        gsl_blas_dgemv(CblasNoTrans, 1.0, _Sigma_inv,   _mu,   0.0, tmp1);
+        gsl_blas_dgemv(CblasNoTrans, 1.0, _Sigma_inv,   _mu,   0.0, _tmp1);
         // tmp2 = Sigma_0^-1 mu_0
-        gsl_blas_dgemv(CblasNoTrans, 1.0, _Sigma_inv_0, _mu_0, 0.0, tmp2);
+        gsl_blas_dgemv(CblasNoTrans, 1.0, _Sigma_0_inv, _mu_0, 0.0, _tmp2);
         // tmp1 = N Sigma^-1 mu
-        gsl_vector_scale(tmp1, _N);
+        gsl_vector_scale(_tmp1, _N);
         // tmp1 = N Sigma^-1 mu + Sigma_0^-1 mu_0
-        gsl_vector_add(tmp1, tmp2);
+        gsl_vector_add(_tmp1, _tmp2);
         // _mu_N = Sigma_N (N Sigma^-1 mu + Sigma_0^-1 mu_0)
-        gsl_blas_dgemv(CblasTrans, 1.0, _Sigma_N, tmp1, 0.0, _mu_N);
-
-        gsl_vector_free(tmp1);
-        gsl_vector_free(tmp2);
-
+        gsl_blas_dgemv(CblasTrans, 1.0, _Sigma_N, _tmp1, 0.0, _mu_N);
 }
 
 size_t
-BivariateNormal::add_observations(const vector<double>& x)
+BivariateNormal::add(const range_t& range)
 {
-        for (size_t i = 0; i < _dimension; i++) {
-                gsl_vector_set(_mu, i, (_N*gsl_vector_get(_mu, i)+x[i])/(N+1))
-        }
-        _N++;
+        const_iterator_t<vector<double> > iterator = _data[range];
+
+        do {
+                for (size_t i = 0; i < _dimension; i++) {
+                        gsl_vector_set(_mu, i, (_N*gsl_vector_get(_mu, i)+(*iterator)[i])/(_N+1));
+                }
+                _N++;
+        } while(iterator++);
+
         update();
+
+        return range.to[0]-range.from[0]+1;
 }
 
 size_t
-BivariateNormal::remove_observations(const vector<double>& x)
+BivariateNormal::remove(const range_t& range)
 {
-        for (size_t i = 0; i < _dimension; i++) {
-                gsl_vector_set(_mu, i, (_N*gsl_vector_get(_mu, i)-x[i])/(N-1))
-        }
-        _N--;
+        const_iterator_t<vector<double> > iterator = _data[range];
+
+        do {
+                for (size_t i = 0; i < _dimension; i++) {
+                        gsl_vector_set(_mu, i, (_N*gsl_vector_get(_mu, i)-(*iterator)[i])/(_N-1));
+                }
+                _N--;
+        } while(iterator++);
+
         update();
+
+        return range.to[0]-range.from[0]+1;
 }
 
 size_t
-BivariateNormal::count_observations(const vector<double>& x) const
-{
-        return 1;
+BivariateNormal::count(const range_t& range) {
+        return range.to[0]-range.from[0]+1;
 }
 
-double BivariateNormal::pdf(const vector<double>& x) const {
+double BivariateNormal::pdf(const range_t& range) const {
+        const_iterator_t<vector<double> > iterator = _data[range];
+
         double mu_x = gsl_vector_get(_mu_N, 0);
         double mu_y = gsl_vector_get(_mu_N, 1);
         double sigma_x = sqrt(gsl_matrix_get(_Sigma_N, 0, 0));
         double sigma_y = sqrt(gsl_matrix_get(_Sigma_N, 1, 1));
         double rho  = gsl_matrix_get(_Sigma_N, 0, 1)/(sigma_x*sigma_y);
+        double result = 1;
 
-        return gsl_ran_bivariate_gaussian_pdf(x[0]-mu_x, x[1]-mu_y, sigma_x, sigma_y, rho);
+        do {
+                result *= gsl_ran_bivariate_gaussian_pdf((*iterator)[0]-mu_x, (*iterator)[1]-mu_y, sigma_x, sigma_y, rho);
+        } while (iterator++);
+
+        return result;
 }
 
-double BivariateNormal::log_pdf(const vector<double>& x) const {
-        return log(pdf(x));
+double BivariateNormal::log_pdf(const range_t& range) const {
+        return log(pdf(range));
 }
 
 double

@@ -31,7 +31,7 @@
 
 using namespace std;
 
-DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const Data& data)
+DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const Data_TFBS& data)
         : // length of tfbs
           TFBS_LENGTH(tfbs_length),
           // priors
@@ -39,11 +39,12 @@ DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const Data& 
           tfbs_alpha(init_alpha(TFBS_LENGTH)),
           // raw sequences
           _data(data),
-          _cluster_manager(data, new ProductDirichlet(tfbs_alpha)),
           // strength parameter for the dirichlet process
           alpha(alpha),
           // mixture weight for the dirichlet process
           lambda(lambda),
+          // starting positions of tfbs
+          tfbs_start_positions(data.lengths(), 0),
           // number of transcription factor binding sites
           num_tfbs(0)
 {
@@ -52,20 +53,15 @@ DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const Data& 
                 _posterior.push_back(vector<double>(data.length(i), 0.0));
         }
 
-        // starting positions of tfbs
-        for(size_t i = 0; i < data.length(); i++) {
-                this->tfbs_start_positions.push_back(vector<bool>(data.length(i), false));
-        }
-
         // initialize cluster manager
-        ProductDirichlet* bg_product_dirichlet   = new ProductDirichlet(bg_alpha);
-        bg_cluster_tag   = _cluster_manager.add_cluster(bg_product_dirichlet);
+        _cluster_manager = ClusterManager(new ProductDirichlet(tfbs_alpha, _data), *new sequence_data_t<cluster_tag_t>(_data.lengths(), -1));
+        ProductDirichlet* bg_product_dirichlet = new ProductDirichlet(bg_alpha, _data);
+        bg_cluster_tag = _cluster_manager.add_cluster(bg_product_dirichlet);
 
         // assign all elements to the background
-        for (Data::const_iterator it = _data.begin();
+        for (Data_TFBS::const_iterator it = _data.begin();
              it != _data.end(); it++) {
-                const word_t word = _data.get_word(*it, BG_LENGTH);
-                _cluster_manager[bg_cluster_tag].add_word(word);
+                _cluster_manager[bg_cluster_tag].add_observations(range_t(*it, *it));
         }
 }
 
@@ -80,11 +76,13 @@ DPM_TFBS::clone() const {
 }
 
 bool
-DPM_TFBS::valid_for_sampling(const element_t& element, const word_t& word) const
+DPM_TFBS::valid_for_sampling(const index_t& index) const
 {
-        const size_t sequence = word.sequence;
-        const size_t position = word.position;
-        const size_t length   = word.length;
+        cluster_tag_t tag = _cluster_manager[index];
+
+        const size_t sequence = index[0];
+        const size_t position = index[1];
+        const size_t length   = tag == bg_cluster_tag ? BG_LENGTH : TFBS_LENGTH;
 
         // check if there is enough space
         if (_data.length(sequence) - position < length) {
@@ -92,15 +90,15 @@ DPM_TFBS::valid_for_sampling(const element_t& element, const word_t& word) const
         }
         // check if there is a tfbs starting here, if not check
         // succeeding positions
-        if (tfbs_start_positions[element.sequence][element.position] == 0) {
+        if (tfbs_start_positions[index] == 0) {
                 // check if this element belongs to a tfbs that starts
                 // earlier in the sequence
-                if (_cluster_manager[element] != bg_cluster_tag) {
+                if (_cluster_manager[index] != bg_cluster_tag) {
                         return false;
                 }
                 // check if there is a tfbs starting within the word
                 for (size_t i = 1; i < length; i++) {
-                        if (tfbs_start_positions[sequence][position+i] == 1) {
+                        if (tfbs_start_positions[index_t(sequence, position+i)] == 1) {
                                 return false;
                         }
                 }
@@ -110,22 +108,36 @@ DPM_TFBS::valid_for_sampling(const element_t& element, const word_t& word) const
 }
 
 void
-DPM_TFBS::add_word(const word_t& word, cluster_tag_t tag)
+DPM_TFBS::add(const index_t& index, cluster_tag_t tag)
 {
-        _cluster_manager[tag].add_word(word);
-        if (tag != bg_cluster_tag) {
+        if (tag == bg_cluster_tag) {
+                const index_t& from(index);
+                const index_t  to  (index[0], index[1] + BG_LENGTH - 1);
+                _cluster_manager[tag].add_observations(range_t(from, to));
+        }
+        else {
+                const index_t& from(index);
+                const index_t  to  (index[0], index[1] + TFBS_LENGTH - 1);
+                _cluster_manager[tag].add_observations(range_t(from, to));
                 num_tfbs++;
-                tfbs_start_positions[word.sequence][word.position] = 1;
+                tfbs_start_positions[index] = 1;
         }
 }
 
 void
-DPM_TFBS::remove_word(const word_t& word, cluster_tag_t tag)
+DPM_TFBS::remove(const index_t& index, cluster_tag_t tag)
 {
-        _cluster_manager[tag].remove_word(word);
-        if (tag != bg_cluster_tag) {
+        if (tag == bg_cluster_tag) {
+                const index_t& from(index);
+                const index_t  to  (index[0], index[1] + BG_LENGTH - 1);
+                _cluster_manager[tag].remove_observations(range_t(from, to));
+        }
+        else {
+                const index_t& from(index);
+                const index_t  to  (index[0], index[1] + TFBS_LENGTH - 1);
+                _cluster_manager[tag].remove_observations(range_t(from, to));
                 num_tfbs--;
-                tfbs_start_positions[word.sequence][word.position] = 0;
+                tfbs_start_positions[index] = 0;
         }
 }
 
@@ -138,12 +150,13 @@ DPM_TFBS::word_length() const
 size_t
 DPM_TFBS::mixture_components() const
 {
-        return _cluster_manager.size() ;
+        return _cluster_manager.size();
 }
 
 void
-DPM_TFBS::mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[])
+DPM_TFBS::mixture_weights(const index_t& index, double weights[], cluster_tag_t tags[])
 {
+        range_t range(index, index_t(index[0], index[1]+TFBS_LENGTH));
         size_t components = mixture_components();
         double dp_norm    = num_tfbs + alpha;
         double sum        = -HUGE_VAL;
@@ -155,7 +168,7 @@ DPM_TFBS::mixture_weights(const word_t& word, double weights[], cluster_tag_t ta
                 ////////////////////////////////////////////////////////////////
                 // mixture component 1: background model
                 if (tags[i] == bg_cluster_tag) {
-                        weights[i] = log(1-lambda) + cluster.distribution().log_pdf(word);
+                        weights[i] = log(1-lambda) + cluster.distribution().log_pdf(range);
                         // normalization constant
                         sum = logadd(sum, weights[i]);
                 }
@@ -163,7 +176,7 @@ DPM_TFBS::mixture_weights(const word_t& word, double weights[], cluster_tag_t ta
                 // mixture component 2: dirichlet process for tfbs models
                 else {
                         double num_elements = (double)cluster.size();
-                        weights[i] = log(lambda*num_elements/dp_norm) + cluster.distribution().log_pdf(word);
+                        weights[i] = log(lambda*num_elements/dp_norm) + cluster.distribution().log_pdf(range);
                         // normalization constant
                         sum = logadd(sum, weights[i]);
                 }
@@ -172,7 +185,7 @@ DPM_TFBS::mixture_weights(const word_t& word, double weights[], cluster_tag_t ta
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         tags[components]    = _cluster_manager.get_free_cluster().tag();
-        weights[components] = log(lambda*alpha/dp_norm) + _cluster_manager[tags[components]].distribution().log_pdf(word);
+        weights[components] = log(lambda*alpha/dp_norm) + _cluster_manager[tags[components]].distribution().log_pdf(range);
         sum = logadd(sum, weights[components]);
 
         ////////////////////////////////////////////////////////////////////////
@@ -196,12 +209,12 @@ DPM_TFBS::likelihood() const {
 
 void
 DPM_TFBS::update_posterior(size_t sampling_steps) {
-        for (Data::const_iterator it = _data.begin();
+        for (Data_TFBS::const_iterator it = _data.begin();
              it != _data.end(); it++) {
-                const element_t& element = *it;
-                const size_t sequence    = element.sequence;
-                const size_t position    = element.position;
-                if (_cluster_manager.get_cluster_tag(element) == bg_cluster_tag) {
+                const index_t& index = *it;
+                const size_t sequence    = index[0];
+                const size_t position    = index[1];
+                if (_cluster_manager[index] == bg_cluster_tag) {
                         double tmp   = _posterior[sequence][position];
                         double value = ((double)sampling_steps*tmp)/((double)sampling_steps+1.0);
                         _posterior[sequence][position] = value;
@@ -219,7 +232,7 @@ DPM_TFBS::posterior() const {
         return _posterior;
 }
 
-const Data&
+const Data_TFBS&
 DPM_TFBS::data() const {
         return _data;
 }
@@ -232,13 +245,13 @@ DPM_TFBS::cluster_manager() const {
 // misc methods
 ////////////////////////////////////////////////////////////////////////////////
 
-ostream& operator<< (ostream& o, const DPM_TFBS& dpm)
-{
-        for (size_t i = 0; i < dpm._data.length(); i++) {
-                for (size_t j = 0; j < dpm._data.length(i); j++) {
-                        o << dpm.tfbs_start_positions[i][j] << " ";
-                }
-                o << endl;
-        }
-        return o;
-}
+// ostream& operator<< (ostream& o, const DPM_TFBS& dpm)
+// {
+//         for (size_t i = 0; i < dpm._data.length(); i++) {
+//                 for (size_t j = 0; j < dpm._data.length(i); j++) {
+// //                        o << dpm.tfbs_start_positions[index_t(i,j)] << " ";
+//                 }
+//                 o << endl;
+//         }
+//         return o;
+// }

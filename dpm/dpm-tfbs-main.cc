@@ -136,7 +136,7 @@ void get_max_length(const char* file_name, size_t *lines, size_t *max_len)
 }
 
 static
-char * readfile(const char* file_name, char *sequences[])
+char * readfile(const char* file_name, vector<string>& sequences)
 {
         ifstream file(file_name);
         string line;
@@ -145,10 +145,11 @@ char * readfile(const char* file_name, char *sequences[])
         while (getline(file, line)) {
                 size_t read = line.size();
                 if (read > 1) {
+                        sequences.push_back("");
                         size_t pos = 0;
                         for (size_t j = 0; j < (size_t)read && line[j] != '\n'; j++) {
                                 if (is_nucleotide(line[j])) {
-                                        sequences[i][pos] = line[j];
+                                        sequences[i].append(1,line[j]);
                                         pos++;
                                 }
                         }
@@ -157,27 +158,6 @@ char * readfile(const char* file_name, char *sequences[])
         }
 
         return NULL;
-}
-
-static
-char ** alloc_sequences(size_t n, size_t m) {
-        char **sequences = (char **)malloc((n+1)*sizeof(char *));
-        size_t i;
-
-        for (i = 0; i < n; i++) {
-                sequences[i] = (char *)calloc(m+1, sizeof(char));
-        }
-        sequences[i] = NULL;
-
-        return sequences;
-}
-
-static
-void free_sequences(char **sequences)
-{
-        for (size_t i = 0; sequences[i] != NULL; i++) {
-                free(sequences[i]);
-        }
 }
 
 static
@@ -227,15 +207,14 @@ static
 void run_dpm(const char* file_name)
 {
         size_t lines, max_len;
-        char **sequences;
+        vector<string> sequences;
 
         // read sequences
         get_max_length(file_name, &lines, &max_len);
-        sequences = alloc_sequences(lines, max_len);
         readfile(file_name, sequences);
 
         // create data, dpm, and sampler objects
-        Data& data = *new Data(lines, sequences);
+        Data_TFBS& data = *new Data_TFBS(sequences);
         DPM_TFBS&  gdpm = *new DPM_TFBS(options.alpha, options.lambda, options.tfbs_length, data);
         GibbsSampler& sampler = *new GibbsSampler(gdpm, data);
         PopulationMCMC& pmcmc = *new PopulationMCMC(sampler, options.population_size);
@@ -257,7 +236,6 @@ void run_dpm(const char* file_name)
         // free memory
         free(&data);
         free(&pmcmc);
-        free_sequences(sequences);
 }
 
 static

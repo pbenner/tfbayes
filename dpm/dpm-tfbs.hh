@@ -31,14 +31,10 @@
 
 class DPM_TFBS : public DPM {
 public:
-         DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const Data& data);
+         DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const Data_TFBS& data);
         ~DPM_TFBS();
 
         DPM_TFBS* clone() const;
-
-        // type definitions
-        ////////////////////////////////////////////////////////////////////////
-        typedef std::vector<std::vector<bool>   > tfbs_start_positions_t;
 
         // operators
         ////////////////////////////////////////////////////////////////////////
@@ -50,15 +46,15 @@ public:
         // methods
         ////////////////////////////////////////////////////////////////////////
         size_t mixture_components() const;
-        void   mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[]);
-        void   add_word(const word_t& word, cluster_tag_t tag);
-        void   remove_word(const word_t& word, cluster_tag_t tag);
+        void   mixture_weights(const index_t& index, double weights[], cluster_tag_t tags[]);
+        void   add(const index_t& index, cluster_tag_t tag);
+        void   remove(const index_t& index, cluster_tag_t tag);
         size_t word_length() const;
         void   update_posterior(size_t sampling_steps);
         double likelihood() const;
-        bool   valid_for_sampling(const element_t& element, const word_t& word) const;
+        bool   valid_for_sampling(const index_t& index) const;
         const posterior_t& posterior() const;
-        const Data& data() const;
+        const Data_TFBS& data() const;
         const ClusterManager& cluster_manager() const;
 
         // constants
@@ -73,8 +69,8 @@ private:
         gsl_matrix* tfbs_alpha;
 
         // data and clusters
-        const Data& _data;
-        ClusterManager _cluster_manager;
+        const Data_TFBS& _data;
+        ClusterManager   _cluster_manager;
 
         // tags of special clusters
         cluster_tag_t bg_cluster_tag;
@@ -84,7 +80,7 @@ private:
         double lambda;
 
         // record start positions of tfbs
-        tfbs_start_positions_t tfbs_start_positions;
+        sequence_data_t<char> tfbs_start_positions;
 
         // posterior distribution
         posterior_t _posterior;

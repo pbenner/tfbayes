@@ -25,7 +25,7 @@
 
 using namespace std;
 
-GibbsSampler::GibbsSampler(DPM& dpm, const Data& data)
+GibbsSampler::GibbsSampler(DPM& dpm, const Data_TFBS& data)
         : _dpm(dpm), _data(data), _sampling_steps(0),
           _sampling_history(*new sampling_history_t())
 {
@@ -56,21 +56,20 @@ GibbsSampler::clone() const {
 }
 
 bool
-GibbsSampler::_sample(const element_t& element) {
-        const word_t word = _data.get_word(element, _dpm.word_length());
+GibbsSampler::_sample(const index_t& index) {
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
-        if (!_dpm.valid_for_sampling(element, word)) {
+        if (!_dpm.valid_for_sampling(index)) {
                 return false;
         }
         ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
-        cluster_tag_t old_cluster_tag = _dpm.cluster_manager().get_cluster_tag(element);
-        _dpm.remove_word(word, old_cluster_tag);
+        cluster_tag_t old_cluster_tag = _dpm.cluster_manager()[index];
+        _dpm.remove(index, old_cluster_tag);
         size_t components = _dpm.mixture_components();
         double weights[components+1];
         cluster_tag_t tags[components+1];
-        _dpm.mixture_weights(word, weights, tags);
+        _dpm.mixture_weights(index, weights, tags);
 
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
@@ -81,7 +80,7 @@ GibbsSampler::_sample(const element_t& element) {
         cluster_tag_t new_cluster_tag = tags[i];
 
         ////////////////////////////////////////////////////////////////////////
-        _dpm.add_word(word, new_cluster_tag);
+        _dpm.add(index, new_cluster_tag);
 
         return old_cluster_tag != new_cluster_tag;
 }
@@ -108,7 +107,7 @@ GibbsSampler::sample(size_t n, size_t burnin) {
                 printf("Burn in... [%u][Components: %02d]\n", (unsigned int)i+1, (int)_dpm.mixture_components());
                 fflush(stdout);
                 double sum = 0;
-                for (Data::const_iterator_randomized it = _data.begin_randomized();
+                for (Data_TFBS::const_iterator_randomized it = _data.begin_randomized();
                      it != _data.end_randomized(); it++) {
                         const bool switched =_sample(**it);
                         if (switched) sum+=1;
@@ -123,7 +122,7 @@ GibbsSampler::sample(size_t n, size_t burnin) {
                 printf("Sampling... [%u][Components: %02d]\n", (unsigned int)i+1, (int)_dpm.mixture_components());
                 fflush(stdout);
                 double sum = 0;
-                for (Data::const_iterator_randomized it = _data.begin_randomized();
+                for (Data_TFBS::const_iterator_randomized it = _data.begin_randomized();
                      it != _data.end_randomized(); it++) {
                         const bool switched = _sample(**it);
                         if (switched) sum+=1;

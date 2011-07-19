@@ -26,21 +26,196 @@
 #include <vector>
 #include <string>
 
-// efficient representation of words (nucleotide sequences)
-// of variable length
-typedef struct {
-        size_t sequence;
-        size_t position;
-        size_t length;
-        const std::vector<std::vector<char> >& sequences;
-} word_t;
+// index_t and range_t
+////////////////////////////////////////////////////////////////////////////////
 
-typedef struct {
-        size_t sequence;
-        size_t position;
-} element_t;
+class index_t {
+public:
+        explicit index_t(size_t x0) : _x(1, 0), _size(1) {
+                _x[0] = x0;
+        }
+        index_t(size_t x0, size_t x1) : _x(2, 0), _size(2) {
+                _x[0] = x0;
+                _x[1] = x1;
+        }
+        index_t(size_t x0, size_t x1, size_t x2) : _x(3, 0), _size(3) {
+                _x[0] = x0;
+                _x[1] = x1;
+                _x[2] = x2;
+        }
+        index_t(const std::vector<size_t>& x) : _x(x), _size(x.size()) {
+        }
+        index_t(const index_t& index) : _x(index._x), _size(index._size) {
+        }
+        size_t operator[](size_t i) const { return _x[i]; }
+        size_t operator[](size_t i)       { return _x[i]; }
 
-typedef size_t cluster_tag_t;
+        void operator=(const index_t& index) {
+                for (size_t i = 0; i < _size; i++) {
+                        _x[i] = index[i];
+                }
+        }
+
+        void operator++(int i) {
+                _x[_size-1]++;
+        }
+
+        bool operator<(index_t index) const {
+                return _x[_size-1] < index[_size-1];
+        }
+
+        size_t size() const {
+                return _size;
+        }
+
+private:
+        std::vector<size_t> _x;
+        const size_t _size;
+};
+
+class range_t {
+public:
+        range_t(const index_t from, const index_t to) 
+                : from(from), to(to){
+        }
+
+        const index_t from;
+        const index_t to;
+};
+
+// data_t and iterator_t
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename T> class data_t;
+
+template <typename T>
+class iterator_t
+{
+public:
+        iterator_t(data_t<T>& data, const index_t& from, const index_t& to)
+                : _data(data), _from(from), _to(to), _pos(from) {
+        }
+
+        const T& operator*() const {
+                return _data[_pos];
+        }
+              T& operator*() {
+                return _data[_pos];
+        }
+
+        void reset() {
+                _pos = _from;
+        }
+
+        const bool operator++(int i) {
+                if (_pos < _to) {
+                        _pos++;
+                        return true;
+                }
+                return false;
+        }
+
+private:
+              data_t<T>& _data;
+        const index_t& _from;
+        const index_t& _to;
+        index_t _pos;
+};
+
+template <typename T>
+class const_iterator_t
+{
+public:
+        const_iterator_t(const data_t<T>& data, const index_t& from, const index_t& to)
+                : _data(data), _from(from), _to(to), _pos(from) {
+        }
+
+        const T& operator*() const {
+                return _data[_pos];
+        }
+
+        void reset() {
+                _pos = _from;
+        }
+
+        const bool operator++(int i) {
+                if (_pos < _to) {
+                        _pos++;
+                        return true;
+                }
+                return false;
+        }
+
+private:
+        const data_t<T>& _data;
+        const index_t& _from;
+        const index_t& _to;
+        index_t _pos;
+};
+
+template <typename T>
+class data_t
+{
+public:
+        data_t() : _data() {
+        }
+        data_t(const std::vector<T>& data) : _data(data) {
+        }
+        ~data_t() {}
+
+        virtual const_iterator_t<T> operator[](const range_t& range) const {
+                return const_iterator_t<T>(*this, range.from, range.to);
+        }
+        virtual iterator_t<T> operator[](const range_t& range) {
+                return iterator_t<T>(*this, range.from, range.to);
+        }
+        virtual const T& operator[](const index_t& index) const {
+                return _data[index[0]];
+        }
+        virtual T& operator[](const index_t& index) {
+                return _data[index[0]];
+        }
+
+protected:
+        std::vector<T> _data;
+};
+
+template <typename T>
+class sequence_data_t : public data_t<T>
+{
+public:
+        sequence_data_t() : _data() {
+        }
+        sequence_data_t(const std::vector<std::vector<T> >& data) : _data(data) {
+        }
+        sequence_data_t(const std::vector<size_t> n, const T init) : _data() {
+                for (size_t i = 0; i < n.size(); i++) {
+                        _data.push_back(std::vector<T>(n[i], init));
+                }
+        }
+
+        virtual const_iterator_t<T> operator[](const range_t& range) const {
+                return const_iterator_t<T>((const data_t<T>&)*this, range.from, range.to);
+        }
+        virtual iterator_t<T> operator[](const range_t& range) {
+                return iterator_t<T>((data_t<T>&)*this, range.from, range.to);
+        }
+        virtual const T& operator[](const index_t& index) const {
+                return _data[index[0]][index[1]];
+        }
+
+        virtual T& operator[](const index_t& index) {
+                return _data[index[0]][index[1]];
+        }
+
+protected:
+        std::vector<std::vector<T> > _data;
+};
+
+// cluster structures
+////////////////////////////////////////////////////////////////////////////////
+
+typedef ssize_t cluster_tag_t;
 
 typedef enum {
         cluster_event_empty, cluster_event_nonempty,

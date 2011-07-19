@@ -35,7 +35,7 @@ namespace Bayes {
 using namespace std;
 
 static DPM_TFBS* _gdpm;
-static Data* _data;
+static Data_TFBS* _data;
 static GibbsSampler* _sampler;
 
 __BEGIN_C_REGION;
@@ -50,7 +50,12 @@ void _dpm_init(double alpha, double lambda, int tfbs_length, int n, char *sequen
 {
         __dpm_init__();
 
-        _data = new Data(n, sequences);
+        vector<string> _sequences;
+        for (size_t i = 0; i < (size_t)n; i++) {
+                _sequences.push_back(sequences[i]);
+        }
+
+        _data = new Data_TFBS(_sequences);
         _gdpm = new DPM_TFBS(alpha, lambda, (size_t)tfbs_length, *_data);
         _sampler = new GibbsSampler(*_gdpm, *_data);
 }
@@ -105,10 +110,10 @@ Bayes::Matrix* _dpm_cluster_assignments() {
         // allocate matrix
         result = Bayes::allocMatrix(n, m);
         // copy posterior
-        for (Data::const_iterator it = _gdpm->data().begin();
+        for (Data_TFBS::const_iterator it = _gdpm->data().begin();
              it != _gdpm->data().end(); it++) {
-                const element_t& element = *it;
-                result->mat[element.sequence][element.position] = _gdpm->cluster_manager()[element];
+                const index_t& index = *it;
+                result->mat[index[0]][index[1]] = _gdpm->cluster_manager()[index];
         }
         return result;
 }

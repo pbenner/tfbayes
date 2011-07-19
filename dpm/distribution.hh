@@ -39,7 +39,6 @@
 extern gsl_rng* _r;
 
 class Distribution : public clonable {
-
 public:
         Distribution() {}
         Distribution(const Distribution& distribution) {
@@ -52,11 +51,11 @@ public:
         typedef std::vector<std::vector<size_t> > counts_t;
 
         // purely virtual functions
-        virtual size_t add_observations(const word_t& word) = 0;
-        virtual size_t remove_observations(const word_t& word) = 0;
-        virtual size_t count_observations(const word_t& word) const = 0;
-        virtual double pdf(const word_t& word) const = 0;
-        virtual double log_pdf(const word_t& word) const = 0;
+        virtual size_t add(const range_t& range) = 0;
+        virtual size_t remove(const range_t& range) = 0;
+        virtual size_t count(const range_t& range) = 0;
+        virtual double pdf(const range_t& range) const = 0;
+        virtual double log_pdf(const range_t& range) const = 0;
         virtual double log_likelihood() const = 0;
 
         virtual Distribution* clone() const = 0;
@@ -64,15 +63,15 @@ public:
 
 class ProductDirichlet : public Distribution {
 public:
-         ProductDirichlet(gsl_matrix* alpha);
+        ProductDirichlet(gsl_matrix* alpha, const sequence_data_t<char>& data);
          ProductDirichlet(const ProductDirichlet& distribution);
         ~ProductDirichlet();
 
-        size_t add_observations(const word_t& word);
-        size_t remove_observations(const word_t& word);
-        size_t count_observations(const word_t& word) const;
-        double pdf(const word_t& word) const;
-        double log_pdf(const word_t& word) const;
+        size_t add(const range_t& range);
+        size_t remove(const range_t& range);
+        size_t count(const range_t& range);
+        double pdf(const range_t& range) const;
+        double log_pdf(const range_t& range) const;
         double log_likelihood() const;
 
         ProductDirichlet* clone() const;
@@ -80,6 +79,8 @@ public:
 private:
         alpha_t alpha;
         counts_t counts;
+
+        const sequence_data_t<char>& _data;
 };
 
 class BivariateNormal : public Distribution {
@@ -87,14 +88,15 @@ public:
          BivariateNormal();
          BivariateNormal(const gsl_matrix* Sigma,
                          const gsl_matrix* Sigma_0,
-                         const gsl_vector* mu_0);
+                         const gsl_vector* mu_0,
+                         const data_t<std::vector<double> >& data);
         ~BivariateNormal();
 
-        size_t add_observations(const std::vector<double>& word);
-        size_t remove_observations(const std::vector<double>& word);
-        size_t count_observations(const std::vector<double>& word) const;
-        double pdf(const std::vector<double>& x) const;
-        double log_pdf(const std::vector<double>& x) const;
+        size_t add(const range_t& range);
+        size_t remove(const range_t& range);
+        size_t count(const range_t& range);
+        double pdf(const range_t& range) const;
+        double log_pdf(const range_t& range) const;
         double log_likelihood() const;
 
 private:
@@ -119,7 +121,10 @@ private:
         gsl_vector* _tmp1;
         gsl_vector* _tmp2;
 
-        void inverse(gsl_matrix* dst, gsl_matrix* src);
+        void inverse(gsl_matrix* dst, const gsl_matrix* src);
+        void update();
+
+        const data_t<std::vector<double> >& _data;
 };
 
 #endif /* STATISTICS_HH */

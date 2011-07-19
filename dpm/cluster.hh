@@ -50,8 +50,8 @@ public:
         friend std::ostream& operator<< (std::ostream& o, const Cluster& cluster);
 
         // methods
-        void add_word(const word_t& word);
-        void remove_word(const word_t& word);
+        void add_observations(const range_t& range);
+        void remove_observations(const range_t& range);
         size_t size() const;
         cluster_tag_t tag() const;
         bool destructible() const;

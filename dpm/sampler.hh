@@ -36,7 +36,7 @@ public:
 
 class GibbsSampler : public Sampler {
 public:
-         GibbsSampler(DPM& dpm, const Data& data);
+         GibbsSampler(DPM& dpm, const Data_TFBS& data);
          GibbsSampler(const GibbsSampler& sampler);
         ~GibbsSampler();
 
@@ -49,11 +49,11 @@ public:
 
 private:
         // private methods
-        bool _sample(const element_t& element);
+        bool _sample(const index_t& element);
 
         // the mixture model
         DPM& _dpm;
-        const Data& _data;
+        const Data_TFBS& _data;
 
         // gibbs sampler history
         size_t _sampling_steps;

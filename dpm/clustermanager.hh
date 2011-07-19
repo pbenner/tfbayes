@@ -37,7 +37,8 @@
 
 class ClusterManager : public Observer<cluster_event_t> {
 public:
-        ClusterManager(const Data& data, Distribution* distribution);
+        ClusterManager();
+        ClusterManager(Distribution* distribution, data_t<cluster_tag_t>& cluster_assignments);
         ClusterManager(const ClusterManager& cm);
         virtual ~ClusterManager();
 
@@ -65,19 +66,21 @@ public:
         ////////////////////////////////////////////////////////////////////////
               Cluster& operator[](cluster_tag_t c);
         const Cluster& operator[](cluster_tag_t c) const;
-         cluster_tag_t operator[](element_t element) const;
+         cluster_tag_t operator[](const index_t& index) const;
 
-        friend std::ostream& operator<< (std::ostream& o, const ClusterManager& data);
+//        friend std::ostream& operator<< (std::ostream& o, const ClusterManager& cm);
 
         // methods
         ////////////////////////////////////////////////////////////////////////
         void update(Observed<cluster_event_t>* cluster, cluster_event_t event);
-        void update(Observed<cluster_event_t>* cluster, cluster_event_t event, const word_t& word);
+        void update(Observed<cluster_event_t>* cluster, cluster_event_t event, const range_t& range);
         cluster_tag_t add_cluster();
         cluster_tag_t add_cluster(Distribution* distribution);
-        cluster_tag_t get_cluster_tag(const element_t& element) const;
         Cluster& get_free_cluster();
         size_t size() const;
+
+        // keep track of cluster assignments
+        void record_cluster_assignment(const range_t& range, cluster_tag_t tag);
 
 private:
         std::vector<Cluster*> clusters;
@@ -89,14 +92,11 @@ private:
         size_t used_clusters_size;
         size_t free_clusters_size;
 
-        // keep track of cluster assignments
-        void record_cluster_assignment(const word_t& word, cluster_tag_t tag);
-
-        // assignments to clusters
-        std::vector<std::vector<ssize_t> > cluster_assignments;
-
         // default distribution for the dirichlet process
         Distribution* default_distribution;
+
+        // assignments to clusters
+        data_t<cluster_tag_t> cluster_assignments;
 };
 
 #endif /* CLUSTERMANAGER_HH */

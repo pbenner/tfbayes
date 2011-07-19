@@ -28,14 +28,15 @@
 
 using namespace std;
 
-ClusterManager::ClusterManager(const Data& data, Distribution* distribution)
-        : used_clusters_size(0), free_clusters_size(0),
-          default_distribution(distribution)
+ClusterManager::ClusterManager()
 {
-        for(size_t i = 0; i < data.length(); i++) {
-                const size_t m = data.length(i);
-                cluster_assignments.push_back(vector<ssize_t>(m, -1));
-        }
+}
+
+ClusterManager::ClusterManager(Distribution* distribution, data_t<cluster_tag_t>& cluster_assignments)
+        : used_clusters_size(0), free_clusters_size(0),
+          default_distribution(distribution),
+          cluster_assignments(cluster_assignments)
+{
 }
 
 ClusterManager::~ClusterManager() {
@@ -49,7 +50,6 @@ ClusterManager::~ClusterManager() {
 ClusterManager::ClusterManager(const ClusterManager& cm)
         : used_clusters_size(cm.used_clusters_size),
           free_clusters_size(cm.free_clusters_size),
-          cluster_assignments(cm.cluster_assignments),
           default_distribution(cm.default_distribution->clone())
 {
         for (size_t i = 0; i < cm.clusters.size(); i++) {
@@ -138,25 +138,27 @@ ClusterManager::update(Observed<cluster_event_t>* observed, cluster_event_t even
 }
 
 void
-ClusterManager::update(Observed<cluster_event_t>* observed, cluster_event_t event, const word_t& word)
+ClusterManager::update(Observed<cluster_event_t>* observed, cluster_event_t event, const range_t& range)
 {
         Cluster* cluster = (Cluster*)observed;
+        iterator_t<cluster_tag_t> iterator = cluster_assignments[range];
 
         switch (event) {
         case cluster_event_add_word:
-                for (size_t i = 0; i < word.length; i++) {
-                        cluster_assignments[word.sequence][word.position+i] = cluster->tag();
-                }
+                do {
+                        *iterator = cluster->tag();
+                } while(iterator++);
                 break;
         case cluster_event_remove_word:
-                for (size_t i = 0; i < word.length; i++) {
-                        cluster_assignments[word.sequence][word.position+i] = -1;
-                }
+                do {
+                        *iterator = -1;
+                } while(iterator++);
                 break;
         default:
                 break;
         }
 }
+
 
 Cluster&
 ClusterManager::operator[](cluster_tag_t c) {
@@ -169,8 +171,8 @@ ClusterManager::operator[](cluster_tag_t c) const {
 }
 
 cluster_tag_t
-ClusterManager::operator[](element_t element) const {
-        return cluster_assignments[element.sequence][element.position];
+ClusterManager::operator[](const index_t& index) const {
+        return cluster_assignments[index];
 }
 
 size_t
@@ -178,19 +180,14 @@ ClusterManager::size() const {
         return used_clusters_size;
 }
 
-cluster_tag_t
-ClusterManager::get_cluster_tag(const element_t& element) const {
-        return (cluster_tag_t)cluster_assignments[element.sequence][element.position];
-}
+// ostream&
+// operator<< (ostream& o, const ClusterManager& cm) {
+//         for (size_t i = 0; i < cm.cluster_assignments.size(); i++) {
+//                 for (size_t j = 0; j < cm.cluster_assignments[i].size(); j++) {
+//                         o << cm.cluster_assignments[i][j] << " ";
+//                 }
+//                 o << endl;
+//         }
 
-ostream&
-operator<< (ostream& o, const ClusterManager& cm) {
-        for (size_t i = 0; i < cm.cluster_assignments.size(); i++) {
-                for (size_t j = 0; j < cm.cluster_assignments[i].size(); j++) {
-                        o << cm.cluster_assignments[i][j] << " ";
-                }
-                o << endl;
-        }
-
-        return o;
-}
+//         return o;
+// }

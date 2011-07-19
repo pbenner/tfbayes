@@ -45,15 +45,14 @@ public:
         // methods
         ////////////////////////////////////////////////////////////////////////
         virtual size_t mixture_components() const = 0;
-        virtual void   mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[]) = 0;
-        virtual void   add_word(const word_t& word, cluster_tag_t tag) = 0;
-        virtual void   remove_word(const word_t& word, cluster_tag_t tag) = 0;
-        virtual size_t word_length() const = 0;
+        virtual void   mixture_weights(const index_t& index, double weights[], cluster_tag_t tags[]) = 0;
+        virtual void   add(const index_t& index, cluster_tag_t tag) = 0;
+        virtual void   remove(const index_t& index, cluster_tag_t tag) = 0;
         virtual void   update_posterior(size_t sampling_steps) = 0;
         virtual double likelihood() const = 0;
-        virtual bool   valid_for_sampling(const element_t& element, const word_t& word) const = 0;
+        virtual bool   valid_for_sampling(const index_t& index) const = 0;
         virtual const posterior_t& posterior() const = 0;
-        virtual const Data& data() const = 0;
+//        virtual const Data& data() const = 0;
         virtual const ClusterManager& cluster_manager() const = 0;
 };
 

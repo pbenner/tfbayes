@@ -32,7 +32,7 @@ class Observer {
 public:
         virtual ~Observer() {}
         virtual void update(Observed<E>* observed, E event) = 0;
-        virtual void update(Observed<E>* observed, E event, const word_t& word) = 0;
+        virtual void update(Observed<E>* observed, E event, const range_t& range) = 0;
 };
 
 template <class E>
@@ -50,9 +50,9 @@ protected:
                         observer->update(this, event);
                 }
         }
-        void notify(E event, const word_t& word) {
+        void notify(E event, const range_t& range) {
                 if (observer) {
-                        observer->update(this, event, word);
+                        observer->update(this, event, range);
                 }
         }
 

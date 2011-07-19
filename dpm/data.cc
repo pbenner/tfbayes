@@ -37,79 +37,72 @@
 
 using namespace std;
 
-Data::Data(size_t n, char *sequences[])
-        : n_sequences(n), _size(0)
-{
-        for(size_t i = 0; i < n; i++) {
-                size_t m = strlen(sequences[i]);
-                this->sequences.push_back(sequences[i]);
+const vector<vector<char> > code_sequences(const vector<string>& sequences) {
+        vector<vector<char> > sequences_coded;
+
+        for(size_t i = 0; i < sequences.size(); i++) {
                 try {
-                        this->sequences_coded.push_back(code_nucleotide_sequence(sequences[i]));
+                        sequences_coded.push_back(code_nucleotide_sequence(sequences[i]));
                 }
                 catch (const InvalidNucleotide& i) {
-                        cout << "Exception: " << i.what() << " \'" << i.nucleotide() << "\'"
+                        cout << "Exception:    " << i.what()     << " \'" << i.nucleotide() << "\'"
                              << " in sequence: " << i.sequence() << endl;
                         exit(EXIT_FAILURE);
                 }
-                this->sequences_length.push_back(m);
-                for(size_t j = 0; j < m; j++) {
-                        element_t e = {i, j};
-                        this->elements.push_back(e);
-                        this->sequences_coded[i][j] = code_nucleotide(this->sequences[i][j]);
+        }
+        return sequences_coded;
+}
+
+Data_TFBS::Data_TFBS(const vector<string>& sequences)
+        : sequence_data_t<char>(code_sequences(sequences)), sequences(sequences), _n_sequences(sequences.size()), _size(0)
+{
+        for(size_t i = 0; i < sequences.size(); i++) {
+                // store length of sequences
+                this->sequences_length.push_back(sequences[i].size());
+                // and a list of indices
+                for(size_t j = 0; j < sequences[i].size(); j++) {
+                        this->indices.push_back(index_t(i,j));
                         _size++;
                 }
         }
-        for (Data::iterator it = begin(); it != end(); it++) {
-                elements_randomized.push_back(&(*it));
+        // generate a randomized list of indices
+        for (Data_TFBS::iterator it = begin(); it != end(); it++) {
+                indices_randomized.push_back(&(*it));
         }
         shuffle();
 }
 
-Data::~Data() {
+Data_TFBS::~Data_TFBS() {
 }
 
 void
-Data::shuffle() {
-        random_shuffle(elements_randomized.begin(), elements_randomized.end());
+Data_TFBS::shuffle() {
+        random_shuffle(indices_randomized.begin(), indices_randomized.end());
 }
 
-const element_t&
-Data::operator[](size_t i) const {
-        return elements[i];
+const index_t&
+Data_TFBS::operator[](size_t i) const {
+        return indices[i];
 }
 
-element_t&
-Data::operator[](size_t i) {
-        return elements[i];
-}
-
-char
-Data::operator[](element_t element) const {
-        return sequences[element.sequence][element.position];
-}
-
-const word_t
-Data::get_word(const element_t& element, size_t length) const {
-        const size_t sequence = element.sequence;
-        const size_t position = element.position;
-        word_t word = {sequence, position, length, sequences_coded};
-
-        return word;
-}
+// char
+// Data_TFBS::operator[](const index_t& index) const {
+//         return sequences[index_t(index[0])][index[1]];
+// }
 
 size_t
-Data::size() const {
+Data_TFBS::size() const {
         return _size;
 }
 
 size_t
-Data::length() const {
-        return n_sequences;
+Data_TFBS::length() const {
+        return _n_sequences;
 }
 
 size_t
-Data::length(size_t i) const {
-        if (i < n_sequences) {
+Data_TFBS::length(size_t i) const {
+        if (i < _n_sequences) {
                 return sequences_length[i];
         }
         else {
@@ -117,20 +110,26 @@ Data::length(size_t i) const {
         }
 }
 
-ostream&
-operator<< (ostream& o, const word_t& word) {
-        o << "(" << word.sequence << ":" << word.position << ":";
-        for (size_t i = 0; i < word.length; i++) {
-                o << decode_nucleotide(word.sequences[word.sequence][word.position+i]);
-        }
-        o << ")";
-
-        return o;
+const std::vector<size_t>&
+Data_TFBS::lengths() const
+{
+        return sequences_length;
 }
 
-ostream& operator<< (ostream& o, const Data& data)
+// ostream&
+// operator<< (ostream& o, const word_t& word) {
+//         o << "(" << word.sequence << ":" << word.position << ":";
+//         for (size_t i = 0; i < word.length; i++) {
+//                 o << decode_nucleotide(word.sequences[word.sequence][word.position+i]);
+//         }
+//         o << ")";
+
+//         return o;
+// }
+
+ostream& operator<< (ostream& o, const Data_TFBS& data)
 {
-        for (size_t i = 0; i < data.length(); i++) {
+        for (size_t i = 0; i < data.sequences.size(); i++) {
                 o << data.sequences[i] << endl;
         }
         return o;
