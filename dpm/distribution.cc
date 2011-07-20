@@ -38,7 +38,7 @@ using namespace std;
 gsl_rng* _r;
 
 ProductDirichlet::ProductDirichlet(gsl_matrix* _alpha, const sequence_data_t<char>& data)
-        : _data(data)
+        : _data(data), _size1(_alpha->size1), _size2(_alpha->size2)
 {
         for (size_t i = 0; i < _alpha->size1; i++) {
                 double sum = 0;
@@ -53,7 +53,8 @@ ProductDirichlet::ProductDirichlet(gsl_matrix* _alpha, const sequence_data_t<cha
 }
 
 ProductDirichlet::ProductDirichlet(const ProductDirichlet& distribution)
-        : alpha(distribution.alpha), counts(distribution.counts), _data(distribution._data)
+        : alpha(distribution.alpha), counts(distribution.counts), _data(distribution._data),
+          _size1(distribution._size1), _size2(distribution._size2)
 {
 }
 
@@ -71,11 +72,11 @@ ProductDirichlet::add(const range_t& range) {
         size_t i;
 
         for (i = 0;; i++) {
-                counts[i%counts.size()][*iterator]++;
-                counts[i%counts.size()][4]++;
+                counts[i%_size1][*iterator]++;
+                counts[i%_size1][4]++;
                 if (!iterator++) break;
         }
-        return (i+1)/counts.size();
+        return (i+1)/_size1;
 }
 
 size_t
@@ -84,16 +85,16 @@ ProductDirichlet::remove(const range_t& range) {
         size_t i;
 
         for (i = 0;; i++) {
-                counts[i%counts.size()][*iterator]--;
-                counts[i%counts.size()][4]--;
+                counts[i%_size1][*iterator]--;
+                counts[i%_size1][4]--;
                 if (!iterator++) break;
         }
-        return (i+1)/counts.size();
+        return (i+1)/_size1;
 }
 
 size_t
 ProductDirichlet::count(const range_t& range) {
-        return (range.to[1]-range.from[1]+1)/counts.size();
+        return (range.to[1]-range.from[1]+1)/_size1;
 }
 
 double ProductDirichlet::pdf(const range_t& range) const {
@@ -101,7 +102,7 @@ double ProductDirichlet::pdf(const range_t& range) const {
         double result = 1;
         size_t i;
 
-        for (i = 0;; i=(i+1)%counts.size()) {
+        for (i = 0;; i=(i+1)%_size1) {
                 result *= (counts[i][*iterator]+alpha[i][*iterator])/(counts[i][4]+alpha[i][4]);
                 if (!iterator++) break;
         }
@@ -113,7 +114,7 @@ double ProductDirichlet::log_pdf(const range_t& range) const {
         double result = 0;
         size_t i;
 
-        for (i = 0;; i=(i+1)%counts.size()) {
+        for (i = 0;; i=(i+1)%_size1) {
                 result += log((counts[i][*iterator]+alpha[i][*iterator])/(counts[i][4]+alpha[i][4]));
                 if (!iterator++) break;
         }
@@ -126,8 +127,8 @@ double ProductDirichlet::log_pdf(const range_t& range) const {
 double ProductDirichlet::log_likelihood() const {
         double result = 0;
 
-        for (size_t j = 0; j < counts.size(); j++) {
-                for (size_t k = 0; k < counts[j].size(); k++) {
+        for (size_t j = 0; j < _size1; j++) {
+                for (size_t k = 0; k < _size2; k++) {
                         result += counts[j][k]*log((counts[j][k]+alpha[j][k])/(counts[j][4]+alpha[j][4]));
                 }
         }

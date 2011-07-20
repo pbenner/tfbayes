@@ -81,6 +81,9 @@ private:
         counts_t counts;
 
         const sequence_data_t<char>& _data;
+
+        const size_t _size1;
+        const size_t _size2;
 };
 
 class BivariateNormal : public Distribution {
