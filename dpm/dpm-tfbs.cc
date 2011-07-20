@@ -54,6 +54,8 @@ DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const Data_T
                 _posterior.push_back(vector<double>(data.length(i), 0.0));
         }
 
+        cout << _data << endl;
+
         // initialize cluster manager
         ProductDirichlet* bg_product_dirichlet = new ProductDirichlet(bg_alpha, _data);
         bg_cluster_tag = _cluster_manager.add_cluster(bg_product_dirichlet);
@@ -63,6 +65,7 @@ DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const Data_T
              it != _data.end(); it++) {
                 _cluster_manager[bg_cluster_tag].add_observations(range_t(*it, *it));
         }
+        cout << "finished adding background" << endl;
 }
 
 DPM_TFBS::~DPM_TFBS() {
@@ -78,14 +81,11 @@ DPM_TFBS::clone() const {
 bool
 DPM_TFBS::valid_for_sampling(const index_t& index) const
 {
-        cluster_tag_t tag = _cluster_manager[index];
-
         const size_t sequence = index[0];
         const size_t position = index[1];
-        const size_t length   = tag == bg_cluster_tag ? BG_LENGTH : TFBS_LENGTH;
 
         // check if there is enough space
-        if (_data.length(sequence) - position < length) {
+        if (_data.length(sequence) - position < TFBS_LENGTH) {
                 return false;
         }
         // check if there is a tfbs starting here, if not check
@@ -97,7 +97,7 @@ DPM_TFBS::valid_for_sampling(const index_t& index) const
                         return false;
                 }
                 // check if there is a tfbs starting within the word
-                for (size_t i = 1; i < length; i++) {
+                for (size_t i = 1; i < TFBS_LENGTH; i++) {
                         if (tfbs_start_positions[index_t(sequence, position+i)] == 1) {
                                 return false;
                         }
