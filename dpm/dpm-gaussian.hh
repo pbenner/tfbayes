@@ -56,7 +56,6 @@ public:
         void   mixture_weights(const word_t& word, double weights[], cluster_tag_t tags[]);
         void   add_word(const word_t& word, cluster_tag_t tag);
         void   remove_word(const word_t& word, cluster_tag_t tag);
-        size_t word_length() const;
         void   update_posterior(size_t sampling_steps);
         double likelihood() const;
         bool   valid_for_sampling(const element_t& element, const word_t& word) const;

@@ -116,21 +116,11 @@ Data_TFBS::lengths() const
         return sequences_length;
 }
 
-// ostream&
-// operator<< (ostream& o, const word_t& word) {
-//         o << "(" << word.sequence << ":" << word.position << ":";
-//         for (size_t i = 0; i < word.length; i++) {
-//                 o << decode_nucleotide(word.sequences[word.sequence][word.position+i]);
-//         }
-//         o << ")";
-
-//         return o;
-// }
-
 ostream& operator<< (ostream& o, const Data_TFBS& data)
 {
         for (size_t i = 0; i < data.sequences.size(); i++) {
                 o << data.sequences[i] << endl;
         }
+
         return o;
 }

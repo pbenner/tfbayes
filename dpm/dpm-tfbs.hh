@@ -49,7 +49,6 @@ public:
         void   mixture_weights(const index_t& index, double weights[], cluster_tag_t tags[]);
         void   add(const index_t& index, cluster_tag_t tag);
         void   remove(const index_t& index, cluster_tag_t tag);
-        size_t word_length() const;
         void   update_posterior(size_t sampling_steps);
         double likelihood() const;
         bool   valid_for_sampling(const index_t& index) const;
@@ -70,6 +69,7 @@ private:
 
         // data and clusters
         const Data_TFBS& _data;
+        sequence_data_t<cluster_tag_t> _cluster_assignments;
         ClusterManager   _cluster_manager;
 
         // tags of special clusters
@@ -80,7 +80,7 @@ private:
         double lambda;
 
         // record start positions of tfbs
-        sequence_data_t<char> tfbs_start_positions;
+        sequence_data_t<cluster_tag_t> _tfbs_start_positions; // TODO
 
         // posterior distribution
         posterior_t _posterior;

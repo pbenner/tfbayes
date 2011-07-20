@@ -71,12 +71,6 @@ DPM_GAUSSIAN::remove_word(const word_t& word, cluster_tag_t tag)
 }
 
 size_t
-DPM_GAUSSIAN::word_length() const
-{
-        return 1;
-}
-
-size_t
 DPM_GAUSSIAN::mixture_components() const
 {
         return _cluster_manager.size() ;

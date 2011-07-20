@@ -67,7 +67,7 @@ public:
         const Cluster& operator[](cluster_tag_t c) const;
          cluster_tag_t operator[](const index_t& index) const;
 
-//        friend std::ostream& operator<< (std::ostream& o, const ClusterManager& cm);
+        friend std::ostream& operator<< (std::ostream& o, const ClusterManager& cm);
 
         // methods
         ////////////////////////////////////////////////////////////////////////

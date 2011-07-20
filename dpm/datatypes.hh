@@ -47,6 +47,9 @@ public:
         }
         index_t(const index_t& index) : _x(index._x), _size(index._size) {
         }
+
+        friend std::ostream& operator<< (std::ostream& o, const index_t& index);
+
         size_t operator[](size_t i) const { return _x[i]; }
         size_t operator[](size_t i)       { return _x[i]; }
 

@@ -19,6 +19,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <assert.h>
 #include <math.h>
 #include <vector>
 
@@ -74,7 +75,7 @@ ProductDirichlet::add(const range_t& range) {
                 counts[i%counts.size()][4]++;
                 if (!iterator++) break;
         }
-        return i/counts.size();
+        return (i+1)/counts.size();
 }
 
 size_t
@@ -87,7 +88,7 @@ ProductDirichlet::remove(const range_t& range) {
                 counts[i%counts.size()][4]--;
                 if (!iterator++) break;
         }
-        return i/counts.size();
+        return (i+1)/counts.size();
 }
 
 size_t

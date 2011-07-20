@@ -55,14 +55,13 @@ void _dpm_init(double alpha, double lambda, int tfbs_length, int n, char *sequen
                 _sequences.push_back(sequences[i]);
         }
 
-        _data = new Data_TFBS(_sequences);
-        _gdpm = new DPM_TFBS(alpha, lambda, (size_t)tfbs_length, *_data);
+        _data    = new Data_TFBS(_sequences);
+        _gdpm    = new DPM_TFBS(alpha, lambda, (size_t)tfbs_length, *_data);
         _sampler = new GibbsSampler(*_gdpm, *_data);
 }
 
 unsigned int _dpm_num_clusters() {
-//        return _gdpm->num_clusters();
-        return 0;
+        return _gdpm->cluster_manager().size();
 }
 
 Bayes::Matrix* _dpm_get_posterior() {
@@ -143,7 +142,7 @@ Bayes::Vector* _dpm_hist_switches() {
 }
 
 void _dpm_print() {
-//        cout << *_gdpm << endl;
+        cout << *_gdpm << endl;
 }
 
 void _dpm_sample(unsigned int n, unsigned int burnin) {

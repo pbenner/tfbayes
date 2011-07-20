@@ -177,13 +177,12 @@ ClusterManager::size() const {
         return used_clusters_size;
 }
 
-// ostream&
-// operator<< (ostream& o, const ClusterManager& cm) {
-//         for (size_t i = 0; i < cm.cluster_assignments.size(); i++) {
-//                 for (size_t j = 0; j < cm.cluster_assignments[i].size(); j++) {
-//                         o << cm.cluster_assignments[i][j] << " ";
-//                 }
-//                 o << endl;
-//         }
-//         return o;
-// }
+std::ostream& operator<< (std::ostream& o, const ClusterManager& cm) {
+        o << "(" << cm.size() << "): ";
+        for (ClusterManager::const_iterator it = cm.begin(); it != cm.end(); it++) {
+                o << **it << " ";
+        }
+        o << endl;
+
+        return o;
+}
