@@ -31,40 +31,37 @@
 
 class index_t {
 public:
-        explicit index_t(size_t x0) : _x(1, 0), _size(1) {
-                _x[0] = x0;
+        explicit index_t(size_t x0) : _x0(x0), _size(1) {
+                _x0 = x0;
         }
-        index_t(size_t x0, size_t x1) : _x(2, 0), _size(2) {
-                _x[0] = x0;
-                _x[1] = x1;
+        index_t(size_t x0, size_t x1) : _x0(x0), _x1(x1), _size(2) {
         }
-        index_t(size_t x0, size_t x1, size_t x2) : _x(3, 0), _size(3) {
-                _x[0] = x0;
-                _x[1] = x1;
-                _x[2] = x2;
+        index_t(const std::vector<size_t>& x) : _x0(x[0]), _x1(x[1]), _size(x.size()) {
         }
-        index_t(const std::vector<size_t>& x) : _x(x), _size(x.size()) {
-        }
-        index_t(const index_t& index) : _x(index._x), _size(index._size) {
+        index_t(const index_t& index) : _x0(index._x0), _x1(index._x1), _size(index._size) {
         }
 
         friend std::ostream& operator<< (std::ostream& o, const index_t& index);
 
-        size_t operator[](size_t i) const { return _x[i]; }
-        size_t operator[](size_t i)       { return _x[i]; }
+        size_t operator[](size_t i) const { return i == 0 ? _x0 : _x1; }
+        size_t operator[](size_t i)       { return i == 0 ? _x0 : _x1; }
 
         void operator=(const index_t& index) {
-                for (size_t i = 0; i < _size; i++) {
-                        _x[i] = index[i];
-                }
+                _x0 = index[0];
+                _x1 = index[1];
         }
 
         void operator++(int i) {
-                _x[_size-1]++;
+                _size == 1 ? _x0++ : _x1++;
         }
 
         bool operator<(index_t index) const {
-                return _x[_size-1] < index[_size-1];
+                if (_size == 1) {
+                        return _x0 < index[0];
+                }
+                else {
+                        return _x0 < index[0] || (_x0 == index[0] && _x1 < index[1]);
+                }
         }
 
         size_t size() const {
@@ -72,7 +69,8 @@ public:
         }
 
 private:
-        std::vector<size_t> _x;
+        size_t _x0;
+        size_t _x1;
         const size_t _size;
 };
 
@@ -188,7 +186,6 @@ public:
         }
         data_t(const std::vector<T>& data) : _data(data) {
         }
-        ~data_t() {}
 
         friend std::ostream& operator<< <> (std::ostream& o, const data_t<T>& sd);
 

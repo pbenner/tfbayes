@@ -225,6 +225,7 @@ AS_IF([test "x$enable_debug" = "xyes"],
    AX_CXXFLAGS_GCC_OPTION([-ffast-math])])
 
 AX_CFLAGS_GCC_OPTION([-Wall])
+AX_CFLAGS_GCC_OPTION([-Winline])
 AX_CFLAGS_GCC_OPTION([-Wwrite-strings])
 AX_CFLAGS_GCC_OPTION([-Wstrict-prototypes])
 AX_CFLAGS_GCC_OPTION([-Wno-trigraphs])
@@ -233,6 +234,7 @@ AX_CFLAGS_GCC_OPTION([-fPIC])
 AX_CFLAGS_GCC_OPTION([-fno-nested-functions])
 
 AX_CXXFLAGS_GCC_OPTION([-Wall])
+AX_CXXFLAGS_GCC_OPTION([-Winline])
 AX_CXXFLAGS_GCC_OPTION([-Wwrite-strings])
 AX_CXXFLAGS_GCC_OPTION([-Wstrict-prototypes])
 AX_CXXFLAGS_GCC_OPTION([-Wno-trigraphs])

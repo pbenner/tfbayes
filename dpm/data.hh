@@ -34,7 +34,6 @@
 class Data_TFBS : public sequence_data_t<char> {
 public:
          Data_TFBS(const std::vector<std::string>& sequences);
-        ~Data_TFBS();
 
         // type definitions
         typedef std::vector<index_t>::iterator iterator;

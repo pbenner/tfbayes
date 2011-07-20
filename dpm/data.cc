@@ -72,9 +72,6 @@ Data_TFBS::Data_TFBS(const vector<string>& sequences)
         shuffle();
 }
 
-Data_TFBS::~Data_TFBS() {
-}
-
 void
 Data_TFBS::shuffle() {
         random_shuffle(indices_randomized.begin(), indices_randomized.end());
