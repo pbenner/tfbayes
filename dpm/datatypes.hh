@@ -87,6 +87,30 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T> class data_t;
+template <typename T> class sequence_data_t;
+
+template <typename T>
+std::ostream&
+operator<< (std::ostream& o, const data_t<T>& sd) {
+        for (size_t i = 0; i < sd._data.size(); i++) {
+                o << sd._data[i] << " ";
+        }
+        o << std::endl;
+
+        return o;
+}
+
+template <typename T>
+std::ostream&
+operator<< (std::ostream& o, const sequence_data_t<T>& sd) {
+        for (size_t i = 0; i < sd._data.size(); i++) {
+                for (size_t j = 0; j < sd._data[i].size(); j++) {
+                        o << sd._data[i][j] << " ";
+                }
+                o << std::endl;
+        }
+        return o;
+}
 
 template <typename T>
 class iterator_t
@@ -163,6 +187,8 @@ public:
         }
         ~data_t() {}
 
+        friend std::ostream& operator<< <> (std::ostream& o, const data_t<T>& sd);
+
         virtual const_iterator_t<T> operator[](const range_t& range) const {
                 return const_iterator_t<T>(*this, range.from, range.to);
         }
@@ -186,13 +212,15 @@ class sequence_data_t : public data_t<T>
 public:
         sequence_data_t() : _data() {
         }
-        sequence_data_t(const std::vector<std::vector<T> >& data) : _data(data) {
-        }
         sequence_data_t(const std::vector<size_t> n, const T init) : _data() {
                 for (size_t i = 0; i < n.size(); i++) {
                         _data.push_back(std::vector<T>(n[i], init));
                 }
         }
+        sequence_data_t(const std::vector<std::vector<T> >& data) : _data(data) {
+        }
+
+        friend std::ostream& operator<< <> (std::ostream& o, const sequence_data_t<T>& sd);
 
         virtual const_iterator_t<T> operator[](const range_t& range) const {
                 return const_iterator_t<T>((const data_t<T>&)*this, range.from, range.to);

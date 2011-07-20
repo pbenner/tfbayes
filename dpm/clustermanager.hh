@@ -37,10 +37,9 @@
 
 class ClusterManager : public Observer<cluster_event_t> {
 public:
-        ClusterManager();
-        ClusterManager(Distribution* distribution, data_t<cluster_tag_t>& cluster_assignments);
-        ClusterManager(const ClusterManager& cm);
-        virtual ~ClusterManager();
+         ClusterManager(Distribution* distribution, data_t<cluster_tag_t>& cluster_assignments);
+         ClusterManager(const ClusterManager& cm);
+        ~ClusterManager();
 
         // iterators
         ////////////////////////////////////////////////////////////////////////
@@ -96,7 +95,7 @@ private:
         Distribution* default_distribution;
 
         // assignments to clusters
-        data_t<cluster_tag_t> cluster_assignments;
+        data_t<cluster_tag_t>& cluster_assignments;
 };
 
 #endif /* CLUSTERMANAGER_HH */

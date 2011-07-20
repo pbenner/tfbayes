@@ -39,6 +39,7 @@ DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const Data_T
           tfbs_alpha(init_alpha(TFBS_LENGTH)),
           // raw sequences
           _data(data),
+          _cluster_manager(new ProductDirichlet(tfbs_alpha, _data), *new sequence_data_t<cluster_tag_t>(_data.lengths(), -1)),
           // strength parameter for the dirichlet process
           alpha(alpha),
           // mixture weight for the dirichlet process
@@ -54,7 +55,6 @@ DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const Data_T
         }
 
         // initialize cluster manager
-        _cluster_manager = ClusterManager(new ProductDirichlet(tfbs_alpha, _data), *new sequence_data_t<cluster_tag_t>(_data.lengths(), -1));
         ProductDirichlet* bg_product_dirichlet = new ProductDirichlet(bg_alpha, _data);
         bg_cluster_tag = _cluster_manager.add_cluster(bg_product_dirichlet);
 

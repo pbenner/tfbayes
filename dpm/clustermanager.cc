@@ -28,10 +28,6 @@
 
 using namespace std;
 
-ClusterManager::ClusterManager()
-{
-}
-
 ClusterManager::ClusterManager(Distribution* distribution, data_t<cluster_tag_t>& cluster_assignments)
         : used_clusters_size(0), free_clusters_size(0),
           default_distribution(distribution),
@@ -50,7 +46,8 @@ ClusterManager::~ClusterManager() {
 ClusterManager::ClusterManager(const ClusterManager& cm)
         : used_clusters_size(cm.used_clusters_size),
           free_clusters_size(cm.free_clusters_size),
-          default_distribution(cm.default_distribution->clone())
+          default_distribution(cm.default_distribution->clone()),
+          cluster_assignments(cm.cluster_assignments)
 {
         for (size_t i = 0; i < cm.clusters.size(); i++) {
                 Cluster* c = new Cluster(*cm.clusters[i]);
@@ -188,6 +185,5 @@ ClusterManager::size() const {
 //                 }
 //                 o << endl;
 //         }
-
 //         return o;
 // }
