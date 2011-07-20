@@ -74,7 +74,7 @@ private:
 
 class range_t {
 public:
-        range_t(const index_t from, const index_t to) 
+        range_t(const index_t& from, const index_t& to) 
                 : from(from), to(to){
         }
 
@@ -181,6 +181,8 @@ class data_t
 {
 public:
         data_t() : _data() {
+        }
+        data_t(size_t n, T init) : _data(n, init) {
         }
         data_t(const std::vector<T>& data) : _data(data) {
         }

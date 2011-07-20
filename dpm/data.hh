@@ -83,6 +83,4 @@ private:
         size_t _size;
 };
 
-//std::ostream& operator<< (std::ostream& o, const word_t& word);
-
 #endif /* DATA_HH */

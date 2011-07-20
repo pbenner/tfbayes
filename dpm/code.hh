@@ -54,5 +54,6 @@ bool is_nucleotide(char a);
 char code_nucleotide(char a);
 char decode_nucleotide(char a);
 std::vector<short> code_nucleotide_sequence(const std::string& sequence) throw(InvalidNucleotide);
+std::vector<std::vector<short> > code_sequences(const std::vector<std::string>& sequences);
 
 #endif /* CODE_HH */

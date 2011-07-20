@@ -37,22 +37,6 @@
 
 using namespace std;
 
-const vector<vector<short> > code_sequences(const vector<string>& sequences) {
-        vector<vector<short> > sequences_coded;
-
-        for(size_t i = 0; i < sequences.size(); i++) {
-                try {
-                        sequences_coded.push_back(code_nucleotide_sequence(sequences[i]));
-                }
-                catch (const InvalidNucleotide& i) {
-                        cout << "Exception:    " << i.what()     << " \'" << i.nucleotide() << "\'"
-                             << " in sequence: " << i.sequence() << endl;
-                        exit(EXIT_FAILURE);
-                }
-        }
-        return sequences_coded;
-}
-
 Data_TFBS::Data_TFBS(const vector<string>& sequences)
         : sequence_data_t<short>(code_sequences(sequences)), sequences(sequences), _n_sequences(sequences.size()), _size(0)
 {
@@ -81,11 +65,6 @@ const index_t&
 Data_TFBS::operator[](size_t i) const {
         return indices[i];
 }
-
-// char
-// Data_TFBS::operator[](const index_t& index) const {
-//         return sequences[index_t(index[0])][index[1]];
-// }
 
 size_t
 Data_TFBS::size() const {

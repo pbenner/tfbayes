@@ -98,3 +98,19 @@ vector<short> code_nucleotide_sequence(const string& sequence) throw(InvalidNucl
         }
         return coded_sequence;
 }
+
+vector<vector<short> > code_sequences(const vector<string>& sequences) {
+        vector<vector<short> > sequences_coded;
+
+        for(size_t i = 0; i < sequences.size(); i++) {
+                try {
+                        sequences_coded.push_back(code_nucleotide_sequence(sequences[i]));
+                }
+                catch (const InvalidNucleotide& i) {
+                        cout << "Exception:    " << i.what()     << " \'" << i.nucleotide() << "\'"
+                             << " in sequence: " << i.sequence() << endl;
+                        exit(EXIT_FAILURE);
+                }
+        }
+        return sequences_coded;
+}

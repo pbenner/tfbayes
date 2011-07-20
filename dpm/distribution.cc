@@ -171,6 +171,40 @@ BivariateNormal::BivariateNormal(
         inverse(_Sigma_N_inv, _Sigma_N);
 }
 
+BivariateNormal::BivariateNormal(const BivariateNormal& bn)
+        : _N(bn._N), _dimension(bn._dimension), _data(bn._data)
+{
+        // alloc tmp
+        _inv_tmp  = gsl_matrix_alloc(_dimension, _dimension);
+        _inv_perm = gsl_permutation_alloc(_dimension);
+        _tmp1     = gsl_vector_alloc(_dimension);
+        _tmp2     = gsl_vector_alloc(_dimension);
+
+        // alloc prior
+        _Sigma_0_inv  = gsl_matrix_alloc(_dimension, _dimension);
+        _mu_0         = gsl_vector_alloc(_dimension);
+
+        // alloc likelihood
+        _Sigma_inv    = gsl_matrix_alloc(_dimension, _dimension);
+        _mu           = gsl_vector_calloc(_dimension);
+
+        // alloc posterior
+        _Sigma_N      = gsl_matrix_alloc(_dimension, _dimension);
+        _Sigma_N_inv  = gsl_matrix_alloc(_dimension, _dimension);
+
+        // prior
+        gsl_matrix_memcpy(_Sigma_0_inv, bn._Sigma_0_inv);
+        gsl_vector_memcpy(_mu_0,        bn._mu_0);
+
+        // likelihood
+        gsl_matrix_memcpy(_Sigma_inv,   bn._Sigma_inv);
+        gsl_vector_memcpy(_mu,          bn._mu);
+
+        // posterior
+        gsl_matrix_memcpy(_Sigma_N,     bn._Sigma_N);
+        gsl_matrix_memcpy(_Sigma_N_inv, bn._Sigma_N_inv);
+}
+
 BivariateNormal::~BivariateNormal()
 {
         // tmp
@@ -191,6 +225,11 @@ BivariateNormal::~BivariateNormal()
         gsl_matrix_free(_Sigma_N);
         gsl_matrix_free(_Sigma_N_inv);
         gsl_vector_free(_mu_N);
+}
+
+BivariateNormal*
+BivariateNormal::clone() const {
+        return new BivariateNormal(*this);
 }
 
 void

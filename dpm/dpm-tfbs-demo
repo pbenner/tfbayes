@@ -95,7 +95,7 @@ def plot_sequences(ax, sequences, clusters):
     for sl, cl, p1l, p2l in zip(sequences, clusters, x, y):
         for s, c, p1, p2 in zip(sl, cl, p1l, p2l):
             ax.text(p1, p2, str(s), size=10, rotation=0,
-                    ha="center", va="bottom", color=cluster_colors(c))
+                    ha="center", va="bottom", color=cluster_colors(c), weight='bold')
 
 class TfbsDPM():
     def __init__(self, sequences, clusters):

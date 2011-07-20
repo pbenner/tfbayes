@@ -93,6 +93,7 @@ public:
                          const gsl_matrix* Sigma_0,
                          const gsl_vector* mu_0,
                          const data_t<std::vector<double> >& data);
+         BivariateNormal(const BivariateNormal& bn);
         ~BivariateNormal();
 
         size_t add(const range_t& range);
@@ -101,6 +102,8 @@ public:
         double pdf(const range_t& range) const;
         double log_pdf(const range_t& range) const;
         double log_likelihood() const;
+
+        BivariateNormal* clone() const;
 
 private:
         // prior
