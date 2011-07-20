@@ -37,8 +37,8 @@
 
 using namespace std;
 
-const vector<vector<char> > code_sequences(const vector<string>& sequences) {
-        vector<vector<char> > sequences_coded;
+const vector<vector<short> > code_sequences(const vector<string>& sequences) {
+        vector<vector<short> > sequences_coded;
 
         for(size_t i = 0; i < sequences.size(); i++) {
                 try {
@@ -54,7 +54,7 @@ const vector<vector<char> > code_sequences(const vector<string>& sequences) {
 }
 
 Data_TFBS::Data_TFBS(const vector<string>& sequences)
-        : sequence_data_t<char>(code_sequences(sequences)), sequences(sequences), _n_sequences(sequences.size()), _size(0)
+        : sequence_data_t<short>(code_sequences(sequences)), sequences(sequences), _n_sequences(sequences.size()), _size(0)
 {
         for(size_t i = 0; i < sequences.size(); i++) {
                 // store length of sequences

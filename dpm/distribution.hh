@@ -63,7 +63,7 @@ public:
 
 class ProductDirichlet : public Distribution {
 public:
-         ProductDirichlet(gsl_matrix* alpha, const sequence_data_t<char>& data);
+         ProductDirichlet(gsl_matrix* alpha, const sequence_data_t<short>& data);
          ProductDirichlet(const ProductDirichlet& distribution);
         ~ProductDirichlet();
 
@@ -80,7 +80,7 @@ private:
         alpha_t alpha;
         counts_t counts;
 
-        const sequence_data_t<char>& _data;
+        const sequence_data_t<short>& _data;
 
         const size_t _size1;
         const size_t _size2;

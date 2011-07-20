@@ -36,15 +36,13 @@ public:
         }
         index_t(size_t x0, size_t x1) : _x0(x0), _x1(x1), _size(2) {
         }
-        index_t(const std::vector<size_t>& x) : _x0(x[0]), _x1(x[1]), _size(x.size()) {
-        }
         index_t(const index_t& index) : _x0(index._x0), _x1(index._x1), _size(index._size) {
         }
 
         friend std::ostream& operator<< (std::ostream& o, const index_t& index);
 
-        size_t operator[](size_t i) const { return i == 0 ? _x0 : _x1; }
-        size_t operator[](size_t i)       { return i == 0 ? _x0 : _x1; }
+        inline size_t operator[](size_t i) const { return i == 0 ? _x0 : _x1; }
+        inline size_t operator[](size_t i)       { return i == 0 ? _x0 : _x1; }
 
         void operator=(const index_t& index) {
                 _x0 = index[0];

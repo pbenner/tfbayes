@@ -19,7 +19,6 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <assert.h>
 #include <math.h>
 #include <vector>
 
@@ -37,7 +36,7 @@ using namespace std;
 
 gsl_rng* _r;
 
-ProductDirichlet::ProductDirichlet(gsl_matrix* _alpha, const sequence_data_t<char>& data)
+ProductDirichlet::ProductDirichlet(gsl_matrix* _alpha, const sequence_data_t<short>& data)
         : _data(data), _size1(_alpha->size1), _size2(_alpha->size2)
 {
         for (size_t i = 0; i < _alpha->size1; i++) {
@@ -68,7 +67,7 @@ ProductDirichlet::clone() const {
 
 size_t
 ProductDirichlet::add(const range_t& range) {
-        const_iterator_t<char> iterator = _data[range];
+        const_iterator_t<short> iterator = _data[range];
         size_t i;
 
         for (i = 0;; i++) {
@@ -81,7 +80,7 @@ ProductDirichlet::add(const range_t& range) {
 
 size_t
 ProductDirichlet::remove(const range_t& range) {
-        const_iterator_t<char> iterator = _data[range];
+        const_iterator_t<short> iterator = _data[range];
         size_t i;
 
         for (i = 0;; i++) {
@@ -98,11 +97,10 @@ ProductDirichlet::count(const range_t& range) {
 }
 
 double ProductDirichlet::pdf(const range_t& range) const {
-        const_iterator_t<char> iterator = _data[range];
+        const_iterator_t<short> iterator = _data[range];
         double result = 1;
-        size_t i;
 
-        for (i = 0;; i=(i+1)%_size1) {
+        for (size_t i = 0;; i=(i+1)%_size1) {
                 result *= (counts[i][*iterator]+alpha[i][*iterator])/(counts[i][4]+alpha[i][4]);
                 if (!iterator++) break;
         }
@@ -110,11 +108,10 @@ double ProductDirichlet::pdf(const range_t& range) const {
 }
 
 double ProductDirichlet::log_pdf(const range_t& range) const {
-        const_iterator_t<char> iterator = _data[range];
+        const_iterator_t<short> iterator = _data[range];
         double result = 0;
-        size_t i;
 
-        for (i = 0;; i=(i+1)%_size1) {
+        for (size_t i = 0;; i=(i+1)%_size1) {
                 result += log((counts[i][*iterator]+alpha[i][*iterator])/(counts[i][4]+alpha[i][4]));
                 if (!iterator++) break;
         }

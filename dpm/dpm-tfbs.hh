@@ -80,7 +80,7 @@ private:
         double lambda;
 
         // record start positions of tfbs
-        sequence_data_t<cluster_tag_t> _tfbs_start_positions; // TODO
+        sequence_data_t<short> _tfbs_start_positions;
 
         // posterior distribution
         posterior_t _posterior;

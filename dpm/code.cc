@@ -84,10 +84,10 @@ char decode_nucleotide(char a)
         exit(EXIT_FAILURE);
 }
 
-vector<char> code_nucleotide_sequence(const string& sequence) throw(InvalidNucleotide)
+vector<short> code_nucleotide_sequence(const string& sequence) throw(InvalidNucleotide)
 {
         size_t n = sequence.size();
-        vector<char> coded_sequence(n, 0);
+        vector<short> coded_sequence(n, 0);
 
         for (size_t i = 0; i < n; i++) {
                 char c = code_nucleotide(sequence[i]);

@@ -31,7 +31,7 @@
 #include <code.hh>
 #include <datatypes.hh>
 
-class Data_TFBS : public sequence_data_t<char> {
+class Data_TFBS : public sequence_data_t<short> {
 public:
          Data_TFBS(const std::vector<std::string>& sequences);
 
@@ -58,7 +58,6 @@ public:
         // operators
         ////////////////////////////////////////////////////////////////////////
         const index_t& operator[](size_t i) const;
-//                char   operator[](const index_t& index) const;
 
         friend std::ostream& operator<< (std::ostream& o, const Data_TFBS& data);
 

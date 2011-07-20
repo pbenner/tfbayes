@@ -206,16 +206,19 @@ AC_ARG_ENABLE([debug],
 								[turn on debugging @<:@default=no@:>@])],
 	[],
 	[enable_debug=no])
+AC_ARG_ENABLE([profiling],
+	[AS_HELP_STRING([--enable-profiling],
+								[turn on profiling support @<:@profiling=no@:>@])],
+	[],
+	[enable_profiling=no])
 AS_IF([test "x$enable_debug" = "xyes"],
   [AX_CFLAGS_GCC_OPTION([-O0])
    AX_CFLAGS_GCC_OPTION([-g])
    AX_CFLAGS_GCC_OPTION([-ggdb])
-   AX_CFLAGS_GCC_OPTION([-pg])
 	 dnl
 	 AX_CXXFLAGS_GCC_OPTION([-O0])
 	 AX_CXXFLAGS_GCC_OPTION([-g])
    AX_CXXFLAGS_GCC_OPTION([-ggdb])
-   AX_CXXFLAGS_GCC_OPTION([-pg])
 	 CFLAGS="$CFLAGS -DDEBUG"
 	 CXXFLAGS="$CXXFLAGS -DDEBUG"],
   [AX_CFLAGS_GCC_OPTION([-O4])
@@ -223,9 +226,11 @@ AS_IF([test "x$enable_debug" = "xyes"],
 	 dnl
 	 AX_CXXFLAGS_GCC_OPTION([-O4])
    AX_CXXFLAGS_GCC_OPTION([-ffast-math])])
+AS_IF([test "x$enable_profiling" = "xyes"],
+	[AX_CFLAGS_GCC_OPTION([-pg])
+	 AX_CXXFLAGS_GCC_OPTION([-pg])])
 
 AX_CFLAGS_GCC_OPTION([-Wall])
-AX_CFLAGS_GCC_OPTION([-Winline])
 AX_CFLAGS_GCC_OPTION([-Wwrite-strings])
 AX_CFLAGS_GCC_OPTION([-Wstrict-prototypes])
 AX_CFLAGS_GCC_OPTION([-Wno-trigraphs])
@@ -234,7 +239,6 @@ AX_CFLAGS_GCC_OPTION([-fPIC])
 AX_CFLAGS_GCC_OPTION([-fno-nested-functions])
 
 AX_CXXFLAGS_GCC_OPTION([-Wall])
-AX_CXXFLAGS_GCC_OPTION([-Winline])
 AX_CXXFLAGS_GCC_OPTION([-Wwrite-strings])
 AX_CXXFLAGS_GCC_OPTION([-Wstrict-prototypes])
 AX_CXXFLAGS_GCC_OPTION([-Wno-trigraphs])

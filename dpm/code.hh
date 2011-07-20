@@ -53,6 +53,6 @@ private:
 bool is_nucleotide(char a);
 char code_nucleotide(char a);
 char decode_nucleotide(char a);
-std::vector<char> code_nucleotide_sequence(const std::string& sequence) throw(InvalidNucleotide);
+std::vector<short> code_nucleotide_sequence(const std::string& sequence) throw(InvalidNucleotide);
 
 #endif /* CODE_HH */
