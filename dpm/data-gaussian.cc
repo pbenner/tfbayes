@@ -24,7 +24,7 @@ using namespace std;
 
 Data_Gaussian::Data_Gaussian(size_t cluster, size_t samples, gsl_matrix* Sigma)
         : data_t<std::vector<double> >(generate_samples(cluster, samples, Sigma)),
-          _size(samples), _length(1), _cluster(cluster)
+          _elements(samples), _length(1), _cluster(cluster)
 {
 }
 
@@ -74,8 +74,8 @@ Data_Gaussian::generate_samples(
 }
 
 size_t
-Data_Gaussian::size() const {
-        return _size;
+Data_Gaussian::elements() const {
+        return _elements;
 }
 
 size_t

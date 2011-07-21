@@ -33,11 +33,11 @@ public:
          Data_Gaussian(size_t cluster, size_t samples, gsl_matrix* Sigma);
         ~Data_Gaussian();
 
-        size_t size() const;
+        size_t elements() const;
         size_t length() const;
 
 private:
-        const size_t _size;
+        const size_t _elements;
         const size_t _length;
         const size_t _cluster;
 

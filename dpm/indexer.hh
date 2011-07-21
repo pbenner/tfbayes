@@ -15,36 +15,46 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DATA_HH
-#define DATA_HH
+#ifndef INDEXER_HH
+#define INDEXER_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <iostream>
-#include <vector>
-#include <string>
-
-#include <gsl/gsl_matrix.h>
-
-#include <datatypes.hh>
-#include <index.hh>
-
 //
-// Interface for basic data structures
+// Interface for (randomly) indexing data structures
 //
 
-class Data {
+class Indexer {
 public:
+        // type definitions
+        typedef std::vector<index_t>::iterator iterator;
+        typedef std::vector<index_t>::const_iterator const_iterator;
+
+        typedef std::vector<index_t*>::iterator iterator_randomized;
+        typedef std::vector<index_t*>::const_iterator const_iterator_randomized;
+
+        // iterators
+        ////////////////////////////////////////////////////////////////////////
+        virtual iterator begin() = 0;
+        virtual iterator end()   = 0;
+
+        virtual const_iterator begin() const = 0;
+        virtual const_iterator end()   const = 0;
+
+        virtual const_iterator_randomized begin_randomized() const = 0;
+        virtual const_iterator_randomized end_randomized()   const = 0;
+
         // operators
         ////////////////////////////////////////////////////////////////////////
         virtual const index_t& operator[](size_t i) const = 0;
 
-        // methods
+        // operators
         ////////////////////////////////////////////////////////////////////////
-        virtual size_t length() const = 0;
-        virtual size_t length(size_t i) const = 0;
+        virtual size_t elements() const = 0;
+
+        virtual void shuffle() = 0;
 };
 
-#endif /* DATA_HH */
+#endif /* INDEXER_HH */

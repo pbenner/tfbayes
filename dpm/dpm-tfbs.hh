@@ -26,12 +26,13 @@
 #include <gsl/gsl_matrix.h>
 
 #include <clustermanager.hh>
+#include <data-tfbs.hh>
 #include <dpm.hh>
 #include <distribution.hh>
 
 class DPM_TFBS : public DPM {
 public:
-         DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const Data_TFBS& data);
+         DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const DataTFBS& data);
         ~DPM_TFBS();
 
         DPM_TFBS* clone() const;
@@ -53,7 +54,7 @@ public:
         double likelihood() const;
         bool   valid_for_sampling(const index_t& index) const;
         const posterior_t& posterior() const;
-        const Data_TFBS& data() const;
+        const DataTFBS& data() const;
         const ClusterManager& cluster_manager() const;
 
         // constants
@@ -68,7 +69,7 @@ private:
         gsl_matrix* tfbs_alpha;
 
         // data and clusters
-        const Data_TFBS& _data;
+        const DataTFBS& _data;
         sequence_data_t<cluster_tag_t> _cluster_assignments;
         ClusterManager   _cluster_manager;
 

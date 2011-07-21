@@ -26,7 +26,7 @@
 #include <vector>
 
 #include <cluster.hh>
-#include <data.hh>
+#include <datatypes.hh>
 #include <distribution.hh>
 
 // ClusterManager

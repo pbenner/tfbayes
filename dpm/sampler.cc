@@ -25,8 +25,8 @@
 
 using namespace std;
 
-GibbsSampler::GibbsSampler(DPM& dpm, const Data_TFBS& data)
-        : _dpm(dpm), _data(data), _sampling_steps(0),
+GibbsSampler::GibbsSampler(DPM& dpm, const Indexer& indexer)
+        : _dpm(dpm), _indexer(indexer), _sampling_steps(0),
           _sampling_history(*new sampling_history_t())
 {
         // for sampling statistics
@@ -39,7 +39,7 @@ GibbsSampler::GibbsSampler(DPM& dpm, const Data_TFBS& data)
 }
 
 GibbsSampler::GibbsSampler(const GibbsSampler& sampler)
-        : _dpm(*sampler._dpm.clone()), _data(sampler._data), _sampling_steps(0),
+        : _dpm(*sampler._dpm.clone()), _indexer(sampler._indexer), _sampling_steps(0),
           _sampling_history(*new sampling_history_t(sampler._sampling_history))
 {
 }
@@ -107,14 +107,14 @@ GibbsSampler::sample(size_t n, size_t burnin) {
                 printf("Burn in... [%u][Components: %02d]\n", (unsigned int)i+1, (int)_dpm.mixture_components());
                 fflush(stdout);
                 double sum = 0;
-                for (Data_TFBS::const_iterator_randomized it = _data.begin_randomized();
-                     it != _data.end_randomized(); it++) {
+                for (Indexer::const_iterator_randomized it = _indexer.begin_randomized();
+                     it != _indexer.end_randomized(); it++) {
                         const bool switched =_sample(**it);
                         if (switched) sum+=1;
                 }
                 _sampling_history.likelihood[0].push_back(_dpm.likelihood());
                 _sampling_history.components[0].push_back(_dpm.mixture_components());
-                _sampling_history.switches[0].push_back(sum/(double)_data.size());
+                _sampling_history.switches[0].push_back(sum/(double)_indexer.elements());
         }
         // sample `n' times
         for (size_t i = 0; i < n; i++) {
@@ -122,14 +122,14 @@ GibbsSampler::sample(size_t n, size_t burnin) {
                 printf("Sampling... [%u][Components: %02d]\n", (unsigned int)i+1, (int)_dpm.mixture_components());
                 fflush(stdout);
                 double sum = 0;
-                for (Data_TFBS::const_iterator_randomized it = _data.begin_randomized();
-                     it != _data.end_randomized(); it++) {
+                for (Indexer::const_iterator_randomized it = _indexer.begin_randomized();
+                     it != _indexer.end_randomized(); it++) {
                         const bool switched = _sample(**it);
                         if (switched) sum+=1;
                 }
                 _sampling_history.likelihood[0].push_back(_dpm.likelihood());
                 _sampling_history.components[0].push_back(_dpm.mixture_components());
-                _sampling_history.switches[0].push_back(sum/(double)_data.size());
+                _sampling_history.switches[0].push_back(sum/(double)_indexer.elements());
                 _dpm.update_posterior(_sampling_steps);
                 _sampling_steps++;
         }

@@ -31,7 +31,7 @@
 
 using namespace std;
 
-DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const Data_TFBS& data)
+DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const DataTFBS& data)
         : // length of tfbs
           TFBS_LENGTH(tfbs_length),
           // priors
@@ -63,7 +63,7 @@ DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const Data_T
         bg_cluster_tag = _cluster_manager.add_cluster(bg_product_dirichlet);
 
         // assign all elements to the background
-        for (Data_TFBS::const_iterator it = _data.begin();
+        for (DataTFBS::const_iterator it = _data.begin();
              it != _data.end(); it++) {
                 _cluster_manager[bg_cluster_tag].add_observations(range_t(*it, *it));
         }
@@ -202,7 +202,7 @@ DPM_TFBS::likelihood() const {
 
 void
 DPM_TFBS::update_posterior(size_t sampling_steps) {
-        for (Data_TFBS::const_iterator it = _data.begin();
+        for (DataTFBS::const_iterator it = _data.begin();
              it != _data.end(); it++) {
                 const index_t& index = *it;
                 const size_t sequence    = index[0];
@@ -225,7 +225,7 @@ DPM_TFBS::posterior() const {
         return _posterior;
 }
 
-const Data_TFBS&
+const DataTFBS&
 DPM_TFBS::data() const {
         return _data;
 }

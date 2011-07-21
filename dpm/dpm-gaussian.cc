@@ -81,7 +81,7 @@ DPM_Gaussian::mixture_weights(const index_t& index, double weights[], cluster_ta
 {
         size_t components = mixture_components();
         double sum        = -HUGE_VAL;
-        double N          = _data.size() - 1;
+        double N          = _data.elements() - 1;
         const range_t range(index, index);
 
         cluster_tag_t i = 0;

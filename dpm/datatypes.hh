@@ -26,61 +26,8 @@
 #include <vector>
 #include <string>
 
-// index_t and range_t
-////////////////////////////////////////////////////////////////////////////////
-
-class index_t {
-public:
-        explicit index_t(size_t x0) : _x0(x0), _size(1) {
-                _x0 = x0;
-        }
-        index_t(size_t x0, size_t x1) : _x0(x0), _x1(x1), _size(2) {
-        }
-        index_t(const index_t& index) : _x0(index._x0), _x1(index._x1), _size(index._size) {
-        }
-
-        friend std::ostream& operator<< (std::ostream& o, const index_t& index);
-
-        inline size_t operator[](size_t i) const { return i == 0 ? _x0 : _x1; }
-        inline size_t operator[](size_t i)       { return i == 0 ? _x0 : _x1; }
-
-        void operator=(const index_t& index) {
-                _x0 = index[0];
-                _x1 = index[1];
-        }
-
-        void operator++(int i) {
-                _size == 1 ? _x0++ : _x1++;
-        }
-
-        bool operator<(index_t index) const {
-                if (_size == 1) {
-                        return _x0 < index[0];
-                }
-                else {
-                        return _x0 < index[0] || (_x0 == index[0] && _x1 < index[1]);
-                }
-        }
-
-        size_t size() const {
-                return _size;
-        }
-
-private:
-        size_t _x0;
-        size_t _x1;
-        const size_t _size;
-};
-
-class range_t {
-public:
-        range_t(const index_t& from, const index_t& to) 
-                : from(from), to(to){
-        }
-
-        const index_t from;
-        const index_t to;
-};
+#include <index.hh>
+#include <data.hh>
 
 // data_t and iterator_t
 ////////////////////////////////////////////////////////////////////////////////

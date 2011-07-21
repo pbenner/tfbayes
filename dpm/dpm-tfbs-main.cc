@@ -214,8 +214,8 @@ void run_dpm(const char* file_name)
         readfile(file_name, sequences);
 
         // create data, dpm, and sampler objects
-        Data_TFBS& data = *new Data_TFBS(sequences);
-        DPM_TFBS&  gdpm = *new DPM_TFBS(options.alpha, options.lambda, options.tfbs_length, data);
+        DataTFBS& data = *new DataTFBS(sequences);
+        DPM_TFBS& gdpm = *new DPM_TFBS(options.alpha, options.lambda, options.tfbs_length, data);
         GibbsSampler& sampler = *new GibbsSampler(gdpm, data);
         PopulationMCMC& pmcmc = *new PopulationMCMC(sampler, options.population_size);
 

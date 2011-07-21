@@ -32,13 +32,13 @@
 #include <gsl/gsl_matrix.h>
 
 #include <clustermanager.hh>
-#include <data.hh>
+#include <data-tfbs.hh>
 #include <distribution.hh>
 
 using namespace std;
 
-Data_TFBS::Data_TFBS(const vector<string>& sequences)
-        : sequence_data_t<short>(code_sequences(sequences)), sequences(sequences), _n_sequences(sequences.size()), _size(0)
+DataTFBS::DataTFBS(const vector<string>& sequences)
+        : sequence_data_t<short>(code_sequences(sequences)), sequences(sequences), _n_sequences(sequences.size()), _elements(0)
 {
         for(size_t i = 0; i < sequences.size(); i++) {
                 // store length of sequences
@@ -46,38 +46,38 @@ Data_TFBS::Data_TFBS(const vector<string>& sequences)
                 // and a list of indices
                 for(size_t j = 0; j < sequences[i].size(); j++) {
                         this->indices.push_back(index_t(i,j));
-                        _size++;
+                        _elements++;
                 }
         }
         // generate a randomized list of indices
-        for (Data_TFBS::iterator it = begin(); it != end(); it++) {
+        for (DataTFBS::iterator it = begin(); it != end(); it++) {
                 indices_randomized.push_back(&(*it));
         }
         shuffle();
 }
 
 void
-Data_TFBS::shuffle() {
+DataTFBS::shuffle() {
         random_shuffle(indices_randomized.begin(), indices_randomized.end());
 }
 
 const index_t&
-Data_TFBS::operator[](size_t i) const {
+DataTFBS::operator[](size_t i) const {
         return indices[i];
 }
 
 size_t
-Data_TFBS::size() const {
-        return _size;
+DataTFBS::elements() const {
+        return _elements;
 }
 
 size_t
-Data_TFBS::length() const {
+DataTFBS::length() const {
         return _n_sequences;
 }
 
 size_t
-Data_TFBS::length(size_t i) const {
+DataTFBS::length(size_t i) const {
         if (i < _n_sequences) {
                 return sequences_length[i];
         }
@@ -87,12 +87,12 @@ Data_TFBS::length(size_t i) const {
 }
 
 const std::vector<size_t>&
-Data_TFBS::lengths() const
+DataTFBS::lengths() const
 {
         return sequences_length;
 }
 
-ostream& operator<< (ostream& o, const Data_TFBS& data)
+ostream& operator<< (ostream& o, const DataTFBS& data)
 {
         for (size_t i = 0; i < data.sequences.size(); i++) {
                 o << data.sequences[i] << endl;
