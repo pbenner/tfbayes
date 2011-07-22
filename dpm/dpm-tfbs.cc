@@ -149,7 +149,7 @@ DPM_TFBS::mixture_components() const
 void
 DPM_TFBS::mixture_weights(const index_t& index, double weights[], cluster_tag_t tags[])
 {
-        range_t range(index, index_t(index[0], index[1] + TFBS_LENGTH -1 ));
+        range_t range(index, index_t(index[0], index[1] + TFBS_LENGTH - 1));
         size_t components = mixture_components();
         double dp_norm    = num_tfbs + alpha;
         double sum        = -HUGE_VAL;

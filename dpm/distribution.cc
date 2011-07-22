@@ -109,13 +109,13 @@ double ProductDirichlet::pdf(const range_t& range) const {
 
 double ProductDirichlet::log_pdf(const range_t& range) const {
         const_iterator_t<short> iterator = _data[range];
-        double result = 0;
+        double result = 1;
 
         for (size_t i = 0;; i=(i+1)%_size1) {
-                result += log((counts[i][*iterator]+alpha[i][*iterator])/(counts[i][4]+alpha[i][4]));
+                result *= (counts[i][*iterator]+alpha[i][*iterator])/(counts[i][4]+alpha[i][4]);
                 if (!iterator++) break;
         }
-        return result;
+        return log(result);
 }
 
 //
