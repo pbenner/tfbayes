@@ -43,8 +43,11 @@ DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const DataTF
           _cluster_manager(new ProductDirichlet(tfbs_alpha, _data), _cluster_assignments),
           // strength parameter for the dirichlet process
           alpha(alpha),
+          alpha_log(log(alpha)),
           // mixture weight for the dirichlet process
           lambda(lambda),
+          lambda_log(log(lambda)),
+          lambda_inv_log(log(1-lambda)),
           // starting positions of tfbs
           _tfbs_start_positions(_data.lengths(), 0),
           // number of transcription factor binding sites
@@ -149,9 +152,9 @@ void
 DPM_TFBS::mixture_weights(const index_t& index, double weights[], cluster_tag_t tags[])
 {
         range_t range(index, index_t(index[0], index[1] + TFBS_LENGTH - 1));
-        size_t components = mixture_components();
-        double dp_norm    = num_tfbs + alpha;
-        double sum        = -HUGE_VAL;
+        size_t components  = mixture_components();
+        double dp_norm_log = fastlog(num_tfbs + alpha);
+        double sum         = -HUGE_VAL;
 
         cluster_tag_t i = 0;
         for (ClusterManager::const_iterator it = _cluster_manager.begin(); it != _cluster_manager.end(); it++) {
@@ -160,7 +163,7 @@ DPM_TFBS::mixture_weights(const index_t& index, double weights[], cluster_tag_t 
                 ////////////////////////////////////////////////////////////////
                 // mixture component 1: background model
                 if (tags[i] == bg_cluster_tag) {
-                        weights[i] = log(1-lambda) + cluster.model().log_pdf(range);
+                        weights[i] = lambda_inv_log + cluster.model().log_pdf(range);
                         // normalization constant
                         sum = logadd(sum, weights[i]);
                 }
@@ -168,7 +171,7 @@ DPM_TFBS::mixture_weights(const index_t& index, double weights[], cluster_tag_t 
                 // mixture component 2: dirichlet process for tfbs models
                 else {
                         double num_elements = (double)cluster.size();
-                        weights[i] = log(lambda*num_elements/dp_norm) + cluster.model().log_pdf(range);
+                        weights[i] = lambda_log + fastlog(num_elements) - dp_norm_log + cluster.model().log_pdf(range);
                         // normalization constant
                         sum = logadd(sum, weights[i]);
                 }
@@ -177,7 +180,7 @@ DPM_TFBS::mixture_weights(const index_t& index, double weights[], cluster_tag_t 
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         tags[components]    = _cluster_manager.get_free_cluster().tag();
-        weights[components] = log(lambda*alpha/dp_norm) + _cluster_manager[tags[components]].model().log_pdf(range);
+        weights[components] = lambda_log + alpha_log - dp_norm_log + _cluster_manager[tags[components]].model().log_pdf(range);
         sum = logadd(sum, weights[components]);
 
         ////////////////////////////////////////////////////////////////////////

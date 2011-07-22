@@ -77,8 +77,11 @@ private:
         cluster_tag_t bg_cluster_tag;
 
         // parameters
-        double alpha;
-        double lambda;
+        const double alpha;
+        const double alpha_log;
+        const double lambda;
+        const double lambda_log;
+        const double lambda_inv_log;
 
         // record start positions of tfbs
         sequence_data_t<short> _tfbs_start_positions;
