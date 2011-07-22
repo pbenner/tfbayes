@@ -36,6 +36,7 @@
 
 #include <clonable.hh>
 #include <datatypes.hh>
+#include <tfbayes/logarithmetic.h>
 
 extern gsl_rng* _r;
 
@@ -48,7 +49,7 @@ public:
         }
 
         // datatypes
-        typedef std::vector<std::vector<double> > alpha_t;
+        typedef std::vector<std::vector<size_t> > alpha_t;
         typedef std::vector<std::vector<size_t> > counts_t;
 
         // purely virtual functions

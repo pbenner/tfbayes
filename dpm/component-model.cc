@@ -40,8 +40,8 @@ ProductDirichlet::ProductDirichlet(gsl_matrix* _alpha, const sequence_data_t<sho
         : _data(data), _size1(_alpha->size1), _size2(_alpha->size2)
 {
         for (size_t i = 0; i < _alpha->size1; i++) {
-                double sum = 0;
-                alpha.push_back (vector<double>(_alpha->size2+1, 0));
+                size_t sum = 0;
+                alpha.push_back (vector<size_t>(_alpha->size2+1, 0));
                 counts.push_back(vector<size_t>(_alpha->size2+1, 0));
                 for (size_t j = 0; j < _alpha->size2; j++) {
                         alpha[i][j] = gsl_matrix_get(_alpha, i, j);
@@ -109,13 +109,13 @@ double ProductDirichlet::pdf(const range_t& range) const {
 
 double ProductDirichlet::log_pdf(const range_t& range) const {
         const_iterator_t<short> iterator = _data[range];
-        double result = 1;
+        double result = 0;
 
         for (size_t i = 0;; i=(i+1)%_size1) {
-                result *= (counts[i][*iterator]+alpha[i][*iterator])/(counts[i][4]+alpha[i][4]);
+                result += fastlog(counts[i][*iterator]+alpha[i][*iterator]) - fastlog(counts[i][4]+alpha[i][4]);
                 if (!iterator++) break;
         }
-        return logf(result);
+        return result;
 }
 
 //
@@ -126,7 +126,7 @@ double ProductDirichlet::log_likelihood() const {
 
         for (size_t j = 0; j < _size1; j++) {
                 for (size_t k = 0; k < _size2; k++) {
-                        result += counts[j][k]*log((counts[j][k]+alpha[j][k])/(counts[j][4]+alpha[j][4]));
+                        result += counts[j][k]*(fastlog(counts[j][k]+alpha[j][k]) - fastlog(counts[j][4]+alpha[j][4]));
                 }
         }
         return result;
