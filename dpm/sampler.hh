@@ -25,13 +25,12 @@
 #include <clonable.hh>
 #include <datatypes.hh>
 #include <data.hh>
-#include <dpm.hh>
+#include <mixture-model.hh>
 #include <indexer.hh>
 
 class Sampler : public clonable {
 public:
         virtual void sample(size_t n, size_t burnin) = 0;
-        virtual const Model& model() const = 0;
         virtual const sampling_history_t& sampling_history() const = 0;
         virtual const posterior_t& posterior() const = 0;
 };
@@ -45,7 +44,6 @@ public:
         GibbsSampler* clone() const;
 
         void sample(size_t n, size_t burnin);
-        const DPM& model() const;
         const sampling_history_t& sampling_history() const;
         const posterior_t& posterior() const;
 

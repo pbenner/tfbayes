@@ -85,11 +85,6 @@ GibbsSampler::_sample(const index_t& index) {
         return old_cluster_tag != new_cluster_tag;
 }
 
-const DPM&
-GibbsSampler::model() const {
-        return _dpm;
-}
-
 const sampling_history_t&
 GibbsSampler::sampling_history() const {
         return _sampling_history;

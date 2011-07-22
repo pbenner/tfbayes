@@ -115,7 +115,7 @@ double ProductDirichlet::log_pdf(const range_t& range) const {
                 result *= (counts[i][*iterator]+alpha[i][*iterator])/(counts[i][4]+alpha[i][4]);
                 if (!iterator++) break;
         }
-        return log(result);
+        return logf(result);
 }
 
 //

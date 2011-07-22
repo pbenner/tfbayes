@@ -164,11 +164,6 @@ PopulationMCMC::sampling_history() const {
         return *_sampling_history;
 }
 
-const Model&
-PopulationMCMC::model() const {
-        return _model;
-}
-
 const posterior_t&
 PopulationMCMC::posterior() const {
         return *_posterior;

@@ -27,8 +27,8 @@
 
 #include <clustermanager.hh>
 #include <data-tfbs.hh>
-#include <dpm.hh>
 #include <distribution.hh>
+#include <mixture-model.hh>
 
 class DPM_TFBS : public DPM {
 public:

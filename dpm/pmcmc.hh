@@ -44,7 +44,6 @@ public:
         void sample(size_t n, size_t burnin);
         size_t size() const;
 
-        const Model& model() const;
         const sampling_history_t& sampling_history() const;
         const posterior_t& posterior() const;
 
@@ -53,7 +52,6 @@ private:
         const size_t _size;
         sampling_history_t* _sampling_history;
         posterior_t* _posterior;
-        Model _model;
 
         // private methods
         ////////////////////////////////////////////////////////////////////////

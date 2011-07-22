@@ -25,7 +25,7 @@
 #include <gsl/gsl_matrix.h>
 
 #include <data-gaussian.hh>
-#include <dpm.hh>
+#include <mixture-model.hh>
 #include <distribution.hh>
 
 class DPM_Gaussian : public DPM {

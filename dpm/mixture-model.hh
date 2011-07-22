@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DPM_HH
-#define DPM_HH
+#ifndef MIXTURE_MODEL_HH
+#define MIXTURE_MODEL_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -28,10 +28,7 @@
 #include <clustermanager.hh>
 #include <distribution.hh>
 
-class Model {
-};
-
-class DPM : public Model, public clonable {
+class DPM : public clonable {
 public:
         virtual ~DPM() {}
 
@@ -52,8 +49,7 @@ public:
         virtual double likelihood() const = 0;
         virtual bool   valid_for_sampling(const index_t& index) const = 0;
         virtual const posterior_t& posterior() const = 0;
-//        virtual const Data& data() const = 0;
         virtual const ClusterManager& cluster_manager() const = 0;
 };
 
-#endif /* DPM_HH */
+#endif /* MIXTURE_MODEL_HH */
