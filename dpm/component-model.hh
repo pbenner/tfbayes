@@ -36,7 +36,6 @@
 
 #include <clonable.hh>
 #include <datatypes.hh>
-#include <tfbayes/logarithmetic.h>
 
 extern gsl_rng* _r;
 

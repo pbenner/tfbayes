@@ -17,17 +17,23 @@
 
 #include <math.h>
 
+#include <iterator>
+#include <algorithm>
+
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
 #include <data-gaussian.hh>
 
 using namespace std;
 
-Data_Gaussian::Data_Gaussian(size_t cluster, size_t samples, gsl_matrix* Sigma)
-        : data_t<std::vector<double> >(generate_samples(cluster, samples, Sigma)),
+DataGaussian::DataGaussian(size_t cluster, size_t samples, gsl_matrix* Sigma, const double* pi)
+        : data_t<std::vector<double> >(generate_samples(cluster, samples, Sigma, pi)),
           _elements(samples), _length(1), _cluster(cluster)
 {
 }
 
-Data_Gaussian::~Data_Gaussian()
+DataGaussian::~DataGaussian()
 {
         for (size_t i = 0; i < _cluster; i++) {
                 gsl_vector_free(_mu[i]);
@@ -36,11 +42,13 @@ Data_Gaussian::~Data_Gaussian()
 }
 
 vector<vector<double> >
-Data_Gaussian::generate_samples(
+DataGaussian::generate_samples(
         size_t cluster,
         size_t samples,
-        gsl_matrix* Sigma)
+        gsl_matrix* Sigma,
+        const double* pi)
 {
+        gsl_ran_discrete_t* gdd = gsl_ran_discrete_preproc(cluster, pi);
         double sigma_x = sqrt(gsl_matrix_get(Sigma, 0, 0));
         double sigma_y = sqrt(gsl_matrix_get(Sigma, 1, 1));
         double rho  = gsl_matrix_get(Sigma, 0, 1)/(sigma_x*sigma_y);
@@ -62,22 +70,41 @@ Data_Gaussian::generate_samples(
         double x1;
         for (size_t i = 0; i < samples; i++) {
                 vector<double> x(2,0);
-                size_t j = rand()%cluster;
+                size_t j = gsl_ran_discrete(_r, gdd);
                 gsl_ran_bivariate_gaussian(_r, sigma_x, sigma_y, rho, &x0, &x1);
                 x[0] = gsl_vector_get(_mu[j], 0) + x0;
                 x[1] = gsl_vector_get(_mu[j], 1) + x1;
                 data.push_back(x);
+                indices.push_back(index_t(i));
         }
+
+        // generate a randomized list of indices
+        for (DataGaussian::iterator it = begin(); it != end(); it++) {
+                indices_randomized.push_back(&(*it));
+        }
+        shuffle();
+
+        gsl_ran_discrete_free(gdd);
 
         return data;
 }
 
+void
+DataGaussian::shuffle() {
+        random_shuffle(indices_randomized.begin(), indices_randomized.end());
+}
+
+const index_t&
+DataGaussian::operator[](size_t i) const {
+        return indices[i];
+}
+
 size_t
-Data_Gaussian::elements() const {
+DataGaussian::elements() const {
         return _elements;
 }
 
 size_t
-Data_Gaussian::length() const {
+DataGaussian::length() const {
         return _length;
 }

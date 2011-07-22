@@ -28,6 +28,9 @@
 
 #include <dpm-tfbs.hh>
 
+#include <tfbayes/logarithmetic.h>
+#include <tfbayes/fastlog.h>
+
 using namespace std;
 
 DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const DataTFBS& data)
@@ -57,8 +60,6 @@ DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const DataTF
         for (size_t i = 0; i < data.length(); i++) {
                 _posterior.push_back(vector<double>(data.length(i), 0.0));
         }
-
-        cout << _data << endl;
 
         // initialize cluster manager
         ProductDirichlet* bg_product_dirichlet = new ProductDirichlet(bg_alpha, _data);

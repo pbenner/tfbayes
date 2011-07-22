@@ -127,17 +127,21 @@ def getMatrix(c_m):
 #
 # ------------------------------------------------------------------------------
 
-def dpm_init(alpha, lam, tfbs_length, sequences):
-     c_alpha       = c_double(alpha)
-     c_lam         = c_double(lam)
-     c_tfbs_length = c_int(tfbs_length)
-     n             = len(sequences)
-     c_n           = c_int(n)
-     c_sequences   = (n*c_char_p)()
-     for i in range(0, n):
-          m = len(sequences[i])
-          c_sequences[i] = c_char_p(sequences[i])
-     _lib._dpm_gaussian_init(c_alpha, c_lam, c_tfbs_length, c_n, c_sequences)
+def dpm_init(alpha, cov, cov_0, mu_0, n, pi):
+     c_alpha = c_double(alpha)
+     c_cov   = _lib._allocMatrix(len(cov), len(cov[0]))
+     c_cov_0 = _lib._allocMatrix(len(cov_0), len(cov_0[0]))
+     c_mu_0  = _lib._allocVector(len(mu_0))
+     c_pi    = _lib._allocVector(len(pi))
+     copyMatrixToC(cov, c_cov)
+     copyMatrixToC(cov_0, c_cov_0)
+     copyVectorToC(mu_0, c_mu_0)
+     copyVectorToC(pi, c_pi)
+     _lib._dpm_gaussian_init(c_alpha, c_cov, c_cov_0, c_mu_0, n, c_pi)
+     _lib._freeMatrix(c_cov)
+     _lib._freeMatrix(c_cov_0)
+     _lib._freeVector(c_mu_0)
+     _lib._freeVector(c_pi)
 
 def dpm_print():
      _lib._dpm_gaussian_print()

@@ -32,6 +32,8 @@
 #include <data.hh>
 #include <component-model.hh>
 
+#include <tfbayes/fastlog.h>
+
 using namespace std;
 
 gsl_rng* _r;

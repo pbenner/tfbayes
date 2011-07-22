@@ -24,27 +24,51 @@
 
 #include <datatypes.hh>
 #include <component-model.hh>
+#include <indexer.hh>
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-class Data_Gaussian : public data_t<std::vector<double> > {
+class DataGaussian : public Indexer, public Data, public data_t<std::vector<double> > {
 public:
-         Data_Gaussian(size_t cluster, size_t samples, gsl_matrix* Sigma);
-        ~Data_Gaussian();
+         DataGaussian(size_t cluster, size_t samples, gsl_matrix* Sigma, const double* pi);
+        ~DataGaussian();
 
+        // iterators
+        ////////////////////////////////////////////////////////////////////////
+        iterator begin() { return indices.begin(); }
+        iterator end()   { return indices.end();   }
+
+        const_iterator begin() const { return indices.begin(); }
+        const_iterator end()   const { return indices.end();   }
+
+        const_iterator_randomized begin_randomized() const
+                { return indices_randomized.begin(); }
+        const_iterator_randomized end_randomized() const
+                { return indices_randomized.end();   }
+
+        // operators
+        ////////////////////////////////////////////////////////////////////////
+        const index_t& operator[](size_t i) const;
+
+        // methods
+        ////////////////////////////////////////////////////////////////////////
         size_t elements() const;
         size_t length() const;
+        void shuffle();
 
 private:
+        std::vector<index_t > indices;
+        std::vector<index_t*> indices_randomized;
+
         const size_t _elements;
         const size_t _length;
         const size_t _cluster;
 
         gsl_vector** _mu;
 
-        std::vector<std::vector<double> > generate_samples(size_t cluster, size_t samples, gsl_matrix* Sigma);
+        std::vector<std::vector<double> > generate_samples(size_t cluster, size_t samples, gsl_matrix* Sigma, const double* pi);
 };
 
 #endif /* DATA_GAUSSIAN_HH */

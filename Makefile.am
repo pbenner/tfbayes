@@ -2,7 +2,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = libexception include humandb dpm
+SUBDIRS = libexception libfastlog include humandb dpm
 
 EXTRA_DIST = hdb-load-upstream.in hdb-load-chrom.in hdb-read-upstream.in hdb-read-chrom.in hdb-search-upstream.in hdb-search-chrom.in hdb-statistics-chrom.in hdb-statistics-upstream.in
 

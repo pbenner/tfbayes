@@ -30,17 +30,14 @@
 
 class DPM_Gaussian : public DPM {
 public:
-         DPM_Gaussian(gsl_matrix* _cov,
-                      gsl_matrix* _cov_0,
+         DPM_Gaussian(double alpha,
+                      gsl_matrix* _Sigma,
+                      gsl_matrix* _Sigma_0,
                       gsl_vector* _mu_0,
-                      const Data_Gaussian& data);
+                      const DataGaussian& data);
         ~DPM_Gaussian();
 
         DPM_Gaussian* clone() const;
-
-        // type definitions
-        ////////////////////////////////////////////////////////////////////////
-        typedef std::vector<std::vector<bool>   > tfbs_start_positions_t;
 
         // operators
         ////////////////////////////////////////////////////////////////////////
@@ -72,12 +69,12 @@ private:
         gsl_matrix* cov_inv_0;
 
         // data and clusters
-        const Data_Gaussian& _data;
+        const DataGaussian& _data;
         data_t<cluster_tag_t> _cluster_assignments;
         ClusterManager _cluster_manager;
 
         // parameters
-        double alpha;
+        const double alpha;
 
         // posterior distribution
         posterior_t _posterior;

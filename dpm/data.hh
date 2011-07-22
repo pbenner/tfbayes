@@ -37,6 +37,8 @@
 
 class Data {
 public:
+        virtual ~Data() {}
+
         // operators
         ////////////////////////////////////////////////////////////////////////
         virtual const index_t& operator[](size_t i) const = 0;
@@ -44,7 +46,6 @@ public:
         // methods
         ////////////////////////////////////////////////////////////////////////
         virtual size_t length() const = 0;
-        virtual size_t length(size_t i) const = 0;
 };
 
 #endif /* DATA_HH */

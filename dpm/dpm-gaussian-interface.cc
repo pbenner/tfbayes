@@ -24,30 +24,41 @@ namespace Bayes {
 }
 
 #include <init.hh>
+#include <data-gaussian.hh>
 #include <dpm-gaussian-interface.hh>
-#include <dpm-tfbs.hh>
+#include <dpm-gaussian.hh>
 #include <sampler.hh>
 
 using namespace std;
 
-static DPM_TFBS* _gdpm;
-static DataTFBS* _data;
+static DPM_Gaussian* _gdpm;
+static DataGaussian* _data;
 static GibbsSampler* _sampler;
 
 __BEGIN_C_REGION;
 
-void _dpm_gaussian_init(double alpha, double lambda, int tfbs_length, int n, char *sequences[])
+void _dpm_gaussian_init(
+        double alpha,
+        unsigned int samples,
+        Bayes::Matrix* _Sigma,
+        Bayes::Matrix* _Sigma_0,
+        Bayes::Vector* _mu_0,
+        Bayes::Vector* _pi)
 {
         __dpm_init__();
 
-        vector<string> _sequences;
-        for (size_t i = 0; i < (size_t)n; i++) {
-                _sequences.push_back(sequences[i]);
-        }
+        gsl_matrix *Sigma    = toGslMatrix(_Sigma);
+        gsl_matrix *Sigma_0  = toGslMatrix(_Sigma_0);
+        gsl_vector *mu_0     = toGslVector(_mu_0);
+        const size_t cluster = _pi->size;
 
-        _data    = new DataTFBS(_sequences);
-        _gdpm    = new DPM_TFBS(alpha, lambda, (size_t)tfbs_length, *_data);
+        _data    = new DataGaussian(cluster, (size_t)samples, Sigma, _pi->vec);
+        _gdpm    = new DPM_Gaussian(alpha, Sigma, Sigma_0, mu_0, *_data);
         _sampler = new GibbsSampler(*_gdpm, *_data);
+
+        gsl_matrix_free(Sigma);
+        gsl_matrix_free(Sigma_0);
+        gsl_vector_free(mu_0);
 }
 
 unsigned int _dpm_gaussian_num_clusters() {
@@ -84,25 +95,17 @@ Bayes::Matrix* _dpm_gaussian_get_posterior() {
         return result;
 }
 
-Bayes::Matrix* _dpm_gaussian_cluster_assignments() {
-        Bayes::Matrix* result;
-        size_t n = _gdpm->data().length();
-        size_t m = 0;
-
-        // compute maximum length
-        for (size_t i = 0; i < n; i++) {
-                if (m < _gdpm->data().length(i)) {
-                        m = _gdpm->data().length(i);
-                }
-        }
+Bayes::Vector* _dpm_gaussian_cluster_assignments() {
+        Bayes::Vector* result;
+        size_t n = _data->length();
 
         // allocate matrix
-        result = Bayes::allocMatrix(n, m);
+        result = Bayes::allocVector(n);
         // copy posterior
-        for (DataTFBS::const_iterator it = _gdpm->data().begin();
-             it != _gdpm->data().end(); it++) {
+        for (DataGaussian::const_iterator it = _data->begin();
+             it != _data->end(); it++) {
                 const index_t& index = *it;
-                result->mat[index[0]][index[1]] = _gdpm->cluster_manager()[index];
+                result->vec[index[0]] = _gdpm->cluster_manager()[index];
         }
         return result;
 }

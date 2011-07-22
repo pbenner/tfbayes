@@ -233,7 +233,8 @@ AS_IF([test "x$enable_debug" = "xyes"],
    AX_CXXFLAGS_GCC_OPTION([-ffast-math])])
 AS_IF([test "x$enable_profiling" = "xyes"],
 	[AX_CFLAGS_GCC_OPTION([-pg])
-	 AX_CXXFLAGS_GCC_OPTION([-pg])])
+	 AX_CXXFLAGS_GCC_OPTION([-pg])
+	 LDFLAGS="$LDFLAGS -static"])
 AS_IF([test "x$enable_native" = "xyes"],
 	[AX_CFLAGS_GCC_OPTION([-march=native])
 	 AX_CXXFLAGS_GCC_OPTION([-march=native])])
@@ -291,6 +292,7 @@ AC_CONFIG_FILES([
 	Makefile
 	version.h
 	libexception/Makefile
+	libfastlog/Makefile
 	include/Makefile
 	humandb/Makefile
 	dpm/Makefile

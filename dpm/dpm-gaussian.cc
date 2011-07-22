@@ -28,13 +28,17 @@
 
 #include <dpm-gaussian.hh>
 
+#include <tfbayes/logarithmetic.h>
+#include <tfbayes/fastlog.h>
+
 using namespace std;
 
 DPM_Gaussian::DPM_Gaussian(
+        double alpha,
         gsl_matrix* Sigma,
         gsl_matrix* Sigma_0,
         gsl_vector* mu_0,
-        const Data_Gaussian& data)
+        const DataGaussian& data)
         : _data(data),
           _cluster_assignments(_data.length(), -1),
           _cluster_manager(new BivariateNormal(Sigma, Sigma_0, mu_0, data), _cluster_assignments),
