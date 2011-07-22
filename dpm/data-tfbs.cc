@@ -31,9 +31,7 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_matrix.h>
 
-#include <clustermanager.hh>
 #include <data-tfbs.hh>
-#include <distribution.hh>
 
 using namespace std;
 
@@ -65,11 +63,6 @@ const index_t&
 DataTFBS::operator[](size_t i) const {
         return indices[i];
 }
-
-// size_t
-// DataTFBS::elements() const {
-//         return _elements;
-// }
 
 size_t
 DataTFBS::length() const {

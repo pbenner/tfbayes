@@ -27,7 +27,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-#include <distribution.hh>
+#include <component-model.hh>
 
 using namespace std;
 

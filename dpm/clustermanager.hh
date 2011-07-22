@@ -26,8 +26,8 @@
 #include <vector>
 
 #include <cluster.hh>
+#include <component-model.hh>
 #include <datatypes.hh>
-#include <distribution.hh>
 
 // ClusterManager
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,7 +37,7 @@
 
 class ClusterManager : public Observer<cluster_event_t> {
 public:
-         ClusterManager(Distribution* distribution, data_t<cluster_tag_t>& cluster_assignments);
+         ClusterManager(ComponentModel* model, data_t<cluster_tag_t>& cluster_assignments);
          ClusterManager(const ClusterManager& cm);
         ~ClusterManager();
 
@@ -74,7 +74,7 @@ public:
         void update(Observed<cluster_event_t>* cluster, cluster_event_t event);
         void update(Observed<cluster_event_t>* cluster, cluster_event_t event, const range_t& range);
         cluster_tag_t add_cluster();
-        cluster_tag_t add_cluster(Distribution* distribution);
+        cluster_tag_t add_cluster(ComponentModel* distribution);
         Cluster& get_free_cluster();
         __inline__ size_t size() const { return used_clusters_size; };
 
@@ -92,7 +92,7 @@ private:
         size_t free_clusters_size;
 
         // default distribution for the dirichlet process
-        Distribution* default_distribution;
+        ComponentModel* default_model;
 
         // assignments to clusters
         data_t<cluster_tag_t>& cluster_assignments;

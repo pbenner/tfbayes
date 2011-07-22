@@ -26,8 +26,8 @@
 #include <gsl/gsl_matrix.h>
 
 #include <clustermanager.hh>
+#include <component-model.hh>
 #include <data-tfbs.hh>
-#include <distribution.hh>
 #include <mixture-model.hh>
 
 class DPM_TFBS : public DPM {

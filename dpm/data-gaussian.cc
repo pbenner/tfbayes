@@ -18,7 +18,6 @@
 #include <math.h>
 
 #include <data-gaussian.hh>
-#include <distribution.hh>
 
 using namespace std;
 

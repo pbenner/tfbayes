@@ -28,28 +28,28 @@
 
 using namespace std;
 
-Cluster::Cluster(Distribution* distribution, cluster_tag_t tag)
-        : _distribution(distribution), _tag(tag), _destructible(true), _size(0)
+Cluster::Cluster(ComponentModel* model, cluster_tag_t tag)
+        : _model(model), _tag(tag), _destructible(true), _size(0)
 { }
 
-Cluster::Cluster(Distribution* distribution, cluster_tag_t tag, bool destructible)
-        : _distribution(distribution), _tag(tag), _destructible(destructible), _size(0)
+Cluster::Cluster(ComponentModel* model, cluster_tag_t tag, bool destructible)
+        : _model(model), _tag(tag), _destructible(destructible), _size(0)
 { }
 
-Cluster::Cluster(Distribution* distribution, cluster_tag_t tag, Observer<cluster_event_t>* observer)
-        : _distribution(distribution), _tag(tag), _destructible(true), _size(0)
+Cluster::Cluster(ComponentModel* model, cluster_tag_t tag, Observer<cluster_event_t>* observer)
+        : _model(model), _tag(tag), _destructible(true), _size(0)
 {
         set_observer(observer);
 }
 
-Cluster::Cluster(Distribution* distribution, cluster_tag_t tag, Observer<cluster_event_t>* observer, bool destructible)
-        : _distribution(distribution), _tag(tag), _destructible(destructible), _size(0)
+Cluster::Cluster(ComponentModel* model, cluster_tag_t tag, Observer<cluster_event_t>* observer, bool destructible)
+        : _model(model), _tag(tag), _destructible(destructible), _size(0)
 {
         set_observer(observer);
 }
 
 Cluster::Cluster(const Cluster& cluster)
-        : _distribution(cluster._distribution->clone()),
+        : _model(cluster._model->clone()),
           _tag(cluster._tag),
           _destructible(cluster._destructible),
           _size(cluster._size)
@@ -58,18 +58,18 @@ Cluster::Cluster(const Cluster& cluster)
 }
 
 Cluster::~Cluster() {
-        delete(_distribution);
+        delete(_model);
 }
 
 void
 Cluster::add_observations(const range_t& range)
 {
         if (_size == 0) {
-                _size += _distribution->add(range);
+                _size += _model->add(range);
                 notify(cluster_event_nonempty);
         }
         else {
-                _size += _distribution->add(range);
+                _size += _model->add(range);
         }
         notify(cluster_event_add_word, range);
 }
@@ -77,8 +77,8 @@ Cluster::add_observations(const range_t& range)
 void
 Cluster::remove_observations(const range_t& range)
 {
-        if (_size >= _distribution->count(range)) {
-                _size -= _distribution->remove(range);
+        if (_size >= _model->count(range)) {
+                _size -= _model->remove(range);
                 if (_size == 0) {
                         notify(cluster_event_empty);
                 }
@@ -104,10 +104,10 @@ Cluster::destructible() const
         return _destructible;
 }
 
-const Distribution&
-Cluster::distribution() const
+const ComponentModel&
+Cluster::model() const
 {
-        return *_distribution;
+        return *_model;
 }
 
 ostream&

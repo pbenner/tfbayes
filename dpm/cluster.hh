@@ -27,8 +27,8 @@
 #include <iostream>
 
 #include <clonable.hh>
+#include <component-model.hh>
 #include <datatypes.hh>
-#include <distribution.hh>
 #include <observer.hh>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,10 +39,10 @@
 
 class Cluster : public Observed<cluster_event_t> {
 public:
-         Cluster(Distribution* distribution, cluster_tag_t tag);
-         Cluster(Distribution* distribution, cluster_tag_t tag, bool destructible);
-         Cluster(Distribution* distribution, cluster_tag_t tag, Observer<cluster_event_t>* observer);
-         Cluster(Distribution* distribution, cluster_tag_t tag, Observer<cluster_event_t>* observer, bool destructible);
+         Cluster(ComponentModel* model, cluster_tag_t tag);
+         Cluster(ComponentModel* model, cluster_tag_t tag, bool destructible);
+         Cluster(ComponentModel* model, cluster_tag_t tag, Observer<cluster_event_t>* observer);
+         Cluster(ComponentModel* model, cluster_tag_t tag, Observer<cluster_event_t>* observer, bool destructible);
          Cluster(const Cluster& cluster);
         ~Cluster();
 
@@ -55,10 +55,10 @@ public:
         size_t size() const;
         cluster_tag_t tag() const;
         bool destructible() const;
-        const Distribution& distribution() const;
+        const ComponentModel& model() const;
 
 private:
-        Distribution* _distribution;
+        ComponentModel* _model;
         cluster_tag_t _tag;
         bool _destructible;
         // number of elements in the cluster

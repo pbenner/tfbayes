@@ -23,6 +23,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <datatypes.hh>
+#include <component-model.hh>
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_rng.h>

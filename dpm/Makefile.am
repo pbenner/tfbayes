@@ -15,7 +15,7 @@ dist_bin_SCRIPTS = dpm-tfbs-plot dpm-tfbs-demo
 
 ## dpm library
 lib_LTLIBRARIES  = libdpm.la
-libdpm_la_SOURCES = code.cc code.hh index.hh datatypes.cc datatypes.hh data.hh data-tfbs.cc data-tfbs.hh data-gaussian.cc data-gaussian.hh dpm.hh dpm-tfbs.cc dpm-tfbs.hh dpm-gaussian.cc dpm-gaussian.hh clustermanager.cc clustermanager.hh cluster.cc cluster.hh distribution.cc distribution.hh pmcmc.cc pmcmc.hh sampler.cc sampler.hh init.cc init.hh interface.cc interface.hh
+libdpm_la_SOURCES = code.cc code.hh index.hh datatypes.cc datatypes.hh data.hh data-tfbs.cc data-tfbs.hh data-gaussian.cc data-gaussian.hh dpm.hh dpm-tfbs.cc dpm-tfbs.hh dpm-gaussian.cc dpm-gaussian.hh clustermanager.cc clustermanager.hh cluster.cc cluster.hh component-model.cc component-model.hh pmcmc.cc pmcmc.hh sampler.cc sampler.hh init.cc init.hh interface.cc interface.hh
 libdpm_la_LIBADD  = $(top_builddir)/libexception/libexception.la
 libdpm_la_LDFLAGS = -no-undefined -version-info 0:0:0
 

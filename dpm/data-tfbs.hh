@@ -29,7 +29,7 @@
 #include <gsl/gsl_matrix.h>
 
 #include <code.hh>
-#include <datatypes.hh>
+#include <component-model.hh>
 #include <indexer.hh>
 
 class DataTFBS : public Indexer, public Data, public sequence_data_t<short> {

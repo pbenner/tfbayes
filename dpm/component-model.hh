@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef STATISTICS_HH
-#define STATISTICS_HH
+#ifndef COMPONENT_MODEL_HH
+#define COMPONENT_MODEL_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -39,10 +39,10 @@
 
 extern gsl_rng* _r;
 
-class Distribution : public clonable {
+class ComponentModel : public clonable {
 public:
-        Distribution() {}
-        Distribution(const Distribution& distribution) {
+        ComponentModel() {}
+        ComponentModel(const ComponentModel& model) {
                 std::cout << "Distribution copy constructor called." << std::endl;
                 exit(EXIT_FAILURE);
         }
@@ -59,10 +59,10 @@ public:
         virtual double log_pdf(const range_t& range) const = 0;
         virtual double log_likelihood() const = 0;
 
-        virtual Distribution* clone() const = 0;
+        virtual ComponentModel* clone() const = 0;
 };
 
-class ProductDirichlet : public Distribution {
+class ProductDirichlet : public ComponentModel {
 public:
          ProductDirichlet(gsl_matrix* alpha, const sequence_data_t<short>& data);
          ProductDirichlet(const ProductDirichlet& distribution);
@@ -87,7 +87,7 @@ private:
         const size_t _size2;
 };
 
-class BivariateNormal : public Distribution {
+class BivariateNormal : public ComponentModel {
 public:
          BivariateNormal();
          BivariateNormal(const gsl_matrix* Sigma,
@@ -134,4 +134,4 @@ private:
         const data_t<std::vector<double> >& _data;
 };
 
-#endif /* STATISTICS_HH */
+#endif /* COMPONENT_MODEL_HH */

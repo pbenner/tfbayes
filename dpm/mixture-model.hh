@@ -26,7 +26,6 @@
 #include <gsl/gsl_matrix.h>
 
 #include <clustermanager.hh>
-#include <distribution.hh>
 
 class DPM : public clonable {
 public:

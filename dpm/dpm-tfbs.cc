@@ -161,7 +161,7 @@ DPM_TFBS::mixture_weights(const index_t& index, double weights[], cluster_tag_t 
                 ////////////////////////////////////////////////////////////////
                 // mixture component 1: background model
                 if (tags[i] == bg_cluster_tag) {
-                        weights[i] = log(1-lambda) + cluster.distribution().log_pdf(range);
+                        weights[i] = log(1-lambda) + cluster.model().log_pdf(range);
                         // normalization constant
                         sum = logadd(sum, weights[i]);
                 }
@@ -169,7 +169,7 @@ DPM_TFBS::mixture_weights(const index_t& index, double weights[], cluster_tag_t 
                 // mixture component 2: dirichlet process for tfbs models
                 else {
                         double num_elements = (double)cluster.size();
-                        weights[i] = log(lambda*num_elements/dp_norm) + cluster.distribution().log_pdf(range);
+                        weights[i] = log(lambda*num_elements/dp_norm) + cluster.model().log_pdf(range);
                         // normalization constant
                         sum = logadd(sum, weights[i]);
                 }
@@ -178,7 +178,7 @@ DPM_TFBS::mixture_weights(const index_t& index, double weights[], cluster_tag_t 
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         tags[components]    = _cluster_manager.get_free_cluster().tag();
-        weights[components] = log(lambda*alpha/dp_norm) + _cluster_manager[tags[components]].distribution().log_pdf(range);
+        weights[components] = log(lambda*alpha/dp_norm) + _cluster_manager[tags[components]].model().log_pdf(range);
         sum = logadd(sum, weights[components]);
 
         ////////////////////////////////////////////////////////////////////////
@@ -195,7 +195,7 @@ DPM_TFBS::likelihood() const {
         for (ClusterManager::const_iterator it = _cluster_manager.begin();
              it != _cluster_manager.end(); it++) {
                 Cluster& cluster = **it;
-                result += cluster.distribution().log_likelihood();
+                result += cluster.model().log_likelihood();
         }
         return result;
 }

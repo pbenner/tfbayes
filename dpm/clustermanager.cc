@@ -28,9 +28,9 @@
 
 using namespace std;
 
-ClusterManager::ClusterManager(Distribution* distribution, data_t<cluster_tag_t>& cluster_assignments)
+ClusterManager::ClusterManager(ComponentModel* model, data_t<cluster_tag_t>& cluster_assignments)
         : used_clusters_size(0), free_clusters_size(0),
-          default_distribution(distribution),
+          default_model(model),
           cluster_assignments(cluster_assignments)
 {
 }
@@ -40,13 +40,13 @@ ClusterManager::~ClusterManager() {
              it != end_all(); it++) {
                 delete(*it);
         }
-        delete(default_distribution);
+        delete(default_model);
 }
 
 ClusterManager::ClusterManager(const ClusterManager& cm)
         : used_clusters_size(cm.used_clusters_size),
           free_clusters_size(cm.free_clusters_size),
-          default_distribution(cm.default_distribution->clone()),
+          default_model(cm.default_model->clone()),
           cluster_assignments(cm.cluster_assignments)
 {
         for (size_t i = 0; i < cm.clusters.size(); i++) {
@@ -62,10 +62,10 @@ ClusterManager::ClusterManager(const ClusterManager& cm)
         }
 }
 
-// add a cluster with specific distribution which will
+// add a cluster with specific model which will
 // not be destructible (for other components of the mixture model)
 cluster_tag_t
-ClusterManager::add_cluster(Distribution* distribution)
+ClusterManager::add_cluster(ComponentModel* model)
 {
         cluster_tag_t tag = clusters.size();
 
@@ -74,7 +74,7 @@ ClusterManager::add_cluster(Distribution* distribution)
         // of free clusters, so we do not need to observe it
         // and we can simply push it to the list of used
         // clusters
-        Cluster* c = new Cluster(distribution, tag, this, false);
+        Cluster* c = new Cluster(model, tag, this, false);
         clusters.push_back(c);
         used_clusters.push_back(clusters.back());
         used_clusters_size++;
@@ -82,13 +82,13 @@ ClusterManager::add_cluster(Distribution* distribution)
         return tag;
 }
 
-// add cluster with default distribution
+// add cluster with default model
 cluster_tag_t
 ClusterManager::add_cluster()
 {
         cluster_tag_t tag = clusters.size();
 
-        Cluster* c = new Cluster(default_distribution->clone(), tag, this);
+        Cluster* c = new Cluster(default_model->clone(), tag, this);
         clusters.push_back(c);
         // this cluster is empty, so place it into the list
         // of free clusters
