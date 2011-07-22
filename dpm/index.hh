@@ -31,19 +31,42 @@
 
 class index_t {
 public:
-        explicit index_t(size_t x0);
-        index_t(size_t x0, size_t x1);
-        index_t(const index_t& index);
+        __inline__ explicit index_t(size_t x0) : _x0(x0), _size(1) {
+                _x0 = x0;
+        }
+        __inline__ index_t(size_t x0, size_t x1) : _x0(x0), _x1(x1), _size(2) {
+        }
+        __inline__ index_t(const index_t& index) : _x0(index._x0), _x1(index._x1), _size(index._size) {
+        }
 
         friend std::ostream& operator<< (std::ostream& o, const index_t& index);
 
-        size_t operator[](size_t i) const;
-        size_t operator[](size_t i);
+        __inline__ const size_t& operator[](size_t i) const {
+                return i == 0 ? _x0 : _x1;
+        }
+        __inline__ size_t& operator[](size_t i) {
+                return i == 0 ? _x0 : _x1;
+        }
 
-        void operator=(const index_t& index);
-        void operator++(int i);
-        bool operator<(index_t index) const;
-        size_t size() const;
+        __inline__ void operator=(const index_t& index) {
+                _x0 = index[0];
+                _x1 = index[1];
+        }
+        __inline__ void operator++(int i) {
+                _size == 1 ? _x0++ : _x1++;
+        }
+        __inline__ bool operator<(index_t index) const {
+                if (_size == 1) {
+                        return _x0 < index[0];
+                }
+                else {
+                        return _x0 < index[0] || (_x0 == index[0] && _x1 < index[1]);
+                }
+        }
+        __inline__ size_t size() const {
+                return _size;
+        }
+
 
 private:
         size_t _x0;

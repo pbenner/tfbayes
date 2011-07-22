@@ -66,10 +66,10 @@ DataTFBS::operator[](size_t i) const {
         return indices[i];
 }
 
-size_t
-DataTFBS::elements() const {
-        return _elements;
-}
+// size_t
+// DataTFBS::elements() const {
+//         return _elements;
+// }
 
 size_t
 DataTFBS::length() const {

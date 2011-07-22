@@ -156,27 +156,6 @@ ClusterManager::update(Observed<cluster_event_t>* observed, cluster_event_t even
         }
 }
 
-
-Cluster&
-ClusterManager::operator[](cluster_tag_t c) {
-        return *clusters[c];
-}
-
-const Cluster&
-ClusterManager::operator[](cluster_tag_t c) const {
-        return *clusters[c];
-}
-
-cluster_tag_t
-ClusterManager::operator[](const index_t& index) const {
-        return cluster_assignments[index];
-}
-
-size_t
-ClusterManager::size() const {
-        return used_clusters_size;
-}
-
 std::ostream& operator<< (std::ostream& o, const ClusterManager& cm) {
         o << "(" << cm.size() << "): ";
         for (ClusterManager::const_iterator it = cm.begin(); it != cm.end(); it++) {

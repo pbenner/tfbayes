@@ -63,9 +63,9 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-              Cluster& operator[](cluster_tag_t c);
-        const Cluster& operator[](cluster_tag_t c) const;
-         cluster_tag_t operator[](const index_t& index) const;
+        __inline__       Cluster& operator[](cluster_tag_t c)            { return *clusters[c];               }
+        __inline__ const Cluster& operator[](cluster_tag_t c)      const { return *clusters[c];               }
+        __inline__  cluster_tag_t operator[](const index_t& index) const { return cluster_assignments[index]; }
 
         friend std::ostream& operator<< (std::ostream& o, const ClusterManager& cm);
 
@@ -76,7 +76,7 @@ public:
         cluster_tag_t add_cluster();
         cluster_tag_t add_cluster(Distribution* distribution);
         Cluster& get_free_cluster();
-        size_t size() const;
+        __inline__ size_t size() const { return used_clusters_size; };
 
         // keep track of cluster assignments
         void record_cluster_assignment(const range_t& range, cluster_tag_t tag);
