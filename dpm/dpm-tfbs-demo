@@ -33,7 +33,7 @@ def importMatplotlib(backend=None):
 # local imports
 # ------------------------------------------------------------------------------
 
-from interface import *
+from dpm_tfbs_interface import *
 
 # global options
 # ------------------------------------------------------------------------------

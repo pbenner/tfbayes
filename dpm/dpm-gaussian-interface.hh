@@ -15,24 +15,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef INTERFACE_HH
-#define INTERFACE_HH
+#ifndef DPM_GAUSSIAN_INTERFACE_HH
+#define DPM_GAUSSIAN_INTERFACE_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <gsl/gsl_errno.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_odeiv.h>
+#include <interface.hh>
 
-namespace Bayes {
-        extern "C" {
-#include <tfbayes/linalg.h>
-        }
-}
-
-#define __BEGIN_C_REGION extern "C" {
-#define __END_C_REGION }
-
-#endif /* INTERFACE_HH */
+#endif /* DPM_GAUSSIAN_INTERFACE_HH */

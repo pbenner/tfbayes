@@ -71,32 +71,32 @@ _lib._freeMatrix.argtypes  = [POINTER(MATRIX)]
 _lib._free.restype         = None
 _lib._free.argtypes        = [POINTER(None)]
 
-#_lib._dpm_init.restype     = None
-#_lib._dpm_init.argtypes    = [c_int]
+#_lib._dpm_gaussian_init.restype     = None
+#_lib._dpm_gaussian_init.argtypes    = [c_int]
 
-_lib._dpm_num_clusters.restype  = c_uint
-_lib._dpm_num_clusters.argtypes = []
+_lib._dpm_gaussian_num_clusters.restype  = c_uint
+_lib._dpm_gaussian_num_clusters.argtypes = []
 
-_lib._dpm_cluster_assignments.restype  = POINTER(MATRIX)
-_lib._dpm_cluster_assignments.argtypes = []
+_lib._dpm_gaussian_cluster_assignments.restype  = POINTER(MATRIX)
+_lib._dpm_gaussian_cluster_assignments.argtypes = []
 
-_lib._dpm_hist_likelihood.restype  = POINTER(VECTOR)
-_lib._dpm_hist_likelihood.argtypes = []
+_lib._dpm_gaussian_hist_likelihood.restype  = POINTER(VECTOR)
+_lib._dpm_gaussian_hist_likelihood.argtypes = []
 
-_lib._dpm_hist_switches.restype  = POINTER(VECTOR)
-_lib._dpm_hist_switches.argtypes = []
+_lib._dpm_gaussian_hist_switches.restype  = POINTER(VECTOR)
+_lib._dpm_gaussian_hist_switches.argtypes = []
 
-_lib._dpm_print.restype    = None
-_lib._dpm_print.argtypes   = []
+_lib._dpm_gaussian_print.restype    = None
+_lib._dpm_gaussian_print.argtypes   = []
 
-_lib._dpm_sample.restype   = None
-_lib._dpm_sample.argtypes  = []
+_lib._dpm_gaussian_sample.restype   = None
+_lib._dpm_gaussian_sample.argtypes  = []
 
-_lib._dpm_free.restype     = None
-_lib._dpm_free.argtypes    = []
+_lib._dpm_gaussian_free.restype     = None
+_lib._dpm_gaussian_free.argtypes    = []
 
-_lib._dpm_get_posterior.restype  = POINTER(MATRIX)
-_lib._dpm_get_posterior.argtypes = []
+_lib._dpm_gaussian_get_posterior.restype  = POINTER(MATRIX)
+_lib._dpm_gaussian_get_posterior.argtypes = []
 
 # convert datatypes
 # ------------------------------------------------------------------------------
@@ -137,28 +137,28 @@ def dpm_init(alpha, lam, tfbs_length, sequences):
      for i in range(0, n):
           m = len(sequences[i])
           c_sequences[i] = c_char_p(sequences[i])
-     _lib._dpm_init(c_alpha, c_lam, c_tfbs_length, c_n, c_sequences)
+     _lib._dpm_gaussian_init(c_alpha, c_lam, c_tfbs_length, c_n, c_sequences)
 
 def dpm_print():
-     _lib._dpm_print()
+     _lib._dpm_gaussian_print()
 
 def dpm_num_clusters():
-     return _lib._dpm_num_clusters()
+     return _lib._dpm_gaussian_num_clusters()
 
 def dpm_cluster_assignments():
-     result  = _lib._dpm_cluster_assignments()
+     result  = _lib._dpm_gaussian_cluster_assignments()
      cluster = getMatrix(result)
      _lib._freeMatrix(result)
      return cluster
 
 def dpm_hist_likelihood():
-     result     = _lib._dpm_hist_likelihood()
+     result     = _lib._dpm_gaussian_hist_likelihood()
      likelihood = getVector(result)
      _lib._freeVector(result)
      return likelihood
 
 def dpm_hist_switches():
-     result   = _lib._dpm_hist_switches()
+     result   = _lib._dpm_gaussian_hist_switches()
      switches = getVector(result)
      _lib._freeVector(result)
      return switches
@@ -166,10 +166,10 @@ def dpm_hist_switches():
 def dpm_sample(n, burnin):
      c_n      = c_int(n)
      c_burnin = c_int(burnin)
-     _lib._dpm_sample(c_n, c_burnin)
+     _lib._dpm_gaussian_sample(c_n, c_burnin)
 
 def dpm_free():
-     _lib._dpm_free()
+     _lib._dpm_gaussian_free()
 
 def dpm_get_posterior():
-     return getMatrix(_lib._dpm_get_posterior())
+     return getMatrix(_lib._dpm_gaussian_get_posterior())
