@@ -31,6 +31,11 @@ DataGaussian::DataGaussian(size_t cluster, size_t samples, gsl_matrix* Sigma, co
         : data_t<std::vector<double> >(generate_samples(cluster, samples, Sigma, pi)),
           _elements(samples), _length(1), _cluster(cluster)
 {
+        // generate a randomized list of indices
+        for (DataGaussian::iterator it = begin(); it != end(); it++) {
+                indices_randomized.push_back(&(*it));
+        }
+        shuffle();
 }
 
 DataGaussian::~DataGaussian()
@@ -77,12 +82,6 @@ DataGaussian::generate_samples(
                 data.push_back(x);
                 indices.push_back(index_t(i));
         }
-
-        // generate a randomized list of indices
-        for (DataGaussian::iterator it = begin(); it != end(); it++) {
-                indices_randomized.push_back(&(*it));
-        }
-        shuffle();
 
         gsl_ran_discrete_free(gdd);
 

@@ -127,7 +127,8 @@ def getMatrix(c_m):
 #
 # ------------------------------------------------------------------------------
 
-def dpm_init(alpha, cov, cov_0, mu_0, n, pi):
+def dpm_init(n, alpha, cov, cov_0, mu_0, pi):
+     c_n     = c_int(n)
      c_alpha = c_double(alpha)
      c_cov   = _lib._allocMatrix(len(cov), len(cov[0]))
      c_cov_0 = _lib._allocMatrix(len(cov_0), len(cov_0[0]))
@@ -137,7 +138,7 @@ def dpm_init(alpha, cov, cov_0, mu_0, n, pi):
      copyMatrixToC(cov_0, c_cov_0)
      copyVectorToC(mu_0, c_mu_0)
      copyVectorToC(pi, c_pi)
-     _lib._dpm_gaussian_init(c_alpha, c_cov, c_cov_0, c_mu_0, n, c_pi)
+     _lib._dpm_gaussian_init(c_n, c_alpha, c_cov, c_cov_0, c_mu_0, c_pi)
      _lib._freeMatrix(c_cov)
      _lib._freeMatrix(c_cov_0)
      _lib._freeVector(c_mu_0)

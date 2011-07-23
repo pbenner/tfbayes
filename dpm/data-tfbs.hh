@@ -46,7 +46,7 @@ public:
 
         const_iterator_randomized begin_randomized() const
                 { return indices_randomized.begin(); }
-        const_iterator_randomized end_randomized() const
+        const_iterator_randomized end_randomized()   const
                 { return indices_randomized.end();   }
 
         // operators

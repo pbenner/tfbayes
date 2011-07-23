@@ -38,8 +38,8 @@ static GibbsSampler* _sampler;
 __BEGIN_C_REGION;
 
 void _dpm_gaussian_init(
-        double alpha,
         unsigned int samples,
+        double alpha,
         Bayes::Matrix* _Sigma,
         Bayes::Matrix* _Sigma_0,
         Bayes::Vector* _mu_0,

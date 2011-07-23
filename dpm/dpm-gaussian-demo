@@ -40,8 +40,8 @@ def plotGrid(ax):
     return x, y, X, Y
 
 class GaussianDPM():
-    def __init__(self, cov, cov_0, mu_0, n, pi):
-        dpm_init(cov, cov_0, mu_0, n, pi)
+    def __init__(self, n, alpha, cov, cov_0, mu_0, pi):
+        dpm_init(n, alpha, cov, cov_0, mu_0, pi)
         self.cov   = cov
         self.cov_0 = cov_0
         self.mu_0  = mu_0
@@ -97,8 +97,8 @@ class GaussianDPM():
         return w/sum(w)
 
 class InteractiveGDPM(GaussianDPM):
-    def __init__(self, cov, cov_0, mu_0, n, pi, ax):
-        GaussianDPM.__init__(self, cov, cov_0, mu_0, n, pi)
+    def __init__(self, n, alpha, cov, cov_0, mu_0, pi, ax):
+        GaussianDPM.__init__(self, n, alpha, cov, cov_0, mu_0, pi)
         self.plotResult(ax)
         mu  = np.array(dpm_means())
         x, y, X, Y = plotGrid(ax)
@@ -133,6 +133,7 @@ class InteractiveGDPM(GaussianDPM):
         self.Z*=float(self.steps-1)/float(self.steps)
 
 def main():
+    alpha = 1
     # parameters for the likelihood
     cov   = np.array([[0.5,0.2],[0.2,0.5]])
     # parameters for the prior
@@ -145,7 +146,7 @@ def main():
     fig1  = figure()
     ax1   = fig1.add_subplot(2,1,1, title="Data")
     ax2   = fig1.add_subplot(2,1,2)
-    dpm   = InteractiveGDPM(cov, cov_0, mu_0, n, pi, ax2)
+    dpm   = InteractiveGDPM(n, alpha, cov, cov_0, mu_0, pi, ax2)
     dpm.plotData(ax1)
     dpm.plotResult(ax2)
     show()
