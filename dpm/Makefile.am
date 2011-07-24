@@ -16,20 +16,24 @@ dpm_tfbs_LDADD  += $(top_builddir)/libfastlog/libfastlog.la
 dpm_tfbs_LDADD  += libdpm.la
 dpm_tfbs_LDADD  += $(LIB_PTHREAD)
 
+## compile python files
+pkgpython_PYTHON = __init__.py dpm_gaussian_interface.py dpm_tfbs_interface.py
+
 ## scripts
-dist_bin_SCRIPTS = dpm-tfbs-plot dpm-tfbs-demo
+dist_bin_SCRIPTS = dpm-gaussian-demo dpm-tfbs-demo dpm-tfbs-plot
 
 ## dpm library
 lib_LTLIBRARIES  = libdpm.la
 libdpm_la_SOURCES =                                                           \
 	code.cc code.hh                                                       \
-	index.hh                                                              \
+	index.hh indexer.hh clonable.hh observer.hh                           \
 	datatypes.cc datatypes.hh                                             \
 	data.hh data-tfbs.cc data-tfbs.hh data-gaussian.cc data-gaussian.hh   \
-	dpm.hh dpm-tfbs.cc dpm-tfbs.hh dpm-gaussian.cc dpm-gaussian.hh        \
+	dpm-tfbs.cc dpm-tfbs.hh dpm-gaussian.cc dpm-gaussian.hh               \
 	clustermanager.cc clustermanager.hh                                   \
 	cluster.cc cluster.hh                                                 \
 	component-model.cc component-model.hh                                 \
+	mixture-model.hh                                                      \
 	pmcmc.cc pmcmc.hh                                                     \
 	sampler.cc sampler.hh                                                 \
 	init.cc init.hh                                                       \

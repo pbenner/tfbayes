@@ -57,6 +57,7 @@ class GaussianDPM():
         self.steps += 1
     def plotData(self, ax):
         """ Plot data generated from a mixture of Gaussians. """
+        ax.set_axis_off()
         ax.set_xlim([-1,1])
         ax.set_ylim([-1,1])
         # samples
@@ -78,6 +79,7 @@ class GaussianDPM():
         ax.images.append(im)
     def plotResult(self, ax):
         """ Plot clustering result. """
+        ax.set_axis_off()
         ax.set_xlim([-1,1])
         ax.set_ylim([-1,1])
         num_clusters = dpm_num_clusters()

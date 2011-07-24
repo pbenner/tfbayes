@@ -2,14 +2,27 @@
 --------------------------------------------------------------------------------
 
 autoreconf
-./configure --prefix=$HOME/usr
+./configure --prefix=$HOME/.usr
 
 make install
+
+if [ -d "$HOME/.usr" ] ; then
+    export PATH="$HOME/.usr/bin:$PATH"
+    export LD_LIBRARY_PATH="$HOME/.usr/lib:$LD_LIBRARY_PATH"
+    export PYTHONPATH="$HOME/.usr/lib/python2.6/site-packages/"
+fi
 
 - Human Upstream Database
 --------------------------------------------------------------------------------
 
-hdb-load-seq upstream5000.hg18.chr1.cfg sequence.tmp 1
+hdb-load-upstream upstream5000.hg18.chr1.cfg sequence.tmp 1
 
-hdb-read-seq    upstream5000.hg18.chr1.cfg 1 10 100
-hdb-read-seq -p upstream5000.hg18.chr1.cfg 1 10 100
+hdb-read-upstream    upstream5000.hg18.chr1.cfg 1 10 100
+hdb-read-upstream -p upstream5000.hg18.chr1.cfg 1 10 100
+
+- Dirichlet Process Mixture
+--------------------------------------------------------------------------------
+
+dpm-gaussian-demo
+
+dpm-tfbs-demo dpm/dpm-tfbs-demo.txt
