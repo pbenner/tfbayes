@@ -39,8 +39,8 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-              Cluster& operator[](cluster_tag_t c)       { return _cluster_manager[c]; }
-        const Cluster& operator[](cluster_tag_t c) const { return _cluster_manager[c]; }
+              Cluster& operator[](cluster_tag_t c)       { return _clustermanager[c]; }
+        const Cluster& operator[](cluster_tag_t c) const { return _clustermanager[c]; }
 
         friend std::ostream& operator<<(std::ostream& o, const DPM_TFBS& dpm);
 
@@ -55,7 +55,7 @@ public:
         bool   valid_for_sampling(const index_t& index) const;
         const posterior_t& posterior() const;
         const DataTFBS& data() const;
-        const ClusterManager& cluster_manager() const;
+        const ClusterManager& clustermanager() const;
 
         // constants
         ////////////////////////////////////////////////////////////////////////
@@ -71,7 +71,7 @@ private:
         // data and clusters
         const DataTFBS& _data;
         sequence_data_t<cluster_tag_t> _cluster_assignments;
-        ClusterManager   _cluster_manager;
+        ClusterManager   _clustermanager;
 
         // tags of special clusters
         cluster_tag_t bg_cluster_tag;

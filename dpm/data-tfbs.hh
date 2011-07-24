@@ -51,6 +51,7 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
+        using sequence_data_t<short>::operator[];
         const index_t& operator[](size_t i) const;
 
         friend std::ostream& operator<< (std::ostream& o, const DataTFBS& data);

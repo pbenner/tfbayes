@@ -50,6 +50,7 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
+        using data_t<std::vector<double> >::operator[];
         const index_t& operator[](size_t i) const;
 
         // methods

@@ -56,6 +56,9 @@ class GaussianDPM():
         dpm_sample(n, burnin)
         self.steps += 1
     def plotData(self, ax):
+        """ Plot data generated from a mixture of Gaussians. """
+        ax.set_xlim([-1,1])
+        ax.set_ylim([-1,1])
         num_clusters = self.num_clusters()
 #        for c in range(0, num_clusters):
 #            x, y = zip(*dpm_cluster(c))
@@ -63,7 +66,8 @@ class GaussianDPM():
 #            for (x_, y_, c_) in zip(x, y, original_tags):
 #                ax.scatter(x_, y_, c=self.cluster_colors[c_])
         original_means = dpm_original_means()
-        mu  = np.array(dpm_means())
+        mu  = np.array(dpm_original_means())
+        ax.scatter(*zip(*mu), c='red')
         x, y, X, Y = plotGrid(ax)
         Z = self.pi[0]*biNormalDensity(original_means[0], self.cov)(X, Y)
         for pi, m in zip(self.pi[1:], original_means[1:]):
@@ -72,11 +76,16 @@ class GaussianDPM():
         im.set_data(x, y, Z)
         ax.images.append(im)
     def plotResult(self, ax):
+        """ Plot clustering result. """
+        ax.set_xlim([-1,1])
+        ax.set_ylim([-1,1])
         num_clusters = dpm_num_clusters()
-#        for c in range(0, num_clusters):
-#            x, y = zip(*dpm_cluster(c))
-#            ax.scatter(x, y, c=self.cluster_colors[c])
-#            ax.set_title("Clustering Result K="+str(num_clusters)+", N="+str(self.steps))
+        mu  = np.array(dpm_means())
+        ax.scatter(*zip(*mu), c='red')
+        for c in dpm_cluster_tags():
+            x, y = zip(*dpm_cluster_elements(c))
+            ax.scatter(x, y, c=self.cluster_colors[c])
+            ax.set_title("Clustering Result K="+str(num_clusters)+", N="+str(self.steps))
     def plotStatistics(self, ax1):
         ax2 = ax1.twinx()
         p1  = ax1.plot(dpm_hist_switches())
@@ -88,8 +97,8 @@ class GaussianDPM():
     def weights(self):
         num_clusters = dpm_num_clusters()
         w = np.zeros(num_clusters)
-#        for c in range(0, num_clusters):
-#            w[c] = float(len(dpm_cluster(c)))
+        for i, c in zip(range(0, num_clusters), dpm_cluster_tags()):
+            w[i] = float(len(dpm_cluster_elements(c)))
         return w/sum(w)
 
 class InteractiveGDPM(GaussianDPM):
@@ -131,9 +140,9 @@ class InteractiveGDPM(GaussianDPM):
 def main():
     alpha = 1
     # parameters for the likelihood
-    cov   = np.array([[0.5,0.2],[0.2,0.5]])
+    cov   = np.array([[0.02,0.01],[0.01,0.02]])
     # parameters for the prior
-    mu_0  = np.array( [10.0,10.0])
+    mu_0  = np.array( [0.0,0.0])
     cov_0 = np.array([[10.0,5.0],[5.0,10.0]])
     # parameters for drawing the data
     n     = 300

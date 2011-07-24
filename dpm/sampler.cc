@@ -64,7 +64,7 @@ GibbsSampler::_sample(const index_t& index) {
         }
         ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
-        cluster_tag_t old_cluster_tag = _dpm.cluster_manager()[index];
+        cluster_tag_t old_cluster_tag = _dpm.clustermanager()[index];
         _dpm.remove(index, old_cluster_tag);
         size_t components = _dpm.mixture_components();
         double weights[components+1];

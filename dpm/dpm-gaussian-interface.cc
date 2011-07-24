@@ -62,7 +62,38 @@ void _dpm_gaussian_init(
 }
 
 unsigned int _dpm_gaussian_num_clusters() {
-        return _gdpm->cluster_manager().size();
+        return _gdpm->clustermanager().size();
+}
+
+Bayes::Vector* _dpm_gaussian_cluster_tags() {
+        size_t cluster = _gdpm->clustermanager().size();
+        Bayes::Vector* tags = Bayes::allocVector(cluster);
+        const ClusterManager& clustermanager = _gdpm->clustermanager();
+
+        size_t i = 0;
+        for (ClusterManager::const_iterator it = clustermanager.begin();
+             it != clustermanager.end(); it++) {
+                tags->vec[i++] = (*it)->tag();
+        }
+        return tags;
+}
+
+Bayes::Matrix* _dpm_gaussian_cluster_elements(int tag) {
+        const ClusterManager& clustermanager = _gdpm->clustermanager();
+        const Cluster& cluster = clustermanager[(cluster_tag_t)tag];
+        Bayes::Matrix* elements = Bayes::allocMatrix(cluster.size(), 2);
+
+        size_t i = 0;
+        for (DataGaussian::const_iterator it = _data->begin();
+             it != _data->end(); it++) {
+                if (clustermanager[*it] == (cluster_tag_t)tag) {
+                        elements->mat[i][0] = (*_data)[*it][0];
+                        elements->mat[i][1] = (*_data)[*it][1];
+                        i++;
+                }
+        }
+
+        return elements;
 }
 
 Bayes::Matrix* _dpm_gaussian_get_posterior() {
@@ -97,7 +128,7 @@ Bayes::Matrix* _dpm_gaussian_get_posterior() {
 
 Bayes::Vector* _dpm_gaussian_cluster_assignments() {
         Bayes::Vector* result;
-        size_t n = _data->length();
+        size_t n = _data->elements();
 
         // allocate matrix
         result = Bayes::allocVector(n);
@@ -105,7 +136,7 @@ Bayes::Vector* _dpm_gaussian_cluster_assignments() {
         for (DataGaussian::const_iterator it = _data->begin();
              it != _data->end(); it++) {
                 const index_t& index = *it;
-                result->vec[index[0]] = _gdpm->cluster_manager()[index];
+                result->vec[index[0]] = _gdpm->clustermanager()[index];
         }
         return result;
 }

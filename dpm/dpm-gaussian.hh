@@ -41,8 +41,8 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-              Cluster& operator[](cluster_tag_t c)       { return _cluster_manager[c]; }
-        const Cluster& operator[](cluster_tag_t c) const { return _cluster_manager[c]; }
+              Cluster& operator[](cluster_tag_t c)       { return _clustermanager[c]; }
+        const Cluster& operator[](cluster_tag_t c) const { return _clustermanager[c]; }
 
         friend std::ostream& operator<<(std::ostream& o, const DPM_Gaussian& dpm);
 
@@ -56,7 +56,7 @@ public:
         double likelihood() const;
         bool   valid_for_sampling(const index_t& index) const;
         const posterior_t& posterior() const;
-        const ClusterManager& cluster_manager() const;
+        const ClusterManager& clustermanager() const;
         gsl_matrix* means() const;
 
 private:
@@ -72,7 +72,7 @@ private:
         // data and clusters
         const DataGaussian& _data;
         data_t<cluster_tag_t> _cluster_assignments;
-        ClusterManager _cluster_manager;
+        ClusterManager _clustermanager;
 
         // parameters
         const double alpha;

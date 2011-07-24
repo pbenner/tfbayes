@@ -43,7 +43,7 @@ DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const DataTF
           _data(data),
           // cluster manager
           _cluster_assignments(_data.lengths(), -1),
-          _cluster_manager(new ProductDirichlet(tfbs_alpha, _data), _cluster_assignments),
+          _clustermanager(new ProductDirichlet(tfbs_alpha, _data), _cluster_assignments),
           // strength parameter for the dirichlet process
           alpha(alpha),
           alpha_log(log(alpha)),
@@ -63,12 +63,12 @@ DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const DataTF
 
         // initialize cluster manager
         ProductDirichlet* bg_product_dirichlet = new ProductDirichlet(bg_alpha, _data);
-        bg_cluster_tag = _cluster_manager.add_cluster(bg_product_dirichlet);
+        bg_cluster_tag = _clustermanager.add_cluster(bg_product_dirichlet);
 
         // assign all elements to the background
         for (DataTFBS::const_iterator it = _data.begin();
              it != _data.end(); it++) {
-                _cluster_manager[bg_cluster_tag].add_observations(range_t(*it, *it));
+                _clustermanager[bg_cluster_tag].add_observations(range_t(*it, *it));
         }
 }
 
@@ -97,7 +97,7 @@ DPM_TFBS::valid_for_sampling(const index_t& index) const
         if (_tfbs_start_positions[index] == 0) {
                 // check if this element belongs to a tfbs that starts
                 // earlier in the sequence
-                if (_cluster_manager[index] != bg_cluster_tag) {
+                if (_clustermanager[index] != bg_cluster_tag) {
                         return false;
                 }
                 // check if there is a tfbs starting within the word
@@ -118,10 +118,10 @@ DPM_TFBS::add(const index_t& index, cluster_tag_t tag)
         const index_t  to  (index[0], index[1] + TFBS_LENGTH - 1);
 
         if (tag == bg_cluster_tag) {
-                _cluster_manager[tag].add_observations(range_t(from, to));
+                _clustermanager[tag].add_observations(range_t(from, to));
         }
         else {
-                _cluster_manager[tag].add_observations(range_t(from, to));
+                _clustermanager[tag].add_observations(range_t(from, to));
                 num_tfbs++;
                 _tfbs_start_positions[index] = 1;
         }
@@ -134,10 +134,10 @@ DPM_TFBS::remove(const index_t& index, cluster_tag_t tag)
         const index_t  to  (index[0], index[1] + TFBS_LENGTH - 1);
 
         if (tag == bg_cluster_tag) {
-                _cluster_manager[tag].remove_observations(range_t(from, to));
+                _clustermanager[tag].remove_observations(range_t(from, to));
         }
         else {
-                _cluster_manager[tag].remove_observations(range_t(from, to));
+                _clustermanager[tag].remove_observations(range_t(from, to));
                 num_tfbs--;
                 _tfbs_start_positions[index] = 0;
         }
@@ -146,7 +146,7 @@ DPM_TFBS::remove(const index_t& index, cluster_tag_t tag)
 size_t
 DPM_TFBS::mixture_components() const
 {
-        return _cluster_manager.size();
+        return _clustermanager.size();
 }
 
 void
@@ -158,7 +158,7 @@ DPM_TFBS::mixture_weights(const index_t& index, double weights[], cluster_tag_t 
         double sum         = -HUGE_VAL;
 
         cluster_tag_t i = 0;
-        for (ClusterManager::const_iterator it = _cluster_manager.begin(); it != _cluster_manager.end(); it++) {
+        for (ClusterManager::const_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {
                 Cluster& cluster = **it;
                 tags[i] = cluster.tag();
                 ////////////////////////////////////////////////////////////////
@@ -180,8 +180,8 @@ DPM_TFBS::mixture_weights(const index_t& index, double weights[], cluster_tag_t 
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
-        tags[components]    = _cluster_manager.get_free_cluster().tag();
-        weights[components] = lambda_log + alpha_log - dp_norm_log + _cluster_manager[tags[components]].model().log_pdf(range);
+        tags[components]    = _clustermanager.get_free_cluster().tag();
+        weights[components] = lambda_log + alpha_log - dp_norm_log + _clustermanager[tags[components]].model().log_pdf(range);
         sum = logadd(sum, weights[components]);
 
         ////////////////////////////////////////////////////////////////////////
@@ -195,8 +195,8 @@ double
 DPM_TFBS::likelihood() const {
         double result = 0;
 
-        for (ClusterManager::const_iterator it = _cluster_manager.begin();
-             it != _cluster_manager.end(); it++) {
+        for (ClusterManager::const_iterator it = _clustermanager.begin();
+             it != _clustermanager.end(); it++) {
                 Cluster& cluster = **it;
                 result += cluster.model().log_likelihood();
         }
@@ -210,7 +210,7 @@ DPM_TFBS::update_posterior(size_t sampling_steps) {
                 const index_t& index  = *it;
                 const size_t sequence = index[0];
                 const size_t position = index[1];
-                if (_cluster_manager[index] == bg_cluster_tag) {
+                if (_clustermanager[index] == bg_cluster_tag) {
                         const double tmp   = _posterior[sequence][position];
                         const double value = ((double)sampling_steps*tmp)/((double)sampling_steps+1.0);
                         _posterior[sequence][position] = value;
@@ -234,8 +234,8 @@ DPM_TFBS::data() const {
 }
 
 const ClusterManager&
-DPM_TFBS::cluster_manager() const {
-        return _cluster_manager;
+DPM_TFBS::clustermanager() const {
+        return _clustermanager;
 }
 
 
@@ -251,7 +251,7 @@ ostream& operator<< (ostream& o, const DPM_TFBS& dpm)
         o << dpm._tfbs_start_positions  << endl;
 
         o << "Clusters:"                << endl;
-        o << dpm._cluster_manager;
+        o << dpm._clustermanager;
 
         return o;
 }

@@ -55,7 +55,7 @@ void _dpm_tfbs_init(double alpha, double lambda, int tfbs_length, int n, char *s
 }
 
 unsigned int _dpm_tfbs_num_clusters() {
-        return _gdpm->cluster_manager().size();
+        return _gdpm->clustermanager().size();
 }
 
 Bayes::Matrix* _dpm_tfbs_get_posterior() {
@@ -106,7 +106,7 @@ Bayes::Matrix* _dpm_tfbs_cluster_assignments() {
         for (DataTFBS::const_iterator it = _gdpm->data().begin();
              it != _gdpm->data().end(); it++) {
                 const index_t& index = *it;
-                result->mat[index[0]][index[1]] = _gdpm->cluster_manager()[index];
+                result->mat[index[0]][index[1]] = _gdpm->clustermanager()[index];
         }
         return result;
 }

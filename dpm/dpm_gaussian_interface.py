@@ -80,7 +80,13 @@ _lib._dpm_gaussian_num_clusters.argtypes = []
 _lib._dpm_gaussian_means.restype  = POINTER(MATRIX)
 _lib._dpm_gaussian_means.argtypes = []
 
-_lib._dpm_gaussian_cluster_assignments.restype  = POINTER(MATRIX)
+_lib._dpm_gaussian_cluster_tags.restype  = POINTER(VECTOR)
+_lib._dpm_gaussian_cluster_tags.argtypes = []
+
+_lib._dpm_gaussian_cluster_elements.restype  = POINTER(MATRIX)
+_lib._dpm_gaussian_cluster_elements.argtypes = [c_int]
+
+_lib._dpm_gaussian_cluster_assignments.restype  = POINTER(VECTOR)
 _lib._dpm_gaussian_cluster_assignments.argtypes = []
 
 _lib._dpm_gaussian_hist_likelihood.restype  = POINTER(VECTOR)
@@ -158,14 +164,27 @@ def dpm_num_clusters():
 
 def dpm_cluster_assignments():
      result  = _lib._dpm_gaussian_cluster_assignments()
-     cluster = getMatrix(result)
-     _lib._freeMatrix(result)
+     cluster = map(int, getVector(result))
+     _lib._freeVector(result)
      return cluster
+
+def dpm_cluster_tags():
+     result = _lib._dpm_gaussian_cluster_tags()
+     tags   = map(int, getVector(result))
+     _lib._freeVector(result)
+     return tags
+
+def dpm_cluster_elements(tag):
+     c_tag    = c_int(tag)
+     result   = _lib._dpm_gaussian_cluster_elements(c_tag)
+     elements = getMatrix(result)
+     _lib._freeMatrix(result)
+     return elements
 
 def dpm_hist_likelihood():
      result     = _lib._dpm_gaussian_hist_likelihood()
      likelihood = getVector(result)
-     _lib._freeVector(result)
+     _lib._freeMatrix(result)
      return likelihood
 
 def dpm_hist_switches():
