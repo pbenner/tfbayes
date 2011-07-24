@@ -59,13 +59,16 @@ class GaussianDPM():
         """ Plot data generated from a mixture of Gaussians. """
         ax.set_xlim([-1,1])
         ax.set_ylim([-1,1])
+        # samples
         data = dpm_data()
         tags = dpm_original_cluster_assignments()
         for (x_, y_), c_ in zip(data, tags):
-            ax.scatter(x_, y_, c=self.cluster_colors[c_])
+            ax.scatter(x_, y_, c=self.cluster_colors[c_], alpha=0.75)
+        # means
         original_means = dpm_original_means()
         mu  = np.array(dpm_original_means())
-        ax.scatter(*zip(*mu), c='red')
+        ax.scatter(*zip(*mu), c='red', s=50, marker='^')
+        # density
         x, y, X, Y = plotGrid(ax)
         Z = self.pi[0]*biNormalDensity(original_means[0], self.cov)(X, Y)
         for pi, m in zip(self.pi[1:], original_means[1:]):
@@ -78,12 +81,14 @@ class GaussianDPM():
         ax.set_xlim([-1,1])
         ax.set_ylim([-1,1])
         num_clusters = dpm_num_clusters()
-        mu  = np.array(dpm_means())
-        ax.scatter(*zip(*mu), c='red')
+        # samples
         for c in dpm_cluster_tags():
             x, y = zip(*dpm_cluster_elements(c))
-            ax.scatter(x, y, c=self.cluster_colors[c])
+            ax.scatter(x, y, c=self.cluster_colors[c], alpha=0.75)
             ax.set_title("Clustering Result K="+str(num_clusters)+", N="+str(self.steps))
+        # means
+        mu  = np.array(dpm_means())
+        ax.scatter(*zip(*mu), c='red', s=50, marker='^')
     def plotStatistics(self, ax1):
         ax2 = ax1.twinx()
         p1  = ax1.plot(dpm_hist_switches())

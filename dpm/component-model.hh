@@ -113,6 +113,7 @@ private:
         gsl_vector* _mu_0;
 
         // likelihood
+        gsl_matrix* _Sigma;
         gsl_matrix* _Sigma_inv;
         gsl_vector* _mu;
         double _N;

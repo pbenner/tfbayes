@@ -154,6 +154,7 @@ BivariateNormal::BivariateNormal(
         _mu_0         = gsl_vector_alloc(_dimension);
 
         // alloc likelihood
+        _Sigma        = gsl_matrix_alloc(_dimension, _dimension);
         _Sigma_inv    = gsl_matrix_alloc(_dimension, _dimension);
         _mu           = gsl_vector_calloc(_dimension);
 
@@ -167,6 +168,7 @@ BivariateNormal::BivariateNormal(
         gsl_vector_memcpy(_mu_0, mu_0);
 
         // likelihood
+        gsl_matrix_memcpy(_Sigma, Sigma);
         inverse(_Sigma_inv, Sigma);
 
         // posterior
@@ -189,6 +191,7 @@ BivariateNormal::BivariateNormal(const BivariateNormal& bn)
         _mu_0         = gsl_vector_alloc(_dimension);
 
         // alloc likelihood
+        _Sigma        = gsl_matrix_alloc(_dimension, _dimension);
         _Sigma_inv    = gsl_matrix_alloc(_dimension, _dimension);
         _mu           = gsl_vector_calloc(_dimension);
 
@@ -202,6 +205,7 @@ BivariateNormal::BivariateNormal(const BivariateNormal& bn)
         gsl_vector_memcpy(_mu_0,        bn._mu_0);
 
         // likelihood
+        gsl_matrix_memcpy(_Sigma,       bn._Sigma);
         gsl_matrix_memcpy(_Sigma_inv,   bn._Sigma_inv);
         gsl_vector_memcpy(_mu,          bn._mu);
 
@@ -224,6 +228,7 @@ BivariateNormal::~BivariateNormal()
         gsl_vector_free(_mu_0);
 
         // likelihood
+        gsl_matrix_free(_Sigma);
         gsl_matrix_free(_Sigma_inv);
         gsl_vector_free(_mu);
 
@@ -251,7 +256,7 @@ BivariateNormal::update()
 {
         // update _mu_N and _Sigma_N
 
-        // compute posterior covariance _Sigma)N and _Sigma_N_inv
+        // compute posterior covariance _Sigma_N and _Sigma_N_inv
         gsl_matrix_memcpy(_Sigma_N_inv, _Sigma_inv);
         gsl_matrix_scale(_Sigma_N_inv, _N);
         gsl_matrix_add(_Sigma_N_inv, _Sigma_0_inv);
@@ -268,7 +273,8 @@ BivariateNormal::update()
         gsl_vector_add(_tmp1, _tmp2);
         // _mu_N = Sigma_N (N Sigma^-1 mu + Sigma_0^-1 mu_0)
         gsl_blas_dgemv(CblasTrans, 1.0, _Sigma_N, _tmp1, 0.0, _mu_N);
-//        gsl_matrix_add(_Sigma_N, _Sigma);
+
+        gsl_matrix_add(_Sigma_N, _Sigma);
 }
 
 size_t
@@ -295,7 +301,12 @@ BivariateNormal::remove(const range_t& range)
 
         do {
                 for (size_t i = 0; i < _dimension; i++) {
-                        gsl_vector_set(_mu, i, (_N*gsl_vector_get(_mu, i)-(*iterator)[i])/(_N-1));
+                        if (_N - 1 == 0) {
+                                gsl_vector_set(_mu, i, 0);
+                        }
+                        else {
+                                gsl_vector_set(_mu, i, (_N*gsl_vector_get(_mu, i)-(*iterator)[i])/(_N-1));
+                        }
                 }
                 _N--;
         } while(iterator++);
