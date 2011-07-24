@@ -52,20 +52,16 @@ class GaussianDPM():
         dpm_print()
     def num_clusters(self):
         return dpm_num_clusters()
-    def sample(self, n):
-        dpm_sample(n)
+    def sample(self, n, burnin):
+        dpm_sample(n, burnin)
         self.steps += 1
-    def hist_means(self):
-        return dpm_hist_means()
-    def means():
-        return dpm_means()
     def plotData(self, ax):
         num_clusters = self.num_clusters()
-        for c in range(0, num_clusters):
-            x, y = zip(*dpm_cluster(c))
-            original_tags = dpm_original_tags(c)
-            for (x_, y_, c_) in zip(x, y, original_tags):
-                ax.scatter(x_, y_, c=self.cluster_colors[c_])
+#        for c in range(0, num_clusters):
+#            x, y = zip(*dpm_cluster(c))
+#            original_tags = dpm_original_tags(c)
+#            for (x_, y_, c_) in zip(x, y, original_tags):
+#                ax.scatter(x_, y_, c=self.cluster_colors[c_])
         original_means = dpm_original_means()
         mu  = np.array(dpm_means())
         x, y, X, Y = plotGrid(ax)
@@ -77,10 +73,10 @@ class GaussianDPM():
         ax.images.append(im)
     def plotResult(self, ax):
         num_clusters = dpm_num_clusters()
-        for c in range(0, num_clusters):
-            x, y = zip(*dpm_cluster(c))
-            ax.scatter(x, y, c=self.cluster_colors[c])
-            ax.set_title("Clustering Result K="+str(num_clusters)+", N="+str(self.steps))
+#        for c in range(0, num_clusters):
+#            x, y = zip(*dpm_cluster(c))
+#            ax.scatter(x, y, c=self.cluster_colors[c])
+#            ax.set_title("Clustering Result K="+str(num_clusters)+", N="+str(self.steps))
     def plotStatistics(self, ax1):
         ax2 = ax1.twinx()
         p1  = ax1.plot(dpm_hist_switches())
@@ -92,8 +88,8 @@ class GaussianDPM():
     def weights(self):
         num_clusters = dpm_num_clusters()
         w = np.zeros(num_clusters)
-        for c in range(0, num_clusters):
-            w[c] = float(len(dpm_cluster(c)))
+#        for c in range(0, num_clusters):
+#            w[c] = float(len(dpm_cluster(c)))
         return w/sum(w)
 
 class InteractiveGDPM(GaussianDPM):
@@ -124,7 +120,7 @@ class InteractiveGDPM(GaussianDPM):
         im.set_data(x, y, self.Z)
         ax.images.append(im)
     def sampleInteractively(self, n, ax):
-        self.sample(n)
+        self.sample(n, 0)
         x, y, X, Y = plotGrid(ax)
         mu  = np.array(dpm_means())
         weights = self.weights()
@@ -146,15 +142,16 @@ def main():
     fig1  = figure()
     ax1   = fig1.add_subplot(2,1,1, title="Data")
     ax2   = fig1.add_subplot(2,1,2)
+    print(pi)
     dpm   = InteractiveGDPM(n, alpha, cov, cov_0, mu_0, pi, ax2)
     dpm.plotData(ax1)
     dpm.plotResult(ax2)
     show()
 
-    fig2 = figure()
-    ax3  = fig2.add_subplot(1,1,1, title="Statistics")
-    dpm.plotStatistics(ax3)
-    show()
+#    fig2 = figure()
+#    ax3  = fig2.add_subplot(1,1,1, title="Statistics")
+#    dpm.plotStatistics(ax3)
+#    show()
 
 if __name__ == "__main__":
     sys.exit(main())

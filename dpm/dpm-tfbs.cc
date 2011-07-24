@@ -207,9 +207,9 @@ void
 DPM_TFBS::update_posterior(size_t sampling_steps) {
         for (DataTFBS::const_iterator it = _data.begin();
              it != _data.end(); it++) {
-                const index_t& index = *it;
-                const size_t sequence    = index[0];
-                const size_t position    = index[1];
+                const index_t& index  = *it;
+                const size_t sequence = index[0];
+                const size_t position = index[1];
                 if (_cluster_manager[index] == bg_cluster_tag) {
                         const double tmp   = _posterior[sequence][position];
                         const double value = ((double)sampling_steps*tmp)/((double)sampling_steps+1.0);

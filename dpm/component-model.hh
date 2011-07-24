@@ -103,6 +103,7 @@ public:
         double pdf(const range_t& range) const;
         double log_pdf(const range_t& range) const;
         double log_likelihood() const;
+        const gsl_vector* mean() const;
 
         BivariateNormal* clone() const;
 

@@ -57,6 +57,7 @@ public:
         bool   valid_for_sampling(const index_t& index) const;
         const posterior_t& posterior() const;
         const ClusterManager& cluster_manager() const;
+        gsl_matrix* means() const;
 
 private:
         // likelihood parameters

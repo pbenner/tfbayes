@@ -24,4 +24,13 @@
 
 #include <interface.hh>
 
+extern "C" void _dpm_gaussian_init(
+        int samples,
+        double alpha,
+        Bayes::Matrix* _Sigma,
+        Bayes::Matrix* _Sigma_0,
+        Bayes::Vector* _mu_0,
+        Bayes::Vector* _pi);
+extern "C" void _dpm_gaussian_sample(unsigned int n, unsigned int burnin);
+
 #endif /* DPM_GAUSSIAN_INTERFACE_HH */

@@ -40,11 +40,16 @@ DPM_Gaussian::DPM_Gaussian(
         gsl_vector* mu_0,
         const DataGaussian& data)
         : _data(data),
-          _cluster_assignments(_data.length(), -1),
+          _cluster_assignments(_data.elements(), -1),
           _cluster_manager(new BivariateNormal(Sigma, Sigma_0, mu_0, data), _cluster_assignments),
           // strength parameter for the dirichlet process
           alpha(alpha)
 {
+        cluster_tag_t tag = _cluster_manager.get_free_cluster().tag();
+        for (DataGaussian::const_iterator it = _data.begin();
+             it != _data.end(); it++) {
+                _cluster_manager[tag].add_observations(range_t(*it, *it));
+        }
 }
 
 DPM_Gaussian::~DPM_Gaussian() {
@@ -89,7 +94,7 @@ DPM_Gaussian::mixture_weights(const index_t& index, double weights[], cluster_ta
 
         cluster_tag_t i = 0;
         for (ClusterManager::const_iterator it = _cluster_manager.begin(); it != _cluster_manager.end(); it++) {
-                Cluster& cluster = **it;
+                const Cluster& cluster = **it;
                 tags[i] = cluster.tag();
                 double num_elements = (double)cluster.size();
                 weights[i] = log(num_elements/(alpha + N)) + cluster.model().log_pdf(range);
@@ -108,6 +113,27 @@ DPM_Gaussian::mixture_weights(const index_t& index, double weights[], cluster_ta
         for (size_t i = 0; i < components+1; i++) {
                 weights[i] = exp(weights[i] - sum);
         }
+}
+
+gsl_matrix*
+DPM_Gaussian::means() const {
+        if (mixture_components() == 0) {
+                return NULL;
+        }
+
+        gsl_matrix* means = gsl_matrix_alloc(mixture_components(), 2);
+
+        size_t i = 0;
+        for (ClusterManager::const_iterator it = _cluster_manager.begin();
+             it != _cluster_manager.end(); it++) {
+                const Cluster& cluster = **it;
+                const BivariateNormal& bg = static_cast<const BivariateNormal&>(cluster.model());
+                gsl_matrix_set(means, i, 0, gsl_vector_get(bg.mean(), 0));
+                gsl_matrix_set(means, i, 1, gsl_vector_get(bg.mean(), 1));
+                i++;
+        }
+
+        return means;
 }
 
 double

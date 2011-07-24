@@ -225,7 +225,8 @@ AS_IF([test "x$enable_debug" = "xyes"],
 	 AX_CXXFLAGS_GCC_OPTION([-g])
    AX_CXXFLAGS_GCC_OPTION([-ggdb])
 	 CFLAGS="$CFLAGS -DDEBUG"
-	 CXXFLAGS="$CXXFLAGS -DDEBUG"],
+	 CXXFLAGS="$CXXFLAGS -DDEBUG"
+	 LDFLAGS="$LDFLAGS -static"],
   [AX_CFLAGS_GCC_OPTION([-O4])
    AX_CFLAGS_GCC_OPTION([-ffast-math])
 	 dnl

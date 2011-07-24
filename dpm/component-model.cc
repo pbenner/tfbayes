@@ -160,6 +160,7 @@ BivariateNormal::BivariateNormal(
         // alloc posterior
         _Sigma_N      = gsl_matrix_alloc(_dimension, _dimension);
         _Sigma_N_inv  = gsl_matrix_alloc(_dimension, _dimension);
+        _mu_N         = gsl_vector_alloc(_dimension);
 
         // prior
         inverse(_Sigma_0_inv, Sigma_0);
@@ -170,6 +171,7 @@ BivariateNormal::BivariateNormal(
 
         // posterior
         gsl_matrix_memcpy(_Sigma_N, Sigma_0);
+        gsl_matrix_add   (_Sigma_N, Sigma);
         inverse(_Sigma_N_inv, _Sigma_N);
 }
 
@@ -191,6 +193,7 @@ BivariateNormal::BivariateNormal(const BivariateNormal& bn)
         _mu           = gsl_vector_calloc(_dimension);
 
         // alloc posterior
+        _mu_N         = gsl_vector_alloc(_dimension);
         _Sigma_N      = gsl_matrix_alloc(_dimension, _dimension);
         _Sigma_N_inv  = gsl_matrix_alloc(_dimension, _dimension);
 
@@ -205,6 +208,7 @@ BivariateNormal::BivariateNormal(const BivariateNormal& bn)
         // posterior
         gsl_matrix_memcpy(_Sigma_N,     bn._Sigma_N);
         gsl_matrix_memcpy(_Sigma_N_inv, bn._Sigma_N_inv);
+        gsl_vector_memcpy(_mu_N,        bn._mu_N);
 }
 
 BivariateNormal::~BivariateNormal()
@@ -264,6 +268,7 @@ BivariateNormal::update()
         gsl_vector_add(_tmp1, _tmp2);
         // _mu_N = Sigma_N (N Sigma^-1 mu + Sigma_0^-1 mu_0)
         gsl_blas_dgemv(CblasTrans, 1.0, _Sigma_N, _tmp1, 0.0, _mu_N);
+//        gsl_matrix_add(_Sigma_N, _Sigma);
 }
 
 size_t
@@ -330,4 +335,10 @@ double
 BivariateNormal::log_likelihood() const
 {
         return 0;
+}
+
+const gsl_vector*
+BivariateNormal::mean() const
+{
+        return _mu;
 }

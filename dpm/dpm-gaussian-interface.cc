@@ -38,7 +38,7 @@ static GibbsSampler* _sampler;
 __BEGIN_C_REGION;
 
 void _dpm_gaussian_init(
-        unsigned int samples,
+        int samples,
         double alpha,
         Bayes::Matrix* _Sigma,
         Bayes::Matrix* _Sigma_0,
@@ -132,6 +132,29 @@ Bayes::Vector* _dpm_gaussian_hist_switches() {
         }
 
         return result;
+}
+
+Bayes::Matrix* _dpm_gaussian_means() {
+        gsl_matrix* tmp = _gdpm->means();
+        Bayes::Matrix* means;
+        if (tmp == NULL) {
+                means = Bayes::allocMatrix(0,0);
+        }
+        else {  
+                means = Bayes::fromGslMatrix(tmp);
+                gsl_matrix_free(tmp);
+        }
+        return means;
+}
+
+Bayes::Matrix* _dpm_gaussian_original_means() {
+        gsl_matrix* means = _data->original_means();
+        return Bayes::fromGslMatrix(means);
+}
+
+Bayes::Vector* _dpm_gaussian_original_cluster_assignments() {
+        gsl_vector* original_cluster_assignments = _data->original_cluster_assignments();
+        return Bayes::fromGslVector(original_cluster_assignments);
 }
 
 void _dpm_gaussian_print() {

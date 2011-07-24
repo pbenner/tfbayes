@@ -57,6 +57,8 @@ public:
         size_t elements() const;
         size_t length() const;
         void shuffle();
+        gsl_matrix* original_means();
+        gsl_vector* original_cluster_assignments();
 
 private:
         std::vector<index_t > indices;
@@ -66,7 +68,10 @@ private:
         const size_t _length;
         const size_t _cluster;
 
-        gsl_vector** _mu;
+        // means for generating samples
+        gsl_matrix* _mu;
+        // original cluster assignments
+        gsl_vector* _original_cluster_assignments;
 
         std::vector<std::vector<double> > generate_samples(size_t cluster, size_t samples, gsl_matrix* Sigma, const double* pi);
 };

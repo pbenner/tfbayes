@@ -2,7 +2,13 @@
 
 INCLUDES = -I$(top_srcdir)/include
 
-bin_PROGRAMS = dpm-tfbs
+bin_PROGRAMS = dpm-tfbs dpm-gaussian
+
+dpm_gaussian_SOURCES = dpm-gaussian-main.cc
+dpm_gaussian_LDADD   = $(top_builddir)/libexception/libexception.la
+dpm_gaussian_LDADD  += $(top_builddir)/libfastlog/libfastlog.la
+dpm_gaussian_LDADD  += libdpm.la
+dpm_gaussian_LDADD  += $(LIB_PTHREAD)
 
 dpm_tfbs_SOURCES = dpm-tfbs-main.cc
 dpm_tfbs_LDADD   = $(top_builddir)/libexception/libexception.la
