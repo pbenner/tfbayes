@@ -154,7 +154,6 @@ def main():
     fig1  = figure()
     ax1   = fig1.add_subplot(2,1,1, title="Data")
     ax2   = fig1.add_subplot(2,1,2)
-    print(pi)
     dpm   = InteractiveGDPM(n, alpha, cov, cov_0, mu_0, pi, ax2)
     dpm.plotData(ax1)
     dpm.plotResult(ax2)
