@@ -178,6 +178,20 @@ Bayes::Matrix* _dpm_gaussian_means() {
         return means;
 }
 
+Bayes::Matrix* _dpm_gaussian_data() {
+        Bayes::Matrix* data = Bayes::allocMatrix(_data->elements(), 2);
+
+        size_t i = 0;
+        for (DataGaussian::const_iterator it = _data->begin();
+             it != _data->end(); it++) {
+                data->mat[i][0] = (*_data)[*it][0];
+                data->mat[i][1] = (*_data)[*it][1];
+                i++;
+        }
+
+        return data;
+}
+
 Bayes::Matrix* _dpm_gaussian_original_means() {
         gsl_matrix* means = _data->original_means();
         return Bayes::fromGslMatrix(means);

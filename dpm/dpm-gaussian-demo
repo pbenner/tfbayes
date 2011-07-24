@@ -59,12 +59,10 @@ class GaussianDPM():
         """ Plot data generated from a mixture of Gaussians. """
         ax.set_xlim([-1,1])
         ax.set_ylim([-1,1])
-        num_clusters = self.num_clusters()
-#        for c in range(0, num_clusters):
-#            x, y = zip(*dpm_cluster(c))
-#            original_tags = dpm_original_tags(c)
-#            for (x_, y_, c_) in zip(x, y, original_tags):
-#                ax.scatter(x_, y_, c=self.cluster_colors[c_])
+        data = dpm_data()
+        tags = dpm_original_cluster_assignments()
+        for (x_, y_), c_ in zip(data, tags):
+            ax.scatter(x_, y_, c=self.cluster_colors[c_])
         original_means = dpm_original_means()
         mu  = np.array(dpm_original_means())
         ax.scatter(*zip(*mu), c='red')

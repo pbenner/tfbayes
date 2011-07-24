@@ -80,6 +80,9 @@ _lib._dpm_gaussian_num_clusters.argtypes = []
 _lib._dpm_gaussian_means.restype  = POINTER(MATRIX)
 _lib._dpm_gaussian_means.argtypes = []
 
+_lib._dpm_gaussian_data.restype   = POINTER(MATRIX)
+_lib._dpm_gaussian_data.argtypes  = []
+
 _lib._dpm_gaussian_cluster_tags.restype  = POINTER(VECTOR)
 _lib._dpm_gaussian_cluster_tags.argtypes = []
 
@@ -97,6 +100,9 @@ _lib._dpm_gaussian_hist_switches.argtypes   = []
 
 _lib._dpm_gaussian_original_means.restype   = POINTER(MATRIX)
 _lib._dpm_gaussian_original_means.argtypes  = []
+
+_lib._dpm_gaussian_original_cluster_assignments.restype   = POINTER(VECTOR)
+_lib._dpm_gaussian_original_cluster_assignments.argtypes  = []
 
 _lib._dpm_gaussian_print.restype    = None
 _lib._dpm_gaussian_print.argtypes   = []
@@ -199,14 +205,20 @@ def dpm_means():
      _lib._freeMatrix(result)
      return means
 
+def dpm_data():
+     result = _lib._dpm_gaussian_data()
+     data  = getMatrix(result)
+     _lib._freeMatrix(result)
+     return data
+
 def dpm_original_means():
      result = _lib._dpm_gaussian_original_means()
      means  = getMatrix(result)
      _lib._freeMatrix(result)
      return means
 
-def dpm_original_cluster_assignments(c):
-     result = _lib._dpm_gaussian_original_cluster_assignments(c)
+def dpm_original_cluster_assignments():
+     result = _lib._dpm_gaussian_original_cluster_assignments()
      tags   = map(int, getVector(result))
      _lib._freeVector(result)
      return tags
