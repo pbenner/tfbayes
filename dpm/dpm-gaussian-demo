@@ -143,13 +143,13 @@ class InteractiveGDPM(GaussianDPM):
 def main():
     alpha = 1
     # parameters for the likelihood
-    cov   = np.array([[0.02,0.01],[0.01,0.02]])
+    cov   = np.array([[0.01,0.005],[0.005,0.01]])
     # parameters for the prior
     mu_0  = np.array( [0.0,0.0])
-    cov_0 = np.array([[10.0,5.0],[5.0,10.0]])
+    cov_0 = np.array([[10.0,0.1],[0.1,10.0]])
     # parameters for drawing the data
     n     = 300
-    pi    = mt.dirichlet([10, 3, 1, 1, 1, 1, 1, 2, 4, 19, 3])
+    pi    = mt.dirichlet([10, 3, 5, 7, 8, 3, 4, 4, 4, 19, 3])
 
     fig1  = figure()
     ax1   = fig1.add_subplot(2,1,1, title="Data")

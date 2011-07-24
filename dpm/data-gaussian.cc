@@ -66,8 +66,8 @@ DataGaussian::generate_samples(
         // generate a random mean for each cluster
         _mu = gsl_matrix_alloc(cluster, 2);
         for (size_t i = 0; i < cluster; i++) {
-                gsl_matrix_set(_mu, i, 0, (double)rand()/RAND_MAX-0.5);
-                gsl_matrix_set(_mu, i, 1, (double)rand()/RAND_MAX-0.5);
+                gsl_matrix_set(_mu, i, 0, 1.2*(double)rand()/RAND_MAX-0.5);
+                gsl_matrix_set(_mu, i, 1, 1.2*(double)rand()/RAND_MAX-0.5);
         }
 
         // generate samples
