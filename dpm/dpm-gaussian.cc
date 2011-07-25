@@ -85,7 +85,7 @@ DPM_Gaussian::mixture_components() const
 }
 
 void
-DPM_Gaussian::mixture_weights(const index_t& index, double weights[], cluster_tag_t tags[])
+DPM_Gaussian::mixture_weights(const index_t& index, double log_weights[], cluster_tag_t tags[])
 {
         size_t components = mixture_components();
         double sum        = -HUGE_VAL;
@@ -97,22 +97,16 @@ DPM_Gaussian::mixture_weights(const index_t& index, double weights[], cluster_ta
                 const Cluster& cluster = **it;
                 tags[i] = cluster.tag();
                 double num_elements = (double)cluster.size();
-                weights[i] = log(num_elements/(alpha + N)) + cluster.model().log_pdf(range);
                 // normalization constant
-                sum = logadd(sum, weights[i]);
+                sum = logadd(sum, log(num_elements/(alpha + N)) + cluster.model().log_pdf(range));
+                log_weights[i] = sum;
                 i++;
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         tags[components]    = _clustermanager.get_free_cluster().tag();
-        weights[components] = log(alpha/(alpha + N)) + _clustermanager[tags[components]].model().log_pdf(range);
-        sum = logadd(sum, weights[components]);
-
-        ////////////////////////////////////////////////////////////////////////
-        // normalize
-        for (size_t i = 0; i < components+1; i++) {
-                weights[i] = exp(weights[i] - sum);
-        }
+        sum = logadd(sum, log(alpha/(alpha + N)) + _clustermanager[tags[components]].model().log_pdf(range));
+        log_weights[components] = sum;
 }
 
 gsl_matrix*

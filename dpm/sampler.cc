@@ -22,6 +22,7 @@
 #include <gsl/gsl_randist.h>
 
 #include <sampler.hh>
+#include <statistics.hh>
 
 using namespace std;
 
@@ -67,17 +68,14 @@ GibbsSampler::_sample(const index_t& index) {
         cluster_tag_t old_cluster_tag = _dpm.clustermanager()[index];
         _dpm.remove(index, old_cluster_tag);
         size_t components = _dpm.mixture_components();
-        double weights[components+1];
+        double log_weights[components+1];
         cluster_tag_t tags[components+1];
-        _dpm.mixture_weights(index, weights, tags);
+        _dpm.mixture_weights(index, log_weights, tags);
 
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
         // to that cluster
-        gsl_ran_discrete_t* gdd  = gsl_ran_discrete_preproc(components+1, weights);
-        cluster_tag_t i = gsl_ran_discrete(_r, gdd);
-        gsl_ran_discrete_free(gdd);
-        cluster_tag_t new_cluster_tag = tags[i];
+        cluster_tag_t new_cluster_tag = tags[select_component(components+1, log_weights)];
 
         ////////////////////////////////////////////////////////////////////////
         _dpm.add(index, new_cluster_tag);

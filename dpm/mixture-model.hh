@@ -41,7 +41,8 @@ public:
         // methods
         ////////////////////////////////////////////////////////////////////////
         virtual size_t mixture_components() const = 0;
-        virtual void   mixture_weights(const index_t& index, double weights[], cluster_tag_t tags[]) = 0;
+        // compute cumulative mixture weights on log scale (not normalized!)
+        virtual void   mixture_weights(const index_t& index, double log_weights[], cluster_tag_t tags[]) = 0;
         virtual void   add(const index_t& index, cluster_tag_t tag) = 0;
         virtual void   remove(const index_t& index, cluster_tag_t tag) = 0;
         virtual void   update_posterior(size_t sampling_steps) = 0;

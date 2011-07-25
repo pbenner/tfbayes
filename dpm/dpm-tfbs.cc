@@ -150,11 +150,11 @@ DPM_TFBS::mixture_components() const
 }
 
 void
-DPM_TFBS::mixture_weights(const index_t& index, double weights[], cluster_tag_t tags[])
+DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_tag_t tags[])
 {
         range_t range(index, index_t(index[0], index[1] + TFBS_LENGTH - 1));
         size_t components  = mixture_components();
-        double dp_norm_log = fastlog(num_tfbs + alpha);
+        double dp_norm_log = log(num_tfbs + alpha);
         double sum         = -HUGE_VAL;
 
         cluster_tag_t i = 0;
@@ -164,31 +164,23 @@ DPM_TFBS::mixture_weights(const index_t& index, double weights[], cluster_tag_t 
                 ////////////////////////////////////////////////////////////////
                 // mixture component 1: background model
                 if (tags[i] == bg_cluster_tag) {
-                        weights[i] = lambda_inv_log + cluster.model().log_pdf(range);
-                        // normalization constant
-                        sum = logadd(sum, weights[i]);
+                        sum = logadd(sum, lambda_inv_log + cluster.model().log_pdf(range));
+                        log_weights[i] = sum;
                 }
                 ////////////////////////////////////////////////////////////////
                 // mixture component 2: dirichlet process for tfbs models
                 else {
                         double num_elements = (double)cluster.size();
-                        weights[i] = lambda_log + fastlog(num_elements) - dp_norm_log + cluster.model().log_pdf(range);
-                        // normalization constant
-                        sum = logadd(sum, weights[i]);
+                        sum = logadd(sum, lambda_log + fastlog(num_elements) - dp_norm_log + cluster.model().log_pdf(range));
+                        log_weights[i] = sum;
                 }
                 i++;
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
-        tags[components]    = _clustermanager.get_free_cluster().tag();
-        weights[components] = lambda_log + alpha_log - dp_norm_log + _clustermanager[tags[components]].model().log_pdf(range);
-        sum = logadd(sum, weights[components]);
-
-        ////////////////////////////////////////////////////////////////////////
-        // normalize
-        for (size_t i = 0; i < components+1; i++) {
-                weights[i] = exp(weights[i] - sum);
-        }
+        tags[components] = _clustermanager.get_free_cluster().tag();
+        sum = logadd(sum, lambda_log + alpha_log - dp_norm_log + _clustermanager[tags[components]].model().log_pdf(range));
+        log_weights[components] = sum;
 }
 
 double

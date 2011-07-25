@@ -47,7 +47,7 @@ public:
         // methods
         ////////////////////////////////////////////////////////////////////////
         size_t mixture_components() const;
-        void   mixture_weights(const index_t& index, double weights[], cluster_tag_t tags[]);
+        void   mixture_weights(const index_t& index, double log_weights[], cluster_tag_t tags[]);
         void   add(const index_t& index, cluster_tag_t tag);
         void   remove(const index_t& index, cluster_tag_t tag);
         void   update_posterior(size_t sampling_steps);

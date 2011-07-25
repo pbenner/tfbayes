@@ -26,7 +26,7 @@ dist_bin_SCRIPTS = dpm-gaussian-demo dpm-tfbs-demo dpm-tfbs-plot
 lib_LTLIBRARIES  = libdpm.la
 libdpm_la_SOURCES =                                                           \
 	code.cc code.hh                                                       \
-	index.hh indexer.hh clonable.hh observer.hh                           \
+	index.hh indexer.hh clonable.hh observer.hh statistics.hh             \
 	datatypes.cc datatypes.hh                                             \
 	data.hh data-tfbs.cc data-tfbs.hh data-gaussian.cc data-gaussian.hh   \
 	dpm-tfbs.cc dpm-tfbs.hh dpm-gaussian.cc dpm-gaussian.hh               \
