@@ -12,6 +12,7 @@
   - [ ] Extract and analyse TFBS sequences
   - [ ] Information content of TFBS
   - [ ] Discuss reversible jump / transdimensional MCMC
+  - [ ] Test on dataset (e.g. SCPD database)
 
 * TODO [0/1] Zincfinger Analysis
   - [ ] Individual Information Theory and Sequence Walkers
