@@ -29,7 +29,7 @@ def usage():
 
 def plot_motif(fname):
     m = Motif.Motif()
-    m._from_horiz_matrix(sys.stdin)
+    m._from_horiz_matrix(sys.stdin, letters='ACGT')
     m.weblogo(fname)
 
 # main
