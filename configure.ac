@@ -309,6 +309,8 @@ AC_MSG_NOTICE_BOX([Configure summary
 
 System type:              ${host}
 Build with debug symbols: ${enable_debug}
+Profiling support:        ${enable_profiling}
+Native processor support: ${enable_native}
 Use long double:          ${enable_longdouble}
 ])
 
