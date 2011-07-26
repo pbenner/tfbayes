@@ -47,10 +47,6 @@ public:
                 exit(EXIT_FAILURE);
         }
 
-        // datatypes
-        typedef std::vector<std::vector<size_t> > alpha_t;
-        typedef std::vector<std::vector<size_t> > counts_t;
-
         // purely virtual functions
         virtual size_t add(const range_t& range) = 0;
         virtual size_t remove(const range_t& range) = 0;
@@ -68,6 +64,10 @@ public:
          ProductDirichlet(const ProductDirichlet& distribution);
         ~ProductDirichlet();
 
+        // datatypes
+        typedef std::vector<std::vector<size_t> > alpha_t;
+        typedef std::vector<std::vector<size_t> > counts_t;
+
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
@@ -76,6 +76,8 @@ public:
         double log_likelihood() const;
 
         ProductDirichlet* clone() const;
+
+        friend std::ostream& operator<< (std::ostream& o, const ProductDirichlet& pd);
 
 private:
         alpha_t alpha;
@@ -106,6 +108,8 @@ public:
         const gsl_vector* mean() const;
 
         BivariateNormal* clone() const;
+
+        friend std::ostream& operator<< (std::ostream& o, const BivariateNormal& pd);
 
 private:
         // prior

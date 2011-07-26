@@ -160,6 +160,36 @@ char * readfile(const char* file_name, vector<string>& sequences)
         return NULL;
 }
 
+ostream& operator<< (ostream& o, const ProductDirichlet& pd) {
+        for (size_t j = 0; j < pd.alpha[0].size() - 1; j++) {
+                o << "\t";
+                for (size_t i = 0; i < pd.alpha.size(); i++) {
+                        o << pd.alpha[i][j] + pd.counts[i][j] << " ";
+                }
+                o << endl;
+        }
+
+        return o;
+}
+
+static
+void save_motifs(ostream& file, const DPM_TFBS& dpm)
+{
+        const ClusterManager& cm = dpm.clustermanager();
+
+        file << "cluster = ";
+        for (ClusterManager::const_iterator it = cm.begin();
+             it != cm.end(); it++) {
+                file << "cluster_" << (*it)->tag() << ":" << (*it)->size() << " ";
+        }
+        file << endl;
+        for (ClusterManager::const_iterator it = cm.begin();
+             it != cm.end(); it++) {
+                file << "cluster_" << (*it)->tag() << " =" << endl;
+                file << static_cast<const ProductDirichlet&>((*it)->model());
+        }
+}
+
 static
 void save_result(ostream& file, const Sampler& sampler)
 {
@@ -200,7 +230,6 @@ void save_result(ostream& file, const Sampler& sampler)
                 }
                 file << endl;
         }
-        file << endl;
 }
 
 static
@@ -225,11 +254,13 @@ void run_dpm(const char* file_name)
         // save result
         if (options.save == "") {
                 save_result(cout, pmcmc);
+                save_motifs(cout, gdpm);
         }
         else {
                 ofstream file;
                 file.open(options.save.c_str());
                 save_result(file, pmcmc);
+                save_motifs(file, gdpm);
                 file.close();
         }
 

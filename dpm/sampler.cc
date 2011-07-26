@@ -97,7 +97,8 @@ void
 GibbsSampler::sample(size_t n, size_t burnin) {
         // burn in sampling
         for (size_t i = 0; i < burnin; i++) {
-                printf("Burn in... [%u][Components: %02d]\n", (unsigned int)i+1, (int)_dpm.mixture_components());
+                printf("Burn in... [%u]", (unsigned int)i+1);
+                cout << "[ Cluster: " <<_dpm.clustermanager() << "]" << endl;
                 fflush(stdout);
                 double sum = 0;
                 for (Indexer::const_iterator_randomized it = _indexer.begin_randomized();
@@ -112,7 +113,8 @@ GibbsSampler::sample(size_t n, size_t burnin) {
         // sample `n' times
         for (size_t i = 0; i < n; i++) {
                 // loop through all elements
-                printf("Sampling... [%u][Components: %02d]\n", (unsigned int)i+1, (int)_dpm.mixture_components());
+                printf("Sampling... [%u]", (unsigned int)i+1);
+                cout << "[ Cluster: " <<_dpm.clustermanager() << "]" << endl;
                 fflush(stdout);
                 double sum = 0;
                 for (Indexer::const_iterator_randomized it = _indexer.begin_randomized();

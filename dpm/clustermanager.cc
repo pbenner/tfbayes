@@ -161,7 +161,6 @@ std::ostream& operator<< (std::ostream& o, const ClusterManager& cm) {
         for (ClusterManager::const_iterator it = cm.begin(); it != cm.end(); it++) {
                 o << **it << " ";
         }
-        o << endl;
 
         return o;
 }

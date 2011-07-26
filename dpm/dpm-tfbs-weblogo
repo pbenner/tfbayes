@@ -1,0 +1,61 @@
+#! /usr/bin/env python
+
+import getopt
+import sys
+import Bio.Motif as Motif
+
+# global options
+# ------------------------------------------------------------------------------
+
+options = {
+    'verbose'     : False,
+    }
+
+# usage
+# ------------------------------------------------------------------------------
+
+def usage():
+    """Print usage."""
+    print
+    print "dpm-tfbs-weblogo [option]... FILE.png"
+    print
+    print "Options:"
+    print "   -h, --help                     - print help"
+    print "   -v, --verbose                  - be verbose"
+    print
+
+# motif plotting
+# ------------------------------------------------------------------------------
+
+def plot_motif(fname):
+    m = Motif.Motif()
+    m._from_horiz_matrix(sys.stdin)
+    m.weblogo(fname)
+
+# main
+# ------------------------------------------------------------------------------
+
+def main():
+    global options
+    try:
+        longopts   = ["help", "verbose"]
+        opts, tail = getopt.getopt(sys.argv[1:], "is:", longopts)
+    except getopt.GetoptError:
+        usage()
+        return 2
+    output = None
+    for o, a in opts:
+        if o in ("-v", "--verbose"):
+            sys.stderr.write("Verbose mode turned on.\n")
+            options["verbose"] = True
+        if o in ("-h", "--help"):
+            usage()
+            return 0
+    if len(tail) != 1:
+        usage()
+        return 1
+    plot_motif(tail[0])
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
