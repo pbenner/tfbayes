@@ -87,7 +87,7 @@ def read_config(config_file):
             counts_str = read_counts(config_parser, c_name)
             file_name  = os.path.splitext(config_file)[0]+'_'+c_name+'.png'
             print 'Generating '+file_name+'...'
-            plot_motif(counts_str, c_name)
+            plot_motif(counts_str, file_name)
 
 # main
 # ------------------------------------------------------------------------------
