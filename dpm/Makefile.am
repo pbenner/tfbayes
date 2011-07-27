@@ -20,7 +20,7 @@ dpm_tfbs_LDADD  += $(LIB_PTHREAD)
 pkgpython_PYTHON = __init__.py dpm_gaussian_interface.py dpm_tfbs_interface.py
 
 ## scripts
-dist_bin_SCRIPTS = dpm-gaussian-demo dpm-tfbs-demo dpm-tfbs-plot dpm-tfbs-weblogo
+dist_bin_SCRIPTS = dpm-gaussian-demo dpm-tfbs-demo dpm-tfbs-plot dpm-tfbs-pwm dpm-tfbs-weblogo
 
 ## dpm library
 lib_LTLIBRARIES  = libdpm.la

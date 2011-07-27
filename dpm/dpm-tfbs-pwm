@@ -1,0 +1,121 @@
+#! /usr/bin/env python
+
+import ConfigParser
+import getopt
+import os
+import math
+import sys
+
+# global options
+# ------------------------------------------------------------------------------
+
+options = {
+    'verbose'     : False,
+    }
+
+# usage
+# ------------------------------------------------------------------------------
+
+def usage():
+    """Print usage."""
+    print
+    print "dpm-tfbs-pwm [option]... CONFIG CLUSTER SEQUENCES_FILE"
+    print
+    print "Options:"
+    print "   -h, --help                     - print help"
+    print "   -v, --verbose                  - be verbose"
+    print
+
+# scan sequences file
+# ------------------------------------------------------------------------------
+
+def compute_score(pwm, sequence):
+    result = 0
+    for j in range(len(sequence)):
+        if sequence[j] == 'A' or sequence[j] == 'a':
+            result += pwm[0][j]
+        if sequence[j] == 'C' or sequence[j] == 'c':
+            result += pwm[1][j]
+        if sequence[j] == 'G' or sequence[j] == 'g':
+            result += pwm[2][j]
+        if sequence[j] == 'T' or sequence[j] == 't':
+            result += pwm[3][j]
+    return result
+
+def scan(pwm, sequences_file):
+    fp = open(sequences_file, 'r')
+    length = len(pwm[0])
+    i = 0
+    for line in fp.readlines():
+        for j in range(0, len(line)-length):
+            sequence = line[j:j+length-1]
+            score = compute_score(pwm, sequence)
+            if score > 20:
+                print "(%05i,%05i,%3.5f): %s" % (i, j, score, sequence)
+        i += 1
+    fp.close()
+
+# compute pwm
+# ------------------------------------------------------------------------------
+
+def readVector(config, section, option, converter):
+    vector_str = config.get(section, option)
+    vector     = map(converter, vector_str.split(' '))
+    return vector
+
+def readMatrix(config, section, option, converter):
+    matrix_str = config.get(section, option)
+    matrix     = []
+    for line in matrix_str.split('\n'):
+        if line != '':
+            matrix.append([converter(a) for a in line.split(' ')])
+    return matrix
+
+def compute_frequencies(counts):
+    sums = [ sum(map(lambda m: m[j], counts)) for j in range(0, len(counts[0])) ]
+    return [ [ float(counts[i][j])/sums[j]    for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
+
+def compute_pwm(config_parser, cluster_name):
+    bg_counts   = readMatrix(config_parser, 'Result', 'cluster_0',  int)
+    tfbs_counts = readMatrix(config_parser, 'Result', cluster_name, int)
+    bg_freq     = compute_frequencies(bg_counts)
+    tfbs_freq   = compute_frequencies(tfbs_counts)
+    return [ [ math.log(tfbs_freq[i][j]/bg_freq[i][0], 2) for j in range(0, len(tfbs_freq[0])) ] for i in range(0, len(tfbs_freq)) ]
+
+# parse results config
+# ------------------------------------------------------------------------------
+
+def read_config(config_file, cluster_name, sequences_file):
+    config_parser = ConfigParser.RawConfigParser()
+    config_parser.read(config_file)
+    if not config_parser.has_section('Result'):
+        raise IOError("Invalid configuration file.")
+    pwm = compute_pwm(config_parser, cluster_name)
+    scan(pwm, sequences_file)
+
+# main
+# ------------------------------------------------------------------------------
+
+def main():
+    global options
+    try:
+        longopts   = ["help", "verbose", "plot"]
+        opts, tail = getopt.getopt(sys.argv[1:], "", longopts)
+    except getopt.GetoptError:
+        usage()
+        return 2
+    output = None
+    for o, a in opts:
+        if o in ("-v", "--verbose"):
+            sys.stderr.write("Verbose mode turned on.\n")
+            options["verbose"] = True
+        if o in ("-h", "--help"):
+            usage()
+            return 0
+    if len(tail) != 3:
+        usage()
+        return 1
+    read_config(*tail)
+
+if __name__ == "__main__":
+    sys.exit(main())
