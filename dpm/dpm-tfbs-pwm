@@ -10,6 +10,7 @@ import sys
 # ------------------------------------------------------------------------------
 
 options = {
+    'threshold'   : 20.0,
     'verbose'     : False,
     }
 
@@ -22,6 +23,8 @@ def usage():
     print "dpm-tfbs-pwm [option]... CONFIG CLUSTER SEQUENCES_FILE"
     print
     print "Options:"
+    print "       --threshold=VALUE"
+    print
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
     print
@@ -50,7 +53,7 @@ def scan(pwm, sequences_file):
         for j in range(0, len(line)-length):
             sequence = line[j:j+length-1]
             score = compute_score(pwm, sequence)
-            if score > 20:
+            if score > options['threshold']:
                 print "(%05i,%05i,%3.5f): %s" % (i, j, score, sequence)
         i += 1
     fp.close()
@@ -99,7 +102,7 @@ def read_config(config_file, cluster_name, sequences_file):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "plot"]
+        longopts   = ["help", "verbose", "threshold="]
         opts, tail = getopt.getopt(sys.argv[1:], "", longopts)
     except getopt.GetoptError:
         usage()
@@ -112,6 +115,8 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
+        if o == "--threshold":
+            options['threshold'] = float(a)
     if len(tail) != 3:
         usage()
         return 1
