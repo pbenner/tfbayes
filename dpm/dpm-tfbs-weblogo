@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 
+import ConfigParser
 import getopt
+import os
 import sys
 import Bio.Motif as Motif
 
@@ -8,6 +10,7 @@ import Bio.Motif as Motif
 # ------------------------------------------------------------------------------
 
 options = {
+    'plot'        : False,
     'verbose'     : False,
     }
 
@@ -17,9 +20,11 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-weblogo [option]... FILE.png"
+    print "dpm-tfbs-weblogo [option]... CONFIG"
     print
     print "Options:"
+    print "       --plot                     - print weblogo"
+    print
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
     print
@@ -27,10 +32,62 @@ def usage():
 # motif plotting
 # ------------------------------------------------------------------------------
 
-def plot_motif(fname):
+class MotifStream():
+    def __init__(self, counts_str):
+        self.counts = []
+        for line in counts_str.splitlines(True):
+            if line != '\n':
+                self.counts.append(line)
+        self.counts.append('\n')
+        self.counts.append('\n')
+        self.i      = 0
+    def readline(self):
+        if (self.i < len(self.counts)):
+            line = self.counts[self.i]
+            self.i += 1
+            return line
+        else:
+            return None
+
+def plot_motif(counts_str, file_name):
+    stream = MotifStream(counts_str)
     m = Motif.Motif()
-    m._from_horiz_matrix(sys.stdin, letters='ACGT')
-    m.weblogo(fname)
+    m._from_horiz_matrix(stream, letters='ACGT')
+    m.weblogo(file_name)
+
+# parse results config
+# ------------------------------------------------------------------------------
+
+def readVector(config, section, option, converter):
+    vector_str = config.get(section, option)
+    vector     = map(converter, vector_str.split(' '))
+    return vector
+
+def readMatrix(config, section, option, converter):
+    matrix_str = config.get(section, option)
+    matrix     = []
+    for line in matrix_str.split('\n'):
+        if line != '':
+            matrix.append([converter(a) for a in line.split(' ')])
+    return matrix
+
+def read_counts(config_parser, c_name):
+    counts_str = config_parser.get('Result', c_name)
+    return counts_str+'\n'
+
+def read_config(config_file):
+    config_parser = ConfigParser.RawConfigParser()
+    config_parser.read(config_file)
+    if not config_parser.has_section('Result'):
+        raise IOError("Invalid configuration file.")
+    cluster = readVector(config_parser, 'Result', 'cluster', str)
+    for c in cluster:
+        c_name = c.split(':')[0]
+        if c_name != 'cluster_0':
+            counts_str = read_counts(config_parser, c_name)
+            file_name  = os.path.splitext(config_file)[0]+'_'+c_name+'.png'
+            print 'Generating '+file_name+'...'
+            plot_motif(counts_str, c_name)
 
 # main
 # ------------------------------------------------------------------------------
@@ -38,8 +95,8 @@ def plot_motif(fname):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose"]
-        opts, tail = getopt.getopt(sys.argv[1:], "is:", longopts)
+        longopts   = ["help", "verbose", "plot"]
+        opts, tail = getopt.getopt(sys.argv[1:], "", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -51,10 +108,15 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
+        if o == "--plot":
+            options['plot'] = True
     if len(tail) != 1:
         usage()
         return 1
-    plot_motif(tail[0])
+    if options['plot']:
+        plot_motif(tail[0])
+    else:
+        read_config(tail[0])
     return 0
 
 if __name__ == "__main__":
