@@ -1,0 +1,220 @@
+#! /usr/bin/env python
+
+import ConfigParser
+import getopt
+import os
+import math
+import sys
+import Bio.Motif as Motif
+
+from itertools import izip
+
+# global options
+# ------------------------------------------------------------------------------
+
+options = {
+    'force-alignment' : None,
+    'save-counts'     : None,
+    'save-plot'       : None,
+    'verbose'         : False,
+    }
+
+# usage
+# ------------------------------------------------------------------------------
+
+def usage():
+    """Print usage."""
+    print
+    print "dpm-tfbs-pwm [option]... CONFIG CLUSTER_1 CLUSTER_2"
+    print
+    print "Options:"
+    print "       --save-counts=CLUSTER      - save counts as CLUSTER"
+    print "       --save-plot=FILE           - save weblogo in FILE"
+    print
+    print "   -h, --help                     - print help"
+    print "   -v, --verbose                  - be verbose"
+    print
+
+# tools
+# ------------------------------------------------------------------------------
+
+def argmax(array):
+    result = []
+    for i in izip(array, xrange(len(array))):
+        if i[0] == max(array):
+            result.append(i[1])
+    return result
+
+# motif plotting
+# ------------------------------------------------------------------------------
+
+class MotifStream():
+    def __init__(self, counts):
+        self.counts = []
+        for i in counts:
+            line = ''
+            for j in i:
+                line = line + str(j) + ' '
+            self.counts.append(line + '\n')
+        self.counts.append('\n')
+        self.counts.append('\n')
+        self.i      = 0
+    def readline(self):
+        if (self.i < len(self.counts)):
+            line = self.counts[self.i]
+            self.i += 1
+            return line
+        else:
+            return None
+
+def plot_motif(counts, file_name, title):
+    stream = MotifStream(counts)
+    m = Motif.Motif()
+    m._from_horiz_matrix(stream, letters='ACGT')
+    m.weblogo(file_name, title=title)
+
+# scan sequences file
+# ------------------------------------------------------------------------------
+
+def compute_score(pwm, sequence):
+    result = 0
+    for j in range(len(sequence)):
+        if sequence[j] == 'A' or sequence[j] == 'a':
+            result += pwm[0][j]
+        if sequence[j] == 'C' or sequence[j] == 'c':
+            result += pwm[1][j]
+        if sequence[j] == 'G' or sequence[j] == 'g':
+            result += pwm[2][j]
+        if sequence[j] == 'T' or sequence[j] == 't':
+            result += pwm[3][j]
+    return result
+
+def scan(pwm, sequences_file):
+    fp = open(sequences_file, 'r')
+    length = len(pwm[0])
+    i = 0
+    for line in fp.readlines():
+        for j in range(0, len(line)-length):
+            sequence = line[j:j+length-1]
+            score = compute_score(pwm, sequence)
+            if score > options['threshold']:
+                print "(%05i,%05i,%3.5f): %s" % (i, j, score, sequence)
+        i += 1
+    fp.close()
+
+# compute information content
+# ------------------------------------------------------------------------------
+
+def sum_counts(i, j, k, c1_counts, c2_counts, length):
+    j1 = j
+    j2 = j-k
+    if   j1 >= 0 and j1 < length and j2 >= 0 and j2 < length:
+        return c1_counts[i][j1] + c2_counts[i][j2]
+    elif j1 >= 0 and j1 < length:
+        return c1_counts[i][j1]
+    elif j2 >= 0 and j2 < length:
+        return c2_counts[i][j2]
+    else:
+        return 0
+
+def information_content(bg_counts, cluster_counts):
+    norm = 1.0/float(len(cluster_counts[0]))
+    bg_freq      = compute_frequencies(bg_counts)
+    cluster_freq = compute_frequencies(cluster_counts)
+    return -norm*sum([ sum([ cluster_freq[i][j]*math.log(cluster_freq[i][j]/bg_freq[i][0], 2) for j in range(0, len(cluster_freq[0])) ]) for i in range(0, len(cluster_freq)) ])
+
+def compute_frequencies(counts):
+    sums = [ sum(map(lambda m: m[j], counts)) for j in range(0, len(counts[0])) ]
+    return [ [ float(counts[i][j])/sums[j]    for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
+
+# alignment
+# ------------------------------------------------------------------------------
+
+def align(k, bg_counts, c1_counts, c2_counts):
+    length  = len(c1_counts[0])
+    j_range = range(min(0,k), max(length,length+k))
+    return [ [ sum_counts(i,j,k,c1_counts,c2_counts,length) for j in j_range ] for i in range(0, len(c1_counts)) ]
+
+def max_alignment(bg_counts, c1_counts, c2_counts):
+    ic      = []
+    length  = len(c1_counts[0])
+    k_range = range(-length+1, length)
+    for k in k_range:
+        result = align(k, bg_counts, c1_counts, c2_counts)
+        ic.append(information_content(bg_counts, result))
+    if options['verbose']:
+        print zip(ic, k_range)
+    return k_range[argmax(ic)[0]]
+
+# parse results config
+# ------------------------------------------------------------------------------
+
+def readVector(config, section, option, converter):
+    vector_str = config.get(section, option)
+    vector     = map(converter, vector_str.split(' '))
+    return vector
+
+def readMatrix(config, section, option, converter):
+    matrix_str = config.get(section, option)
+    matrix     = []
+    for line in matrix_str.split('\n'):
+        if line != '':
+            matrix.append([converter(a) for a in line.split(' ')])
+    return matrix
+
+def save_counts(config_parser, result):
+    config_parser.set('Result', options['save-counts'], "\n"+"\n".join(map(lambda arg: " ".join(map(str, arg)), result)))
+
+def read_config(config_file, cluster_1, cluster_2):
+    config_parser = ConfigParser.RawConfigParser()
+    config_parser.read(config_file)
+    if not config_parser.has_section('Result'):
+        raise IOError("Invalid configuration file.")
+    bg_counts = readMatrix(config_parser, 'Result', 'cluster_0', int)
+    c1_counts = readMatrix(config_parser, 'Result',  cluster_1,  int)
+    c2_counts = readMatrix(config_parser, 'Result',  cluster_2,  int)
+    if options['force-alignment']:
+        m = options['force-alignment']
+    else:
+        m = max_alignment(bg_counts, c1_counts, c2_counts)
+    result = align(m, bg_counts, c1_counts, c2_counts)
+    if options['save-plot']:
+        plot_motif(result, options['save-plot'], 'Alignment of '+cluster_1+' and '+cluster_2)
+    if options['save-counts']:
+        save_counts(config_parser, result)
+        fp = open(config_file, 'wb')
+        config_parser.write(fp)
+        fp.close()
+
+# main
+# ------------------------------------------------------------------------------
+
+def main():
+    global options
+    try:
+        longopts   = ["help", "verbose", "force-alignment=", "save-counts=", "save-plot="]
+        opts, tail = getopt.getopt(sys.argv[1:], "v", longopts)
+    except getopt.GetoptError:
+        usage()
+        return 2
+    output = None
+    for o, a in opts:
+        if o in ("-v", "--verbose"):
+            sys.stderr.write("Verbose mode turned on.\n")
+            options["verbose"] = True
+        if o in ("-h", "--help"):
+            usage()
+            return 0
+        if o == "--force-alignment":
+            options['force-alignment'] = int(a)
+        if o == "--save-counts":
+            options['save-counts'] = a
+        if o == "--save-plot":
+            options['save-plot'] = a
+    if len(tail) != 3:
+        usage()
+        return 1
+    read_config(*tail)
+
+if __name__ == "__main__":
+    sys.exit(main())
