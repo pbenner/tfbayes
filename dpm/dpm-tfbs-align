@@ -45,6 +45,11 @@ def argmax(array):
             result.append(i[1])
     return result
 
+def gcd(a, b):
+    if a > b: a, b = b, a
+    while a > 0: a, b = (b % a), a
+    return b
+
 # motif plotting
 # ------------------------------------------------------------------------------
 
@@ -128,7 +133,7 @@ def information_content(bg_counts, cluster_counts):
     cluster_freq = compute_frequencies(cluster_counts)
     return -norm*sum([ sum([ cluster_freq[i][j]*math.log(cluster_freq[i][j]/bg_freq[i][0], 2) for j in range(0, len(cluster_freq[0])) ]) for i in range(0, len(cluster_freq)) ])
 
-def mutual_information(k, c1_counts, c2_counts):
+def kl_divergence(k, c1_counts, c2_counts):
     length  = len(c1_counts[0])
     j_range = range(max(0, k), min(length, length+k))
     c1_freq = compute_frequencies(c1_counts)
@@ -150,9 +155,19 @@ def cut_matrix(length, bg_counts, counts):
             counts = [ [ counts[i][j] for j in range(1, len(counts[0])  ) ] for i in range(0, len(counts)) ]
     return counts
 
+def adjust_counts(c1_counts, c2_counts):
+    s1 = sum([ c1_counts[i][0] for i in range(0, len(c1_counts)) ])
+    s2 = sum([ c2_counts[i][0] for i in range(0, len(c2_counts)) ])
+    m1 = s1/gcd(s1,s2)
+    m2 = s2/gcd(s1,s2)
+    c1_counts = [ [ m2*c1_counts[i][j] for j in range(0, len(c1_counts[0])) ] for i in range(0, len(c1_counts)) ]
+    c2_counts = [ [ m1*c2_counts[i][j] for j in range(0, len(c2_counts[0])) ] for i in range(0, len(c2_counts)) ]
+    return c1_counts, c2_counts
+
 def align(k, bg_counts, c1_counts, c2_counts):
     length  = len(c1_counts[0])
     j_range = range(min(0,k), max(length,length+k))
+    c1_counts, c2_counts = adjust_counts(c1_counts, c2_counts)
     return [ [ sum_counts(i,j,k,c1_counts,c2_counts,length) for j in j_range ] for i in range(0, len(c1_counts)) ]
 
 def max_alignment(bg_counts, c1_counts, c2_counts):
@@ -162,7 +177,7 @@ def max_alignment(bg_counts, c1_counts, c2_counts):
     for k in k_range:
 #        result = align(k, bg_counts, c1_counts, c2_counts)
 #        ic.append(information_content(bg_counts, result))
-        ic.append(mutual_information(k, c1_counts, c2_counts))
+        ic.append(kl_divergence(k, c1_counts, c2_counts))
     if options['verbose']:
         print zip(ic, k_range)
         print "max: %i" % k_range[argmax(ic)[0]]
@@ -201,6 +216,10 @@ def read_config(config_file, cluster_1, cluster_2):
         m = max_alignment(bg_counts, c1_counts, c2_counts)
     result = align(m, bg_counts, c1_counts, c2_counts)
     result = cut_matrix(len(c1_counts[0]), bg_counts, result)
+    if options['verbose']:
+        print c1_counts
+        print c2_counts
+        print result
     if options['save-plot']:
         plot_motif(result, options['save-plot'], 'Alignment of '+cluster_1+' and '+cluster_2)
     if options['save-counts']:

@@ -49,13 +49,16 @@ def scan(pwm, sequences_file):
     fp = open(sequences_file, 'r')
     length = len(pwm[0])
     i = 0
+    hits = 0
     for line in fp.readlines():
         for j in range(0, len(line)-length):
             sequence = line[j:j+length-1]
             score = compute_score(pwm, sequence)
             if score > options['threshold']:
+                hits += 1
                 print "(%05i,%05i,%3.5f): %s" % (i, j, score, sequence)
         i += 1
+    print "Found %d sequences." % hits
     fp.close()
 
 # compute pwm
