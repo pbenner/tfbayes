@@ -20,7 +20,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-pwm [option]... CONFIG CLUSTER SEQUENCES_FILE"
+    print "dpm-tfbs-scan [option]... CONFIG CLUSTER SEQUENCES_FILE"
     print
     print "Options:"
     print "       --threshold=VALUE"
