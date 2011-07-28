@@ -117,6 +117,11 @@ def sum_counts(i, j, k, c1_counts, c2_counts, length):
     else:
         return 0
 
+def information_content_column(j, bg_counts, counts):
+    freq    = compute_frequencies(counts)
+    bg_freq = compute_frequencies(bg_counts)
+    return -sum([ freq[i][j]*math.log(freq[i][j]/bg_freq[i][0], 2) for i in range(0, len(freq)) ])
+
 def information_content(bg_counts, cluster_counts):
     norm = 1.0/float(len(cluster_counts[0]))
     bg_freq      = compute_frequencies(bg_counts)
@@ -136,6 +141,14 @@ def compute_frequencies(counts):
 
 # alignment
 # ------------------------------------------------------------------------------
+
+def cut_matrix(length, bg_counts, counts):
+    while len(counts[0]) > length:
+        if information_content_column(0, bg_counts, counts) > information_content_column(-1, bg_counts, counts):
+            counts = [ [ counts[i][j] for j in range(0, len(counts[0])-1) ] for i in range(0, len(counts)) ]
+        else:
+            counts = [ [ counts[i][j] for j in range(1, len(counts[0])  ) ] for i in range(0, len(counts)) ]
+    return counts
 
 def align(k, bg_counts, c1_counts, c2_counts):
     length  = len(c1_counts[0])
@@ -187,6 +200,7 @@ def read_config(config_file, cluster_1, cluster_2):
     else:
         m = max_alignment(bg_counts, c1_counts, c2_counts)
     result = align(m, bg_counts, c1_counts, c2_counts)
+    result = cut_matrix(len(c1_counts[0]), bg_counts, result)
     if options['save-plot']:
         plot_motif(result, options['save-plot'], 'Alignment of '+cluster_1+' and '+cluster_2)
     if options['save-counts']:
