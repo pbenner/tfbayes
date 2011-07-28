@@ -123,6 +123,13 @@ def information_content(bg_counts, cluster_counts):
     cluster_freq = compute_frequencies(cluster_counts)
     return -norm*sum([ sum([ cluster_freq[i][j]*math.log(cluster_freq[i][j]/bg_freq[i][0], 2) for j in range(0, len(cluster_freq[0])) ]) for i in range(0, len(cluster_freq)) ])
 
+def mutual_information(k, c1_counts, c2_counts):
+    length  = len(c1_counts[0])
+    j_range = range(max(0, k), min(length, length+k))
+    c1_freq = compute_frequencies(c1_counts)
+    c2_freq = compute_frequencies(c2_counts)
+    return -abs(k) -sum([ sum([ c1_freq[i][j]*math.log(c1_freq[i][j]/c2_freq[i][j-k], 2) for j in j_range ]) for i in range(0, len(c1_freq)) ])
+
 def compute_frequencies(counts):
     sums = [ sum(map(lambda m: m[j], counts)) for j in range(0, len(counts[0])) ]
     return [ [ float(counts[i][j])/sums[j]    for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
@@ -140,10 +147,12 @@ def max_alignment(bg_counts, c1_counts, c2_counts):
     length  = len(c1_counts[0])
     k_range = range(-length+1, length)
     for k in k_range:
-        result = align(k, bg_counts, c1_counts, c2_counts)
-        ic.append(information_content(bg_counts, result))
+#        result = align(k, bg_counts, c1_counts, c2_counts)
+#        ic.append(information_content(bg_counts, result))
+        ic.append(mutual_information(k, c1_counts, c2_counts))
     if options['verbose']:
         print zip(ic, k_range)
+        print "max: %i" % k_range[argmax(ic)[0]]
     return k_range[argmax(ic)[0]]
 
 # parse results config
