@@ -116,9 +116,9 @@ def sum_counts(i, j, k, c1_counts, c2_counts, length):
     if   j1 >= 0 and j1 < length and j2 >= 0 and j2 < length:
         return c1_counts[i][j1] + c2_counts[i][j2]
     elif j1 >= 0 and j1 < length:
-        return c1_counts[i][j1]
+        return 2*c1_counts[i][j1]
     elif j2 >= 0 and j2 < length:
-        return c2_counts[i][j2]
+        return 2*c2_counts[i][j2]
     else:
         return 0
 
