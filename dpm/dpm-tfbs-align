@@ -138,7 +138,7 @@ def kl_divergence(k, c1_counts, c2_counts):
     j_range = range(max(0, k), min(length, length+k))
     c1_freq = compute_frequencies(c1_counts)
     c2_freq = compute_frequencies(c2_counts)
-    return -abs(k) -sum([ sum([ c1_freq[i][j]*math.log(c1_freq[i][j]/c2_freq[i][j-k], 2) for j in j_range ]) for i in range(0, len(c1_freq)) ])
+    return -abs(k)*math.log(4,2) -sum([ sum([ c1_freq[i][j]*math.log(c1_freq[i][j]/c2_freq[i][j-k], 2) for j in j_range ]) for i in range(0, len(c1_freq)) ])
 
 def compute_frequencies(counts):
     sums = [ sum(map(lambda m: m[j], counts)) for j in range(0, len(counts[0])) ]

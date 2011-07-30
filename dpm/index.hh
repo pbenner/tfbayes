@@ -47,7 +47,14 @@ public:
         __inline__ size_t& operator[](size_t i) {
                 return i == 0 ? _x0 : _x1;
         }
-
+        __inline__ bool operator==(const index_t& index) const {
+                if (_size == 1) {
+                        return _x0 == index[0];
+                }
+                else {
+                        return _x0 == index[0] && _x1 == index[1];
+                }
+        }
         __inline__ void operator=(const index_t& index) {
                 _x0 = index[0];
                 _x1 = index[1];

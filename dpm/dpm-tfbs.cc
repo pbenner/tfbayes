@@ -27,6 +27,7 @@
 #include <gsl/gsl_blas.h>
 
 #include <dpm-tfbs.hh>
+#include <dpm-tfbs-graph.hh>
 
 #include <tfbayes/logarithmetic.h>
 #include <tfbayes/fastlog.h>
@@ -208,11 +209,15 @@ DPM_TFBS::update_posterior(size_t sampling_steps) {
                         _posterior[sequence][position] = value;
                 }
                 else {
+                        if (_clustermanager[index] == 2 && _tfbs_start_positions[index]) {
+                                cerr << "2:" << index << " ";
+                        }
                         const double tmp   = _posterior[sequence][position];
                         const double value = ((double)sampling_steps*tmp+1.0)/((double)sampling_steps+1.0);
                         _posterior[sequence][position] = value;
                 }
         }
+        cerr << endl << endl;
 }
 
 const posterior_t&
