@@ -16,6 +16,7 @@ options = {
     'force-alignment' : None,
     'save-counts'     : None,
     'save-plot'       : None,
+    'method'          : 'kl-divergence',
     'verbose'         : False,
     }
 
@@ -42,6 +43,13 @@ def argmax(array):
     result = []
     for i in izip(array, xrange(len(array))):
         if i[0] == max(array):
+            result.append(i[1])
+    return result
+
+def argmin(array):
+    result = []
+    for i in izip(array, xrange(len(array))):
+        if i[0] == min(array):
             result.append(i[1])
     return result
 
@@ -107,8 +115,61 @@ def scan(pwm, sequences_file):
         i += 1
     fp.close()
 
-# compute information content
+# information content
 # ------------------------------------------------------------------------------
+
+def information_content_column(j, bg_counts, counts):
+    freq    = compute_frequencies(counts)
+    bg_freq = compute_frequencies(bg_counts)
+    return sum([ freq[i][j]*math.log(freq[i][j]/bg_freq[i][0], 2) for i in range(0, len(freq)) ])
+
+def information_content(bg_counts, cluster_counts):
+    norm = 1.0/float(len(cluster_counts[0]))
+    bg_freq      = compute_frequencies(bg_counts)
+    cluster_freq = compute_frequencies(cluster_counts)
+    return norm*sum([ sum([ cluster_freq[i][j]*math.log(cluster_freq[i][j]/bg_freq[i][0], 2) for j in range(0, len(cluster_freq[0])) ]) for i in range(0, len(cluster_freq)) ])
+
+# Kullback-Leibler divergence
+# ------------------------------------------------------------------------------
+
+def kl_divergence_column(j, k, bg_freq, c1_freq, c2_freq, length):
+    j1 = j
+    j2 = j-k
+    if   j1 >= 0 and j1 < length and j2 >= 0 and j2 < length:
+        # both matrices overlap
+        return sum( [ c1_freq[i][j1]*math.log(c1_freq[i][j1]/c2_freq[i][j2], 2) for i in range(0, len(c1_freq)) ] )
+    else:
+        if j1 >= 0 and j1 < length:
+            # only the first matrix
+            return sum( [ c1_freq[i][j1]*math.log(c1_freq[i][j1]/bg_freq[i][0], 2) for i in range(0, len(c1_freq)) ] )
+        else:
+            # only the second matrix
+            return sum( [ bg_freq[i][0]*math.log(bg_freq[i][0]/c2_freq[i][j2], 2) for i in range(0, len(c1_freq)) ] )
+
+def kl_divergence(k, bg_counts, c1_counts, c2_counts):
+    """ KL-divergence normalized by length """
+    length  = len(c1_counts[0])
+    j_range = range(min(0, k), max(length, length+k))
+    c1_freq = compute_frequencies(c1_counts)
+    c2_freq = compute_frequencies(c2_counts)
+    bg_freq = compute_frequencies(bg_counts)
+    return 1.0/float(length+abs(k)) * sum([ kl_divergence_column(j, k, bg_freq, c1_freq, c2_freq, length) for j in j_range ])
+
+# pwm tools
+# ------------------------------------------------------------------------------
+
+def adjust_counts(c1_counts, c2_counts):
+    s1 = sum([ c1_counts[i][0] for i in range(0, len(c1_counts)) ])
+    s2 = sum([ c2_counts[i][0] for i in range(0, len(c2_counts)) ])
+    m1 = s1/gcd(s1,s2)
+    m2 = s2/gcd(s1,s2)
+    c1_counts = [ [ m2*c1_counts[i][j] for j in range(0, len(c1_counts[0])) ] for i in range(0, len(c1_counts)) ]
+    c2_counts = [ [ m1*c2_counts[i][j] for j in range(0, len(c2_counts[0])) ] for i in range(0, len(c2_counts)) ]
+    return c1_counts, c2_counts
+
+def compute_frequencies(counts):
+    sums = [ sum(map(lambda m: m[j], counts)) for j in range(0, len(counts[0])) ]
+    return [ [ float(counts[i][j])/sums[j]    for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
 
 def sum_counts(i, j, k, c1_counts, c2_counts, length):
     j1 = j
@@ -122,28 +183,6 @@ def sum_counts(i, j, k, c1_counts, c2_counts, length):
     else:
         return 0
 
-def information_content_column(j, bg_counts, counts):
-    freq    = compute_frequencies(counts)
-    bg_freq = compute_frequencies(bg_counts)
-    return -sum([ freq[i][j]*math.log(freq[i][j]/bg_freq[i][0], 2) for i in range(0, len(freq)) ])
-
-def information_content(bg_counts, cluster_counts):
-    norm = 1.0/float(len(cluster_counts[0]))
-    bg_freq      = compute_frequencies(bg_counts)
-    cluster_freq = compute_frequencies(cluster_counts)
-    return -norm*sum([ sum([ cluster_freq[i][j]*math.log(cluster_freq[i][j]/bg_freq[i][0], 2) for j in range(0, len(cluster_freq[0])) ]) for i in range(0, len(cluster_freq)) ])
-
-def kl_divergence(k, c1_counts, c2_counts):
-    length  = len(c1_counts[0])
-    j_range = range(max(0, k), min(length, length+k))
-    c1_freq = compute_frequencies(c1_counts)
-    c2_freq = compute_frequencies(c2_counts)
-    return -abs(k)*math.log(4,2) -sum([ sum([ c1_freq[i][j]*math.log(c1_freq[i][j]/c2_freq[i][j-k], 2) for j in j_range ]) for i in range(0, len(c1_freq)) ])
-
-def compute_frequencies(counts):
-    sums = [ sum(map(lambda m: m[j], counts)) for j in range(0, len(counts[0])) ]
-    return [ [ float(counts[i][j])/sums[j]    for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
-
 # alignment
 # ------------------------------------------------------------------------------
 
@@ -154,15 +193,6 @@ def cut_matrix(length, bg_counts, counts):
         else:
             counts = [ [ counts[i][j] for j in range(1, len(counts[0])  ) ] for i in range(0, len(counts)) ]
     return counts
-
-def adjust_counts(c1_counts, c2_counts):
-    s1 = sum([ c1_counts[i][0] for i in range(0, len(c1_counts)) ])
-    s2 = sum([ c2_counts[i][0] for i in range(0, len(c2_counts)) ])
-    m1 = s1/gcd(s1,s2)
-    m2 = s2/gcd(s1,s2)
-    c1_counts = [ [ m2*c1_counts[i][j] for j in range(0, len(c1_counts[0])) ] for i in range(0, len(c1_counts)) ]
-    c2_counts = [ [ m1*c2_counts[i][j] for j in range(0, len(c2_counts[0])) ] for i in range(0, len(c2_counts)) ]
-    return c1_counts, c2_counts
 
 def align(k, bg_counts, c1_counts, c2_counts):
     length  = len(c1_counts[0])
@@ -175,13 +205,22 @@ def max_alignment(bg_counts, c1_counts, c2_counts):
     length  = len(c1_counts[0])
     k_range = range(-length+1, length)
     for k in k_range:
-#        result = align(k, bg_counts, c1_counts, c2_counts)
-#        ic.append(information_content(bg_counts, result))
-        ic.append(kl_divergence(k, c1_counts, c2_counts))
-    if options['verbose']:
-        print zip(ic, k_range)
-        print "max: %i" % k_range[argmax(ic)[0]]
-    return k_range[argmax(ic)[0]]
+        if options['method'] == 'information-content':
+            result = align(k, bg_counts, c1_counts, c2_counts)
+            result = cut_matrix(len(c1_counts[0]), bg_counts, result)
+            ic.append(information_content(bg_counts, result))
+        if options['method'] == 'kl-divergence':
+            ic.append(kl_divergence(k, bg_counts, c1_counts, c2_counts))
+    if options['method'] == 'information-content':
+        if options['verbose']:
+            print zip(ic, k_range)
+            print "max: %i" % k_range[argmax(ic)[0]]
+        return k_range[argmax(ic)[0]]
+    if options['method'] == 'kl-divergence':
+        if options['verbose']:
+            print zip(ic, k_range)
+            print "max: %i" % k_range[argmin(ic)[0]]
+        return k_range[argmin(ic)[0]]
 
 # parse results config
 # ------------------------------------------------------------------------------
