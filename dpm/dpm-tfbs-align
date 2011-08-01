@@ -17,6 +17,7 @@ options = {
     'save-counts'     : None,
     'save-plot'       : None,
     'method'          : 'kl-divergence',
+    'cut-matrix'      : True,
     'verbose'         : False,
     }
 
@@ -29,6 +30,11 @@ def usage():
     print "dpm-tfbs-pwm [option]... CONFIG CLUSTER_1 CLUSTER_2"
     print
     print "Options:"
+    print "       --force-alignment=N        - force alignment at position N"
+    print "       --method=METHOD            - kl-divergence (default), information-content, or"
+    print "                                    r-sequence"
+    print "   -n                             - do not cut matrix"
+    print
     print "       --save-counts=CLUSTER      - save counts as CLUSTER"
     print "       --save-plot=FILE           - save weblogo in FILE"
     print
@@ -115,6 +121,16 @@ def scan(pwm, sequences_file):
         i += 1
     fp.close()
 
+# R_sequence
+# ------------------------------------------------------------------------------
+
+def r_sequence(cluster_counts):
+    z = 1.0/float(len(cluster_counts[0]))
+    cluster_freq = compute_frequencies(cluster_counts)
+    return z*sum([ 2 + sum([ cluster_freq[i][j]*math.log(cluster_freq[i][j])
+                             for i in range(0, len(cluster_freq)) ])
+                   for j in range(0, len(cluster_freq[0])) ])
+
 # information content
 # ------------------------------------------------------------------------------
 
@@ -194,11 +210,11 @@ def cut_matrix(length, bg_counts, counts):
             counts = [ [ counts[i][j] for j in range(1, len(counts[0])  ) ] for i in range(0, len(counts)) ]
     return counts
 
-def align(k, bg_counts, c1_counts, c2_counts):
+def align(k, c1_counts, c2_counts):
     length  = len(c1_counts[0])
     j_range = range(min(0,k), max(length,length+k))
     c1_counts, c2_counts = adjust_counts(c1_counts, c2_counts)
-    return [ [ sum_counts(i,j,k,c1_counts,c2_counts,length) for j in j_range ] for i in range(0, len(c1_counts)) ]
+    return [ [ sum_counts(i, j, k, c1_counts, c2_counts, length) for j in j_range ] for i in range(0, len(c1_counts)) ]
 
 def max_alignment(bg_counts, c1_counts, c2_counts):
     ic      = []
@@ -206,12 +222,16 @@ def max_alignment(bg_counts, c1_counts, c2_counts):
     k_range = range(-length+1, length)
     for k in k_range:
         if options['method'] == 'information-content':
-            result = align(k, bg_counts, c1_counts, c2_counts)
+            result = align(k, c1_counts, c2_counts)
             result = cut_matrix(len(c1_counts[0]), bg_counts, result)
             ic.append(information_content(bg_counts, result))
+        if options['method'] == 'r-sequence':
+            result = align(k, c1_counts, c2_counts)
+            result = cut_matrix(len(c1_counts[0]), bg_counts, result)
+            ic.append(r_sequence(result))
         if options['method'] == 'kl-divergence':
             ic.append(kl_divergence(k, bg_counts, c1_counts, c2_counts))
-    if options['method'] == 'information-content':
+    if options['method'] == 'information-content' or options['method'] == 'r-sequence':
         if options['verbose']:
             print zip(ic, k_range)
             print "max: %i" % k_range[argmax(ic)[0]]
@@ -219,7 +239,7 @@ def max_alignment(bg_counts, c1_counts, c2_counts):
     if options['method'] == 'kl-divergence':
         if options['verbose']:
             print zip(ic, k_range)
-            print "max: %i" % k_range[argmin(ic)[0]]
+            print "min: %i" % k_range[argmin(ic)[0]]
         return k_range[argmin(ic)[0]]
 
 # parse results config
@@ -253,8 +273,9 @@ def read_config(config_file, cluster_1, cluster_2):
         m = options['force-alignment']
     else:
         m = max_alignment(bg_counts, c1_counts, c2_counts)
-    result = align(m, bg_counts, c1_counts, c2_counts)
-    result = cut_matrix(len(c1_counts[0]), bg_counts, result)
+    result = align(m, c1_counts, c2_counts)
+    if options['cut-matrix']:
+        result = cut_matrix(len(c1_counts[0]), bg_counts, result)
     if options['verbose']:
         print c1_counts
         print c2_counts
@@ -273,8 +294,8 @@ def read_config(config_file, cluster_1, cluster_2):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "force-alignment=", "save-counts=", "save-plot="]
-        opts, tail = getopt.getopt(sys.argv[1:], "v", longopts)
+        longopts   = ["help", "verbose", "method=", "force-alignment=", "save-counts=", "save-plot="]
+        opts, tail = getopt.getopt(sys.argv[1:], "vn", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -286,6 +307,14 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
+        if o == "--method":
+            if a == "kl-divergence" or a == "information-content" or a == 'r-sequence':
+                options['method'] = a
+            else:
+                usage()
+                return 1
+        if o == "-n":
+            options['cut-matrix'] = False
         if o == "--force-alignment":
             options['force-alignment'] = int(a)
         if o == "--save-counts":
