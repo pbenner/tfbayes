@@ -255,6 +255,8 @@ AX_CXXFLAGS_GCC_OPTION([-Wno-trigraphs])
 AX_CXXFLAGS_GCC_OPTION([-Wtrampolines])
 AX_CXXFLAGS_GCC_OPTION([-fPIC])
 AX_CXXFLAGS_GCC_OPTION([-fno-nested-functions])
+dnl no runtime type information
+AX_CXXFLAGS_GCC_OPTION([-fno-rtti])
 
 dnl ,---------------------------- 
 dnl | SUBDIR CONFIGURATION

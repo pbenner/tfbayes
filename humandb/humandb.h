@@ -26,6 +26,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <tfbayes/linalg.h>
+
 #define HUMANDB_PAGE_SIZE 1024
 #define HUMANDB_RECORD_LENGTH 128
 
@@ -38,6 +40,7 @@ int  hdb_load_maf(DB *dbp, const char* maf);
 int  hdb_get_sequence(DB *dbp, long pos_from, long n_nucleotides, char* buf);
 int  hdb_get_sequence_pure(DB *dbp, long pos_from, long n_nucleotides, char* buf);
 int  hdb_search(DB* dba[], int dba_n, const char* db_names[], const char* pattern, int pattern_n);
+int  hdb_search_pwm(DB* dbp_list[], const int dbp_list_n, const char* db_names[], const Matrix* pwm, const double threshold);
 
 static inline
 int is_nucleotide(char S) {

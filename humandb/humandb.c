@@ -62,6 +62,9 @@ void hdb_set_error_file_pointer(FILE* error_file_pointer)
         _error_file_pointer = error_file_pointer;
 }
 
+// open & close
+////////////////////////////////////////////////////////////////////////////////
+
 int hdb_open(DB** _dbp, const char* db_file_name, const char* db_name, u_int32_t open_flags)
 {
         DB* dbp;
@@ -162,6 +165,9 @@ int hdb_load_maf(DB *dbp, const char* maf)
         return 0;
 }
 
+// obtain sequences
+////////////////////////////////////////////////////////////////////////////////
+
 int hdb_get_sequence(DB *dbp, long pos_from, long n_nucleotides, char* buf)
 {
         DBT key, data;
@@ -247,6 +253,95 @@ int hdb_get_sequence_pure(DB *dbp, long pos_from, long n_nucleotides, char* buf)
         return 0;
 }
 
+// search for pwm match
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct {
+        DB* dbp;
+        const char* db_name;
+        const Matrix* pwm;
+        double threshold;
+        int thread_id;
+} pthread_pwm_data;
+
+static void* hdb_search_pwm_thread(void* data_)
+{
+        pthread_pwm_data* data = (pthread_pwm_data*)data_;
+        DB* dbp                = data->dbp;
+        const char* db_name    = data->db_name;
+        const Matrix* pwm      = data->pwm;
+        const double threshold = data->threshold;
+        char buf[HUMANDB_RECORD_LENGTH+1];
+        size_t pos, i, j, n = 0;
+
+        // get sequence
+        for (pos  = 0; hdb_get_sequence(dbp, pos, HUMANDB_RECORD_LENGTH, buf) == 0;
+             pos += HUMANDB_RECORD_LENGTH - pwm->columns + 1)
+        {
+                // loop through sequence
+                for (i = 0; i < HUMANDB_RECORD_LENGTH - pwm->columns + 1; i++) {
+                        // test pattern
+                        double sum = 0;
+                        for (j = 0; j < pwm->columns; j++) {
+                                if (buf[i+j] == '\0') {
+                                        // reached end of upstream sequence or chromosome
+                                        printf("%s: Found %d sequences.\n", db_name, (int)n);
+                                        return NULL;
+                                }
+                                else {
+                                        switch (buf[i+j]) {
+                                        case 'A':
+                                        case 'a': sum += pwm->mat[0][j]; break;
+                                        case 'C':
+                                        case 'c': sum += pwm->mat[1][j]; break;
+                                        case 'G':
+                                        case 'g': sum += pwm->mat[2][j]; break;
+                                        case 'T':
+                                        case 't': sum += pwm->mat[3][j]; break;
+                                        default: break;
+                                        }
+                                        if (j == pwm->columns - 1 && sum > threshold) {
+                                                printf("(%12s,%010lu,%3.5f): %.*s\n", db_name, (unsigned long)pos+i, sum, pwm->columns, buf+i);
+                                                fflush(stdout); n++;
+                                        }
+                                }
+                        }
+                }
+        }
+
+        return NULL;
+}
+
+int hdb_search_pwm(DB* dbp_list[], const int dbp_list_n, const char* db_names[], const Matrix* pwm, const double threshold)
+{
+        pthread_t threads[dbp_list_n];
+        pthread_pwm_data data[dbp_list_n];
+        int i, rc;
+
+        for (i = 0; i < dbp_list_n; i++) {
+                data[i].dbp       = dbp_list[i];
+                data[i].db_name   = db_names[i];
+                data[i].pwm       = pwm;
+                data[i].threshold = threshold;
+                data[i].thread_id = i;
+                rc = pthread_create(&threads[i], NULL, hdb_search_pwm_thread, (void *)&data[i]);
+                if (rc) {
+                        std_err(NONE, "Couldn't create thread.");
+                }
+        }
+        for (i = 0; i < dbp_list_n; i++) {
+                rc = pthread_join(threads[i], NULL);
+                if (rc) {
+                        std_err(NONE, "Couldn't join thread.");
+                }
+        }
+
+        return 0;
+}
+
+// search for sequence
+////////////////////////////////////////////////////////////////////////////////
+
 typedef struct {
         DB* dbp;
         const char* db_name;
@@ -256,7 +351,7 @@ typedef struct {
 } pthread_data;
 
 static inline
-int nucleotide_matches(char a, char b) {
+char nucleotide_matches(char a, char b) {
         if (tolower(a) == tolower(b)) {
                 return 1;
         }
@@ -271,7 +366,7 @@ static void* hdb_search_thread(void* data_)
         DB* dbp             = data->dbp;
         const char* db_name = data->db_name;
         const char* pattern = data->pattern;
-        int pattern_n       = data->pattern_n;
+        const int pattern_n = data->pattern_n;
         char buf[HUMANDB_RECORD_LENGTH+1];
         size_t pos, i, j;
 
@@ -287,10 +382,10 @@ static void* hdb_search_thread(void* data_)
                                         // reached end of upstream sequence or chromosome
                                         return NULL;
                                 }
-                                else if (buf[i+j] != pattern[j]) {
+                                else if (!nucleotide_matches(buf[i+j], pattern[j])) {
                                         break;
                                 }
-                                else if (nucleotide_matches(buf[i+j], pattern[j]) && j == pattern_n - 1) {
+                                else if (j == pattern_n - 1) {
                                         printf("%s: %010lu\n", db_name, (unsigned long)pos+i);
                                         fflush(stdout);
                                 }
@@ -301,7 +396,7 @@ static void* hdb_search_thread(void* data_)
         return NULL;
 }
 
-int hdb_search(DB* dbp_list[], int dbp_list_n, const char* db_names[] ,const char* pattern, int pattern_n)
+int hdb_search(DB* dbp_list[], const int dbp_list_n, const char* db_names[], const char* pattern, const int pattern_n)
 {
         pthread_t threads[dbp_list_n];
         pthread_data data[dbp_list_n];

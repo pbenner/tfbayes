@@ -39,7 +39,11 @@ database = {
     }
 
 options = {
-    'verbose'  : False
+    'config-name'  : None,
+    'cluster-name' : None,
+    'sequence'     : None,
+    'threshold'    : 20,
+    'verbose'      : False
     }
 
 # usage
@@ -48,18 +52,61 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "hdb-search-chrom [option]... DATABASE_CONFIG SEQUENCE_STRING"
+    print "hdb-search-chrom [option]... DATABASE_CONFIG"
     print
     print "Options:"
+    print "   -p=CLUSTER_NAME:CLUSTER.cfg    - search for pwm match"
+    print "   -s=SEQUENCE                    - search for exact match of a sequence"
+    print
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
     print
 
+# compute pwm
+# ------------------------------------------------------------------------------
+
+def readVector(config, section, option, converter):
+    vector_str = config.get(section, option)
+    vector     = map(converter, vector_str.split(' '))
+    return vector
+
+def readMatrix(config, section, option, converter):
+    matrix_str = config.get(section, option)
+    matrix     = []
+    for line in matrix_str.split('\n'):
+        if line != '':
+            matrix.append([converter(a) for a in line.split(' ')])
+    return matrix
+
+def compute_frequencies(counts):
+    sums = [ sum(map(lambda m: m[j], counts)) for j in range(0, len(counts[0])) ]
+    return [ [ float(counts[i][j])/sums[j]    for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
+
+def compute_pwm(config_parser, cluster_name):
+    bg_counts   = readMatrix(config_parser, 'Cluster', 'cluster_0',  int)
+    tfbs_counts = readMatrix(config_parser, 'Cluster', cluster_name, int)
+    bg_freq     = compute_frequencies(bg_counts)
+    tfbs_freq   = compute_frequencies(tfbs_counts)
+    return [ [ math.log(tfbs_freq[i][j]/bg_freq[i][0], 2) for j in range(0, len(tfbs_freq[0])) ] for i in range(0, len(tfbs_freq)) ]
+
+# search
+# ------------------------------------------------------------------------------
+
+def search_pwm(dbp_list, database):
+    config_parser = ConfigParser.RawConfigParser()
+    config_parser.read(options['config-name'])
+    if not config_parser.has_section('Cluster'):
+        raise IOError("Invalid configuration file.")
+    pwm = compute_pwm(config_parser, options['cluster-name'])
+    interface.hdb_search_pwm(dbp_list, database['chromosomes'], pwm, options['threshold'])
+
+def search_sequence(dbp_list, database):
+    interface.hdb_search(dbp_list, database['chromosomes'], options['sequence'])
 
 # load results from file
 # ------------------------------------------------------------------------------
 
-def loadConfig(config_file, sequence):
+def loadConfig(config_file):
     global database
     if os.path.isfile(config_file+'.pkl'):
         fp = open(config_file+'.pkl', 'r')
@@ -84,7 +131,10 @@ def loadConfig(config_file, sequence):
     for chrom_name in database['chromosomes']:
         dbp_list.append(interface.hdb_open_ro(os.path.join(directory, database['database']), chrom_name))
 
-    interface.hdb_search(dbp_list, database['chromosomes'], sequence)
+    if options['sequence']:
+        search_sequence(dbp_list, database)
+    if options['cluster-name']:
+        search_pwm(dbp_list, database)
 
     for dbp in dbp_list:
         interface.hdb_close(dbp)
@@ -97,8 +147,8 @@ def loadConfig(config_file, sequence):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose"]
-        opts, tail = getopt.getopt(sys.argv[1:], "", longopts)
+        longopts   = ["help", "verbose", "threshold="]
+        opts, tail = getopt.getopt(sys.argv[1:], "p:s:", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -110,10 +160,19 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
-    if len(tail) != 2:
+        if o == "-p":
+            options['config-name'], options['cluster-name'] = a.split(':')
+            if options['config-name'] == '' or options['cluster-name'] == '':
+                usage()
+                return 1
+        if o == "-s":
+            options['sequence'] = a
+        if o == "--threshold":
+            options['threshold'] = float(a)
+    if len(tail) != 1:
         usage()
         return 1
-    loadConfig(tail[0], tail[1])
+    loadConfig(*tail)
     return 0
 
 if __name__ == "__main__":
