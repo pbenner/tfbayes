@@ -113,29 +113,6 @@ void wrong_usage(const char *msg)
 }
 
 static
-void get_max_length(const char* file_name, size_t *lines, size_t *max_len)
-{
-        string line;
-        ifstream file(file_name);
-
-        *max_len = 0;
-        *lines   = 0;
-
-        while (getline(file, line)) {
-                size_t read = line.size();
-                if (line[read-1] == '\n') {
-                        read--;
-                }
-                if ((size_t)read > *max_len) {
-                        *max_len = (size_t)read;
-                }
-                if (read > 0) {
-                        (*lines)++;
-                }
-        }
-}
-
-static
 char * readfile(const char* file_name, vector<string>& sequences)
 {
         ifstream file(file_name);
@@ -177,6 +154,7 @@ void save_motifs(ostream& file, const DPM_TFBS& dpm)
 {
         const ClusterManager& cm = dpm.clustermanager();
 
+        file << "[Cluster]" << endl;
         file << "cluster = ";
         for (ClusterManager::const_iterator it = cm.begin();
              it != cm.end(); it++) {
@@ -235,11 +213,9 @@ void save_result(ostream& file, const Sampler& sampler)
 static
 void run_dpm(const char* file_name)
 {
-        size_t lines, max_len;
         vector<string> sequences;
 
         // read sequences
-        get_max_length(file_name, &lines, &max_len);
         readfile(file_name, sequences);
 
         // create data, dpm, and sampler objects

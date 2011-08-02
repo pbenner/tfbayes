@@ -82,8 +82,8 @@ def compute_frequencies(counts):
     return [ [ float(counts[i][j])/sums[j]    for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
 
 def compute_pwm(config_parser, cluster_name):
-    bg_counts   = readMatrix(config_parser, 'Result', 'cluster_0',  int)
-    tfbs_counts = readMatrix(config_parser, 'Result', cluster_name, int)
+    bg_counts   = readMatrix(config_parser, 'Cluster', 'cluster_0',  int)
+    tfbs_counts = readMatrix(config_parser, 'Cluster', cluster_name, int)
     bg_freq     = compute_frequencies(bg_counts)
     tfbs_freq   = compute_frequencies(tfbs_counts)
     return [ [ math.log(tfbs_freq[i][j]/bg_freq[i][0], 2) for j in range(0, len(tfbs_freq[0])) ] for i in range(0, len(tfbs_freq)) ]
@@ -94,7 +94,7 @@ def compute_pwm(config_parser, cluster_name):
 def read_config(config_file, cluster_name, sequences_file):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
-    if not config_parser.has_section('Result'):
+    if not config_parser.has_section('Cluster'):
         raise IOError("Invalid configuration file.")
     pwm = compute_pwm(config_parser, cluster_name)
     scan(pwm, sequences_file)

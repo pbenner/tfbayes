@@ -259,16 +259,16 @@ def readMatrix(config, section, option, converter):
     return matrix
 
 def save_counts(config_parser, result):
-    config_parser.set('Result', options['save-counts'], "\n"+"\n".join(map(lambda arg: " ".join(map(str, arg)), result)))
+    config_parser.set('Cluster', options['save-counts'], "\n"+"\n".join(map(lambda arg: " ".join(map(str, arg)), result)))
 
 def read_config(config_file, cluster_1, cluster_2):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
-    if not config_parser.has_section('Result'):
+    if not config_parser.has_section('Cluster'):
         raise IOError("Invalid configuration file.")
-    bg_counts = readMatrix(config_parser, 'Result', 'cluster_0', int)
-    c1_counts = readMatrix(config_parser, 'Result',  cluster_1,  int)
-    c2_counts = readMatrix(config_parser, 'Result',  cluster_2,  int)
+    bg_counts = readMatrix(config_parser, 'Cluster', 'cluster_0', int)
+    c1_counts = readMatrix(config_parser, 'Cluster',  cluster_1,  int)
+    c2_counts = readMatrix(config_parser, 'Cluster',  cluster_2,  int)
     if options['force-alignment']:
         m = options['force-alignment']
     else:

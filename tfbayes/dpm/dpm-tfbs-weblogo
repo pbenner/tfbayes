@@ -72,15 +72,15 @@ def readMatrix(config, section, option, converter):
     return matrix
 
 def read_counts(config_parser, c_name):
-    counts_str = config_parser.get('Result', c_name)
+    counts_str = config_parser.get('Cluster', c_name)
     return counts_str+'\n'
 
 def read_config(config_file):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
-    if not config_parser.has_section('Result'):
+    if not config_parser.has_section('Cluster'):
         raise IOError("Invalid configuration file.")
-    cluster = readVector(config_parser, 'Result', 'cluster', str)
+    cluster = readVector(config_parser, 'Cluster', 'cluster', str)
     for c in cluster:
         c_name = c.split(':')[0]
         if c_name != 'cluster_0':
