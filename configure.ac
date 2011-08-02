@@ -297,8 +297,10 @@ AC_CONFIG_FILES([
 	libexception/Makefile
 	libfastlog/Makefile
 	include/Makefile
-	humandb/Makefile
-	dpm/Makefile
+	tfbayes/Makefile
+	tfbayes/fasta/Makefile
+	tfbayes/humandb/Makefile
+	tfbayes/dpm/Makefile
  	])
 
 AC_OUTPUT

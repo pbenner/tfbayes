@@ -21,7 +21,7 @@
 import sys
 sys.path.append('@pythondir@')
 
-from humandb.hdb_load_upstream import main
+from tfbayes.humandb import hdb_load_upstream
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(hdb_load_upstream.main())

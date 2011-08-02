@@ -21,7 +21,7 @@
 import sys
 sys.path.append('@pythondir@')
 
-from humandb.hdb_statistics_upstream import main
+from tfbayes.humandb import hdb_statistics_upstream
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(hdb_statistics_upstream.main())

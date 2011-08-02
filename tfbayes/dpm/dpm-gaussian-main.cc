@@ -31,18 +31,18 @@ main(void) {
         Bayes::Vector* mu      = Bayes::allocVector(2);
         Bayes::Vector* pi      = Bayes::allocVector(11);
 
-        Sigma->mat[0][0] = 4;
-        Sigma->mat[0][1] = 2;
-        Sigma->mat[1][0] = 2;
-        Sigma->mat[1][1] = 4;
+        Sigma->mat[0][0] = 0.01;
+        Sigma->mat[0][1] = 0.005;
+        Sigma->mat[1][0] = 0.005;
+        Sigma->mat[1][1] = 0.01;
 
-        Sigma_0->mat[0][0] = 4;
-        Sigma_0->mat[0][1] = 2;
-        Sigma_0->mat[1][0] = 2;
-        Sigma_0->mat[1][1] = 4;
+        Sigma_0->mat[0][0] = 10.0;
+        Sigma_0->mat[0][1] = 0.1;
+        Sigma_0->mat[1][0] = 0.1;
+        Sigma_0->mat[1][1] = 10.0;
 
-        mu->vec[0] = 5;
-        mu->vec[1] = 5;
+        mu->vec[0] = 0;
+        mu->vec[1] = 0;
 
         pi->vec[0]  = 0.27693787;
         pi->vec[1]  = 0.06001137;
@@ -56,6 +56,6 @@ main(void) {
         pi->vec[9]  = 0.29406385;
         pi->vec[10] = 0.06357562;
 
-        _dpm_gaussian_init(300, 1, Sigma, Sigma_0, mu, pi);
-        _dpm_gaussian_sample(10,10);
+        _dpm_gaussian_init(1000, 1, Sigma, Sigma_0, mu, pi);
+        _dpm_gaussian_sample(100,100);
 }

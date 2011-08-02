@@ -25,7 +25,7 @@ import math
 import random
 import pickle
 
-import humandb.interface as interface
+import interface
 
 # global options
 # ------------------------------------------------------------------------------

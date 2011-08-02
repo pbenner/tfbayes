@@ -25,7 +25,7 @@ import math
 import random
 import pickle
 
-import humandb.interface as interface
+import interface
 
 # global options
 # ------------------------------------------------------------------------------
@@ -38,8 +38,7 @@ database = {
     }
 
 options = {
-    'verbose'    : False,
-    'pure'       : False
+    'verbose'    : False
     }
 
 # usage
@@ -48,11 +47,9 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "hdb-read-chrom [option]... DATABASE_CONFIG CHROMOSOME POSITION NUCLEOTIDES"
+    print "hdb-load-seq [option]... DATABASE_CONFIG INPUT_FILE SEQUENCE_NUMBER"
     print
     print "Options:"
-    print "   -p, --pure                     - strip all alignment specific characters"
-    print
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
     print
@@ -61,7 +58,7 @@ def usage():
 # load results from file
 # ------------------------------------------------------------------------------
 
-def loadConfig(config_file, chrom_name, pos, num):
+def loadConfig(config_file, input_file, seq):
     global database
     if os.path.isfile(config_file+'.pkl'):
         fp = open(config_file+'.pkl', 'r')
@@ -73,26 +70,19 @@ def loadConfig(config_file, chrom_name, pos, num):
         if not config_parser.has_section('Database'):
             raise IOError("Invalid configuration file.")
         section = 'Database'
-        database['identifier']   = config_parser.get(section, 'identifier')
-        database['database']     = config_parser.get(section, 'database')
-        database['chromosomes']  = config_parser.get(section, 'chromosomes').split(' ')
+        database['identifier'] = config_parser.get(section, 'identifier')
+        database['database']   = config_parser.get(section, 'database')
+        database['sequences']  = config_parser.get(section, 'sequences')
         fp = open(config_file+'.pkl', 'wb')
         pickle.dump(database, fp)
         fp.close()
 
-    try:
-        database['chromosomes'].index(chrom_name)
-    except ValueError:
-        print "Unknown chromosome."
-        exit(1)
+    if not int(seq) > 0 and int(seq) > database['sequences']:
+        raise IOError("Invalid sequence number.")
 
-    directory = os.path.dirname(config_file)
-    interface.hdb_init('hdb-read-chrom')
-    dbp = interface.hdb_open_ro(os.path.join(directory, database['database']), chrom_name)
-    if options['pure']:
-        print interface.hdb_get_sequence_pure(dbp, pos, num)
-    else:
-        print interface.hdb_get_sequence(dbp, pos, num)
+    interface.hdb_init('hdb-load-seq')
+    dbp = interface.hdb_create(database['database'], seq)
+    interface.hdb_load_maf(dbp, input_file)
     interface.hdb_close(dbp)
     interface.hdb_free()
 
@@ -102,26 +92,24 @@ def loadConfig(config_file, chrom_name, pos, num):
 def main():
     global options
     try:
-        longopts   = ['help', 'verbose']
-        opts, tail = getopt.getopt(sys.argv[1:], "p", longopts)
+        longopts   = ["help", "verbose"]
+        opts, tail = getopt.getopt(sys.argv[1:], "", longopts)
     except getopt.GetoptError:
         usage()
         return 2
     output = None
     for o, a in opts:
-        if o in ('-v', '--verbose'):
-            sys.stderr.write('Verbose mode turned on.\n')
-            options['verbose'] = True
-        if o in ('-h', '--help'):
+        if o in ("-v", "--verbose"):
+            sys.stderr.write("Verbose mode turned on.\n")
+            options["verbose"] = True
+        if o in ("-h", "--help"):
             usage()
             return 0
-        if o in ('-p', '--pure'):
-            options['pure'] = True
-    if len(tail) != 4:
+    if len(tail) != 3:
         usage()
         return 1
-    loadConfig(tail[0], tail[1], int(tail[2]), int(tail[3]))
+    loadConfig(tail[0], tail[1], tail[2])
     return 0
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

@@ -25,7 +25,8 @@ import math
 import random
 import pickle
 
-import humandb.interface as interface
+import interface
+from   ..fasta   import fasta
 
 # global options
 # ------------------------------------------------------------------------------
@@ -38,6 +39,8 @@ database = {
     }
 
 options = {
+    'id'         : None,
+    'pure'       : False,
     'verbose'    : False
     }
 
@@ -47,9 +50,12 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "hdb-load-seq [option]... DATABASE_CONFIG INPUT_FILE SEQUENCE_NUMBER"
+    print "hdb-read-chrom [option]... DATABASE_CONFIG CHROMOSOME POSITION NUCLEOTIDES"
     print
     print "Options:"
+    print "   -p, --pure                     - strip all alignment specific characters"
+    print "       --id=ID                    - sequence id for fasta description"
+    print
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
     print
@@ -58,7 +64,7 @@ def usage():
 # load results from file
 # ------------------------------------------------------------------------------
 
-def loadConfig(config_file, input_file, seq):
+def loadConfig(config_file, chrom_name, pos, num):
     global database
     if os.path.isfile(config_file+'.pkl'):
         fp = open(config_file+'.pkl', 'r')
@@ -70,19 +76,32 @@ def loadConfig(config_file, input_file, seq):
         if not config_parser.has_section('Database'):
             raise IOError("Invalid configuration file.")
         section = 'Database'
-        database['identifier'] = config_parser.get(section, 'identifier')
-        database['database']   = config_parser.get(section, 'database')
-        database['sequences']  = config_parser.get(section, 'sequences')
+        database['identifier']   = config_parser.get(section, 'identifier')
+        database['database']     = config_parser.get(section, 'database')
+        database['chromosomes']  = config_parser.get(section, 'chromosomes').split(' ')
         fp = open(config_file+'.pkl', 'wb')
         pickle.dump(database, fp)
         fp.close()
 
-    if not int(seq) > 0 and int(seq) > database['sequences']:
-        raise IOError("Invalid sequence number.")
+    try:
+        database['chromosomes'].index(chrom_name)
+    except ValueError:
+        print "Unknown chromosome."
+        exit(1)
 
-    interface.hdb_init('hdb-load-seq')
-    dbp = interface.hdb_create(database['database'], seq)
-    interface.hdb_load_maf(dbp, input_file)
+    directory = os.path.dirname(config_file)
+    interface.hdb_init('hdb-read-chrom')
+    dbp = interface.hdb_open_ro(os.path.join(directory, database['database']), chrom_name)
+    if options['pure']:
+        sequence = interface.hdb_get_sequence_pure(dbp, pos, num)
+    else:
+        sequence = interface.hdb_get_sequence(dbp, pos, num)
+
+    if options['id']:
+        print fasta.fimport([options['id'], database['identifier'], chrom_name, str(pos)], sequence),
+    else:
+        print fasta.fimport([database['identifier'], chrom_name, str(pos)], sequence),
+
     interface.hdb_close(dbp)
     interface.hdb_free()
 
@@ -92,24 +111,28 @@ def loadConfig(config_file, input_file, seq):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose"]
-        opts, tail = getopt.getopt(sys.argv[1:], "", longopts)
+        longopts   = ['help', 'verbose', 'id=']
+        opts, tail = getopt.getopt(sys.argv[1:], "p", longopts)
     except getopt.GetoptError:
         usage()
         return 2
     output = None
     for o, a in opts:
-        if o in ("-v", "--verbose"):
-            sys.stderr.write("Verbose mode turned on.\n")
-            options["verbose"] = True
-        if o in ("-h", "--help"):
+        if o in ('-v', '--verbose'):
+            sys.stderr.write('Verbose mode turned on.\n')
+            options['verbose'] = True
+        if o in ('-h', '--help'):
             usage()
             return 0
-    if len(tail) != 3:
+        if o in ('-p', '--pure'):
+            options['pure'] = True
+        if o == '--id':
+            options['id'] = a
+    if len(tail) != 4:
         usage()
         return 1
-    loadConfig(tail[0], tail[1], tail[2])
+    loadConfig(tail[0], tail[1], int(tail[2]), int(tail[3]))
     return 0
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main())

@@ -25,8 +25,8 @@ import math
 import random
 import pickle
 
-import humandb.config    as config
-import humandb.interface as interface
+import config
+import interface
 
 # global options
 # ------------------------------------------------------------------------------

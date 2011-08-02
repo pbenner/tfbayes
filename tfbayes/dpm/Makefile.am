@@ -16,6 +16,9 @@ dpm_tfbs_LDADD  += $(top_builddir)/libfastlog/libfastlog.la
 dpm_tfbs_LDADD  += libdpm.la
 dpm_tfbs_LDADD  += $(LIB_PTHREAD)
 
+## set python package name
+pkgpythondir = $(pyexecdir)/tfbayes/dpm
+
 ## compile python files
 pkgpython_PYTHON = __init__.py dpm_gaussian_interface.py dpm_tfbs_interface.py
 

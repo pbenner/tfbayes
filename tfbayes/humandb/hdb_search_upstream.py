@@ -25,20 +25,14 @@ import math
 import random
 import pickle
 
-import humandb.interface as interface
+import config
+import interface
 
 # global options
 # ------------------------------------------------------------------------------
 
-database = {
-    'identifier' : None,
-    'basedir'    : None,
-    'db'         : None,
-    'maf'        : None
-    }
-
 options = {
-    'verbose'    : False
+    'verbose'  : False
     }
 
 # usage
@@ -47,7 +41,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "hdb-load-chrom [option]... DATABASE_CONFIG INPUT_FILE CHROM_NAME"
+    print "hdb-search-seq [option]... DATABASE_BUNDLE SEQUENCE SEQUENCE_NUMBER"
     print
     print "Options:"
     print "   -h, --help                     - print help"
@@ -58,36 +52,26 @@ def usage():
 # load results from file
 # ------------------------------------------------------------------------------
 
-def loadConfig(config_file, input_file, chrom_name):
-    global database
-    if os.path.isfile(config_file+'.pkl'):
-        fp = open(config_file+'.pkl', 'r')
-        database = pickle.load(fp)
-        fp.close()
-    else:
-        config_parser = ConfigParser.RawConfigParser()
-        config_parser.read(config_file)
-        if not config_parser.has_section('Database'):
-            raise IOError("Invalid configuration file.")
-        section = 'Database'
-        database['identifier']   = config_parser.get(section, 'identifier')
-        database['database']     = config_parser.get(section, 'database')
-        database['chromosomes']  = config_parser.get(section, 'chromosomes').split(' ')
-        fp = open(config_file+'.pkl', 'wb')
-        pickle.dump(database, fp)
-        fp.close()
+def loadConfig(config_file, sequence, seq_num):
+    config_parser = ConfigParser.RawConfigParser()
+    config_parser.read(config_file)
+    if not config_parser.has_section('Database Bundle'):
+        raise IOError("Invalid configuration file.")
 
-    try:
-        database['chromosomes'].index(chrom_name)
-    except ValueError:
-        print "Unknown chromosome."
-        exit(1)
+    databases = config.readMatrix(config_parser, 'Database Bundle', 'databases', str)
+    dbp_list  = []
+    db_names  = []
 
-    directory = os.path.dirname(config_file)
-    interface.hdb_init('hdb-load-chrom')
-    dbp = interface.hdb_create(os.path.join(directory, database['database']), chrom_name)
-    interface.hdb_load_maf(dbp, input_file)
-    interface.hdb_close(dbp)
+    interface.hdb_init('hdb-search-seq')
+    for database_id, database_file in databases:
+        dbp_list.append(interface.hdb_open_ro(database_file, seq_num))
+        db_names.append(database_file)
+
+    interface.hdb_search(dbp_list, db_names, sequence)
+
+    for dbp in dbp_list:
+        interface.hdb_close(dbp)
+
     interface.hdb_free()
 
 # main
