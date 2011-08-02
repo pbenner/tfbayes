@@ -6,6 +6,8 @@ import os
 import math
 import sys
 
+from tfbayes.fasta import fasta
+
 # global options
 # ------------------------------------------------------------------------------
 
@@ -46,20 +48,20 @@ def compute_score(pwm, sequence):
     return result
 
 def scan(pwm, sequences_file):
-    fp = open(sequences_file, 'r')
+    parser = fasta.parser(sequences_file)
     length = len(pwm[0])
-    i = 0
     hits = 0
-    for line in fp.readlines():
-        for j in range(0, len(line)-length):
-            sequence = line[j:j+length-1]
-            score = compute_score(pwm, sequence)
+    while 1:
+        description, sequence = parser.read_sequence()
+        if not sequence:
+            break
+        for j in range(0, len(sequence)-length):
+            sub_sequence = sequence[j:j+length-1]
+            score = compute_score(pwm, sub_sequence)
             if score > options['threshold']:
                 hits += 1
-                print "(%05i,%05i,%3.5f): %s" % (i, j, score, sequence)
-        i += 1
+                print "(%15s,%12s,%05i%3.5f): %s" % (description[0], description[2], j, score, sub_sequence)
     print "Found %d sequences." % hits
-    fp.close()
 
 # compute pwm
 # ------------------------------------------------------------------------------
