@@ -13,6 +13,7 @@ dpm_gaussian_LDADD  += $(LIB_PTHREAD)
 dpm_tfbs_SOURCES = dpm-tfbs-main.cc
 dpm_tfbs_LDADD   = $(top_builddir)/libexception/libexception.la
 dpm_tfbs_LDADD  += $(top_builddir)/libfastlog/libfastlog.la
+dpm_tfbs_LDADD  += $(top_builddir)/tfbayes/fasta/libfasta.la
 dpm_tfbs_LDADD  += libdpm.la
 dpm_tfbs_LDADD  += $(LIB_PTHREAD)
 

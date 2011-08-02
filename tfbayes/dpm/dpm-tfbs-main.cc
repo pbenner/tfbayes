@@ -32,6 +32,7 @@
 #include <pmcmc.hh>
 
 #include <tfbayes/exception.h>
+#include <tfbayes/fasta.hh>
 
 using namespace std;
 
@@ -115,23 +116,23 @@ void wrong_usage(const char *msg)
 static
 char * readfile(const char* file_name, vector<string>& sequences)
 {
+        FastaParser parser(file_name);
+
         ifstream file(file_name);
         string line;
 
         size_t i = 0;
-        while (getline(file, line)) {
+        while ((line = parser.read_sequence()) != "") {
                 size_t read = line.size();
-                if (read > 1) {
-                        sequences.push_back("");
-                        size_t pos = 0;
-                        for (size_t j = 0; j < (size_t)read && line[j] != '\n'; j++) {
-                                if (is_nucleotide(line[j])) {
-                                        sequences[i].append(1,line[j]);
-                                        pos++;
-                                }
+                sequences.push_back("");
+                size_t pos = 0;
+                for (size_t j = 0; j < (size_t)read && line[j] != '\n'; j++) {
+                        if (is_nucleotide(line[j])) {
+                                sequences[i].append(1,line[j]);
+                                pos++;
                         }
-                        i++;
                 }
+                i++;
         }
 
         return NULL;

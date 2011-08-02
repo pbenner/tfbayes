@@ -22,4 +22,23 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <sstream>
+
+class FastaParser {
+public:
+        FastaParser(const char* file_name);
+
+        std::string read_sequence();
+        const std::vector<std::string>& description();
+
+protected:
+        std::ifstream file;
+        std::string prev_line;
+        std::vector<std::string> _description;
+};
+
 #endif /* FASTA_HH */
