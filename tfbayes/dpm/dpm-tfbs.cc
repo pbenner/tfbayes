@@ -89,10 +89,6 @@ DPM_TFBS::valid_for_sampling(const index_t& index) const
         const size_t sequence = index[0];
         const size_t position = index[1];
 
-        // check if there is enough space
-        if (_data.length(sequence) - position < TFBS_LENGTH) {
-                return false;
-        }
         // check if there is a tfbs starting here, if not check
         // succeeding positions
         if (_tfbs_start_positions[index] == 0) {
