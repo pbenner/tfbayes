@@ -101,8 +101,8 @@ GibbsSampler::sample(size_t n, size_t burnin) {
                 cout << "[ Cluster: " <<_dpm.clustermanager() << "]" << endl;
                 fflush(stdout);
                 double sum = 0;
-                for (Indexer::const_iterator_randomized it = _indexer.begin_randomized();
-                     it != _indexer.end_randomized(); it++) {
+                for (Indexer::sampling_iterator it = _indexer.sampling_begin();
+                     it != _indexer.sampling_end(); it++) {
                         const bool switched =_sample(**it);
                         if (switched) sum+=1;
                 }
@@ -117,8 +117,8 @@ GibbsSampler::sample(size_t n, size_t burnin) {
                 cout << "[ Cluster: " <<_dpm.clustermanager() << "]" << endl;
                 fflush(stdout);
                 double sum = 0;
-                for (Indexer::const_iterator_randomized it = _indexer.begin_randomized();
-                     it != _indexer.end_randomized(); it++) {
+                for (Indexer::sampling_iterator it = _indexer.sampling_begin();
+                     it != _indexer.sampling_end(); it++) {
                         const bool switched = _sample(**it);
                         if (switched) sum+=1;
                 }

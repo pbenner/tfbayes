@@ -76,7 +76,7 @@ def usage():
 def cluster_colors(c):
     if c < 5:
         return {
-           -1 : 'black',
+           -1 : 'white',
             0 : 'black',
             1 : 'red',
             2 : 'green',
@@ -169,7 +169,7 @@ def readSequences(seq_file):
             break
         sequences.append('')
         clusters.append([])
-        for m in re.finditer(r'\(([1-9]):([ACGT]+)\)|[ACGT]+', sequence):
+        for m in re.finditer(r'\(([1-9]):([ACGTN]+)\)|[ACGTN]+', sequence):
             if m.group(2):
                 clusters[-1].extend([ int(m.group(1)) for i in range(0, len(m.group(2))) ])
                 sequences[-1] = sequences[-1] + m.group(2)

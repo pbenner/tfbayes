@@ -49,7 +49,7 @@ void _dpm_tfbs_init(double alpha, double lambda, int tfbs_length, int n, char *s
                 _sequences.push_back(sequences[i]);
         }
 
-        _data    = new DataTFBS(_sequences);
+        _data    = new DataTFBS(_sequences, (size_t)tfbs_length);
         _gdpm    = new DPM_TFBS(alpha, lambda, (size_t)tfbs_length, *_data);
         _sampler = new GibbsSampler(*_gdpm, *_data);
 }
@@ -102,6 +102,12 @@ Bayes::Matrix* _dpm_tfbs_cluster_assignments() {
 
         // allocate matrix
         result = Bayes::allocMatrix(n, m);
+        // default initialization to -1
+        for (size_t i = 0; i < n; i++) {
+                for (size_t j = 0; j < m; j++) {
+                        result->mat[i][j] = -1;
+                }
+        }
         // copy posterior
         for (DataTFBS::const_iterator it = _gdpm->data().begin();
              it != _gdpm->data().end(); it++) {

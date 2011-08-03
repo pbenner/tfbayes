@@ -37,7 +37,7 @@ DataGaussian::DataGaussian(size_t cluster, size_t samples, gsl_matrix* Sigma, co
 
         // generate a randomized list of indices
         for (DataGaussian::iterator it = begin(); it != end(); it++) {
-                indices_randomized.push_back(&(*it));
+                sampling_indices.push_back(&(*it));
         }
         shuffle();
 }
@@ -91,7 +91,7 @@ DataGaussian::generate_samples(
 
 void
 DataGaussian::shuffle() {
-        random_shuffle(indices_randomized.begin(), indices_randomized.end());
+        random_shuffle(sampling_indices.begin(), sampling_indices.end());
 }
 
 const index_t&

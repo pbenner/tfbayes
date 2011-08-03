@@ -51,6 +51,7 @@ private:
 };
 
 bool is_nucleotide(char a);
+bool is_nucleotide_or_masked(char S);
 char code_nucleotide(char a);
 char decode_nucleotide(char a);
 std::vector<short> code_nucleotide_sequence(const std::string& sequence) throw(InvalidNucleotide);

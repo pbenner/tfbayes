@@ -35,7 +35,21 @@
 
 using namespace std;
 
-DataTFBS::DataTFBS(const vector<string>& sequences)
+static inline
+bool valid_sampling_index(const vector<string>& sequences, const index_t& index, size_t tfbs_length)
+{
+        if (sequences[index[0]].size() - index[1] < tfbs_length) {
+                return false;
+        }
+        for (size_t i = 0; i < tfbs_length; i++) {
+                if (sequences[index[0]][index[1]+i] == 'N') {
+                        return false;
+                }
+        }
+        return true;
+}
+
+DataTFBS::DataTFBS(const vector<string>& sequences, size_t tfbs_length)
         : sequence_data_t<short>(code_sequences(sequences)), sequences(sequences), _n_sequences(sequences.size()), _elements(0)
 {
         for(size_t i = 0; i < sequences.size(); i++) {
@@ -43,20 +57,24 @@ DataTFBS::DataTFBS(const vector<string>& sequences)
                 this->sequences_length.push_back(sequences[i].size());
                 // and a list of indices
                 for(size_t j = 0; j < sequences[i].size(); j++) {
-                        this->indices.push_back(index_t(i,j));
-                        _elements++;
+                        if (sequences[i][j] != 'N') {
+                                this->indices.push_back(index_t(i,j));
+                                _elements++;
+                        }
                 }
         }
         // generate a randomized list of indices
         for (DataTFBS::iterator it = begin(); it != end(); it++) {
-                indices_randomized.push_back(&(*it));
+                if (valid_sampling_index(sequences, *it, tfbs_length)) {
+                        sampling_indices.push_back(&(*it));
+                }
         }
         shuffle();
 }
 
 void
 DataTFBS::shuffle() {
-        random_shuffle(indices_randomized.begin(), indices_randomized.end());
+        random_shuffle(sampling_indices.begin(), sampling_indices.end());
 }
 
 const index_t&

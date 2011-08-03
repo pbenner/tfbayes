@@ -34,8 +34,7 @@ public:
         typedef std::vector<index_t>::iterator iterator;
         typedef std::vector<index_t>::const_iterator const_iterator;
 
-        typedef std::vector<index_t*>::iterator iterator_randomized;
-        typedef std::vector<index_t*>::const_iterator const_iterator_randomized;
+        typedef std::vector<index_t*>::const_iterator sampling_iterator;
 
         // iterators
         ////////////////////////////////////////////////////////////////////////
@@ -45,8 +44,8 @@ public:
         virtual const_iterator begin() const = 0;
         virtual const_iterator end()   const = 0;
 
-        virtual const_iterator_randomized begin_randomized() const = 0;
-        virtual const_iterator_randomized end_randomized()   const = 0;
+        virtual sampling_iterator sampling_begin() const = 0;
+        virtual sampling_iterator sampling_end()   const = 0;
 
         // operators
         ////////////////////////////////////////////////////////////////////////

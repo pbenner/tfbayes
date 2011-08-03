@@ -127,7 +127,7 @@ char * readfile(const char* file_name, vector<string>& sequences)
                 sequences.push_back("");
                 size_t pos = 0;
                 for (size_t j = 0; j < (size_t)read && line[j] != '\n'; j++) {
-                        if (is_nucleotide(line[j])) {
+                        if (is_nucleotide_or_masked(line[j])) {
                                 sequences[i].append(1,line[j]);
                                 pos++;
                         }
@@ -220,7 +220,7 @@ void run_dpm(const char* file_name)
         readfile(file_name, sequences);
 
         // create data, dpm, and sampler objects
-        DataTFBS& data = *new DataTFBS(sequences);
+        DataTFBS& data = *new DataTFBS(sequences, options.tfbs_length);
         DPM_TFBS& gdpm = *new DPM_TFBS(options.alpha, options.lambda, options.tfbs_length, data);
         GibbsSampler& sampler = *new GibbsSampler(gdpm, data);
         PopulationMCMC& pmcmc = *new PopulationMCMC(sampler, options.population_size);

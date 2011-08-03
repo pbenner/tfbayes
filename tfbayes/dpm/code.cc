@@ -36,6 +36,16 @@ bool is_nucleotide(char S) {
         }
 }
 
+bool is_nucleotide_or_masked(char S) {
+        if (S == 'A' || S == 'C' || S == 'G' || S == 'T' || S == 'N' ||
+            S == 'a' || S == 'c' || S == 'g' || S == 't') {
+                return true;
+        }
+        else {
+                return false;
+        }
+}
+
 char code_nucleotide(char a)
 {
         switch (a) {
@@ -55,6 +65,8 @@ char code_nucleotide(char a)
         case 't':
                 return 3;
         break;
+        case 'N':
+                return 4;
         default:
                 break;
         }
@@ -65,17 +77,19 @@ char decode_nucleotide(char a)
 {
         switch (a) {
         case 0:
-                return 'a';
+                return 'A';
         break;
         case 1:
-                return 'c';
+                return 'C';
         break;
         case 2:
-                return 'g';
+                return 'G';
         break;
         case 3:
-                return 't';
+                return 'T';
         break;
+        case 4:
+                return 'N';
         default:
                 break;
         }

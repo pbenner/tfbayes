@@ -34,20 +34,23 @@
 
 class DataTFBS : public Indexer, public Data, public sequence_data_t<short> {
 public:
-        DataTFBS(const std::vector<std::string>& sequences);
+        DataTFBS(const std::vector<std::string>& sequences, size_t tfbs_length);
 
         // iterators
         ////////////////////////////////////////////////////////////////////////
+
+        // iterators over the full dataset (excluding masked nucleotides)
         iterator begin() { return indices.begin(); }
         iterator end()   { return indices.end();   }
-
         const_iterator begin() const { return indices.begin(); }
         const_iterator end()   const { return indices.end();   }
 
-        const_iterator_randomized begin_randomized() const
-                { return indices_randomized.begin(); }
-        const_iterator_randomized end_randomized()   const
-                { return indices_randomized.end();   }
+        // randomized iterator where in addition regions are excluded
+        // where no binding site would fit
+        sampling_iterator sampling_begin() const
+                { return sampling_indices.begin(); }
+        sampling_iterator sampling_end()   const
+                { return sampling_indices.end();   }
 
         // operators
         ////////////////////////////////////////////////////////////////////////
@@ -67,7 +70,7 @@ public:
 private:
         // all nucleotide positions in a vector (used for the gibbs sampler)
         std::vector<index_t > indices;
-        std::vector<index_t*> indices_randomized;
+        std::vector<index_t*> sampling_indices;
 
         // the raw nucleotide sequences
         const std::vector<std::string> sequences;

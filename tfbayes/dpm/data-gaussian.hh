@@ -43,10 +43,10 @@ public:
         const_iterator begin() const { return indices.begin(); }
         const_iterator end()   const { return indices.end();   }
 
-        const_iterator_randomized begin_randomized() const
-                { return indices_randomized.begin(); }
-        const_iterator_randomized end_randomized() const
-                { return indices_randomized.end();   }
+        sampling_iterator sampling_begin() const
+                { return sampling_indices.begin(); }
+        sampling_iterator sampling_end() const
+                { return sampling_indices.end();   }
 
         // operators
         ////////////////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ public:
 
 private:
         std::vector<index_t > indices;
-        std::vector<index_t*> indices_randomized;
+        std::vector<index_t*> sampling_indices;
 
         const size_t _elements;
         const size_t _length;
