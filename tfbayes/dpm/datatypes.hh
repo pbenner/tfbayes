@@ -133,6 +133,7 @@ public:
         }
         data_t(const std::vector<T>& data) : _data(data) {
         }
+        virtual ~data_t() {}
 
         friend std::ostream& operator<< <> (std::ostream& o, const data_t<T>& sd);
 
@@ -166,6 +167,7 @@ public:
         }
         sequence_data_t(const std::vector<std::vector<T> >& data) : _data(data) {
         }
+        virtual ~sequence_data_t() {}
 
         friend std::ostream& operator<< <> (std::ostream& o, const sequence_data_t<T>& sd);
 
