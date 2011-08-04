@@ -92,7 +92,7 @@ def read_config(config_file):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "plot"]
+        longopts   = ["help", "verbose"]
         opts, tail = getopt.getopt(sys.argv[1:], "", longopts)
     except getopt.GetoptError:
         usage()
@@ -105,8 +105,6 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
-        if o == "--plot":
-            options['plot'] = True
     if len(tail) != 1:
         usage()
         return 1
