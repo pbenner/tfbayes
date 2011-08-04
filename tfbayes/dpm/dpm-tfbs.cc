@@ -27,7 +27,6 @@
 #include <gsl/gsl_blas.h>
 
 #include <dpm-tfbs.hh>
-#include <dpm-tfbs-graph.hh>
 
 #include <tfbayes/logarithmetic.h>
 #include <tfbayes/fastlog.h>
@@ -210,10 +209,12 @@ DPM_TFBS::update_posterior(size_t sampling_steps) {
                         _posterior[sequence][position] = value;
                 }
         }
+        _tfbs_graph.update(_data, _cluster_assignments, _tfbs_start_positions);
 }
 
 const posterior_t&
 DPM_TFBS::posterior() const {
+        _tfbs_graph.print();
         return _posterior;
 }
 

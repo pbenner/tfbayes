@@ -31,8 +31,7 @@
 
 class index_t {
 public:
-        __inline__ explicit index_t(size_t x0) : _x0(x0), _size(1) {
-                _x0 = x0;
+        __inline__ explicit index_t(size_t x0) : _x0(x0), _x1(0), _size(1) {
         }
         __inline__ index_t(size_t x0, size_t x1) : _x0(x0), _x1(x1), _size(2) {
         }

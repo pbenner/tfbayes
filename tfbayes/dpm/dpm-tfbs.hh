@@ -25,6 +25,7 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>
 
+#include <dpm-tfbs-graph.hh>
 #include <clustermanager.hh>
 #include <component-model.hh>
 #include <data-tfbs.hh>
@@ -88,6 +89,7 @@ private:
 
         // posterior distribution
         posterior_t _posterior;
+        TfbsGraph _tfbs_graph;
 
         // keep track of the number of transcription factor binding sites
         size_t num_tfbs;
