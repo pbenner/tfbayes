@@ -6,9 +6,7 @@
 import re
 import math
 import time
-import gobject
 import ConfigParser
-import gtk
 import sys
 import getopt
 import os
@@ -16,6 +14,8 @@ import os
 import numpy               as     np
 import numpy.random.mtrand as     mt
 import numpy.random        as     rd
+
+from tfbayes.fasta import fasta
 
 def importMatplotlib(backend=None):
     global pyplot
@@ -73,15 +73,16 @@ def makefilter(keep):
     return lambda s,a=allchars,d=delchars: s.translate(a, d)
 
 def readSequences(seq_file):
-    fh = open(seq_file,'r')
-    identifier = makefilter("ACGTacgt")
-    li = fh.readlines()
-    sequences = []
-    for line in li:
-        if line != "\n":
-            sequences.append(identifier(line))
-    fh.close()
-    return sequences
+    parser = fasta.parser(seq_file)
+    descriptions = []
+    sequences    = []
+    while 1:
+        description, sequence = parser.read_sequence()
+        if not sequence:
+            break
+        descriptions.append(description[0])
+        sequences.append(sequence)
+    return descriptions, sequences
 
 # parse results config
 # ------------------------------------------------------------------------------
@@ -133,11 +134,11 @@ def plot_components(components, show):
 def split_len(seq, length):
     return [seq[i:i+length] for i in range(0, len(seq), length)]
 
-def plot_sequence(sequence, _posterior, n, show):
+def plot_sequence(description, sequence, _posterior, n, show):
     sequences = split_len(sequence, 50)
     posterior = split_len(_posterior, 50)
     fig = pyplot.figure()
-    ax  = fig.add_subplot(111, title="Sequence "+str(n))
+    ax  = fig.add_subplot(111, title=description)
     ax.set_frame_on(False)
     ax.set_axis_off()
     xn    = max(map(len, sequences))
@@ -152,9 +153,9 @@ def plot_sequence(sequence, _posterior, n, show):
                     ha="center", va="bottom", color=pyplot.cm.jet(p), weight='bold')
     show()
 
-def plot_sequences(sequences, posterior, show):
+def plot_sequences(descriptions, sequences, posterior, show):
     for i in range(0, len(sequences)):
-        plot_sequence(sequences[i], posterior[i], i+1, show)
+        plot_sequence(descriptions[i], sequences[i], posterior[i], i+1, show)
 
 def plot_result(results_file, sequences_file):
     if options['save']:
@@ -167,10 +168,10 @@ def plot_result(results_file, sequences_file):
         show  = pyplot.show
         close = None
     posterior, likelihood, components = parseConfig(results_file)
-    sequences = readSequences(sequences_file)
+    descriptions, sequences = readSequences(sequences_file)
     plot_likehood(likelihood, show)
     plot_components(components, show)
-    plot_sequences(sequences, posterior, show)
+    plot_sequences(descriptions, sequences, posterior, show)
     if close:
         close()
 
