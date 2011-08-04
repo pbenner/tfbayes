@@ -57,6 +57,7 @@ public:
         const posterior_t& posterior() const;
         const DataTFBS& data() const;
         const ClusterManager& clustermanager() const;
+        const TfbsGraph& graph() const;
 
         // constants
         ////////////////////////////////////////////////////////////////////////

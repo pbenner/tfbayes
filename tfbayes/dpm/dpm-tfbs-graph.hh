@@ -90,6 +90,17 @@ public:
         ////////////////////////////////////////////////////////////////////////////////
         typedef std::tr1::unordered_map<edge_t, size_t> map_t;
 
+        typedef map_t::iterator iterator;
+        typedef map_t::const_iterator const_iterator;
+
+        // iterators
+        ////////////////////////////////////////////////////////////////////////////////
+        iterator begin() { return _edges.begin(); }
+        iterator end()   { return _edges.end(); }
+
+        const_iterator begin() const { return _edges.begin(); }
+        const_iterator end()   const { return _edges.end(); }
+
         // methods
         ////////////////////////////////////////////////////////////////////////////////
         void insert(const edge_t& edge) {

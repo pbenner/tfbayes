@@ -214,7 +214,6 @@ DPM_TFBS::update_posterior(size_t sampling_steps) {
 
 const posterior_t&
 DPM_TFBS::posterior() const {
-        _tfbs_graph.print();
         return _posterior;
 }
 
@@ -228,6 +227,10 @@ DPM_TFBS::clustermanager() const {
         return _clustermanager;
 }
 
+const TfbsGraph&
+DPM_TFBS::graph() const {
+        return _tfbs_graph;
+}
 
 // misc methods
 ////////////////////////////////////////////////////////////////////////////////
