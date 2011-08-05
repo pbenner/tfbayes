@@ -128,18 +128,9 @@ public:
                                 for (std::list<const index_t*>::const_iterator is = it;
                                      is != binding_sites.end(); is++) {
                                         if (tfbs_start_positions[**is] == 1 && cluster_assignments[**is] == tag) {
-                                                tfbs_start_positions[**is] = 0;
                                                 _edges[edge_t(**it, **is)]++;
                                         }
                                 }
-                        }
-                }
-        }
-        void print() const {
-                for (map_t::const_iterator it = _edges.begin();
-                     it != _edges.end(); it++) {
-                        if ((*it).second >= 10) {
-                                std::cout << (*it).first.index1 << ":" << (*it).first.index2 << " -> " << (*it).second << std::endl;
                         }
                 }
         }

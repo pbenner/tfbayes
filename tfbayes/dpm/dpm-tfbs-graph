@@ -111,7 +111,7 @@ def plot_graph(edges):
 
     nx.draw(G, pos, node_size=[200*G.degree(v) for v in G], alpha=0.6, cmap=pyplot.cm.Reds_r)
     nx.draw_networkx_edges(G, pos, width=edgewidth, edge_color='r', alpha=0.2)
-    print nx.clustering(G)
+#    print nx.clustering(G)
 
     pyplot.show()
 
