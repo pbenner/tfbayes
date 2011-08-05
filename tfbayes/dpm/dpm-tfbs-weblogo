@@ -108,10 +108,7 @@ def main():
     if len(tail) != 1:
         usage()
         return 1
-    if options['plot']:
-        plot_motif(tail[0])
-    else:
-        read_config(tail[0])
+    read_config(tail[0])
     return 0
 
 if __name__ == "__main__":
