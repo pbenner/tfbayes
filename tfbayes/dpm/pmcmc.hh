@@ -46,6 +46,7 @@ public:
 
         const sampling_history_t& sampling_history() const;
         const posterior_t& posterior() const;
+        size_t sampling_steps() const;
 
 private:
         std::vector<Sampler*> _population;

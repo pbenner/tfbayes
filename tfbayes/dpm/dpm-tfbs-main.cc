@@ -151,7 +151,7 @@ ostream& operator<< (ostream& o, const ProductDirichlet& pd) {
 }
 
 static
-void save_motifs(ostream& file, const DPM_TFBS& dpm)
+void save_motifs(ostream& file, const DPM_TFBS& dpm, size_t n)
 {
         const ClusterManager& cm = dpm.clustermanager();
         const TfbsGraph& graph   = dpm.graph();
@@ -172,7 +172,9 @@ void save_motifs(ostream& file, const DPM_TFBS& dpm)
         for (TfbsGraph::const_iterator it = graph.begin();
              it != graph.end(); it++) {
                 if ((*it).second > 1) {
-                        file << (*it).first.index1 << "-" << (*it).first.index2 << "=" << (*it).second << " ";
+                        file << (*it).first.index1 << "-"
+                             << (*it).first.index2 << "="
+                             << static_cast<double>((*it).second)/static_cast<double>(n) << " ";
                 }
         }
         file << endl;
@@ -240,13 +242,13 @@ void run_dpm(const char* file_name)
         // save result
         if (options.save == "") {
                 save_result(cout, pmcmc);
-                save_motifs(cout, gdpm);
+                save_motifs(cout, gdpm, sampler.sampling_steps());
         }
         else {
                 ofstream file;
                 file.open(options.save.c_str());
                 save_result(file, pmcmc);
-                save_motifs(file, gdpm);
+                save_motifs(file, gdpm, sampler.sampling_steps());
                 file.close();
         }
 

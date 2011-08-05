@@ -1,0 +1,156 @@
+#! /usr/bin/env python
+
+# imports
+# ------------------------------------------------------------------------------
+
+import re
+import math
+import time
+import ConfigParser
+import sys
+import getopt
+import os
+
+import networkx as nx
+try:
+    from networkx import graphviz_layout
+except ImportError:
+    raise ImportError("This example needs Graphviz and either PyGraphviz or Pydot")
+
+import numpy               as     np
+import numpy.random.mtrand as     mt
+import numpy.random        as     rd
+
+from tfbayes.fasta import fasta
+
+def importMatplotlib(backend=None):
+    global pyplot
+    global NonUniformImage
+    global PdfPages
+    global patches
+    global path
+    from matplotlib import use
+    if backend:
+        use(backend)
+    import matplotlib.pyplot   as     pyplot
+    from   matplotlib.image    import NonUniformImage
+    from   matplotlib.backends.backend_pdf import PdfPages
+    import matplotlib.patches  as     patches
+    import matplotlib.path     as     path
+
+# global options
+# ------------------------------------------------------------------------------
+
+options = {
+    'threshold'   : 0.005,
+    'save'        : None,
+    'interactive' : False,
+    'verbose'     : False,
+    }
+
+# usage
+# ------------------------------------------------------------------------------
+
+def usage():
+    """Print usage."""
+    print
+    print "dpm-tfbs-graph [option]... RESULT"
+    print
+    print "Options:"
+    print "   -s, --save=FILE                - save plot to FILE"
+    print "       --threshold=DOUBLE         - cut edges that are below threshold"
+    print
+    print "   -h, --help                     - print help"
+    print "   -v, --verbose                  - be verbose"
+    print
+
+# parse results config
+# ------------------------------------------------------------------------------
+
+def readVector(config, section, option, converter):
+    vector_str = config.get(section, option)
+    vector     = map(converter, vector_str.split(' '))
+    return vector
+
+def readMatrix(config, section, option, converter):
+    matrix_str = config.get(section, option)
+    matrix     = []
+    for line in matrix_str.split('\n'):
+        if line != '':
+            matrix.append([converter(a) for a in line.split(' ')])
+    return matrix
+
+def parse_config(config_file):
+    config_parser = ConfigParser.RawConfigParser()
+    config_parser.read(config_file)
+
+    edges = map(lambda s: s.strip(), readVector(config_parser, 'Cluster', 'graph', str))
+
+    return edges
+
+# plot
+# ------------------------------------------------------------------------------
+
+def plot_graph(edges):
+    G = nx.Graph()
+    for edge in edges:
+        e, w = edge.split('=')
+        a, b = e.split('-')
+        if float(w) > options['threshold']:
+            G.add_edge(a, b, weight=float(w))
+#    pos = nx.graphviz_layout(G,prog='twopi',args='')
+#    pos = nx.graphviz_layout(G,prog='dot',args='')
+#    pos = nx.graphviz_layout(G,prog='neato',args='')
+    pos = nx.graphviz_layout(G,prog='circo',args='')
+#    pos = nx.graphviz_layout(G,prog='nop',args='')
+#    pos = nx.spring_layout(G)
+    fig = pyplot.figure()
+    edgewidth=[]
+    for (u,v,d) in G.edges(data=True):
+        edgewidth.append(d['weight']*10.0)
+
+    nx.draw(G, pos, node_size=[200*G.degree(v) for v in G], alpha=0.6, cmap=pyplot.cm.Reds_r)
+    nx.draw_networkx_edges(G, pos, width=edgewidth, edge_color='r', alpha=0.2)
+    print nx.clustering(G)
+
+    pyplot.show()
+
+def plot_result(results_file):
+    if options['save']:
+        importMatplotlib('Agg')
+    else:
+        importMatplotlib()
+    edges = parse_config(results_file)
+    plot_graph(edges)
+
+# main
+# ------------------------------------------------------------------------------
+
+def main():
+    global options
+    try:
+        longopts   = ["help", "verbose", "save=", "threshold="]
+        opts, tail = getopt.getopt(sys.argv[1:], "s:", longopts)
+    except getopt.GetoptError:
+        usage()
+        return 2
+    output = None
+    for o, a in opts:
+        if o in ("-v", "--verbose"):
+            sys.stderr.write("Verbose mode turned on.\n")
+            options["verbose"] = True
+        if o in ("-h", "--help"):
+            usage()
+            return 0
+        if o in ("-s", "--save"):
+            options['save'] = a
+        if o == "--threshold":
+            options['threshold'] = float(a)
+    if len(tail) != 1:
+        usage()
+        return 1
+    plot_result(*tail)
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())

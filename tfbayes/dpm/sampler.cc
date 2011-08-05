@@ -93,6 +93,11 @@ GibbsSampler::posterior() const {
         return _dpm.posterior();
 }
 
+size_t
+GibbsSampler::sampling_steps() const {
+        return _sampling_steps;
+}
+
 void
 GibbsSampler::sample(size_t n, size_t burnin) {
         // burn in sampling

@@ -173,3 +173,8 @@ size_t
 PopulationMCMC::size() const {
         return _size;
 }
+
+size_t
+PopulationMCMC::sampling_steps() const {
+        return _population[0]->sampling_steps();
+}
