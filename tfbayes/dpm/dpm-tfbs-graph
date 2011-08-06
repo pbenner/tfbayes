@@ -128,6 +128,23 @@ def read_sequences(seq_file):
         sequences.append(seqfilter(line))
     return descriptions, sequences
 
+# pwm tools
+# ------------------------------------------------------------------------------
+
+def compute_frequencies(counts):
+    sums = [ sum(map(lambda m: m[j], counts)) for j in range(0, len(counts[0])) ]
+    return [ [ float(counts[i][j])/float(sums[j]) for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
+
+# R_sequence
+# ------------------------------------------------------------------------------
+
+def r_sequence(cluster_counts):
+    z = 1.0/float(len(cluster_counts[0]))
+    cluster_freq = compute_frequencies(cluster_counts)
+    return z*sum([ 2 + sum([ cluster_freq[i][j]*math.log(cluster_freq[i][j])
+                             for i in range(0, len(cluster_freq)) ])
+                   for j in range(0, len(cluster_freq[0])) ])
+
 # motif plotting
 # ------------------------------------------------------------------------------
 
@@ -149,8 +166,9 @@ class MotifStream():
 
 def plot_motifs(motifs, basename):
     for n, motif in zip(range(0, len(motifs)), motifs):
+        r_seq = r_sequence(motif)
         file_name = '%s_cluster_%d.png' % (basename, n)
-        title = 'cluster_%d' % n
+        title = 'cluster_%d, R_seq = %f' % (n, r_seq)
         stream = MotifStream(motif)
         m = Motif.Motif()
         m._from_horiz_matrix(stream, letters='ACGT')
