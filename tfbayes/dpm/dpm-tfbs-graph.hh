@@ -24,7 +24,7 @@
 
 #include <list>
 #include <map>
-#include <tr1/unordered_map>
+#include <boost/unordered_map.hpp> 
 
 #include <index.hh>
 #include <indexer.hh>
@@ -68,18 +68,12 @@ typedef struct _edge_t {
         const index_t& index2;
 } edge_t;
 
-namespace std {
-namespace tr1 {
-        template<>
-        class hash<edge_t>
-                : public unary_function<edge_t, size_t>
-        {
-        public:
-                size_t operator()(const edge_t& edge) const {
-                        return static_cast<size_t>(edge.index1[0] << sizeof(size_t)*4 & edge.index1[1]);
-                }
-        };
-}
+static
+size_t hash_value(const edge_t& edge)
+{
+        boost::hash<size_t> hasher;
+
+        return hasher(edge.index1[0] + edge.index1[1]);
 }
 
 class TfbsGraph {
@@ -88,7 +82,7 @@ public:
 
         // typedefs
         ////////////////////////////////////////////////////////////////////////////////
-        typedef std::tr1::unordered_map<edge_t, size_t> map_t;
+        typedef boost::unordered_map<edge_t, size_t> map_t;
 
         typedef map_t::iterator iterator;
         typedef map_t::const_iterator const_iterator;
