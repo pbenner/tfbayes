@@ -94,6 +94,9 @@ AC_CHECK_LIB([pthread], [pthread_create], LIB_PTHREAD="-lpthread",
 AC_SUBST(LIB_DB)
 AC_SUBST(LIB_PTHREAD)
 
+AX_BOOST_BASE([1.40.0],,
+	AC_MSG_ERROR([this library is required]))
+
 dnl ,---------------------------- 
 dnl | GETOPT_LONG
 dnl `----------------------------

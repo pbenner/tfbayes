@@ -44,6 +44,7 @@ def importMatplotlib(backend=None):
 
 options = {
     'threshold'   : 0.005,
+    'plot'        : False,
     'save'        : None,
     'interactive' : False,
     'verbose'     : False,
@@ -58,7 +59,8 @@ def usage():
     print "dpm-tfbs-graph [option]... RESULT SEQUENCES MOTIF_LENGTH"
     print
     print "Options:"
-    print "   -s, --save=FILE                - save plot to FILE"
+    print "   -p, --plot                     - plot motifs"
+    print "   -s, --save=FILE                - save motifs to FILE"
     print "       --threshold=DOUBLE         - cut edges that are below threshold"
     print
     print "   -h, --help                     - print help"
@@ -149,7 +151,7 @@ def plot_motif(counts_str, file_name, title):
 
 def generate_motif(sequences, Gi, motif_length):
     components = len(Gi)+1
-    maximum_degree  = max([ Gi.degree(v) for v in Gi ])
+    maximum_degree  = max([ Gi.degree(v, weighted=True) for v in Gi ])
     mixture_weights = [ float(components-1)/float(components)*float(Gi.degree(v))/float(maximum_degree) for v in Gi ]
     motif = [ [ 1.0/float(components) for j in range(0, motif_length) ] for i in range(0, 4) ]
     for node, weight in zip(Gi.nodes(), mixture_weights):
@@ -168,10 +170,14 @@ def generate_motif(sequences, Gi, motif_length):
 
 def generate_motifs(sequences, G, motif_length):
     Gcc = nx.connected_component_subgraphs(G)
+    motifs = []
     for n, Gi in zip(range(0, len(Gcc)), Gcc):
-        motif  = generate_motif(sequences, Gi, motif_length)
+        motifs.append(generate_motif(sequences, Gi, motif_length))
         counts = [ [ int(round(motif[i][j]*100)) for j in range(0, motif_length) ] for i in range(0, 4) ]
-        plot_motif(counts, 'cluster_'+str(n)+'.png', 'cluster_'+str(n)+':'+str(len(Gi)))
+        if options['plot']:
+            plot_motif(counts, 'cluster_'+str(n)+'.png', 'cluster_'+str(n)+':'+str(len(Gi)))
+        if options['save']:
+            save_motif(counts, 'cluster_'+str(n)+'.png', 'cluster_'+str(n)+':'+str(len(Gi)))
 
 # graph construction
 # ------------------------------------------------------------------------------
@@ -202,7 +208,7 @@ def plot_graph(G):
     max_weight = max(edgewidth)
     edgewidth  = [ weight/max_weight*10 for weight in edgewidth ]
 
-    nx.draw(G, pos, node_size=[200*G.degree(v) for v in G], alpha=0.6, cmap=pyplot.cm.Reds_r)
+    nx.draw(G, pos, node_size=[200*G.degree(v, weighted=True) for v in G], alpha=0.6, cmap=pyplot.cm.Reds_r)
     nx.draw_networkx_edges(G, pos, width=edgewidth, edge_color='r', alpha=0.2)
 
     pyplot.show()
@@ -221,14 +227,16 @@ def __main__(results_file, seq_file, motif_length):
     edges = parse_config(results_file)
     descriptions, sequences = read_sequences(seq_file)
     G = construct_graph(edges)
-    generate_motifs(sequences, G, int(motif_length))
-    plot_result(G)
+    if options['plot'] || options['save']:
+        generate_motifs(sequences, G, int(motif_length))
+    else:
+        plot_result(G)
 
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "save=", "threshold="]
-        opts, tail = getopt.getopt(sys.argv[1:], "s:", longopts)
+        longopts   = ["help", "verbose", "plot", "save=", "threshold="]
+        opts, tail = getopt.getopt(sys.argv[1:], "ps:", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -240,6 +248,8 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
+        if o in ("-p", "--plot"):
+            options['plot'] = True
         if o in ("-s", "--save"):
             options['save'] = a
         if o == "--threshold":
