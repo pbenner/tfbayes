@@ -68,7 +68,7 @@ typedef struct _edge_t {
         const index_t& index2;
 } edge_t;
 
-static
+static inline
 size_t hash_value(const edge_t& edge)
 {
         boost::hash<size_t> hasher;
