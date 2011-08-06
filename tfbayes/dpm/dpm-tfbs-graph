@@ -141,7 +141,7 @@ def compute_frequencies(counts):
 def r_sequence(cluster_counts):
     z = 1.0/float(len(cluster_counts[0]))
     cluster_freq = compute_frequencies(cluster_counts)
-    return z*sum([ 2 + sum([ cluster_freq[i][j]*math.log(cluster_freq[i][j])
+    return z*sum([ 2 + sum([ cluster_freq[i][j]*math.log(cluster_freq[i][j], 2)
                              for i in range(0, len(cluster_freq)) ])
                    for j in range(0, len(cluster_freq[0])) ])
 
