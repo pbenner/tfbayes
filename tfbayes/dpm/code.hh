@@ -54,7 +54,9 @@ bool is_nucleotide(char a);
 bool is_nucleotide_or_masked(char S);
 char code_nucleotide(char a);
 char decode_nucleotide(char a);
+char complement_nucleotide(char a);
 std::vector<short> code_nucleotide_sequence(const std::string& sequence) throw(InvalidNucleotide);
 std::vector<std::vector<short> > code_sequences(const std::vector<std::string>& sequences);
+std::vector<std::string> complement(const std::vector<std::string>& sequences);
 
 #endif /* CODE_HH */

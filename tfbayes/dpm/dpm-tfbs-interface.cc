@@ -36,6 +36,7 @@ using namespace std;
 
 static DPM_TFBS* _gdpm;
 static DataTFBS* _data;
+static DataTFBS* _data_comp;
 static GibbsSampler* _sampler;
 
 __BEGIN_C_REGION;
@@ -45,13 +46,16 @@ void _dpm_tfbs_init(double alpha, double lambda, int tfbs_length, int n, char *s
         __dpm_init__();
 
         vector<string> _sequences;
+        vector<string> _sequences_comp;
         for (size_t i = 0; i < (size_t)n; i++) {
                 _sequences.push_back(sequences[i]);
         }
+        _sequences_comp = complement(_sequences);
 
-        _data    = new DataTFBS(_sequences, (size_t)tfbs_length);
-        _gdpm    = new DPM_TFBS(alpha, lambda, (size_t)tfbs_length, *_data);
-        _sampler = new GibbsSampler(*_gdpm, *_data);
+        _data      = new DataTFBS(_sequences, (size_t)tfbs_length);
+        _data_comp = new DataTFBS(_sequences_comp, (size_t)tfbs_length);
+        _gdpm      = new DPM_TFBS(alpha, lambda, (size_t)tfbs_length, *_data, *_data_comp);
+        _sampler   = new GibbsSampler(*_gdpm, *_data);
 }
 
 unsigned int _dpm_tfbs_num_clusters() {

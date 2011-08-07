@@ -33,7 +33,7 @@
 
 class DPM_TFBS : public DPM {
 public:
-         DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const DataTFBS& data);
+         DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const DataTFBS& data, const DataTFBS& data_comp);
         ~DPM_TFBS();
 
         DPM_TFBS* clone() const;
@@ -74,6 +74,7 @@ private:
 
         // data and clusters
         const DataTFBS& _data;
+        const DataTFBS& _data_comp;
         sequence_data_t<cluster_tag_t> _cluster_assignments;
         ClusterManager   _clustermanager;
 
@@ -121,6 +122,22 @@ private:
                 for (size_t i = 0; i < length; i++) {
                         for (size_t j = 0; j < TFBS_CODING_LENGTH; j++) {
                                 if (j == 2 || j == 4 || j == 5 || j == 6) {
+                                        gsl_matrix_set(alpha, i, j, 0);
+                                }
+                                else {
+                                        gsl_matrix_set(alpha, i, j, 1);
+                                }
+                        }
+                }
+                return alpha;
+        }
+        static gsl_matrix* init_alpha_bg_rev(size_t length) {
+                gsl_matrix* alpha = gsl_matrix_alloc(length, TFBS_REV_CODING_LENGTH);
+
+                // initialize prior for the background model
+                for (size_t i = 0; i < length; i++) {
+                        for (size_t j = 0; j < TFBS_REV_CODING_LENGTH; j++) {
+                                if (j == 5 || j == 9 || j == 11 || j == 12 || j == 13) {
                                         gsl_matrix_set(alpha, i, j, 0);
                                 }
                                 else {

@@ -98,6 +98,33 @@ char decode_nucleotide(char a)
         exit(EXIT_FAILURE);
 }
 
+char complement_nucleotide(char a)
+{
+        switch (a) {
+        case 'A':
+                return 'T';
+        case 'a':
+                return 't';
+        case 'C':
+                return 'G';
+        case 'c':
+                return 'g';
+        case 'G':
+                return 'C';
+        case 'g':
+                return 'c';
+        case 'T':
+                return 'A';
+        case 't':
+                return 'a';
+        case 'N':
+                return 'N';
+        default:
+                break;
+        }
+        return -1;
+}
+
 vector<short> code_nucleotide_sequence(const string& sequence) throw(InvalidNucleotide)
 {
         size_t n = sequence.size();
@@ -127,4 +154,16 @@ vector<vector<short> > code_sequences(const vector<string>& sequences) {
                 }
         }
         return sequences_coded;
+}
+
+vector<string> complement(const vector<string>& sequences) {
+        vector<string> sequences_reversed;
+
+        for(size_t i = 0; i < sequences.size(); i++) {
+                sequences_reversed.push_back(string(sequences[i].size(), '\0'));
+                for(size_t j = 0; j < sequences[i].size(); j++) {
+                        sequences_reversed[i][j] = complement_nucleotide(sequences[i][j]);
+                }
+        }
+        return sequences_reversed;
 }

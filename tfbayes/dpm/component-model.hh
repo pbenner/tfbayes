@@ -91,7 +91,9 @@ private:
 
 class ProductRevDirichlet : public ComponentModel {
 public:
-         ProductRevDirichlet(gsl_matrix* alpha, const sequence_data_t<short>& data);
+         ProductRevDirichlet(gsl_matrix* alpha,
+                             const sequence_data_t<short>& data,
+                             const sequence_data_t<short>& data_comp);
          ProductRevDirichlet(const ProductRevDirichlet& distribution);
         ~ProductRevDirichlet();
 
@@ -115,6 +117,7 @@ private:
         counts_t counts;
 
         const sequence_data_t<short>& _data;
+        const sequence_data_t<short>& _data_comp;
 
         const size_t _size1;
         const size_t _size2;

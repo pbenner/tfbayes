@@ -140,6 +140,20 @@ char * readfile(const char* file_name, vector<string>& sequences)
 
 ostream& operator<< (ostream& o, const ProductDirichlet& pd) {
         for (size_t j = 0; j < pd.alpha[0].size() - 1; j++) {
+                if (j != 2 && j != 4 && j != 5 && j != 6) {
+                        o << "\t";
+                        for (size_t i = 0; i < pd.alpha.size(); i++) {
+                                o << pd.alpha[i][j] + pd.counts[i][j] << " ";
+                        }
+                        o << endl;
+                }
+        }
+
+        return o;
+}
+
+ostream& operator<< (ostream& o, const ProductRevDirichlet& pd) {
+        for (size_t j = 0; j < pd.alpha[0].size(); j++) {
                 o << "\t";
                 for (size_t i = 0; i < pd.alpha.size(); i++) {
                         o << pd.alpha[i][j] + pd.counts[i][j] << " ";
@@ -156,7 +170,6 @@ void save_motifs(ostream& file, const DPM_TFBS& dpm, size_t n)
         const ClusterManager& cm = dpm.clustermanager();
         const TfbsGraph& graph   = dpm.graph();
 
-        file << "cluster = ";
         for (ClusterManager::const_iterator it = cm.begin();
              it != cm.end(); it++) {
                 if ((*it)->tag() == 0) {
@@ -220,13 +233,16 @@ static
 void run_dpm(const char* file_name)
 {
         vector<string> sequences;
+        vector<string> sequences_comp;
 
         // read sequences
         readfile(file_name, sequences);
+        sequences_comp = complement(sequences);
 
         // create data, dpm, and sampler objects
         DataTFBS& data = *new DataTFBS(sequences, options.tfbs_length);
-        DPM_TFBS& gdpm = *new DPM_TFBS(options.alpha, options.lambda, options.tfbs_length, data);
+        DataTFBS& data_comp = *new DataTFBS(sequences_comp, options.tfbs_length);
+        DPM_TFBS& gdpm = *new DPM_TFBS(options.alpha, options.lambda, options.tfbs_length, data, data_comp);
         GibbsSampler& sampler = *new GibbsSampler(gdpm, data);
         PopulationMCMC& pmcmc = *new PopulationMCMC(sampler, options.population_size);
 

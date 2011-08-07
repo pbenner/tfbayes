@@ -36,7 +36,7 @@ GibbsSampler::GibbsSampler(DPM& dpm, const Indexer& indexer)
         _sampling_history.components.push_back(vector<size_t>());
         _sampling_history.switches[0].push_back(0);
         _sampling_history.likelihood[0].push_back(_dpm.likelihood());
-        _sampling_history.components[0].push_back(0);
+        _sampling_history.components[0].push_back(1);
 }
 
 GibbsSampler::GibbsSampler(const GibbsSampler& sampler)
