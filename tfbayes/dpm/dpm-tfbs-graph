@@ -255,6 +255,7 @@ def plot_graph(G):
 #    pos = nx.graphviz_layout(G, prog='nop', args='')
 #    pos = nx.spring_layout(G)
     fig = pyplot.figure()
+    ax  = fig.add_subplot(1,1,1)
     edgewidth=[]
     for (u, v, d) in G.edges(data = True):
         edgewidth.append(d['weight'])
@@ -265,11 +266,11 @@ def plot_graph(G):
     Gcc = nx.connected_component_subgraphs(G)
     for n, Gi in zip(range(0, len(Gcc)), Gcc):
         center = map(lambda x: sum(x)/float(len(x)), zip(*[ pos[node] for node in Gi ]))
-        pyplot.text(center[0], center[1]+10, 'Cluster %d' % n, font, alpha=0.2)
+        ax.text(center[0], center[1]+10, 'Cluster %d' % n, font, alpha=0.2)
 
     # plot graph
-    nx.draw(G, pos, node_size=[5000*G.degree(v, weighted=True) for v in G], alpha=0.6, cmap=pyplot.cm.Reds_r)
-    nx.draw_networkx_edges(G, pos, width=edgewidth, edge_color='r', alpha=0.2)
+    nx.draw(G, pos, node_size=[50*G.degree(v, weighted=True) for v in G], alpha=0.6, cmap=pyplot.cm.Reds_r, ax=ax)
+    nx.draw_networkx_edges(G, pos, width=edgewidth, edge_color='r', alpha=0.2, ax=ax)
 
     pyplot.show()
 

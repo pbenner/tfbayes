@@ -37,8 +37,8 @@ DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const DataTF
         : // length of tfbs
           TFBS_LENGTH(tfbs_length),
           // priors
-          bg_alpha(init_alpha(BG_LENGTH)),
-          tfbs_alpha(init_alpha(TFBS_LENGTH)),
+          bg_alpha(init_alpha_bg(BG_LENGTH)),
+          tfbs_alpha(init_alpha_tfbs(TFBS_LENGTH)),
           // raw sequences
           _data(data),
           // cluster manager

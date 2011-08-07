@@ -74,7 +74,7 @@ ProductDirichlet::add(const range_t& range) {
 
         for (i = 0;; i++) {
                 counts[i%_size1][*iterator]++;
-                counts[i%_size1][4]++;
+                counts[i%_size1][_size2]++;
                 if (!iterator++) break;
         }
         return (i+1)/_size1;
@@ -87,7 +87,7 @@ ProductDirichlet::remove(const range_t& range) {
 
         for (i = 0;; i++) {
                 counts[i%_size1][*iterator]--;
-                counts[i%_size1][4]--;
+                counts[i%_size1][_size2]--;
                 if (!iterator++) break;
         }
         return (i+1)/_size1;
@@ -103,7 +103,7 @@ double ProductDirichlet::pdf(const range_t& range) const {
         double result = 1;
 
         for (size_t i = 0;; i=(i+1)%_size1) {
-                result *= (counts[i][*iterator]+alpha[i][*iterator])/(counts[i][4]+alpha[i][4]);
+                result *= (counts[i][*iterator]+alpha[i][*iterator])/(counts[i][_size2]+alpha[i][_size2]);
                 if (!iterator++) break;
         }
         return result;
@@ -114,7 +114,7 @@ double ProductDirichlet::log_pdf(const range_t& range) const {
         double result = 0;
 
         for (size_t i = 0;; i=(i+1)%_size1) {
-                result += fastlog(counts[i][*iterator]+alpha[i][*iterator]) - fastlog(counts[i][4]+alpha[i][4]);
+                result += fastlog(counts[i][*iterator]+alpha[i][*iterator]) - fastlog(counts[i][_size2]+alpha[i][_size2]);
                 if (!iterator++) break;
         }
         return result;
@@ -128,7 +128,7 @@ double ProductDirichlet::log_likelihood() const {
 
         for (size_t j = 0; j < _size1; j++) {
                 for (size_t k = 0; k < _size2; k++) {
-                        result += counts[j][k]*(fastlog(counts[j][k]+alpha[j][k]) - fastlog(counts[j][4]+alpha[j][4]));
+                        result += counts[j][k]*(fastlog(counts[j][k]+alpha[j][k]) - fastlog(counts[j][_size2]+alpha[j][_size2]));
                 }
         }
         return result;

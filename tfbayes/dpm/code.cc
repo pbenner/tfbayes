@@ -59,14 +59,14 @@ char code_nucleotide(char a)
         break;
         case 'G':
         case 'g':
-                return 2;
+                return 3;
         break;
         case 'T':
         case 't':
-                return 3;
+                return 7;
         break;
         case 'N':
-                return 4;
+                return 5;
         default:
                 break;
         }
@@ -82,13 +82,13 @@ char decode_nucleotide(char a)
         case 1:
                 return 'C';
         break;
-        case 2:
+        case 3:
                 return 'G';
         break;
-        case 3:
+        case 7:
                 return 'T';
         break;
-        case 4:
+        case 5:
                 return 'N';
         default:
                 break;

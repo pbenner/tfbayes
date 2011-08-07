@@ -63,7 +63,9 @@ public:
         ////////////////////////////////////////////////////////////////////////
         static const size_t BG_LENGTH   = 1;
                const size_t TFBS_LENGTH;
-        static const size_t NUCLEOTIDES = 4;
+        static const size_t BG_CODING_LENGTH = 8;
+        static const size_t TFBS_CODING_LENGTH = 8;
+        static const size_t TFBS_REV_CODING_LENGTH = 15;
 
 private:
         // priors
@@ -96,16 +98,53 @@ private:
         size_t num_tfbs;
 
         // standard priors
-        static gsl_matrix* init_alpha(size_t length) {
-                gsl_matrix* bg_alpha = gsl_matrix_alloc(length, DPM_TFBS::NUCLEOTIDES);
+        static gsl_matrix* init_alpha_bg(size_t length) {
+                gsl_matrix* alpha = gsl_matrix_alloc(length, BG_CODING_LENGTH);
 
                 // initialize prior for the background model
                 for (size_t i = 0; i < length; i++) {
-                        for (size_t j = 0; j < DPM_TFBS::NUCLEOTIDES; j++) {
-                                gsl_matrix_set(bg_alpha, i, j, 1);
+                        for (size_t j = 0; j < BG_CODING_LENGTH; j++) {
+                                if (j == 2 || j == 4 || j == 5 || j == 6) {
+                                        gsl_matrix_set(alpha, i, j, 0);
+                                }
+                                else {
+                                        gsl_matrix_set(alpha, i, j, 1);
+                                }
                         }
                 }
-                return bg_alpha;
+                return alpha;
+        }
+        static gsl_matrix* init_alpha_tfbs(size_t length) {
+                gsl_matrix* alpha = gsl_matrix_alloc(length, TFBS_CODING_LENGTH);
+
+                // initialize prior for the background model
+                for (size_t i = 0; i < length; i++) {
+                        for (size_t j = 0; j < TFBS_CODING_LENGTH; j++) {
+                                if (j == 2 || j == 4 || j == 5 || j == 6) {
+                                        gsl_matrix_set(alpha, i, j, 0);
+                                }
+                                else {
+                                        gsl_matrix_set(alpha, i, j, 1);
+                                }
+                        }
+                }
+                return alpha;
+        }
+        static gsl_matrix* init_alpha_tfbs_rev(size_t length) {
+                gsl_matrix* alpha = gsl_matrix_alloc(length, TFBS_REV_CODING_LENGTH);
+
+                // initialize prior for the background model
+                for (size_t i = 0; i < length; i++) {
+                        for (size_t j = 0; j < TFBS_REV_CODING_LENGTH; j++) {
+                                if (j == 5 || j == 9 || j == 11 || j == 12 || j == 13) {
+                                        gsl_matrix_set(alpha, i, j, 0);
+                                }
+                                else {
+                                        gsl_matrix_set(alpha, i, j, 1);
+                                }
+                        }
+                }
+                return alpha;
         }
 };
 
