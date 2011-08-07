@@ -90,10 +90,10 @@ public:
         // iterators
         ////////////////////////////////////////////////////////////////////////////////
         iterator begin() { return _edges.begin(); }
-        iterator end()   { return _edges.end(); }
+        iterator end()   { return _edges.end();   }
 
         const_iterator begin() const { return _edges.begin(); }
-        const_iterator end()   const { return _edges.end(); }
+        const_iterator end()   const { return _edges.end();   }
 
         // methods
         ////////////////////////////////////////////////////////////////////////////////
@@ -125,6 +125,17 @@ public:
                                                 _edges[edge_t(**it, **is)]++;
                                         }
                                 }
+                        }
+                }
+        }
+        void cleanup(size_t threshold) {
+                for (map_t::const_iterator it = _edges.begin();
+                     it != _edges.end();) {
+                        if ((*it).second <= threshold) {
+                                it = _edges.erase(it);
+                        }
+                        else {
+                                it++;
                         }
                 }
         }

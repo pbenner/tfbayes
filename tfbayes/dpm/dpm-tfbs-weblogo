@@ -19,7 +19,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-weblogo [option]... CONFIG"
+    print "dpm-tfbs-weblogo [option]... CLUSTER_CONFIG"
     print
     print "Options:"
     print "   -h, --help                     - print help"

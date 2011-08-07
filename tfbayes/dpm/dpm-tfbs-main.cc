@@ -156,26 +156,20 @@ void save_motifs(ostream& file, const DPM_TFBS& dpm, size_t n)
         const ClusterManager& cm = dpm.clustermanager();
         const TfbsGraph& graph   = dpm.graph();
 
-        file << "[Cluster]" << endl;
         file << "cluster = ";
         for (ClusterManager::const_iterator it = cm.begin();
              it != cm.end(); it++) {
-                file << "cluster_" << (*it)->tag() << ":" << (*it)->size() << " ";
-        }
-        file << endl;
-        for (ClusterManager::const_iterator it = cm.begin();
-             it != cm.end(); it++) {
-                file << "cluster_" << (*it)->tag() << " =" << endl;
-                file << static_cast<const ProductDirichlet&>((*it)->model());
+                if ((*it)->tag() == 0) {
+                        file << "cluster_bg" << " =" << endl;
+                        file << static_cast<const ProductDirichlet&>((*it)->model());
+                }
         }
         file << "graph = ";
         for (TfbsGraph::const_iterator it = graph.begin();
              it != graph.end(); it++) {
-                if ((*it).second > 1) {
-                        file << (*it).first.index1 << "-"
-                             << (*it).first.index2 << "="
-                             << static_cast<double>((*it).second)/static_cast<double>(n) << " ";
-                }
+                file << (*it).first.index1 << "-"
+                     << (*it).first.index2 << "="
+                     << static_cast<double>((*it).second)/static_cast<double>(n) << " ";
         }
         file << endl;
 }

@@ -128,7 +128,9 @@ double ProductDirichlet::log_likelihood() const {
 
         for (size_t j = 0; j < _size1; j++) {
                 for (size_t k = 0; k < _size2; k++) {
-                        result += counts[j][k]*(fastlog(counts[j][k]+alpha[j][k]) - fastlog(counts[j][_size2]+alpha[j][_size2]));
+                        if (alpha[j][k] != 0) {
+                                result += counts[j][k]*(fastlog(counts[j][k]+alpha[j][k]) - fastlog(counts[j][_size2]+alpha[j][_size2]));
+                        }
                 }
         }
         return result;

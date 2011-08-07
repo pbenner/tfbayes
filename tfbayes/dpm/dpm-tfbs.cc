@@ -193,6 +193,9 @@ DPM_TFBS::likelihood() const {
 
 void
 DPM_TFBS::update_posterior(size_t sampling_steps) {
+        if (sampling_steps % 100 == 0) {
+                _tfbs_graph.cleanup(1);
+        }
         for (DataTFBS::const_iterator it = _data.begin();
              it != _data.end(); it++) {
                 const index_t& index  = *it;
