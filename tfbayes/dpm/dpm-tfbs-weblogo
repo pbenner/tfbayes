@@ -2,6 +2,7 @@
 
 import ConfigParser
 import getopt
+import math
 import os
 import sys
 import Bio.Motif as Motif
@@ -19,22 +20,38 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-weblogo [option]... CLUSTER_CONFIG"
+    print "dpm-tfbs-weblogo [option]... CLUSTER_CONFIG [CLUSTER_NAME]"
     print
     print "Options:"
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
     print
 
+# pwm tools
+# ------------------------------------------------------------------------------
+
+def compute_frequencies(counts):
+    sums = [ sum(map(lambda m: m[j], counts)) for j in range(0, len(counts[0])) ]
+    return [ [ float(counts[i][j])/float(sums[j]) for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
+
+# R_sequence
+# ------------------------------------------------------------------------------
+
+def r_sequence(cluster_counts):
+    z = 1.0/float(len(cluster_counts[0]))
+    cluster_freq = compute_frequencies(cluster_counts)
+    return z*sum([ 2 + sum([ cluster_freq[i][j]*math.log(cluster_freq[i][j], 2)
+                             for i in range(0, len(cluster_freq)) ])
+                   for j in range(0, len(cluster_freq[0])) ])
+
 # motif plotting
 # ------------------------------------------------------------------------------
 
 class MotifStream():
-    def __init__(self, counts_str):
+    def __init__(self, counts):
         self.counts = []
-        for line in counts_str.splitlines(True):
-            if line != '\n':
-                self.counts.append(line)
+        for line in counts:
+            self.counts.append(' '.join(map(str, line)))
         self.counts.append('\n')
         self.counts.append('\n')
         self.i      = 0
@@ -46,8 +63,8 @@ class MotifStream():
         else:
             return None
 
-def plot_motif(counts_str, file_name, title):
-    stream = MotifStream(counts_str)
+def plot_motif(counts, file_name, title):
+    stream = MotifStream(counts)
     m = Motif.Motif()
     m._from_horiz_matrix(stream, letters='ACGT')
     m.weblogo(file_name, title=title)
@@ -55,12 +72,12 @@ def plot_motif(counts_str, file_name, title):
 # parse results config
 # ------------------------------------------------------------------------------
 
-def readVector(config, section, option, converter):
+def read_vector(config, section, option, converter):
     vector_str = config.get(section, option)
     vector     = map(converter, vector_str.split(' '))
     return vector
 
-def readMatrix(config, section, option, converter):
+def read_matrix(config, section, option, converter):
     matrix_str = config.get(section, option)
     matrix     = []
     for line in matrix_str.split('\n'):
@@ -68,23 +85,22 @@ def readMatrix(config, section, option, converter):
             matrix.append([converter(a) for a in line.split(' ')])
     return matrix
 
-def read_counts(config_parser, c_name):
-    counts_str = config_parser.get('Cluster', c_name)
-    return counts_str+'\n'
-
-def read_config(config_file):
+def read_config(config_file, cluster_name):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
     if not config_parser.has_section('Cluster'):
         raise IOError("Invalid configuration file.")
-    cluster = readVector(config_parser, 'Cluster', 'cluster', str)
-    for c in cluster:
-        c_name = c.split(':')[0]
-        if c_name != 'cluster_0':
-            counts_str = read_counts(config_parser, c_name)
-            file_name  = os.path.splitext(config_file)[0]+'_'+c_name+'.png'
-            print 'Generating '+file_name+'...'
-            plot_motif(counts_str, file_name, c)
+    if cluster_name:
+        cluster_list = [cluster_name]
+    else:
+        cluster_list = readVector(config_parser, 'Cluster', 'cluster', str)
+    for cluster in cluster_list:
+        counts = read_matrix(config_parser, 'Cluster', cluster, int)
+        components = config_parser.get('Cluster', '%s_components' % cluster)
+        r_seq = r_sequence(counts)
+        file_name  = os.path.splitext(config_file)[0]+'_'+cluster+'.png'
+        print 'Generating %s...' % file_name
+        plot_motif(counts, file_name, '%s:%s, R_seq = %f' % (cluster, components, r_seq))
 
 # main
 # ------------------------------------------------------------------------------
@@ -105,10 +121,13 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
-    if len(tail) != 1:
+    if len(tail) == 1:
+        read_config(tail[0], None)
+    if len(tail) == 2:
+        read_config(tail[0], tail[1])
+    else:
         usage()
         return 1
-    read_config(tail[0])
     return 0
 
 if __name__ == "__main__":

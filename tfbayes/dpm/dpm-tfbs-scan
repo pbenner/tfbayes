@@ -22,7 +22,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-scan [option]... CONFIG CLUSTER SEQUENCES_FILE"
+    print "dpm-tfbs-scan [option]... CLUSTER_CONFIG CLUSTER_NAMESEQUENCES_FASTA"
     print
     print "Options:"
     print "       --threshold=VALUE"
@@ -60,18 +60,18 @@ def scan(pwm, sequences_file):
             score = compute_score(pwm, sub_sequence)
             if score > options['threshold']:
                 hits += 1
-                print "(%15s,%12s,%05i%3.5f): %s" % (description[0], description[2], j, score, sub_sequence)
+                print "(%15s,%12s,%05i,%3.5f): %s" % (description[0], description[2], j, score, sub_sequence)
     print "Found %d sequences." % hits
 
 # compute pwm
 # ------------------------------------------------------------------------------
 
-def readVector(config, section, option, converter):
+def read_vector(config, section, option, converter):
     vector_str = config.get(section, option)
     vector     = map(converter, vector_str.split(' '))
     return vector
 
-def readMatrix(config, section, option, converter):
+def read_matrix(config, section, option, converter):
     matrix_str = config.get(section, option)
     matrix     = []
     for line in matrix_str.split('\n'):
@@ -84,8 +84,8 @@ def compute_frequencies(counts):
     return [ [ float(counts[i][j])/sums[j]    for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
 
 def compute_pwm(config_parser, cluster_name):
-    bg_counts   = readMatrix(config_parser, 'Cluster', 'cluster_0',  int)
-    tfbs_counts = readMatrix(config_parser, 'Cluster', cluster_name, int)
+    bg_counts   = read_matrix(config_parser, 'Cluster', 'cluster_bg',  int)
+    tfbs_counts = read_matrix(config_parser, 'Cluster', cluster_name, int)
     bg_freq     = compute_frequencies(bg_counts)
     tfbs_freq   = compute_frequencies(tfbs_counts)
     return [ [ math.log(tfbs_freq[i][j]/bg_freq[i][0], 2) for j in range(0, len(tfbs_freq[0])) ] for i in range(0, len(tfbs_freq)) ]
