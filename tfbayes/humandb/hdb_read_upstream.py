@@ -86,7 +86,7 @@ def loadConfig(config_file, seq, pos, num):
     if not int(seq) > 0 and int(seq) > database['sequences']:
         raise IOError("Invalid sequence number.")
 
-    interface.hdb_init('hdb-read-upstream')
+    interface.hdb_init('hdb-read-upstream', 1)
     dbp = interface.hdb_open_ro(database['database'], seq)
     if options['pure']:
         sequence = interface.hdb_get_sequence_pure(dbp, pos, num)

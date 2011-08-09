@@ -31,6 +31,7 @@
 
 #include "humandb.h"
 
+static size_t _num_threads;
 static char* _program_name;
 static FILE* _error_file_pointer;
 
@@ -44,6 +45,11 @@ static u_int32_t num_records(DB* dbp)
         free(sp);
 
         return num;
+}
+
+void hdb_set_num_threads(size_t num_threads)
+{
+        _num_threads = num_threads;
 }
 
 void hdb_set_program_name(const char* program_name)
@@ -314,9 +320,9 @@ static void* hdb_search_pwm_thread(void* data_)
 
 int hdb_search_pwm(DB* dbp_list[], const int dbp_list_n, const char* db_names[], const Matrix* pwm, const double threshold)
 {
-        pthread_t threads[dbp_list_n];
+        pthread_t threads[_num_threads];
         pthread_pwm_data data[dbp_list_n];
-        int i, rc;
+        int i, j, rc;
 
         for (i = 0; i < dbp_list_n; i++) {
                 data[i].dbp       = dbp_list[i];
@@ -324,15 +330,20 @@ int hdb_search_pwm(DB* dbp_list[], const int dbp_list_n, const char* db_names[],
                 data[i].pwm       = pwm;
                 data[i].threshold = threshold;
                 data[i].thread_id = i;
-                rc = pthread_create(&threads[i], NULL, hdb_search_pwm_thread, (void *)&data[i]);
-                if (rc) {
-                        std_err(NONE, "Couldn't create thread.");
-                }
         }
-        for (i = 0; i < dbp_list_n; i++) {
-                rc = pthread_join(threads[i], NULL);
-                if (rc) {
-                        std_err(NONE, "Couldn't join thread.");
+        for (i = 0; i < dbp_list_n; i += _num_threads) {
+                for (j = 0; j < _num_threads && i+j < dbp_list_n; j++) {
+
+                        rc = pthread_create(&threads[j], NULL, hdb_search_pwm_thread, (void *)&data[i+j]);
+                        if (rc) {
+                                std_err(NONE, "Couldn't create thread.");
+                        }
+                }
+                for (j = 0; j < _num_threads && i+j < dbp_list_n; j++) {
+                        rc = pthread_join(threads[j], NULL);
+                        if (rc) {
+                                std_err(NONE, "Couldn't join thread.");
+                        }
                 }
         }
 
@@ -398,9 +409,9 @@ static void* hdb_search_thread(void* data_)
 
 int hdb_search(DB* dbp_list[], const int dbp_list_n, const char* db_names[], const char* pattern, const int pattern_n)
 {
-        pthread_t threads[dbp_list_n];
+        pthread_t threads[_num_threads];
         pthread_data data[dbp_list_n];
-        int i, rc;
+        int i, j, rc;
 
         for (i = 0; i < dbp_list_n; i++) {
                 data[i].dbp       = dbp_list[i];
@@ -408,15 +419,21 @@ int hdb_search(DB* dbp_list[], const int dbp_list_n, const char* db_names[], con
                 data[i].pattern   = pattern;
                 data[i].pattern_n = pattern_n;
                 data[i].thread_id = i;
-                rc = pthread_create(&threads[i], NULL, hdb_search_thread, (void *)&data[i]);
-                if (rc) {
-                        std_err(NONE, "Couldn't create thread.");
-                }
         }
-        for (i = 0; i < dbp_list_n; i++) {
-                rc = pthread_join(threads[i], NULL);
-                if (rc) {
-                        std_err(NONE, "Couldn't join thread.");
+
+        for (i = 0; i < dbp_list_n; i += _num_threads) {
+                for (j = 0; j < _num_threads && i+j < dbp_list_n; j++) {
+                        rc = pthread_create(&threads[j], NULL, hdb_search_thread, (void *)&data[i+j]);
+                        if (rc) {
+                                std_err(NONE, "Couldn't create thread.");
+                        }
+
+                }
+                for (j = 0; j < _num_threads && i+j < dbp_list_n; j++) {
+                        rc = pthread_join(threads[j], NULL);
+                        if (rc) {
+                                std_err(NONE, "Couldn't join thread.");
+                        }
                 }
         }
 

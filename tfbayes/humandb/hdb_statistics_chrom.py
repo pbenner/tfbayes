@@ -141,7 +141,7 @@ def loadConfig(config_file, filename):
         fp.close()
 
     directory = os.path.dirname(config_file)
-    interface.hdb_init('hdb-statistics-chrom')
+    interface.hdb_init('hdb-statistics-chrom', 1)
 
     parseFile(filename, directory, database)
 

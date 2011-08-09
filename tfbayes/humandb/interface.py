@@ -136,9 +136,10 @@ def getMatrix(c_m):
 # 
 # ------------------------------------------------------------------------------
 
-def hdb_init(program_name):
+def hdb_init(program_name, num_threads):
+     c_num_threads  = c_int(num_threads)
      c_program_name = c_char_p(program_name)
-     _lib._hdb_init(c_program_name)
+     _lib._hdb_init(c_program_name, c_num_threads)
 
 def hdb_free():
      _lib._hdb_free()

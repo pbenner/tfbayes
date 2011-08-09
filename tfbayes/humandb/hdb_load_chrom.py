@@ -84,7 +84,7 @@ def loadConfig(config_file, input_file, chrom_name):
         exit(1)
 
     directory = os.path.dirname(config_file)
-    interface.hdb_init('hdb-load-chrom')
+    interface.hdb_init('hdb-load-chrom', 1)
     dbp = interface.hdb_create(os.path.join(directory, database['database']), chrom_name)
     interface.hdb_load_maf(dbp, input_file)
     interface.hdb_close(dbp)

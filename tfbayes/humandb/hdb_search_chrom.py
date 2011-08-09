@@ -55,8 +55,10 @@ def usage():
     print "hdb-search-chrom [option]... DATABASE_CONFIG"
     print
     print "Options:"
-    print "   -p=CLUSTER_NAME:CLUSTER.cfg    - search for pwm match"
+    print "   -p=CLUSTER.cfg:CLUSTER_NAME    - search for pwm match"
     print "   -s=SEQUENCE                    - search for exact match of a sequence"
+    print
+    print "       --threshold=THRESHOLD      - threshold for PWM matching"
     print
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
@@ -83,7 +85,7 @@ def compute_frequencies(counts):
     return [ [ float(counts[i][j])/sums[j]    for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
 
 def compute_pwm(config_parser, cluster_name):
-    bg_counts   = readMatrix(config_parser, 'Cluster', 'cluster_0',  int)
+    bg_counts   = readMatrix(config_parser, 'Cluster', 'cluster_bg',  int)
     tfbs_counts = readMatrix(config_parser, 'Cluster', cluster_name, int)
     bg_freq     = compute_frequencies(bg_counts)
     tfbs_freq   = compute_frequencies(tfbs_counts)
@@ -126,7 +128,7 @@ def loadConfig(config_file):
         fp.close()
 
     directory = os.path.dirname(config_file)
-    interface.hdb_init('hdb-search-chrom')
+    interface.hdb_init('hdb-search-chrom', 1)
     dbp_list = []
     for chrom_name in database['chromosomes']:
         dbp_list.append(interface.hdb_open_ro(os.path.join(directory, database['database']), chrom_name))

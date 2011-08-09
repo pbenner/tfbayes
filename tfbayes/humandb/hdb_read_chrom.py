@@ -90,7 +90,7 @@ def loadConfig(config_file, chrom_name, pos, num):
         exit(1)
 
     directory = os.path.dirname(config_file)
-    interface.hdb_init('hdb-read-chrom')
+    interface.hdb_init('hdb-read-chrom', 1)
     dbp = interface.hdb_open_ro(os.path.join(directory, database['database']), chrom_name)
     if options['pure']:
         sequence = interface.hdb_get_sequence_pure(dbp, pos, num)

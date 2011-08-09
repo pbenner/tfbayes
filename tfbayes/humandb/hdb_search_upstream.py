@@ -62,7 +62,7 @@ def loadConfig(config_file, sequence, seq_num):
     dbp_list  = []
     db_names  = []
 
-    interface.hdb_init('hdb-search-seq')
+    interface.hdb_init('hdb-search-seq', 1)
     for database_id, database_file in databases:
         dbp_list.append(interface.hdb_open_ro(database_file, seq_num))
         db_names.append(database_file)

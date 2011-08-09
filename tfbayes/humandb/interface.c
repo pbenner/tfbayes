@@ -38,8 +38,9 @@ Matrix * _allocMatrix(int rows, int columns) { return allocMatrix(rows, columns)
 void     _freeMatrix(Matrix *m)              { freeMatrix(m); }
 void     _free(void *ptr)                    { free(ptr); }
 
-void _hdb_init(const char* program_name)
+void _hdb_init(const char* program_name, int num_threads)
 {
+        hdb_set_num_threads((size_t)num_threads);
         hdb_set_program_name(program_name);
         hdb_set_error_file_pointer(stderr);
 }

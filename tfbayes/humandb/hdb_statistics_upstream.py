@@ -87,7 +87,7 @@ def loadConfig(config_file):
         fp.close()
 
     directory = os.path.dirname(config_file)
-    interface.hdb_init('hdb-read-seq')
+    interface.hdb_init('hdb-read-seq', 1)
     for seq in range(0, int(database['sequences'])):
 #        print "Opening: "+str(seq+1)
         dbp = interface.hdb_open_ro(os.path.join(directory, database['database']), str(seq+1))

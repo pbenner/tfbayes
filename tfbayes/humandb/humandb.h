@@ -31,6 +31,7 @@
 #define HUMANDB_PAGE_SIZE 1024
 #define HUMANDB_RECORD_LENGTH 128
 
+void hdb_set_num_threads(size_t num_threads);
 void hdb_set_program_name(const char* program_name);
 void hdb_free_program_name();
 void hdb_set_error_file_pointer(FILE* error_file_pointer);
