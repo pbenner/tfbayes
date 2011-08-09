@@ -33,7 +33,7 @@
 
 class DPM_TFBS : public DPM {
 public:
-         DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const DataTFBS& data, const DataTFBS& data_comp);
+         DPM_TFBS(double alpha, double d, double lambda, size_t tfbs_length, const DataTFBS& data, const DataTFBS& data_comp);
         ~DPM_TFBS();
 
         DPM_TFBS* clone() const;
@@ -82,6 +82,8 @@ private:
         // parameters
         const double alpha;
         const double alpha_log;
+        const double d;
+        const double d_log;
         const double lambda;
         const double lambda_log;
         const double lambda_inv_log;

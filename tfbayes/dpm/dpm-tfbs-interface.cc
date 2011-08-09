@@ -41,7 +41,7 @@ static GibbsSampler* _sampler;
 
 __BEGIN_C_REGION;
 
-void _dpm_tfbs_init(double alpha, double lambda, int tfbs_length, int n, char *sequences[])
+void _dpm_tfbs_init(double alpha, double d, double lambda, int tfbs_length, int n, char *sequences[])
 {
         __dpm_init__();
 
@@ -54,7 +54,7 @@ void _dpm_tfbs_init(double alpha, double lambda, int tfbs_length, int n, char *s
 
         _data      = new DataTFBS(_sequences, (size_t)tfbs_length);
         _data_comp = new DataTFBS(_sequences_comp, (size_t)tfbs_length);
-        _gdpm      = new DPM_TFBS(alpha, lambda, (size_t)tfbs_length, *_data, *_data_comp);
+        _gdpm      = new DPM_TFBS(alpha, d, lambda, (size_t)tfbs_length, *_data, *_data_comp);
         _sampler   = new GibbsSampler(*_gdpm, *_data);
 }
 

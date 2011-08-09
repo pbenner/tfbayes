@@ -41,6 +41,7 @@ typedef struct _options_t {
         size_t burnin;
         size_t tfbs_length;
         double alpha;
+        double d;
         double lambda;
         size_t population_size;
         string save;
@@ -49,6 +50,7 @@ typedef struct _options_t {
                   burnin(100),
                   tfbs_length(10),
                   alpha(0.05),
+                  d(0.0),
                   lambda(0.01),
                   population_size(1),
                   save()
@@ -62,8 +64,9 @@ operator<<(std::ostream& o, const _options_t& options) {
           << "-> burnin          = " << options.burnin          << endl
           << "-> tfbs_length     = " << options.tfbs_length     << endl
           << "-> alpha           = " << options.alpha           << endl
-          << "-> population_size = " << options.population_size << endl
+          << "-> d               = " << options.d               << endl
           << "-> lambda          = " << options.lambda          << endl
+          << "-> population_size = " << options.population_size << endl
           << "-> save            = " << options.save            << endl;
         return o;
 }
@@ -230,7 +233,7 @@ void run_dpm(const char* file_name)
         // create data, dpm, and sampler objects
         DataTFBS& data = *new DataTFBS(sequences, options.tfbs_length);
         DataTFBS& data_comp = *new DataTFBS(sequences_comp, options.tfbs_length);
-        DPM_TFBS& gdpm = *new DPM_TFBS(options.alpha, options.lambda, options.tfbs_length, data, data_comp);
+        DPM_TFBS& gdpm = *new DPM_TFBS(options.alpha, options.d, options.lambda, options.tfbs_length, data, data_comp);
         GibbsSampler& sampler = *new GibbsSampler(gdpm, data);
         PopulationMCMC& pmcmc = *new PopulationMCMC(sampler, options.population_size);
 
@@ -290,7 +293,7 @@ int main(int argc, char *argv[])
 			{ "version",	     0, 0, 'v' }
 		};
 
-		c = getopt_long(argc, argv, "",
+		c = getopt_long(argc, argv, "d:",
 				long_options, &option_index);
 
 		if(c == -1) {
@@ -300,6 +303,12 @@ int main(int argc, char *argv[])
 		switch(c) {
                 case 'a':
                         options.alpha = atof(optarg);
+                        break;
+                case 'd':
+                        options.d = atof(optarg);
+                        if (options.d < 0 || options.d >= 1) {
+                                wrong_usage(NULL);
+                        }
                         break;
                 case 'l':
                         options.lambda = atof(optarg);

@@ -42,6 +42,7 @@ from dpm_tfbs_interface import *
 
 options = {
     'alpha'       : 0.05,
+    'd'           : 0.0,
     'lambda'      : 0.01,
     'samples'     : (1000,100),
     'tfbs_length' : 10,
@@ -60,6 +61,7 @@ def usage():
     print
     print "Options:"
     print "       --alpha=ALPHA              - alpha parameter for the dirichlet process"
+    print "   -d=DOUBLE                      - Pitman-Yor discount (0 <= d < 1)"
     print "       --lambda=LAMBDA            - lambda mixture weight"
     print "       --tfbs-length=LENGTH       - length of the tfbs"
     print "   -i                             - interactive mode"
@@ -104,7 +106,7 @@ class TfbsDPM():
         self.sequences = sequences
         self.clusters  = clusters
         self.steps     = 0
-        dpm_init(options['alpha'], options['lambda'], options['tfbs_length'], sequences[:][:])
+        dpm_init(options['alpha'], options['d'], options['lambda'], options['tfbs_length'], sequences[:][:])
     def print_clusters(self):
         dpm_print()
     def num_clusters(self):
@@ -217,7 +219,7 @@ def main():
     global options
     try:
         longopts   = ["help", "verbose", "alpha=", "lambda=", "tfbs-length=", "save=", "samples="]
-        opts, tail = getopt.getopt(sys.argv[1:], "is:", longopts)
+        opts, tail = getopt.getopt(sys.argv[1:], "d:is:", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -233,6 +235,12 @@ def main():
             return 0
         if o == "--alpha":
             options['alpha'] = float(a)
+        if o == "-d":
+            if 0 <= float(a) and float(a) < 1:
+                options['d'] = float(a)
+            else:
+                usage()
+                return 1
         if o == "--lambda":
             options['lambda'] = float(a)
         if o == "--tfbs-length":

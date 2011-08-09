@@ -34,7 +34,7 @@
 
 using namespace std;
 
-DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const DataTFBS& data, const DataTFBS& data_comp)
+DPM_TFBS::DPM_TFBS(double alpha, double d, double lambda, size_t tfbs_length, const DataTFBS& data, const DataTFBS& data_comp)
         : // length of tfbs
           TFBS_LENGTH(tfbs_length),
           // priors
@@ -49,6 +49,9 @@ DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const DataTF
           // strength parameter for the dirichlet process
           alpha(alpha),
           alpha_log(log(alpha)),
+          // pitman-yor discount factor
+          d(d),
+          d_log(log(d)),
           // mixture weight for the dirichlet process
           lambda(lambda),
           lambda_log(log(lambda)),
@@ -170,7 +173,7 @@ DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_ta
                 // mixture component 2: dirichlet process for tfbs models
                 else {
                         double num_elements = (double)cluster.size();
-                        sum = logadd(sum, lambda_log + fastlog(num_elements) - dp_norm_log + cluster.model().log_pdf(range));
+                        sum = logadd(sum, lambda_log + log(num_elements-d) - dp_norm_log + cluster.model().log_pdf(range));
                         log_weights[i] = sum;
                 }
                 i++;
@@ -178,7 +181,7 @@ DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_ta
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         tags[components] = _clustermanager.get_free_cluster().tag();
-        sum = logadd(sum, lambda_log + alpha_log - dp_norm_log + _clustermanager[tags[components]].model().log_pdf(range));
+        sum = logadd(sum, lambda_log + log(alpha + d*(components-1)) - dp_norm_log + _clustermanager[tags[components]].model().log_pdf(range));
         log_weights[components] = sum;
 }
 

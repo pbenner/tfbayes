@@ -127,8 +127,9 @@ def getMatrix(c_m):
 #
 # ------------------------------------------------------------------------------
 
-def dpm_init(alpha, lam, tfbs_length, sequences):
+def dpm_init(alpha, d, lam, tfbs_length, sequences):
      c_alpha       = c_double(alpha)
+     c_d           = c_double(d)
      c_lam         = c_double(lam)
      c_tfbs_length = c_int(tfbs_length)
      n             = len(sequences)
@@ -137,7 +138,7 @@ def dpm_init(alpha, lam, tfbs_length, sequences):
      for i in range(0, n):
           m = len(sequences[i])
           c_sequences[i] = c_char_p(sequences[i])
-     _lib._dpm_tfbs_init(c_alpha, c_lam, c_tfbs_length, c_n, c_sequences)
+     _lib._dpm_tfbs_init(c_alpha, c_d, c_lam, c_tfbs_length, c_n, c_sequences)
 
 def dpm_print():
      _lib._dpm_tfbs_print()
