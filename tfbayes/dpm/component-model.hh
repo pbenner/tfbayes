@@ -89,40 +89,6 @@ private:
         const size_t _size2;
 };
 
-class ProductRevDirichlet : public ComponentModel {
-public:
-         ProductRevDirichlet(gsl_matrix* alpha,
-                             const sequence_data_t<short>& data,
-                             const sequence_data_t<short>& data_comp);
-         ProductRevDirichlet(const ProductRevDirichlet& distribution);
-        ~ProductRevDirichlet();
-
-        // datatypes
-        typedef std::vector<std::vector<size_t> > alpha_t;
-        typedef std::vector<std::vector<size_t> > counts_t;
-
-        size_t add(const range_t& range);
-        size_t remove(const range_t& range);
-        size_t count(const range_t& range);
-        double pdf(const range_t& range) const;
-        double log_pdf(const range_t& range) const;
-        double log_likelihood() const;
-
-        ProductRevDirichlet* clone() const;
-
-        friend std::ostream& operator<< (std::ostream& o, const ProductRevDirichlet& pd);
-
-private:
-        alpha_t alpha;
-        counts_t counts;
-
-        const sequence_data_t<short>& _data;
-        const sequence_data_t<short>& _data_comp;
-
-        const size_t _size1;
-        const size_t _size2;
-};
-
 class BivariateNormal : public ComponentModel {
 public:
          BivariateNormal();

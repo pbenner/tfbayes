@@ -152,18 +152,6 @@ ostream& operator<< (ostream& o, const ProductDirichlet& pd) {
         return o;
 }
 
-ostream& operator<< (ostream& o, const ProductRevDirichlet& pd) {
-        for (size_t j = 0; j < pd.alpha[0].size(); j++) {
-                o << "\t";
-                for (size_t i = 0; i < pd.alpha.size(); i++) {
-                        o << pd.alpha[i][j] + pd.counts[i][j] << " ";
-                }
-                o << endl;
-        }
-
-        return o;
-}
-
 static
 void save_motifs(ostream& file, const DPM_TFBS& dpm, size_t n)
 {

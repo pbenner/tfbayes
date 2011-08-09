@@ -69,28 +69,30 @@ ProductDirichlet::clone() const {
 
 size_t
 ProductDirichlet::add(const range_t& range) {
-        const_iterator_t<short> iterator = _data[range];
+        const size_t sequence = range.from[0];
+        const size_t from     = range.from[1];
+        const size_t to       = range.to[1];
         size_t i;
 
-        for (i = 0;; i++) {
-                counts[i%_size1][*iterator]++;
+        for (i = 0; i <= to-from; i++) {
+                counts[i%_size1][_data[index_t(sequence, from+i)]]++;
                 counts[i%_size1][_size2]++;
-                if (!iterator++) break;
         }
-        return (i+1)/_size1;
+        return i/_size1;
 }
 
 size_t
 ProductDirichlet::remove(const range_t& range) {
-        const_iterator_t<short> iterator = _data[range];
+        const size_t sequence = range.from[0];
+        const size_t from     = range.from[1];
+        const size_t to       = range.to[1];
         size_t i;
 
-        for (i = 0;; i++) {
-                counts[i%_size1][*iterator]--;
+        for (i = 0; i <= to-from; i++) {
+                counts[i%_size1][_data[index_t(sequence, from+i)]]--;
                 counts[i%_size1][_size2]--;
-                if (!iterator++) break;
         }
-        return (i+1)/_size1;
+        return i/_size1;
 }
 
 size_t
@@ -99,23 +101,32 @@ ProductDirichlet::count(const range_t& range) {
 }
 
 double ProductDirichlet::pdf(const range_t& range) const {
-        const_iterator_t<short> iterator = _data[range];
+        const size_t sequence = range.from[0];
+        const size_t from     = range.from[1];
+        const size_t to       = range.to[1];
         double result = 1;
 
-        for (size_t i = 0;; i=(i+1)%_size1) {
-                result *= (counts[i][*iterator]+alpha[i][*iterator])/(counts[i][_size2]+alpha[i][_size2]);
-                if (!iterator++) break;
+        for (size_t i = 0; i <= to-from; i++) {
+                const char code = _data[index_t(sequence, from+i)];
+                result *= (counts[i%_size1][code  ]+alpha[i%_size1][code  ])
+                         /(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
         }
         return result;
 }
 
 double ProductDirichlet::log_pdf(const range_t& range) const {
-        const_iterator_t<short> iterator = _data[range];
+        const size_t sequence = range.from[0];
+        const size_t from     = range.from[1];
+        const size_t to       = range.to[1];
+//        double log_z = fastlog(4) - fastlog(10+14);
+        double log_z = fastlog(4);
+//        double log_z = 0;
         double result = 0;
 
-        for (size_t i = 0;; i=(i+1)%_size1) {
-                result += fastlog(counts[i][*iterator]+alpha[i][*iterator]) - fastlog(counts[i][_size2]+alpha[i][_size2]);
-                if (!iterator++) break;
+        for (size_t i = 0; i <= to-from; i++) {
+                const char code = _data[index_t(sequence, from+i)];
+                result += log_z + fastlog(counts[i%_size1][code  ]+alpha[i%_size1][  code])
+                                - fastlog(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
         }
         return result;
 }
@@ -130,121 +141,6 @@ double ProductDirichlet::log_likelihood() const {
                 for (size_t k = 0; k < _size2; k++) {
                         if (alpha[j][k] != 0) {
                                 result += counts[j][k]*(fastlog(counts[j][k]+alpha[j][k]) - fastlog(counts[j][_size2]+alpha[j][_size2]));
-                        }
-                }
-        }
-        return result;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-ProductRevDirichlet::ProductRevDirichlet(
-        gsl_matrix* _alpha,
-        const sequence_data_t<short>& data,
-        const sequence_data_t<short>& data_comp)
-        : _data(data), _data_comp(data_comp), _size1(_alpha->size1), _size2(_alpha->size2)
-{
-        for (size_t i = 0; i < _alpha->size1; i++) {
-                size_t sum = 0;
-                alpha.push_back (vector<size_t>(_alpha->size2+1, 0));
-                counts.push_back(vector<size_t>(_alpha->size2+1, 0));
-                for (size_t j = 0; j < _alpha->size2; j++) {
-                        alpha[i][j] = gsl_matrix_get(_alpha, i, j);
-                        sum += alpha[i][j];
-                }
-                alpha[i][_alpha->size2] = sum;
-        }
-}
-
-ProductRevDirichlet::ProductRevDirichlet(const ProductRevDirichlet& distribution)
-        : alpha(distribution.alpha), counts(distribution.counts),
-          _data(distribution._data), _data_comp(distribution._data_comp),
-          _size1(distribution._size1), _size2(distribution._size2)
-{
-}
-
-ProductRevDirichlet::~ProductRevDirichlet() {
-}
-
-ProductRevDirichlet*
-ProductRevDirichlet::clone() const {
-        return new ProductRevDirichlet(*this);
-}
-
-size_t
-ProductRevDirichlet::add(const range_t& range) {
-        const size_t sequence = range.from[0];
-        const size_t from     = range.from[1];
-        const size_t to       = range.to[1];
-        size_t i;
-
-        for (i = 0; i <= to-from; i++) {
-                const char code = _data[index_t(sequence, from+i)]+_data_comp[index_t(sequence, to-i)];
-                counts[i%_size1][ code]++;
-                counts[i%_size1][_size2]++;
-        }
-        return i/_size1;
-}
-
-size_t
-ProductRevDirichlet::remove(const range_t& range) {
-        const size_t sequence = range.from[0];
-        const size_t from     = range.from[1];
-        const size_t to       = range.to[1];
-        size_t i;
-
-        for (i = 0; i <= to-from; i++) {
-                const char code = _data[index_t(sequence, from+i)]+_data_comp[index_t(sequence, to-i)];
-                counts[i%_size1][code]--;
-                counts[i%_size1][_size2]--;
-        }
-        return i/_size1;
-}
-
-size_t
-ProductRevDirichlet::count(const range_t& range) {
-        return (range.to[1]-range.from[1]+1)/_size1;
-}
-
-double ProductRevDirichlet::pdf(const range_t& range) const {
-        const size_t sequence = range.from[0];
-        const size_t from     = range.from[1];
-        const size_t to       = range.to[1];
-        double result = 1;
-
-        for (size_t i = 0; i <= to-from; i++) {
-                const char code = _data[index_t(sequence, from+i)]+_data_comp[index_t(sequence, to-i)];
-                result *= (counts[i%_size1][code  ]+alpha[i%_size1][code  ])
-                         /(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
-        }
-        return result;
-}
-
-double ProductRevDirichlet::log_pdf(const range_t& range) const {
-        const size_t sequence = range.from[0];
-        const size_t from     = range.from[1];
-        const size_t to       = range.to[1];
-        double result = 0;
-
-        for (size_t i = 0; i <= to-from; i++) {
-                const char code = _data[index_t(sequence, from+i)]+_data_comp[index_t(sequence, to-i)];
-                result += fastlog(counts[i%_size1][code  ]+alpha[i%_size1][code  ])
-                         -fastlog(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
-        }
-        return result;
-}
-
-//
-// \sum_{x \in X} n_x log(\frac{n_x + \alpha_x}{\sum_{x' \in X} n_{x'} + \alpha_{x'}})
-//
-double ProductRevDirichlet::log_likelihood() const {
-        double result = 0;
-
-        for (size_t j = 0; j < _size1; j++) {
-                for (size_t k = 0; k < _size2; k++) {
-                        if (alpha[j][k] != 0) {
-                                result += counts[j][k]*(fastlog(counts[j][k     ]+alpha[j][k     ])
-                                                      - fastlog(counts[j][_size2]+alpha[j][_size2]));
                         }
                 }
         }

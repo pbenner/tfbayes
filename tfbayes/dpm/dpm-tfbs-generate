@@ -1,0 +1,145 @@
+#! /usr/bin/env python
+
+import ConfigParser
+import getopt
+import os
+import math
+import random
+import sys
+
+from tfbayes.fasta import fasta
+
+# global options
+# ------------------------------------------------------------------------------
+
+options = {
+    'threshold'   : 10,
+    'verbose'     : False,
+    }
+
+# usage
+# ------------------------------------------------------------------------------
+
+def usage():
+    """Print usage."""
+    print
+    print "dpm-tfbs-generate [option]..."
+    print
+    print "Options:"
+    print "       --threshold=VALUE          - replace all sequences above THRESHOLD"
+    print
+    print "   -h, --help                     - print help"
+    print "   -v, --verbose                  - be verbose"
+    print
+
+# scan subsequences
+# ------------------------------------------------------------------------------
+
+def compute_score(motif, sequence):
+    result = 0
+    for j in range(len(sequence)):
+        if sequence[j] == motif[j]:
+            result += 1
+    return result
+
+# reverse complements
+# ------------------------------------------------------------------------------
+
+def reverse_complement(a):
+    comp = { 'a': 't', 'c': 'g', 'g': 'c', 't': 'a',
+             'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A', 'N' : 'N' }
+    return ''.join([ comp[a[-(i+1)]] for i in range(0, len(a)) ])
+
+# predefined motifs
+# ------------------------------------------------------------------------------
+
+motif_1_str = 'TTTATACAGATGGCGGTGTA'
+motif_1_pos = [(0,10), (1, 32)]
+
+motif_2_str = reverse_complement(motif_1_str)
+motif_2_pos = [(3,20), (4, 60)]
+
+motif_3_str = 'TTTGGGAGGCTGAGGCAGGC'
+motif_3_pos = [(5,40), (6,2), (6, 44)]
+
+motif_4_str = reverse_complement(motif_3_str)
+motif_4_pos = [(8, 32), (9,1)]
+
+motif_1 = { 'id': 1, 'str' : motif_1_str, 'pos' : motif_1_pos }
+motif_2 = { 'id': 2, 'str' : motif_2_str, 'pos' : motif_2_pos }
+motif_3 = { 'id': 3, 'str' : motif_3_str, 'pos' : motif_3_pos }
+motif_4 = { 'id': 4, 'str' : motif_4_str, 'pos' : motif_4_pos }
+
+motif_length = 20
+motifs  = [ motif_1, motif_2, motif_3, motif_4 ]
+lengths = [80, 75, 85, 80, 100 , 96, 82, 78, 83, 84]
+
+# sequence generator
+# ------------------------------------------------------------------------------
+
+def random_nucleotide():
+    n = [ 'A', 'C', 'G', 'T' ]
+    r = random.randint(0, 3)
+    return n[r]
+
+def random_nucleotide_sequence(n):
+    return ''.join([ random_nucleotide() for i in range(0, n) ])
+
+def generate_sequences():
+    sequences = []
+    # generate random sequences
+    for length in lengths:
+        sequences.append(random_nucleotide_sequence(length))
+    # remove matches
+    while True:
+        n = 0
+        for motif in motifs:
+            for i in range(0, len(sequences)):
+                for j in range(0, len(sequences[i])-motif_length+1):
+                    sequence = sequences[i][j:j+motif_length]
+                    score = compute_score(motif['str'], sequence)
+                    if score >= options['threshold']:
+                        n += 1
+                        print >>sys.stderr, 'Replacing match of motif %d at %d:%d with score %f: %s' % (motif['id'], i, j, score, sequence)
+                        sequences[i] = sequences[i].replace(sequence, random_nucleotide_sequence(motif_length))
+        if n == 0: break
+    # insert strings
+    for motif in motifs:
+        for i, j in motif['pos']:
+            sequence = sequences[i][j:j+motif_length]
+            sequences[i] = sequences[i].replace(sequence, '(%d:%s)' % (motif['id'], motif['str']))
+
+    return sequences
+
+# main
+# ------------------------------------------------------------------------------
+
+def __main__():
+    for i, sequence in zip(range(0, len(lengths)), generate_sequences()):
+        print fasta.fimport(['sequence_%d' %i], sequence),
+
+def main():
+    global options
+    try:
+        longopts   = ["help", "verbose", "threshold="]
+        opts, tail = getopt.getopt(sys.argv[1:], "", longopts)
+    except getopt.GetoptError:
+        usage()
+        return 2
+    output = None
+    for o, a in opts:
+        if o in ("-v", "--verbose"):
+            sys.stderr.write("Verbose mode turned on.\n")
+            options["verbose"] = True
+        if o in ("-h", "--help"):
+            usage()
+            return 0
+        if o == "--threshold":
+            options['threshold'] = float(a)
+    if len(tail) != 0:
+        usage()
+        return 1
+    __main__()
+
+if __name__ == "__main__":
+    sys.exit(main())

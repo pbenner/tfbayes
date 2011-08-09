@@ -27,36 +27,25 @@
 #include <gsl/gsl_blas.h>
 
 #include <dpm-tfbs.hh>
+#include <statistics.hh>
 
 #include <tfbayes/logarithmetic.h>
 #include <tfbayes/fastlog.h>
 
 using namespace std;
 
-ostream& operator<< (ostream& o, const ProductRevDirichlet& pd) {
-        for (size_t j = 0; j < pd.alpha[0].size() - 1; j++) {
-                o << "\t";
-                for (size_t i = 0; i < pd.alpha.size(); i++) {
-                        o << pd.alpha[i][j] + pd.counts[i][j] << " ";
-                }
-                o << endl;
-        }
-
-        return o;
-}
-
 DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const DataTFBS& data, const DataTFBS& data_comp)
         : // length of tfbs
           TFBS_LENGTH(tfbs_length),
           // priors
-          bg_alpha(init_alpha_bg(BG_LENGTH)),
-          tfbs_alpha(init_alpha_tfbs_rev(TFBS_LENGTH)),
+          bg_alpha(init_alpha(BG_LENGTH)),
+          tfbs_alpha(init_alpha(TFBS_LENGTH)),
           // raw sequences
           _data(data),
           _data_comp(data_comp),
           // cluster manager
           _cluster_assignments(_data.lengths(), -1),
-          _clustermanager(new ProductRevDirichlet(tfbs_alpha, _data, _data_comp), _cluster_assignments),
+          _clustermanager(new ProductDirichlet(tfbs_alpha, _data), _cluster_assignments),
           // strength parameter for the dirichlet process
           alpha(alpha),
           alpha_log(log(alpha)),
@@ -78,32 +67,12 @@ DPM_TFBS::DPM_TFBS(double alpha, double lambda, size_t tfbs_length, const DataTF
         ProductDirichlet* bg_product_dirichlet = new ProductDirichlet(bg_alpha, _data);
         bg_cluster_tag = _clustermanager.add_cluster(bg_product_dirichlet);
 
+        ////////////////////////////////////////////////////////////////////////////////
         // assign all elements to the background
         for (DataTFBS::const_iterator it = _data.begin();
              it != _data.end(); it++) {
                 _clustermanager[bg_cluster_tag].add_observations(range_t(*it, *it));
         }
-
-//         Cluster& cluster = _clustermanager.get_free_cluster();
-//         cout << _data << endl;
-//         cout << _data_comp << endl;
-//         cout << static_cast< const ProductRevDirichlet& > (cluster.model()) << endl;
-//         range_t r(index_t(0,0), index_t(0,9));
-//         cout << "BG Log pdf: " << _clustermanager[0].model().log_pdf(r) << endl;
-// cout << "BG Log pdf: " << static_cast< const ProductRevDirichlet& > (_clustermanager[0].model()) << endl;
-//         cout << "Log pdf: " << cluster.model().log_pdf(r) << endl;
-//         cluster.add_observations(r);
-//         cluster.add_observations(r);
-//         cluster.add_observations(r);
-//         cluster.add_observations(r);
-//         cluster.add_observations(r);
-//         cluster.add_observations(r);
-//         cluster.add_observations(r);
-//         cluster.add_observations(r);
-//         cluster.add_observations(r);
-//         cluster.add_observations(r);
-//         cout << static_cast< const ProductRevDirichlet& > (cluster.model()) << endl;
-//         cout << "Log pdf: " << cluster.model().log_pdf(r) << endl;
 }
 
 DPM_TFBS::~DPM_TFBS() {
