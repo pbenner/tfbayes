@@ -143,13 +143,11 @@ char * readfile(const char* file_name, vector<string>& sequences)
 
 ostream& operator<< (ostream& o, const ProductDirichlet& pd) {
         for (size_t j = 0; j < pd.alpha[0].size() - 1; j++) {
-                if (j != 2 && j != 4 && j != 5 && j != 6) {
-                        o << "\t";
-                        for (size_t i = 0; i < pd.alpha.size(); i++) {
-                                o << pd.alpha[i][j] + pd.counts[i][j] << " ";
-                        }
-                        o << endl;
+                o << "\t";
+                for (size_t i = 0; i < pd.alpha.size(); i++) {
+                        o << pd.alpha[i][j] + pd.counts[i][j] << " ";
                 }
+                o << endl;
         }
 
         return o;
