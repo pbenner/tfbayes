@@ -156,7 +156,8 @@ DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_ta
 {
         range_t range(index, index_t(index[0], index[1] + TFBS_LENGTH - 1));
         size_t components  = mixture_components();
-        double dp_norm_log = log(num_tfbs + alpha);
+//        double dp_norm_log = log(num_tfbs + alpha);
+        double dp_norm_log = log(alpha + components - 1);
         double sum         = -HUGE_VAL;
 
         cluster_tag_t i = 0;
@@ -173,7 +174,8 @@ DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_ta
                 // mixture component 2: dirichlet process for tfbs models
                 else {
                         double num_elements = (double)cluster.size();
-                        sum = logadd(sum, lambda_log + log(num_elements-d) - dp_norm_log + cluster.model().log_pdf(range));
+//                        sum = logadd(sum, lambda_log + log(num_elements-d) - dp_norm_log + cluster.model().log_pdf(range));
+                        sum = logadd(sum, lambda_log - dp_norm_log + cluster.model().log_pdf(range));
                         log_weights[i] = sum;
                 }
                 i++;
@@ -181,7 +183,8 @@ DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_ta
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         tags[components] = _clustermanager.get_free_cluster().tag();
-        sum = logadd(sum, lambda_log + log(alpha + d*(components-1)) - dp_norm_log + _clustermanager[tags[components]].model().log_pdf(range));
+//        sum = logadd(sum, lambda_log + log(alpha + d*(components-1)) - dp_norm_log + _clustermanager[tags[components]].model().log_pdf(range));
+        sum = logadd(sum, lambda_log + log(alpha) - dp_norm_log + _clustermanager[tags[components]].model().log_pdf(range));
         log_weights[components] = sum;
 }
 

@@ -44,6 +44,7 @@ def importMatplotlib(backend=None):
 
 options = {
     'threshold'   : 0.005,
+    'with-prior'  : True,
     'plot'        : False,
     'load'        : None,
     'save'        : None,
@@ -61,6 +62,7 @@ def usage():
     print
     print "Options:"
     print "   -p, --plot                     - plot motifs"
+    print "       --with-prior=Yes|No        - generate motif with uniform prior (default: yes)"
     print "   -l, --load=FILE                - load motifs from FILE"
     print "   -s, --save=FILE                - save motifs to FILE"
     print "       --threshold=DOUBLE         - cut edges that are below threshold"
@@ -201,10 +203,15 @@ def load_motifs(config_parser):
 # ------------------------------------------------------------------------------
 
 def generate_motif(sequences, Gi, motif_length):
-    components = len(Gi)+1
     maximum_degree  = max([ Gi.degree(v, weighted=True) for v in Gi ])
-    mixture_weights = [ float(components-1)/float(components)*float(Gi.degree(v, weighted=True))/float(maximum_degree) for v in Gi ]
-    motif = [ [ 1.0/float(components) for j in range(0, motif_length) ] for i in range(0, 4) ]
+    if options['with-prior']:
+        components = len(Gi)+1
+        motif = [ [ 1.0/float(components) for j in range(0, motif_length) ] for i in range(0, 4) ]
+        mixture_weights = [ float(components-1)/float(components)*float(Gi.degree(v, weighted=True))/float(maximum_degree) for v in Gi ]
+    else:
+        components = len(Gi)
+        motif = [ [ 0.001 for j in range(0, motif_length) ] for i in range(0, 4) ]
+        mixture_weights = [ float(Gi.degree(v, weighted=True))/float(maximum_degree) for v in Gi ]
     for node, weight in zip(Gi.nodes(), mixture_weights):
         s = int(node.split(':')[0][1:])
         p = int(node.split(':')[1][:-1])
@@ -324,8 +331,8 @@ def __main__(results_file, seq_file, motif_length):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "plot", "load=", "save=", "threshold="]
-        opts, tail = getopt.getopt(sys.argv[1:], "pls:", longopts)
+        longopts   = ["help", "verbose", "plot", "with-prior=", "load=", "save=", "threshold="]
+        opts, tail = getopt.getopt(sys.argv[1:], "pls:v", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -337,6 +344,12 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
+        if o == "--with-prior":
+            if a == "Yes" or a == "yes":
+                options['with-prior'] = True
+            if a == "No" or a == "no":
+                print "Neglecting uniform prior!"
+                options['with-prior'] = False
         if o in ("-p", "--plot"):
             options['plot'] = True
         if o in ("-l", "--load"):

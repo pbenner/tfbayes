@@ -60,7 +60,10 @@ def scan(pwm, sequences_file):
             score = compute_score(pwm, sub_sequence)
             if score > options['threshold']:
                 hits += 1
-                print "(%15s,%12s,%05i,%3.5f): %s" % (description[0], description[2], j, score, sub_sequence)
+                if len(description) >= 3:
+                    print "(%15s,%12s,%05i,%3.5f): %s" % (description[0], description[2], j, score, sub_sequence)
+                else:
+                    print "(%30s,%05i,%3.5f): %s" % (description[0], j, score, sub_sequence)
     print "Found %d sequences." % hits
 
 # compute pwm
