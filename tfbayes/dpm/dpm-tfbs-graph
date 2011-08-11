@@ -320,7 +320,7 @@ def __main__(results_file, seq_file, motif_length):
             bg = read_matrix(config_parser_results, 'Result', 'cluster_bg', int)
             motifs, components = generate_motifs(sequences, G, int(motif_length))
         if options['plot']:
-            plot_motifs(motifs, components, os.path.splitext(results_file)[0])
+            plot_motifs(motifs, components, os.path.splitext(os.path.split(results_file)[1])[0])
         if options['save']:
             save_motifs(config_parser_save, bg, motifs, components)
             configfile = open(options['save'], 'wb')
