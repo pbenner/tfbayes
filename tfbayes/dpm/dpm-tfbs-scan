@@ -56,7 +56,7 @@ def scan(pwm, sequences_file):
         if not sequence:
             break
         for j in range(0, len(sequence)-length):
-            sub_sequence = sequence[j:j+length-1]
+            sub_sequence = sequence[j:j+length]
             score = compute_score(pwm, sub_sequence)
             if score > options['threshold']:
                 hits += 1
