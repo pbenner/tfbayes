@@ -28,6 +28,8 @@ import pickle
 import config
 import interface
 
+from ..motif import tools
+
 # global options
 # ------------------------------------------------------------------------------
 
@@ -39,10 +41,11 @@ database = {
     }
 
 options = {
+    'threads'      : 1,
     'config-name'  : None,
     'cluster-name' : None,
     'sequence'     : None,
-    'threshold'    : 20,
+    'threshold'    : 20.0,
     'verbose'      : False
     }
 
@@ -55,41 +58,15 @@ def usage():
     print "hdb-search-chrom [option]... DATABASE_CONFIG"
     print
     print "Options:"
-    print "   -p=CLUSTER.cfg:CLUSTER_NAME    - search for pwm match"
-    print "   -s=SEQUENCE                    - search for exact match of a sequence"
+    print "   -p CLUSTER.cfg:CLUSTER_NAME    - search for pwm match"
+    print "   -s SEQUENCE                    - search for exact match of a sequence"
     print
     print "       --threshold=THRESHOLD      - threshold for PWM matching"
+    print "       --threads=INT              - number of search threads (default: 1)"
     print
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
     print
-
-# compute pwm
-# ------------------------------------------------------------------------------
-
-def readVector(config, section, option, converter):
-    vector_str = config.get(section, option)
-    vector     = map(converter, vector_str.split(' '))
-    return vector
-
-def readMatrix(config, section, option, converter):
-    matrix_str = config.get(section, option)
-    matrix     = []
-    for line in matrix_str.split('\n'):
-        if line != '':
-            matrix.append([converter(a) for a in line.split(' ')])
-    return matrix
-
-def compute_frequencies(counts):
-    sums = [ sum(map(lambda m: m[j], counts)) for j in range(0, len(counts[0])) ]
-    return [ [ float(counts[i][j])/sums[j]    for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
-
-def compute_pwm(config_parser, cluster_name):
-    bg_counts   = readMatrix(config_parser, 'Cluster', 'cluster_bg',  int)
-    tfbs_counts = readMatrix(config_parser, 'Cluster', cluster_name, int)
-    bg_freq     = compute_frequencies(bg_counts)
-    tfbs_freq   = compute_frequencies(tfbs_counts)
-    return [ [ math.log(tfbs_freq[i][j]/bg_freq[i][0], 2) for j in range(0, len(tfbs_freq[0])) ] for i in range(0, len(tfbs_freq)) ]
 
 # search
 # ------------------------------------------------------------------------------
@@ -99,7 +76,7 @@ def search_pwm(dbp_list, database):
     config_parser.read(options['config-name'])
     if not config_parser.has_section('Cluster'):
         raise IOError("Invalid configuration file.")
-    pwm = compute_pwm(config_parser, options['cluster-name'])
+    pwm = tools.compute_pwm(config_parser, options['cluster-name'])
     interface.hdb_search_pwm(dbp_list, database['chromosomes'], pwm, options['threshold'])
 
 def search_sequence(dbp_list, database):
@@ -128,7 +105,7 @@ def loadConfig(config_file):
         fp.close()
 
     directory = os.path.dirname(config_file)
-    interface.hdb_init('hdb-search-chrom', 1)
+    interface.hdb_init('hdb-search-chrom', options['threads'])
     dbp_list = []
     for chrom_name in database['chromosomes']:
         dbp_list.append(interface.hdb_open_ro(os.path.join(directory, database['database']), chrom_name))
@@ -149,7 +126,7 @@ def loadConfig(config_file):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "threshold="]
+        longopts   = ["help", "verbose", "threshold=", "threads="]
         opts, tail = getopt.getopt(sys.argv[1:], "p:s:", longopts)
     except getopt.GetoptError:
         usage()
@@ -171,6 +148,8 @@ def main():
             options['sequence'] = a
         if o == "--threshold":
             options['threshold'] = float(a)
+        if o == "--threads":
+            options['threads'] = int(a)
     if len(tail) != 1:
         usage()
         return 1

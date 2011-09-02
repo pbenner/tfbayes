@@ -7,6 +7,8 @@ import math
 import sys
 
 from tfbayes.fasta import fasta
+from tfbayes.motif import tools
+from tfbayes.uipac.alphabet import DNA
 
 # global options
 # ------------------------------------------------------------------------------
@@ -34,19 +36,6 @@ def usage():
 # scan sequences file
 # ------------------------------------------------------------------------------
 
-def compute_score(pwm, sequence):
-    result = 0
-    for j in range(len(sequence)):
-        if sequence[j] == 'A' or sequence[j] == 'a':
-            result += pwm[0][j]
-        if sequence[j] == 'C' or sequence[j] == 'c':
-            result += pwm[1][j]
-        if sequence[j] == 'G' or sequence[j] == 'g':
-            result += pwm[2][j]
-        if sequence[j] == 'T' or sequence[j] == 't':
-            result += pwm[3][j]
-    return result
-
 def scan(pwm, sequences_file):
     parser = fasta.parser(sequences_file)
     length = len(pwm[0])
@@ -57,7 +46,7 @@ def scan(pwm, sequences_file):
             break
         for j in range(0, len(sequence)-length):
             sub_sequence = sequence[j:j+length]
-            score = compute_score(pwm, sub_sequence)
+            score = tools.compute_score(pwm, sub_sequence)
             if score > options['threshold']:
                 hits += 1
                 if len(description) >= 3:
@@ -65,33 +54,6 @@ def scan(pwm, sequences_file):
                 else:
                     print "(%30s,%05i,%3.5f): %s" % (description[0], j, score, sub_sequence)
     print "Found %d sequences." % hits
-
-# compute pwm
-# ------------------------------------------------------------------------------
-
-def read_vector(config, section, option, converter):
-    vector_str = config.get(section, option)
-    vector     = map(converter, vector_str.split(' '))
-    return vector
-
-def read_matrix(config, section, option, converter):
-    matrix_str = config.get(section, option)
-    matrix     = []
-    for line in matrix_str.split('\n'):
-        if line != '':
-            matrix.append([converter(a) for a in line.split(' ')])
-    return matrix
-
-def compute_frequencies(counts):
-    sums = [ sum(map(lambda m: m[j], counts)) for j in range(0, len(counts[0])) ]
-    return [ [ float(counts[i][j])/sums[j]    for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
-
-def compute_pwm(config_parser, cluster_name):
-    bg_counts   = read_matrix(config_parser, 'Cluster', 'cluster_bg',  int)
-    tfbs_counts = read_matrix(config_parser, 'Cluster', cluster_name, int)
-    bg_freq     = compute_frequencies(bg_counts)
-    tfbs_freq   = compute_frequencies(tfbs_counts)
-    return [ [ math.log(tfbs_freq[i][j]/bg_freq[i][0], 2) for j in range(0, len(tfbs_freq[0])) ] for i in range(0, len(tfbs_freq)) ]
 
 # parse results config
 # ------------------------------------------------------------------------------
@@ -101,7 +63,7 @@ def read_config(config_file, cluster_name, sequences_file):
     config_parser.read(config_file)
     if not config_parser.has_section('Cluster'):
         raise IOError("Invalid configuration file.")
-    pwm = compute_pwm(config_parser, cluster_name)
+    pwm = tools.compute_pwm(config_parser, cluster_name)
     scan(pwm, sequences_file)
 
 # main

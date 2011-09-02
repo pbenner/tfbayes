@@ -304,6 +304,8 @@ AC_CONFIG_FILES([
 	tfbayes/fasta/Makefile
 	tfbayes/humandb/Makefile
 	tfbayes/dpm/Makefile
+	tfbayes/motif/Makefile
+	tfbayes/uipac/Makefile
  	])
 
 AC_OUTPUT

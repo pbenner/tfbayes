@@ -10,7 +10,6 @@ import ConfigParser
 import sys
 import getopt
 import os
-import Bio.Motif as Motif
 
 import networkx as nx
 try:
@@ -23,6 +22,12 @@ import numpy.random.mtrand as     mt
 import numpy.random        as     rd
 
 from tfbayes.fasta import fasta
+from tfbayes.motif import fileio
+from tfbayes.motif import information
+from tfbayes.motif import tools
+from tfbayes.motif import plot
+
+from tfbayes.uipac.alphabet import DNA
 
 def importMatplotlib(backend=None):
     global pyplot
@@ -87,12 +92,6 @@ def read_matrix(config, section, option, converter):
             matrix.append([converter(a) for a in line.split(' ')])
     return matrix
 
-def write_vector(config, section, option, vector):
-    config.set(section, option, " ".join(map(str, vector)))
-
-def write_matrix(config, section, option, matrix):
-    config.set(section, option, "\n"+"\n".join(map(lambda arg: " ".join(map(str, arg)), matrix)))
-
 def parse_config(config_parser):
     edges = map(lambda s: s.strip(), read_vector(config_parser, 'Result', 'graph', str))
 
@@ -127,103 +126,34 @@ def read_sequences(seq_file):
         sequences.append(seqfilter(line))
     return descriptions, sequences
 
-# pwm tools
-# ------------------------------------------------------------------------------
-
-def compute_frequencies(counts):
-    sums = [ sum(map(lambda m: m[j], counts)) for j in range(0, len(counts[0])) ]
-    return [ [ float(counts[i][j])/float(sums[j]) for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
-
-# R_sequence
-# ------------------------------------------------------------------------------
-
-def r_sequence(cluster_counts):
-    z = 1.0/float(len(cluster_counts[0]))
-    cluster_freq = compute_frequencies(cluster_counts)
-    return z*sum([ 2 + sum([ cluster_freq[i][j]*math.log(cluster_freq[i][j], 2)
-                             for i in range(0, len(cluster_freq)) ])
-                   for j in range(0, len(cluster_freq[0])) ])
-
-# motif plotting
-# ------------------------------------------------------------------------------
-
-class MotifStream():
-    def __init__(self, counts):
-        self.counts = []
-        for line in counts:
-            self.counts.append(' '.join(map(str, line)))
-        self.counts.append('\n')
-        self.counts.append('\n')
-        self.i      = 0
-    def readline(self):
-        if (self.i < len(self.counts)):
-            line = self.counts[self.i]
-            self.i += 1
-            return line
-        else:
-            return None
-
-def plot_motifs(motifs, components, basename):
-    for n, motif, comp in zip(range(0, len(motifs)), motifs, components):
-        r_seq = r_sequence(motif)
-        file_name = '%s_cluster_%d.png' % (basename, n)
-        title = 'cluster_%d:%d, R_seq = %f' % (n, comp, r_seq)
-        print 'Generating %s...' % file_name
-        stream = MotifStream(motif)
-        m = Motif.Motif()
-        m._from_horiz_matrix(stream, letters='ACGT')
-        m.weblogo(file_name, title=title)
-
-# load and save motifs
-# ------------------------------------------------------------------------------
-
-def save_motifs(config_parser, bg, motifs, components):
-    if not config_parser.has_section('Cluster'):
-        config_parser.add_section('Cluster')
-    cluster_names = []
-    for n, motif, comp in zip(range(0, len(motifs)), motifs, components):
-        cluster_name = 'cluster_%d' % n
-        cluster_names.append(cluster_name)
-        write_matrix(config_parser, 'Cluster', cluster_name, motif)
-        config_parser.set('Cluster', '%s_components' % cluster_name, str(comp))
-    write_vector(config_parser, 'Cluster', 'cluster', cluster_names)
-    write_matrix(config_parser, 'Cluster', 'cluster_bg', bg)
-
-def load_motifs(config_parser):
-    bg = read_matrix(config_parser, 'Cluster', 'cluster_bg', int)
-    motifs = []
-    components = []
-    cluster_names = read_vector(config_parser, 'Cluster', 'cluster', str)
-    for cluster_name in cluster_names:
-        motifs.append(read_matrix(config_parser, 'Cluster', cluster_name, int))
-        components.append(int(config_parser.get('Cluster', '%s_components' % cluster_name)))
-    return bg, motifs, components
-
 # generate motifs
 # ------------------------------------------------------------------------------
 
 def generate_motif(sequences, Gi, motif_length):
-    maximum_degree  = max([ Gi.degree(v, weighted=True) for v in Gi ])
-    if options['with-prior']:
-        components = len(Gi)+1
-        motif = [ [ 1.0/float(components) for j in range(0, motif_length) ] for i in range(0, 4) ]
-        mixture_weights = [ float(components-1)/float(components)*float(Gi.degree(v, weighted=True))/float(maximum_degree) for v in Gi ]
-    else:
-        components = len(Gi)
-        motif = [ [ 0.001 for j in range(0, motif_length) ] for i in range(0, 4) ]
-        mixture_weights = [ float(Gi.degree(v, weighted=True))/float(maximum_degree) for v in Gi ]
+    sum_degrees  = sum([ Gi.degree(v, weighted=True) for v in Gi ])
+    motif = [ [ 0.0 for j in range(0, motif_length) ] for i in range(0, 4) ]
+    mixture_weights = [ float(Gi.degree(v, weighted=True))/sum_degrees for v in Gi ]
     for node, weight in zip(Gi.nodes(), mixture_weights):
         s = int(node.split(':')[0][1:])
         p = int(node.split(':')[1][:-1])
         for j in range(0, motif_length):
             if sequences[s][p+j] == 'A' or sequences[s][p+j] == 'a':
-                motif[0][j] += weight/components
+                code = DNA.code('A')
+                motif[code][j] += weight
             if sequences[s][p+j] == 'C' or sequences[s][p+j] == 'c':
-                motif[1][j] += weight/components
+                code = DNA.code('C')
+                motif[code][j] += weight
             if sequences[s][p+j] == 'G' or sequences[s][p+j] == 'g':
-                motif[2][j] += weight/components
+                code = DNA.code('G')
+                motif[code][j] += weight
             if sequences[s][p+j] == 'T' or sequences[s][p+j] == 't':
-                motif[3][j] += weight/components
+                code = DNA.code('T')
+                motif[code][j] += weight
+    if options['with-prior']:
+        components = len(Gi)+1
+        motif = [ [ 0.25/components + float(components-1)/components*motif[i][j] for j in range(0, motif_length) ] for i in range(0, 4) ]
+    else:
+        components = len(Gi)
     return motif, components
 
 def generate_motifs(sequences, G, motif_length):
@@ -235,11 +165,7 @@ def generate_motifs(sequences, G, motif_length):
         motif, comp = generate_motif(sequences, Gi, motif_length)
         motifs.append(motif)
         components.append(comp)
-    for motif in motifs:
-        # convert motifs to counts
-        counts = [ [ int(round(motif[i][j]*1000)) for j in range(0, motif_length) ] for i in range(0, 4) ]
-        motif_counts.append(counts)
-    return motif_counts, components
+    return motifs, components
 
 # graph construction
 # ------------------------------------------------------------------------------
@@ -315,14 +241,15 @@ def __main__(results_file, seq_file, motif_length):
         if options['load']:
             config_parser_load = ConfigParser.ConfigParser()
             config_parser_load.read(options['load'])
-            bg, motifs, components = load_motifs(config_parser_load)
+            bg, motifs, components = fileio.load_motifs(config_parser_load)
         else:
-            bg = read_matrix(config_parser_results, 'Result', 'cluster_bg', int)
+            bg_counts = read_matrix(config_parser_results, 'Result', 'cluster_bg', int)
+            bg = tools.compute_frequencies(bg_counts)
             motifs, components = generate_motifs(sequences, G, int(motif_length))
         if options['plot']:
-            plot_motifs(motifs, components, os.path.splitext(os.path.split(results_file)[1])[0])
+            plot.plot_motifs(motifs, components, os.path.splitext(os.path.split(results_file)[1])[0])
         if options['save']:
-            save_motifs(config_parser_save, bg, motifs, components)
+            fileio.save_motifs(config_parser_save, bg, motifs, components)
             configfile = open(options['save'], 'wb')
             config_parser_save.write(configfile)
     else:

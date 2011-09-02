@@ -297,13 +297,13 @@ static void* hdb_search_pwm_thread(void* data_)
                                 else {
                                         switch (buf[i+j]) {
                                         case 'A':
-                                        case 'a': sum += pwm->mat[0][j]; break;
+                                        case 'a': sum += pwm->mat[1][j]; break;
                                         case 'C':
-                                        case 'c': sum += pwm->mat[1][j]; break;
+                                        case 'c': sum += pwm->mat[3][j]; break;
                                         case 'G':
-                                        case 'g': sum += pwm->mat[2][j]; break;
+                                        case 'g': sum += pwm->mat[0][j]; break;
                                         case 'T':
-                                        case 't': sum += pwm->mat[3][j]; break;
+                                        case 't': sum += pwm->mat[2][j]; break;
                                         default: break;
                                         }
                                         if (j == pwm->columns - 1 && sum > threshold) {

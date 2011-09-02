@@ -5,7 +5,10 @@ import getopt
 import os
 import math
 import sys
-import Bio.Motif as Motif
+
+from tfbayes.motif import information
+from tfbayes.motif import plot
+from tfbayes.motif import tools
 
 from itertools import izip
 
@@ -14,7 +17,7 @@ from itertools import izip
 
 options = {
     'force-alignment' : None,
-    'save-counts'     : None,
+    'save-motif'     : None,
     'save-plot'       : None,
     'method'          : 'kl-divergence',
     'cut-matrix'      : True,
@@ -35,7 +38,7 @@ def usage():
     print "                                    r-sequence"
     print "   -n                             - do not cut matrix"
     print
-    print "       --save-counts=CLUSTER      - save counts as CLUSTER"
+    print "       --save-motif=CLUSTER       - save counts as CLUSTER"
     print "       --save-plot=FILE           - save weblogo in FILE"
     print
     print "   -h, --help                     - print help"
@@ -59,178 +62,52 @@ def argmin(array):
             result.append(i[1])
     return result
 
-def gcd(a, b):
-    if a > b: a, b = b, a
-    while a > 0: a, b = (b % a), a
-    return b
-
-# motif plotting
-# ------------------------------------------------------------------------------
-
-class MotifStream():
-    def __init__(self, counts):
-        self.counts = []
-        for i in counts:
-            line = ''
-            for j in i:
-                line = line + str(j) + ' '
-            self.counts.append(line + '\n')
-        self.counts.append('\n')
-        self.counts.append('\n')
-        self.i      = 0
-    def readline(self):
-        if (self.i < len(self.counts)):
-            line = self.counts[self.i]
-            self.i += 1
-            return line
-        else:
-            return None
-
-def plot_motif(counts, file_name, title):
-    stream = MotifStream(counts)
-    m = Motif.Motif()
-    m._from_horiz_matrix(stream, letters='ACGT')
-    m.weblogo(file_name, title=title)
-
-# scan sequences file
-# ------------------------------------------------------------------------------
-
-def compute_score(pwm, sequence):
-    result = 0
-    for j in range(len(sequence)):
-        if sequence[j] == 'A' or sequence[j] == 'a':
-            result += pwm[0][j]
-        if sequence[j] == 'C' or sequence[j] == 'c':
-            result += pwm[1][j]
-        if sequence[j] == 'G' or sequence[j] == 'g':
-            result += pwm[2][j]
-        if sequence[j] == 'T' or sequence[j] == 't':
-            result += pwm[3][j]
-    return result
-
-def scan(pwm, sequences_file):
-    fp = open(sequences_file, 'r')
-    length = len(pwm[0])
-    i = 0
-    for line in fp.readlines():
-        for j in range(0, len(line)-length):
-            sequence = line[j:j+length-1]
-            score = compute_score(pwm, sequence)
-            if score > options['threshold']:
-                print "(%05i,%05i,%3.5f): %s" % (i, j, score, sequence)
-        i += 1
-    fp.close()
-
-# R_sequence
-# ------------------------------------------------------------------------------
-
-def r_sequence(cluster_counts):
-    z = 1.0/float(len(cluster_counts[0]))
-    cluster_freq = compute_frequencies(cluster_counts)
-    return z*sum([ 2 + sum([ cluster_freq[i][j]*math.log(cluster_freq[i][j], 2)
-                             for i in range(0, len(cluster_freq)) ])
-                   for j in range(0, len(cluster_freq[0])) ])
-
-# information content
-# ------------------------------------------------------------------------------
-
-def information_content_column(j, bg_counts, counts):
-    freq    = compute_frequencies(counts)
-    bg_freq = compute_frequencies(bg_counts)
-    return sum([ freq[i][j]*math.log(freq[i][j]/bg_freq[i][0], 2) for i in range(0, len(freq)) ])
-
-def information_content(bg_counts, cluster_counts):
-    norm = 1.0/float(len(cluster_counts[0]))
-    bg_freq      = compute_frequencies(bg_counts)
-    cluster_freq = compute_frequencies(cluster_counts)
-    return norm*sum([ sum([ cluster_freq[i][j]*math.log(cluster_freq[i][j]/bg_freq[i][0], 2) for j in range(0, len(cluster_freq[0])) ]) for i in range(0, len(cluster_freq)) ])
-
-# Kullback-Leibler divergence
-# ------------------------------------------------------------------------------
-
-def kl_divergence_column(j, k, bg_freq, c1_freq, c2_freq, length):
-    j1 = j
-    j2 = j-k
-    if   j1 >= 0 and j1 < length and j2 >= 0 and j2 < length:
-        # both matrices overlap
-        return sum( [ c1_freq[i][j1]*math.log(c1_freq[i][j1]/c2_freq[i][j2], 2) for i in range(0, len(c1_freq)) ] )
-    else:
-        if j1 >= 0 and j1 < length:
-            # only the first matrix
-            return sum( [ c1_freq[i][j1]*math.log(c1_freq[i][j1]/bg_freq[i][0], 2) for i in range(0, len(c1_freq)) ] )
-        else:
-            # only the second matrix
-            return sum( [ bg_freq[i][0]*math.log(bg_freq[i][0]/c2_freq[i][j2], 2) for i in range(0, len(c1_freq)) ] )
-
-def kl_divergence(k, bg_counts, c1_counts, c2_counts):
-    """ KL-divergence normalized by length """
-    length  = len(c1_counts[0])
-    j_range = range(min(0, k), max(length, length+k))
-    c1_freq = compute_frequencies(c1_counts)
-    c2_freq = compute_frequencies(c2_counts)
-    bg_freq = compute_frequencies(bg_counts)
-    return 1.0/float(length+abs(k)) * sum([ kl_divergence_column(j, k, bg_freq, c1_freq, c2_freq, length) for j in j_range ])
-
 # pwm tools
 # ------------------------------------------------------------------------------
 
-def adjust_counts(c1_counts, c2_counts):
-    s1 = sum([ c1_counts[i][0] for i in range(0, len(c1_counts)) ])
-    s2 = sum([ c2_counts[i][0] for i in range(0, len(c2_counts)) ])
-    m1 = s1/gcd(s1,s2)
-    m2 = s2/gcd(s1,s2)
-    c1_counts = [ [ m2*c1_counts[i][j] for j in range(0, len(c1_counts[0])) ] for i in range(0, len(c1_counts)) ]
-    c2_counts = [ [ m1*c2_counts[i][j] for j in range(0, len(c2_counts[0])) ] for i in range(0, len(c2_counts)) ]
-    return c1_counts, c2_counts
-
-def compute_frequencies(counts):
-    sums = [ sum(map(lambda m: m[j], counts)) for j in range(0, len(counts[0])) ]
-    return [ [ float(counts[i][j])/sums[j]    for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
-
-def sum_counts(i, j, k, c1_counts, c2_counts, length):
+def sum_freq(i, j, k, c1_freq, c2_freq, length):
     j1 = j
     j2 = j-k
     if   j1 >= 0 and j1 < length and j2 >= 0 and j2 < length:
-        return c1_counts[i][j1] + c2_counts[i][j2]
+        return (c1_freq[i][j1] + c2_freq[i][j2])/2.0
     elif j1 >= 0 and j1 < length:
-        return 2*c1_counts[i][j1]
+        return c1_freq[i][j1]
     elif j2 >= 0 and j2 < length:
-        return 2*c2_counts[i][j2]
+        return c2_freq[i][j2]
     else:
         return 0
 
 # alignment
 # ------------------------------------------------------------------------------
 
-def cut_matrix(length, bg_counts, counts):
-    while len(counts[0]) > length:
-        if information_content_column(0, bg_counts, counts) > information_content_column(-1, bg_counts, counts):
-            counts = [ [ counts[i][j] for j in range(0, len(counts[0])-1) ] for i in range(0, len(counts)) ]
+def cut_matrix(length, bg_freq, motif):
+    while len(motif[0]) > length:
+        if information.information_content_column(0, bg_freq, motif) > information.information_content_column(-1, bg_freq, motif):
+            motif = [ [ motif[i][j] for j in range(0, len(motif[0])-1) ] for i in range(0, len(motif)) ]
         else:
-            counts = [ [ counts[i][j] for j in range(1, len(counts[0])  ) ] for i in range(0, len(counts)) ]
-    return counts
+            motif = [ [ motif[i][j] for j in range(1, len(motif[0])  ) ] for i in range(0, len(motif)) ]
+    return motif
 
-def align(k, c1_counts, c2_counts):
-    length  = len(c1_counts[0])
+def align(k, c1_freq, c2_freq):
+    length  = len(c1_freq[0])
     j_range = range(min(0,k), max(length,length+k))
-    c1_counts, c2_counts = adjust_counts(c1_counts, c2_counts)
-    return [ [ sum_counts(i, j, k, c1_counts, c2_counts, length) for j in j_range ] for i in range(0, len(c1_counts)) ]
+    return [ [ sum_freq(i, j, k, c1_freq, c2_freq, length) for j in j_range ] for i in range(0, len(c1_freq)) ]
 
-def max_alignment(bg_counts, c1_counts, c2_counts):
+def max_alignment(bg_freq, c1_freq, c2_freq):
     ic      = []
-    length  = len(c1_counts[0])
+    length  = len(c1_freq[0])
     k_range = range(-length+1, length)
     for k in k_range:
         if options['method'] == 'information-content':
-            result = align(k, c1_counts, c2_counts)
-            result = cut_matrix(len(c1_counts[0]), bg_counts, result)
-            ic.append(information_content(bg_counts, result))
+            result = align(k, c1_freq, c2_freq)
+            result = cut_matrix(len(c1_freq[0]), bg_freq, result)
+            ic.append(information.information_content(bg_freq, result))
         if options['method'] == 'r-sequence':
-            result = align(k, c1_counts, c2_counts)
-            result = cut_matrix(len(c1_counts[0]), bg_counts, result)
-            ic.append(r_sequence(result))
+            result = align(k, c1_freq, c2_freq)
+            result = cut_matrix(len(c1_freq[0]), bg_freq, result)
+            ic.append(information.r_sequence(result))
         if options['method'] == 'kl-divergence':
-            ic.append(kl_divergence(k, bg_counts, c1_counts, c2_counts))
+            ic.append(information.kl_divergence(k, bg_freq, c1_freq, c2_freq))
     if options['method'] == 'information-content' or options['method'] == 'r-sequence':
         if options['verbose']:
             print zip(ic, k_range)
@@ -245,12 +122,12 @@ def max_alignment(bg_counts, c1_counts, c2_counts):
 # parse results config
 # ------------------------------------------------------------------------------
 
-def readVector(config, section, option, converter):
+def read_vector(config, section, option, converter):
     vector_str = config.get(section, option)
     vector     = map(converter, vector_str.split(' '))
     return vector
 
-def readMatrix(config, section, option, converter):
+def read_matrix(config, section, option, converter):
     matrix_str = config.get(section, option)
     matrix     = []
     for line in matrix_str.split('\n'):
@@ -258,32 +135,32 @@ def readMatrix(config, section, option, converter):
             matrix.append([converter(a) for a in line.split(' ')])
     return matrix
 
-def save_counts(config_parser, result):
-    config_parser.set('Cluster', options['save-counts'], "\n"+"\n".join(map(lambda arg: " ".join(map(str, arg)), result)))
+def save_freq(config_parser, result):
+    config_parser.set('Cluster', options['save-motif'], "\n"+"\n".join(map(lambda arg: " ".join(map(str, arg)), result)))
 
 def read_config(config_file, cluster_1, cluster_2):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
     if not config_parser.has_section('Cluster'):
         raise IOError("Invalid configuration file.")
-    bg_counts = readMatrix(config_parser, 'Cluster', 'cluster_0', int)
-    c1_counts = readMatrix(config_parser, 'Cluster',  cluster_1,  int)
-    c2_counts = readMatrix(config_parser, 'Cluster',  cluster_2,  int)
+    bg_freq = read_matrix(config_parser, 'Cluster', 'cluster_0', float)
+    c1_freq = read_matrix(config_parser, 'Cluster',  cluster_1,  float)
+    c2_freq = read_matrix(config_parser, 'Cluster',  cluster_2,  float)
     if options['force-alignment']:
         m = options['force-alignment']
     else:
-        m = max_alignment(bg_counts, c1_counts, c2_counts)
-    result = align(m, c1_counts, c2_counts)
+        m = max_alignment(bg_freq, c1_freq, c2_freq)
+    result = align(m, c1_freq, c2_freq)
     if options['cut-matrix']:
-        result = cut_matrix(len(c1_counts[0]), bg_counts, result)
+        result = cut_matrix(len(c1_freq[0]), bg_freq, result)
     if options['verbose']:
-        print c1_counts
-        print c2_counts
+        print c1_freq
+        print c2_freq
         print result
     if options['save-plot']:
-        plot_motif(result, options['save-plot'], 'Alignment of '+cluster_1+' and '+cluster_2)
-    if options['save-counts']:
-        save_counts(config_parser, result)
+        plot.plot_motif(result, options['save-plot'], 'Alignment of %s and %s' % (cluster_1, cluster_2))
+    if options['save-motif']:
+        save_freq(config_parser, result)
         fp = open(config_file, 'wb')
         config_parser.write(fp)
         fp.close()
@@ -294,7 +171,7 @@ def read_config(config_file, cluster_1, cluster_2):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "method=", "force-alignment=", "save-counts=", "save-plot="]
+        longopts   = ["help", "verbose", "method=", "force-alignment=", "save-motif=", "save-plot="]
         opts, tail = getopt.getopt(sys.argv[1:], "vn", longopts)
     except getopt.GetoptError:
         usage()
@@ -317,8 +194,8 @@ def main():
             options['cut-matrix'] = False
         if o == "--force-alignment":
             options['force-alignment'] = int(a)
-        if o == "--save-counts":
-            options['save-counts'] = a
+        if o == "--save-motif":
+            options['save-motif'] = a
         if o == "--save-plot":
             options['save-plot'] = a
     if len(tail) != 3:
