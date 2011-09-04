@@ -154,10 +154,9 @@ ostream& operator<< (ostream& o, const ProductDirichlet& pd) {
 }
 
 static
-void save_motifs(ostream& file, const DPM_TFBS& dpm, size_t n)
+void save_motifs(ostream& file, const DPM_TFBS& dpm)
 {
         const ClusterManager& cm = dpm.clustermanager();
-        const TfbsGraph& graph   = dpm.graph();
 
         for (ClusterManager::const_iterator it = cm.begin();
              it != cm.end(); it++) {
@@ -166,14 +165,6 @@ void save_motifs(ostream& file, const DPM_TFBS& dpm, size_t n)
                         file << static_cast<const ProductDirichlet&>((*it)->model());
                 }
         }
-        file << "graph = ";
-        for (TfbsGraph::const_iterator it = graph.begin();
-             it != graph.end(); it++) {
-                file << (*it).first.index1 << "-"
-                     << (*it).first.index2 << "="
-                     << static_cast<double>((*it).second)/static_cast<double>(n) << " ";
-        }
-        file << endl;
 }
 
 static
@@ -185,10 +176,10 @@ void save_result(ostream& file, const Sampler& sampler)
 
         file << "[Result]" << endl;
         file << "posterior =" << endl;
-        for (size_t i = 0; i < posterior.size(); i++) {
+        for (size_t i = 0; i < posterior.probabilities.size(); i++) {
                 file << "\t";
-                for (size_t j = 0; j < posterior[i].size(); j++) {
-                        file << (float)posterior[i][j] << " ";
+                for (size_t j = 0; j < posterior.probabilities[i].size(); j++) {
+                        file << (float)posterior.probabilities[i][j] << " ";
                 }
                 file << endl;
         }
@@ -216,6 +207,14 @@ void save_result(ostream& file, const Sampler& sampler)
                 }
                 file << endl;
         }
+        file << "graph = ";
+        for (Graph::const_iterator it = posterior.graph.begin();
+             it != posterior.graph.end(); it++) {
+                file << (*it).first.index1 << "-"
+                     << (*it).first.index2 << "="
+                     << static_cast<double>((*it).second)/static_cast<double>(sampler.sampling_steps()) << " ";
+        }
+        file << endl;
 }
 
 static
@@ -241,13 +240,13 @@ void run_dpm(const char* file_name)
         // save result
         if (options.save == "") {
                 save_result(cout, pmcmc);
-                save_motifs(cout, gdpm, sampler.sampling_steps());
+                save_motifs(cout, gdpm);
         }
         else {
                 ofstream file;
                 file.open(options.save.c_str());
                 save_result(file, pmcmc);
-                save_motifs(file, gdpm, sampler.sampling_steps());
+                save_motifs(file, gdpm);
                 file.close();
         }
 

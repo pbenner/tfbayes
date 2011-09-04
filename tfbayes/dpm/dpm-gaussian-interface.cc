@@ -98,14 +98,14 @@ Bayes::Matrix* _dpm_gaussian_cluster_elements(int tag) {
 
 Bayes::Matrix* _dpm_gaussian_get_posterior() {
         Bayes::Matrix* result;
-        const vector<vector<double> >& posterior = _gdpm->posterior();
-        size_t n = posterior.size();
+        const vector<vector<double> >& probabilities = _gdpm->posterior().probabilities;
+        size_t n = probabilities.size();
         size_t m = 0;
 
         // compute maximum length
         for (size_t i = 0; i < n; i++) {
-                if (m < posterior[i].size()) {
-                        m = posterior[i].size();
+                if (m < probabilities[i].size()) {
+                        m = probabilities[i].size();
                 }
         }
 
@@ -114,8 +114,8 @@ Bayes::Matrix* _dpm_gaussian_get_posterior() {
         // copy posterior
         for (size_t i = 0; i < n; i++) {
                 for (size_t j = 0; j < m; j++) {
-                        if (j < posterior[i].size()) {
-                                result->mat[i][j] = posterior[i][j];
+                        if (j < probabilities[i].size()) {
+                                result->mat[i][j] = probabilities[i][j];
                         }
                         else {
                                 result->mat[i][j] = 0;

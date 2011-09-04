@@ -90,20 +90,23 @@ PopulationMCMC::update_posterior()
         }
         // allocate memory
         _posterior = new posterior_t();
-        for (size_t i = 0; i < _population[0]->posterior().size(); i++) {
-                _posterior->push_back(vector<double>(_population[0]->posterior()[i].size(), 0));
+        for (size_t i = 0; i < _population[0]->posterior().probabilities.size(); i++) {
+                _posterior->probabilities.push_back(vector<double>(_population[0]->posterior().probabilities[i].size(), 0));
         }
         // loop through posterior
-        for (size_t i = 0; i < _population[0]->posterior().size(); i++) {
-                for (size_t j = 0; j < _population[0]->posterior()[i].size(); j++) {
+        for (size_t i = 0; i < _population[0]->posterior().probabilities.size(); i++) {
+                for (size_t j = 0; j < _population[0]->posterior().probabilities[i].size(); j++) {
                         // average over population
                         double sum = 0;
                         for (size_t k = 0; k < _size; k++) {
-                                sum += _population[k]->posterior()[i][j];
+                                sum += _population[k]->posterior().probabilities[i][j];
                         }
                         // save average
-                        (*_posterior)[i][j] = sum/(double)_size;
+                        _posterior->probabilities[i][j] = sum/(double)_size;
                 }
+        }
+        for (size_t i = 0; i < _size; i++) {
+                _posterior->graph.insert(_population[i]->posterior().graph);
         }
 }
 

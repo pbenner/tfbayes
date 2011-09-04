@@ -25,7 +25,7 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>
 
-#include <dpm-tfbs-graph.hh>
+#include <graph.hh>
 #include <clustermanager.hh>
 #include <component-model.hh>
 #include <data-tfbs.hh>
@@ -51,13 +51,14 @@ public:
         void   mixture_weights(const index_t& index, double log_weights[], cluster_tag_t tags[]);
         void   add(const index_t& index, cluster_tag_t tag);
         void   remove(const index_t& index, cluster_tag_t tag);
+        void   update_graph(sequence_data_t<short> tfbs_start_positions);
         void   update_posterior(size_t sampling_steps);
         double likelihood() const;
         bool   valid_for_sampling(const index_t& index) const;
         const posterior_t& posterior() const;
         const DataTFBS& data() const;
         const ClusterManager& clustermanager() const;
-        const TfbsGraph& graph() const;
+        const Graph& graph() const;
 
         // constants
         ////////////////////////////////////////////////////////////////////////
@@ -74,7 +75,7 @@ private:
         const DataTFBS& _data;
         const DataTFBS& _data_comp;
         sequence_data_t<cluster_tag_t> _cluster_assignments;
-        ClusterManager   _clustermanager;
+        ClusterManager _clustermanager;
 
         // tags of special clusters
         cluster_tag_t bg_cluster_tag;
@@ -93,7 +94,7 @@ private:
 
         // posterior distribution
         posterior_t _posterior;
-        TfbsGraph _tfbs_graph;
+        Graph _tfbs_graph;
 
         // keep track of the number of transcription factor binding sites
         size_t num_tfbs;

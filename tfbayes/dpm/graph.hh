@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DPM_TFBS_GRAPH_HH
-#define DPM_TFBS_GRAPH_HH
+#ifndef GRAPH_HH
+#define GRAPH_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -27,8 +27,8 @@
 #include <boost/unordered_map.hpp> 
 
 #include <index.hh>
-#include <indexer.hh>
-#include <datatypes.hh>
+//#include <indexer.hh>
+//#include <datatypes.hh>
 
 static inline
 const index_t& min(const index_t& index1, const index_t& index2) {
@@ -76,9 +76,9 @@ size_t hash_value(const edge_t& edge)
         return hasher(edge.index1[0] + edge.index1[1]);
 }
 
-class TfbsGraph {
+class Graph {
 public:
-        TfbsGraph() {}
+        Graph() {}
 
         // typedefs
         ////////////////////////////////////////////////////////////////////////////////
@@ -95,37 +95,20 @@ public:
         const_iterator begin() const { return _edges.begin(); }
         const_iterator end()   const { return _edges.end();   }
 
+        // operators
+        ////////////////////////////////////////////////////////////////////////////////
+        size_t& operator[](const edge_t& edge) {
+                return _edges[edge];
+        }
+
         // methods
         ////////////////////////////////////////////////////////////////////////////////
         void insert(const edge_t& edge) {
                 _edges[edge]++;
         }
-        void update(const Indexer& indexer,
-                    const sequence_data_t<cluster_tag_t>& cluster_assignments,
-                    sequence_data_t<short> tfbs_start_positions) {
-                std::list<const index_t*> binding_sites;
-                // find all binding sites
-                for (Indexer::sampling_iterator it = indexer.sampling_begin();
-                     it != indexer.sampling_end(); it++) {
-                        if (tfbs_start_positions[**it] == 1) {
-                                binding_sites.push_back(*it);
-                        }
-                }
-                // iterate over binding sites
-                for (std::list<const index_t*>::const_iterator it = binding_sites.begin();
-                     it != binding_sites.end(); it++) {
-                        // if there still is a binding site
-                        if (tfbs_start_positions[**it] == 1) {
-                                cluster_tag_t tag = cluster_assignments[**it];
-                                tfbs_start_positions[**it] = 0;
-                                // find sites with the same cluster assignment
-                                for (std::list<const index_t*>::const_iterator is = it;
-                                     is != binding_sites.end(); is++) {
-                                        if (tfbs_start_positions[**is] == 1 && cluster_assignments[**is] == tag) {
-                                                _edges[edge_t(**it, **is)]++;
-                                        }
-                                }
-                        }
+        void insert(const Graph& graph) {
+                for (const_iterator it = graph.begin(); it != graph.end(); it++) {
+                        _edges[(*it).first] += (*it).second;
                 }
         }
         void cleanup(size_t threshold) {
@@ -144,4 +127,4 @@ protected:
         map_t _edges;
 };
 
-#endif /* DPM_TFBS_GRAPH_HH */
+#endif /* GRAPH_HH */

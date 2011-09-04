@@ -28,6 +28,7 @@
 
 #include <index.hh>
 #include <data.hh>
+#include <graph.hh>
 
 // data_t and iterator_t
 ////////////////////////////////////////////////////////////////////////////////
@@ -205,6 +206,9 @@ typedef struct {
         std::vector<std::vector<size_t> > components;
 } sampling_history_t;
 
-typedef std::vector<std::vector<double> > posterior_t;
+typedef struct {
+        std::vector<std::vector<double> > probabilities;
+        Graph graph;
+} posterior_t;
 
 #endif /* DATATYPES_HH */

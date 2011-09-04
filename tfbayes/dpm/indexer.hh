@@ -24,6 +24,8 @@
 
 #include <vector>
 
+#include <index.hh>
+
 //
 // Interface for (randomly) indexing data structures
 //
