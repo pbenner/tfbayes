@@ -18,6 +18,8 @@
 
 import math
 
+from ..uipac.alphabet import DNA
+
 # config tools
 # ------------------------------------------------------------------------------
 
