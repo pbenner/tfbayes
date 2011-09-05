@@ -26,6 +26,7 @@
 #include <vector>
 #include <string>
 
+#include <clonable.hh>
 #include <index.hh>
 #include <data.hh>
 #include <graph.hh>
@@ -125,7 +126,7 @@ private:
 };
 
 template <typename T>
-class data_t
+class data_t : public clonable
 {
 public:
         data_t() : _data() {
@@ -135,6 +136,10 @@ public:
         data_t(const std::vector<T>& data) : _data(data) {
         }
         virtual ~data_t() {}
+
+        virtual data_t* clone() const {
+                return new data_t(*this);
+        }
 
         friend std::ostream& operator<< <> (std::ostream& o, const data_t<T>& sd);
 
@@ -169,6 +174,10 @@ public:
         sequence_data_t(const std::vector<std::vector<T> >& data) : _data(data) {
         }
         virtual ~sequence_data_t() {}
+
+        virtual sequence_data_t* clone() const {
+                return new sequence_data_t(*this);
+        }
 
         friend std::ostream& operator<< <> (std::ostream& o, const sequence_data_t<T>& sd);
 
