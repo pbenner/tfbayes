@@ -19,6 +19,13 @@
 class DNA:
     letters = 'GATC'
     @staticmethod
+    def is_nucleotide(n):
+        if (n == 'A' or n == 'a' or n == 'C' or n == 'c' or
+            n == 'G' or n == 'g' or n == 'T' or n == 't'):
+            return True
+        else:
+            return False
+    @staticmethod
     def code(sequence):
         codebook = { 'G': 0, 'g': 0, 'A': 1, 'a': 1,
                      'T': 2, 't': 2, 'C': 3, 'c': 3 }

@@ -14,8 +14,9 @@ from tfbayes.uipac.alphabet import DNA
 # ------------------------------------------------------------------------------
 
 options = {
-    'threshold'   : 20.0,
-    'verbose'     : False,
+    'cluster-name'   : None,
+    'threshold'      : 20.0,
+    'verbose'        : False,
     }
 
 # usage
@@ -27,6 +28,7 @@ def usage():
     print "dpm-tfbs-scan [option]... CLUSTER_CONFIG CLUSTER_NAME SEQUENCES_FASTA"
     print
     print "Options:"
+    print "       --save=CLUSTER_NAME        - save motif of matched sequences"
     print "       --threshold=VALUE"
     print
     print "   -h, --help                     - print help"
@@ -36,9 +38,15 @@ def usage():
 # scan sequences file
 # ------------------------------------------------------------------------------
 
+def add_subsequence(counts, sub_sequence):
+    for i in range(len(counts[0])):
+        if DNA.is_nucleotide(sub_sequence[i]):
+            counts[DNA.code(sub_sequence[i])][i] += 1
+
 def scan(pwm, sequences_file):
     parser = fasta.parser(sequences_file)
     length = len(pwm[0])
+    counts = [ [ 1 for i in range(length) ] for j in range(len(pwm)) ]
     hits = 0
     while 1:
         description, sequence = parser.read_sequence()
@@ -48,23 +56,35 @@ def scan(pwm, sequences_file):
             sub_sequence = sequence[j:j+length]
             score = tools.compute_score(pwm, sub_sequence)
             if score > options['threshold']:
+                add_subsequence(counts, sub_sequence)
                 hits += 1
                 if len(description) >= 3:
                     print "(%15s,%12s,%05i,%3.5f): %s" % (description[0], description[2], j, score, sub_sequence)
                 else:
                     print "(%30s,%05i,%3.5f): %s" % (description[0], j, score, sub_sequence)
     print "Found %d sequences." % hits
+    return tools.compute_frequencies(counts), hits+1
 
 # parse results config
 # ------------------------------------------------------------------------------
+
+def save_motif(config_parser, config_file, motif, components):
+    if options['cluster-name']:
+        config_parser.set('Cluster', 'cluster', '%s %s' % (config_parser.get('Cluster', 'cluster'), options['cluster-name']))
+        config_parser.set('Cluster', options['cluster-name'], "\n"+"\n".join(map(lambda arg: " ".join(map(str, arg)), motif)))
+        config_parser.set('Cluster', '%s_components' % options['cluster-name'], str(components))
+        fp = open(config_file, 'wb')
+        config_parser.write(fp)
+        fp.close()
 
 def read_config(config_file, cluster_name, sequences_file):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
     if not config_parser.has_section('Cluster'):
         raise IOError("Invalid configuration file.")
-    pwm = tools.compute_pwm(config_parser, cluster_name)
-    scan(pwm, sequences_file)
+    pwm   = tools.compute_pwm(config_parser, cluster_name)
+    motif, components = scan(pwm, sequences_file)
+    save_motif(config_parser, config_file, motif, components)
 
 # main
 # ------------------------------------------------------------------------------
@@ -72,13 +92,15 @@ def read_config(config_file, cluster_name, sequences_file):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "threshold="]
+        longopts   = ["help", "verbose", "threshold=", "save="]
         opts, tail = getopt.getopt(sys.argv[1:], "", longopts)
     except getopt.GetoptError:
         usage()
         return 2
     output = None
     for o, a in opts:
+        if o == "--save":
+            options['cluster-name'] = a
         if o in ("-v", "--verbose"):
             sys.stderr.write("Verbose mode turned on.\n")
             options["verbose"] = True
