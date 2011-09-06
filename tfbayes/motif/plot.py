@@ -18,6 +18,7 @@
 
 import Bio.Motif as Motif
 
+from ..motif.tools import reverse_complement
 from ..motif.information import r_sequence
 from ..uipac.alphabet import DNA
 
@@ -48,9 +49,14 @@ def plot_motif(motif, file_name, title):
     m._from_horiz_matrix(stream, letters=DNA.letters)
     m.weblogo(file_name, title=title)
 
-def plot_motifs(motifs, components, basename):
+def plot_motifs(motifs, components, basename, revcomp=False):
     for n, motif, comp in zip(range(0, len(motifs)), motifs, components):
         r_seq = r_sequence(motif)
         file_name = '%s_cluster_%d.png' % (basename, n)
         title = 'cluster_%d:%d, R_seq = %f' % (n, comp, r_seq)
         plot_motif(motif, file_name, title)
+        if revcomp:
+            motif_revcomp = reverse_complement(motif)
+            file_name = '%s_cluster_%d_revcomp.png' % (basename, n)
+            title = 'cluster_%d_revcomp:%d, R_seq = %f' % (n, comp, r_seq)
+            plot_motif(motif_revcomp, file_name, title)

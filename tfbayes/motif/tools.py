@@ -70,3 +70,15 @@ def compute_score(pwm, sequence):
             code = DNA.code('T')
             result += pwm[code][j]
     return result
+
+# reverse complement
+# ------------------------------------------------------------------------------
+
+def reverse_complement(motif):
+    revcomp = [ [ 0.0 for i in range(len(motif[0])) ] for j in range(len(motif)) ]
+    for i in range(len(motif[0])):
+        revcomp[DNA.code('T')][-i-1] = motif[DNA.code('A')][i]
+        revcomp[DNA.code('G')][-i-1] = motif[DNA.code('C')][i]
+        revcomp[DNA.code('C')][-i-1] = motif[DNA.code('G')][i]
+        revcomp[DNA.code('A')][-i-1] = motif[DNA.code('T')][i]
+    return revcomp

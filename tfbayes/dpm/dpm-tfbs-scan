@@ -14,6 +14,7 @@ from tfbayes.uipac.alphabet import DNA
 # ------------------------------------------------------------------------------
 
 options = {
+    'revcomp'        : False,
     'cluster-name'   : None,
     'threshold'      : 20.0,
     'verbose'        : False,
@@ -28,6 +29,7 @@ def usage():
     print "dpm-tfbs-scan [option]... CLUSTER_CONFIG CLUSTER_NAME SEQUENCES_FASTA"
     print
     print "Options:"
+    print "   -r                             - scan for the reverse complement"
     print "       --save=CLUSTER_NAME        - save motif of matched sequences"
     print "       --threshold=VALUE"
     print
@@ -44,6 +46,8 @@ def add_subsequence(counts, sub_sequence):
             counts[DNA.code(sub_sequence[i])][i] += 1
 
 def scan(pwm, sequences_file):
+    if options['revcomp']:
+        pwm = tools.reverse_complement(pwm)
     parser = fasta.parser(sequences_file)
     length = len(pwm[0])
     counts = [ [ 1 for i in range(length) ] for j in range(len(pwm)) ]
@@ -82,7 +86,7 @@ def read_config(config_file, cluster_name, sequences_file):
     config_parser.read(config_file)
     if not config_parser.has_section('Cluster'):
         raise IOError("Invalid configuration file.")
-    pwm   = tools.compute_pwm(config_parser, cluster_name)
+    pwm = tools.compute_pwm(config_parser, cluster_name)
     motif, components = scan(pwm, sequences_file)
     save_motif(config_parser, config_file, motif, components)
 
@@ -93,7 +97,7 @@ def main():
     global options
     try:
         longopts   = ["help", "verbose", "threshold=", "save="]
-        opts, tail = getopt.getopt(sys.argv[1:], "", longopts)
+        opts, tail = getopt.getopt(sys.argv[1:], "r", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -109,6 +113,8 @@ def main():
             return 0
         if o == "--threshold":
             options['threshold'] = float(a)
+        if o == "-r":
+            options['revcomp'] = True
     if len(tail) != 3:
         usage()
         return 1
