@@ -24,7 +24,7 @@ pkgpythondir = $(pyexecdir)/tfbayes/dpm
 pkgpython_PYTHON = __init__.py dpm_gaussian_interface.py dpm_tfbs_interface.py
 
 ## scripts
-dist_bin_SCRIPTS = dpm-gaussian-demo dpm-tfbs-align dpm-tfbs-demo dpm-tfbs-graph dpm-tfbs-plot dpm-tfbs-scan dpm-tfbs-weblogo
+dist_bin_SCRIPTS = dpm-gaussian-demo dpm-tfbs-align dpm-tfbs-demo dpm-tfbs-graph dpm-tfbs-plot dpm-tfbs-scan dpm-tfbs-tools dpm-tfbs-weblogo
 
 ## dpm library
 lib_LTLIBRARIES  = libdpm.la
