@@ -2,20 +2,21 @@
 
 INCLUDES = -I$(top_srcdir)/include
 
-bin_PROGRAMS = dpm-tfbs dpm-gaussian
+bin_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug
 
-dpm_gaussian_SOURCES = dpm-gaussian-main.cc
-dpm_gaussian_LDADD   = $(top_builddir)/libexception/libexception.la
-dpm_gaussian_LDADD  += $(top_builddir)/libfastlog/libfastlog.la
-dpm_gaussian_LDADD  += libdpm.la
-dpm_gaussian_LDADD  += $(LIB_PTHREAD)
+dpm_gaussian_debug_SOURCES = dpm-gaussian-main.cc
+dpm_gaussian_debug_LDADD   = $(top_builddir)/libexception/libexception.la
+dpm_gaussian_debug_LDADD  += $(top_builddir)/libfastlog/libfastlog.la
+dpm_gaussian_debug_LDADD  += $(top_builddir)/tfbayes/fasta/libfasta.la
+dpm_gaussian_debug_LDADD  += libdpm.la
+dpm_gaussian_debug_LDADD  += $(LIB_PTHREAD)
 
-dpm_tfbs_SOURCES = dpm-tfbs-main.cc
-dpm_tfbs_LDADD   = $(top_builddir)/libexception/libexception.la
-dpm_tfbs_LDADD  += $(top_builddir)/libfastlog/libfastlog.la
-dpm_tfbs_LDADD  += $(top_builddir)/tfbayes/fasta/libfasta.la
-dpm_tfbs_LDADD  += libdpm.la
-dpm_tfbs_LDADD  += $(LIB_PTHREAD)
+dpm_tfbs_debug_SOURCES = dpm-tfbs-main.cc
+dpm_tfbs_debug_LDADD   = $(top_builddir)/libexception/libexception.la
+dpm_tfbs_debug_LDADD  += $(top_builddir)/libfastlog/libfastlog.la
+dpm_tfbs_debug_LDADD  += $(top_builddir)/tfbayes/fasta/libfasta.la
+dpm_tfbs_debug_LDADD  += libdpm.la
+dpm_tfbs_debug_LDADD  += $(LIB_PTHREAD)
 
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/dpm
@@ -24,7 +25,7 @@ pkgpythondir = $(pyexecdir)/tfbayes/dpm
 pkgpython_PYTHON = __init__.py dpm_gaussian_interface.py dpm_tfbs_interface.py
 
 ## scripts
-dist_bin_SCRIPTS = dpm-gaussian-demo dpm-tfbs-align dpm-tfbs-demo dpm-tfbs-graph dpm-tfbs-plot dpm-tfbs-scan dpm-tfbs-tools dpm-tfbs-weblogo
+dist_bin_SCRIPTS = dpm-gaussian-demo dpm-tfbs-align dpm-tfbs-demo dpm-tfbs-graph dpm-tfbs-plot dpm-tfbs-sampler dpm-tfbs-scan dpm-tfbs-tools dpm-tfbs-weblogo
 
 ## dpm library
 lib_LTLIBRARIES  = libdpm.la
@@ -46,6 +47,7 @@ libdpm_la_SOURCES =                                                           \
 	dpm-tfbs-interface.cc dpm-tfbs-interface.hh
 libdpm_la_LIBADD  = $(top_builddir)/libexception/libexception.la
 libdpm_la_LIBADD += $(top_builddir)/libfastlog/libfastlog.la
+libdpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libfasta.la
 libdpm_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
 ## extra dist

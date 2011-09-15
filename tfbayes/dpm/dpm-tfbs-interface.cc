@@ -30,32 +30,196 @@ namespace Bayes {
 #include <init.hh>
 #include <dpm-tfbs-interface.hh>
 #include <dpm-tfbs.hh>
-#include <sampler.hh>
+#include <pmcmc.hh>
+
+#include <tfbayes/exception.h>
+#include <tfbayes/fasta.hh>
 
 using namespace std;
 
+// options and global variables
+// -----------------------------------------------------------------------------
+
+typedef struct _options_t {
+        int tfbs_length;
+        double alpha;
+        double d;
+        double lambda;
+        int population_size;
+        Bayes::Matrix** baseline_priors;
+        int baseline_priors_n;
+        _options_t()
+                : tfbs_length(10),
+                  alpha(0.05),
+                  d(0.0),
+                  lambda(0.01),
+                  population_size(1),
+                  baseline_priors(NULL),
+                  baseline_priors_n(0)
+                { }
+} options_t;
+
+static options_t _options;
 static DPM_TFBS* _gdpm;
 static DataTFBS* _data;
 static DataTFBS* _data_comp;
 static GibbsSampler* _sampler;
+static PopulationMCMC* _pmcmc;
+static vector<string> _sequences;
+static vector<string> _sequences_comp;
+
+ostream&
+operator<<(std::ostream& o, const options_t& options) {
+        o << "Options:"              << endl
+          << "-> tfbs_length     = " << options.tfbs_length     << endl
+          << "-> alpha           = " << options.alpha           << endl
+          << "-> d               = " << options.d               << endl
+          << "-> lambda          = " << options.lambda          << endl
+          << "-> population_size = " << options.population_size << endl;
+        return o;
+}
+
+// file i/o
+// -----------------------------------------------------------------------------
+
+ostream& operator<< (ostream& o, const ProductDirichlet& pd) {
+        for (size_t j = 0; j < pd.alpha[0].size() - 1; j++) {
+                o << "\t";
+                for (size_t i = 0; i < pd.alpha.size(); i++) {
+                        o << pd.alpha[i][j] + pd.counts[i][j] << " ";
+                }
+                o << endl;
+        }
+
+        return o;
+}
+
+static
+void read_file(const char* file_name, vector<string>& sequences)
+{
+        FastaParser parser(file_name);
+
+        ifstream file(file_name);
+        string line;
+
+        size_t i = 0;
+        while ((line = parser.read_sequence()) != "") {
+                size_t read = line.size();
+                sequences.push_back("");
+                size_t pos = 0;
+                for (size_t j = 0; j < (size_t)read && line[j] != '\n'; j++) {
+                        if (is_nucleotide_or_masked(line[j])) {
+                                sequences[i].append(1,line[j]);
+                                pos++;
+                        }
+                }
+                i++;
+        }
+}
+
+static
+void save_result(ostream& file)
+{
+        const posterior_t& posterior      = _pmcmc->posterior();
+        const sampling_history_t& history = _pmcmc->sampling_history();
+        const ClusterManager& cm          = _gdpm->clustermanager();
+
+        file.setf(ios::showpoint);
+
+        file << "[Result]" << endl;
+        file << "posterior =" << endl;
+        for (size_t i = 0; i < posterior.probabilities.size(); i++) {
+                file << "\t";
+                for (size_t j = 0; j < posterior.probabilities[i].size(); j++) {
+                        file << (float)posterior.probabilities[i][j] << " ";
+                }
+                file << endl;
+        }
+        file << "components =" << endl;
+        for (size_t i = 0; i < history.components.size(); i++) {
+                file << "\t";
+                for (size_t j = 0; j < history.components[i].size(); j++) {
+                        file << history.components[i][j] << " ";
+                }
+                file << endl;
+        }
+        file << "switches =" << endl;
+        for (size_t i = 0; i < history.switches.size(); i++) {
+                file << "\t";
+                for (size_t j = 0; j < history.switches[i].size(); j++) {
+                        file << history.switches[i][j] << " ";
+                }
+                file << endl;
+        }
+        file << "likelihood =" << endl;
+        for (size_t i = 0; i < history.likelihood.size(); i++) {
+                file << "\t";
+                for (size_t j = 0; j < history.likelihood[i].size(); j++) {
+                        file << history.likelihood[i][j] << " ";
+                }
+                file << endl;
+        }
+        file << "graph = ";
+        for (Graph::const_iterator it = posterior.graph.begin();
+             it != posterior.graph.end(); it++) {
+                file << (*it).first.index1 << "-"
+                     << (*it).first.index2 << "="
+                     << static_cast<double>((*it).second)/static_cast<double>(_pmcmc->sampling_steps()) << " ";
+        }
+        file << endl;
+        for (ClusterManager::const_iterator it = cm.begin();
+             it != cm.end(); it++) {
+                if ((*it)->tag() == 0) {
+                        file << "cluster_bg" << " =" << endl;
+                        file << static_cast<const ProductDirichlet&>((*it)->model());
+                }
+        }
+}
 
 __BEGIN_C_REGION;
 
-void _dpm_tfbs_init(double alpha, double d, double lambda, int tfbs_length, int n, char *sequences[])
+// python interface
+// -----------------------------------------------------------------------------
+
+options_t* _dpm_tfbs_options()
+{
+        return &_options;
+}
+
+void _dpm_tfbs_init(const char* filename)
 {
         __dpm_init__();
 
-        vector<string> _sequences;
-        vector<string> _sequences_comp;
-        for (size_t i = 0; i < (size_t)n; i++) {
-                _sequences.push_back(sequences[i]);
-        }
+        // read sequences
+        read_file(filename, _sequences);
         _sequences_comp = complement(_sequences);
 
-        _data      = new DataTFBS(_sequences, (size_t)tfbs_length);
-        _data_comp = new DataTFBS(_sequences_comp, (size_t)tfbs_length);
-        _gdpm      = new DPM_TFBS(alpha, d, lambda, (size_t)tfbs_length, *_data, *_data_comp);
+        // baseline priors
+        gsl_matrix* baseline_priors[_options.baseline_priors_n];
+        for (int i = 0; i < _options.baseline_priors_n; i++) {
+                baseline_priors[i] = Bayes::toGslMatrix(_options.baseline_priors[i]);
+        }
+
+        _data      = new DataTFBS(_sequences, _options.tfbs_length);
+        _data_comp = new DataTFBS(_sequences_comp, _options.tfbs_length);
+        _gdpm      = new DPM_TFBS(_options.alpha, _options.d, _options.lambda, _options.tfbs_length, *_data, *_data_comp);
         _sampler   = new GibbsSampler(*_gdpm, *_data);
+        _pmcmc     = new PopulationMCMC(*_sampler, _options.population_size);
+
+        cout << _options << endl;
+}
+
+void _dpm_tfbs_save(const char* filename)
+{
+        if (filename == NULL) {
+                save_result(cout);
+        }
+        else {
+                ofstream file;
+                file.open(filename);
+                save_result(file);
+                file.close();
+        }
 }
 
 unsigned int _dpm_tfbs_num_clusters() {
@@ -122,7 +286,7 @@ Bayes::Matrix* _dpm_tfbs_cluster_assignments() {
 }
 
 Bayes::Vector* _dpm_tfbs_hist_likelihood() {
-        const vector<double>& likelihood = _sampler->sampling_history().likelihood[0];
+        const vector<double>& likelihood = _pmcmc->sampling_history().likelihood[0];
         size_t length = likelihood.size();
         Bayes::Vector* result = Bayes::allocVector(length);
 
@@ -134,7 +298,7 @@ Bayes::Vector* _dpm_tfbs_hist_likelihood() {
 }
 
 Bayes::Vector* _dpm_tfbs_hist_switches() {
-        const vector<double>& switches = _sampler->sampling_history().switches[0];
+        const vector<double>& switches = _pmcmc->sampling_history().switches[0];
         size_t length = switches.size();
         Bayes::Vector* result = Bayes::allocVector(length);
 
@@ -150,13 +314,13 @@ void _dpm_tfbs_print() {
 }
 
 void _dpm_tfbs_sample(unsigned int n, unsigned int burnin) {
-        _sampler->sample((size_t)n, (size_t)burnin);
+        _pmcmc->sample((size_t)n, (size_t)burnin);
 }
 
 void _dpm_tfbs_free() {
         delete(_data);
         delete(_gdpm);
-        delete(_sampler);
+        delete(_pmcmc);
 }
 
 __END_C_REGION;

@@ -17,6 +17,8 @@
 import os
 import numpy as np
 import math
+import ConfigParser
+import getopt
 
 from ctypes import *
 
@@ -53,6 +55,15 @@ class MATRIX(Structure):
                  ("columns", c_int),
                  ("mat",     POINTER(POINTER(c_double)))]
 
+class OPTIONS(Structure):
+     _fields_ = [("tfbs_length",       c_int),
+                 ("alpha",             c_double),
+                 ("d",                 c_double),
+                 ("lambda_",           c_double),
+                 ("population_size",   c_int),
+                 ("baseline_priors",   POINTER(POINTER(MATRIX))),
+                 ("baseline_priors_n", c_int)]
+
 # function prototypes
 # ------------------------------------------------------------------------------
 
@@ -71,8 +82,11 @@ _lib._freeMatrix.argtypes  = [POINTER(MATRIX)]
 _lib._free.restype         = None
 _lib._free.argtypes        = [POINTER(None)]
 
-#_lib._dpm_tfbs_init.restype     = None
-#_lib._dpm_tfbs_init.argtypes    = [c_int]
+_lib._dpm_tfbs_options.restype       = POINTER(OPTIONS)
+_lib._dpm_tfbs_options.argtypes      = []
+
+_lib._dpm_tfbs_init.restype          = None
+_lib._dpm_tfbs_init.argtypes         = [c_char_p]
 
 _lib._dpm_tfbs_num_clusters.restype  = c_uint
 _lib._dpm_tfbs_num_clusters.argtypes = []
@@ -91,6 +105,9 @@ _lib._dpm_tfbs_print.argtypes   = []
 
 _lib._dpm_tfbs_sample.restype   = None
 _lib._dpm_tfbs_sample.argtypes  = []
+
+_lib._dpm_tfbs_save.restype     = None
+_lib._dpm_tfbs_save.argtypes    = [c_char_p]
 
 _lib._dpm_tfbs_free.restype     = None
 _lib._dpm_tfbs_free.argtypes    = []
@@ -127,18 +144,25 @@ def getMatrix(c_m):
 #
 # ------------------------------------------------------------------------------
 
-def dpm_init(alpha, d, lam, tfbs_length, sequences):
-     c_alpha       = c_double(alpha)
-     c_d           = c_double(d)
-     c_lam         = c_double(lam)
-     c_tfbs_length = c_int(tfbs_length)
-     n             = len(sequences)
-     c_n           = c_int(n)
-     c_sequences   = (n*c_char_p)()
-     for i in range(0, n):
-          m = len(sequences[i])
-          c_sequences[i] = c_char_p(sequences[i])
-     _lib._dpm_tfbs_init(c_alpha, c_d, c_lam, c_tfbs_length, c_n, c_sequences)
+def dpm_init(options, input_file):
+     c_options = _lib._dpm_tfbs_options()
+     c_options.contents.alpha   = options['alpha']
+     c_options.contents.d       = options['d']
+     c_options.contents.lambda_ = options['lambda']
+     c_options.contents.tfbs_length = options['tfbs_length']
+     c_options.contents.population_size = options['population_size']
+     c_input_file = c_char_p(input_file)
+     prior_length = len(options['baseline_priors'])
+     if prior_length > 0:
+          c_baseline_priors = (prior_length*POINTER(MATRIX))()
+          for i, prior in zip(range(prior_length), options['baseline_priors']):
+               c_baseline_priors[i] = _lib._allocMatrix(len(prior), len(prior[0]))
+               copyMatrixToC(prior, c_baseline_priors[i])
+          c_options.contents.baseline_priors   = pointer(c_baseline_priors[0])
+          c_options.contents.baseline_priors_n = c_int(prior_length)
+     _lib._dpm_tfbs_init(c_input_file)
+     for i in range(prior_length):
+          _lib._freeMatrix(c_baseline_priors[i])
 
 def dpm_print():
      _lib._dpm_tfbs_print()
@@ -168,6 +192,10 @@ def dpm_sample(n, burnin):
      c_n      = c_int(n)
      c_burnin = c_int(burnin)
      _lib._dpm_tfbs_sample(c_n, c_burnin)
+
+def dpm_save(filename):
+     c_filename = c_char_p(filename)
+     _lib._dpm_tfbs_save(c_filename)
 
 def dpm_free():
      _lib._dpm_tfbs_free()
