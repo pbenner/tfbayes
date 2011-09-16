@@ -28,29 +28,30 @@
 
 using namespace std;
 
-Cluster::Cluster(ComponentModel* model, cluster_tag_t tag)
-        : _model(model), _tag(tag), _destructible(true), _size(0)
+Cluster::Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag)
+        : _model(model), _cluster_tag(cluster_tag), _model_tag(model_tag), _destructible(true), _size(0)
 { }
 
-Cluster::Cluster(ComponentModel* model, cluster_tag_t tag, bool destructible)
-        : _model(model), _tag(tag), _destructible(destructible), _size(0)
+Cluster::Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag, bool destructible)
+        : _model(model), _cluster_tag(cluster_tag), _model_tag(model_tag), _destructible(destructible), _size(0)
 { }
 
-Cluster::Cluster(ComponentModel* model, cluster_tag_t tag, Observer<cluster_event_t>* observer)
-        : _model(model), _tag(tag), _destructible(true), _size(0)
+Cluster::Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag, Observer<cluster_event_t>* observer)
+        : _model(model), _cluster_tag(cluster_tag), _model_tag(model_tag), _destructible(true), _size(0)
 {
         set_observer(observer);
 }
 
-Cluster::Cluster(ComponentModel* model, cluster_tag_t tag, Observer<cluster_event_t>* observer, bool destructible)
-        : _model(model), _tag(tag), _destructible(destructible), _size(0)
+Cluster::Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag, Observer<cluster_event_t>* observer, bool destructible)
+        : _model(model), _cluster_tag(cluster_tag), _model_tag(model_tag), _destructible(destructible), _size(0)
 {
         set_observer(observer);
 }
 
 Cluster::Cluster(const Cluster& cluster)
         : _model(cluster._model->clone()),
-          _tag(cluster._tag),
+          _cluster_tag(cluster._cluster_tag),
+          _model_tag(cluster._model_tag),
           _destructible(cluster._destructible),
           _size(cluster._size)
 {
@@ -93,9 +94,15 @@ Cluster::size() const
 }
 
 cluster_tag_t
-Cluster::tag() const
+Cluster::cluster_tag() const
 {
-        return _tag;
+        return _cluster_tag;
+}
+
+model_tag_t
+Cluster::model_tag() const
+{
+        return _model_tag;
 }
 
 bool
@@ -113,5 +120,5 @@ Cluster::model() const
 ostream&
 operator<< (ostream& o, const Cluster& cluster)
 {
-        return o << cluster._tag << ":" << cluster._size;
+        return o << cluster._cluster_tag << ":" << cluster._size;
 }

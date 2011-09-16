@@ -60,6 +60,8 @@ public:
         gsl_matrix* means() const;
 
 private:
+        model_tag_t _model_tag;
+
         // likelihood parameters
         gsl_matrix* cov;
         gsl_matrix* cov_inv;

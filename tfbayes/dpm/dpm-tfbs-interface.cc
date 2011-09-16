@@ -169,7 +169,7 @@ void save_result(ostream& file)
         file << endl;
         for (ClusterManager::const_iterator it = cm.begin();
              it != cm.end(); it++) {
-                if ((*it)->tag() == 0) {
+                if ((*it)->cluster_tag() == 0) {
                         file << "cluster_bg" << " =" << endl;
                         file << static_cast<const ProductDirichlet&>((*it)->model());
                 }
@@ -195,14 +195,15 @@ void _dpm_tfbs_init(const char* filename)
         _sequences_comp = complement(_sequences);
 
         // baseline priors
-        gsl_matrix* baseline_priors[_options.baseline_priors_n];
+        gsl_matrix* baseline_priors[_options.baseline_priors_n+1];
         for (int i = 0; i < _options.baseline_priors_n; i++) {
                 baseline_priors[i] = Bayes::toGslMatrix(_options.baseline_priors[i]);
         }
+        baseline_priors[_options.baseline_priors_n] = NULL;
 
         _data      = new DataTFBS(_sequences, _options.tfbs_length);
         _data_comp = new DataTFBS(_sequences_comp, _options.tfbs_length);
-        _gdpm      = new DPM_TFBS(_options.alpha, _options.d, _options.lambda, _options.tfbs_length, *_data, *_data_comp);
+        _gdpm      = new DPM_TFBS(_options.alpha, _options.d, _options.lambda, _options.tfbs_length, *_data, *_data_comp, baseline_priors);
         _sampler   = new GibbsSampler(*_gdpm, *_data);
         _pmcmc     = new PopulationMCMC(*_sampler, _options.population_size);
 

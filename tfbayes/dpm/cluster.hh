@@ -39,10 +39,10 @@
 
 class Cluster : public Observed<cluster_event_t> {
 public:
-         Cluster(ComponentModel* model, cluster_tag_t tag);
-         Cluster(ComponentModel* model, cluster_tag_t tag, bool destructible);
-         Cluster(ComponentModel* model, cluster_tag_t tag, Observer<cluster_event_t>* observer);
-         Cluster(ComponentModel* model, cluster_tag_t tag, Observer<cluster_event_t>* observer, bool destructible);
+         Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag);
+         Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag, bool destructible);
+         Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag, Observer<cluster_event_t>* observer);
+         Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag, Observer<cluster_event_t>* observer, bool destructible);
          Cluster(const Cluster& cluster);
         ~Cluster();
 
@@ -53,13 +53,15 @@ public:
         void add_observations(const range_t& range);
         void remove_observations(const range_t& range);
         size_t size() const;
-        cluster_tag_t tag() const;
+        cluster_tag_t cluster_tag() const;
+        model_tag_t model_tag() const;
         bool destructible() const;
         const ComponentModel& model() const;
 
 private:
         ComponentModel* _model;
-        cluster_tag_t _tag;
+        cluster_tag_t _cluster_tag;
+        model_tag_t _model_tag;
         bool _destructible;
         // number of elements in the cluster
         size_t _size;

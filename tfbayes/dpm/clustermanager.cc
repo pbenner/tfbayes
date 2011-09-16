@@ -23,30 +23,34 @@
 #include <cstdlib>
 #include <ctime>
 #include <list>
+#include <assert.h>
 
 #include <clustermanager.hh>
 
 using namespace std;
 
-ClusterManager::ClusterManager(ComponentModel* model, data_t<cluster_tag_t>& cluster_assignments)
+ClusterManager::ClusterManager(data_t<cluster_tag_t>& cluster_assignments)
         : used_clusters_size(0), free_clusters_size(0),
-          default_model(model),
           cluster_assignments(cluster_assignments)
 {
 }
 
 ClusterManager::~ClusterManager() {
+        // free clusters
         for (ClusterManager::iterator_all it = begin_all();
              it != end_all(); it++) {
                 delete(*it);
         }
-        delete(default_model);
+        // free baseline models
+        for (vector<ComponentModel*>::iterator it = baseline_models.begin();
+             it != baseline_models.end(); it++) {
+                delete(*it);
+        }
 }
 
 ClusterManager::ClusterManager(const ClusterManager& cm)
         : used_clusters_size(cm.used_clusters_size),
           free_clusters_size(cm.free_clusters_size),
-          default_model(cm.default_model->clone()),
           cluster_assignments(*cm.cluster_assignments.clone())
 {
         for (size_t i = 0; i < cm.clusters.size(); i++) {
@@ -60,51 +64,74 @@ ClusterManager::ClusterManager(const ClusterManager& cm)
                         used_clusters.push_back(c);
                 }
         }
+        for (vector<ComponentModel*>::const_iterator it = cm.baseline_models.begin();
+             it != cm.baseline_models.end(); it++) {
+                baseline_models.push_back((*it)->clone());
+        }
 }
 
 // add a cluster with specific model which will
 // not be destructible (for other components of the mixture model)
+// and not included in the baseline measures
 cluster_tag_t
 ClusterManager::add_cluster(ComponentModel* model)
 {
-        cluster_tag_t tag = clusters.size();
+        cluster_tag_t cluster_tag = clusters.size();
 
         // since this cluster is a fixed component of the
         // process, it should never be put into the list
         // of free clusters, so we do not need to observe it
         // and we can simply push it to the list of used
         // clusters
-        Cluster* c = new Cluster(model, tag, this, false);
+        Cluster* c = new Cluster(model, cluster_tag, -1, this, false);
         clusters.push_back(c);
         used_clusters.push_back(clusters.back());
         used_clusters_size++;
 
-        return tag;
+        return cluster_tag;
 }
 
 // add cluster with default model
 cluster_tag_t
-ClusterManager::add_cluster()
+ClusterManager::add_cluster(model_tag_t model_tag)
 {
-        cluster_tag_t tag = clusters.size();
+        assert(model_tag < (model_tag_t)baseline_models.size());
 
-        Cluster* c = new Cluster(default_model->clone(), tag, this);
+        cluster_tag_t cluster_tag = clusters.size();
+
+        Cluster* c = new Cluster(baseline_models[model_tag]->clone(), cluster_tag, model_tag, this);
         clusters.push_back(c);
         // this cluster is empty, so place it into the list
         // of free clusters
         free_clusters.push_back(clusters.back());
         free_clusters_size++;
 
-        return tag;
+        return cluster_tag;
+}
+
+model_tag_t
+ClusterManager::add_baseline_model(ComponentModel* distribution)
+{
+        // add a baseline model to the list of distributions
+        baseline_models.push_back(distribution);
+
+        // return its indes as model_tag
+        return baseline_models.size()-1;
 }
 
 Cluster&
-ClusterManager::get_free_cluster() {
-        if (free_clusters_size == 0) {
-                // create new cluster
-                add_cluster();
+ClusterManager::get_free_cluster(model_tag_t model_tag) {
+        // check free clusters
+        for (std::list<Cluster*>::iterator it = free_clusters.begin();
+             it != free_clusters.end(); it++) {
+                if ((*it)->model_tag() == model_tag) {
+                        return **it;
+                }
         }
-        return *free_clusters.front();
+        // create new cluster
+        cluster_tag_t cluster_tag = add_cluster(model_tag);
+
+        return (*this)[cluster_tag];
 }
 
 void
@@ -143,7 +170,7 @@ ClusterManager::update(Observed<cluster_event_t>* observed, cluster_event_t even
         switch (event) {
         case cluster_event_add_word:
                 do {
-                        *iterator = cluster->tag();
+                        *iterator = cluster->cluster_tag();
                 } while(iterator++);
                 break;
         case cluster_event_remove_word:

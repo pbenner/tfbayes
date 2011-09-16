@@ -67,15 +67,15 @@ unsigned int _dpm_gaussian_num_clusters() {
 
 Bayes::Vector* _dpm_gaussian_cluster_tags() {
         size_t cluster = _gdpm->clustermanager().size();
-        Bayes::Vector* tags = Bayes::allocVector(cluster);
+        Bayes::Vector* cluster_tags = Bayes::allocVector(cluster);
         const ClusterManager& clustermanager = _gdpm->clustermanager();
 
         size_t i = 0;
         for (ClusterManager::const_iterator it = clustermanager.begin();
              it != clustermanager.end(); it++) {
-                tags->vec[i++] = (*it)->tag();
+                cluster_tags->vec[i++] = (*it)->cluster_tag();
         }
-        return tags;
+        return cluster_tags;
 }
 
 Bayes::Matrix* _dpm_gaussian_cluster_elements(int tag) {

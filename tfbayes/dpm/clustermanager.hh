@@ -37,7 +37,7 @@
 
 class ClusterManager : public Observer<cluster_event_t> {
 public:
-         ClusterManager(ComponentModel* model, data_t<cluster_tag_t>& cluster_assignments);
+         ClusterManager(data_t<cluster_tag_t>& cluster_assignments);
          ClusterManager(const ClusterManager& cm);
         ~ClusterManager();
 
@@ -63,9 +63,9 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-        __inline__       Cluster& operator[](cluster_tag_t c)            { return *clusters[c];               }
-        __inline__ const Cluster& operator[](cluster_tag_t c)      const { return *clusters[c];               }
-        __inline__  cluster_tag_t operator[](const index_t& index) const { return cluster_assignments[index]; }
+        __inline__       Cluster& operator[](cluster_tag_t c)            { return *clusters[c];                }
+        __inline__ const Cluster& operator[](cluster_tag_t c)      const { return *clusters[c];                }
+        __inline__  cluster_tag_t operator[](const index_t& index) const { return  cluster_assignments[index]; }
 
         friend std::ostream& operator<< (std::ostream& o, const ClusterManager& cm);
 
@@ -73,13 +73,14 @@ public:
         ////////////////////////////////////////////////////////////////////////
         void update(Observed<cluster_event_t>* cluster, cluster_event_t event);
         void update(Observed<cluster_event_t>* cluster, cluster_event_t event, const range_t& range);
-        cluster_tag_t add_cluster();
+        model_tag_t add_baseline_model(ComponentModel* distribution);
+        cluster_tag_t add_cluster(model_tag_t model_tag);
         cluster_tag_t add_cluster(ComponentModel* distribution);
-        Cluster& get_free_cluster();
+        Cluster& get_free_cluster(model_tag_t model_tag);
         __inline__ size_t size() const { return used_clusters_size; };
 
         // keep track of cluster assignments
-        void record_cluster_assignment(const range_t& range, cluster_tag_t tag);
+        void record_cluster_assignment(const range_t& range, cluster_tag_t cluster_tag);
 
 private:
         std::vector<Cluster*> clusters;
@@ -91,8 +92,8 @@ private:
         size_t used_clusters_size;
         size_t free_clusters_size;
 
-        // default distribution for the dirichlet process
-        ComponentModel* default_model;
+        // distributions that make up the baseline measure for the dirichlet process
+        std::vector<ComponentModel*> baseline_models;
 
         // assignments to clusters
         data_t<cluster_tag_t>& cluster_assignments;

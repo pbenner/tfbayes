@@ -34,18 +34,18 @@
 
 using namespace std;
 
-DPM_TFBS::DPM_TFBS(double alpha, double d, double lambda, size_t tfbs_length, const DataTFBS& data, const DataTFBS& data_comp)
+DPM_TFBS::DPM_TFBS(
+        double alpha, double d, double lambda, size_t tfbs_length,
+        const DataTFBS& data, const DataTFBS& data_comp,
+        gsl_matrix *baseline_priors[])
         : // length of tfbs
           TFBS_LENGTH(tfbs_length),
-          // priors
-          bg_alpha(init_alpha(BG_LENGTH)),
-          tfbs_alpha(init_alpha(TFBS_LENGTH)),
           // raw sequences
           _data(data),
           _data_comp(data_comp),
           // cluster manager
           _cluster_assignments(_data.lengths(), -1),
-          _clustermanager(new ProductDirichlet(tfbs_alpha, _data), _cluster_assignments),
+          _clustermanager(_cluster_assignments),
           // strength parameter for the dirichlet process
           alpha(alpha),
           alpha_log(log(alpha)),
@@ -61,14 +61,22 @@ DPM_TFBS::DPM_TFBS(double alpha, double d, double lambda, size_t tfbs_length, co
           // number of transcription factor binding sites
           num_tfbs(0)
 {
+        gsl_matrix* bg_alpha = init_alpha(BG_LENGTH);
+
+        ////////////////////////////////////////////////////////////////////////////////
         // initialize joint posterior
         for (size_t i = 0; i < data.length(); i++) {
                 _posterior.probabilities.push_back(vector<double>(data.length(i), 0.0));
         }
 
-        // initialize cluster manager
-        ProductDirichlet* bg_product_dirichlet = new ProductDirichlet(bg_alpha, _data);
-        bg_cluster_tag = _clustermanager.add_cluster(bg_product_dirichlet);
+        ////////////////////////////////////////////////////////////////////////////////
+        // add background model to the clustermanager
+        bg_cluster_tag = _clustermanager.add_cluster(new ProductDirichlet(bg_alpha, _data));
+        // add model components for the baseline measure
+        for (size_t i = 0; baseline_priors[i] != NULL; i++) {
+                const model_tag_t model_tag = _clustermanager.add_baseline_model(new ProductDirichlet(baseline_priors[i], _data));
+                _model_tags.push_back(model_tag);
+        }
 
         ////////////////////////////////////////////////////////////////////////////////
         // assign all elements to the background
@@ -76,11 +84,13 @@ DPM_TFBS::DPM_TFBS(double alpha, double d, double lambda, size_t tfbs_length, co
              it != _data.end(); it++) {
                 _clustermanager[bg_cluster_tag].add_observations(range_t(*it, *it));
         }
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // free prior
+        gsl_matrix_free(bg_alpha);
 }
 
 DPM_TFBS::~DPM_TFBS() {
-        gsl_matrix_free(tfbs_alpha);
-        gsl_matrix_free(bg_alpha);
 }
 
 DPM_TFBS*
@@ -152,7 +162,7 @@ DPM_TFBS::mixture_components() const
 }
 
 void
-DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_tag_t tags[])
+DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_tag_t cluster_tags[])
 {
         range_t range(index, index_t(index[0], index[1] + TFBS_LENGTH - 1));
         size_t components  = mixture_components();
@@ -163,10 +173,10 @@ DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_ta
         cluster_tag_t i = 0;
         for (ClusterManager::const_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {
                 Cluster& cluster = **it;
-                tags[i] = cluster.tag();
+                cluster_tags[i] = cluster.cluster_tag();
                 ////////////////////////////////////////////////////////////////
                 // mixture component 1: background model
-                if (tags[i] == bg_cluster_tag) {
+                if (cluster_tags[i] == bg_cluster_tag) {
                         sum = logadd(sum, lambda_inv_log + cluster.model().log_pdf(range));
                         log_weights[i] = sum;
                 }
@@ -182,10 +192,12 @@ DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_ta
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
-        tags[components] = _clustermanager.get_free_cluster().tag();
-        sum = logadd(sum, lambda_log + log(alpha + d*(components-1)) - dp_norm_log + _clustermanager[tags[components]].model().log_pdf(range));
-//        sum = logadd(sum, lambda_log + log(alpha) - dp_norm_log + _clustermanager[tags[components]].model().log_pdf(range));
-        log_weights[components] = sum;
+        for (size_t i = 0; i < _model_tags.size(); i++) {
+                cluster_tags[components+i] = _clustermanager.get_free_cluster(_model_tags[i]).cluster_tag();
+                sum = logadd(sum, lambda_log + log(alpha + d*(components-1)) - dp_norm_log + _clustermanager[cluster_tags[components+i]].model().log_pdf(range));
+//                sum = logadd(sum, lambda_log + log(alpha) - dp_norm_log + _clustermanager[cluster_tags[components+i]].model().log_pdf(range));
+                log_weights[components] = sum;
+        }
 }
 
 double

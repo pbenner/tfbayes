@@ -33,7 +33,9 @@
 
 class DPM_TFBS : public DPM {
 public:
-         DPM_TFBS(double alpha, double d, double lambda, size_t tfbs_length, const DataTFBS& data, const DataTFBS& data_comp);
+         DPM_TFBS(double alpha, double d, double lambda, size_t tfbs_length,
+                  const DataTFBS& data, const DataTFBS& data_comp,
+                  gsl_matrix *baseline_priors[]);
         ~DPM_TFBS();
 
         DPM_TFBS* clone() const;
@@ -67,9 +69,8 @@ public:
         static const size_t CODING_LENGTH = 4;
 
 private:
-        // priors
-        gsl_matrix* bg_alpha;
-        gsl_matrix* tfbs_alpha;
+        // baseline models
+        std::vector<model_tag_t> _model_tags;
 
         // data and clusters
         const DataTFBS& _data;

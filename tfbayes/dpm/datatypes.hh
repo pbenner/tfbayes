@@ -203,6 +203,7 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef ssize_t cluster_tag_t;
+typedef ssize_t model_tag_t;
 
 typedef enum {
         cluster_event_empty, cluster_event_nonempty,
