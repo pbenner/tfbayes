@@ -161,13 +161,20 @@ DPM_TFBS::mixture_components() const
         return _clustermanager.size();
 }
 
+size_t
+DPM_TFBS::baseline_components() const
+{
+        return _model_tags.size();
+}
+
 void
 DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_tag_t cluster_tags[])
 {
         range_t range(index, index_t(index[0], index[1] + TFBS_LENGTH - 1));
-        size_t components  = mixture_components();
+        size_t mixture_n   = mixture_components();
+        size_t baseline_n  = baseline_components();
         double dp_norm_log = log(num_tfbs + alpha);
-//        double dp_norm_log = log(alpha + components - 1);
+//        double dp_norm_log = log(alpha + mixture_n - 1);
         double sum         = -HUGE_VAL;
 
         cluster_tag_t i = 0;
@@ -192,11 +199,12 @@ DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_ta
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
-        for (size_t i = 0; i < _model_tags.size(); i++) {
-                cluster_tags[components+i] = _clustermanager.get_free_cluster(_model_tags[i]).cluster_tag();
-                sum = logadd(sum, lambda_log + log(alpha + d*(components-1)) - dp_norm_log + _clustermanager[cluster_tags[components+i]].model().log_pdf(range));
-//                sum = logadd(sum, lambda_log + log(alpha) - dp_norm_log + _clustermanager[cluster_tags[components+i]].model().log_pdf(range));
-                log_weights[components] = sum;
+        for (size_t i = 0; i < baseline_n; i++) {
+                cluster_tags[mixture_n+i] = _clustermanager.get_free_cluster(_model_tags[i]).cluster_tag();
+                sum = logadd(sum, lambda_log + log((alpha + d*(mixture_n-1))/baseline_n) - dp_norm_log +
+                             _clustermanager[cluster_tags[mixture_n+i]].model().log_pdf(range));
+//                sum = logadd(sum, lambda_log + log(alpha) - dp_norm_log + _clustermanager[cluster_tags[mixture_n+i]].model().log_pdf(range));
+                log_weights[mixture_n+i] = sum;
         }
 }
 

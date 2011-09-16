@@ -48,6 +48,7 @@ public:
 
         // methods
         ////////////////////////////////////////////////////////////////////////
+        size_t baseline_components() const { return 1; }
         size_t mixture_components() const;
         void   mixture_weights(const index_t& index, double log_weights[], cluster_tag_t tags[]);
         void   add(const index_t& index, cluster_tag_t tag);
