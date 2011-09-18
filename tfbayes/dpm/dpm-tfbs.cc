@@ -74,6 +74,7 @@ DPM_TFBS::DPM_TFBS(
         bg_cluster_tag = _clustermanager.add_cluster(new ProductDirichlet(bg_alpha, _data));
         // add model components for the baseline measure
         for (size_t i = 0; baseline_priors[i] != NULL; i++) {
+                assert(tfbs_length == baseline_priors[i]->size1);
                 const model_tag_t model_tag = _clustermanager.add_baseline_model(new ProductDirichlet(baseline_priors[i], _data));
                 _model_tags.push_back(model_tag);
         }

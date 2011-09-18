@@ -51,19 +51,19 @@ char code_nucleotide(char a)
         switch (a) {
         case 'A':
         case 'a':
-                return 0;
+                return 1;
         break;
         case 'C':
         case 'c':
-                return 1;
+                return 3;
         break;
         case 'G':
         case 'g':
-                return 2;
+                return 0;
         break;
         case 'T':
         case 't':
-                return 3;
+                return 2;
         break;
         case 'N':
                 return 4;
@@ -76,16 +76,16 @@ char code_nucleotide(char a)
 char decode_nucleotide(char a)
 {
         switch (a) {
-        case 0:
+        case 1:
                 return 'A';
         break;
-        case 1:
+        case 3:
                 return 'C';
         break;
-        case 2:
+        case 0:
                 return 'G';
         break;
-        case 3:
+        case 2:
                 return 'T';
         break;
         case 4:
