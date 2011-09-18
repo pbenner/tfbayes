@@ -156,8 +156,8 @@ def dpm_init(options, input_file):
      if prior_length > 0:
           c_baseline_priors = (prior_length*POINTER(MATRIX))()
           for i, prior in zip(range(prior_length), options['baseline_priors']):
-               c_baseline_priors[i] = _lib._allocMatrix(len(prior), len(prior[0]))
-               copyMatrixToC(prior, c_baseline_priors[i])
+               c_baseline_priors[i] = _lib._allocMatrix(len(prior[0]), len(prior))
+               copyMatrixToC(map(list, zip(*prior)), c_baseline_priors[i])
           c_options.contents.baseline_priors   = pointer(c_baseline_priors[0])
           c_options.contents.baseline_priors_n = c_int(prior_length)
      _lib._dpm_tfbs_init(c_input_file)
