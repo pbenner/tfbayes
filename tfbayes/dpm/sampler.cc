@@ -102,9 +102,11 @@ void
 GibbsSampler::sample(size_t n, size_t burnin) {
         // burn in sampling
         for (size_t i = 0; i < burnin; i++) {
+                flockfile(stdout);
                 printf("Burn in... [%u]", (unsigned int)i+1);
                 cout << "[ Cluster: " <<_dpm.clustermanager() << "]" << endl;
                 fflush(stdout);
+                funlockfile(stdout);
                 double sum = 0;
                 for (Indexer::sampling_iterator it = _indexer.sampling_begin();
                      it != _indexer.sampling_end(); it++) {
@@ -118,9 +120,11 @@ GibbsSampler::sample(size_t n, size_t burnin) {
         // sample `n' times
         for (size_t i = 0; i < n; i++) {
                 // loop through all elements
+                flockfile(stdout);
                 printf("Sampling... [%u]", (unsigned int)i+1);
                 cout << "[ Cluster: " <<_dpm.clustermanager() << "]" << endl;
                 fflush(stdout);
+                funlockfile(stdout);
                 double sum = 0;
                 for (Indexer::sampling_iterator it = _indexer.sampling_begin();
                      it != _indexer.sampling_end(); it++) {
