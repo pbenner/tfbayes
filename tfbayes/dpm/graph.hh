@@ -73,7 +73,7 @@ size_t hash_value(const edge_t& edge)
 {
         boost::hash<size_t> hasher;
 
-        return hasher(edge.index1[0] + edge.index1[1]);
+        return hasher(edge.index1[0]) + hasher(edge.index1[1]);
 }
 
 class Graph {

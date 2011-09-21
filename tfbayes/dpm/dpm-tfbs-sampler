@@ -109,6 +109,8 @@ def parse_config(config_file):
         options['tfbs_length'] = int(config_parser.get('TFBS-Sampler', 'tfbs-length'))
     if config_parser.has_option('TFBS-Sampler', 'population-size'):
         options['population_size'] = int(config_parser.get('TFBS-Sampler', 'population-size'))
+    if config_parser.has_option('TFBS-Sampler', 'save'):
+        options['save'] = config_parser.get('TFBS-Sampler', 'save')
     if config_parser.has_option('TFBS-Sampler', 'samples'):
         options['samples'] = tuple(map(int, config_parser.get('TFBS-Sampler', 'samples').split(":")))
     if config_parser.has_option('TFBS-Sampler', 'baseline-priors'):
