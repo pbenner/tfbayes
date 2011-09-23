@@ -243,11 +243,6 @@ def readSequences(seq_file):
                 sequences[-1] = sequences[-1] + m.group(0)
     return sequences, clusters
 
-def save_posterior(dpm):
-    fp = open(options['save'], 'w')
-    fp.write(str(dpm_get_posterior()))
-    fp.close()
-
 def prepare_plot():
     importMatplotlib('GTKAgg')
     fig1  = pyplot.figure(linewidth=0,facecolor='white',edgecolor='white')
@@ -278,7 +273,7 @@ def sample(sequences, clusters):
         dpm = TfbsDPM(sequences, clusters[:][:], options['input_file'])
         dpm.sample(samples, burnin)
         if options['save']:
-            save_posterior(dpm)
+            dpm_save(options['save'])
         else:
             ax1, ax2, ax3 = prepare_plot()
             dpm.plotData(ax1)
