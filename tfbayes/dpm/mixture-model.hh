@@ -49,7 +49,7 @@ public:
         virtual void   update_posterior(size_t sampling_steps) = 0;
         virtual double likelihood() const = 0;
         virtual bool   valid_for_sampling(const index_t& index) const = 0;
-        virtual const posterior_t& posterior() const = 0;
+        virtual posterior_t& posterior() = 0;
         virtual const ClusterManager& clustermanager() const = 0;
 };
 

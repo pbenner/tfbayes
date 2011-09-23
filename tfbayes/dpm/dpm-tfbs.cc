@@ -37,9 +37,11 @@ using namespace std;
 DPM_TFBS::DPM_TFBS(
         double alpha, double d, double lambda, size_t tfbs_length,
         const DataTFBS& data, const DataTFBS& data_comp,
-        gsl_matrix *baseline_priors[])
+        std::vector<double> baseline_weights, gsl_matrix *baseline_priors[])
         : // length of tfbs
           TFBS_LENGTH(tfbs_length),
+          // baseline
+          _baseline_weights(baseline_weights),
           // raw sequences
           _data(data),
           _data_comp(data_comp),
@@ -202,9 +204,9 @@ DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_ta
         // add the tag of a new class and compute their weight
         for (i = 0; i < baseline_n; i++) {
                 cluster_tags[mixture_n+i] = _clustermanager.get_free_cluster(_model_tags[i]).cluster_tag();
-                sum = logadd(sum, lambda_log + log((alpha + d*(mixture_n-1))/baseline_n) - dp_norm_log +
+                sum = logadd(sum, lambda_log + log((alpha + d*(mixture_n-1))*_baseline_weights[i]) - dp_norm_log +
                              _clustermanager[cluster_tags[mixture_n+i]].model().log_pdf(range));
-//                sum = logadd(sum, lambda_log + log(alpha/baseline_n) - dp_norm_log +
+//                sum = logadd(sum, lambda_log + log(alpha*_baseline_weights[i]) - dp_norm_log +
 //                             _clustermanager[cluster_tags[mixture_n+i]].model().log_pdf(range));
                 log_weights[mixture_n+i] = sum;
         }
@@ -275,8 +277,8 @@ DPM_TFBS::update_posterior(size_t sampling_steps) {
         update_graph(_tfbs_start_positions);
 }
 
-const posterior_t&
-DPM_TFBS::posterior() const {
+posterior_t&
+DPM_TFBS::posterior() {
         return _posterior;
 }
 

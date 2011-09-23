@@ -107,6 +107,7 @@ PopulationMCMC::update_posterior()
         }
         for (size_t i = 0; i < _size; i++) {
                 _posterior->graph.insert(_population[i]->posterior().graph);
+                _population[i]->posterior().graph.cleanup();
         }
 }
 
@@ -167,8 +168,8 @@ PopulationMCMC::sampling_history() const {
         return *_sampling_history;
 }
 
-const posterior_t&
-PopulationMCMC::posterior() const {
+posterior_t&
+PopulationMCMC::posterior() {
         return *_posterior;
 }
 

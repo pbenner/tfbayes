@@ -45,7 +45,7 @@ public:
         size_t size() const;
 
         const sampling_history_t& sampling_history() const;
-        const posterior_t& posterior() const;
+        posterior_t& posterior();
         size_t sampling_steps() const;
 
 private:

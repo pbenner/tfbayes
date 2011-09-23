@@ -88,8 +88,8 @@ GibbsSampler::sampling_history() const {
         return _sampling_history;
 }
 
-const posterior_t&
-GibbsSampler::posterior() const {
+posterior_t&
+GibbsSampler::posterior() {
         return _dpm.posterior();
 }
 

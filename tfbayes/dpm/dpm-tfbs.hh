@@ -35,7 +35,7 @@ class DPM_TFBS : public DPM {
 public:
          DPM_TFBS(double alpha, double d, double lambda, size_t tfbs_length,
                   const DataTFBS& data, const DataTFBS& data_comp,
-                  gsl_matrix *baseline_priors[]);
+                  std::vector<double> baseline_weights, gsl_matrix *baseline_priors[]);
         ~DPM_TFBS();
 
         DPM_TFBS* clone() const;
@@ -58,7 +58,7 @@ public:
         void   update_posterior(size_t sampling_steps);
         double likelihood() const;
         bool   valid_for_sampling(const index_t& index) const;
-        const posterior_t& posterior() const;
+        posterior_t& posterior();
         const DataTFBS& data() const;
         const ClusterManager& clustermanager() const;
         const Graph& graph() const;
@@ -71,6 +71,7 @@ public:
 
 private:
         // baseline models
+        std::vector<double> _baseline_weights;
         std::vector<model_tag_t> _model_tags;
 
         // data and clusters

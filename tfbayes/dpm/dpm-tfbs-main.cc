@@ -168,7 +168,7 @@ void save_motifs(ostream& file, const DPM_TFBS& dpm)
 }
 
 static
-void save_result(ostream& file, const Sampler& sampler)
+void save_result(ostream& file, Sampler& sampler)
 {
         const posterior_t& posterior      = sampler.posterior();
         const sampling_history_t& history = sampler.sampling_history();
@@ -227,10 +227,13 @@ void run_dpm(const char* file_name)
         readfile(file_name, sequences);
         sequences_comp = complement(sequences);
 
+        // baseline
+        vector<double> baseline_weights(0,0);
+
         // create data, dpm, and sampler objects
         DataTFBS& data = *new DataTFBS(sequences, options.tfbs_length);
         DataTFBS& data_comp = *new DataTFBS(sequences_comp, options.tfbs_length);
-        DPM_TFBS& gdpm = *new DPM_TFBS(options.alpha, options.d, options.lambda, options.tfbs_length, data, data_comp, NULL);
+        DPM_TFBS& gdpm = *new DPM_TFBS(options.alpha, options.d, options.lambda, options.tfbs_length, data, data_comp, baseline_weights, NULL);
         GibbsSampler& sampler = *new GibbsSampler(gdpm, data);
         PopulationMCMC& pmcmc = *new PopulationMCMC(sampler, options.population_size);
 

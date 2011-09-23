@@ -122,6 +122,12 @@ public:
                         }
                 }
         }
+        void cleanup() {
+                for (map_t::const_iterator it = _edges.begin();
+                     it != _edges.end();) {
+                        it = _edges.erase(it);
+                }
+        }
 
 protected:
         map_t _edges;

@@ -147,8 +147,8 @@ void
 DPM_Gaussian::update_posterior(size_t sampling_steps) {
 }
 
-const posterior_t&
-DPM_Gaussian::posterior() const {
+posterior_t&
+DPM_Gaussian::posterior() {
         return _posterior;
 }
 

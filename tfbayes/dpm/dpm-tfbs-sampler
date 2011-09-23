@@ -42,16 +42,17 @@ from tfbayes.dpm.dpm_tfbs_interface import *
 # ------------------------------------------------------------------------------
 
 options = {
-    'alpha'           : 0.05,
-    'd'               : 0.0,
-    'lambda'          : 0.01,
-    'samples'         : (1000,100),
-    'population_size' : 1,
-    'tfbs_length'     : 10,
-    'save'            : None,
-    'input_file'      : None,
-    'verbose'         : False,
-    'baseline_priors' : []
+    'alpha'            : 0.05,
+    'd'                : 0.0,
+    'lambda'           : 0.01,
+    'samples'          : (1000,100),
+    'population_size'  : 1,
+    'tfbs_length'      : 10,
+    'save'             : None,
+    'input_file'       : None,
+    'verbose'          : False,
+    'baseline_weights' : [1.0],
+    'baseline_priors'  : []
     }
 
 # usage
@@ -80,7 +81,7 @@ def usage():
 # ------------------------------------------------------------------------------
 
 def read_vector(config_parser, section, option, converter):
-    vector_str = config_parser.get(section, option).replace('  ','').strip()
+    vector_str = config_parser.get(section, option).replace('  ',' ').strip()
     vector     = map(converter, vector_str.split(' '))
     return vector
 
@@ -88,8 +89,8 @@ def read_matrix(config_parser, section, option, converter):
     matrix_str = config_parser.get(section, option)
     matrix     = []
     for line in matrix_str.split('\n'):
+        line = line.replace('  ',' ').strip()
         if line != '':
-            line.replace('  ','').strip()
             matrix.append([converter(a) for a in line.split(' ')])
     return matrix
 
@@ -113,6 +114,8 @@ def parse_config(config_file):
         options['save'] = config_parser.get('TFBS-Sampler', 'save')
     if config_parser.has_option('TFBS-Sampler', 'samples'):
         options['samples'] = tuple(map(int, config_parser.get('TFBS-Sampler', 'samples').split(":")))
+    if config_parser.has_option('TFBS-Sampler', 'baseline-weights'):
+        options['baseline_weights'] = read_vector(config_parser, 'TFBS-Sampler', 'baseline-weights', int)
     if config_parser.has_option('TFBS-Sampler', 'baseline-priors'):
         for prior_name in read_vector(config_parser, 'TFBS-Sampler', 'baseline-priors', str):
             prior = read_matrix(config_parser, 'TFBS-Sampler', prior_name, int)
@@ -122,6 +125,14 @@ def parse_config(config_file):
 # ------------------------------------------------------------------------------
 
 def sample():
+    # generate baseline
+    if not options['baseline_priors']:
+        options['baseline_priors'].append([ [ 1 for j in range(options['tfbs_length']) ] for i in range(4) ])
+    if not len(options['baseline_priors']) == len(options['baseline_weights']):
+        if options['verbose']:
+            print "Setting uniform weights for baseline priors"
+        options['baseline_weights'] = [ 1 ] * len(options['baseline_priors'])
+    # sample
     samples = options['samples'][0]
     burnin  = options['samples'][1]
     dpm_init(options, options['input_file'])
@@ -135,7 +146,7 @@ def main():
     global options
     try:
         longopts   = ["help", "verbose", "alpha=", "lambda=", "population-size=", "tfbs-length=", "save=", "samples="]
-        opts, tail = getopt.getopt(sys.argv[1:], "d:s:", longopts)
+        opts, tail = getopt.getopt(sys.argv[1:], "d:s:vh", longopts)
     except getopt.GetoptError:
         usage()
         return 2

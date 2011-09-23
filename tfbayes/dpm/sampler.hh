@@ -32,7 +32,7 @@ class Sampler : public clonable {
 public:
         virtual void sample(size_t n, size_t burnin) = 0;
         virtual const sampling_history_t& sampling_history() const = 0;
-        virtual const posterior_t& posterior() const = 0;
+        virtual posterior_t& posterior() = 0;
         virtual size_t sampling_steps() const = 0;
 };
 
@@ -46,7 +46,7 @@ public:
 
         void sample(size_t n, size_t burnin);
         const sampling_history_t& sampling_history() const;
-        const posterior_t& posterior() const;
+        posterior_t& posterior();
         size_t sampling_steps() const;
 
 private:

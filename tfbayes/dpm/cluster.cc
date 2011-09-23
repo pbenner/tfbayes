@@ -120,5 +120,10 @@ Cluster::model() const
 ostream&
 operator<< (ostream& o, const Cluster& cluster)
 {
-        return o << cluster._cluster_tag << ":" << cluster._size;
+        return o << "("
+                 << cluster._cluster_tag
+                 << ":"
+                 << cluster._model_tag
+                 << "):"
+                 << cluster._size;
 }

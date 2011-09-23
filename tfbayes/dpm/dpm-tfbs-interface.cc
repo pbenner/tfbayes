@@ -46,16 +46,18 @@ typedef struct _options_t {
         double d;
         double lambda;
         int population_size;
+        Bayes::Vector*  baseline_weights;
         Bayes::Matrix** baseline_priors;
-        int baseline_priors_n;
+        int baseline_n;
         _options_t()
                 : tfbs_length(10),
                   alpha(0.05),
                   d(0.0),
                   lambda(0.01),
                   population_size(1),
+                  baseline_weights(NULL),
                   baseline_priors(NULL),
-                  baseline_priors_n(0)
+                  baseline_n(0)
                 { }
 } options_t;
 
@@ -195,17 +197,25 @@ void _dpm_tfbs_init(const char* filename)
         _sequences_comp = complement(_sequences);
 
         // baseline priors
-        gsl_matrix* baseline_priors[_options.baseline_priors_n+1];
-        for (int i = 0; i < _options.baseline_priors_n; i++) {
-                baseline_priors[i] = Bayes::toGslMatrix(_options.baseline_priors[i]);
+        std::vector<double> baseline_weights(_options.baseline_n, 0);
+        gsl_matrix* baseline_priors[_options.baseline_n+1];
+        for (int i = 0; i < _options.baseline_n; i++) {
+                baseline_weights[i] = _options.baseline_weights->vec[i];
+                baseline_priors[i]  = Bayes::toGslMatrix(_options.baseline_priors[i]);
         }
-        baseline_priors[_options.baseline_priors_n] = NULL;
+        baseline_priors[_options.baseline_n] = NULL;
 
         _data      = new DataTFBS(_sequences, _options.tfbs_length);
         _data_comp = new DataTFBS(_sequences_comp, _options.tfbs_length);
-        _gdpm      = new DPM_TFBS(_options.alpha, _options.d, _options.lambda, _options.tfbs_length, *_data, *_data_comp, baseline_priors);
+        _gdpm      = new DPM_TFBS(_options.alpha, _options.d, _options.lambda,
+                                  _options.tfbs_length, *_data, *_data_comp,
+                                  baseline_weights, baseline_priors);
         _sampler   = new GibbsSampler(*_gdpm, *_data);
         _pmcmc     = new PopulationMCMC(*_sampler, _options.population_size);
+
+        for (int i = 0; i < _options.baseline_n; i++) {
+                gsl_matrix_free(baseline_priors[i]);
+        }
 
         cout << _options << endl;
 }

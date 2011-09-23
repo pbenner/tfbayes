@@ -56,7 +56,7 @@ public:
         void   update_posterior(size_t sampling_steps);
         double likelihood() const;
         bool   valid_for_sampling(const index_t& index) const;
-        const posterior_t& posterior() const;
+        posterior_t& posterior();
         const ClusterManager& clustermanager() const;
         gsl_matrix* means() const;
 

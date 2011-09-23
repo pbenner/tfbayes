@@ -61,8 +61,9 @@ class OPTIONS(Structure):
                  ("d",                 c_double),
                  ("lambda_",           c_double),
                  ("population_size",   c_int),
+                 ("baseline_weights",  POINTER(VECTOR)),
                  ("baseline_priors",   POINTER(POINTER(MATRIX))),
-                 ("baseline_priors_n", c_int)]
+                 ("baseline_n",        c_int)]
 
 # function prototypes
 # ------------------------------------------------------------------------------
@@ -152,15 +153,22 @@ def dpm_init(options, input_file):
      c_options.contents.tfbs_length = options['tfbs_length']
      c_options.contents.population_size = options['population_size']
      c_input_file = c_char_p(input_file)
+     if not len(options['baseline_priors']) == len(options['baseline_weights']):
+          raise IOError('Length mismatch between baseline priors and weights')
      prior_length = len(options['baseline_priors'])
      if prior_length > 0:
+          normalized_weights = map(lambda x: float(x)/sum(options['baseline_weights']), options['baseline_weights'])
+          c_baseline_weights = _lib._allocVector(prior_length)
+          copyVectorToC(normalized_weights, c_baseline_weights)
           c_baseline_priors = (prior_length*POINTER(MATRIX))()
           for i, prior in zip(range(prior_length), options['baseline_priors']):
                c_baseline_priors[i] = _lib._allocMatrix(len(prior[0]), len(prior))
                copyMatrixToC(map(list, zip(*prior)), c_baseline_priors[i])
-          c_options.contents.baseline_priors   = pointer(c_baseline_priors[0])
-          c_options.contents.baseline_priors_n = c_int(prior_length)
+          c_options.contents.baseline_weights = c_baseline_weights
+          c_options.contents.baseline_priors = pointer(c_baseline_priors[0])
+          c_options.contents.baseline_n = c_int(prior_length)
      _lib._dpm_tfbs_init(c_input_file)
+     _lib._freeVector(c_baseline_weights)
      for i in range(prior_length):
           _lib._freeMatrix(c_baseline_priors[i])
 
