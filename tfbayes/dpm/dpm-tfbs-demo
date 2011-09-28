@@ -51,7 +51,7 @@ def importMatplotlib(backend=None):
 # local imports
 # ------------------------------------------------------------------------------
 
-from dpm_tfbs_interface import *
+from tfbayes.dpm.dpm_tfbs_interface import *
 
 # global options
 # ------------------------------------------------------------------------------

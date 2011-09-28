@@ -169,6 +169,11 @@ void save_result(ostream& file)
                      << static_cast<double>((*it).second)/static_cast<double>(_pmcmc->sampling_steps()) << " ";
         }
         file << endl;
+        file << "hypergraph =" << endl;
+        for (vector<string>::const_iterator it = posterior.hypergraph.begin();
+             it != posterior.hypergraph.end(); it++) {
+                file << "\t" << *it << endl;
+        }
         for (ClusterManager::const_iterator it = cm.begin();
              it != cm.end(); it++) {
                 if ((*it)->cluster_tag() == 0) {

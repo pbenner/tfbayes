@@ -55,6 +55,7 @@ public:
         void   add(const index_t& index, cluster_tag_t tag);
         void   remove(const index_t& index, cluster_tag_t tag);
         void   update_graph(sequence_data_t<short> tfbs_start_positions);
+        void   update_hypergraph(sequence_data_t<short> tfbs_start_positions);
         void   update_posterior(size_t sampling_steps);
         double likelihood() const;
         bool   valid_for_sampling(const index_t& index) const;

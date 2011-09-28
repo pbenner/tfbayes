@@ -76,6 +76,9 @@ size_t hash_value(const edge_t& edge)
         return hasher(edge.index1[0]*edge.index1[1]) + hasher(edge.index2[1]);
 }
 
+// Graph
+////////////////////////////////////////////////////////////////////////////////
+
 class Graph {
 public:
         Graph() {}

@@ -19,6 +19,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <sstream>
 #include <string.h>
 
 #include <gsl/gsl_vector.h>
@@ -250,6 +251,41 @@ DPM_TFBS::update_graph(sequence_data_t<short> tfbs_start_positions)
                                 }
                         }
                 }
+        }
+}
+
+void
+DPM_TFBS::update_hypergraph(sequence_data_t<short> tfbs_start_positions)
+{
+        list<const index_t*> binding_sites;
+        stringstream ss;
+        // find all binding sites
+        for (Indexer::sampling_iterator it = _data.sampling_begin();
+             it != _data.sampling_end(); it++) {
+                if (tfbs_start_positions[**it] == 1) {
+                        binding_sites.push_back(*it);
+                }
+        }
+        // iterate over binding sites
+        for (list<const index_t*>::const_iterator it = binding_sites.begin();
+             it != binding_sites.end(); it++) {
+                // if there still is a binding site
+                if (tfbs_start_positions[**it] == 1) {
+                        cluster_tag_t tag = _cluster_assignments[**it];
+                        tfbs_start_positions[**it] = 0;
+                        ss << "{ " << **it;
+                        // find sites with the same cluster assignment
+                        for (list<const index_t*>::const_iterator is = it;
+                             is != binding_sites.end(); is++) {
+                                if (tfbs_start_positions[**is] == 1 && _cluster_assignments[**is] == tag) {
+                                        ss << " " << **is;
+                                }
+                        }
+                        ss << " } ";
+                }
+        }
+        if (!ss.str().size() == 0) {
+                _posterior.hypergraph.push_back(ss.str());
         }
 }
 
