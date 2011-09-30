@@ -36,7 +36,7 @@ def plot_motif(motif, file_name, title):
     data = LogoData.from_counts(alphabet, np.array(counts))
     options = LogoOptions()
     options.color_scheme = nucleotide
-    options.title = title
+    options.logo_title = title
     options.creator_text = ''
     options.fineprint = ''
     options.stacks_per_line = 60
