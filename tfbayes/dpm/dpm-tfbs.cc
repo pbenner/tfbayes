@@ -35,10 +35,13 @@
 
 using namespace std;
 
+#define process_prior ((*this).*(_process_prior))
+
 DPM_TFBS::DPM_TFBS(
-        double alpha, double d, double lambda, size_t tfbs_length,
+        double alpha, double discount, double lambda, size_t tfbs_length,
         const DataTFBS& data, const DataTFBS& data_comp,
-        std::vector<double> baseline_weights, gsl_matrix *baseline_priors[])
+        std::vector<double> baseline_weights, gsl_matrix *baseline_priors[],
+        string process_prior_name)
         : // length of tfbs
           TFBS_LENGTH(tfbs_length),
           // baseline
@@ -53,8 +56,8 @@ DPM_TFBS::DPM_TFBS(
           alpha(alpha),
           alpha_log(log(alpha)),
           // pitman-yor discount factor
-          d(d),
-          d_log(log(d)),
+          discount(discount),
+          discount_log(log(discount)),
           // mixture weight for the dirichlet process
           lambda(lambda),
           lambda_log(log(lambda)),
@@ -90,11 +93,69 @@ DPM_TFBS::DPM_TFBS(
         }
 
         ////////////////////////////////////////////////////////////////////////////////
+        // set the process prior
+        if (process_prior_name == "pitman-yor process") {
+                _process_prior = &DPM_TFBS::py_prior;
+        }
+        else if (process_prior_name == "uniform process") {
+                _process_prior = &DPM_TFBS::uniform_prior;
+        }
+        else if (process_prior_name == "poppe process") {
+                _process_prior = &DPM_TFBS::poppe_prior;
+        }
+        else {
+                cerr << "Unknown prior process." << endl;
+                exit(EXIT_FAILURE);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
         // free prior
         gsl_matrix_free(bg_alpha);
+
+        ////////////////////////////////////////////////////////////////////////////////
+        test();
 }
 
 DPM_TFBS::~DPM_TFBS() {
+}
+
+void
+DPM_TFBS::test() {
+        index_t index1(0,0);
+        index_t index2(1,0);
+        index_t index3(2,0);
+        index_t index4(3,0);
+
+        Cluster& cluster1 = _clustermanager.get_free_cluster(_model_tags[0]);
+        cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
+        cout << "Adding index1:" << index1 << " to cluster:" << cluster_tag1 << endl;
+        add(index1, cluster_tag1);
+        Cluster& cluster2 = _clustermanager.get_free_cluster(_model_tags[0]);
+        cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
+        cout << "Adding index2:" << index2 << " to cluster:" << cluster_tag2 << endl;
+        add(index2, cluster_tag2);
+
+        cout << "Components: " << mixture_components() << " + " << baseline_components() << endl;
+        size_t components = mixture_components() + baseline_components();
+        double log_weights[components];
+        cluster_tag_t cluster_tags[components];
+        cluster_tag_t new_cluster_tag;
+
+        cout << "Sampling index3:" << index3 << endl;
+        mixture_weights(index3, log_weights, cluster_tags);
+        for (size_t i = 0; i < 100; i++) {
+                new_cluster_tag = cluster_tags[select_component(components, log_weights)];
+                cout << "selected cluster " << new_cluster_tag << endl;
+        }
+
+        cout << "Sampling index4:" << index4 << endl;
+        mixture_weights(index4, log_weights, cluster_tags);
+        for (size_t i = 0; i < 100; i++) {
+                new_cluster_tag = cluster_tags[select_component(components, log_weights)];
+                cout << "selected cluster " << new_cluster_tag << endl;
+        }
+
+        exit(EXIT_SUCCESS);
 }
 
 DPM_TFBS*
@@ -171,44 +232,89 @@ DPM_TFBS::baseline_components() const
         return _model_tags.size();
 }
 
+double
+DPM_TFBS::py_prior(Cluster& cluster)
+{
+        if (cluster.size() == 0) {
+                return log(alpha + discount*(mixture_components()-1)) - log(num_tfbs + alpha);
+        }
+        else {
+                return log(cluster.size()-discount) - log(num_tfbs + alpha);
+        }
+}
+
+double
+DPM_TFBS::uniform_prior(Cluster& cluster)
+{
+        if (cluster.size() == 0) {
+                return log(alpha + (mixture_components()-1)) - log(alpha + mixture_components() - 1);
+        }
+        else {
+                return log(alpha) - log(alpha + mixture_components() - 1);
+        }
+}
+
+double
+DPM_TFBS::poppe_prior(Cluster& cluster)
+{
+        double K = mixture_components()-1;
+        double N = num_tfbs;
+
+        if (K == 0 && cluster.size() == 0) {
+                return 0;
+        }
+        if (cluster.size() == 0) {
+                if (K == 1.0) {
+                        return -log(N);
+                }
+                else {
+                        return log(K*(K-1)/(N*(N+1)));
+                }
+        }
+        else {
+                if (K == 1.0) {
+                        return log((N-1)/N);
+                }
+                else {
+                        return log((cluster.size()+1)/(N+1) * (N-K+1)/N);
+                }
+        }
+}
+
 void
 DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_tag_t cluster_tags[])
 {
         range_t range(index, index_t(index[0], index[1] + TFBS_LENGTH - 1));
         ssize_t mixture_n  = mixture_components();
         ssize_t baseline_n = baseline_components();
-        double dp_norm_log = log(num_tfbs + alpha);
-//        double dp_norm_log = log(alpha + mixture_n - 1);
         double sum         = -HUGE_VAL;
 
         cluster_tag_t i = 0;
+        ////////////////////////////////////////////////////////////////////////
+        // loop through existing clusters
         for (ClusterManager::const_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {
                 Cluster& cluster = **it;
                 cluster_tags[i] = cluster.cluster_tag();
-                ////////////////////////////////////////////////////////////////
-                // mixture component 1: background model
-                if (cluster_tags[i] == bg_cluster_tag) {
+                if (cluster.cluster_tag() == bg_cluster_tag) {
+                        ////////////////////////////////////////////////////////
+                        // mixture component 1: background model
                         sum = logadd(sum, lambda_inv_log + cluster.model().log_pdf(range));
-                        log_weights[i] = sum;
                 }
-                ////////////////////////////////////////////////////////////////
-                // mixture component 2: dirichlet process for tfbs models
                 else {
-                        double num_elements = (double)cluster.size();
-                        sum = logadd(sum, lambda_log + log(num_elements-d) - dp_norm_log + cluster.model().log_pdf(range));
-//                        sum = logadd(sum, lambda_log - dp_norm_log + cluster.model().log_pdf(range));
-                        log_weights[i] = sum;
+                        ////////////////////////////////////////////////////////
+                        // mixture component 2: dirichlet process
+                        sum = logadd(sum, lambda_log + process_prior(cluster) + cluster.model().log_pdf(range));
                 }
+                log_weights[i] = sum;
                 i++;
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         for (i = 0; i < baseline_n; i++) {
-                cluster_tags[mixture_n+i] = _clustermanager.get_free_cluster(_model_tags[i]).cluster_tag();
-                sum = logadd(sum, lambda_log + log((alpha + d*(mixture_n-1))*_baseline_weights[i]) - dp_norm_log +
-                             _clustermanager[cluster_tags[mixture_n+i]].model().log_pdf(range));
-//                sum = logadd(sum, lambda_log + log(alpha*_baseline_weights[i]) - dp_norm_log +
-//                             _clustermanager[cluster_tags[mixture_n+i]].model().log_pdf(range));
+                Cluster& cluster = _clustermanager.get_free_cluster(_model_tags[i]);
+                cluster_tags[mixture_n+i] = cluster.cluster_tag();
+                sum = logadd(sum, lambda_log + process_prior(cluster) + log(_baseline_weights[i]) +
+                             cluster.model().log_pdf(range));
                 log_weights[mixture_n+i] = sum;
         }
 }

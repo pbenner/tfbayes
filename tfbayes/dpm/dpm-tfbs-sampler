@@ -43,8 +43,9 @@ from tfbayes.dpm.dpm_tfbs_interface import *
 
 options = {
     'alpha'            : 0.05,
-    'd'                : 0.0,
+    'discount'         : 0.0,
     'lambda'           : 0.01,
+    'process_prior'    : "pitman-yor process",
     'samples'          : (1000,100),
     'population_size'  : 1,
     'tfbs_length'      : 10,
@@ -61,12 +62,15 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs [option]... CONFIG"
+    print "dpm-tfbs-sampler [option]... CONFIG"
     print
     print "Options:"
     print "       --alpha=ALPHA              - alpha parameter for the dirichlet process"
-    print "   -d=DOUBLE                      - Pitman-Yor discount (0 <= d < 1)"
+    print "       --discount=DISCOUNT        - Pitman-Yor discount (0 <= d < 1)"
     print "       --lambda=LAMBDA            - lambda mixture weight"
+    print "       --process-prior=NAME       - possible process priors:"
+    print "                                    pitman-yor process (default),"
+    print "                                    uniform process, poppe process"
     print "       --tfbs-length=LENGTH       - length of the tfbs"
     print
     print "   -s, --save=FILE                - save posterior to FILE"
@@ -102,10 +106,12 @@ def parse_config(config_file):
     options['input_file'] = config_parser.get('TFBS-Sampler', 'sequences')
     if config_parser.has_option('TFBS-Sampler', 'alpha'):
         options['alpha'] = float(config_parser.get('TFBS-Sampler', 'alpha'))
-    if config_parser.has_option('TFBS-Sampler', 'd'):
-        options['d'] = float(config_parser.get('TFBS-Sampler', 'd'))
+    if config_parser.has_option('TFBS-Sampler', 'discount'):
+        options['discount'] = float(config_parser.get('TFBS-Sampler', 'discount'))
     if config_parser.has_option('TFBS-Sampler', 'lambda'):
         options['lambda'] = float(config_parser.get('TFBS-Sampler', 'lambda'))
+    if config_parser.has_option('TFBS-Sampler', 'process-prior'):
+        options['process_prior'] = config_parser.get('TFBS-Sampler', 'process-prior').strip()
     if config_parser.has_option('TFBS-Sampler', 'tfbs-length'):
         options['tfbs_length'] = int(config_parser.get('TFBS-Sampler', 'tfbs-length'))
     if config_parser.has_option('TFBS-Sampler', 'population-size'):
@@ -145,8 +151,10 @@ def sample():
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "alpha=", "lambda=", "population-size=", "tfbs-length=", "save=", "samples="]
-        opts, tail = getopt.getopt(sys.argv[1:], "d:s:vh", longopts)
+        longopts   = ["help", "verbose", "alpha=", "lambda=", "discount=",
+                      "process-prior=", "population-size=", "tfbs-length=",
+                      "save=", "samples="]
+        opts, tail = getopt.getopt(sys.argv[1:], "s:vh", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -166,14 +174,16 @@ def main():
             return 0
         if o == "--alpha":
             options['alpha'] = float(a)
-        if o == "-d":
+        if o == "--discount":
             if 0 <= float(a) and float(a) < 1:
-                options['d'] = float(a)
+                options['discount'] = float(a)
             else:
                 usage()
                 return 1
         if o == "--lambda":
             options['lambda'] = float(a)
+        if o == "--process-prior":
+            options['process_prior'] = a
         if o == "--tfbs-length":
             options['tfbs_length'] = int(a)
         if o == "--population-size":

@@ -58,8 +58,9 @@ class MATRIX(Structure):
 class OPTIONS(Structure):
      _fields_ = [("tfbs_length",       c_int),
                  ("alpha",             c_double),
-                 ("d",                 c_double),
+                 ("discount",          c_double),
                  ("lambda_",           c_double),
+                 ("process_prior",     c_char_p),
                  ("population_size",   c_int),
                  ("baseline_weights",  POINTER(VECTOR)),
                  ("baseline_priors",   POINTER(POINTER(MATRIX))),
@@ -147,9 +148,10 @@ def getMatrix(c_m):
 
 def dpm_init(options, input_file):
      c_options = _lib._dpm_tfbs_options()
-     c_options.contents.alpha   = options['alpha']
-     c_options.contents.d       = options['d']
+     c_options.contents.alpha = options['alpha']
+     c_options.contents.discount = options['discount']
      c_options.contents.lambda_ = options['lambda']
+     c_options.contents.process_prior = options['process_prior']
      c_options.contents.tfbs_length = options['tfbs_length']
      c_options.contents.population_size = options['population_size']
      c_input_file = c_char_p(input_file)

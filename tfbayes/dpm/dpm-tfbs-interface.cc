@@ -43,8 +43,9 @@ using namespace std;
 typedef struct _options_t {
         int tfbs_length;
         double alpha;
-        double d;
+        double discount;
         double lambda;
+        const char *process_prior;
         int population_size;
         Bayes::Vector*  baseline_weights;
         Bayes::Matrix** baseline_priors;
@@ -52,7 +53,7 @@ typedef struct _options_t {
         _options_t()
                 : tfbs_length(10),
                   alpha(0.05),
-                  d(0.0),
+                  discount(0.0),
                   lambda(0.01),
                   population_size(1),
                   baseline_weights(NULL),
@@ -75,7 +76,7 @@ operator<<(std::ostream& o, const options_t& options) {
         o << "Options:"              << endl
           << "-> tfbs_length     = " << options.tfbs_length     << endl
           << "-> alpha           = " << options.alpha           << endl
-          << "-> d               = " << options.d               << endl
+          << "-> discount        = " << options.discount        << endl
           << "-> lambda          = " << options.lambda          << endl
           << "-> population_size = " << options.population_size << endl;
         return o;
@@ -212,9 +213,10 @@ void _dpm_tfbs_init(const char* filename)
 
         _data      = new DataTFBS(_sequences, _options.tfbs_length);
         _data_comp = new DataTFBS(_sequences_comp, _options.tfbs_length);
-        _gdpm      = new DPM_TFBS(_options.alpha, _options.d, _options.lambda,
+        _gdpm      = new DPM_TFBS(_options.alpha, _options.discount, _options.lambda,
                                   _options.tfbs_length, *_data, *_data_comp,
-                                  baseline_weights, baseline_priors);
+                                  baseline_weights, baseline_priors,
+                                  _options.process_prior);
         _sampler   = new GibbsSampler(*_gdpm, *_data);
         _pmcmc     = new PopulationMCMC(*_sampler, _options.population_size);
 
