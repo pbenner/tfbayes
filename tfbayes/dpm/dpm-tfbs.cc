@@ -113,7 +113,7 @@ DPM_TFBS::DPM_TFBS(
         gsl_matrix_free(bg_alpha);
 
         ////////////////////////////////////////////////////////////////////////////////
-        test();
+        //test();
 }
 
 DPM_TFBS::~DPM_TFBS() {
