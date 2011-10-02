@@ -53,6 +53,7 @@ def importMatplotlib(backend=None):
 
 options = {
     'save'        : None,
+    'sequences'   : False,
     'interactive' : False,
     'verbose'     : False,
     }
@@ -66,6 +67,7 @@ def usage():
     print "dpm-tfbs-plot [option]... RESULT SEQUENCES"
     print
     print "Options:"
+    print "       --sequences                - plot sequences"
     print "   -s, --save=FILE                - save plot to FILE"
     print
     print "   -h, --help                     - print help"
@@ -184,10 +186,11 @@ def plot_result(results_file, sequences_file):
         show  = pyplot.show
         close = None
     posterior, likelihood, components = parseConfig(results_file)
-    descriptions, sequences = readSequences(sequences_file)
     plot_likehood(likelihood, show)
     plot_components(components, show)
-    plot_sequences(descriptions, sequences, posterior, show)
+    if options['sequences']:
+        descriptions, sequences = readSequences(sequences_file)
+        plot_sequences(descriptions, sequences, posterior, show)
     if close:
         close()
 
@@ -197,7 +200,7 @@ def plot_result(results_file, sequences_file):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "save="]
+        longopts   = ["help", "verbose", "save=", "sequences"]
         opts, tail = getopt.getopt(sys.argv[1:], "s:", longopts)
     except getopt.GetoptError:
         usage()
@@ -212,6 +215,8 @@ def main():
             return 0
         if o in ("-s", "--save"):
             options['save'] = a
+        if o == "--sequences":
+            options['sequences'] = True
     if len(tail) != 2:
         usage()
         return 1
