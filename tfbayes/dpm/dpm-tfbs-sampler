@@ -22,12 +22,9 @@
 import re
 import math
 import time
-import gobject
-import gtk
 import sys
 import getopt
 import os
-import cProfile
 
 import numpy               as np
 import numpy.random.mtrand as mt
