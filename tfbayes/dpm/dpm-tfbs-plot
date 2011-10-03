@@ -53,7 +53,7 @@ def importMatplotlib(backend=None):
 
 options = {
     'save'        : None,
-    'sequences'   : False,
+    'sequences'   : None,
     'interactive' : False,
     'verbose'     : False,
     }
@@ -64,10 +64,9 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-plot [option]... RESULT SEQUENCES"
+    print "dpm-tfbs-plot [option]... RESULT [SEQUENCES]"
     print
     print "Options:"
-    print "       --sequences                - plot sequences"
     print "   -s, --save=FILE                - save plot to FILE"
     print
     print "   -h, --help                     - print help"
@@ -175,7 +174,7 @@ def plot_sequences(descriptions, sequences, posterior, show):
     for i in range(0, len(sequences)):
         plot_sequence(descriptions[i], sequences[i], posterior[i], i+1, show)
 
-def plot_result(results_file, sequences_file):
+def plot_result(results_file):
     if options['save']:
         importMatplotlib('Agg')
         pp    = PdfPages(options['save'])
@@ -189,7 +188,7 @@ def plot_result(results_file, sequences_file):
     plot_likehood(likelihood, show)
     plot_components(components, show)
     if options['sequences']:
-        descriptions, sequences = readSequences(sequences_file)
+        descriptions, sequences = readSequences(options['sequences'])
         plot_sequences(descriptions, sequences, posterior, show)
     if close:
         close()
@@ -200,7 +199,7 @@ def plot_result(results_file, sequences_file):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "save=", "sequences"]
+        longopts   = ["help", "verbose", "save="]
         opts, tail = getopt.getopt(sys.argv[1:], "s:", longopts)
     except getopt.GetoptError:
         usage()
@@ -215,12 +214,14 @@ def main():
             return 0
         if o in ("-s", "--save"):
             options['save'] = a
-        if o == "--sequences":
-            options['sequences'] = True
-    if len(tail) != 2:
+    if len(tail) == 1:
+        plot_result(tail[0])
+    elif len(tail) == 2:
+        options['sequences'] = tail[1]
+        plot_result(tail[0])
+    else:
         usage()
         return 1
-    plot_result(tail[0], tail[1])
     return 0
 
 if __name__ == "__main__":

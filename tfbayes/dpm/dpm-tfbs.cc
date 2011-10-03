@@ -246,11 +246,13 @@ DPM_TFBS::py_prior(Cluster& cluster)
 double
 DPM_TFBS::uniform_prior(Cluster& cluster)
 {
+        double K = mixture_components()-1;
+
         if (cluster.size() == 0) {
-                return log(alpha + (mixture_components()-1)) - log(alpha + mixture_components() - 1);
+                return log(alpha) - log(alpha + K);
         }
         else {
-                return log(alpha) - log(alpha + mixture_components() - 1);
+                return -log(alpha + K);
         }
 }
 
@@ -265,18 +267,18 @@ DPM_TFBS::poppe_prior(Cluster& cluster)
         }
         if (cluster.size() == 0) {
                 if (K == 1.0) {
-                        return -log(N);
+                        return -log(N+1.0);
                 }
                 else {
-                        return log(K*(K-1)/(N*(N+1)));
+                        return log(K*(K-1.0)/(N*(N+1.0)));
                 }
         }
         else {
                 if (K == 1.0) {
-                        return log((N-1)/N);
+                        return log(N/(N+1.0));
                 }
                 else {
-                        return log((cluster.size()+1)/(N+1) * (N-K+1)/N);
+                        return log((cluster.size()+1.0)/(N+1.0) * (N-K+1.0)/N);
                 }
         }
 }
