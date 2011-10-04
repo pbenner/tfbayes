@@ -36,7 +36,7 @@ def information_content_column(j, bg_freq, motif):
     return sum([ motif[i][j]*math.log(motif[i][j]/bg_freq[i][0], 2) for i in range(0, len(motif)) ])
 
 def information_content(bg_freq, motif):
-    norm = 1.0/float(len(cluster_counts[0]))
+    norm = 1.0/float(len(motif[0]))
     return norm*sum([ sum([ motif[i][j]*math.log(motif[i][j]/bg_freq[i][0], 2) for j in range(0, len(motif[0])) ]) for i in range(0, len(motif)) ])
 
 # Kullback-Leibler divergence
