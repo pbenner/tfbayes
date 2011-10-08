@@ -55,6 +55,7 @@ typedef struct _options_t {
                   alpha(0.05),
                   discount(0.0),
                   lambda(0.01),
+                  process_prior("pitman-yor process"),
                   population_size(1),
                   baseline_weights(NULL),
                   baseline_priors(NULL),
@@ -75,6 +76,7 @@ ostream&
 operator<<(std::ostream& o, const options_t& options) {
         o << "Options:"              << endl
           << "-> tfbs_length     = " << options.tfbs_length     << endl
+          << "-> process prior   = " << options.process_prior   << endl
           << "-> alpha           = " << options.alpha           << endl
           << "-> discount        = " << options.discount        << endl
           << "-> lambda          = " << options.lambda          << endl
