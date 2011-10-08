@@ -64,13 +64,16 @@ def importMatplotlib(backend=None):
 # ------------------------------------------------------------------------------
 
 options = {
-    'threshold'   : 0.005,
-    'with-prior'  : True,
-    'plot'        : False,
-    'load'        : None,
-    'save'        : None,
-    'interactive' : False,
-    'verbose'     : False,
+    'threshold'    : 0.005,
+    'with-prior'   : True,
+    'plot'         : False,
+    'tfbs_length'  : None,
+    'result_file'  : None,
+    'seq_file'     : None,
+    'load'         : None,
+    'save'         : None,
+    'interactive'  : False,
+    'verbose'      : False,
     }
 
 # usage
@@ -79,14 +82,17 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-graph [option]... RESULTS_CONFIG SEQUENCES_FASTA MOTIF_LENGTH"
+    print "dpm-tfbs-graph [option]... SAMPLER_CONFIG"
     print
     print "Options:"
     print "   -p, --plot                     - plot motifs"
-    print "       --with-prior=Yes|No        - generate motif with uniform prior (default: yes)"
+    print "       --with-prior=Yes|No        - generate motif with uniform prior [default: Yes]"
+    print "       --result=FILE              - sampler result file"
+    print "       --sequences=FILE           - fasta sequences file"
+    print "       --threshold=DOUBLE         - cut edges that are below threshold"
+    print
     print "   -l, --load=FILE                - load motifs from FILE"
     print "   -s, --save=FILE                - save motifs to FILE"
-    print "       --threshold=DOUBLE         - cut edges that are below threshold"
     print
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
@@ -108,9 +114,18 @@ def read_matrix(config, section, option, converter):
             matrix.append([converter(a) for a in line.split(' ')])
     return matrix
 
-def parse_config(config_parser):
-    edges = map(lambda s: s.strip(), read_vector(config_parser, 'Result', 'graph', str))
+def parse_config(config_file):
+    config_parser = ConfigParser.RawConfigParser()
+    config_parser.read(config_file)
+    if not config_parser.has_section('TFBS-Sampler'):
+        raise IOError("Invalid configuration file.")
+    options['seq_file'] = config_parser.get('TFBS-Sampler', 'sequences')
+    options['tfbs_length'] = int(config_parser.get('TFBS-Sampler', 'tfbs-length'))
+    if config_parser.has_option('TFBS-Sampler', 'save'):
+        options['result_file'] = config_parser.get('TFBS-Sampler', 'save')
 
+def parse_result(config_parser):
+    edges = map(lambda s: s.strip(), read_vector(config_parser, 'Result', 'graph', str))
     return edges
 
 # parse sequences file
@@ -244,11 +259,11 @@ def plot_result(G):
 # main
 # ------------------------------------------------------------------------------
 
-def __main__(results_file, seq_file, motif_length):
+def __main__():
     config_parser_results = ConfigParser.ConfigParser()
-    config_parser_results.read(results_file)
-    edges = parse_config(config_parser_results)
-    descriptions, sequences = read_sequences(seq_file)
+    config_parser_results.read(options['result_file'])
+    edges = parse_result(config_parser_results)
+    descriptions, sequences = read_sequences(options['seq_file'])
     G = construct_graph(edges)
     if options['plot'] or options['save']:
         if options['save']:
@@ -261,9 +276,9 @@ def __main__(results_file, seq_file, motif_length):
         else:
             bg_counts = read_matrix(config_parser_results, 'Result', 'cluster_bg', int)
             bg = tools.compute_frequencies(bg_counts)
-            motifs, components = generate_motifs(sequences, G, int(motif_length))
+            motifs, components = generate_motifs(sequences, G, options['tfbs_length'])
         if options['plot']:
-            plot.plot_motifs(motifs, components, os.path.splitext(os.path.split(results_file)[1])[0])
+            plot.plot_motifs(motifs, components, os.path.splitext(os.path.split(options['result_file'])[1])[0])
         if options['save']:
             fileio.save_motifs(config_parser_save, bg, motifs, components)
             configfile = open(options['save'], 'wb')
@@ -274,12 +289,19 @@ def __main__(results_file, seq_file, motif_length):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "plot", "with-prior=", "load=", "save=", "threshold="]
+        longopts   = ["help", "verbose", "plot", "with-prior=", "threshold=",
+                      "result=", "sequences=", "load=", "save="]
         opts, tail = getopt.getopt(sys.argv[1:], "pls:v", longopts)
     except getopt.GetoptError:
         usage()
         return 2
     output = None
+    if len(tail) != 1:
+        usage()
+        return 1
+    # option default options from config file
+    parse_config(*tail)
+    # override those options with command line arguments
     for o, a in opts:
         if o in ("-v", "--verbose"):
             sys.stderr.write("Verbose mode turned on.\n")
@@ -295,16 +317,25 @@ def main():
                 options['with-prior'] = False
         if o in ("-p", "--plot"):
             options['plot'] = True
+        if o == "--result":
+            options['result_file'] = a
+        if o == "--sequences":
+            options['seq_file'] = a
         if o in ("-l", "--load"):
             options['load'] = a
         if o in ("-s", "--save"):
             options['save'] = a
         if o == "--threshold":
             options['threshold'] = float(a)
-    if len(tail) != 3:
-        usage()
-        return 1
-    __main__(*tail)
+    # check if all required options are specified
+    if not options['tfbs_length']:
+        raise IOError('tfbs length is unknown')
+    if not options['result_file']:
+        raise IOError('no result file specified')
+    if not options['seq_file']:
+        raise IOError('no sequences file specified')
+    # call __main__ and exit
+    __main__()
     return 0
 
 if __name__ == "__main__":
