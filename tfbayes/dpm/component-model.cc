@@ -32,8 +32,6 @@
 #include <data.hh>
 #include <component-model.hh>
 
-#include <tfbayes/fastlog.h>
-
 using namespace std;
 
 gsl_rng* _r;
@@ -118,15 +116,12 @@ double ProductDirichlet::log_pdf(const range_t& range) const {
         const size_t sequence = range.from[0];
         const size_t from     = range.from[1];
         const size_t to       = range.to[1];
-//        double log_z = fastlog(4) - fastlog(10+14);
-        double log_z = fastlog(4);
-//        double log_z = 0;
         double result = 0;
 
         for (size_t i = 0; i <= to-from; i++) {
                 const char code = _data[index_t(sequence, from+i)];
-                result += log_z + fastlog(counts[i%_size1][code  ]+alpha[i%_size1][  code])
-                                - fastlog(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
+                result += log(counts[i%_size1][code  ]+alpha[i%_size1][  code])
+                        - log(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
         }
         return result;
 }
@@ -140,7 +135,7 @@ double ProductDirichlet::log_likelihood() const {
         for (size_t j = 0; j < _size1; j++) {
                 for (size_t k = 0; k < _size2; k++) {
                         if (alpha[j][k] != 0) {
-                                result += counts[j][k]*(fastlog(counts[j][k]+alpha[j][k]) - fastlog(counts[j][_size2]+alpha[j][_size2]));
+                                result += counts[j][k]*(log(counts[j][k]+alpha[j][k]) - log(counts[j][_size2]+alpha[j][_size2]));
                         }
                 }
         }

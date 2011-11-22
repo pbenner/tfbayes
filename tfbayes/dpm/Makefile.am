@@ -6,14 +6,12 @@ bin_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug
 
 dpm_gaussian_debug_SOURCES = dpm-gaussian-main.cc
 dpm_gaussian_debug_LDADD   = $(top_builddir)/libexception/libexception.la
-dpm_gaussian_debug_LDADD  += $(top_builddir)/libfastlog/libfastlog.la
 dpm_gaussian_debug_LDADD  += $(top_builddir)/tfbayes/fasta/libfasta.la
 dpm_gaussian_debug_LDADD  += libdpm.la
 dpm_gaussian_debug_LDADD  += $(LIB_PTHREAD)
 
 dpm_tfbs_debug_SOURCES = dpm-tfbs-main.cc
 dpm_tfbs_debug_LDADD   = $(top_builddir)/libexception/libexception.la
-dpm_tfbs_debug_LDADD  += $(top_builddir)/libfastlog/libfastlog.la
 dpm_tfbs_debug_LDADD  += $(top_builddir)/tfbayes/fasta/libfasta.la
 dpm_tfbs_debug_LDADD  += libdpm.la
 dpm_tfbs_debug_LDADD  += $(LIB_PTHREAD)
@@ -46,7 +44,6 @@ libdpm_la_SOURCES =                                                           \
 	dpm-gaussian-interface.cc dpm-gaussian-interface.hh                   \
 	dpm-tfbs-interface.cc dpm-tfbs-interface.hh
 libdpm_la_LIBADD  = $(top_builddir)/libexception/libexception.la
-libdpm_la_LIBADD += $(top_builddir)/libfastlog/libfastlog.la
 libdpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libfasta.la
 libdpm_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
