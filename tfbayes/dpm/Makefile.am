@@ -44,6 +44,7 @@ libdpm_la_SOURCES =                                                           \
 	dpm-gaussian-interface.cc dpm-gaussian-interface.hh                   \
 	dpm-tfbs-interface.cc dpm-tfbs-interface.hh
 libdpm_la_LIBADD  = $(top_builddir)/libexception/libexception.la
+libdpm_la_LIBADD += $(top_builddir)/parsmm/libparsmm.la
 libdpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libfasta.la
 libdpm_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
