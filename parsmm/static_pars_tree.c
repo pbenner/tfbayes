@@ -1,9 +1,8 @@
-#include <parsmm/static_pars_tree.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include <parsmm/static_pars_tree.h>
 #include <tfbayes/logarithmetic.h>
 
 static_pars_tree_t * pt_create(

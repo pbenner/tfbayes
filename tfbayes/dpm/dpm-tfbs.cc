@@ -33,6 +33,9 @@
 #include <tfbayes/logarithmetic.h>
 #include <tfbayes/fastlog.h>
 
+#include <parsmm/abstract_set.h>
+#include <parsmm/static_pars_tree.h>
+
 using namespace std;
 
 #define process_prior ((*this).*(_process_prior))
@@ -114,9 +117,26 @@ DPM_TFBS::DPM_TFBS(
 
         ////////////////////////////////////////////////////////////////////////////////
         //test();
+        test_parsmm();
 }
 
 DPM_TFBS::~DPM_TFBS() {
+}
+
+void
+DPM_TFBS::test_parsmm() {
+        abstract_set_t * as = as_create(ALPHABET_SIZE);
+        static_pars_tree_t * pt = pt_create(as, PARSMM_DEPTH);
+
+        /**
+         * test string:
+         * ACGTCGATGCGTGATCGACTACGGCT
+         *           |>---<|
+         * remove:   GTGATCG
+         * and compute its probability from
+         * the predictive distribution
+         */
+        exit(EXIT_SUCCESS);
 }
 
 void

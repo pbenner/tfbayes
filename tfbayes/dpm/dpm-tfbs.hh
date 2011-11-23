@@ -65,12 +65,14 @@ public:
         const ClusterManager& clustermanager() const;
         const Graph& graph() const;
         void test();
+        void test_parsmm();
 
         // constants
         ////////////////////////////////////////////////////////////////////////
         static const size_t BG_LENGTH   = 1;
                const size_t TFBS_LENGTH;
-        static const size_t CODING_LENGTH = 4;
+        static const size_t PARSMM_DEPTH = 3;
+        static const size_t ALPHABET_SIZE = 4;
 
 private:
         // baseline models
@@ -114,11 +116,11 @@ private:
 
         // standard priors
         static gsl_matrix* init_alpha(size_t length) {
-                gsl_matrix* alpha = gsl_matrix_alloc(length, CODING_LENGTH);
+                gsl_matrix* alpha = gsl_matrix_alloc(length, ALPHABET_SIZE);
 
                 // initialize prior for the background model
                 for (size_t i = 0; i < length; i++) {
-                        for (size_t j = 0; j < CODING_LENGTH; j++) {
+                        for (size_t j = 0; j < ALPHABET_SIZE; j++) {
                                 gsl_matrix_set(alpha, i, j, 1);
                         }
                 }

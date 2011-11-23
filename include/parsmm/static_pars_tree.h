@@ -16,10 +16,22 @@
 #ifndef STATIC_PARS_TREE_H
 #define STATIC_PARS_TREE_H
 
-#include "abstract_set.h"
 #include <math.h>
 #include <gsl/gsl_sf_gamma.h>
 
+#include <parsmm/abstract_set.h>
+
+#undef __BEGIN_DECLS
+#undef __END_DECLS
+#ifdef __cplusplus
+# define __BEGIN_DECLS extern "C" {
+# define __END_DECLS }
+#else
+# define __BEGIN_DECLS /* empty */
+# define __END_DECLS /* empty */
+#endif
+
+__BEGIN_DECLS
 
 #define GET_CHILD_OFFSET(as, node, subset) ((node)*(as)->nb_subsets+(subset))
 
@@ -56,7 +68,7 @@ struct static_pars_tree {
 };
 
 static_pars_tree_t * pt_create(const abstract_set_t * as,
-                               short depth );
+                               short depth);
 
 void pt_free(static_pars_tree_t* tree);
 
@@ -118,4 +130,7 @@ void pt_set_prior(static_pars_tree_t * tree,
 int ipow(int base, int exp);
 
 void sum_counts(count_t*, count_t*, count_t*, int); 
+
+__END_DECLS
+
 #endif /* STATIC_PARS_TREE_H */

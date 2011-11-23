@@ -16,10 +16,21 @@
  * GNU General Public License as published by the Free Software Foundation.
  */
 
+#ifndef ABSTACT_SET_H
+#define ABSTACT_SET_H
 
-#ifndef SET_H
-#define SET_H
-#include "config.h"
+#undef __BEGIN_DECLS
+#undef __END_DECLS
+#ifdef __cplusplus
+# define __BEGIN_DECLS extern "C" {
+# define __END_DECLS }
+#else
+# define __BEGIN_DECLS /* empty */
+# define __END_DECLS /* empty */
+#endif
+
+__BEGIN_DECLS
+
 #define POW2(x) (1 << (x))
 /**
  * @brief Represents an abstract symbol
@@ -89,4 +100,6 @@ void        as_append_subset (const abstract_set_t * as,
 
 int         _as_generate_partitions ();
 
-#endif /* SET_H */
+__END_DECLS
+
+#endif /* ABSTACT_SET_H */
