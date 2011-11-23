@@ -123,10 +123,61 @@ DPM_TFBS::DPM_TFBS(
 DPM_TFBS::~DPM_TFBS() {
 }
 
+template <typename T>
+class AbysmalStack {
+public:
+        AbysmalStack(size_t depth)
+                : _depth(depth), _bottom(0), _content(depth, 0)
+                {}
+        
+        void push(T letter) {
+                _content[_bottom] = letter;
+                _bottom = (_bottom + 1) % _depth;
+        }
+
+        const T& operator[](size_t pos) const {
+                return _content[(_bottom+pos)%_depth];
+        }
+
+        T& operator[](size_t pos) {
+                return _content[(_bottom+pos)%_depth];
+        }
+
+protected:
+        size_t _depth;
+        size_t _bottom;
+        vector<T> _content;
+};
+
+#include <code.hh>
+
+static
+void compute_counts(const vector<char>& sequence)
+{
+        AbysmalStack<count_t> stack(DPM_TFBS::PARSMM_DEPTH+1);
+
+        for (size_t i = 0; i < sequence.size(); i++) {
+                stack.push(sequence[i]);
+                if (i > DPM_TFBS::PARSMM_DEPTH) {
+                }
+        }
+
+}
+
 void
 DPM_TFBS::test_parsmm() {
         abstract_set_t * as = as_create(ALPHABET_SIZE);
         static_pars_tree_t * pt = pt_create(as, PARSMM_DEPTH);
+        AbysmalStack<count_t> stack(PARSMM_DEPTH+1);
+        count_t counts[(int)pow(ALPHABET_SIZE, PARSMM_DEPTH+1)];
+
+        /* nucleotide sequences */
+        const string sequence("ACGTCGATGCGTGATCGACTACGGCT");
+        vector<char> coded_sequence(sequence.length(), 0);
+
+        for (size_t i = 0; i < sequence.length(); i++) {
+                coded_sequence[i] = code_nucleotide(sequence[i]);
+        }
 
         /**
          * test string:
