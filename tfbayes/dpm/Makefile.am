@@ -2,7 +2,12 @@
 
 INCLUDES = -I$(top_srcdir)/include
 
-bin_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug
+bin_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug parsmm-test
+
+parsmm_test_SOURCES = parsmm-test.cc
+parsmm_test_LDADD   = $(top_builddir)/parsmm/libparsmm.la
+parsmm_test_LDADD  += libdpm.la
+parsmm_test_LDADD  += -lm
 
 dpm_gaussian_debug_SOURCES = dpm-gaussian-main.cc
 dpm_gaussian_debug_LDADD   = $(top_builddir)/libexception/libexception.la
