@@ -10,15 +10,15 @@ static_pars_tree_t * pt_create(
         const abstract_set_t * as,
         short depth)
 {
-	static_pars_tree_t * tree ;
-	tree = (static_pars_tree_t *) malloc(sizeof(static_pars_tree_t)) ;
-	tree->as = as ;
-	tree->size = _pt_size(as, depth) ;
-	tree->depth = depth ;
-	tree->counts = (count_t *)malloc(sizeof(unsigned long) * tree->size * as->size) ;
-	tree->scores = (double *)malloc(sizeof(double) * tree->size) ;
-	tree->dirichlet_params = (double *)malloc(sizeof(double) * tree->size * as->size) ;
-	return tree ;
+	static_pars_tree_t * tree;
+	tree = (static_pars_tree_t *) malloc(sizeof(static_pars_tree_t));
+	tree->as = as;
+	tree->size = _pt_size(as, depth);
+	tree->depth = depth;
+	tree->counts = (count_t *)malloc(sizeof(unsigned long) * tree->size * as->size);
+	tree->scores = (double *)malloc(sizeof(double) * tree->size);
+	tree->dirichlet_params = (double *)malloc(sizeof(double) * tree->size * as->size);
+	return tree;
 }
 
 void pt_free(static_pars_tree_t * tree)
@@ -26,7 +26,7 @@ void pt_free(static_pars_tree_t * tree)
 	free(tree->dirichlet_params);
 	free(tree->scores);
 	free(tree->counts);
-	free(tree) ;
+	free(tree);
 }
 
 unsigned long _pt_size(
