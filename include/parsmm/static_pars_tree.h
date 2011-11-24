@@ -65,6 +65,9 @@ struct static_pars_tree {
 	count_t * counts ;
 	double * scores ;
 	double * dirichlet_params ;
+        /* The array of pointers over nodes in the pars_tree */
+        node_t * node_ids;
+        node_t * new_node_ids;
 };
 
 static_pars_tree_t * pt_create(const abstract_set_t * as,
@@ -93,14 +96,8 @@ void pt_free(static_pars_tree_t* tree);
  *
  *  \return the logarithm of the marginal likelihood.
  */
-double pt_ln_marginal_likelihood(const static_pars_tree_t * tree, 
+double pt_ln_marginal_likelihood(static_pars_tree_t * tree, 
                                  const count_t * obs);
-
-double pt_ln_marginal_likelihood_add(const static_pars_tree_t * tree,
-                                     const symbol_t ** contexts);
-
-double pt_ln_marginal_likelihood_rm(const static_pars_tree_t * tree,
-                                    const symbol_t ** contexts);
 
 /*! \brief Prepares a prior array for use in pt_marginal_likelihood()
  *  <UL>

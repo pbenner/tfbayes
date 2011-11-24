@@ -82,11 +82,12 @@ class Context : public std::vector<ssize_t>
 public:
         Context(const NucleotideSequence& sequence, size_t depth, size_t alphabet_size) {
                 AbysmalStack<count_t> stack(depth+1);
+                size_t position;
 
                 for (size_t i = 0; i < sequence.size(); i++) {
                         stack.push(sequence[i]);
                         if (i >= depth) {
-                                size_t position = pow(alphabet_size, depth+1) - 1;
+                                position = pow(alphabet_size, depth+1) - 1;
                                 for (size_t i = 0; i < depth+1; i++) {
                                         position -= stack[i]*pow(alphabet_size, i);
                                 }

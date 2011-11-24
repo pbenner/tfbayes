@@ -27,21 +27,6 @@
 #include <tfbayes/logarithmetic.h>
 
 static
-int ipow(int base, int exp) 
-{
-        int result = 1;
-        while (exp)
-        {
-                if (exp & 1) {
-                        result *= base;
-                }
-                exp >>= 1;
-                base *= base;
-        }
-        return result;
-} 
-
-static
 void sum_counts(count_t* dest, count_t* src1, count_t* src2, int size) 
 {
         int ii;
@@ -69,13 +54,19 @@ static_pars_tree_t * pt_create(
         short depth)
 {
         static_pars_tree_t * tree;
-        tree = (static_pars_tree_t *) malloc(sizeof(static_pars_tree_t));
+        tree = (static_pars_tree_t *)malloc(sizeof(static_pars_tree_t));
         tree->as = as;
         tree->size = pt_size(as, depth);
         tree->depth = depth;
         tree->counts = (count_t *)malloc(sizeof(unsigned long) * tree->size * as->size);
         tree->scores = (double *)malloc(sizeof(double) * tree->size);
         tree->dirichlet_params = (double *)malloc(sizeof(double) * tree->size * as->size);
+        /* Allocate memory for the stack of pointers 
+         * Exactly half of the subsets contain a given symbol
+         */
+        tree->node_ids = (node_t *)malloc(sizeof(node_t) * (1 << ((tree->as->size)*tree->depth)));
+        tree->new_node_ids = (node_t *)malloc(sizeof(node_t) * (1 << ((tree->as->size) * tree->depth)));
+
         return tree;
 }
 
@@ -84,6 +75,8 @@ void pt_free(static_pars_tree_t * tree)
         free(tree->dirichlet_params);
         free(tree->scores);
         free(tree->counts);
+        free(tree->node_ids);
+        free(tree->new_node_ids);
         free(tree);
 }
 
@@ -100,7 +93,7 @@ double dirichlet_eval(
 
         print_debug("[dirichlet_eval]\n");
 
-        for ( ii = 0; ii < alphabet_size; ii++ )
+        for (ii = 0; ii < alphabet_size; ii++)
         {
                 sum_params += dirichlet_params[ii];
                 sum_counts += obs[ii];
@@ -124,7 +117,7 @@ double get_ln_score(
         partition_t partition;
 
         print_debug("[get_ln_score node: %lu]\n",node);
-        if ( node * tree->as->nb_subsets + 2 > tree->size )
+        if (node * tree->as->nb_subsets + 2 > tree->size)
         {
                 /* Node is a leaf */
                 result = dirichlet_eval(GET_COUNTS(tree, node), GET_DIR_PARAMS(tree, node), tree->as->size);
@@ -132,14 +125,14 @@ double get_ln_score(
         else
         {
                 /* Node is internal */
-                for ( ii = 0; ii < tree->as->nb_partitions; ii++ )
+                for (ii = 0; ii < tree->as->nb_partitions; ii++)
                 {
                         partition = tree->as->partitions[ii];
                         
                         jj = 0;
                         partial_sum = 0;
                         
-                        while ( partition[jj] != 0 )
+                        while (partition[jj] != 0)
                         {
                                 partial_sum += tree->scores[GET_CHILD_OFFSET(tree->as, node, partition[jj])];
                                 jj++; 
@@ -152,17 +145,13 @@ double get_ln_score(
 }
 
 double pt_ln_marginal_likelihood(
-        const static_pars_tree_t* tree,
+        static_pars_tree_t* tree,
         const count_t * obs)
 {
         /* The running index over the contexts */
         word_t context_id = 0;
 
         symbol_t symbol = 0; /* TOCHECK Maintain this upon iteration */
-
-        /* The array of pointers over nodes in the pars_tree */
-        node_t * node_ids;
-        node_t * new_node_ids;
 
         void * pivot;
 
@@ -178,59 +167,54 @@ double pt_ln_marginal_likelihood(
         move_t last_move;
 
         /* INITIALIZATION */
-        context_id_max = ipow(tree->as->size, tree->depth);
-        container_max = ( tree->as->nb_subsets + 1 ) / 2;
+        context_id_max = pow(tree->as->size, tree->depth);
+        container_max = (tree->as->nb_subsets + 1)/ 2;
         /* First blank the counts and scores array */
         memset(tree->counts, 0, sizeof(unsigned long) * tree->size * tree->as->size);
         memset(tree->scores, 0, sizeof(double) * tree->size);
-        /* Allocate memory for the stack of pointers 
-         * Exactly half of the subsets contain a given symbol
-         */
-        node_ids = (node_t *) malloc(sizeof(node_t) * (1 << ((tree->as->size)*tree->depth)));
-        new_node_ids = (node_t *) malloc(sizeof(node_t) * (1 << ((tree->as->size) * tree->depth)));
-        memset(node_ids, (unsigned int) 0, sizeof(node_t) * (1 << ((tree->as->size)*tree->depth)));
-        node_ids[0] = 0;
+        memset(tree->node_ids, (unsigned int) 0, sizeof(node_t) * (1 << ((tree->as->size)*tree->depth)));
+        tree->node_ids[0] = 0;
         last_move = MV_DOWN; /* Not to perturb the first iteration */
 
         /* ITERATIONS */
         do {
-                memset(new_node_ids, (unsigned int) 0, sizeof(node_t) * (1 << ((tree->as->size)*tree->depth)));
+                memset(tree->new_node_ids, (unsigned int) 0, sizeof(node_t) * (1 << ((tree->as->size)*tree->depth)));
 
                 if (last_move != MV_UP)
                 {
                         /* Copy and compute counts */
                         ii = 0;
                         do {
-                                if (as_subset_size(GET_SUBSET(tree->as, node_ids[ii])) <= 1) {
-                                        memcpy(GET_COUNTS(tree, node_ids[ii]), obs + context_id * tree->as->size, tree->as->size * sizeof(count_t));
-                                        print_debug("Copying counts - src: %lu\tdst: %lu\n", context_id, node_ids[ii]);
+                                if (as_subset_size(GET_SUBSET(tree->as, tree->node_ids[ii])) <= 1) {
+                                        memcpy(GET_COUNTS(tree, tree->node_ids[ii]), obs + context_id * tree->as->size, tree->as->size * sizeof(count_t));
+                                        print_debug("Copying counts - src: %lu\tdst: %lu\n", context_id, tree->node_ids[ii]);
                                 }
-                                else if ( GET_SUBSET(tree->as, node_ids[ii]) < (1 << (symbol + 1)))
+                                else if (GET_SUBSET(tree->as, tree->node_ids[ii]) < (1 << (symbol + 1)))
                                 {
-                                        print_debug("Summing counts - current: %lu\n", node_ids[ii]);
-                                        sum_counts(GET_COUNTS(tree, node_ids[ii]),GET_COUNTS(tree, node_ids[ii] - (1 << symbol)), GET_COUNTS(tree, GET_CHILD_OFFSET(tree->as,GET_PARENT_OFFSET(tree->as,node_ids[ii]),(1 << symbol))),tree->as->size);
+                                        print_debug("Summing counts - current: %lu\n", tree->node_ids[ii]);
+                                        sum_counts(GET_COUNTS(tree, tree->node_ids[ii]),GET_COUNTS(tree, tree->node_ids[ii] - (1 << symbol)), GET_COUNTS(tree, GET_CHILD_OFFSET(tree->as,GET_PARENT_OFFSET(tree->as,tree->node_ids[ii]),(1 << symbol))),tree->as->size);
                                 }
-                                if ( context_id * tree->as->size + 2 > context_id_max )
-                                        tree->scores[node_ids[ii]] = get_ln_score(tree, node_ids[ii]);
+                                if (context_id * tree->as->size + 2 > context_id_max)
+                                        tree->scores[tree->node_ids[ii]] = get_ln_score(tree, tree->node_ids[ii]);
                                 ii++;
                         }
-                        while (node_ids[ii]);
+                        while (tree->node_ids[ii]);
 
                                 
                 }
                 else {
                         ii = 0;
                         do {
-                                print_debug("[pt_ln_marginal_likelihood] Node: %lu - Computing score\n", node_ids[ii]);
-                                tree->scores[node_ids[ii]] = get_ln_score(tree,node_ids[ii]);
+                                print_debug("[pt_ln_marginal_likelihood] Node: %lu - Computing score\n", tree->node_ids[ii]);
+                                tree->scores[tree->node_ids[ii]] = get_ln_score(tree,tree->node_ids[ii]);
                                 ii++;
                         }
-                        while ( node_ids[ii] != 0 );
+                        while (tree->node_ids[ii] != 0);
                 }
 
                 /* Move the pointer over observations */
-                if (( context_id * tree->as->size + 1 < context_id_max ) &&
-                    ( last_move != MV_UP ))
+                if (( context_id * tree->as->size + 1 < context_id_max) &&
+                    (last_move != MV_UP))
                 {
                         /* GO DOWN */
                         context_id = context_id * tree->as->size + 1;
@@ -239,14 +223,14 @@ double pt_ln_marginal_likelihood(
                         ii = 0;
                         kk = 0;
                         do {
-                                for ( jj = 0; jj < container_max; jj++ )
-                                        new_node_ids[kk++] = GET_CHILD_OFFSET(tree->as, node_ids[ii],tree->as->containers[0][jj]);
+                                for (jj = 0; jj < container_max; jj++)
+                                        tree->new_node_ids[kk++] = GET_CHILD_OFFSET(tree->as, tree->node_ids[ii],tree->as->containers[0][jj]);
                                 ii++;
                         }
-                        while ( node_ids[ii] != 0 );
+                        while (tree->node_ids[ii] != 0);
                 }
 
-                else if ( context_id % tree->as->size != 0 )
+                else if (context_id % tree->as->size != 0)
                 {
                         /* GO TO NEXT SIBLING */
                         context_id = context_id + 1;
@@ -255,11 +239,11 @@ double pt_ln_marginal_likelihood(
                         ii = 0;
                         kk = 0;
                         do {
-                                for ( jj = 0; jj < container_max; jj++ )
-                                        new_node_ids[kk++] = GET_CHILD_OFFSET(tree->as, GET_PARENT_OFFSET(tree->as,node_ids[ii]), tree->as->containers[(context_id - 1) % 4][jj]);
+                                for (jj = 0; jj < container_max; jj++)
+                                        tree->new_node_ids[kk++] = GET_CHILD_OFFSET(tree->as, GET_PARENT_OFFSET(tree->as,tree->node_ids[ii]), tree->as->containers[(context_id - 1) % 4][jj]);
                                 ii += container_max;
                         }
-                        while ( node_ids[ii] != 0 );
+                        while (tree->node_ids[ii] != 0);
                 }
 
                 else
@@ -271,22 +255,18 @@ double pt_ln_marginal_likelihood(
                         ii = 0;
                         kk = 0;
                         do {
-                                new_node_ids[kk++] = GET_PARENT_OFFSET(tree->as, node_ids[ii]);
+                                tree->new_node_ids[kk++] = GET_PARENT_OFFSET(tree->as, tree->node_ids[ii]);
                                 ii += container_max;
                         }
-                        while ( node_ids[ii] != 0 );
+                        while (tree->node_ids[ii] != 0);
                 }
-                pivot = node_ids;
-                node_ids = new_node_ids;
-                new_node_ids = pivot;
+                pivot = tree->node_ids;
+                tree->node_ids = tree->new_node_ids;
+                tree->new_node_ids = pivot;
         }
-        while ( context_id != 0 );
+        while (context_id != 0);
 
         tree->scores[0] = get_ln_score(tree,0);
-
-        /* CLEANUP */
-        free(node_ids);
-        free(new_node_ids);
 
         return tree->scores[0];
 }
