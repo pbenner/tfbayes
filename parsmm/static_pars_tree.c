@@ -161,7 +161,7 @@ double pt_ln_marginal_likelihood(
         symbol_t symbol = 0; /* TOCHECK Maintain this upon iteration */
 
         /* The array of pointers over nodes in the pars_tree */
-        node_t * node_ids ;
+        node_t * node_ids;
         node_t * new_node_ids;
 
         void * pivot;
