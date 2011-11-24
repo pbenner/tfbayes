@@ -116,20 +116,9 @@ double pt_ln_marginal_likelihood_rm(const static_pars_tree_t * tree,
  *  </UL>
  */
 
-double _get_ln_score(const static_pars_tree_t * tree,
-                     node_t node) ;
-
-double _dirichlet_eval(const count_t * obs, 
-                       const double* prior,
-                       short alphabet_size) ;
-
 void pt_set_prior(static_pars_tree_t * tree,
                   double weight,
                   prior_family_t prior_family);
-
-int ipow(int base, int exp);
-
-void sum_counts(count_t*, count_t*, count_t*, int); 
 
 __END_DECLS
 
