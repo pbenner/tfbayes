@@ -1,3 +1,23 @@
+/*
+ *      @file  static_pars_tree.c
+ *      @brief  Parsimonious context tree
+ *
+ *     @author  P.-Y. Bourguignon (pyb), bourguig@mis.mpg.de
+ *
+ *   @internal
+ *     Created  03/09/2010
+ *     Revision  ---
+ *     Company  Max-Planck Institute for Mathematics in the Sciences, Leipzig
+ *     Copyright (c) 2010, P.-Y. Bourguignon
+ *
+ * This source code is released for free distribution under the terms of the
+ * GNU General Public License as published by the Free Software Foundation.
+ */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,8 +32,9 @@ int ipow(int base, int exp)
         int result = 1;
         while (exp)
         {
-                if (exp & 1)
+                if (exp & 1) {
                         result *= base;
+                }
                 exp >>= 1;
                 base *= base;
         }
@@ -29,6 +50,20 @@ void sum_counts(count_t* dest, count_t* src1, count_t* src2, int size)
         }
 }
 
+static
+unsigned long pt_size(
+        const abstract_set_t * as,
+        int depth)
+{
+        int ii;
+        unsigned long powk = as->nb_subsets;
+        for (ii = 0; ii < depth; ii++)
+        {
+                powk = powk * as->nb_subsets;
+        }
+        return (powk - 1) / (as->nb_subsets - 1);
+}
+
 static_pars_tree_t * pt_create(
         const abstract_set_t * as,
         short depth)
@@ -36,7 +71,7 @@ static_pars_tree_t * pt_create(
         static_pars_tree_t * tree;
         tree = (static_pars_tree_t *) malloc(sizeof(static_pars_tree_t));
         tree->as = as;
-        tree->size = _pt_size(as, depth);
+        tree->size = pt_size(as, depth);
         tree->depth = depth;
         tree->counts = (count_t *)malloc(sizeof(unsigned long) * tree->size * as->size);
         tree->scores = (double *)malloc(sizeof(double) * tree->size);
@@ -52,21 +87,8 @@ void pt_free(static_pars_tree_t * tree)
         free(tree);
 }
 
-unsigned long _pt_size(
-        const abstract_set_t * as,
-        int depth)
-{
-        int ii;
-        unsigned long powk = as->nb_subsets;
-        for (ii = 0; ii < depth; ii++)
-        {
-                powk = powk * as->nb_subsets;
-        }
-        return (powk - 1) / (as->nb_subsets - 1);
-}
-
 static
-double _dirichlet_eval(
+double dirichlet_eval(
         const count_t * obs,
         const double * dirichlet_params,
         short alphabet_size)
@@ -76,7 +98,7 @@ double _dirichlet_eval(
         double result = 0.0;
         int ii;
 
-        print_debug("[_dirichlet_eval]\n");
+        print_debug("[dirichlet_eval]\n");
 
         for ( ii = 0; ii < alphabet_size; ii++ )
         {
@@ -92,7 +114,7 @@ double _dirichlet_eval(
 }
 
 static
-double _get_ln_score(
+double get_ln_score(
         const static_pars_tree_t * tree,
         node_t node)
 {
@@ -101,11 +123,11 @@ double _get_ln_score(
         short ii, jj; /* partition index, subset index */
         partition_t partition;
 
-        print_debug("[_get_ln_score node: %lu]\n",node);
+        print_debug("[get_ln_score node: %lu]\n",node);
         if ( node * tree->as->nb_subsets + 2 > tree->size )
         {
                 /* Node is a leaf */
-                result = _dirichlet_eval(GET_COUNTS(tree, node), GET_DIR_PARAMS(tree, node), tree->as->size);
+                result = dirichlet_eval(GET_COUNTS(tree, node), GET_DIR_PARAMS(tree, node), tree->as->size);
         }
         else
         {
@@ -189,7 +211,7 @@ double pt_ln_marginal_likelihood(
                                         sum_counts(GET_COUNTS(tree, node_ids[ii]),GET_COUNTS(tree, node_ids[ii] - (1 << symbol)), GET_COUNTS(tree, GET_CHILD_OFFSET(tree->as,GET_PARENT_OFFSET(tree->as,node_ids[ii]),(1 << symbol))),tree->as->size);
                                 }
                                 if ( context_id * tree->as->size + 2 > context_id_max )
-                                        tree->scores[node_ids[ii]] = _get_ln_score(tree, node_ids[ii]);
+                                        tree->scores[node_ids[ii]] = get_ln_score(tree, node_ids[ii]);
                                 ii++;
                         }
                         while (node_ids[ii]);
@@ -200,7 +222,7 @@ double pt_ln_marginal_likelihood(
                         ii = 0;
                         do {
                                 print_debug("[pt_ln_marginal_likelihood] Node: %lu - Computing score\n", node_ids[ii]);
-                                tree->scores[node_ids[ii]] = _get_ln_score(tree,node_ids[ii]);
+                                tree->scores[node_ids[ii]] = get_ln_score(tree,node_ids[ii]);
                                 ii++;
                         }
                         while ( node_ids[ii] != 0 );
@@ -260,11 +282,11 @@ double pt_ln_marginal_likelihood(
         }
         while ( context_id != 0 );
 
-        tree->scores[0] = _get_ln_score(tree,0);
+        tree->scores[0] = get_ln_score(tree,0);
 
         /* CLEANUP */
         free(node_ids);
         free(new_node_ids);
 
-        return 0;
+        return tree->scores[0];
 }

@@ -72,9 +72,6 @@ static_pars_tree_t * pt_create(const abstract_set_t * as,
 
 void pt_free(static_pars_tree_t* tree);
 
-unsigned long _pt_size(const abstract_set_t * as,
-                       int depth);
-
 
 /*! \brief Compute the marginal likelihood for counts and prior provided
  *  \sa pt_get_prior()
