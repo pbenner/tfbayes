@@ -38,7 +38,7 @@ DPM_Gaussian::DPM_Gaussian(
         gsl_matrix* Sigma,
         gsl_matrix* Sigma_0,
         gsl_vector* mu_0,
-        const DataGaussian& data)
+        const data_gaussian_t& data)
         : _data(data),
           _cluster_assignments(_data.elements(), -1),
           _clustermanager(_cluster_assignments),
@@ -47,7 +47,7 @@ DPM_Gaussian::DPM_Gaussian(
 {
         _model_tag = _clustermanager.add_baseline_model(new BivariateNormal(Sigma, Sigma_0, mu_0, data));
         cluster_tag_t cluster_tag = _clustermanager.get_free_cluster(_model_tag).cluster_tag();
-        for (DataGaussian::const_iterator it = _data.begin();
+        for (data_gaussian_t::const_iterator it = _data.begin();
              it != _data.end(); it++) {
                 _clustermanager[cluster_tag].add_observations(range_t(**it,1));
         }

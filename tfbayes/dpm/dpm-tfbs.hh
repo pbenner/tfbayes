@@ -34,7 +34,7 @@
 class DPM_TFBS : public DPM {
 public:
          DPM_TFBS(double alpha, double discount, double lambda, size_t tfbs_length,
-                  const DataTFBS& data, const DataTFBS& data_comp,
+                  const data_tfbs_t& data, const data_tfbs_t& data_comp,
                   std::vector<double> baseline_weights, gsl_matrix *baseline_priors[],
                   std::string process_prior_name = "pitman-yor process");
         ~DPM_TFBS();
@@ -61,7 +61,7 @@ public:
         double likelihood() const;
         bool   valid_for_sampling(const index_t& index) const;
         posterior_t& posterior();
-        const DataTFBS& data() const;
+        const data_tfbs_t& data() const;
         const ClusterManager& clustermanager() const;
         const Graph& graph() const;
         void test();
@@ -79,8 +79,8 @@ private:
         std::vector<model_tag_t> _model_tags;
 
         // data and clusters
-        const DataTFBS& _data;
-        const DataTFBS& _data_comp;
+        const data_tfbs_t& _data;
+        const data_tfbs_t& _data_comp;
         sequence_data_t<cluster_tag_t> _cluster_assignments;
         ClusterManager _clustermanager;
 

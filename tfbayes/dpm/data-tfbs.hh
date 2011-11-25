@@ -32,11 +32,11 @@
 #include <component-model.hh>
 #include <indexer.hh>
 
-class DataTFBS : public Indexer, public Data, public sequence_data_t<short> {
+class data_tfbs_t : public Indexer, public sequence_data_t<short> {
 public:
-         DataTFBS(const std::vector<std::string>& sequences, size_t tfbs_length);
-         DataTFBS(const DataTFBS& data);
-        ~DataTFBS();
+         data_tfbs_t(const std::vector<std::string>& sequences, size_t tfbs_length);
+         data_tfbs_t(const data_tfbs_t& data);
+        ~data_tfbs_t();
 
         // iterators
         ////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ public:
         using sequence_data_t<short>::operator[];
         const index_t& operator[](size_t i) const;
 
-        friend std::ostream& operator<< (std::ostream& o, const DataTFBS& data);
+        friend std::ostream& operator<< (std::ostream& o, const data_tfbs_t& data);
 
         // methods
         ////////////////////////////////////////////////////////////////////////

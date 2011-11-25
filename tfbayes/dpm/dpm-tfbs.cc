@@ -42,7 +42,7 @@ using namespace std;
 
 DPM_TFBS::DPM_TFBS(
         double alpha, double discount, double lambda, size_t tfbs_length,
-        const DataTFBS& data, const DataTFBS& data_comp,
+        const data_tfbs_t& data, const data_tfbs_t& data_comp,
         std::vector<double> baseline_weights, gsl_matrix *baseline_priors[],
         string process_prior_name)
         : // length of tfbs
@@ -90,7 +90,7 @@ DPM_TFBS::DPM_TFBS(
 
         ////////////////////////////////////////////////////////////////////////////////
         // assign all elements to the background
-        for (DataTFBS::const_iterator it = _data.begin();
+        for (data_tfbs_t::const_iterator it = _data.begin();
              it != _data.end(); it++) {
                 range_t range(**it, 1);
                 _clustermanager[bg_cluster_tag].add_observations(range);
@@ -404,7 +404,7 @@ DPM_TFBS::update_posterior(size_t sampling_steps) {
         if (sampling_steps % 100 == 0) {
                 _tfbs_graph.cleanup(1);
         }
-        for (DataTFBS::const_iterator it = _data.begin();
+        for (data_tfbs_t::const_iterator it = _data.begin();
              it != _data.end(); it++) {
                 const index_t& index  = **it;
                 const size_t sequence = index[0];
@@ -428,7 +428,7 @@ DPM_TFBS::posterior() {
         return _posterior;
 }
 
-const DataTFBS&
+const data_tfbs_t&
 DPM_TFBS::data() const {
         return _data;
 }

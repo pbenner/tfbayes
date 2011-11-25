@@ -65,8 +65,8 @@ typedef struct _options_t {
 
 static options_t _options;
 static DPM_TFBS* _gdpm;
-static DataTFBS* _data;
-static DataTFBS* _data_comp;
+static data_tfbs_t* _data;
+static data_tfbs_t* _data_comp;
 static GibbsSampler* _sampler;
 static PopulationMCMC* _pmcmc;
 static vector<string> _sequences;
@@ -213,8 +213,8 @@ void _dpm_tfbs_init(const char* filename)
         }
         baseline_priors[_options.baseline_n] = NULL;
 
-        _data      = new DataTFBS(_sequences, _options.tfbs_length);
-        _data_comp = new DataTFBS(_sequences_comp, _options.tfbs_length);
+        _data      = new data_tfbs_t(_sequences, _options.tfbs_length);
+        _data_comp = new data_tfbs_t(_sequences_comp, _options.tfbs_length);
         _gdpm      = new DPM_TFBS(_options.alpha, _options.discount, _options.lambda,
                                   _options.tfbs_length, *_data, *_data_comp,
                                   baseline_weights, baseline_priors,
@@ -297,7 +297,7 @@ Bayes::Matrix* _dpm_tfbs_cluster_assignments() {
                 }
         }
         // copy posterior
-        for (DataTFBS::const_iterator it = _gdpm->data().begin();
+        for (data_tfbs_t::const_iterator it = _gdpm->data().begin();
              it != _gdpm->data().end(); it++) {
                 const index_t& index = **it;
                 result->mat[index[0]][index[1]] = _gdpm->clustermanager()[index];

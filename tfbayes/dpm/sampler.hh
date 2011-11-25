@@ -24,7 +24,6 @@
 
 #include <clonable.hh>
 #include <datatypes.hh>
-#include <data.hh>
 #include <mixture-model.hh>
 #include <indexer.hh>
 

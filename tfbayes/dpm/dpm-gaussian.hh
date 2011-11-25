@@ -34,7 +34,7 @@ public:
                       gsl_matrix* _Sigma,
                       gsl_matrix* _Sigma_0,
                       gsl_vector* _mu_0,
-                      const DataGaussian& data);
+                      const data_gaussian_t& data);
         ~DPM_Gaussian();
 
         DPM_Gaussian* clone() const;
@@ -73,7 +73,7 @@ private:
         gsl_matrix* cov_inv_0;
 
         // data and clusters
-        const DataGaussian& _data;
+        const data_gaussian_t& _data;
         data_t<cluster_tag_t> _cluster_assignments;
         ClusterManager _clustermanager;
 

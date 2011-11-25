@@ -27,22 +27,19 @@
 
 using namespace std;
 
-DataGaussian::DataGaussian(size_t cluster, size_t samples, gsl_matrix* Sigma, const double* pi)
+data_gaussian_t::data_gaussian_t(size_t cluster, size_t samples, gsl_matrix* Sigma, const double* pi)
         : data_t<std::vector<double> >(generate_samples(cluster, samples, Sigma, pi)),
           _elements(samples), _length(1), _cluster(cluster)
 {
         for (size_t i = 0; i < samples; i++) {
-                indices.push_back(new index_t(i));
-        }
-
-        // generate a randomized list of indices
-        for (DataGaussian::iterator it = begin(); it != end(); it++) {
-                sampling_indices.push_back(*it);
+                index_t* index = new index_t(i);
+                indices.push_back(index);
+                sampling_indices.push_back(index);
         }
         shuffle();
 }
 
-DataGaussian::DataGaussian(const DataGaussian& data)
+data_gaussian_t::data_gaussian_t(const data_gaussian_t& data)
         : _elements(data._elements), _length(data._length), _cluster(data._cluster)
 {
         _mu = gsl_matrix_alloc(data._mu->size1, data._mu->size2);
@@ -52,7 +49,7 @@ DataGaussian::DataGaussian(const DataGaussian& data)
         gsl_vector_memcpy(_original_cluster_assignments, data._original_cluster_assignments);
 
         // generate a randomized list of indices
-        for (DataGaussian::const_iterator it = data.begin(); it != data.end(); it++) {
+        for (data_gaussian_t::const_iterator it = data.begin(); it != data.end(); it++) {
                 index_t* index = (**it).clone();
                 indices.push_back(index);
                 sampling_indices.push_back(index);
@@ -60,17 +57,17 @@ DataGaussian::DataGaussian(const DataGaussian& data)
         shuffle();
 }
 
-DataGaussian::~DataGaussian()
+data_gaussian_t::~data_gaussian_t()
 {
         gsl_matrix_free(_mu);
         gsl_vector_free(_original_cluster_assignments);
-        for (DataGaussian::iterator it = begin(); it != end(); it++) {
+        for (data_gaussian_t::iterator it = begin(); it != end(); it++) {
                 delete(*it);
         }
 }
 
 vector<vector<double> >
-DataGaussian::generate_samples(
+data_gaussian_t::generate_samples(
         size_t cluster,
         size_t samples,
         gsl_matrix* Sigma,
@@ -111,31 +108,31 @@ DataGaussian::generate_samples(
 }
 
 void
-DataGaussian::shuffle() {
+data_gaussian_t::shuffle() {
         random_shuffle(sampling_indices.begin(), sampling_indices.end());
 }
 
 const index_t&
-DataGaussian::operator[](size_t i) const {
+data_gaussian_t::operator[](size_t i) const {
         return *indices[i];
 }
 
 size_t
-DataGaussian::elements() const {
+data_gaussian_t::elements() const {
         return _elements;
 }
 
 size_t
-DataGaussian::length() const {
+data_gaussian_t::length() const {
         return _length;
 }
 
 gsl_matrix*
-DataGaussian::original_means() {
+data_gaussian_t::original_means() {
         return _mu;
 }
 
 gsl_vector*
-DataGaussian::original_cluster_assignments() {
+data_gaussian_t::original_cluster_assignments() {
         return _original_cluster_assignments;
 }

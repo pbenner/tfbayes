@@ -49,7 +49,7 @@ bool valid_sampling_index(const vector<string>& sequences, const index_t& index,
         return true;
 }
 
-DataTFBS::DataTFBS(const vector<string>& sequences, size_t tfbs_length)
+data_tfbs_t::data_tfbs_t(const vector<string>& sequences, size_t tfbs_length)
         : sequence_data_t<short>(code_sequences(sequences)),
           sequences(sequences), _n_sequences(sequences.size()), _elements(0)
 {
@@ -59,25 +59,23 @@ DataTFBS::DataTFBS(const vector<string>& sequences, size_t tfbs_length)
                 // and a list of indices
                 for(size_t j = 0; j < sequences[i].size(); j++) {
                         if (sequences[i][j] != 'N') {
-                                this->indices.push_back(new seq_index_t(i,j));
+                                index_t* index = new seq_index_t(i,j);
+                                indices.push_back(index);
+                                if (valid_sampling_index(sequences, *index, tfbs_length)) {
+                                        sampling_indices.push_back(index);
+                                }
                                 _elements++;
                         }
-                }
-        }
-        // generate a randomized list of indices
-        for (DataTFBS::iterator it = begin(); it != end(); it++) {
-                if (valid_sampling_index(sequences, **it, tfbs_length)) {
-                        sampling_indices.push_back(*it);
                 }
         }
         shuffle();
 }
 
-DataTFBS::DataTFBS(const DataTFBS& data)
+data_tfbs_t::data_tfbs_t(const data_tfbs_t& data)
         : sequences(data.sequences), sequences_length(data.sequences_length),
           _n_sequences(data._n_sequences), _elements(data._elements)
 {
-        for (DataTFBS::const_iterator it = data.begin(); it != data.end(); it++) {
+        for (data_tfbs_t::const_iterator it = data.begin(); it != data.end(); it++) {
                 index_t* index = (**it).clone();
                 indices.push_back(index);
                 sampling_indices.push_back(index);
@@ -85,30 +83,30 @@ DataTFBS::DataTFBS(const DataTFBS& data)
         shuffle();
 }
 
-DataTFBS::~DataTFBS()
+data_tfbs_t::~data_tfbs_t()
 {
-        for (DataTFBS::iterator it = begin(); it != end(); it++) {
+        for (data_tfbs_t::iterator it = begin(); it != end(); it++) {
                 delete(*it);
         }
 }
 
 void
-DataTFBS::shuffle() {
+data_tfbs_t::shuffle() {
         random_shuffle(sampling_indices.begin(), sampling_indices.end());
 }
 
 const index_t&
-DataTFBS::operator[](size_t i) const {
+data_tfbs_t::operator[](size_t i) const {
         return *indices[i];
 }
 
 size_t
-DataTFBS::length() const {
+data_tfbs_t::length() const {
         return _n_sequences;
 }
 
 size_t
-DataTFBS::length(size_t i) const {
+data_tfbs_t::length(size_t i) const {
         if (i < _n_sequences) {
                 return sequences_length[i];
         }
@@ -118,12 +116,12 @@ DataTFBS::length(size_t i) const {
 }
 
 const std::vector<size_t>&
-DataTFBS::lengths() const
+data_tfbs_t::lengths() const
 {
         return sequences_length;
 }
 
-ostream& operator<< (ostream& o, const DataTFBS& data)
+ostream& operator<< (ostream& o, const data_tfbs_t& data)
 {
         for (size_t i = 0; i < data.sequences.size(); i++) {
                 o << data.sequences[i] << endl;

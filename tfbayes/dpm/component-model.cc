@@ -30,7 +30,6 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_sf_gamma.h>
 
-#include <data.hh>
 #include <component-model.hh>
 
 using namespace std;

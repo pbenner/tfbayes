@@ -28,7 +28,6 @@
 
 #include <clonable.hh>
 #include <index.hh>
-#include <data.hh>
 #include <graph.hh>
 
 // data_t and iterator_t

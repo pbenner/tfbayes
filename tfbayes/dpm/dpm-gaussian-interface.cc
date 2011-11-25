@@ -32,7 +32,7 @@ namespace Bayes {
 using namespace std;
 
 static DPM_Gaussian* _gdpm;
-static DataGaussian* _data;
+static data_gaussian_t* _data;
 static GibbsSampler* _sampler;
 
 __BEGIN_C_REGION;
@@ -52,7 +52,7 @@ void _dpm_gaussian_init(
         gsl_vector *mu_0     = toGslVector(_mu_0);
         const size_t cluster = _pi->size;
 
-        _data    = new DataGaussian(cluster, (size_t)samples, Sigma, _pi->vec);
+        _data    = new data_gaussian_t(cluster, (size_t)samples, Sigma, _pi->vec);
         _gdpm    = new DPM_Gaussian(alpha, Sigma, Sigma_0, mu_0, *_data);
         _sampler = new GibbsSampler(*_gdpm, *_data);
 
@@ -84,7 +84,7 @@ Bayes::Matrix* _dpm_gaussian_cluster_elements(int tag) {
         Bayes::Matrix* elements = Bayes::allocMatrix(cluster.size(), 2);
 
         size_t i = 0;
-        for (DataGaussian::const_iterator it = _data->begin();
+        for (data_gaussian_t::const_iterator it = _data->begin();
              it != _data->end(); it++) {
                 if (clustermanager[**it] == (cluster_tag_t)tag) {
                         elements->mat[i][0] = (*_data)[**it][0];
@@ -133,7 +133,7 @@ Bayes::Vector* _dpm_gaussian_cluster_assignments() {
         // allocate matrix
         result = Bayes::allocVector(n);
         // copy posterior
-        for (DataGaussian::const_iterator it = _data->begin();
+        for (data_gaussian_t::const_iterator it = _data->begin();
              it != _data->end(); it++) {
                 const index_t& index = **it;
                 result->vec[index[0]] = _gdpm->clustermanager()[index];
@@ -182,7 +182,7 @@ Bayes::Matrix* _dpm_gaussian_data() {
         Bayes::Matrix* data = Bayes::allocMatrix(_data->elements(), 2);
 
         size_t i = 0;
-        for (DataGaussian::const_iterator it = _data->begin();
+        for (data_gaussian_t::const_iterator it = _data->begin();
              it != _data->end(); it++) {
                 data->mat[i][0] = (*_data)[**it][0];
                 data->mat[i][1] = (*_data)[**it][1];

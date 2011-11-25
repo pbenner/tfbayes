@@ -30,11 +30,11 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-class DataGaussian : public Indexer, public Data, public data_t<std::vector<double> > {
+class data_gaussian_t : public Indexer, public data_t<std::vector<double> > {
 public:
-         DataGaussian(size_t cluster, size_t samples, gsl_matrix* Sigma, const double* pi);
-         DataGaussian(const DataGaussian& data);
-        ~DataGaussian();
+         data_gaussian_t(size_t cluster, size_t samples, gsl_matrix* Sigma, const double* pi);
+         data_gaussian_t(const data_gaussian_t& data);
+        ~data_gaussian_t();
 
         // iterators
         ////////////////////////////////////////////////////////////////////////
