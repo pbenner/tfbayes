@@ -303,12 +303,12 @@ DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_ta
                 if (cluster.cluster_tag() == bg_cluster_tag) {
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
-                        sum = logadd(sum, lambda_inv_log + cluster.model().log_pdf(range));
+                        sum = logadd(sum, lambda_inv_log + cluster.model().log_predictive(range));
                 }
                 else {
                         ////////////////////////////////////////////////////////
                         // mixture component 2: dirichlet process
-                        sum = logadd(sum, lambda_log + process_prior(cluster) + cluster.model().log_pdf(range));
+                        sum = logadd(sum, lambda_log + process_prior(cluster) + cluster.model().log_predictive(range));
                 }
                 log_weights[i] = sum;
                 i++;
@@ -319,7 +319,7 @@ DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_ta
                 Cluster& cluster = _clustermanager.get_free_cluster(_model_tags[i]);
                 cluster_tags[mixture_n+i] = cluster.cluster_tag();
                 sum = logadd(sum, lambda_log + process_prior(cluster) + log(_baseline_weights[i]) +
-                             cluster.model().log_pdf(range));
+                             cluster.model().log_predictive(range));
                 log_weights[mixture_n+i] = sum;
         }
 }

@@ -37,6 +37,9 @@
 #include <clonable.hh>
 #include <datatypes.hh>
 
+#include <parsmm/abstract_set.h>
+#include <parsmm/static_pars_tree.h>
+
 extern gsl_rng* _r;
 
 class ComponentModel : public clonable {
@@ -51,8 +54,8 @@ public:
         virtual size_t add(const range_t& range) = 0;
         virtual size_t remove(const range_t& range) = 0;
         virtual size_t count(const range_t& range) = 0;
-        virtual double pdf(const range_t& range) const = 0;
-        virtual double log_pdf(const range_t& range) const = 0;
+        virtual double predictive(const range_t& range) const = 0;
+        virtual double log_predictive(const range_t& range) const = 0;
         virtual double log_likelihood() const = 0;
 
         virtual ComponentModel* clone() const = 0;
@@ -71,8 +74,8 @@ public:
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
-        double pdf(const range_t& range) const;
-        double log_pdf(const range_t& range) const;
+        double predictive(const range_t& range) const;
+        double log_predictive(const range_t& range) const;
         double log_likelihood() const;
 
         ProductDirichlet* clone() const;
@@ -89,6 +92,37 @@ private:
         const size_t _size2;
 };
 
+class ParsimoniousTree : public ComponentModel {
+public:
+        ParsimoniousTree(size_t alphabet_size, size_t tree_depth,
+                         const sequence_data_t<short>& data);
+         ParsimoniousTree(const ParsimoniousTree& distribution);
+        ~ParsimoniousTree();
+
+        // datatypes
+        typedef std::vector<std::vector<size_t> > alpha_t;
+        typedef std::vector<std::vector<size_t> > counts_t;
+
+        size_t add(const range_t& range);
+        size_t remove(const range_t& range);
+        size_t count(const range_t& range);
+        double predictive(const range_t& range) const;
+        double log_predictive(const range_t& range) const;
+        double log_likelihood() const;
+
+        ParsimoniousTree* clone() const;
+
+        friend std::ostream& operator<< (std::ostream& o, const ParsimoniousTree& pd);
+
+private:
+        abstract_set_t* _as;
+        static_pars_tree_t* _pt;
+        size_t _counts_length;
+        count_t* _counts;
+
+        const sequence_data_t<short>& _data;
+};
+
 class BivariateNormal : public ComponentModel {
 public:
          BivariateNormal();
@@ -102,8 +136,8 @@ public:
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
-        double pdf(const range_t& range) const;
-        double log_pdf(const range_t& range) const;
+        double predictive(const range_t& range) const;
+        double log_predictive(const range_t& range) const;
         double log_likelihood() const;
         const gsl_vector* mean() const;
 

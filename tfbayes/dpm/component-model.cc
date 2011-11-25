@@ -20,6 +20,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <math.h>
+#include <string.h>
 #include <vector>
 
 #include <gsl/gsl_blas.h>
@@ -98,7 +99,7 @@ ProductDirichlet::count(const range_t& range) {
         return (range.to[1]-range.from[1]+1)/_size1;
 }
 
-double ProductDirichlet::pdf(const range_t& range) const {
+double ProductDirichlet::predictive(const range_t& range) const {
         const size_t sequence = range.from[0];
         const size_t from     = range.from[1];
         const size_t to       = range.to[1];
@@ -112,7 +113,7 @@ double ProductDirichlet::pdf(const range_t& range) const {
         return result;
 }
 
-double ProductDirichlet::log_pdf(const range_t& range) const {
+double ProductDirichlet::log_predictive(const range_t& range) const {
         const size_t sequence = range.from[0];
         const size_t from     = range.from[1];
         const size_t to       = range.to[1];
@@ -140,6 +141,84 @@ double ProductDirichlet::log_likelihood() const {
                 }
         }
         return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static
+void pt_init(static_pars_tree_t* pt) {
+        for (size_t i = 0 ; i < pt->size * pt->as->size ; i++) {
+                pt->dirichlet_params[i] = 1.0;
+        }
+}
+
+ParsimoniousTree::ParsimoniousTree(
+        size_t alphabet_size, size_t tree_depth,
+        const sequence_data_t<short>& data)
+        : _data(data)
+{
+        _as = as_create(alphabet_size);
+        _pt = pt_create(_as, tree_depth);
+        _counts_length = pow(alphabet_size, tree_depth+1);
+        _counts = (count_t*)malloc(_counts_length*sizeof(count_t));
+
+        /* init data structures */
+        pt_init(_pt);
+        memset(_counts, 0, _counts_length*sizeof(count_t));
+}
+
+ParsimoniousTree::ParsimoniousTree(const ParsimoniousTree& distribution)
+        : _counts_length(distribution._counts_length),
+          _data(distribution._data)
+{
+        _as = as_create(distribution._as->size);
+        _pt = pt_create(_as, distribution._pt->depth);
+        _counts = (count_t*)malloc(_counts_length*sizeof(count_t));
+
+        /* init data structures */
+        pt_init(_pt);
+        memcpy(_counts, distribution._counts, _counts_length*sizeof(count_t));
+}
+
+ParsimoniousTree::~ParsimoniousTree() {
+        free(_counts);
+        pt_free(_pt);
+        as_free(_as);
+}
+
+ParsimoniousTree*
+ParsimoniousTree::clone() const {
+        return new ParsimoniousTree(*this);
+}
+
+size_t
+ParsimoniousTree::add(const range_t& range) {
+        return 1;
+}
+
+size_t
+ParsimoniousTree::remove(const range_t& range) {
+        return 1;
+}
+
+size_t
+ParsimoniousTree::count(const range_t& range) {
+        return 1;
+}
+
+double ParsimoniousTree::predictive(const range_t& range) const {
+        return 1;
+}
+
+double ParsimoniousTree::log_predictive(const range_t& range) const {
+        return 1;
+}
+
+//
+// \sum_{x \in X} n_x log(\frac{n_x + \alpha_x}{\sum_{x' \in X} n_{x'} + \alpha_{x'}})
+//
+double ParsimoniousTree::log_likelihood() const {
+        return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -329,7 +408,7 @@ BivariateNormal::count(const range_t& range) {
         return range.to[0]-range.from[0]+1;
 }
 
-double BivariateNormal::pdf(const range_t& range) const {
+double BivariateNormal::predictive(const range_t& range) const {
         const_iterator_t<vector<double> > iterator = _data[range];
 
         double mu_x = gsl_vector_get(_mu_N, 0);
@@ -346,8 +425,8 @@ double BivariateNormal::pdf(const range_t& range) const {
         return result;
 }
 
-double BivariateNormal::log_pdf(const range_t& range) const {
-        return log(pdf(range));
+double BivariateNormal::log_predictive(const range_t& range) const {
+        return log(predictive(range));
 }
 
 double

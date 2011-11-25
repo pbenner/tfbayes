@@ -99,14 +99,14 @@ DPM_Gaussian::mixture_weights(const index_t& index, double log_weights[], cluste
                 cluster_tags[i] = cluster.cluster_tag();
                 double num_elements = (double)cluster.size();
                 // normalization constant
-                sum = logadd(sum, log(num_elements/(alpha + N)) + cluster.model().log_pdf(range));
+                sum = logadd(sum, log(num_elements/(alpha + N)) + cluster.model().log_predictive(range));
                 log_weights[i] = sum;
                 i++;
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         cluster_tags[components] = _clustermanager.get_free_cluster(_model_tag).cluster_tag();
-        sum = logadd(sum, log(alpha/(alpha + N)) + _clustermanager[cluster_tags[components]].model().log_pdf(range));
+        sum = logadd(sum, log(alpha/(alpha + N)) + _clustermanager[cluster_tags[components]].model().log_predictive(range));
         log_weights[components] = sum;
 }
 
