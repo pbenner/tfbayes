@@ -68,13 +68,13 @@ ProductDirichlet::clone() const {
 
 size_t
 ProductDirichlet::add(const range_t& range) {
-        const size_t sequence = range.from[0];
-        const size_t from     = range.from[1];
-        const size_t to       = range.to[1];
+        const size_t sequence = range.index[0];
+        const size_t position = range.index[1];
+        const size_t length   = range.length;
         size_t i;
 
-        for (i = 0; i <= to-from; i++) {
-                counts[i%_size1][_data[index_t(sequence, from+i)]]++;
+        for (i = 0; i < length; i++) {
+                counts[i%_size1][_data[seq_index_t(sequence, position+i)]]++;
                 counts[i%_size1][_size2]++;
         }
         return i/_size1;
@@ -82,13 +82,13 @@ ProductDirichlet::add(const range_t& range) {
 
 size_t
 ProductDirichlet::remove(const range_t& range) {
-        const size_t sequence = range.from[0];
-        const size_t from     = range.from[1];
-        const size_t to       = range.to[1];
+        const size_t sequence = range.index[0];
+        const size_t position = range.index[1];
+        const size_t length   = range.length;
         size_t i;
 
-        for (i = 0; i <= to-from; i++) {
-                counts[i%_size1][_data[index_t(sequence, from+i)]]--;
+        for (i = 0; i < length; i++) {
+                counts[i%_size1][_data[seq_index_t(sequence, position+i)]]--;
                 counts[i%_size1][_size2]--;
         }
         return i/_size1;
@@ -96,17 +96,17 @@ ProductDirichlet::remove(const range_t& range) {
 
 size_t
 ProductDirichlet::count(const range_t& range) {
-        return (range.to[1]-range.from[1]+1)/_size1;
+        return range.length/_size1;
 }
 
 double ProductDirichlet::predictive(const range_t& range) const {
-        const size_t sequence = range.from[0];
-        const size_t from     = range.from[1];
-        const size_t to       = range.to[1];
+        const size_t sequence = range.index[0];
+        const size_t position = range.index[1];
+        const size_t length   = range.length;
         double result = 1;
 
-        for (size_t i = 0; i <= to-from; i++) {
-                const char code = _data[index_t(sequence, from+i)];
+        for (size_t i = 0; i < length; i++) {
+                const char code = _data[seq_index_t(sequence, position+i)];
                 result *= (counts[i%_size1][code  ]+alpha[i%_size1][code  ])
                          /(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
         }
@@ -114,13 +114,13 @@ double ProductDirichlet::predictive(const range_t& range) const {
 }
 
 double ProductDirichlet::log_predictive(const range_t& range) const {
-        const size_t sequence = range.from[0];
-        const size_t from     = range.from[1];
-        const size_t to       = range.to[1];
+        const size_t sequence = range.index[0];
+        const size_t position = range.index[1];
+        const size_t length   = range.length;
         double result = 0;
 
-        for (size_t i = 0; i <= to-from; i++) {
-                const char code = _data[index_t(sequence, from+i)];
+        for (size_t i = 0; i < length; i++) {
+                const char code = _data[seq_index_t(sequence, position+i)];
                 result += log(counts[i%_size1][code  ]+alpha[i%_size1][  code])
                         - log(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
         }
@@ -378,7 +378,7 @@ BivariateNormal::add(const range_t& range)
 
         update();
 
-        return range.to[0]-range.from[0]+1;
+        return range.length;
 }
 
 size_t
@@ -400,12 +400,12 @@ BivariateNormal::remove(const range_t& range)
 
         update();
 
-        return range.to[0]-range.from[0]+1;
+        return range.length;
 }
 
 size_t
 BivariateNormal::count(const range_t& range) {
-        return range.to[0]-range.from[0]+1;
+        return range.length;
 }
 
 double BivariateNormal::predictive(const range_t& range) const {

@@ -33,6 +33,7 @@
 class DataGaussian : public Indexer, public Data, public data_t<std::vector<double> > {
 public:
          DataGaussian(size_t cluster, size_t samples, gsl_matrix* Sigma, const double* pi);
+         DataGaussian(const DataGaussian& data);
         ~DataGaussian();
 
         // iterators
@@ -62,7 +63,7 @@ public:
         gsl_vector* original_cluster_assignments();
 
 private:
-        std::vector<index_t > indices;
+        std::vector<index_t*> indices;
         std::vector<index_t*> sampling_indices;
 
         const size_t _elements;

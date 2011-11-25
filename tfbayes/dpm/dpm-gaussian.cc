@@ -49,7 +49,7 @@ DPM_Gaussian::DPM_Gaussian(
         cluster_tag_t cluster_tag = _clustermanager.get_free_cluster(_model_tag).cluster_tag();
         for (DataGaussian::const_iterator it = _data.begin();
              it != _data.end(); it++) {
-                _clustermanager[cluster_tag].add_observations(range_t(*it, *it));
+                _clustermanager[cluster_tag].add_observations(range_t(**it,1));
         }
 }
 
@@ -70,13 +70,13 @@ DPM_Gaussian::valid_for_sampling(const index_t& index) const
 void
 DPM_Gaussian::add(const index_t& index, cluster_tag_t cluster_tag)
 {
-        _clustermanager[cluster_tag].add_observations(range_t(index,index));
+        _clustermanager[cluster_tag].add_observations(range_t(index,1));
 }
 
 void
 DPM_Gaussian::remove(const index_t& index, cluster_tag_t cluster_tag)
 {
-        _clustermanager[cluster_tag].remove_observations(range_t(index,index));
+        _clustermanager[cluster_tag].remove_observations(range_t(index,1));
 }
 
 size_t
@@ -91,7 +91,7 @@ DPM_Gaussian::mixture_weights(const index_t& index, double log_weights[], cluste
         size_t components = mixture_components();
         double sum        = -HUGE_VAL;
         double N          = _data.elements() - 1;
-        const range_t range(index, index);
+        range_t range(index, 1);
 
         cluster_tag_t i = 0;
         for (ClusterManager::const_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {

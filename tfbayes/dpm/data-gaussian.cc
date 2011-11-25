@@ -32,12 +32,30 @@ DataGaussian::DataGaussian(size_t cluster, size_t samples, gsl_matrix* Sigma, co
           _elements(samples), _length(1), _cluster(cluster)
 {
         for (size_t i = 0; i < samples; i++) {
-                indices.push_back(index_t(i));
+                indices.push_back(new index_t(i));
         }
 
         // generate a randomized list of indices
         for (DataGaussian::iterator it = begin(); it != end(); it++) {
-                sampling_indices.push_back(&(*it));
+                sampling_indices.push_back(*it);
+        }
+        shuffle();
+}
+
+DataGaussian::DataGaussian(const DataGaussian& data)
+        : _elements(data._elements), _length(data._length), _cluster(data._cluster)
+{
+        _mu = gsl_matrix_alloc(data._mu->size1, data._mu->size2);
+        _original_cluster_assignments = gsl_vector_alloc(data._original_cluster_assignments->size);
+
+        gsl_matrix_memcpy(_mu, data._mu);
+        gsl_vector_memcpy(_original_cluster_assignments, data._original_cluster_assignments);
+
+        // generate a randomized list of indices
+        for (DataGaussian::const_iterator it = data.begin(); it != data.end(); it++) {
+                index_t* index = (**it).clone();
+                indices.push_back(index);
+                sampling_indices.push_back(index);
         }
         shuffle();
 }
@@ -46,6 +64,9 @@ DataGaussian::~DataGaussian()
 {
         gsl_matrix_free(_mu);
         gsl_vector_free(_original_cluster_assignments);
+        for (DataGaussian::iterator it = begin(); it != end(); it++) {
+                delete(*it);
+        }
 }
 
 vector<vector<double> >
@@ -96,7 +117,7 @@ DataGaussian::shuffle() {
 
 const index_t&
 DataGaussian::operator[](size_t i) const {
-        return indices[i];
+        return *indices[i];
 }
 
 size_t

@@ -50,7 +50,8 @@ bool valid_sampling_index(const vector<string>& sequences, const index_t& index,
 }
 
 DataTFBS::DataTFBS(const vector<string>& sequences, size_t tfbs_length)
-        : sequence_data_t<short>(code_sequences(sequences)), sequences(sequences), _n_sequences(sequences.size()), _elements(0)
+        : sequence_data_t<short>(code_sequences(sequences)),
+          sequences(sequences), _n_sequences(sequences.size()), _elements(0)
 {
         for(size_t i = 0; i < sequences.size(); i++) {
                 // store length of sequences
@@ -58,18 +59,37 @@ DataTFBS::DataTFBS(const vector<string>& sequences, size_t tfbs_length)
                 // and a list of indices
                 for(size_t j = 0; j < sequences[i].size(); j++) {
                         if (sequences[i][j] != 'N') {
-                                this->indices.push_back(index_t(i,j));
+                                this->indices.push_back(new seq_index_t(i,j));
                                 _elements++;
                         }
                 }
         }
         // generate a randomized list of indices
         for (DataTFBS::iterator it = begin(); it != end(); it++) {
-                if (valid_sampling_index(sequences, *it, tfbs_length)) {
-                        sampling_indices.push_back(&(*it));
+                if (valid_sampling_index(sequences, **it, tfbs_length)) {
+                        sampling_indices.push_back(*it);
                 }
         }
         shuffle();
+}
+
+DataTFBS::DataTFBS(const DataTFBS& data)
+        : sequences(data.sequences), sequences_length(data.sequences_length),
+          _n_sequences(data._n_sequences), _elements(data._elements)
+{
+        for (DataTFBS::const_iterator it = data.begin(); it != data.end(); it++) {
+                index_t* index = (**it).clone();
+                indices.push_back(index);
+                sampling_indices.push_back(index);
+        }
+        shuffle();
+}
+
+DataTFBS::~DataTFBS()
+{
+        for (DataTFBS::iterator it = begin(); it != end(); it++) {
+                delete(*it);
+        }
 }
 
 void
@@ -79,7 +99,7 @@ DataTFBS::shuffle() {
 
 const index_t&
 DataTFBS::operator[](size_t i) const {
-        return indices[i];
+        return *indices[i];
 }
 
 size_t

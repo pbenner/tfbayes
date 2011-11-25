@@ -24,70 +24,83 @@
 
 #include <stddef.h>
 
+#include <clonable.hh>
 #include <iostream>
 
 // index_t and range_t
 ////////////////////////////////////////////////////////////////////////////////
 
-class index_t {
+class index_t : public clonable {
 public:
-        __inline__ explicit index_t(size_t x0) : _x0(x0), _x1(0), _size(1) {
+        __inline__ explicit index_t(size_t x0) : _x0(x0) {
         }
-        __inline__ index_t(size_t x0, size_t x1) : _x0(x0), _x1(x1), _size(2) {
+        __inline__ index_t(const index_t& index) : _x0(index._x0) {
         }
-        __inline__ index_t(const index_t& index) : _x0(index._x0), _x1(index._x1), _size(index._size) {
-        }
+
+        index_t* clone() const { return new index_t(*this); }
 
         friend std::ostream& operator<< (std::ostream& o, const index_t& index);
 
-        __inline__ const size_t& operator[](size_t i) const {
-                return i == 0 ? _x0 : _x1;
+        virtual __inline__ const size_t& operator[](size_t i) const {
+                return _x0;
         }
-        __inline__ size_t& operator[](size_t i) {
-                return i == 0 ? _x0 : _x1;
+        virtual __inline__ size_t& operator[](size_t i) {
+                return _x0;
         }
-        __inline__ bool operator==(const index_t& index) const {
-                if (_size == 1) {
-                        return _x0 == index[0];
-                }
-                else {
-                        return _x0 == index[0] && _x1 == index[1];
-                }
+        virtual __inline__ bool operator==(const index_t& index) const {
+                return _x0 == index[0];
         }
-        __inline__ void operator=(const index_t& index) {
+        virtual __inline__ void operator=(const index_t& index) {
                 _x0 = index[0];
-                _x1 = index[1];
         }
-        __inline__ void operator++(int i) {
-                _size == 1 ? _x0++ : _x1++;
-        }
-        __inline__ bool operator<(index_t index) const {
-                if (_size == 1) {
-                        return _x0 < index[0];
-                }
-                else {
-                        return _x0 < index[0] || (_x0 == index[0] && _x1 < index[1]);
-                }
-        }
-        __inline__ size_t size() const {
-                return _size;
+        virtual __inline__ void operator++(int i) {
+                _x0++;
         }
 
-
-private:
+protected:
         size_t _x0;
+};
+
+class seq_index_t : public index_t {
+public:
+        __inline__ seq_index_t(size_t x0, size_t x1) : index_t(x0), _x1(x1) {
+        }
+        __inline__ seq_index_t(const seq_index_t& seq_index) : index_t(seq_index), _x1(seq_index._x1) {
+        }
+
+        index_t* clone() const { return new seq_index_t(*this); }
+
+        friend std::ostream& operator<< (std::ostream& o, const seq_index_t& seq_index);
+
+        virtual __inline__ const size_t& operator[](size_t i) const {
+                return i == 0 ? _x0 : _x1;
+        }
+        virtual __inline__ size_t& operator[](size_t i) {
+                return i == 0 ? _x0 : _x1;
+        }
+        virtual __inline__ bool operator==(const seq_index_t& seq_index) const {
+                return _x0 == seq_index[0] && _x1 == seq_index[1];
+        }
+        virtual __inline__ void operator=(const seq_index_t& seq_index) {
+                _x0 = seq_index[0];
+                _x1 = seq_index[1];
+        }
+        virtual __inline__ void operator++(int i) {
+                _x1++;
+        }
+
+protected:
         size_t _x1;
-        const size_t _size;
 };
 
 class range_t {
 public:
-        range_t(const index_t& from, const index_t& to) 
-                : from(from), to(to){
+        range_t(const index_t& index, size_t length) 
+                : index(index), length(length) {
         }
 
-        const index_t from;
-        const index_t to;
+        const index_t& index;
+        const size_t length;
 };
 
 #endif /* INDEX_HH */

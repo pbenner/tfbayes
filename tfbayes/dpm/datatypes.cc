@@ -23,12 +23,14 @@
 
 std::ostream&
 operator<< (std::ostream& o, const index_t& index) {
-        if (index._size == 1) {
-                o << "(" << index._x0 << ")";
-        }
-        else {
-                o << "(" << index._x0 << ":" << index._x1 << ")";
-        }
+        o << "(" << index._x0 << ")";
+
+        return o;
+}
+
+std::ostream&
+operator<< (std::ostream& o, const seq_index_t& index) {
+        o << "(" << index._x0 << ":" << index._x1 << ")";
 
         return o;
 }

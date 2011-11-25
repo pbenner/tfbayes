@@ -64,42 +64,49 @@ template <typename T>
 class iterator_t
 {
 public:
-        iterator_t(data_t<T>& data, const index_t& from, const index_t& to)
-                : _data(data), _from(from), _to(to), _pos(from) {
+        iterator_t(data_t<T>& data, const index_t& index, size_t length)
+                : _data(data), _index(index), _pos(*index.clone()), _length(length), _i(0) {
+        }
+        ~iterator_t() {
+                delete(&_pos);
         }
 
         const T& operator*() const {
                 return _data[_pos];
         }
-              T& operator*() {
+        T& operator*() {
                 return _data[_pos];
         }
 
         void reset() {
-                _pos = _from;
+                _pos = _index;
+                _i   = 0;
         }
 
         const bool operator++(int i) {
-                if (_pos < _to) {
-                        _pos++;
+                if (_i+1 < _length) {
+                        _pos++; _i++;
                         return true;
                 }
                 return false;
         }
 
 private:
-              data_t<T>& _data;
-        const index_t& _from;
-        const index_t& _to;
-        index_t _pos;
+        data_t<T>& _data;
+        const index_t& _index;
+        index_t& _pos;
+        size_t _length, _i;
 };
 
 template <typename T>
 class const_iterator_t
 {
 public:
-        const_iterator_t(const data_t<T>& data, const index_t& from, const index_t& to)
-                : _data(data), _from(from), _to(to), _pos(from) {
+        const_iterator_t(const data_t<T>& data, const index_t& index, size_t length)
+                : _data(data), _index(index), _pos(*index.clone()), _length(length), _i(0) {
+        }
+        ~const_iterator_t() {
+                delete(&_pos);
         }
 
         const T& operator*() const {
@@ -107,12 +114,13 @@ public:
         }
 
         void reset() {
-                _pos = _from;
+                _pos = _index;
+                _i   = 0;
         }
 
         const bool operator++(int i) {
-                if (_pos < _to) {
-                        _pos++;
+                if (_i+1 < _length) {
+                        _pos++; _i++;
                         return true;
                 }
                 return false;
@@ -120,9 +128,9 @@ public:
 
 private:
         const data_t<T>& _data;
-        const index_t& _from;
-        const index_t& _to;
-        index_t _pos;
+        const index_t& _index;
+        index_t& _pos;
+        size_t _length, _i;
 };
 
 template <typename T>
@@ -144,10 +152,10 @@ public:
         friend std::ostream& operator<< <> (std::ostream& o, const data_t<T>& sd);
 
         virtual const_iterator_t<T> operator[](const range_t& range) const {
-                return const_iterator_t<T>(*this, range.from, range.to);
+                return const_iterator_t<T>(*this, range.index, range.length);
         }
         virtual iterator_t<T> operator[](const range_t& range) {
-                return iterator_t<T>(*this, range.from, range.to);
+                return iterator_t<T>(*this, range.index, range.length);
         }
         virtual const T& operator[](const index_t& index) const {
                 return _data[index[0]];
@@ -182,15 +190,14 @@ public:
         friend std::ostream& operator<< <> (std::ostream& o, const sequence_data_t<T>& sd);
 
         virtual const_iterator_t<T> operator[](const range_t& range) const {
-                return const_iterator_t<T>((const data_t<T>&)*this, range.from, range.to);
+                return const_iterator_t<T>(*this, range.index, range.length);
         }
         virtual iterator_t<T> operator[](const range_t& range) {
-                return iterator_t<T>((data_t<T>&)*this, range.from, range.to);
+                return iterator_t<T>(*this, range.index, range.length);
         }
         virtual const T& operator[](const index_t& index) const {
                 return _data[index[0]][index[1]];
         }
-
         virtual T& operator[](const index_t& index) {
                 return _data[index[0]][index[1]];
         }

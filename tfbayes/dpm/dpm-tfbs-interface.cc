@@ -299,7 +299,7 @@ Bayes::Matrix* _dpm_tfbs_cluster_assignments() {
         // copy posterior
         for (DataTFBS::const_iterator it = _gdpm->data().begin();
              it != _gdpm->data().end(); it++) {
-                const index_t& index = *it;
+                const index_t& index = **it;
                 result->mat[index[0]][index[1]] = _gdpm->clustermanager()[index];
         }
         return result;

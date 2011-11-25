@@ -80,7 +80,7 @@ public:
         __inline__ size_t size() const { return used_clusters_size; };
 
         // keep track of cluster assignments
-        void record_cluster_assignment(const range_t& range, cluster_tag_t cluster_tag);
+        void record_cluster_assignment(const index_t& index, cluster_tag_t cluster_tag);
 
 private:
         std::vector<Cluster*> clusters;

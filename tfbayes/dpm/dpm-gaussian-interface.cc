@@ -86,9 +86,9 @@ Bayes::Matrix* _dpm_gaussian_cluster_elements(int tag) {
         size_t i = 0;
         for (DataGaussian::const_iterator it = _data->begin();
              it != _data->end(); it++) {
-                if (clustermanager[*it] == (cluster_tag_t)tag) {
-                        elements->mat[i][0] = (*_data)[*it][0];
-                        elements->mat[i][1] = (*_data)[*it][1];
+                if (clustermanager[**it] == (cluster_tag_t)tag) {
+                        elements->mat[i][0] = (*_data)[**it][0];
+                        elements->mat[i][1] = (*_data)[**it][1];
                         i++;
                 }
         }
@@ -135,7 +135,7 @@ Bayes::Vector* _dpm_gaussian_cluster_assignments() {
         // copy posterior
         for (DataGaussian::const_iterator it = _data->begin();
              it != _data->end(); it++) {
-                const index_t& index = *it;
+                const index_t& index = **it;
                 result->vec[index[0]] = _gdpm->clustermanager()[index];
         }
         return result;
@@ -184,8 +184,8 @@ Bayes::Matrix* _dpm_gaussian_data() {
         size_t i = 0;
         for (DataGaussian::const_iterator it = _data->begin();
              it != _data->end(); it++) {
-                data->mat[i][0] = (*_data)[*it][0];
-                data->mat[i][1] = (*_data)[*it][1];
+                data->mat[i][0] = (*_data)[**it][0];
+                data->mat[i][1] = (*_data)[**it][1];
                 i++;
         }
 

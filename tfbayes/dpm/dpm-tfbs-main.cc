@@ -228,12 +228,20 @@ void run_dpm(const char* file_name)
         sequences_comp = complement(sequences);
 
         // baseline
-        vector<double> baseline_weights(0,0);
+        vector<double> baseline_weights(1,1);
+        gsl_matrix *baseline_priors[2];
+        baseline_priors[0] = gsl_matrix_alloc(options.tfbs_length, 4);
+        baseline_priors[1] = NULL;
+        for (size_t i = 0; i < options.tfbs_length; i++) {
+                for (size_t j = 0; j < 4; j++) {
+                        gsl_matrix_set(baseline_priors[0], i, j, 1.0);
+                }
+        }
 
         // create data, dpm, and sampler objects
         DataTFBS& data = *new DataTFBS(sequences, options.tfbs_length);
         DataTFBS& data_comp = *new DataTFBS(sequences_comp, options.tfbs_length);
-        DPM_TFBS& gdpm = *new DPM_TFBS(options.alpha, options.d, options.lambda, options.tfbs_length, data, data_comp, baseline_weights, NULL);
+        DPM_TFBS& gdpm = *new DPM_TFBS(options.alpha, options.d, options.lambda, options.tfbs_length, data, data_comp, baseline_weights, baseline_priors);
         GibbsSampler& sampler = *new GibbsSampler(gdpm, data);
         PopulationMCMC& pmcmc = *new PopulationMCMC(sampler, options.population_size);
 
