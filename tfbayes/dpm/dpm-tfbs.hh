@@ -38,7 +38,7 @@ typedef struct {
         double alpha;
         double discount;
         double lambda;
-        std::string process_prior_name;
+        std::string process_prior;
         std::vector<double> baseline_weights;
         std::vector<std::matrix<double> > baseline_priors;
 } tfbs_options_t;

@@ -64,7 +64,7 @@ operator<<(std::ostream& o, const _options_t& options) {
           << "-> burnin          = " << options.burnin          << endl
           << "-> tfbs_length     = " << options.tfbs_length     << endl
           << "-> alpha           = " << options.alpha           << endl
-          << "-> d               = " << options.discount        << endl
+          << "-> discount        = " << options.discount        << endl
           << "-> lambda          = " << options.lambda          << endl
           << "-> population_size = " << options.population_size << endl
           << "-> save            = " << options.save            << endl;
@@ -235,10 +235,10 @@ void run_dpm(const char* file_name)
 
         // tfbs options
         tfbs_options_t tfbs_options;
-        tfbs_options.alpha       = options.alpha;
-        tfbs_options.lambda      = options.lambda;
-        tfbs_options.discount    = options.discount;
-        tfbs_options.tfbs_length = options.tfbs_length;
+        tfbs_options.alpha         = options.alpha;
+        tfbs_options.lambda        = options.lambda;
+        tfbs_options.discount      = options.discount;
+        tfbs_options.tfbs_length   = options.tfbs_length;
         tfbs_options.baseline_weights = baseline_weights;
         tfbs_options.baseline_priors  = baseline_priors;
 

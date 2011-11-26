@@ -213,10 +213,11 @@ void _dpm_tfbs_init(const char* filename)
 
         // tfbs options
         tfbs_options_t tfbs_options;
-        tfbs_options.alpha       = _options.alpha;
-        tfbs_options.lambda      = _options.lambda;
-        tfbs_options.discount    = _options.discount;
-        tfbs_options.tfbs_length = _options.tfbs_length;
+        tfbs_options.alpha         = _options.alpha;
+        tfbs_options.lambda        = _options.lambda;
+        tfbs_options.discount      = _options.discount;
+        tfbs_options.tfbs_length   = _options.tfbs_length;
+        tfbs_options.process_prior = _options.process_prior;
         tfbs_options.baseline_weights = baseline_weights;
         tfbs_options.baseline_priors  = baseline_priors;
 

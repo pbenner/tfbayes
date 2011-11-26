@@ -38,7 +38,7 @@
 
 using namespace std;
 
-#define process_prior ((*this).*(_process_prior))
+#define __process_prior ((*this).*(_process_prior))
 
 DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
         : // length of tfbs
@@ -94,13 +94,13 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
 
         ////////////////////////////////////////////////////////////////////////////////
         // set the process prior
-        if (options.process_prior_name == "pitman-yor process" || options.process_prior_name == "") {
+        if (options.process_prior == "pitman-yor process" || options.process_prior == "") {
                 _process_prior = &DpmTfbs::py_prior;
         }
-        else if (options.process_prior_name == "uniform process") {
+        else if (options.process_prior == "uniform process") {
                 _process_prior = &DpmTfbs::uniform_prior;
         }
-        else if (options.process_prior_name == "poppe process") {
+        else if (options.process_prior == "poppe process") {
                 _process_prior = &DpmTfbs::poppe_prior;
         }
         else {
@@ -299,7 +299,7 @@ DpmTfbs::mixture_weights(const index_t& index, double log_weights[], cluster_tag
                 else {
                         ////////////////////////////////////////////////////////
                         // mixture component 2: dirichlet process
-                        sum = logadd(sum, lambda_log + process_prior(cluster) + cluster.model().log_predictive(range));
+                        sum = logadd(sum, lambda_log + __process_prior(cluster) + cluster.model().log_predictive(range));
                 }
                 log_weights[i] = sum;
                 i++;
@@ -309,7 +309,7 @@ DpmTfbs::mixture_weights(const index_t& index, double log_weights[], cluster_tag
         for (i = 0; i < baseline_n; i++) {
                 Cluster& cluster = _clustermanager.get_free_cluster(_model_tags[i]);
                 cluster_tags[mixture_n+i] = cluster.cluster_tag();
-                sum = logadd(sum, lambda_log + process_prior(cluster) + log(_baseline_weights[i]) +
+                sum = logadd(sum, lambda_log + __process_prior(cluster) + log(_baseline_weights[i]) +
                              cluster.model().log_predictive(range));
                 log_weights[mixture_n+i] = sum;
         }
