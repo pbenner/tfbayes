@@ -62,11 +62,16 @@ public:
                                 stack.push(sequence[i]);
                         }
                         if (!stack.clogged()) {
+                                // compute counts position
                                 position = pow(alphabet_size, depth+1) - 1;
                                 for (size_t i = 0; i < depth+1; i++) {
                                         position -= stack[i]*pow(alphabet_size, i);
                                 }
                                 push_back(position);
+                        }
+                        else {
+                                // no context available
+                                push_back(-1);
                         }
                 }
         }
