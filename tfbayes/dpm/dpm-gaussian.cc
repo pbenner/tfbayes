@@ -95,7 +95,7 @@ DPM_Gaussian::mixture_weights(const index_t& index, double log_weights[], cluste
 
         cluster_tag_t i = 0;
         for (ClusterManager::const_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {
-                const Cluster& cluster = **it;
+                Cluster& cluster = **it;
                 cluster_tags[i] = cluster.cluster_tag();
                 double num_elements = (double)cluster.size();
                 // normalization constant
@@ -121,8 +121,8 @@ DPM_Gaussian::means() const {
         size_t i = 0;
         for (ClusterManager::const_iterator it = _clustermanager.begin();
              it != _clustermanager.end(); it++) {
-                const Cluster& cluster = **it;
-                const BivariateNormal& bg = static_cast<const BivariateNormal&>(cluster.model());
+                Cluster& cluster = **it;
+                BivariateNormal& bg = static_cast<BivariateNormal&>(cluster.model());
                 gsl_matrix_set(means, i, 0, gsl_vector_get(bg.mean(), 0));
                 gsl_matrix_set(means, i, 1, gsl_vector_get(bg.mean(), 1));
                 i++;

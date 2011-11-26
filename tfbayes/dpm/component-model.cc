@@ -100,7 +100,7 @@ ProductDirichlet::count(const range_t& range) {
         return range.length/_size1;
 }
 
-double ProductDirichlet::predictive(const range_t& range) const {
+double ProductDirichlet::predictive(const range_t& range) {
         const size_t sequence = range.index[0];
         const size_t position = range.index[1];
         const size_t length   = range.length;
@@ -114,7 +114,7 @@ double ProductDirichlet::predictive(const range_t& range) const {
         return result;
 }
 
-double ProductDirichlet::log_predictive(const range_t& range) const {
+double ProductDirichlet::log_predictive(const range_t& range) {
         const size_t sequence = range.index[0];
         const size_t position = range.index[1];
         const size_t length   = range.length;
@@ -200,25 +200,39 @@ ParsimoniousTree::clone() const {
 
 size_t
 ParsimoniousTree::add(const range_t& range) {
-        return 1;
+        iterator_t<short> iterator = _context[range];
+        do {
+                _counts[*iterator]++;
+        } while(iterator++);
+
+        return range.length;
 }
 
 size_t
 ParsimoniousTree::remove(const range_t& range) {
-        return 1;
+        iterator_t<short> iterator = _context[range];
+        do {
+                _counts[*iterator]++;
+        } while(iterator++);
+
+        return range.length;
 }
 
 size_t
 ParsimoniousTree::count(const range_t& range) {
-        return 1;
+        return range.length;
 }
 
-double ParsimoniousTree::predictive(const range_t& range) const {
-        return 1;
+double ParsimoniousTree::predictive(const range_t& range) {
+        double ml1 = pt_ln_marginal_likelihood(_pt, _counts); add(range);
+        double ml2 = pt_ln_marginal_likelihood(_pt, _counts); remove(range);
+        return exp(ml2-ml1);
 }
 
-double ParsimoniousTree::log_predictive(const range_t& range) const {
-        return 1;
+double ParsimoniousTree::log_predictive(const range_t& range) {
+        double ml1 = pt_ln_marginal_likelihood(_pt, _counts); add(range);
+        double ml2 = pt_ln_marginal_likelihood(_pt, _counts); remove(range);
+        return ml2-ml1;
 }
 
 //
@@ -415,7 +429,7 @@ BivariateNormal::count(const range_t& range) {
         return range.length;
 }
 
-double BivariateNormal::predictive(const range_t& range) const {
+double BivariateNormal::predictive(const range_t& range) {
         const_iterator_t<vector<double> > iterator = _data[range];
 
         double mu_x = gsl_vector_get(_mu_N, 0);
@@ -432,7 +446,7 @@ double BivariateNormal::predictive(const range_t& range) const {
         return result;
 }
 
-double BivariateNormal::log_predictive(const range_t& range) const {
+double BivariateNormal::log_predictive(const range_t& range) {
         return log(predictive(range));
 }
 

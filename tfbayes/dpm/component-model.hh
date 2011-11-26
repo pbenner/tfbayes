@@ -55,8 +55,8 @@ public:
         virtual size_t add(const range_t& range) = 0;
         virtual size_t remove(const range_t& range) = 0;
         virtual size_t count(const range_t& range) = 0;
-        virtual double predictive(const range_t& range) const = 0;
-        virtual double log_predictive(const range_t& range) const = 0;
+        virtual double predictive(const range_t& range);
+        virtual double log_predictive(const range_t& range);
         virtual double log_likelihood() const = 0;
 
         virtual ComponentModel* clone() const = 0;
@@ -75,8 +75,8 @@ public:
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
-        double predictive(const range_t& range) const;
-        double log_predictive(const range_t& range) const;
+        double predictive(const range_t& range);
+        double log_predictive(const range_t& range);
         double log_likelihood() const;
 
         ProductDirichlet* clone() const;
@@ -107,8 +107,8 @@ public:
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
-        double predictive(const range_t& range) const;
-        double log_predictive(const range_t& range) const;
+        double predictive(const range_t& range);
+        double log_predictive(const range_t& range);
         double log_likelihood() const;
 
         ParsimoniousTree* clone() const;
@@ -138,8 +138,8 @@ public:
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
-        double predictive(const range_t& range) const;
-        double log_predictive(const range_t& range) const;
+        double predictive(const range_t& range);
+        double log_predictive(const range_t& range);
         double log_likelihood() const;
         const gsl_vector* mean() const;
 

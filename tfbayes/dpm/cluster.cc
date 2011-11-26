@@ -111,8 +111,8 @@ Cluster::destructible() const
         return _destructible;
 }
 
-const ComponentModel&
-Cluster::model() const
+ComponentModel&
+Cluster::model()
 {
         return *_model;
 }

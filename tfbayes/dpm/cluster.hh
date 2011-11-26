@@ -56,7 +56,7 @@ public:
         cluster_tag_t cluster_tag() const;
         model_tag_t model_tag() const;
         bool destructible() const;
-        const ComponentModel& model() const;
+        ComponentModel& model();
 
 private:
         ComponentModel* _model;
