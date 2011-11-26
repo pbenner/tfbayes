@@ -46,16 +46,16 @@ __BEGIN_DECLS
 void _dpm_gaussian_init(
         int samples,
         double alpha,
-        Simple::Matrix* _Sigma,
-        Simple::Matrix* _Sigma_0,
-        Simple::Vector* _mu_0,
-        Simple::Vector* _pi)
+        matrix_t* _Sigma,
+        matrix_t* _Sigma_0,
+        vector_t* _mu_0,
+        vector_t* _pi)
 {
         __dpm_init__();
 
-        gsl_matrix *Sigma    = toGslMatrix(_Sigma);
-        gsl_matrix *Sigma_0  = toGslMatrix(_Sigma_0);
-        gsl_vector *mu_0     = toGslVector(_mu_0);
+        gsl_matrix *Sigma    = to_gsl_matrix(_Sigma);
+        gsl_matrix *Sigma_0  = to_gsl_matrix(_Sigma_0);
+        gsl_vector *mu_0     = to_gsl_vector(_mu_0);
         const size_t cluster = _pi->size;
 
         _data    = new data_gaussian_t(cluster, (size_t)samples, Sigma, _pi->vec);
@@ -71,9 +71,9 @@ unsigned int _dpm_gaussian_num_clusters() {
         return _gdpm->clustermanager().size();
 }
 
-Simple::Vector* _dpm_gaussian_cluster_tags() {
+vector_t* _dpm_gaussian_cluster_tags() {
         size_t cluster = _gdpm->clustermanager().size();
-        Simple::Vector* cluster_tags = Simple::allocVector(cluster);
+        vector_t* cluster_tags = alloc_vector(cluster);
         const ClusterManager& clustermanager = _gdpm->clustermanager();
 
         size_t i = 0;
@@ -84,10 +84,10 @@ Simple::Vector* _dpm_gaussian_cluster_tags() {
         return cluster_tags;
 }
 
-Simple::Matrix* _dpm_gaussian_cluster_elements(int tag) {
+matrix_t* _dpm_gaussian_cluster_elements(int tag) {
         const ClusterManager& clustermanager = _gdpm->clustermanager();
         const Cluster& cluster = clustermanager[(cluster_tag_t)tag];
-        Simple::Matrix* elements = Simple::allocMatrix(cluster.size(), 2);
+        matrix_t* elements = alloc_matrix(cluster.size(), 2);
 
         size_t i = 0;
         for (data_gaussian_t::const_iterator it = _data->begin();
@@ -102,8 +102,8 @@ Simple::Matrix* _dpm_gaussian_cluster_elements(int tag) {
         return elements;
 }
 
-Simple::Matrix* _dpm_gaussian_get_posterior() {
-        Simple::Matrix* result;
+matrix_t* _dpm_gaussian_get_posterior() {
+        matrix_t* result;
         const vector<vector<double> >& probabilities = _gdpm->posterior().probabilities;
         size_t n = probabilities.size();
         size_t m = 0;
@@ -116,7 +116,7 @@ Simple::Matrix* _dpm_gaussian_get_posterior() {
         }
 
         // allocate matrix
-        result = Simple::allocMatrix(n, m);
+        result = alloc_matrix(n, m);
         // copy posterior
         for (size_t i = 0; i < n; i++) {
                 for (size_t j = 0; j < m; j++) {
@@ -132,12 +132,12 @@ Simple::Matrix* _dpm_gaussian_get_posterior() {
         return result;
 }
 
-Simple::Vector* _dpm_gaussian_cluster_assignments() {
-        Simple::Vector* result;
+vector_t* _dpm_gaussian_cluster_assignments() {
+        vector_t* result;
         size_t n = _data->elements();
 
         // allocate matrix
-        result = Simple::allocVector(n);
+        result = alloc_vector(n);
         // copy posterior
         for (data_gaussian_t::const_iterator it = _data->begin();
              it != _data->end(); it++) {
@@ -147,10 +147,10 @@ Simple::Vector* _dpm_gaussian_cluster_assignments() {
         return result;
 }
 
-Simple::Vector* _dpm_gaussian_hist_likelihood() {
+vector_t* _dpm_gaussian_hist_likelihood() {
         const vector<double>& likelihood = _sampler->sampling_history().likelihood[0];
         size_t length = likelihood.size();
-        Simple::Vector* result = Simple::allocVector(length);
+        vector_t* result = alloc_vector(length);
 
         for (size_t i = 0; i < length; i++) {
                 result->vec[i] = likelihood[i];
@@ -159,10 +159,10 @@ Simple::Vector* _dpm_gaussian_hist_likelihood() {
         return result;
 }
 
-Simple::Vector* _dpm_gaussian_hist_switches() {
+vector_t* _dpm_gaussian_hist_switches() {
         const vector<double>& switches = _sampler->sampling_history().switches[0];
         size_t length = switches.size();
-        Simple::Vector* result = Simple::allocVector(length);
+        vector_t* result = alloc_vector(length);
 
         for (size_t i = 0; i < length; i++) {
                 result->vec[i] = switches[i];
@@ -171,21 +171,21 @@ Simple::Vector* _dpm_gaussian_hist_switches() {
         return result;
 }
 
-Simple::Matrix* _dpm_gaussian_means() {
+matrix_t* _dpm_gaussian_means() {
         gsl_matrix* tmp = _gdpm->means();
-        Simple::Matrix* means;
+        matrix_t* means;
         if (tmp == NULL) {
-                means = Simple::allocMatrix(0,0);
+                means = alloc_matrix(0,0);
         }
         else {  
-                means = Simple::fromGslMatrix(tmp);
+                means = from_gsl_matrix(tmp);
                 gsl_matrix_free(tmp);
         }
         return means;
 }
 
-Simple::Matrix* _dpm_gaussian_data() {
-        Simple::Matrix* data = Simple::allocMatrix(_data->elements(), 2);
+matrix_t* _dpm_gaussian_data() {
+        matrix_t* data = alloc_matrix(_data->elements(), 2);
 
         size_t i = 0;
         for (data_gaussian_t::const_iterator it = _data->begin();
@@ -198,14 +198,14 @@ Simple::Matrix* _dpm_gaussian_data() {
         return data;
 }
 
-Simple::Matrix* _dpm_gaussian_original_means() {
+matrix_t* _dpm_gaussian_original_means() {
         gsl_matrix* means = _data->original_means();
-        return Simple::fromGslMatrix(means);
+        return from_gsl_matrix(means);
 }
 
-Simple::Vector* _dpm_gaussian_original_cluster_assignments() {
+vector_t* _dpm_gaussian_original_cluster_assignments() {
         gsl_vector* original_cluster_assignments = _data->original_cluster_assignments();
-        return Simple::fromGslVector(original_cluster_assignments);
+        return from_gsl_vector(original_cluster_assignments);
 }
 
 void _dpm_gaussian_print() {

@@ -36,6 +36,7 @@
 
 #include <clonable.hh>
 #include <data.hh>
+#include <datatypes.hh>
 
 #include <parsmm/abstract_set.h>
 #include <parsmm/static_pars_tree.h>
@@ -63,7 +64,7 @@ public:
 
 class ProductDirichlet : public ComponentModel {
 public:
-         ProductDirichlet(gsl_matrix* alpha, const sequence_data_t<short>& data);
+         ProductDirichlet(const std::matrix<double>& alpha, const sequence_data_t<short>& data);
          ProductDirichlet(const ProductDirichlet& distribution);
         ~ProductDirichlet();
 

@@ -31,23 +31,24 @@
 #include <gsl/gsl_sf_gamma.h>
 
 #include <component-model.hh>
+#include <datatypes.hh>
 
 using namespace std;
 
 gsl_rng* _r;
 
-ProductDirichlet::ProductDirichlet(gsl_matrix* _alpha, const sequence_data_t<short>& data)
-        : _data(data), _size1(_alpha->size1), _size2(_alpha->size2)
+ProductDirichlet::ProductDirichlet(const matrix<double>& _alpha, const sequence_data_t<short>& data)
+        : _data(data), _size1(_alpha.size()), _size2(_alpha[0].size())
 {
-        for (size_t i = 0; i < _alpha->size1; i++) {
+        for (size_t i = 0; i < _alpha.size(); i++) {
                 size_t sum = 0;
-                alpha.push_back (vector<size_t>(_alpha->size2+1, 0));
-                counts.push_back(vector<size_t>(_alpha->size2+1, 0));
-                for (size_t j = 0; j < _alpha->size2; j++) {
-                        alpha[i][j] = gsl_matrix_get(_alpha, i, j);
-                        sum += alpha[i][j];
+                alpha.push_back (vector<size_t>(_size2+1, 0));
+                counts.push_back(vector<size_t>(_size2+1, 0));
+                for (size_t j = 0; j < _alpha[i].size(); j++) {
+                        alpha[i][j] = _alpha[i][j];
+                        sum        +=  alpha[i][j];
                 }
-                alpha[i][_alpha->size2] = sum;
+                alpha[i][_alpha[i].size()] = sum;
         }
 }
 
@@ -106,7 +107,7 @@ double ProductDirichlet::predictive(const range_t& range) const {
 
         for (size_t i = 0; i < length; i++) {
                 const char code = _data[seq_index_t(sequence, position+i)];
-                result *= (counts[i%_size1][code  ]+alpha[i%_size1][code  ])
+                result *= (counts[i%_size1][ code ]+alpha[i%_size1][ code ])
                          /(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
         }
         return result;
@@ -120,7 +121,7 @@ double ProductDirichlet::log_predictive(const range_t& range) const {
 
         for (size_t i = 0; i < length; i++) {
                 const char code = _data[seq_index_t(sequence, position+i)];
-                result += log(counts[i%_size1][code  ]+alpha[i%_size1][  code])
+                result += log(counts[i%_size1][ code ]+alpha[i%_size1][ code ])
                         - log(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
         }
         return result;
@@ -414,7 +415,7 @@ double BivariateNormal::predictive(const range_t& range) const {
         double mu_y = gsl_vector_get(_mu_N, 1);
         double sigma_x = sqrt(gsl_matrix_get(_Sigma_N, 0, 0));
         double sigma_y = sqrt(gsl_matrix_get(_Sigma_N, 1, 1));
-        double rho  = gsl_matrix_get(_Sigma_N, 0, 1)/(sigma_x*sigma_y);
+        double rho = gsl_matrix_get(_Sigma_N, 0, 1)/(sigma_x*sigma_y);
         double result = 1;
 
         do {

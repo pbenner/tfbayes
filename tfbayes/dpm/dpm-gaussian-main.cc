@@ -26,10 +26,10 @@
 
 int
 main(void) {
-        Simple::Matrix* Sigma   = Simple::allocMatrix(2, 2);
-        Simple::Matrix* Sigma_0 = Simple::allocMatrix(2, 2);
-        Simple::Vector* mu      = Simple::allocVector(2);
-        Simple::Vector* pi      = Simple::allocVector(11);
+        matrix_t* Sigma   = alloc_matrix(2, 2);
+        matrix_t* Sigma_0 = alloc_matrix(2, 2);
+        vector_t* mu      = alloc_vector(2);
+        vector_t* pi      = alloc_vector(11);
 
         Sigma->mat[0][0] = 0.01;
         Sigma->mat[0][1] = 0.005;

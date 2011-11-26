@@ -35,18 +35,24 @@ using namespace std;
 // options and global variables
 // -----------------------------------------------------------------------------
 
-typedef struct : public tfbs_options_t {
+typedef struct {
+        size_t tfbs_length;
+        double alpha;
+        double discount;
+        double lambda;
+        const char* process_prior;
+        vector_t*  baseline_weights;
+        matrix_t** baseline_priors;
+        size_t baseline_n;
         size_t population_size;
 } options_t;
 
 static options_t _options;
 static DpmTfbs* _gdpm;
 static data_tfbs_t* _data;
-static data_tfbs_t* _data_comp;
 static GibbsSampler* _sampler;
 static PopulationMCMC* _pmcmc;
 static vector<string> _sequences;
-static vector<string> _sequences_comp;
 
 ostream&
 operator<<(std::ostream& o, const options_t& options) {
@@ -188,25 +194,36 @@ void _dpm_tfbs_init(const char* filename)
 
         // read sequences
         read_file(filename, _sequences);
-        _sequences_comp = complement(_sequences);
 
         // baseline priors
-        std::vector<double> baseline_weights(_options.baseline_n, 0);
-        gsl_matrix* baseline_priors[_options.baseline_n+1];
-        for (size_t i = 0; i < _options.baseline_n; i++) {
-                baseline_weights[i] = _options.baseline_weights->vec[i];
-                baseline_priors[i]  = Simple::toGslMatrix(_options.baseline_priors[i]);
+        vector<double> baseline_weights;
+        vector<matrix<double> > baseline_priors;
+        for (size_t k = 0; k < _options.baseline_n; k++) {
+                baseline_weights.push_back(_options.baseline_weights->vec[k]);
+                baseline_priors.push_back(matrix<double>());
+                for (size_t i = 0; i < _options.baseline_priors[k]->rows; i++) {
+                        baseline_priors[k].push_back(
+                                vector<double>(_options.baseline_priors[k]->columns, 0));
+                        for (size_t j = 0; j < _options.baseline_priors[k]->columns; j++) {
+                                baseline_priors[k][i][j] = 
+                                        _options.baseline_priors[k]->mat[i][j];
+                        }
+                }
         }
-        baseline_priors[_options.baseline_n] = NULL;
+
+        // tfbs options
+        tfbs_options_t tfbs_options;
+        tfbs_options.alpha       = _options.alpha;
+        tfbs_options.lambda      = _options.lambda;
+        tfbs_options.discount    = _options.discount;
+        tfbs_options.tfbs_length = _options.tfbs_length;
+        tfbs_options.baseline_weights = baseline_weights;
+        tfbs_options.baseline_priors  = baseline_priors;
 
         _data      = new data_tfbs_t(_sequences, _options.tfbs_length);
-        _gdpm      = new DpmTfbs(_options, *_data);
+        _gdpm      = new DpmTfbs(tfbs_options, *_data);
         _sampler   = new GibbsSampler(*_gdpm, *_data);
         _pmcmc     = new PopulationMCMC(*_sampler, _options.population_size);
-
-        for (size_t i = 0; i < _options.baseline_n; i++) {
-                gsl_matrix_free(baseline_priors[i]);
-        }
 
         cout << _options << endl;
 }
@@ -228,8 +245,8 @@ unsigned int _dpm_tfbs_num_clusters() {
         return _gdpm->clustermanager().size();
 }
 
-Simple::Matrix* _dpm_tfbs_get_posterior() {
-        Simple::Matrix* result;
+matrix_t* _dpm_tfbs_get_posterior() {
+        matrix_t* result;
         const vector<vector<double> >& probabilities = _gdpm->posterior().probabilities;
         size_t n = probabilities.size();
         size_t m = 0;
@@ -242,7 +259,7 @@ Simple::Matrix* _dpm_tfbs_get_posterior() {
         }
 
         // allocate matrix
-        result = Simple::allocMatrix(n, m);
+        result = alloc_matrix(n, m);
         // copy posterior
         for (size_t i = 0; i < n; i++) {
                 for (size_t j = 0; j < m; j++) {
@@ -258,8 +275,8 @@ Simple::Matrix* _dpm_tfbs_get_posterior() {
         return result;
 }
 
-Simple::Matrix* _dpm_tfbs_cluster_assignments() {
-        Simple::Matrix* result;
+matrix_t* _dpm_tfbs_cluster_assignments() {
+        matrix_t* result;
         size_t n = _gdpm->data().length();
         size_t m = 0;
 
@@ -271,7 +288,7 @@ Simple::Matrix* _dpm_tfbs_cluster_assignments() {
         }
 
         // allocate matrix
-        result = Simple::allocMatrix(n, m);
+        result = alloc_matrix(n, m);
         // default initialization to -1
         for (size_t i = 0; i < n; i++) {
                 for (size_t j = 0; j < m; j++) {
@@ -287,10 +304,10 @@ Simple::Matrix* _dpm_tfbs_cluster_assignments() {
         return result;
 }
 
-Simple::Vector* _dpm_tfbs_hist_likelihood() {
+vector_t* _dpm_tfbs_hist_likelihood() {
         const vector<double>& likelihood = _pmcmc->sampling_history().likelihood[0];
         size_t length = likelihood.size();
-        Simple::Vector* result = Simple::allocVector(length);
+        vector_t* result = alloc_vector(length);
 
         for (size_t i = 0; i < length; i++) {
                 result->vec[i] = likelihood[i];
@@ -299,10 +316,10 @@ Simple::Vector* _dpm_tfbs_hist_likelihood() {
         return result;
 }
 
-Simple::Vector* _dpm_tfbs_hist_switches() {
+vector_t* _dpm_tfbs_hist_switches() {
         const vector<double>& switches = _pmcmc->sampling_history().switches[0];
         size_t length = switches.size();
-        Simple::Vector* result = Simple::allocVector(length);
+        vector_t* result = alloc_vector(length);
 
         for (size_t i = 0; i < length; i++) {
                 result->vec[i] = switches[i];

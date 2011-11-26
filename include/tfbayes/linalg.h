@@ -18,13 +18,15 @@
 #ifndef LINALG_H
 #define LINALG_H
 
+#include <stddef.h>
+
 #include <gsl/gsl_matrix.h>
 
 #undef __BEGIN_DECLS
 #undef __END_DECLS
 #ifdef __cplusplus
-# define __BEGIN_DECLS namespace Simple { extern "C" {
-# define __END_DECLS }}
+# define __BEGIN_DECLS extern "C" {
+# define __END_DECLS }
 #else
 # define __BEGIN_DECLS /* empty */
 # define __END_DECLS /* empty */
@@ -32,32 +34,32 @@
 
 __BEGIN_DECLS
 
-typedef struct vector {
-        int size;
+typedef struct {
+        size_t size;
         double *vec;
-} Vector;
+} vector_t;
 
-typedef struct matrix {
-        int rows;
-        int columns;
+typedef struct {
+        size_t rows;
+        size_t columns;
         double **mat;
-} Matrix;
+} matrix_t;
 
 static inline
-Vector * allocVector(int size) {
-        Vector *v  = (Vector *)malloc(sizeof(Vector));
-        v->vec     = (double *)malloc(sizeof(double) * size);
-        v->size    = size;
+vector_t * alloc_vector(size_t size) {
+        vector_t *v = (vector_t *)malloc(sizeof(vector_t));
+        v->vec      = (double   *)malloc(sizeof(double) * size);
+        v->size     = size;
         return v;
 }
 
 static inline
-Matrix * allocMatrix(int rows, int columns) {
-        Matrix *m  = (Matrix * )malloc(sizeof(Matrix));
-        m->mat     = (double **)malloc(sizeof(double *) * rows);
-        m->rows    = rows;
-        m->columns = columns;
-        int i;
+matrix_t * alloc_matrix(size_t rows, size_t columns) {
+        matrix_t *m = (matrix_t *)malloc(sizeof(matrix_t));
+        m->mat      = (double  **)malloc(sizeof(double *) * rows);
+        m->rows     = rows;
+        m->columns  = columns;
+        size_t i;
         for (i = 0; i < rows; i++) {
                 m->mat[i] = (double *)malloc(sizeof(double) * columns);
         }
@@ -65,14 +67,14 @@ Matrix * allocMatrix(int rows, int columns) {
 }
 
 static inline
-void freeVector(Vector *v) {
+void free_vector(vector_t *v) {
         free(v->vec);
         free(v);
 }
 
 static inline
-void freeMatrix(Matrix *m) {
-        int i;
+void free_matrix(matrix_t *m) {
+        size_t i;
         for (i = 0; i < m->rows; i++) {
                 free(m->mat[i]);
         }
@@ -81,10 +83,10 @@ void freeMatrix(Matrix *m) {
 }
 
 static inline
-gsl_vector * toGslVector(const Vector *vector)
+gsl_vector * to_gsl_vector(const vector_t *vector)
 {
         gsl_vector *v = gsl_vector_alloc(vector->size);
-        int i;
+        size_t i;
 
         for(i = 0; i < vector->size; i++) {
                 gsl_vector_set(v, i, vector->vec[i]);
@@ -93,11 +95,11 @@ gsl_vector * toGslVector(const Vector *vector)
 }
 
 static inline
-Vector * fromGslVector(const gsl_vector * vector)
+vector_t * from_gsl_vector(const gsl_vector * vector)
 {
-        int i;
-        int size    = vector->size;
-        Vector *v   = allocVector(size);
+        size_t i;
+        size_t size = vector->size;
+        vector_t *v = alloc_vector(size);
 
         for(i = 0; i < size; i++) {
                 v->vec[i] = gsl_vector_get(vector, i);
@@ -106,10 +108,10 @@ Vector * fromGslVector(const gsl_vector * vector)
 }
 
 static inline
-gsl_matrix * toGslMatrix(const Matrix *matrix)
+gsl_matrix * to_gsl_matrix(const matrix_t *matrix)
 {
         gsl_matrix *m = gsl_matrix_alloc(matrix->rows, matrix->columns);
-        int i, j;
+        size_t i, j;
 
         for(i = 0; i < matrix->rows; i++) {
                 for(j = 0; j < matrix->columns; j++) {
@@ -120,12 +122,12 @@ gsl_matrix * toGslMatrix(const Matrix *matrix)
 }
 
 static inline
-Matrix * fromGslMatrix(const gsl_matrix * matrix)
+matrix_t * from_gsl_matrix(const gsl_matrix * matrix)
 {
-        int i, j;
-        int rows    = matrix->size1;
-        int columns = matrix->size2;
-        Matrix *m   = allocMatrix(rows, columns);
+        size_t i, j;
+        size_t rows    = matrix->size1;
+        size_t columns = matrix->size2;
+        matrix_t *m    = alloc_matrix(rows, columns);
 
         for(i = 0; i < rows; i++) {
                 for(j = 0; j < columns; j++) {

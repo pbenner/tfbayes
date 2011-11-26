@@ -16,6 +16,7 @@
  */
 
 #include <interface.hh>
+#include <iostream>
 
 #undef __BEGIN_DECLS
 #undef __END_DECLS
@@ -29,10 +30,14 @@
 
 __BEGIN_DECLS
 
-Simple::Vector * _allocVector(int size)              { return Simple::allocVector(size); }
-void            _freeVector(Simple::Vector *v)       { Simple::freeVector(v); }
-Simple::Matrix * _allocMatrix(int rows, int columns) { return Simple::allocMatrix(rows, columns); }
-void            _freeMatrix(Simple::Matrix *m)       { Simple::freeMatrix(m); }
-void            _free(void *ptr)                     { free(ptr); }
+vector_t * _alloc_vector(size_t size) {
+        return alloc_vector(size);
+}
+matrix_t * _alloc_matrix(size_t rows, size_t columns) {
+        return alloc_matrix(rows, columns);
+}
+void _free_vector(vector_t *v) { free_vector(v); }
+void _free_matrix(matrix_t *m) { free_matrix(m); }
+void _free(void *ptr)          { free(ptr); }
 
 __END_DECLS

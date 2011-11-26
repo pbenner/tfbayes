@@ -30,6 +30,14 @@
 #include <index.hh>
 #include <graph.hh>
 
+#include <tfbayes/linalg.h>
+
+namespace std {
+        template <typename T>
+        class matrix : public vector<vector<T> >
+        { };
+}
+
 // cluster structures
 ////////////////////////////////////////////////////////////////////////////////
 

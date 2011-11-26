@@ -38,15 +38,14 @@ typedef struct {
         double alpha;
         double discount;
         double lambda;
-        const char *process_prior;
-        Simple::Vector*  baseline_weights;
-        Simple::Matrix** baseline_priors;
-        size_t baseline_n;
+        std::string process_prior_name;
+        std::vector<double> baseline_weights;
+        std::vector<std::matrix<double> > baseline_priors;
 } tfbs_options_t;
 
 class DpmTfbs : public DPM {
 public:
-         DpmTfbs(tfbs_options_t options, const data_tfbs_t& data);
+         DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data);
         ~DpmTfbs();
 
         DpmTfbs* clone() const;
@@ -123,14 +122,12 @@ private:
         prior_fn _process_prior;
 
         // standard priors
-        static gsl_matrix* init_alpha(size_t length) {
-                gsl_matrix* alpha = gsl_matrix_alloc(length, ALPHABET_SIZE);
+        static std::matrix<double> init_alpha(size_t length) {
+                std::matrix<double> alpha;
 
                 // initialize prior for the background model
                 for (size_t i = 0; i < length; i++) {
-                        for (size_t j = 0; j < ALPHABET_SIZE; j++) {
-                                gsl_matrix_set(alpha, i, j, 1);
-                        }
+                        alpha.push_back(std::vector<double>(ALPHABET_SIZE, 1));
                 }
                 return alpha;
         }

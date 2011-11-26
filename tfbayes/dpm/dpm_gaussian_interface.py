@@ -45,28 +45,28 @@ if not _lib:
 # ------------------------------------------------------------------------------
 
 class VECTOR(Structure):
-     _fields_ = [("size", c_int),
+     _fields_ = [("size", c_ulong),
                  ("vec",  POINTER(c_double))]
 
 class MATRIX(Structure):
-     _fields_ = [("rows",    c_int),
-                 ("columns", c_int),
+     _fields_ = [("rows",    c_ulong),
+                 ("columns", c_ulong),
                  ("mat",     POINTER(POINTER(c_double)))]
 
 # function prototypes
 # ------------------------------------------------------------------------------
 
-_lib._allocVector.restype  = POINTER(VECTOR)
-_lib._allocVector.argtypes = [c_int]
+_lib._alloc_vector.restype  = POINTER(VECTOR)
+_lib._alloc_vector.argtypes = [c_ulong]
 
-_lib._allocMatrix.restype  = POINTER(MATRIX)
-_lib._allocMatrix.argtypes = [c_int, c_int]
+_lib._alloc_matrix.restype  = POINTER(MATRIX)
+_lib._alloc_matrix.argtypes = [c_ulong, c_ulong]
 
-_lib._freeVector.restype   = None
-_lib._freeVector.argtypes  = [POINTER(VECTOR)]
+_lib._free_vector.restype   = None
+_lib._free_vector.argtypes  = [POINTER(VECTOR)]
 
-_lib._freeMatrix.restype   = None
-_lib._freeMatrix.argtypes  = [POINTER(MATRIX)]
+_lib._free_matrix.restype   = None
+_lib._free_matrix.argtypes  = [POINTER(MATRIX)]
 
 _lib._free.restype         = None
 _lib._free.argtypes        = [POINTER(None)]
@@ -119,22 +119,22 @@ _lib._dpm_gaussian_get_posterior.argtypes = []
 # convert datatypes
 # ------------------------------------------------------------------------------
 
-def copyVectorToC(v, c_v):
+def copy_vector_to_c(v, c_v):
      for i in range(0, c_v.contents.size):
           c_v.contents.vec[i] = v[i]
 
-def copyMatrixToC(m, c_m):
+def copy_matrix_to_c(m, c_m):
      for i in range(0, c_m.contents.rows):
           for j in range(0, c_m.contents.columns):
                c_m.contents.mat[i][j] = m[i][j]
 
-def getVector(c_v):
+def get_vector(c_v):
      v = []
      for i in range(0, c_v.contents.size):
           v.append(c_v.contents.vec[i])
      return v
 
-def getMatrix(c_m):
+def get_matrix(c_m):
      m = []
      for i in range(0, c_m.contents.rows):
           m.append([])
@@ -148,19 +148,19 @@ def getMatrix(c_m):
 def dpm_init(n, alpha, cov, cov_0, mu_0, pi):
      c_n     = c_int(n)
      c_alpha = c_double(alpha)
-     c_cov   = _lib._allocMatrix(len(cov), len(cov[0]))
-     c_cov_0 = _lib._allocMatrix(len(cov_0), len(cov_0[0]))
-     c_mu_0  = _lib._allocVector(len(mu_0))
-     c_pi    = _lib._allocVector(len(pi))
-     copyMatrixToC(cov, c_cov)
-     copyMatrixToC(cov_0, c_cov_0)
-     copyVectorToC(mu_0, c_mu_0)
-     copyVectorToC(pi, c_pi)
+     c_cov   = _lib._alloc_matrix(len(cov), len(cov[0]))
+     c_cov_0 = _lib._alloc_matrix(len(cov_0), len(cov_0[0]))
+     c_mu_0  = _lib._alloc_vector(len(mu_0))
+     c_pi    = _lib._alloc_vector(len(pi))
+     copy_matrix_to_c(cov, c_cov)
+     copy_matrix_to_c(cov_0, c_cov_0)
+     copy_vector_to_c(mu_0, c_mu_0)
+     copy_vector_to_c(pi, c_pi)
      _lib._dpm_gaussian_init(c_n, c_alpha, c_cov, c_cov_0, c_mu_0, c_pi)
-     _lib._freeMatrix(c_cov)
-     _lib._freeMatrix(c_cov_0)
-     _lib._freeVector(c_mu_0)
-     _lib._freeVector(c_pi)
+     _lib._free_matrix(c_cov)
+     _lib._free_matrix(c_cov_0)
+     _lib._free_vector(c_mu_0)
+     _lib._free_vector(c_pi)
 
 def dpm_print():
      _lib._dpm_gaussian_print()
@@ -170,57 +170,57 @@ def dpm_num_clusters():
 
 def dpm_cluster_assignments():
      result  = _lib._dpm_gaussian_cluster_assignments()
-     cluster = map(int, getVector(result))
-     _lib._freeVector(result)
+     cluster = map(int, get_vector(result))
+     _lib._free_vector(result)
      return cluster
 
 def dpm_cluster_tags():
      result = _lib._dpm_gaussian_cluster_tags()
-     tags   = map(int, getVector(result))
-     _lib._freeVector(result)
+     tags   = map(int, get_vector(result))
+     _lib._free_vector(result)
      return tags
 
 def dpm_cluster_elements(tag):
      c_tag    = c_int(tag)
      result   = _lib._dpm_gaussian_cluster_elements(c_tag)
-     elements = getMatrix(result)
-     _lib._freeMatrix(result)
+     elements = get_matrix(result)
+     _lib._free_matrix(result)
      return elements
 
 def dpm_hist_likelihood():
      result     = _lib._dpm_gaussian_hist_likelihood()
-     likelihood = getVector(result)
-     _lib._freeMatrix(result)
+     likelihood = get_vector(result)
+     _lib._free_matrix(result)
      return likelihood
 
 def dpm_hist_switches():
      result   = _lib._dpm_gaussian_hist_switches()
-     switches = getVector(result)
-     _lib._freeVector(result)
+     switches = get_vector(result)
+     _lib._free_vector(result)
      return switches
 
 def dpm_means():
      result = _lib._dpm_gaussian_means()
-     means  = getMatrix(result)
-     _lib._freeMatrix(result)
+     means  = get_matrix(result)
+     _lib._free_matrix(result)
      return means
 
 def dpm_data():
      result = _lib._dpm_gaussian_data()
-     data  = getMatrix(result)
-     _lib._freeMatrix(result)
+     data  = get_matrix(result)
+     _lib._free_matrix(result)
      return data
 
 def dpm_original_means():
      result = _lib._dpm_gaussian_original_means()
-     means  = getMatrix(result)
-     _lib._freeMatrix(result)
+     means  = get_matrix(result)
+     _lib._free_matrix(result)
      return means
 
 def dpm_original_cluster_assignments():
      result = _lib._dpm_gaussian_original_cluster_assignments()
-     tags   = map(int, getVector(result))
-     _lib._freeVector(result)
+     tags   = map(int, get_vector(result))
+     _lib._free_vector(result)
      return tags
 
 def dpm_sample(n, burnin):
@@ -232,4 +232,4 @@ def dpm_free():
      _lib._dpm_gaussian_free()
 
 def dpm_get_posterior():
-     return getMatrix(_lib._dpm_gaussian_get_posterior())
+     return get_matrix(_lib._dpm_gaussian_get_posterior())

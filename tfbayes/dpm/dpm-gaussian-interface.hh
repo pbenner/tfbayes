@@ -40,10 +40,10 @@ __BEGIN_DECLS
 void _dpm_gaussian_init(
         int samples,
         double alpha,
-        Simple::Matrix* _Sigma,
-        Simple::Matrix* _Sigma_0,
-        Simple::Vector* _mu_0,
-        Simple::Vector* _pi);
+        matrix_t* _Sigma,
+        matrix_t* _Sigma_0,
+        vector_t* _mu_0,
+        vector_t* _pi);
 void _dpm_gaussian_sample(unsigned int n, unsigned int burnin);
 
 __END_DECLS

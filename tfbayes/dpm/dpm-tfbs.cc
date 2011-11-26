@@ -40,7 +40,7 @@ using namespace std;
 
 #define process_prior ((*this).*(_process_prior))
 
-DpmTfbs::DpmTfbs(tfbs_options_t options, const data_tfbs_t& data)
+DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
         : // length of tfbs
           TFBS_LENGTH(options.tfbs_length),
           // baseline
@@ -65,7 +65,7 @@ DpmTfbs::DpmTfbs(tfbs_options_t options, const data_tfbs_t& data)
           // number of transcription factor binding sites
           num_tfbs(0)
 {
-        gsl_matrix* bg_alpha = init_alpha(BG_LENGTH);
+        const matrix<double>& bg_alpha = init_alpha(BG_LENGTH);
 
         ////////////////////////////////////////////////////////////////////////////////
         // initialize joint posterior
@@ -77,10 +77,10 @@ DpmTfbs::DpmTfbs(tfbs_options_t options, const data_tfbs_t& data)
         // add background model to the clustermanager
         bg_cluster_tag = _clustermanager.add_cluster(new ProductDirichlet(bg_alpha, _data));
         // add model components for the baseline measure
-        for (size_t i = 0; options.baseline_priors[i] != NULL; i++) {
-                assert(tfbs_length == baseline_priors[i]->size1);
-                const model_tag_t model_tag =
-                        _clustermanager.add_baseline_model(new ProductDirichlet(options.baseline_priors[i], _data));
+        for (size_t i = 0; i < options.baseline_priors.size(); i++) {
+                assert(options.tfbs_length == options.baseline_priors[i].size());
+                ProductDirichlet* dirichlet = new ProductDirichlet(options.baseline_priors[i], _data);
+                const model_tag_t model_tag = _clustermanager.add_baseline_model(dirichlet);
                 _model_tags.push_back(model_tag);
         }
 
@@ -94,23 +94,19 @@ DpmTfbs::DpmTfbs(tfbs_options_t options, const data_tfbs_t& data)
 
         ////////////////////////////////////////////////////////////////////////////////
         // set the process prior
-        if (process_prior_name == "pitman-yor process") {
+        if (options.process_prior_name == "pitman-yor process" || options.process_prior_name == "") {
                 _process_prior = &DpmTfbs::py_prior;
         }
-        else if (process_prior_name == "uniform process") {
+        else if (options.process_prior_name == "uniform process") {
                 _process_prior = &DpmTfbs::uniform_prior;
         }
-        else if (process_prior_name == "poppe process") {
+        else if (options.process_prior_name == "poppe process") {
                 _process_prior = &DpmTfbs::poppe_prior;
         }
         else {
                 cerr << "Unknown prior process." << endl;
                 exit(EXIT_FAILURE);
         }
-
-        ////////////////////////////////////////////////////////////////////////////////
-        // free prior
-        gsl_matrix_free(bg_alpha);
 
         ////////////////////////////////////////////////////////////////////////////////
         //test();

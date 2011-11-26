@@ -41,7 +41,7 @@ typedef struct _options_t {
         size_t burnin;
         size_t tfbs_length;
         double alpha;
-        double d;
+        double discount;
         double lambda;
         size_t population_size;
         string save;
@@ -50,7 +50,7 @@ typedef struct _options_t {
                   burnin(100),
                   tfbs_length(10),
                   alpha(0.05),
-                  d(0.0),
+                  discount(0.0),
                   lambda(0.01),
                   population_size(1),
                   save()
@@ -64,7 +64,7 @@ operator<<(std::ostream& o, const _options_t& options) {
           << "-> burnin          = " << options.burnin          << endl
           << "-> tfbs_length     = " << options.tfbs_length     << endl
           << "-> alpha           = " << options.alpha           << endl
-          << "-> d               = " << options.d               << endl
+          << "-> d               = " << options.discount        << endl
           << "-> lambda          = " << options.lambda          << endl
           << "-> population_size = " << options.population_size << endl
           << "-> save            = " << options.save            << endl;
@@ -221,27 +221,30 @@ static
 void run_dpm(const char* file_name)
 {
         vector<string> sequences;
-        vector<string> sequences_comp;
 
         // read sequences
         readfile(file_name, sequences);
-        sequences_comp = complement(sequences);
 
         // baseline
         vector<double> baseline_weights(1,1);
-        gsl_matrix *baseline_priors[2];
-        baseline_priors[0] = gsl_matrix_alloc(options.tfbs_length, 4);
-        baseline_priors[1] = NULL;
+        vector<matrix<double> > baseline_priors;
+        baseline_priors.push_back(matrix<double>());
         for (size_t i = 0; i < options.tfbs_length; i++) {
-                for (size_t j = 0; j < 4; j++) {
-                        gsl_matrix_set(baseline_priors[0], i, j, 1.0);
-                }
+                baseline_priors[0].push_back(vector<double>(4, 1.0));
         }
 
+        // tfbs options
+        tfbs_options_t tfbs_options;
+        tfbs_options.alpha       = options.alpha;
+        tfbs_options.lambda      = options.lambda;
+        tfbs_options.discount    = options.discount;
+        tfbs_options.tfbs_length = options.tfbs_length;
+        tfbs_options.baseline_weights = baseline_weights;
+        tfbs_options.baseline_priors  = baseline_priors;
+
         // create data, dpm, and sampler objects
-        data_tfbs_t& data = *new data_tfbs_t(sequences, options.tfbs_length);
-        data_tfbs_t& data_comp = *new data_tfbs_t(sequences_comp, options.tfbs_length);
-        DpmTfbs& gdpm = *new DpmTfbs(options.alpha, options.d, options.lambda, options.tfbs_length, data, data_comp, baseline_weights, baseline_priors);
+        data_tfbs_t& data     = *new data_tfbs_t(sequences, options.tfbs_length);
+        DpmTfbs& gdpm         = *new DpmTfbs(tfbs_options, data);
         GibbsSampler& sampler = *new GibbsSampler(gdpm, data);
         PopulationMCMC& pmcmc = *new PopulationMCMC(sampler, options.population_size);
 
@@ -313,8 +316,8 @@ int main(int argc, char *argv[])
                         options.alpha = atof(optarg);
                         break;
                 case 'd':
-                        options.d = atof(optarg);
-                        if (options.d < 0 || options.d >= 1) {
+                        options.discount = atof(optarg);
+                        if (options.discount < 0 || options.discount >= 1) {
                                 wrong_usage(NULL);
                         }
                         break;

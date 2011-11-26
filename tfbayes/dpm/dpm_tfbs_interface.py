@@ -47,39 +47,39 @@ if not _lib:
 # ------------------------------------------------------------------------------
 
 class VECTOR(Structure):
-     _fields_ = [("size", c_int),
+     _fields_ = [("size", c_ulong),
                  ("vec",  POINTER(c_double))]
 
 class MATRIX(Structure):
-     _fields_ = [("rows",    c_int),
-                 ("columns", c_int),
+     _fields_ = [("rows",    c_ulong),
+                 ("columns", c_ulong),
                  ("mat",     POINTER(POINTER(c_double)))]
 
 class OPTIONS(Structure):
-     _fields_ = [("tfbs_length",       c_uint),
+     _fields_ = [("tfbs_length",       c_ulong),
                  ("alpha",             c_double),
                  ("discount",          c_double),
                  ("lambda_",           c_double),
                  ("process_prior",     c_char_p),
                  ("baseline_weights",  POINTER(VECTOR)),
                  ("baseline_priors",   POINTER(POINTER(MATRIX))),
-                 ("baseline_n",        c_uint),
-                 ("population_size",   c_uint)]
+                 ("baseline_n",        c_ulong),
+                 ("population_size",   c_ulong)]
 
 # function prototypes
 # ------------------------------------------------------------------------------
 
-_lib._allocVector.restype  = POINTER(VECTOR)
-_lib._allocVector.argtypes = [c_int]
+_lib._alloc_vector.restype  = POINTER(VECTOR)
+_lib._alloc_vector.argtypes = [c_ulong]
 
-_lib._allocMatrix.restype  = POINTER(MATRIX)
-_lib._allocMatrix.argtypes = [c_int, c_int]
+_lib._alloc_matrix.restype  = POINTER(MATRIX)
+_lib._alloc_matrix.argtypes = [c_ulong, c_ulong]
 
-_lib._freeVector.restype   = None
-_lib._freeVector.argtypes  = [POINTER(VECTOR)]
+_lib._free_vector.restype   = None
+_lib._free_vector.argtypes  = [POINTER(VECTOR)]
 
-_lib._freeMatrix.restype   = None
-_lib._freeMatrix.argtypes  = [POINTER(MATRIX)]
+_lib._free_matrix.restype   = None
+_lib._free_matrix.argtypes  = [POINTER(MATRIX)]
 
 _lib._free.restype         = None
 _lib._free.argtypes        = [POINTER(None)]
@@ -120,22 +120,22 @@ _lib._dpm_tfbs_get_posterior.argtypes = []
 # convert datatypes
 # ------------------------------------------------------------------------------
 
-def copyVectorToC(v, c_v):
+def copy_vector_to_c(v, c_v):
      for i in range(0, c_v.contents.size):
           c_v.contents.vec[i] = v[i]
 
-def copyMatrixToC(m, c_m):
+def copy_matrix_to_c(m, c_m):
      for i in range(0, c_m.contents.rows):
           for j in range(0, c_m.contents.columns):
                c_m.contents.mat[i][j] = m[i][j]
 
-def getVector(c_v):
+def get_vector(c_v):
      v = []
      for i in range(0, c_v.contents.size):
           v.append(c_v.contents.vec[i])
      return v
 
-def getMatrix(c_m):
+def get_matrix(c_m):
      m = []
      for i in range(0, c_m.contents.rows):
           m.append([])
@@ -160,19 +160,19 @@ def dpm_init(options, input_file):
      prior_length = len(options['baseline_priors'])
      if prior_length > 0:
           normalized_weights = map(lambda x: float(x)/sum(options['baseline_weights']), options['baseline_weights'])
-          c_baseline_weights = _lib._allocVector(prior_length)
-          copyVectorToC(normalized_weights, c_baseline_weights)
+          c_baseline_weights = _lib._alloc_vector(prior_length)
+          copy_vector_to_c(normalized_weights, c_baseline_weights)
           c_baseline_priors = (prior_length*POINTER(MATRIX))()
           for i, prior in zip(range(prior_length), options['baseline_priors']):
-               c_baseline_priors[i] = _lib._allocMatrix(len(prior[0]), len(prior))
-               copyMatrixToC(map(list, zip(*prior)), c_baseline_priors[i])
+               c_baseline_priors[i] = _lib._alloc_matrix(len(prior[0]), len(prior))
+               copy_matrix_to_c(map(list, zip(*prior)), c_baseline_priors[i])
           c_options.contents.baseline_weights = c_baseline_weights
           c_options.contents.baseline_priors = pointer(c_baseline_priors[0])
-          c_options.contents.baseline_n = c_int(prior_length)
+          c_options.contents.baseline_n = c_ulong(prior_length)
      _lib._dpm_tfbs_init(c_input_file)
-     _lib._freeVector(c_baseline_weights)
+     _lib._free_vector(c_baseline_weights)
      for i in range(prior_length):
-          _lib._freeMatrix(c_baseline_priors[i])
+          _lib._free_matrix(c_baseline_priors[i])
 
 def dpm_print():
      _lib._dpm_tfbs_print()
@@ -182,20 +182,20 @@ def dpm_num_clusters():
 
 def dpm_cluster_assignments():
      result  = _lib._dpm_tfbs_cluster_assignments()
-     cluster = getMatrix(result)
-     _lib._freeMatrix(result)
+     cluster = get_matrix(result)
+     _lib._free_matrix(result)
      return cluster
 
 def dpm_hist_likelihood():
      result     = _lib._dpm_tfbs_hist_likelihood()
-     likelihood = getVector(result)
-     _lib._freeVector(result)
+     likelihood = get_vector(result)
+     _lib._free_vector(result)
      return likelihood
 
 def dpm_hist_switches():
      result   = _lib._dpm_tfbs_hist_switches()
-     switches = getVector(result)
-     _lib._freeVector(result)
+     switches = get_vector(result)
+     _lib._free_vector(result)
      return switches
 
 def dpm_sample(n, burnin):
@@ -211,4 +211,4 @@ def dpm_free():
      _lib._dpm_tfbs_free()
 
 def dpm_get_posterior():
-     return getMatrix(_lib._dpm_tfbs_get_posterior())
+     return get_matrix(_lib._dpm_tfbs_get_posterior())
