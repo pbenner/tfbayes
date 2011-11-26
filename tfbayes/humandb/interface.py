@@ -45,28 +45,28 @@ if not _lib:
 # ------------------------------------------------------------------------------
 
 class VECTOR(Structure):
-     _fields_ = [("size", c_int),
+     _fields_ = [("size", c_ulong),
                  ("vec",  POINTER(c_double))]
 
 class MATRIX(Structure):
-     _fields_ = [("rows",    c_int),
-                 ("columns", c_int),
+     _fields_ = [("rows",    c_ulong),
+                 ("columns", c_ulong),
                  ("mat",     POINTER(POINTER(c_double)))]
 
 # function prototypes
 # ------------------------------------------------------------------------------
 
-_lib._allocVector.restype       = POINTER(VECTOR)
-_lib._allocVector.argtypes      = [c_int]
+_lib._alloc_vector.restype       = POINTER(VECTOR)
+_lib._alloc_vector.argtypes      = [c_ulong]
 
-_lib._allocMatrix.restype       = POINTER(MATRIX)
-_lib._allocMatrix.argtypes      = [c_int, c_int]
+_lib._alloc_matrix.restype       = POINTER(MATRIX)
+_lib._alloc_matrix.argtypes      = [c_ulong, c_ulong]
 
-_lib._freeVector.restype        = None
-_lib._freeVector.argtypes       = [POINTER(VECTOR)]
+_lib._free_vector.restype        = None
+_lib._free_vector.argtypes       = [POINTER(VECTOR)]
 
-_lib._freeMatrix.restype        = None
-_lib._freeMatrix.argtypes       = [POINTER(MATRIX)]
+_lib._free_matrix.restype        = None
+_lib._free_matrix.argtypes       = [POINTER(MATRIX)]
 
 _lib._free.restype              = None
 _lib._free.argtypes             = [POINTER(None)]
@@ -110,22 +110,22 @@ _lib._hdb_count_codons_upstream.argtypes = [POINTER(None), c_long, POINTER(c_lon
 # convert datatypes
 # ------------------------------------------------------------------------------
 
-def copyVectorToC(v, c_v):
+def copy_vector_to_c(v, c_v):
      for i in range(0, c_v.contents.size):
           c_v.contents.vec[i] = v[i]
 
-def copyMatrixToC(m, c_m):
+def copy_matrix_to_c(m, c_m):
      for i in range(0, c_m.contents.rows):
           for j in range(0, c_m.contents.columns):
                c_m.contents.mat[i][j] = m[i][j]
 
-def getVector(c_v):
+def get_vector(c_v):
      v = []
      for i in range(0, c_v.contents.size):
           v.append(c_v.contents.vec[i])
      return v
 
-def getMatrix(c_m):
+def get_matrix(c_m):
      m = []
      for i in range(0, c_m.contents.rows):
           m.append([])
@@ -194,8 +194,8 @@ def hdb_search_pwm(dbp_list, db_names, pwm, threshold):
      c_dbp_list_n = c_int(dbp_list_n)
      c_dbp_list   = (c_void_p*dbp_list_n)()
      c_db_names   = (c_char_p*dbp_list_n)()
-     c_pwm        = _lib._allocMatrix(len(pwm), len(pwm[0]))
-     copyMatrixToC(pwm,  c_pwm)
+     c_pwm        = _lib._alloc_matrix(len(pwm), len(pwm[0]))
+     copy_matrix_to_c(pwm,  c_pwm)
      c_threshold  = c_double(threshold)
      for i in range(0, dbp_list_n):
           c_dbp_list[i] = dbp_list[i]

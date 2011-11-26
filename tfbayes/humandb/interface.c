@@ -32,11 +32,15 @@
 #include "interface.h"
 
 // export functions for interface.py
-Vector * _allocVector(int size)              { return allocVector(size); }
-void     _freeVector(Vector *v)              { freeVector(v); }
-Matrix * _allocMatrix(int rows, int columns) { return allocMatrix(rows, columns); }
-void     _freeMatrix(Matrix *m)              { freeMatrix(m); }
-void     _free(void *ptr)                    { free(ptr); }
+vector_t * _alloc_vector(size_t size) {
+        return alloc_vector(size);
+}
+matrix_t * _alloc_matrix(size_t rows, size_t columns) {
+        return alloc_matrix(rows, columns);
+}
+void _free_vector(vector_t *v) { free_vector(v); }
+void _free_matrix(matrix_t *m) { free_matrix(m); }
+void _free(void *ptr)          { free(ptr); }
 
 void _hdb_init(const char* program_name, int num_threads)
 {
@@ -95,7 +99,7 @@ void _hdb_get_sequence_pure(DB* dbp, size_t pos, size_t n_nucleotides, char* buf
         hdb_get_sequence_pure(dbp, pos, n_nucleotides, buf);
 }
 
-void _hdb_search_pwm(DB* dbp_list[], const int dbp_list_n, const char* db_names[], const Matrix* pwm, double threshold) {
+void _hdb_search_pwm(DB* dbp_list[], const int dbp_list_n, const char* db_names[], const matrix_t* pwm, double threshold) {
         hdb_search_pwm(dbp_list, dbp_list_n, db_names, pwm, threshold);
 }
 

@@ -265,7 +265,7 @@ int hdb_get_sequence_pure(DB *dbp, long pos_from, long n_nucleotides, char* buf)
 typedef struct {
         DB* dbp;
         const char* db_name;
-        const Matrix* pwm;
+        const matrix_t* pwm;
         double threshold;
         int thread_id;
 } pthread_pwm_data;
@@ -275,7 +275,7 @@ static void* hdb_search_pwm_thread(void* data_)
         pthread_pwm_data* data = (pthread_pwm_data*)data_;
         DB* dbp                = data->dbp;
         const char* db_name    = data->db_name;
-        const Matrix* pwm      = data->pwm;
+        const matrix_t* pwm    = data->pwm;
         const double threshold = data->threshold;
         char buf[HUMANDB_RECORD_LENGTH+1];
         size_t pos, i, j, n = 0;
@@ -318,7 +318,7 @@ static void* hdb_search_pwm_thread(void* data_)
         return NULL;
 }
 
-int hdb_search_pwm(DB* dbp_list[], const int dbp_list_n, const char* db_names[], const Matrix* pwm, const double threshold)
+int hdb_search_pwm(DB* dbp_list[], const int dbp_list_n, const char* db_names[], const matrix_t* pwm, const double threshold)
 {
         pthread_t threads[_num_threads];
         pthread_pwm_data data[dbp_list_n];
