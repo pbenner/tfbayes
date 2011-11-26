@@ -40,31 +40,26 @@ using namespace std;
 
 #define process_prior ((*this).*(_process_prior))
 
-DPM_TFBS::DPM_TFBS(
-        double alpha, double discount, double lambda, size_t tfbs_length,
-        const data_tfbs_t& data, const data_tfbs_t& data_comp,
-        std::vector<double> baseline_weights, gsl_matrix *baseline_priors[],
-        string process_prior_name)
+DpmTfbs::DpmTfbs(tfbs_options_t options, const data_tfbs_t& data)
         : // length of tfbs
-          TFBS_LENGTH(tfbs_length),
+          TFBS_LENGTH(options.tfbs_length),
           // baseline
-          _baseline_weights(baseline_weights),
+          _baseline_weights(options.baseline_weights),
           // raw sequences
           _data(data),
-          _data_comp(data_comp),
           // cluster manager
           _cluster_assignments(_data.lengths(), -1),
           _clustermanager(_cluster_assignments),
           // strength parameter for the dirichlet process
-          alpha(alpha),
-          alpha_log(log(alpha)),
+          alpha(options.alpha),
+          alpha_log(log(options.alpha)),
           // pitman-yor discount factor
-          discount(discount),
-          discount_log(log(discount)),
+          discount(options.discount),
+          discount_log(log(options.discount)),
           // mixture weight for the dirichlet process
-          lambda(lambda),
-          lambda_log(log(lambda)),
-          lambda_inv_log(log(1-lambda)),
+          lambda(options.lambda),
+          lambda_log(log(options.lambda)),
+          lambda_inv_log(log(1-options.lambda)),
           // starting positions of tfbs
           _tfbs_start_positions(_data.lengths(), 0),
           // number of transcription factor binding sites
@@ -82,9 +77,10 @@ DPM_TFBS::DPM_TFBS(
         // add background model to the clustermanager
         bg_cluster_tag = _clustermanager.add_cluster(new ProductDirichlet(bg_alpha, _data));
         // add model components for the baseline measure
-        for (size_t i = 0; baseline_priors[i] != NULL; i++) {
+        for (size_t i = 0; options.baseline_priors[i] != NULL; i++) {
                 assert(tfbs_length == baseline_priors[i]->size1);
-                const model_tag_t model_tag = _clustermanager.add_baseline_model(new ProductDirichlet(baseline_priors[i], _data));
+                const model_tag_t model_tag =
+                        _clustermanager.add_baseline_model(new ProductDirichlet(options.baseline_priors[i], _data));
                 _model_tags.push_back(model_tag);
         }
 
@@ -99,13 +95,13 @@ DPM_TFBS::DPM_TFBS(
         ////////////////////////////////////////////////////////////////////////////////
         // set the process prior
         if (process_prior_name == "pitman-yor process") {
-                _process_prior = &DPM_TFBS::py_prior;
+                _process_prior = &DpmTfbs::py_prior;
         }
         else if (process_prior_name == "uniform process") {
-                _process_prior = &DPM_TFBS::uniform_prior;
+                _process_prior = &DpmTfbs::uniform_prior;
         }
         else if (process_prior_name == "poppe process") {
-                _process_prior = &DPM_TFBS::poppe_prior;
+                _process_prior = &DpmTfbs::poppe_prior;
         }
         else {
                 cerr << "Unknown prior process." << endl;
@@ -120,11 +116,11 @@ DPM_TFBS::DPM_TFBS(
         //test();
 }
 
-DPM_TFBS::~DPM_TFBS() {
+DpmTfbs::~DpmTfbs() {
 }
 
 void
-DPM_TFBS::test() {
+DpmTfbs::test() {
         seq_index_t index1(0,0);
         seq_index_t index2(1,0);
         seq_index_t index3(2,0);
@@ -162,13 +158,13 @@ DPM_TFBS::test() {
         exit(EXIT_SUCCESS);
 }
 
-DPM_TFBS*
-DPM_TFBS::clone() const {
-        return new DPM_TFBS(*this);
+DpmTfbs*
+DpmTfbs::clone() const {
+        return new DpmTfbs(*this);
 }
 
 bool
-DPM_TFBS::valid_for_sampling(const index_t& index) const
+DpmTfbs::valid_for_sampling(const index_t& index) const
 {
         const size_t sequence = index[0];
         const size_t position = index[1];
@@ -193,7 +189,7 @@ DPM_TFBS::valid_for_sampling(const index_t& index) const
 }
 
 void
-DPM_TFBS::add(const index_t& index, cluster_tag_t tag)
+DpmTfbs::add(const index_t& index, cluster_tag_t tag)
 {
         const range_t range(index, TFBS_LENGTH);
 
@@ -208,7 +204,7 @@ DPM_TFBS::add(const index_t& index, cluster_tag_t tag)
 }
 
 void
-DPM_TFBS::remove(const index_t& index, cluster_tag_t tag)
+DpmTfbs::remove(const index_t& index, cluster_tag_t tag)
 {
         const range_t range(index, TFBS_LENGTH);
 
@@ -223,19 +219,19 @@ DPM_TFBS::remove(const index_t& index, cluster_tag_t tag)
 }
 
 size_t
-DPM_TFBS::mixture_components() const
+DpmTfbs::mixture_components() const
 {
         return _clustermanager.size();
 }
 
 size_t
-DPM_TFBS::baseline_components() const
+DpmTfbs::baseline_components() const
 {
         return _model_tags.size();
 }
 
 double
-DPM_TFBS::py_prior(Cluster& cluster)
+DpmTfbs::py_prior(Cluster& cluster)
 {
         if (cluster.size() == 0) {
                 return log(alpha + discount*(mixture_components()-1)) - log(num_tfbs + alpha);
@@ -246,7 +242,7 @@ DPM_TFBS::py_prior(Cluster& cluster)
 }
 
 double
-DPM_TFBS::uniform_prior(Cluster& cluster)
+DpmTfbs::uniform_prior(Cluster& cluster)
 {
         double K = mixture_components()-1;
 
@@ -259,7 +255,7 @@ DPM_TFBS::uniform_prior(Cluster& cluster)
 }
 
 double
-DPM_TFBS::poppe_prior(Cluster& cluster)
+DpmTfbs::poppe_prior(Cluster& cluster)
 {
         double K = mixture_components()-1;
         double N = num_tfbs;
@@ -286,7 +282,7 @@ DPM_TFBS::poppe_prior(Cluster& cluster)
 }
 
 void
-DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_tag_t cluster_tags[])
+DpmTfbs::mixture_weights(const index_t& index, double log_weights[], cluster_tag_t cluster_tags[])
 {
         const range_t range(index, TFBS_LENGTH);
         ssize_t mixture_n  = mixture_components();
@@ -324,7 +320,7 @@ DPM_TFBS::mixture_weights(const index_t& index, double log_weights[], cluster_ta
 }
 
 double
-DPM_TFBS::likelihood() const {
+DpmTfbs::likelihood() const {
         double result = 0;
 
         for (ClusterManager::const_iterator it = _clustermanager.begin();
@@ -336,7 +332,7 @@ DPM_TFBS::likelihood() const {
 }
 
 void
-DPM_TFBS::update_graph(sequence_data_t<short> tfbs_start_positions)
+DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
 {
         std::list<const index_t*> binding_sites;
         // find all binding sites
@@ -365,7 +361,7 @@ DPM_TFBS::update_graph(sequence_data_t<short> tfbs_start_positions)
 }
 
 void
-DPM_TFBS::update_hypergraph(sequence_data_t<short> tfbs_start_positions)
+DpmTfbs::update_hypergraph(sequence_data_t<short> tfbs_start_positions)
 {
         list<const index_t*> binding_sites;
         stringstream ss;
@@ -400,7 +396,7 @@ DPM_TFBS::update_hypergraph(sequence_data_t<short> tfbs_start_positions)
 }
 
 void
-DPM_TFBS::update_posterior(size_t sampling_steps) {
+DpmTfbs::update_posterior(size_t sampling_steps) {
         if (sampling_steps % 100 == 0) {
                 _tfbs_graph.cleanup(1);
         }
@@ -424,29 +420,29 @@ DPM_TFBS::update_posterior(size_t sampling_steps) {
 }
 
 posterior_t&
-DPM_TFBS::posterior() {
+DpmTfbs::posterior() {
         return _posterior;
 }
 
 const data_tfbs_t&
-DPM_TFBS::data() const {
+DpmTfbs::data() const {
         return _data;
 }
 
 const ClusterManager&
-DPM_TFBS::clustermanager() const {
+DpmTfbs::clustermanager() const {
         return _clustermanager;
 }
 
 const Graph&
-DPM_TFBS::graph() const {
+DpmTfbs::graph() const {
         return _tfbs_graph;
 }
 
 // misc methods
 ////////////////////////////////////////////////////////////////////////////////
 
-ostream& operator<< (ostream& o, const DPM_TFBS& dpm)
+ostream& operator<< (ostream& o, const DpmTfbs& dpm)
 {
         o << "Cluster Assignments:"     << endl;
         o << dpm._cluster_assignments   << endl;

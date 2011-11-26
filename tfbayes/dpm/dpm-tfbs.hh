@@ -31,22 +31,32 @@
 #include <data-tfbs.hh>
 #include <mixture-model.hh>
 
-class DPM_TFBS : public DPM {
-public:
-         DPM_TFBS(double alpha, double discount, double lambda, size_t tfbs_length,
-                  const data_tfbs_t& data, const data_tfbs_t& data_comp,
-                  std::vector<double> baseline_weights, gsl_matrix *baseline_priors[],
-                  std::string process_prior_name = "pitman-yor process");
-        ~DPM_TFBS();
+#include <tfbayes/linalg.h>
 
-        DPM_TFBS* clone() const;
+typedef struct {
+        size_t tfbs_length;
+        double alpha;
+        double discount;
+        double lambda;
+        const char *process_prior;
+        Simple::Vector*  baseline_weights;
+        Simple::Matrix** baseline_priors;
+        size_t baseline_n;
+} tfbs_options_t;
+
+class DpmTfbs : public DPM {
+public:
+         DpmTfbs(tfbs_options_t options, const data_tfbs_t& data);
+        ~DpmTfbs();
+
+        DpmTfbs* clone() const;
 
         // operators
         ////////////////////////////////////////////////////////////////////////
               Cluster& operator[](cluster_tag_t c)       { return _clustermanager[c]; }
         const Cluster& operator[](cluster_tag_t c) const { return _clustermanager[c]; }
 
-        friend std::ostream& operator<<(std::ostream& o, const DPM_TFBS& dpm);
+        friend std::ostream& operator<<(std::ostream& o, const DpmTfbs& dpm);
 
         // methods
         ////////////////////////////////////////////////////////////////////////
@@ -80,7 +90,6 @@ private:
 
         // data and clusters
         const data_tfbs_t& _data;
-        const data_tfbs_t& _data_comp;
         sequence_data_t<cluster_tag_t> _cluster_assignments;
         ClusterManager _clustermanager;
 
@@ -110,7 +119,7 @@ private:
         double py_prior(Cluster& cluster);
         double uniform_prior(Cluster& cluster);
         double poppe_prior(Cluster& cluster);
-        typedef double (DPM_TFBS::*prior_fn)(Cluster& cluster);
+        typedef double (DpmTfbs::*prior_fn)(Cluster& cluster);
         prior_fn _process_prior;
 
         // standard priors

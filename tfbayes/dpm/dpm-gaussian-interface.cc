@@ -17,17 +17,13 @@
 
 #include <gsl/gsl_matrix.h>
 
-namespace Bayes {
-        extern "C" {
-#include <tfbayes/linalg.h>
-        }
-}
-
 #include <init.hh>
 #include <data-gaussian.hh>
 #include <dpm-gaussian-interface.hh>
 #include <dpm-gaussian.hh>
 #include <sampler.hh>
+
+#include <tfbayes/linalg.h>
 
 using namespace std;
 
@@ -35,15 +31,25 @@ static DPM_Gaussian* _gdpm;
 static data_gaussian_t* _data;
 static GibbsSampler* _sampler;
 
-__BEGIN_C_REGION;
+#undef __BEGIN_DECLS
+#undef __END_DECLS
+#ifdef __cplusplus
+# define __BEGIN_DECLS extern "C" {
+# define __END_DECLS }
+#else
+# define __BEGIN_DECLS /* empty */
+# define __END_DECLS /* empty */
+#endif
+
+__BEGIN_DECLS
 
 void _dpm_gaussian_init(
         int samples,
         double alpha,
-        Bayes::Matrix* _Sigma,
-        Bayes::Matrix* _Sigma_0,
-        Bayes::Vector* _mu_0,
-        Bayes::Vector* _pi)
+        Simple::Matrix* _Sigma,
+        Simple::Matrix* _Sigma_0,
+        Simple::Vector* _mu_0,
+        Simple::Vector* _pi)
 {
         __dpm_init__();
 
@@ -65,9 +71,9 @@ unsigned int _dpm_gaussian_num_clusters() {
         return _gdpm->clustermanager().size();
 }
 
-Bayes::Vector* _dpm_gaussian_cluster_tags() {
+Simple::Vector* _dpm_gaussian_cluster_tags() {
         size_t cluster = _gdpm->clustermanager().size();
-        Bayes::Vector* cluster_tags = Bayes::allocVector(cluster);
+        Simple::Vector* cluster_tags = Simple::allocVector(cluster);
         const ClusterManager& clustermanager = _gdpm->clustermanager();
 
         size_t i = 0;
@@ -78,10 +84,10 @@ Bayes::Vector* _dpm_gaussian_cluster_tags() {
         return cluster_tags;
 }
 
-Bayes::Matrix* _dpm_gaussian_cluster_elements(int tag) {
+Simple::Matrix* _dpm_gaussian_cluster_elements(int tag) {
         const ClusterManager& clustermanager = _gdpm->clustermanager();
         const Cluster& cluster = clustermanager[(cluster_tag_t)tag];
-        Bayes::Matrix* elements = Bayes::allocMatrix(cluster.size(), 2);
+        Simple::Matrix* elements = Simple::allocMatrix(cluster.size(), 2);
 
         size_t i = 0;
         for (data_gaussian_t::const_iterator it = _data->begin();
@@ -96,8 +102,8 @@ Bayes::Matrix* _dpm_gaussian_cluster_elements(int tag) {
         return elements;
 }
 
-Bayes::Matrix* _dpm_gaussian_get_posterior() {
-        Bayes::Matrix* result;
+Simple::Matrix* _dpm_gaussian_get_posterior() {
+        Simple::Matrix* result;
         const vector<vector<double> >& probabilities = _gdpm->posterior().probabilities;
         size_t n = probabilities.size();
         size_t m = 0;
@@ -110,7 +116,7 @@ Bayes::Matrix* _dpm_gaussian_get_posterior() {
         }
 
         // allocate matrix
-        result = Bayes::allocMatrix(n, m);
+        result = Simple::allocMatrix(n, m);
         // copy posterior
         for (size_t i = 0; i < n; i++) {
                 for (size_t j = 0; j < m; j++) {
@@ -126,12 +132,12 @@ Bayes::Matrix* _dpm_gaussian_get_posterior() {
         return result;
 }
 
-Bayes::Vector* _dpm_gaussian_cluster_assignments() {
-        Bayes::Vector* result;
+Simple::Vector* _dpm_gaussian_cluster_assignments() {
+        Simple::Vector* result;
         size_t n = _data->elements();
 
         // allocate matrix
-        result = Bayes::allocVector(n);
+        result = Simple::allocVector(n);
         // copy posterior
         for (data_gaussian_t::const_iterator it = _data->begin();
              it != _data->end(); it++) {
@@ -141,10 +147,10 @@ Bayes::Vector* _dpm_gaussian_cluster_assignments() {
         return result;
 }
 
-Bayes::Vector* _dpm_gaussian_hist_likelihood() {
+Simple::Vector* _dpm_gaussian_hist_likelihood() {
         const vector<double>& likelihood = _sampler->sampling_history().likelihood[0];
         size_t length = likelihood.size();
-        Bayes::Vector* result = Bayes::allocVector(length);
+        Simple::Vector* result = Simple::allocVector(length);
 
         for (size_t i = 0; i < length; i++) {
                 result->vec[i] = likelihood[i];
@@ -153,10 +159,10 @@ Bayes::Vector* _dpm_gaussian_hist_likelihood() {
         return result;
 }
 
-Bayes::Vector* _dpm_gaussian_hist_switches() {
+Simple::Vector* _dpm_gaussian_hist_switches() {
         const vector<double>& switches = _sampler->sampling_history().switches[0];
         size_t length = switches.size();
-        Bayes::Vector* result = Bayes::allocVector(length);
+        Simple::Vector* result = Simple::allocVector(length);
 
         for (size_t i = 0; i < length; i++) {
                 result->vec[i] = switches[i];
@@ -165,21 +171,21 @@ Bayes::Vector* _dpm_gaussian_hist_switches() {
         return result;
 }
 
-Bayes::Matrix* _dpm_gaussian_means() {
+Simple::Matrix* _dpm_gaussian_means() {
         gsl_matrix* tmp = _gdpm->means();
-        Bayes::Matrix* means;
+        Simple::Matrix* means;
         if (tmp == NULL) {
-                means = Bayes::allocMatrix(0,0);
+                means = Simple::allocMatrix(0,0);
         }
         else {  
-                means = Bayes::fromGslMatrix(tmp);
+                means = Simple::fromGslMatrix(tmp);
                 gsl_matrix_free(tmp);
         }
         return means;
 }
 
-Bayes::Matrix* _dpm_gaussian_data() {
-        Bayes::Matrix* data = Bayes::allocMatrix(_data->elements(), 2);
+Simple::Matrix* _dpm_gaussian_data() {
+        Simple::Matrix* data = Simple::allocMatrix(_data->elements(), 2);
 
         size_t i = 0;
         for (data_gaussian_t::const_iterator it = _data->begin();
@@ -192,14 +198,14 @@ Bayes::Matrix* _dpm_gaussian_data() {
         return data;
 }
 
-Bayes::Matrix* _dpm_gaussian_original_means() {
+Simple::Matrix* _dpm_gaussian_original_means() {
         gsl_matrix* means = _data->original_means();
-        return Bayes::fromGslMatrix(means);
+        return Simple::fromGslMatrix(means);
 }
 
-Bayes::Vector* _dpm_gaussian_original_cluster_assignments() {
+Simple::Vector* _dpm_gaussian_original_cluster_assignments() {
         gsl_vector* original_cluster_assignments = _data->original_cluster_assignments();
-        return Bayes::fromGslVector(original_cluster_assignments);
+        return Simple::fromGslVector(original_cluster_assignments);
 }
 
 void _dpm_gaussian_print() {
@@ -216,4 +222,4 @@ void _dpm_gaussian_free() {
         delete(_sampler);
 }
 
-__END_C_REGION;
+__END_DECLS

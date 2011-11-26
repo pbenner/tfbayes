@@ -17,12 +17,22 @@
 
 #include <interface.hh>
 
-__BEGIN_C_REGION;
+#undef __BEGIN_DECLS
+#undef __END_DECLS
+#ifdef __cplusplus
+# define __BEGIN_DECLS extern "C" {
+# define __END_DECLS }
+#else
+# define __BEGIN_DECLS /* empty */
+# define __END_DECLS /* empty */
+#endif
 
-Bayes::Vector * _allocVector(int size)              { return Bayes::allocVector(size); }
-void            _freeVector(Bayes::Vector *v)       { Bayes::freeVector(v); }
-Bayes::Matrix * _allocMatrix(int rows, int columns) { return Bayes::allocMatrix(rows, columns); }
-void            _freeMatrix(Bayes::Matrix *m)       { Bayes::freeMatrix(m); }
-void            _free(void *ptr)                    { free(ptr); }
+__BEGIN_DECLS
 
-__END_C_REGION;
+Simple::Vector * _allocVector(int size)              { return Simple::allocVector(size); }
+void            _freeVector(Simple::Vector *v)       { Simple::freeVector(v); }
+Simple::Matrix * _allocMatrix(int rows, int columns) { return Simple::allocMatrix(rows, columns); }
+void            _freeMatrix(Simple::Matrix *m)       { Simple::freeMatrix(m); }
+void            _free(void *ptr)                     { free(ptr); }
+
+__END_DECLS

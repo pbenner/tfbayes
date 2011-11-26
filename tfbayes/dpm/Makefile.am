@@ -36,9 +36,9 @@ dist_bin_SCRIPTS = dpm-gaussian-demo dpm-tfbs-align dpm-tfbs-demo dpm-tfbs-graph
 lib_LTLIBRARIES  = libdpm.la
 libdpm_la_SOURCES =                                                           \
 	code.cc code.hh                                                       \
-	index.hh indexer.hh clonable.hh observer.hh statistics.hh             \
-	datatypes.cc datatypes.hh graph.hh                                    \
-	data-tfbs.cc data-tfbs.hh data-gaussian.cc data-gaussian.hh           \
+	index.cc index.hh indexer.hh clonable.hh observer.hh statistics.hh    \
+	datatypes.hh graph.hh                                                 \
+	data.hh data-tfbs.cc data-tfbs.hh data-gaussian.cc data-gaussian.hh   \
 	dpm-tfbs.cc dpm-tfbs.hh dpm-gaussian.cc dpm-gaussian.hh               \
 	clustermanager.cc clustermanager.hh                                   \
 	cluster.cc cluster.hh                                                 \

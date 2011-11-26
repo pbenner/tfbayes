@@ -21,12 +21,6 @@
 
 #include <gsl/gsl_matrix.h>
 
-namespace Bayes {
-        extern "C" {
-#include <tfbayes/linalg.h>
-        }
-}
-
 #include <init.hh>
 #include <dpm-tfbs-interface.hh>
 #include <dpm-tfbs.hh>
@@ -34,37 +28,19 @@ namespace Bayes {
 
 #include <tfbayes/exception.h>
 #include <tfbayes/fasta.hh>
+#include <tfbayes/linalg.h>
 
 using namespace std;
 
 // options and global variables
 // -----------------------------------------------------------------------------
 
-typedef struct _options_t {
-        int tfbs_length;
-        double alpha;
-        double discount;
-        double lambda;
-        const char *process_prior;
-        int population_size;
-        Bayes::Vector*  baseline_weights;
-        Bayes::Matrix** baseline_priors;
-        int baseline_n;
-        _options_t()
-                : tfbs_length(10),
-                  alpha(0.05),
-                  discount(0.0),
-                  lambda(0.01),
-                  process_prior("pitman-yor process"),
-                  population_size(1),
-                  baseline_weights(NULL),
-                  baseline_priors(NULL),
-                  baseline_n(0)
-                { }
+typedef struct : public tfbs_options_t {
+        size_t population_size;
 } options_t;
 
 static options_t _options;
-static DPM_TFBS* _gdpm;
+static DpmTfbs* _gdpm;
 static data_tfbs_t* _data;
 static data_tfbs_t* _data_comp;
 static GibbsSampler* _sampler;
@@ -186,7 +162,17 @@ void save_result(ostream& file)
         }
 }
 
-__BEGIN_C_REGION;
+#undef __BEGIN_DECLS
+#undef __END_DECLS
+#ifdef __cplusplus
+# define __BEGIN_DECLS extern "C" {
+# define __END_DECLS }
+#else
+# define __BEGIN_DECLS /* empty */
+# define __END_DECLS /* empty */
+#endif
+
+__BEGIN_DECLS
 
 // python interface
 // -----------------------------------------------------------------------------
@@ -207,22 +193,18 @@ void _dpm_tfbs_init(const char* filename)
         // baseline priors
         std::vector<double> baseline_weights(_options.baseline_n, 0);
         gsl_matrix* baseline_priors[_options.baseline_n+1];
-        for (int i = 0; i < _options.baseline_n; i++) {
+        for (size_t i = 0; i < _options.baseline_n; i++) {
                 baseline_weights[i] = _options.baseline_weights->vec[i];
-                baseline_priors[i]  = Bayes::toGslMatrix(_options.baseline_priors[i]);
+                baseline_priors[i]  = Simple::toGslMatrix(_options.baseline_priors[i]);
         }
         baseline_priors[_options.baseline_n] = NULL;
 
         _data      = new data_tfbs_t(_sequences, _options.tfbs_length);
-        _data_comp = new data_tfbs_t(_sequences_comp, _options.tfbs_length);
-        _gdpm      = new DPM_TFBS(_options.alpha, _options.discount, _options.lambda,
-                                  _options.tfbs_length, *_data, *_data_comp,
-                                  baseline_weights, baseline_priors,
-                                  _options.process_prior);
+        _gdpm      = new DpmTfbs(_options, *_data);
         _sampler   = new GibbsSampler(*_gdpm, *_data);
         _pmcmc     = new PopulationMCMC(*_sampler, _options.population_size);
 
-        for (int i = 0; i < _options.baseline_n; i++) {
+        for (size_t i = 0; i < _options.baseline_n; i++) {
                 gsl_matrix_free(baseline_priors[i]);
         }
 
@@ -246,8 +228,8 @@ unsigned int _dpm_tfbs_num_clusters() {
         return _gdpm->clustermanager().size();
 }
 
-Bayes::Matrix* _dpm_tfbs_get_posterior() {
-        Bayes::Matrix* result;
+Simple::Matrix* _dpm_tfbs_get_posterior() {
+        Simple::Matrix* result;
         const vector<vector<double> >& probabilities = _gdpm->posterior().probabilities;
         size_t n = probabilities.size();
         size_t m = 0;
@@ -260,7 +242,7 @@ Bayes::Matrix* _dpm_tfbs_get_posterior() {
         }
 
         // allocate matrix
-        result = Bayes::allocMatrix(n, m);
+        result = Simple::allocMatrix(n, m);
         // copy posterior
         for (size_t i = 0; i < n; i++) {
                 for (size_t j = 0; j < m; j++) {
@@ -276,8 +258,8 @@ Bayes::Matrix* _dpm_tfbs_get_posterior() {
         return result;
 }
 
-Bayes::Matrix* _dpm_tfbs_cluster_assignments() {
-        Bayes::Matrix* result;
+Simple::Matrix* _dpm_tfbs_cluster_assignments() {
+        Simple::Matrix* result;
         size_t n = _gdpm->data().length();
         size_t m = 0;
 
@@ -289,7 +271,7 @@ Bayes::Matrix* _dpm_tfbs_cluster_assignments() {
         }
 
         // allocate matrix
-        result = Bayes::allocMatrix(n, m);
+        result = Simple::allocMatrix(n, m);
         // default initialization to -1
         for (size_t i = 0; i < n; i++) {
                 for (size_t j = 0; j < m; j++) {
@@ -305,10 +287,10 @@ Bayes::Matrix* _dpm_tfbs_cluster_assignments() {
         return result;
 }
 
-Bayes::Vector* _dpm_tfbs_hist_likelihood() {
+Simple::Vector* _dpm_tfbs_hist_likelihood() {
         const vector<double>& likelihood = _pmcmc->sampling_history().likelihood[0];
         size_t length = likelihood.size();
-        Bayes::Vector* result = Bayes::allocVector(length);
+        Simple::Vector* result = Simple::allocVector(length);
 
         for (size_t i = 0; i < length; i++) {
                 result->vec[i] = likelihood[i];
@@ -317,10 +299,10 @@ Bayes::Vector* _dpm_tfbs_hist_likelihood() {
         return result;
 }
 
-Bayes::Vector* _dpm_tfbs_hist_switches() {
+Simple::Vector* _dpm_tfbs_hist_switches() {
         const vector<double>& switches = _pmcmc->sampling_history().switches[0];
         size_t length = switches.size();
-        Bayes::Vector* result = Bayes::allocVector(length);
+        Simple::Vector* result = Simple::allocVector(length);
 
         for (size_t i = 0; i < length; i++) {
                 result->vec[i] = switches[i];
@@ -343,4 +325,4 @@ void _dpm_tfbs_free() {
         delete(_pmcmc);
 }
 
-__END_C_REGION;
+__END_DECLS

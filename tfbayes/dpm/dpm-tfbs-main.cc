@@ -154,7 +154,7 @@ ostream& operator<< (ostream& o, const ProductDirichlet& pd) {
 }
 
 static
-void save_motifs(ostream& file, const DPM_TFBS& dpm)
+void save_motifs(ostream& file, const DpmTfbs& dpm)
 {
         const ClusterManager& cm = dpm.clustermanager();
 
@@ -241,7 +241,7 @@ void run_dpm(const char* file_name)
         // create data, dpm, and sampler objects
         data_tfbs_t& data = *new data_tfbs_t(sequences, options.tfbs_length);
         data_tfbs_t& data_comp = *new data_tfbs_t(sequences_comp, options.tfbs_length);
-        DPM_TFBS& gdpm = *new DPM_TFBS(options.alpha, options.d, options.lambda, options.tfbs_length, data, data_comp, baseline_weights, baseline_priors);
+        DpmTfbs& gdpm = *new DpmTfbs(options.alpha, options.d, options.lambda, options.tfbs_length, data, data_comp, baseline_weights, baseline_priors);
         GibbsSampler& sampler = *new GibbsSampler(gdpm, data);
         PopulationMCMC& pmcmc = *new PopulationMCMC(sampler, options.population_size);
 

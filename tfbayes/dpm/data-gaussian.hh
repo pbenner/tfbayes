@@ -22,6 +22,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <data.hh>
 #include <datatypes.hh>
 #include <component-model.hh>
 #include <indexer.hh>

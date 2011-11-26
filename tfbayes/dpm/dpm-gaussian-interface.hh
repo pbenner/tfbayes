@@ -23,14 +23,29 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <interface.hh>
+#include <tfbayes/linalg.h>
 
-extern "C" void _dpm_gaussian_init(
+#undef __BEGIN_DECLS
+#undef __END_DECLS
+#ifdef __cplusplus
+# define __BEGIN_DECLS extern "C" {
+# define __END_DECLS }
+#else
+# define __BEGIN_DECLS /* empty */
+# define __END_DECLS /* empty */
+#endif
+
+__BEGIN_DECLS
+
+void _dpm_gaussian_init(
         int samples,
         double alpha,
-        Bayes::Matrix* _Sigma,
-        Bayes::Matrix* _Sigma_0,
-        Bayes::Vector* _mu_0,
-        Bayes::Vector* _pi);
-extern "C" void _dpm_gaussian_sample(unsigned int n, unsigned int burnin);
+        Simple::Matrix* _Sigma,
+        Simple::Matrix* _Sigma_0,
+        Simple::Vector* _mu_0,
+        Simple::Vector* _pi);
+void _dpm_gaussian_sample(unsigned int n, unsigned int burnin);
+
+__END_DECLS
 
 #endif /* DPM_GAUSSIAN_INTERFACE_HH */

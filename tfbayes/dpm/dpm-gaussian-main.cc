@@ -26,10 +26,10 @@
 
 int
 main(void) {
-        Bayes::Matrix* Sigma   = Bayes::allocMatrix(2, 2);
-        Bayes::Matrix* Sigma_0 = Bayes::allocMatrix(2, 2);
-        Bayes::Vector* mu      = Bayes::allocVector(2);
-        Bayes::Vector* pi      = Bayes::allocVector(11);
+        Simple::Matrix* Sigma   = Simple::allocMatrix(2, 2);
+        Simple::Matrix* Sigma_0 = Simple::allocMatrix(2, 2);
+        Simple::Vector* mu      = Simple::allocVector(2);
+        Simple::Vector* pi      = Simple::allocVector(11);
 
         Sigma->mat[0][0] = 0.01;
         Sigma->mat[0][1] = 0.005;

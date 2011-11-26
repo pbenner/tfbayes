@@ -26,13 +26,6 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv.h>
 
-namespace Bayes {
-        extern "C" {
 #include <tfbayes/linalg.h>
-        }
-}
-
-#define __BEGIN_C_REGION extern "C" {
-#define __END_C_REGION }
 
 #endif /* INTERFACE_HH */

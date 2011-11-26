@@ -56,15 +56,15 @@ class MATRIX(Structure):
                  ("mat",     POINTER(POINTER(c_double)))]
 
 class OPTIONS(Structure):
-     _fields_ = [("tfbs_length",       c_int),
+     _fields_ = [("tfbs_length",       c_uint),
                  ("alpha",             c_double),
                  ("discount",          c_double),
                  ("lambda_",           c_double),
                  ("process_prior",     c_char_p),
-                 ("population_size",   c_int),
                  ("baseline_weights",  POINTER(VECTOR)),
                  ("baseline_priors",   POINTER(POINTER(MATRIX))),
-                 ("baseline_n",        c_int)]
+                 ("baseline_n",        c_uint),
+                 ("population_size",   c_uint)]
 
 # function prototypes
 # ------------------------------------------------------------------------------

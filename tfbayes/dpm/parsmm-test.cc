@@ -25,7 +25,6 @@
 #include <math.h>
 
 #include <abysmal-stack.hh>
-#include <datatypes.hh>
 #include <dpm-tfbs.hh>
 #include <nucleotide-sequence.hh>
 
@@ -40,8 +39,8 @@ using namespace std;
 // Constants
 ////////////////////////////////////////////////////////////////////////////////
 
-static const size_t ALPHABET_SIZE = DPM_TFBS::ALPHABET_SIZE; 
-static const size_t PARSMM_DEPTH  = DPM_TFBS::PARSMM_DEPTH; 
+static const size_t ALPHABET_SIZE = DpmTfbs::ALPHABET_SIZE; 
+static const size_t PARSMM_DEPTH  = DpmTfbs::PARSMM_DEPTH; 
 
 // Standard output
 ////////////////////////////////////////////////////////////////////////////////

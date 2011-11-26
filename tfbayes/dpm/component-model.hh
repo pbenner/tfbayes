@@ -35,7 +35,7 @@
 #include <gsl/gsl_matrix.h>
 
 #include <clonable.hh>
-#include <datatypes.hh>
+#include <data.hh>
 
 #include <parsmm/abstract_set.h>
 #include <parsmm/static_pars_tree.h>

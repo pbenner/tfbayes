@@ -22,7 +22,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <datatypes.hh>
+#include <index.hh>
 
 template <class E> class Observer;
 template <class E> class Observed;
