@@ -28,8 +28,6 @@
 #include <abysmal-stack.hh>
 #include <code.hh>
 
-#include <parsmm/static_pars_tree.h>
-
 class nucleotide_sequence_t : public std::vector<short>
 {
 public:
@@ -53,21 +51,22 @@ class nucleotide_context_t : public std::vector<short>
 public:
         nucleotide_context_t(const nucleotide_sequence_t& sequence,
                              size_t depth, size_t alphabet_size) {
-                AbysmalStack<count_t> stack(depth+1);
+                AbysmalStack<short> stack(depth+1);
                 size_t position;
 
                 for (size_t i = 0; i < sequence.size(); i++) {
-                        stack.push(sequence[i]);
-                        if (i >= depth) {
+                        if (sequence[i] == 4) {
+                                stack.push_invalid(sequence[i]);
+                        }
+                        else {
+                                stack.push(sequence[i]);
+                        }
+                        if (!stack.clogged()) {
                                 position = pow(alphabet_size, depth+1) - 1;
                                 for (size_t i = 0; i < depth+1; i++) {
                                         position -= stack[i]*pow(alphabet_size, i);
                                 }
-                                std::cout << stack << " -> " << position << std::endl;
                                 push_back(position);
-                        }
-                        else {
-                                push_back(-1);
                         }
                 }
         }

@@ -29,12 +29,21 @@ template <typename T>
 class AbysmalStack {
 public:
         AbysmalStack(size_t depth)
-                : _depth(depth), _bottom(0), _content(depth, 0)
+                : _depth(depth), _bottom(0), _content(depth, 0),
+                  _clogged(depth)
                 {}
-        
+
         void push(T letter) {
                 _content[_bottom] = letter;
                 _bottom = (_bottom + 1) % _depth;
+                if (_clogged > 0) {
+                        _clogged--;
+                }
+        }
+
+        void push_invalid(T letter) {
+                push(letter);
+                _clogged = _depth;
         }
 
         const T& operator[](size_t pos) const {
@@ -45,8 +54,12 @@ public:
                 return _content[(_bottom+pos)%_depth];
         }
 
+        bool clogged() {
+                return _clogged > 0;
+        }
+
         friend std::ostream& operator<< (std::ostream& o, const AbysmalStack<T>& stack) {
-                for (size_t i = 0; i < stack._depth+1; i++) {
+                for (size_t i = 0; i < stack._depth; i++) {
                         o << stack[i];
                 }
                 return o;
@@ -56,6 +69,7 @@ protected:
         size_t _depth;
         size_t _bottom;
         std::vector<T> _content;
+        size_t _clogged;
 };
 
 #endif /* ABYSMAL_STACK_HH */

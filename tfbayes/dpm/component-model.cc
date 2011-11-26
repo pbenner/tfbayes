@@ -202,7 +202,9 @@ size_t
 ParsimoniousTree::add(const range_t& range) {
         iterator_t<short> iterator = _context[range];
         do {
-                _counts[*iterator]++;
+                if (*iterator != -1) {
+                        _counts[*iterator]++;
+                }
         } while(iterator++);
 
         return range.length;
@@ -212,7 +214,9 @@ size_t
 ParsimoniousTree::remove(const range_t& range) {
         iterator_t<short> iterator = _context[range];
         do {
-                _counts[*iterator]++;
+                if (*iterator != -1) {
+                        _counts[*iterator]++;
+                }
         } while(iterator++);
 
         return range.length;
@@ -235,11 +239,8 @@ double ParsimoniousTree::log_predictive(const range_t& range) {
         return ml2-ml1;
 }
 
-//
-// \sum_{x \in X} n_x log(\frac{n_x + \alpha_x}{\sum_{x' \in X} n_{x'} + \alpha_{x'}})
-//
 double ParsimoniousTree::log_likelihood() const {
-        return 1;
+        return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
