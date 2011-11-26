@@ -435,6 +435,18 @@ DpmTfbs::graph() const {
         return _tfbs_graph;
 }
 
+std::matrix<double>
+DpmTfbs::init_alpha(size_t length)
+{
+        std::matrix<double> alpha;
+
+        // initialize prior for the background model
+        for (size_t i = 0; i < length; i++) {
+                alpha.push_back(std::vector<double>(ALPHABET_SIZE, 1));
+        }
+        return alpha;
+}
+
 // misc methods
 ////////////////////////////////////////////////////////////////////////////////
 
