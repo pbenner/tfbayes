@@ -48,7 +48,7 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
           // raw sequences
           _data(data),
           // cluster manager
-          _cluster_assignments(_data.lengths(), -1),
+          _cluster_assignments(_data.sizes(), -1),
           _clustermanager(_cluster_assignments),
           // strength parameter for the dirichlet process
           alpha(options.alpha),
@@ -61,7 +61,7 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
           lambda_log(log(options.lambda)),
           lambda_inv_log(log(1-options.lambda)),
           // starting positions of tfbs
-          _tfbs_start_positions(_data.lengths(), 0),
+          _tfbs_start_positions(_data.sizes(), 0),
           // number of transcription factor binding sites
           num_tfbs(0)
 {
@@ -69,8 +69,8 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
 
         ////////////////////////////////////////////////////////////////////////////////
         // initialize joint posterior
-        for (size_t i = 0; i < data.length(); i++) {
-                _posterior.probabilities.push_back(vector<double>(data.length(i), 0.0));
+        for (size_t i = 0; i < data.size(); i++) {
+                _posterior.probabilities.push_back(vector<double>(data.size(i), 0.0));
         }
 
         ////////////////////////////////////////////////////////////////////////////////

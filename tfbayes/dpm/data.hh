@@ -188,6 +188,9 @@ public:
 
         friend std::ostream& operator<< <> (std::ostream& o, const sequence_data_t<T>& sd);
 
+        virtual void push_back(const std::vector<T>& sequence) {
+                _data.push_back(sequence);
+        }
         virtual const_iterator_t<T> operator[](const range_t& range) const {
                 return const_iterator_t<T>(*this, range.index, range.length);
         }
@@ -199,6 +202,15 @@ public:
         }
         virtual T& operator[](const index_t& index) {
                 return _data[index[0]][index[1]];
+        }
+        virtual const std::vector<T>& operator[](size_t i) const {
+                return _data[i];
+        }
+        virtual size_t size() const {
+                return _data.size();
+        }
+        virtual size_t size(size_t i) const {
+                return _data[i].size();
         }
 
 protected:

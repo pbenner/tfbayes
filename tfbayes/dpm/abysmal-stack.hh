@@ -45,7 +45,12 @@ public:
                 return _content[(_bottom+pos)%_depth];
         }
 
-//        friend std::ostream& operator<< <> (std::ostream& o, const AbysmalStack<T>& stack);
+        friend std::ostream& operator<< (std::ostream& o, const AbysmalStack<T>& stack) {
+                for (size_t i = 0; i < stack._depth+1; i++) {
+                        o << stack[i];
+                }
+                return o;
+        }
 
 protected:
         size_t _depth;

@@ -54,19 +54,12 @@ public:
         sampling_iterator sampling_end()   const
                 { return sampling_indices.end();   }
 
-        // operators
-        ////////////////////////////////////////////////////////////////////////
-        using sequence_data_t<short>::operator[];
-        const index_t& operator[](size_t i) const;
-
         friend std::ostream& operator<< (std::ostream& o, const data_tfbs_t& data);
 
         // methods
         ////////////////////////////////////////////////////////////////////////
         size_t elements() const { return _elements; };
-        size_t length() const;
-        size_t length(size_t i) const;
-        const std::vector<size_t>& lengths() const;
+        const std::vector<size_t>& sizes() const;
         void shuffle();
 
 private:

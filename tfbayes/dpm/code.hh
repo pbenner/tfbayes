@@ -26,37 +26,10 @@
 #include <string>
 #include <vector>
 
-class InvalidNucleotide: public std::exception
-{
-public:
-        InvalidNucleotide(const char* fname, char nucleotide, const std::string sequence)
-                : fname(fname), _nucleotide(nucleotide), _sequence(sequence)
-                { }
-        ~InvalidNucleotide() throw() {};
-
-        virtual const char* what() const throw() {
-                return (std::string(fname) + std::string(": found invalid nucleotide")).c_str();
-        }
-        const std::string& sequence() const {
-                return _sequence;
-        }
-        char nucleotide() const {
-                return _nucleotide;
-        }
-
-private:
-        const char* fname;
-        const char _nucleotide;
-        const std::string _sequence;
-};
-
 bool is_nucleotide(char a);
 bool is_nucleotide_or_masked(char S);
 char code_nucleotide(char a);
 char decode_nucleotide(char a);
 char complement_nucleotide(char a);
-std::vector<short> code_nucleotide_sequence(const std::string& sequence) throw(InvalidNucleotide);
-std::vector<std::vector<short> > code_sequences(const std::vector<std::string>& sequences);
-std::vector<std::string> complement(const std::vector<std::string>& sequences);
 
 #endif /* CODE_HH */

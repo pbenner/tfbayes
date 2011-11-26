@@ -35,7 +35,7 @@ dist_bin_SCRIPTS = dpm-gaussian-demo dpm-tfbs-align dpm-tfbs-demo dpm-tfbs-graph
 ## dpm library
 lib_LTLIBRARIES  = libdpm.la
 libdpm_la_SOURCES =                                                           \
-	code.cc code.hh                                                       \
+	abysmal-stack.hh code.cc code.hh                                      \
 	index.cc index.hh indexer.hh clonable.hh observer.hh statistics.hh    \
 	datatypes.hh graph.hh                                                 \
 	data.hh data-tfbs.cc data-tfbs.hh data-gaussian.cc data-gaussian.hh   \

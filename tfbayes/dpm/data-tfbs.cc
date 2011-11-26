@@ -32,6 +32,7 @@
 #include <gsl/gsl_matrix.h>
 
 #include <data-tfbs.hh>
+#include <nucleotide-sequence.hh>
 
 using namespace std;
 
@@ -50,10 +51,10 @@ bool valid_sampling_index(const vector<string>& sequences, const index_t& index,
 }
 
 data_tfbs_t::data_tfbs_t(const vector<string>& sequences, size_t tfbs_length)
-        : sequence_data_t<short>(code_sequences(sequences)),
-          sequences(sequences), _n_sequences(sequences.size()), _elements(0)
+        : sequences(sequences), _n_sequences(sequences.size()), _elements(0)
 {
         for(size_t i = 0; i < sequences.size(); i++) {
+                push_back(nucleotide_sequence_t(sequences[i]));
                 // store length of sequences
                 this->sequences_length.push_back(sequences[i].size());
                 // and a list of indices
@@ -95,28 +96,8 @@ data_tfbs_t::shuffle() {
         random_shuffle(sampling_indices.begin(), sampling_indices.end());
 }
 
-const index_t&
-data_tfbs_t::operator[](size_t i) const {
-        return *indices[i];
-}
-
-size_t
-data_tfbs_t::length() const {
-        return _n_sequences;
-}
-
-size_t
-data_tfbs_t::length(size_t i) const {
-        if (i < _n_sequences) {
-                return sequences_length[i];
-        }
-        else {
-                return 0;
-        }
-}
-
 const std::vector<size_t>&
-data_tfbs_t::lengths() const
+data_tfbs_t::sizes() const
 {
         return sequences_length;
 }

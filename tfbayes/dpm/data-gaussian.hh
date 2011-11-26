@@ -50,11 +50,6 @@ public:
         sampling_iterator sampling_end() const
                 { return sampling_indices.end();   }
 
-        // operators
-        ////////////////////////////////////////////////////////////////////////
-        using data_t<std::vector<double> >::operator[];
-        const index_t& operator[](size_t i) const;
-
         // methods
         ////////////////////////////////////////////////////////////////////////
         size_t elements() const;

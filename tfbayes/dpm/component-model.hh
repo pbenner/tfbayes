@@ -122,6 +122,7 @@ private:
         count_t* _counts;
 
         const sequence_data_t<short>& _data;
+              sequence_data_t<short>  _context;
 };
 
 class BivariateNormal : public ComponentModel {

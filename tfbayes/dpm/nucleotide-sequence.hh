@@ -25,12 +25,15 @@
 #include <vector>
 #include <string>
 
+#include <abysmal-stack.hh>
 #include <code.hh>
 
-class NucleotideSequence : public std::vector<short>
+#include <parsmm/static_pars_tree.h>
+
+class nucleotide_sequence_t : public std::vector<short>
 {
 public:
-        NucleotideSequence(const std::string& sequence)
+        nucleotide_sequence_t(const std::string& sequence)
                 : _sequence(sequence) {
                 for (size_t i = 0; i < sequence.length(); i++) {
                         push_back(code_nucleotide(sequence[i]));
@@ -43,6 +46,31 @@ public:
 
 private:
         const std::string _sequence;
+};
+
+class nucleotide_context_t : public std::vector<short>
+{
+public:
+        nucleotide_context_t(const nucleotide_sequence_t& sequence,
+                             size_t depth, size_t alphabet_size) {
+                AbysmalStack<count_t> stack(depth+1);
+                size_t position;
+
+                for (size_t i = 0; i < sequence.size(); i++) {
+                        stack.push(sequence[i]);
+                        if (i >= depth) {
+                                position = pow(alphabet_size, depth+1) - 1;
+                                for (size_t i = 0; i < depth+1; i++) {
+                                        position -= stack[i]*pow(alphabet_size, i);
+                                }
+                                std::cout << stack << " -> " << position << std::endl;
+                                push_back(position);
+                        }
+                        else {
+                                push_back(-1);
+                        }
+                }
+        }
 };
 
 #endif /* NUCLEOTIDE_SEQUENCE_HH */

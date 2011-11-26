@@ -32,6 +32,7 @@
 
 #include <component-model.hh>
 #include <datatypes.hh>
+#include <nucleotide-sequence.hh>
 
 using namespace std;
 
@@ -165,11 +166,17 @@ ParsimoniousTree::ParsimoniousTree(
         /* init data structures */
         pt_init(_pt);
         memset(_counts, 0, _counts_length*sizeof(count_t));
+
+        /* compute context */
+        for (size_t i = 0; i < _data.size(); i++) {
+                const nucleotide_sequence_t& seq = (const nucleotide_sequence_t&)_data[i];
+                _context.push_back(nucleotide_context_t(seq, tree_depth, 4));
+        }
 }
 
 ParsimoniousTree::ParsimoniousTree(const ParsimoniousTree& distribution)
         : _counts_length(distribution._counts_length),
-          _data(distribution._data)
+          _data(distribution._data), _context(distribution._context)
 {
         _as = as_create(distribution._as->size);
         _pt = pt_create(_as, distribution._pt->depth);

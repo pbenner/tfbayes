@@ -53,10 +53,6 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-        virtual const index_t& operator[](size_t i) const = 0;
-
-        // operators
-        ////////////////////////////////////////////////////////////////////////
         virtual size_t elements() const = 0;
 
         virtual void shuffle() = 0;

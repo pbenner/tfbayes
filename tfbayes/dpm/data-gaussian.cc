@@ -112,11 +112,6 @@ data_gaussian_t::shuffle() {
         random_shuffle(sampling_indices.begin(), sampling_indices.end());
 }
 
-const index_t&
-data_gaussian_t::operator[](size_t i) const {
-        return *indices[i];
-}
-
 size_t
 data_gaussian_t::elements() const {
         return _elements;

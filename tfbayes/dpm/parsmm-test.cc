@@ -45,16 +45,7 @@ static const size_t PARSMM_DEPTH  = DpmTfbs::PARSMM_DEPTH;
 // Standard output
 ////////////////////////////////////////////////////////////////////////////////
 
-ostream& operator<< (ostream& o, const AbysmalStack<count_t>& stack)
-{
-        for (size_t i = 0; i < PARSMM_DEPTH+1; i++) {
-                o << stack[i];
-        }
-
-        return o;
-}
-
-ostream& operator<< (ostream& o, const NucleotideSequence& sequence)
+ostream& operator<< (ostream& o, const nucleotide_sequence_t& sequence)
 {
         for (size_t i = 0; i < sequence.size(); i++) {
                 o << sequence[i];
@@ -79,7 +70,7 @@ void print_counts(count_t* counts, size_t length)
 class Context : public std::vector<ssize_t>
 {
 public:
-        Context(const NucleotideSequence& sequence, size_t depth, size_t alphabet_size) {
+        Context(const nucleotide_sequence_t& sequence, size_t depth, size_t alphabet_size) {
                 AbysmalStack<count_t> stack(depth+1);
                 size_t position;
 
@@ -108,7 +99,7 @@ void add_subsequence(
         count_t* counts,
         size_t from, size_t to,
         const Context& context,
-        const NucleotideSequence& sequence)
+        const nucleotide_sequence_t& sequence)
 {
         for(size_t i = from; i < min(sequence.size(), to+PARSMM_DEPTH+1); i++) {
                 if (context[i] != -1) {
@@ -123,7 +114,7 @@ void remove_subsequence(
         count_t* counts,
         size_t from, size_t to,
         const Context& context,
-        const NucleotideSequence& sequence)
+        const nucleotide_sequence_t& sequence)
 {
         for(size_t i = from; i < min(sequence.size(), to+PARSMM_DEPTH+1); i++) {
                 if (context[i] != -1) {
@@ -149,7 +140,7 @@ double predictive(
         size_t from, size_t to,
         static_pars_tree_t* pt,
         const Context& context,
-        const NucleotideSequence& sequence)
+        const nucleotide_sequence_t& sequence)
 {
         double ml1 = pt_ln_marginal_likelihood(pt, counts);
         remove_subsequence(counts, from, to, context, sequence);
@@ -170,8 +161,8 @@ void parsmm_test() {
         memset(counts, 0, counts_length*sizeof(count_t));
 
         /* test nucleotide sequence */
-        const NucleotideSequence sequence("GGGGGACGTCGATGCGTGATCGACTACGGCT");
-//        const NucleotideSequence sequence("AAAAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+        const nucleotide_sequence_t sequence("GGGGGACGTCGATGCGTGATCGACTACGGCT");
+//        const nucleotide_sequence_t sequence("AAAAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
         const Context context(sequence, PARSMM_DEPTH, ALPHABET_SIZE);
         cout << "Coded sequence:" << endl << sequence << endl << endl;
         cout << "Tree depth: "    << PARSMM_DEPTH << endl << endl;

@@ -278,13 +278,13 @@ matrix_t* _dpm_tfbs_get_posterior() {
 
 matrix_t* _dpm_tfbs_cluster_assignments() {
         matrix_t* result;
-        size_t n = _gdpm->data().length();
+        size_t n = _gdpm->data().size();
         size_t m = 0;
 
         // compute maximum length
         for (size_t i = 0; i < n; i++) {
-                if (m < _gdpm->data().length(i)) {
-                        m = _gdpm->data().length(i);
+                if (m < _gdpm->data().size(i)) {
+                        m = _gdpm->data().size(i);
                 }
         }
 
@@ -307,10 +307,10 @@ matrix_t* _dpm_tfbs_cluster_assignments() {
 
 vector_t* _dpm_tfbs_hist_likelihood() {
         const vector<double>& likelihood = _pmcmc->sampling_history().likelihood[0];
-        size_t length = likelihood.size();
-        vector_t* result = alloc_vector(length);
+        size_t size = likelihood.size();
+        vector_t* result = alloc_vector(size);
 
-        for (size_t i = 0; i < length; i++) {
+        for (size_t i = 0; i < size; i++) {
                 result->vec[i] = likelihood[i];
         }
 
@@ -319,10 +319,10 @@ vector_t* _dpm_tfbs_hist_likelihood() {
 
 vector_t* _dpm_tfbs_hist_switches() {
         const vector<double>& switches = _pmcmc->sampling_history().switches[0];
-        size_t length = switches.size();
-        vector_t* result = alloc_vector(length);
+        size_t size = switches.size();
+        vector_t* result = alloc_vector(size);
 
-        for (size_t i = 0; i < length; i++) {
+        for (size_t i = 0; i < size; i++) {
                 result->vec[i] = switches[i];
         }
 
