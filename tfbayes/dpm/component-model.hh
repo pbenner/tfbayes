@@ -95,8 +95,10 @@ private:
 
 class ParsimoniousTree : public ComponentModel {
 public:
-        ParsimoniousTree(size_t alphabet_size, size_t tree_depth,
-                         const sequence_data_t<short>& data);
+         ParsimoniousTree(size_t alphabet_size, size_t tree_depth,
+                          const sequence_data_t<short>& data,
+                          const sequence_data_t<cluster_tag_t>& cluster_assignments,
+                          cluster_tag_t cluster_tag);
          ParsimoniousTree(const ParsimoniousTree& distribution);
         ~ParsimoniousTree();
 
@@ -110,7 +112,6 @@ public:
         double predictive(const range_t& range);
         double log_predictive(const range_t& range);
         double log_likelihood() const;
-
         ParsimoniousTree* clone() const;
 
         friend std::ostream& operator<< (std::ostream& o, const ParsimoniousTree& pd);
@@ -121,8 +122,15 @@ private:
         size_t _counts_length;
         count_t* _counts;
 
-        const sequence_data_t<short>& _data;
-              sequence_data_t<short>  _context;
+        const sequence_data_t<short>&         _data;
+              sequence_data_t<short>          _context;
+        const sequence_data_t<cluster_tag_t>& _cluster_assignments;
+
+        const cluster_tag_t _cluster_tag;
+        const size_t        _tree_depth;
+
+        // internal methods
+        const range_t adjust_range(const range_t& range, seq_index_t& new_index) const;
 };
 
 class BivariateNormal : public ComponentModel {

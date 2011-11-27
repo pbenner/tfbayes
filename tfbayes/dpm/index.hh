@@ -32,6 +32,8 @@
 
 class index_t : public clonable {
 public:
+        __inline__ index_t() {
+        }
         __inline__ explicit index_t(size_t x0) : _x0(x0) {
         }
         __inline__ index_t(const index_t& index) : _x0(index._x0) {
@@ -63,6 +65,8 @@ protected:
 
 class seq_index_t : public index_t {
 public:
+        __inline__ seq_index_t() : index_t() {
+        }
         __inline__ seq_index_t(size_t x0, size_t x1) : index_t(x0), _x1(x1) {
         }
         __inline__ seq_index_t(const seq_index_t& seq_index) : index_t(seq_index), _x1(seq_index._x1) {

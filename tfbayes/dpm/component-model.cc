@@ -155,8 +155,11 @@ void pt_init(static_pars_tree_t* pt) {
 
 ParsimoniousTree::ParsimoniousTree(
         size_t alphabet_size, size_t tree_depth,
-        const sequence_data_t<short>& data)
-        : _data(data)
+        const sequence_data_t<short>& data,
+        const sequence_data_t<cluster_tag_t>& cluster_assignments,
+        cluster_tag_t cluster_tag)
+        : _data(data), _cluster_assignments(cluster_assignments),
+          _cluster_tag(cluster_tag), _tree_depth(tree_depth)
 {
         _as = as_create(alphabet_size);
         _pt = pt_create(_as, tree_depth);
@@ -176,7 +179,11 @@ ParsimoniousTree::ParsimoniousTree(
 
 ParsimoniousTree::ParsimoniousTree(const ParsimoniousTree& distribution)
         : _counts_length(distribution._counts_length),
-          _data(distribution._data), _context(distribution._context)
+          _data(distribution._data),
+          _context(distribution._context),
+          _cluster_assignments(distribution._cluster_assignments),
+          _cluster_tag(distribution._cluster_tag),
+          _tree_depth(distribution._tree_depth)
 {
         _as = as_create(distribution._as->size);
         _pt = pt_create(_as, distribution._pt->depth);
@@ -198,9 +205,34 @@ ParsimoniousTree::clone() const {
         return new ParsimoniousTree(*this);
 }
 
+const range_t
+ParsimoniousTree::adjust_range(const range_t& range, seq_index_t& new_index) const {
+        const  size_t sequence = range.index[0];
+        const  size_t position = range.index[1];
+        const  size_t length   = range.length;
+        const ssize_t sequence_length = _data.size(sequence);
+        ssize_t from = position;
+        ssize_t to   = position+length-1;
+
+        for (size_t i = 0; i < _tree_depth && from > 0 && _cluster_assignments[seq_index_t(sequence, from-1)] == _cluster_tag; i++) {
+                from--;
+        }
+        for (size_t i = 0; i < _tree_depth && to < sequence_length-1 && _cluster_assignments[seq_index_t(sequence, to + 1)] == _cluster_tag; i++) {
+                to++;
+        }
+        from = min(from+(ssize_t)_tree_depth, to);
+
+        new_index[0] = sequence;
+        new_index[1] = from;
+
+        return range_t(new_index, max(to-from+1, (ssize_t)0));
+}
+
 size_t
 ParsimoniousTree::add(const range_t& range) {
-        iterator_t<short> iterator = _context[range];
+        seq_index_t new_index;
+
+        iterator_t<short> iterator = _context[adjust_range(range, new_index)];
         do {
                 if (*iterator != -1) {
                         _counts[*iterator]++;
@@ -212,7 +244,9 @@ ParsimoniousTree::add(const range_t& range) {
 
 size_t
 ParsimoniousTree::remove(const range_t& range) {
-        iterator_t<short> iterator = _context[range];
+        seq_index_t new_index;
+
+        iterator_t<short> iterator = _context[adjust_range(range, new_index)];
         do {
                 if (*iterator != -1) {
                         _counts[*iterator]++;
