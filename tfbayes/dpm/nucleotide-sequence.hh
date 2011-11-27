@@ -55,7 +55,7 @@ public:
                 size_t position;
 
                 for (size_t i = 0; i < sequence.size(); i++) {
-                        if (sequence[i] == 4) {
+                        if (sequence[i] == (short)alphabet_size) {
                                 stack.push_invalid(sequence[i]);
                         }
                         else {
