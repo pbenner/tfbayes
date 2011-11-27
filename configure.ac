@@ -214,6 +214,16 @@ AC_ARG_ENABLE([profiling],
 								[turn on profiling support @<:@profiling=no@:>@])],
 	[],
 	[enable_profiling=no])
+AC_ARG_ENABLE([profile-generate],
+	[AS_HELP_STRING([--enable-profile-generate],
+								[generate optimization profiles @<:@profile-generate=no@:>@])],
+	[],
+	[enable_profile_generate=no])
+AC_ARG_ENABLE([profile-use],
+	[AS_HELP_STRING([--enable-profile-use],
+								[use optimization profiles @<:@profile-use=no@:>@])],
+	[],
+	[enable_profile_use=no])
 AC_ARG_ENABLE([native],
 	[AS_HELP_STRING([--enable-native],
 								[compile with native support @<:@native=no@:>@])],
@@ -239,6 +249,14 @@ AS_IF([test "x$enable_profiling" = "xyes"],
 	[AX_CFLAGS_GCC_OPTION([-pg])
 	 AX_CXXFLAGS_GCC_OPTION([-pg])
 	 LDFLAGS="$LDFLAGS -static"])
+AS_IF([test "x$enable_profile_generate" = "xyes"],
+	[AX_CFLAGS_GCC_OPTION([-fprofile-generate])
+	 AX_CXXFLAGS_GCC_OPTION([-fprofile-generate])
+	 LDFLAGS="$LDFLAGS -static"])
+AS_IF([test "x$enable_profile_use" = "xyes"],
+	[AX_CFLAGS_GCC_OPTION([-fprofile-use])
+	 AX_CXXFLAGS_GCC_OPTION([-fprofile-use])
+	 LDFLAGS="$LDFLAGS"])
 AS_IF([test "x$enable_native" = "xyes"],
 	[AX_CFLAGS_GCC_OPTION([-march=native])
 	 AX_CXXFLAGS_GCC_OPTION([-march=native])])

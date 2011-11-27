@@ -61,6 +61,7 @@ options = {
     'discount'         : 0.0,
     'lambda'           : 0.01,
     'process_prior'    : "pitman-yor process",
+    'background_model' : "independence",
     'samples'          : (1000,100),
     'population_size'  : 1,
     'tfbs_length'      : 10,
@@ -102,6 +103,8 @@ def parse_config(config_file):
         options['lambda'] = float(config_parser.get('TFBS-Sampler', 'lambda'))
     if config_parser.has_option('TFBS-Sampler', 'process-prior'):
         options['process_prior'] = config_parser.get('TFBS-Sampler', 'process-prior').strip()
+    if config_parser.has_option('TFBS-Sampler', 'background-model'):
+        options['background_model'] = config_parser.get('TFBS-Sampler', 'background-model').strip()
     if config_parser.has_option('TFBS-Sampler', 'tfbs-length'):
         options['tfbs_length'] = int(config_parser.get('TFBS-Sampler', 'tfbs-length'))
     if config_parser.has_option('TFBS-Sampler', 'population-size'):
@@ -132,6 +135,9 @@ def usage():
     print "       --process-prior=NAME       - possible process priors:"
     print "                                    pitman-yor process (default),"
     print "                                    uniform process, poppe process"
+    print "       --background-model=NAME    - possible background models:"
+    print "                                    independence (default),"
+    print "                                    parsimonious tree"
     print "       --tfbs-length=LENGTH       - length of the tfbs"
     print "   -i                             - interactive mode"
     print "   -s, --save=FILE                - save posterior to FILE"
@@ -291,7 +297,8 @@ def main():
     global options
     try:
         longopts   = ["help", "verbose", "alpha=", "lambda=", "discount=",
-                      "process-prior=", "tfbs-length=", "save=", "samples="]
+                      "process-prior=", "backround-model=", "tfbs-length=",
+                      "save=", "samples="]
         opts, tail = getopt.getopt(sys.argv[1:], "is:vh", longopts)
     except getopt.GetoptError:
         usage()
@@ -321,6 +328,8 @@ def main():
             options['lambda'] = float(a)
         if o == "--process-prior":
             options['process_prior'] = a
+        if o == "--background-model":
+            options['background_model'] = a
         if o == "--tfbs-length":
             options['tfbs_length'] = int(a)
         if o in ("-s", "--save"):

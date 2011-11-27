@@ -61,6 +61,7 @@ class OPTIONS(Structure):
                  ("discount",          c_double),
                  ("lambda_",           c_double),
                  ("process_prior",     c_char_p),
+                 ("background_model",  c_char_p),
                  ("baseline_weights",  POINTER(VECTOR)),
                  ("baseline_priors",   POINTER(POINTER(MATRIX))),
                  ("baseline_n",        c_ulong),
@@ -152,6 +153,7 @@ def dpm_init(options, input_file):
      c_options.contents.discount = options['discount']
      c_options.contents.lambda_ = options['lambda']
      c_options.contents.process_prior = options['process_prior']
+     c_options.contents.background_model = options['background_model']
      c_options.contents.tfbs_length = options['tfbs_length']
      c_options.contents.population_size = options['population_size']
      c_input_file = c_char_p(input_file)

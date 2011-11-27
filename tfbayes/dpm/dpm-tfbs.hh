@@ -39,6 +39,7 @@ typedef struct {
         double discount;
         double lambda;
         std::string process_prior;
+        std::string background_model;
         std::vector<double> baseline_weights;
         std::vector<std::matrix<double> > baseline_priors;
 } tfbs_options_t;
@@ -79,7 +80,7 @@ public:
         ////////////////////////////////////////////////////////////////////////
         static const size_t BG_LENGTH   = 1;
                const size_t TFBS_LENGTH;
-        static const size_t PARSMM_DEPTH = 3;
+        static const size_t PARSMM_DEPTH = 2;
         static const size_t ALPHABET_SIZE = 4;
 
 private:

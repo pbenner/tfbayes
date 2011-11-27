@@ -65,8 +65,6 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
           // number of transcription factor binding sites
           num_tfbs(0)
 {
-        const matrix<double>& bg_alpha = init_alpha(BG_LENGTH);
-
         ////////////////////////////////////////////////////////////////////////////////
         // initialize joint posterior
         for (size_t i = 0; i < data.size(); i++) {
@@ -75,7 +73,19 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
 
         ////////////////////////////////////////////////////////////////////////////////
         // add background model to the clustermanager
-        bg_cluster_tag = _clustermanager.add_cluster(new ProductDirichlet(bg_alpha, _data));
+        if (options.background_model == "independence" || options.background_model == "") {
+                const matrix<double>& bg_alpha = init_alpha(BG_LENGTH);
+                ProductDirichlet* bg = new ProductDirichlet(bg_alpha, _data);
+                bg_cluster_tag = _clustermanager.add_cluster(bg);
+        }
+        else if (options.background_model == "parsimonious tree") {
+                ParsimoniousTree* bg = new ParsimoniousTree(ALPHABET_SIZE, PARSMM_DEPTH, _data, _cluster_assignments, 0);
+                bg_cluster_tag = _clustermanager.add_cluster(bg);
+        }
+        else {
+                cerr << "Unknown background model." << endl;
+                exit(EXIT_FAILURE);
+        }
         // add model components for the baseline measure
         for (size_t i = 0; i < options.baseline_priors.size(); i++) {
                 assert(options.tfbs_length == options.baseline_priors[i].size());
