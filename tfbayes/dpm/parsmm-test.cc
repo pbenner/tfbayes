@@ -40,7 +40,7 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 static const size_t ALPHABET_SIZE = DpmTfbs::ALPHABET_SIZE; 
-static const size_t PARSMM_DEPTH  = DpmTfbs::PARSMM_DEPTH; 
+static const size_t PARSMM_DEPTH  = 2; 
 
 // Standard output
 ////////////////////////////////////////////////////////////////////////////////
@@ -146,6 +146,10 @@ double predictive(
         remove_subsequence(counts, from, to, context, sequence);
         double ml2 = pt_ln_marginal_likelihood(pt, counts);
         add_subsequence(counts, from, to, context, sequence);
+
+        cout << "Marginal likelihood 1: P(y,x) = " << ml1 << endl;
+        cout << "Marginal likelihood 2: P(x)   = " << ml2 << endl;
+
         return exp(ml1-ml2);
 }
 
