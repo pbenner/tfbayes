@@ -27,9 +27,10 @@
 #include <tfbayes/logarithmetic.h>
 
 static
-void sum_counts(count_t* dest, count_t* src1, count_t* src2, int size) 
+void sum_counts(count_t* dest, count_t* src1, count_t* src2, size_t size) 
 {
-        int ii;
+        size_t ii;
+
         for (ii = 0; ii < size; ii++) {
                 dest[ii] = src1[ii] + src2[ii];
         }
@@ -38,9 +39,9 @@ void sum_counts(count_t* dest, count_t* src1, count_t* src2, int size)
 static
 unsigned long pt_size(
         const abstract_set_t * as,
-        int depth)
+        depth_t depth)
 {
-        int ii;
+        depth_t ii;
         unsigned long powk = as->nb_subsets;
         for (ii = 0; ii < depth; ii++)
         {
@@ -51,14 +52,14 @@ unsigned long pt_size(
 
 static_pars_tree_t * pt_create(
         const abstract_set_t * as,
-        short depth)
+        depth_t depth)
 {
         static_pars_tree_t * tree;
         tree = (static_pars_tree_t *)malloc(sizeof(static_pars_tree_t));
         tree->as = as;
         tree->size = pt_size(as, depth);
         tree->depth = depth;
-        tree->counts = (count_t *)malloc(sizeof(unsigned long) * tree->size * as->size);
+        tree->counts = (count_t *)malloc(sizeof(count_t) * tree->size * as->size);
         tree->scores = (double *)malloc(sizeof(double) * tree->size);
         tree->dirichlet_params = (double *)malloc(sizeof(double) * tree->size * as->size);
         /* Allocate memory for the stack of pointers 
@@ -170,9 +171,9 @@ double pt_ln_marginal_likelihood(
         context_id_max = pow(tree->as->size, tree->depth);
         container_max = (tree->as->nb_subsets + 1)/ 2;
         /* First blank the counts and scores array */
-        memset(tree->counts, 0, sizeof(unsigned long) * tree->size * tree->as->size);
+        memset(tree->counts, 0, sizeof(count_t) * tree->size * tree->as->size);
         memset(tree->scores, 0, sizeof(double) * tree->size);
-        memset(tree->node_ids, (unsigned int) 0, sizeof(node_t) * (1 << ((tree->as->size)*tree->depth)));
+        memset(tree->node_ids, (node_t) 0, sizeof(node_t) * (1 << ((tree->as->size)*tree->depth)));
         tree->node_ids[0] = 0;
         last_move = MV_DOWN; /* Not to perturb the first iteration */
 
@@ -194,8 +195,9 @@ double pt_ln_marginal_likelihood(
                                         print_debug("Summing counts - current: %lu\n", tree->node_ids[ii]);
                                         sum_counts(GET_COUNTS(tree, tree->node_ids[ii]),GET_COUNTS(tree, tree->node_ids[ii] - (1 << symbol)), GET_COUNTS(tree, GET_CHILD_OFFSET(tree->as,GET_PARENT_OFFSET(tree->as,tree->node_ids[ii]),(1 << symbol))),tree->as->size);
                                 }
-                                if (context_id * tree->as->size + 2 > context_id_max)
+                                if (context_id * tree->as->size + 2 > context_id_max) {
                                         tree->scores[tree->node_ids[ii]] = get_ln_score(tree, tree->node_ids[ii]);
+                                }
                                 ii++;
                         }
                         while (tree->node_ids[ii]);
@@ -223,8 +225,9 @@ double pt_ln_marginal_likelihood(
                         ii = 0;
                         kk = 0;
                         do {
-                                for (jj = 0; jj < container_max; jj++)
+                                for (jj = 0; jj < container_max; jj++) {
                                         tree->new_node_ids[kk++] = GET_CHILD_OFFSET(tree->as, tree->node_ids[ii],tree->as->containers[0][jj]);
+                                }
                                 ii++;
                         }
                         while (tree->node_ids[ii] != 0);
@@ -239,8 +242,9 @@ double pt_ln_marginal_likelihood(
                         ii = 0;
                         kk = 0;
                         do {
-                                for (jj = 0; jj < container_max; jj++)
+                                for (jj = 0; jj < container_max; jj++) {
                                         tree->new_node_ids[kk++] = GET_CHILD_OFFSET(tree->as, GET_PARENT_OFFSET(tree->as,tree->node_ids[ii]), tree->as->containers[(context_id - 1) % 4][jj]);
+                                }
                                 ii += container_max;
                         }
                         while (tree->node_ids[ii] != 0);

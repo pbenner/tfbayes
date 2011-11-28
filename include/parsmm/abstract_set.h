@@ -59,46 +59,36 @@ typedef subset_t *partition_t;
  */
 typedef struct
 {
-  symbol_t    size;
-  subset_t    nb_subsets;
-  int         nb_partitions;
-  partition_t *partitions;
-  subset_t	  **containers;
+        symbol_t      size;
+        subset_t      nb_subsets;
+        int           nb_partitions;
+        partition_t  *partitions;
+        subset_t    **containers;
 } abstract_set_t;
 
 /*
  * ! \brief Creation utility function 
  */
-abstract_set_t *as_create (int alphabet_size);
+abstract_set_t *as_create (symbol_t alphabet_size);
 
 /*
  * ! \brief Init utility function 
  */
-int         as_init (abstract_set_t * as, int alphabet_size);
-
+int         as_init (abstract_set_t * as, symbol_t alphabet_size);
 void        as_free (abstract_set_t * as);
-
 int         as_subset_contains (subset_t subset, symbol_t symbol);
-
 int         as_subset_size (subset_t subset);
-
 subset_t    as_complement (const abstract_set_t * as, subset_t subset);
-
 subset_t    as_append_symbol (subset_t subset, symbol_t symbol);
-
-subset_t *	as_get_containers( const abstract_set_t * as, symbol_t symbol);
-
-int 		as_get_largest_item(symbol_t alphabet_size, subset_t subset);
+subset_t *  as_get_containers( const abstract_set_t * as, symbol_t symbol);
+int 	    as_get_largest_item(symbol_t alphabet_size, subset_t subset);
 
 /*
  * ! \brief Return the number of components in a partition 
  */
 int         as_partition_size (const partition_t partition);
-
 void        as_append_subset (const abstract_set_t * as,
 			      partition_t partition, subset_t subset);
-
-int         _as_generate_partitions ();
 
 __END_DECLS
 

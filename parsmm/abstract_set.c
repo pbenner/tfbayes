@@ -23,16 +23,93 @@
 #include <parsmm/abstract_set.h>
 #include <tfbayes/exception.h>
 
+static int
+as_generate_partitions(abstract_set_t *as)
+{
+	partition_t * previous = NULL;
+	partition_t * current  = NULL;
+	int alphabet_size = 1;
+	int next_size = 0;
+	int ii;
+	int jj = 0;
+	int kk;
+/*  	subset_t subset;*/
+        print_debug("*** Starting partitions generation ***\n");
+
+	/* Init (alphabet_size = 1) */
+	current = malloc(2 * sizeof(partition_t));
+	current[0] = malloc(2 * sizeof(subset_t));
+	current[0][0] = 1;
+	current[0][1] = 0;
+	current[1] = NULL;
+	next_size = 2;
+
+	/* Iterations */
+	
+	for (alphabet_size = 2; alphabet_size < as->size + 1; alphabet_size++)
+	{
+		print_debug("In generate_partitions: Alphabet size: %d\n", alphabet_size);
+		/* Rotate the arrays */
+		
+		previous = current;
+		current = malloc((next_size + 1) * sizeof(partition_t));
+		
+		/* Reset utility variables */
+		ii = 0; /* used to iterate over the previous partitions */
+		jj = 0; /* used to index current partitions */
+		next_size = 0; 
+		/* Iterate on the previous partitions */
+		while (previous[ii])
+		{
+			kk = 0; /* used to iterate over the subsets in the previous partition */
+			
+			/* Add the new letter as a singleton */
+			current[jj] = malloc((alphabet_size + 1) * sizeof(subset_t));
+			memcpy(current[jj], previous[ii], alphabet_size * sizeof(subset_t));
+			as_append_subset(as, current[jj], POW2(alphabet_size - 1));
+			next_size += 1 + as_partition_size(current[jj]);
+			jj += 1;
+			/* Create one partition by adding the new element to each subset */
+			while (previous[ii][kk])
+			{
+				current[jj] = malloc((alphabet_size + 1) * sizeof(subset_t));
+				memcpy(current[jj], previous[ii], alphabet_size * sizeof(subset_t));
+				current[jj][kk] = as_append_symbol(current[jj][kk], alphabet_size - 1);
+				next_size += 1 + as_partition_size(current[jj]);
+				jj += 1;
+				kk += 1;
+			}
+			ii += 1;
+		}
+		current[jj] = NULL;
+		ii = 0;
+		while (previous[ii])
+		{
+			free(previous[ii]);
+			ii += 1;
+		}
+		free(previous);	 
+	}
+	as->partitions = current;	
+	as->nb_partitions = jj;
+
+        print_debug("*** Partitions generation done ***\n");
+
+	return as->nb_partitions;
+}
+
 abstract_set_t * 
-as_create(int alphabet_size)
+as_create(symbol_t alphabet_size)
 {
 	abstract_set_t *as;
 	if ((as = (abstract_set_t*)malloc(sizeof(abstract_set_t))))
 	{
-		if (as_init(as, alphabet_size))
+		if (as_init(as, alphabet_size)) {
 			return as;
-		else
+                }
+		else {
 			return NULL;
+                }
 	}
 	else {
 		return NULL;
@@ -42,11 +119,12 @@ as_create(int alphabet_size)
 int
 as_init(
         abstract_set_t *as, 
-        int alphabet_size)
+        symbol_t alphabet_size)
 {
 	symbol_t ii;
 	subset_t jj;
 	subset_t umask;
+
 	as->size = alphabet_size;
 	as->nb_subsets = POW2(alphabet_size) -1;
 	as->containers = (subset_t **) malloc(sizeof(subset_t *)*alphabet_size);
@@ -59,7 +137,7 @@ as_init(
 			as->containers[ii][jj] = ((jj & umask) << 1) | (jj & ~umask) | (1 << ii);
 		}
 	}
-	if (_as_generate_partitions(as))
+	if (as_generate_partitions(as))
 		return 1;
 	else
 		return 0;
@@ -138,81 +216,6 @@ as_append_subset(
 	partition[last+1] = 0;
 }
 
-int 
-_as_generate_partitions(abstract_set_t *as)
-{
-	partition_t * previous = NULL;
-	partition_t * current  = NULL;
-	int alphabet_size = 1;
-	int next_size = 0;
-	int ii;
-	int jj = 0;
-	int kk;
-/*  	subset_t subset;*/
-        print_debug("*** Starting partitions generation ***\n");
-
-	/* Init (alphabet_size = 1) */
-	current = malloc(2 * sizeof(partition_t));
-	current[0] = malloc(2 * sizeof(subset_t));
-	current[0][0] = 1;
-	current[0][1] = 0;
-	current[1] = NULL;
-	next_size = 2;
-
-	/* Iterations */
-	
-	for (alphabet_size = 2; alphabet_size < as->size + 1; alphabet_size++)
-	{
-		print_debug("In generate_partitions: Alphabet size: %d\n", alphabet_size);
-		/* Rotate the arrays */
-		
-		previous = current;
-		current = malloc((next_size + 1) * sizeof(partition_t));
-		
-		/* Reset utility variables */
-		ii = 0; /* used to iterate over the previous partitions */
-		jj = 0; /* used to index current partitions */
-		next_size = 0; 
-		/* Iterate on the previous partitions */
-		while (previous[ii])
-		{
-			kk = 0; /* used to iterate over the subsets in the previous partition */
-			
-			/* Add the new letter as a singleton */
-			current[jj] = malloc((alphabet_size + 1) * sizeof(subset_t));
-			memcpy(current[jj], previous[ii], alphabet_size * sizeof(subset_t));
-			as_append_subset(as, current[jj], POW2(alphabet_size - 1));
-			next_size += 1 + as_partition_size(current[jj]);
-			jj += 1;
-			/* Create one partition by adding the new element to each subset */
-			while (previous[ii][kk])
-			{
-				current[jj] = malloc((alphabet_size + 1) * sizeof(subset_t));
-				memcpy(current[jj], previous[ii], alphabet_size * sizeof(subset_t));
-				current[jj][kk] = as_append_symbol(current[jj][kk], alphabet_size - 1);
-				next_size += 1 + as_partition_size(current[jj]);
-				jj += 1;
-				kk += 1;
-			}
-			ii += 1;
-		}
-		current[jj] = NULL;
-		ii = 0;
-		while (previous[ii])
-		{
-			free(previous[ii]);
-			ii += 1;
-		}
-		free(previous);	 
-	}
-	as->partitions = current;	
-	as->nb_partitions = jj;
-
-        print_debug("*** Partitions generation done ***\n");
-
-	return as->nb_partitions;
-}
-
 #ifdef DEBUG
 int partition_check(
         const abstract_set_t *as, 
@@ -247,7 +250,7 @@ int as_get_largest_item(symbol_t alphabet_size, subset_t subset)
 	/* WARNING: Returns 0 also for an empty subset */
 	int ii = alphabet_size - 1; 
 	do {
-		if ((1 << ii) & subset == 1 << ii) {
+		if (((1 << ii) & subset) == (1 << ii)) {
 			break;
                 }
 	}

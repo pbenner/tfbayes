@@ -44,34 +44,35 @@ __BEGIN_DECLS
 #define GET_DIR_PARAMS(tree, node) ((tree)->dirichlet_params + (tree)->as->size * (node))
 
 
-typedef struct static_pars_tree static_pars_tree_t ;
+typedef struct static_pars_tree static_pars_tree_t;
 
-typedef unsigned long count_t ;
+typedef unsigned long count_t;
+typedef unsigned short depth_t;
 
 /*! Index of a node */
-typedef unsigned long node_t ;
+typedef unsigned long node_t;
 
 /*! Index of a context word (written in reverse) */
-typedef unsigned long word_t ;
+typedef unsigned long word_t;
 
 typedef enum {MV_UP, MV_DOWN, MV_SIBLING } move_t;
 
 typedef enum {PRIOR_BD, PRIOR_CONSTANT} prior_family_t;
 
 struct static_pars_tree {
-	short depth ;
-	const abstract_set_t * as ;
-	node_t size ;
-	count_t * counts ;
-	double * scores ;
-	double * dirichlet_params ;
+	depth_t depth;
+	const abstract_set_t * as;
+	node_t size;
+	count_t * counts;
+	double * scores;
+	double * dirichlet_params;
         /* The array of pointers over nodes in the pars_tree */
         node_t * node_ids;
         node_t * new_node_ids;
 };
 
 static_pars_tree_t * pt_create(const abstract_set_t * as,
-                               short depth);
+                               depth_t depth);
 
 void pt_free(static_pars_tree_t* tree);
 
