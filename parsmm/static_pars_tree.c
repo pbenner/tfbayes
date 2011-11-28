@@ -161,11 +161,7 @@ double pt_ln_marginal_likelihood(
 {
         /* The running index over the contexts */
         word_t context_id = 0;
-
         symbol_t symbol = 0; /* TOCHECK Maintain this upon iteration */
-
-        node_t * pivot;
-
         unsigned long ii, jj, kk;
 
         /* The number of nodes in the counts array */
