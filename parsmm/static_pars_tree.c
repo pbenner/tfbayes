@@ -85,12 +85,12 @@ static
 double dirichlet_eval(
         const count_t * obs,
         const double * dirichlet_params,
-        short alphabet_size)
+        symbol_t alphabet_size)
 {
         double sum_params = 0.0;
         double sum_counts = 0.0;
         double result = 0.0;
-        int ii;
+        symbol_t ii;
 
         print_debug("[dirichlet_eval]\n");
 
@@ -145,6 +145,16 @@ double get_ln_score(
         return result;
 }
 
+static inline
+void swap(node_t **a, node_t **b)
+{
+        node_t *pivot;
+
+        pivot = *a;
+        *a    = *b;
+        *b    = pivot;
+}
+
 double pt_ln_marginal_likelihood(
         static_pars_tree_t* tree,
         const count_t * obs)
@@ -154,7 +164,7 @@ double pt_ln_marginal_likelihood(
 
         symbol_t symbol = 0; /* TOCHECK Maintain this upon iteration */
 
-        void * pivot;
+        node_t * pivot;
 
         unsigned long ii, jj, kk;
 
@@ -171,15 +181,15 @@ double pt_ln_marginal_likelihood(
         context_id_max = pow(tree->as->size, tree->depth);
         container_max = (tree->as->nb_subsets + 1)/ 2;
         /* First blank the counts and scores array */
-        memset(tree->counts, 0, sizeof(count_t) * tree->size * tree->as->size);
-        memset(tree->scores, 0, sizeof(double) * tree->size);
-        memset(tree->node_ids, (node_t) 0, sizeof(node_t) * (1 << ((tree->as->size)*tree->depth)));
+        memset(tree->counts,   0, sizeof(count_t) * tree->size * tree->as->size);
+        memset(tree->scores,   0, sizeof(double)  * tree->size);
+        memset(tree->node_ids, 0, sizeof(node_t)  * (1 << ((tree->as->size)*tree->depth)));
         tree->node_ids[0] = 0;
         last_move = MV_DOWN; /* Not to perturb the first iteration */
 
         /* ITERATIONS */
         do {
-                memset(tree->new_node_ids, (unsigned int) 0, sizeof(node_t) * (1 << ((tree->as->size)*tree->depth)));
+                memset(tree->new_node_ids, 0, sizeof(node_t) * (1 << ((tree->as->size)*tree->depth)));
 
                 if (last_move != MV_UP)
                 {
@@ -187,13 +197,13 @@ double pt_ln_marginal_likelihood(
                         ii = 0;
                         do {
                                 if (as_subset_size(GET_SUBSET(tree->as, tree->node_ids[ii])) <= 1) {
-                                        memcpy(GET_COUNTS(tree, tree->node_ids[ii]), obs + context_id * tree->as->size, tree->as->size * sizeof(count_t));
+                                        memcpy(GET_COUNTS(tree, tree->node_ids[ii]), obs + context_id*tree->as->size, tree->as->size*sizeof(count_t));
                                         print_debug("Copying counts - src: %lu\tdst: %lu\n", context_id, tree->node_ids[ii]);
                                 }
                                 else if (GET_SUBSET(tree->as, tree->node_ids[ii]) < (1 << (symbol + 1)))
                                 {
                                         print_debug("Summing counts - current: %lu\n", tree->node_ids[ii]);
-                                        sum_counts(GET_COUNTS(tree, tree->node_ids[ii]),GET_COUNTS(tree, tree->node_ids[ii] - (1 << symbol)), GET_COUNTS(tree, GET_CHILD_OFFSET(tree->as,GET_PARENT_OFFSET(tree->as,tree->node_ids[ii]),(1 << symbol))),tree->as->size);
+                                        sum_counts(GET_COUNTS(tree, tree->node_ids[ii]), GET_COUNTS(tree, tree->node_ids[ii] - (1 << symbol)), GET_COUNTS(tree, GET_CHILD_OFFSET(tree->as,GET_PARENT_OFFSET(tree->as,tree->node_ids[ii]),(1 << symbol))),tree->as->size);
                                 }
                                 if (context_id * tree->as->size + 2 > context_id_max) {
                                         tree->scores[tree->node_ids[ii]] = get_ln_score(tree, tree->node_ids[ii]);
@@ -201,8 +211,6 @@ double pt_ln_marginal_likelihood(
                                 ii++;
                         }
                         while (tree->node_ids[ii]);
-
-                                
                 }
                 else {
                         ii = 0;
@@ -232,7 +240,6 @@ double pt_ln_marginal_likelihood(
                         }
                         while (tree->node_ids[ii] != 0);
                 }
-
                 else if (context_id % tree->as->size != 0)
                 {
                         /* GO TO NEXT SIBLING */
@@ -249,7 +256,6 @@ double pt_ln_marginal_likelihood(
                         }
                         while (tree->node_ids[ii] != 0);
                 }
-
                 else
                 {
                         /* GO UP */
@@ -264,13 +270,11 @@ double pt_ln_marginal_likelihood(
                         }
                         while (tree->node_ids[ii] != 0);
                 }
-                pivot = tree->node_ids;
-                tree->node_ids = tree->new_node_ids;
-                tree->new_node_ids = pivot;
+                swap(&tree->node_ids, &tree->new_node_ids);
         }
         while (context_id != 0);
 
-        tree->scores[0] = get_ln_score(tree,0);
+        tree->scores[0] = get_ln_score(tree, 0);
 
         return tree->scores[0];
 }
