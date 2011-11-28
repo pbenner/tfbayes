@@ -55,8 +55,8 @@ public:
         virtual size_t add(const range_t& range) = 0;
         virtual size_t remove(const range_t& range) = 0;
         virtual size_t count(const range_t& range) = 0;
-        virtual double predictive(const range_t& range);
-        virtual double log_predictive(const range_t& range);
+        virtual double predictive(const range_t& range) = 0;
+        virtual double log_predictive(const range_t& range) = 0;
         virtual double log_likelihood() const = 0;
 
         virtual ComponentModel* clone() const = 0;
