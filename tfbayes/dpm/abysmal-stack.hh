@@ -54,7 +54,7 @@ public:
                 return _content[(_bottom+pos)%_depth];
         }
 
-        bool clogged() {
+        bool clogged() const {
                 return _clogged > 0;
         }
 
