@@ -27,7 +27,7 @@
 #include <tfbayes/logarithmetic.h>
 
 static
-void sum_counts(count_t* dest, count_t* src1, count_t* src2, size_t size) 
+void sum_counts(count_t* dest, const count_t* src1, const count_t* src2, size_t size) 
 {
         size_t ii;
 
@@ -174,7 +174,7 @@ double pt_ln_marginal_likelihood(
         move_t last_move;
 
         /* INITIALIZATION */
-        context_id_max = pow(tree->as->size, tree->depth);
+        context_id_max = (pow(tree->as->size, tree->depth + 1) - 1)/(tree->as->size - 1);
         container_max = (tree->as->nb_subsets + 1)/ 2;
         /* First blank the counts and scores array */
         memset(tree->counts,   0, sizeof(count_t) * tree->size * tree->as->size);
@@ -193,7 +193,7 @@ double pt_ln_marginal_likelihood(
                         ii = 0;
                         do {
                                 if (as_subset_size(GET_SUBSET(tree->as, tree->node_ids[ii])) <= 1) {
-                                        memcpy(GET_COUNTS(tree, tree->node_ids[ii]), obs + context_id*tree->as->size, tree->as->size*sizeof(count_t));
+                                        sum_counts(GET_COUNTS(tree, tree->node_ids[ii]), GET_COUNTS(tree, tree->node_ids[ii]), obs + context_id * tree->as->size, tree->as->size);
                                         print_debug("Copying counts - src: %lu\tdst: %lu\n", context_id, tree->node_ids[ii]);
                                 }
                                 else if (GET_SUBSET(tree->as, tree->node_ids[ii]) < (1 << (symbol + 1)))

@@ -58,6 +58,14 @@ public:
                 return _clogged > 0;
         }
 
+        size_t depth() const {
+                return _depth;
+        }
+
+        size_t top() const {
+                return (*this)[_depth-1];
+        }
+
         friend std::ostream& operator<< (std::ostream& o, const AbysmalStack<T>& stack) {
                 for (size_t i = 0; i < stack._depth; i++) {
                         o << stack[i];
@@ -66,7 +74,7 @@ public:
         }
 
 protected:
-        size_t _depth;
+        const size_t _depth;
         size_t _bottom;
         std::vector<T> _content;
         size_t _clogged;
