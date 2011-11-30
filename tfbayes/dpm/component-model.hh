@@ -37,6 +37,7 @@
 #include <clonable.hh>
 #include <data.hh>
 #include <datatypes.hh>
+#include <nucleotide-sequence.hh>
 
 #include <parsmm/abstract_set.h>
 #include <parsmm/static_pars_tree.h>
@@ -123,14 +124,15 @@ private:
         count_t* _counts;
 
         const sequence_data_t<short>&         _data;
-              sequence_data_t<short>          _context;
+              sequence_data_t<context_t>      _context;
         const sequence_data_t<cluster_tag_t>& _cluster_assignments;
 
         const cluster_tag_t _cluster_tag;
         const size_t        _tree_depth;
 
         // internal methods
-        const range_t adjust_range(const range_t& range, seq_index_t& new_index) const;
+        size_t max_from_context(const range_t& range) const;
+        size_t max_to_context(const range_t& range) const;
 };
 
 class BivariateNormal : public ComponentModel {

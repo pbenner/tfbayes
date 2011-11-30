@@ -75,6 +75,7 @@ public:
         const ClusterManager& clustermanager() const;
         const Graph& graph() const;
         void test();
+        void test_background();
 
         // constants
         ////////////////////////////////////////////////////////////////////////

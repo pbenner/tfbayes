@@ -25,6 +25,8 @@
 #include <vector>
 #include <string>
 
+#include <math.h>
+
 #include <abysmal-stack.hh>
 #include <code.hh>
 
@@ -46,13 +48,57 @@ private:
         const std::string _sequence;
 };
 
-class nucleotide_context_t : public std::vector<short>
+class context_t : public std::vector<short>
 {
 public:
-        nucleotide_context_t(const nucleotide_sequence_t& sequence,
-                             size_t depth, size_t alphabet_size) {
-                AbysmalStack<short> stack(depth+1);
-                size_t position;
+        context_t(size_t alphabet_size, const AbysmalStack<short>& stack) {
+                for (size_t context = 0; context < stack.depth(); context++) {
+                        if (!stack.clogged(context)) {
+                                // compute counts position
+                                const size_t offset   = counts_offset(alphabet_size, context);
+                                const size_t position = counts_position(alphabet_size, context, stack);
+                                push_back(offset+position);
+                        }
+                        else {
+                                // no context available
+                                push_back(-1);
+                        }
+                }
+        }
+
+        static size_t counts_size(size_t alphabet_size, size_t max_context) {
+                return counts_offset(alphabet_size, max_context+1);
+        }
+
+protected:
+        static size_t counts_offset(size_t alphabet_size, size_t context) {
+                size_t offset = 0;
+
+                for (size_t i = 0; i < context+1; i++) {
+                        offset += pow(alphabet_size, i);
+                }
+
+                return offset - 1;
+        }
+
+        static size_t counts_position(size_t alphabet_size, size_t context, const AbysmalStack<short>& stack) {
+                size_t position = 0;
+
+                for (size_t i = 0; i < context; i++) {
+                        position += stack[i+stack.depth()-1-context]*pow(alphabet_size, i+1);
+                }
+
+                return position + stack.top();
+        }
+};
+
+
+class seq_context_t : public std::vector<context_t>
+{
+public:
+        seq_context_t(const nucleotide_sequence_t& sequence,
+                      size_t context, size_t alphabet_size) {
+                AbysmalStack<short> stack(context+1);
 
                 for (size_t i = 0; i < sequence.size(); i++) {
                         if (sequence[i] == (short)alphabet_size) {
@@ -61,18 +107,7 @@ public:
                         else {
                                 stack.push(sequence[i]);
                         }
-                        if (!stack.clogged()) {
-                                // compute counts position
-                                position = pow(alphabet_size, depth+1) - 1;
-                                for (size_t i = 0; i < depth+1; i++) {
-                                        position -= stack[i]*pow(alphabet_size, i);
-                                }
-                                push_back(position);
-                        }
-                        else {
-                                // no context available
-                                push_back(-1);
-                        }
+                        push_back(context_t(alphabet_size, stack));
                 }
         }
 };

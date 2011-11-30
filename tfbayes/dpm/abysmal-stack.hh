@@ -46,7 +46,7 @@ public:
                 _clogged = _depth;
         }
 
-        const T& operator[](size_t pos) const {
+        const T& operator[](ssize_t pos) const {
                 return _content[(_bottom+pos)%_depth];
         }
 
@@ -56,6 +56,10 @@ public:
 
         bool clogged() const {
                 return _clogged > 0;
+        }
+
+        bool clogged(size_t context) const {
+                return _clogged >= _depth-context;
         }
 
         size_t depth() const {

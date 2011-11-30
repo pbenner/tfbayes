@@ -43,6 +43,8 @@ typedef struct _options_t {
         double alpha;
         double discount;
         double lambda;
+        const char* process_prior;
+        const char* background_model;
         size_t population_size;
         string save;
         _options_t()
@@ -52,6 +54,8 @@ typedef struct _options_t {
                   alpha(0.05),
                   discount(0.0),
                   lambda(0.01),
+                  process_prior("pitman-yor process"),
+                  background_model("parsimonious tree"),
                   population_size(1),
                   save()
                 { }
@@ -60,14 +64,16 @@ typedef struct _options_t {
 ostream&
 operator<<(std::ostream& o, const _options_t& options) {
         o << "Options:"              << endl
-          << "-> samples         = " << options.samples         << endl
-          << "-> burnin          = " << options.burnin          << endl
-          << "-> tfbs_length     = " << options.tfbs_length     << endl
-          << "-> alpha           = " << options.alpha           << endl
-          << "-> discount        = " << options.discount        << endl
-          << "-> lambda          = " << options.lambda          << endl
-          << "-> population_size = " << options.population_size << endl
-          << "-> save            = " << options.save            << endl;
+          << "-> samples          = " << options.samples         << endl
+          << "-> burnin           = " << options.burnin          << endl
+          << "-> tfbs_length      = " << options.tfbs_length     << endl
+          << "-> alpha            = " << options.alpha           << endl
+          << "-> discount         = " << options.discount        << endl
+          << "-> lambda           = " << options.lambda          << endl
+          << "-> process prior    = " << options.process_prior    << endl
+          << "-> background model = " << options.background_model << endl
+          << "-> population_size  = " << options.population_size << endl
+          << "-> save             = " << options.save            << endl;
         return o;
 }
 
@@ -235,10 +241,12 @@ void run_dpm(const char* file_name)
 
         // tfbs options
         tfbs_options_t tfbs_options;
-        tfbs_options.alpha         = options.alpha;
-        tfbs_options.lambda        = options.lambda;
-        tfbs_options.discount      = options.discount;
-        tfbs_options.tfbs_length   = options.tfbs_length;
+        tfbs_options.alpha            = options.alpha;
+        tfbs_options.lambda           = options.lambda;
+        tfbs_options.discount         = options.discount;
+        tfbs_options.tfbs_length      = options.tfbs_length;
+        tfbs_options.process_prior    = options.process_prior;
+        tfbs_options.background_model = options.background_model;
         tfbs_options.baseline_weights = baseline_weights;
         tfbs_options.baseline_priors  = baseline_priors;
 

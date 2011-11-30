@@ -31,8 +31,6 @@
 #include <gsl/gsl_sf_gamma.h>
 
 #include <component-model.hh>
-#include <datatypes.hh>
-#include <nucleotide-sequence.hh>
 
 using namespace std;
 
@@ -163,7 +161,7 @@ ParsimoniousTree::ParsimoniousTree(
 {
         _as = as_create(alphabet_size);
         _pt = pt_create(_as, tree_depth);
-        _counts_length = pow(alphabet_size, tree_depth+1);
+        _counts_length = context_t::counts_size(alphabet_size, tree_depth);
         _counts = (count_t*)malloc(_counts_length*sizeof(count_t));
 
         /* init data structures */
@@ -173,7 +171,7 @@ ParsimoniousTree::ParsimoniousTree(
         /* compute context */
         for (size_t i = 0; i < _data.size(); i++) {
                 const nucleotide_sequence_t& seq = (const nucleotide_sequence_t&)_data[i];
-                _context.push_back(nucleotide_context_t(seq, tree_depth, 4));
+                _context.push_back(seq_context_t(seq, tree_depth, alphabet_size));
         }
 }
 
@@ -205,53 +203,74 @@ ParsimoniousTree::clone() const {
         return new ParsimoniousTree(*this);
 }
 
-const range_t
-ParsimoniousTree::adjust_range(const range_t& range, seq_index_t& new_index) const {
-        const  size_t sequence = range.index[0];
-        const  size_t position = range.index[1];
-        const  size_t length   = range.length;
-        const ssize_t sequence_length = _data.size(sequence);
+size_t
+ParsimoniousTree::max_from_context(const range_t& range) const
+{
+        const size_t sequence = range.index[0];
+        const size_t position = range.index[1];
         ssize_t from = position;
-        ssize_t to   = position+length-1;
 
         for (size_t i = 0; i < _tree_depth && from > 0 && _cluster_assignments[seq_index_t(sequence, from-1)] == _cluster_tag; i++) {
                 from--;
         }
+
+        return position-from;
+}
+
+size_t
+ParsimoniousTree::max_to_context(const range_t& range) const
+{
+        const size_t sequence = range.index[0];
+        const size_t position = range.index[1];
+        const size_t length   = range.length;
+        const ssize_t sequence_length = _data.size(sequence);
+        ssize_t to = position+length-1;
+
         for (size_t i = 0; i < _tree_depth && to < sequence_length-1 && _cluster_assignments[seq_index_t(sequence, to + 1)] == _cluster_tag; i++) {
                 to++;
         }
-        from = min(from+(ssize_t)_tree_depth, to);
 
-        new_index[0] = sequence;
-        new_index[1] = from;
-
-        return range_t(new_index, max(to-from+1, (ssize_t)0));
+        return to-position-length+1;
 }
 
 size_t
 ParsimoniousTree::add(const range_t& range) {
-        seq_index_t new_index;
+        const size_t sequence     = range.index[0];
+        const size_t length       = range.length;
+        const size_t from_context = max_from_context(range);
+        const size_t   to_context = max_to_context(range);
 
-        iterator_t<short> iterator = _context[adjust_range(range, new_index)];
-        do {
-                if (*iterator != -1) {
-                        _counts[*iterator]++;
+        for (size_t i = 0; i < length+to_context; i++) {
+                const size_t pos   = range.index[1]+i;
+                const size_t c_max = min(from_context+i, _tree_depth);
+                const size_t c_min = i < length ? 0 : i-(length-1);
+                for (size_t c = c_min; c <= c_max; c++) {
+                        if (_context[sequence][pos][c] != -1) {
+                                _counts[_context[sequence][pos][c]]++;
+                        }
                 }
-        } while(iterator++);
+        }
 
         return range.length;
 }
 
 size_t
 ParsimoniousTree::remove(const range_t& range) {
-        seq_index_t new_index;
+        const size_t sequence     = range.index[0];
+        const size_t length       = range.length;
+        const size_t from_context = max_from_context(range);
+        const size_t   to_context = max_to_context(range);
 
-        iterator_t<short> iterator = _context[adjust_range(range, new_index)];
-        do {
-                if (*iterator != -1) {
-                        _counts[*iterator]++;
+        for (size_t i = 0; i < length+to_context; i++) {
+                const size_t pos   = range.index[1]+i;
+                const size_t c_max = min(from_context+i, _tree_depth);
+                const size_t c_min = i < length ? 0 : i-(length-1);
+                for (size_t c = c_min; c <= c_max; c++) {
+                        if (_context[sequence][pos][c] != -1) {
+                                _counts[_context[sequence][pos][c]]--;
+                        }
                 }
-        } while(iterator++);
+        }
 
         return range.length;
 }

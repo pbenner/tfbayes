@@ -64,65 +64,6 @@ void print_counts(count_t* counts, size_t length)
         cout << endl;
 }
 
-// Context
-////////////////////////////////////////////////////////////////////////////////
-
-static
-size_t counts_offset(size_t depth)
-{
-        size_t base = 0;
-
-        for (size_t i = 0; i < depth+1; i++) {
-                base += pow(ALPHABET_SIZE, i);
-        }
-
-        return base - 1;
-}
-
-static
-size_t counts_position(const AbysmalStack<count_t>& stack)
-{
-        size_t position = 0;
-
-        for (size_t i = 0; i < stack.depth()-1; i++) {
-                position += stack[i]*pow(ALPHABET_SIZE, i+1);
-        }
-
-        return position + stack.top();
-}
-
-class sub_context_t : public std::vector<ssize_t>
-{
-public:
-        sub_context_t(const nucleotide_sequence_t& sequence, size_t depth, size_t alphabet_size) {
-                AbysmalStack<count_t> stack(depth+1);
-                size_t offset = counts_offset(depth);
-                size_t position;
-
-                for (size_t i = 0; i < sequence.size(); i++) {
-                        stack.push(sequence[i]);
-                        if (i >= depth) {
-                                position = offset + counts_position(stack);
-                                cout << stack << " -> " << position << endl;
-                                push_back(position);
-                        }
-                        else {
-                                push_back(-1);
-                        }
-                }
-        }
-};
-
-class context_t : public std::vector<sub_context_t>
-{
-public:
-        context_t(const nucleotide_sequence_t& sequence, size_t max_depth, size_t alphabet_size) {
-                for (size_t depth = 0; depth <= max_depth; depth++) {
-                        push_back(sub_context_t(sequence, depth, alphabet_size));
-                }
-        }
-};
-
 // Counts
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -130,13 +71,13 @@ static
 void add_subsequence(
         count_t* counts,
         size_t from, size_t to,
-        const context_t& context,
+        const seq_context_t& context,
         const nucleotide_sequence_t& sequence)
 {
-        for(size_t c = 0; c < context.size(); c++) {
-                for(size_t i = from; i < min(sequence.size(), to+PARSMM_DEPTH+1); i++) {
-                        if (context[c][i] != -1) {
-                                counts[context[c][i]] += 1;
+        for(size_t i = from; i < min(sequence.size(), to+PARSMM_DEPTH+1); i++) {
+                for(size_t c = 0; c < PARSMM_DEPTH+1; c++) {
+                        if (context[i][c] != -1) {
+                                counts[context[i][c]] += 1;
 //                                cout << "Adding: " << i << ":" << context[i] << endl;
                         }
                 }
@@ -147,13 +88,13 @@ static
 void remove_subsequence(
         count_t* counts,
         size_t from, size_t to,
-        const context_t& context,
+        const seq_context_t& context,
         const nucleotide_sequence_t& sequence)
 {
-        for(size_t c = 0; c < context.size(); c++) {
-                for(size_t i = from; i < min(sequence.size(), to+PARSMM_DEPTH+1); i++) {
-                        if (context[c][i] != -1) {
-                                counts[context[c][i]] -= 1;
+        for(size_t i = from; i < min(sequence.size(), to+PARSMM_DEPTH+1); i++) {
+                for(size_t c = 0; c < PARSMM_DEPTH+1; c++) {
+                        if (context[i][c] != -1) {
+                                counts[context[i][c]] -= 1;
 //                                cout << "Removing: " << i << ":" << context[i] << endl;
                         }
                 }
@@ -175,7 +116,7 @@ double predictive(
         count_t* counts,
         size_t from, size_t to,
         static_pars_tree_t* pt,
-        const context_t& context,
+        const seq_context_t& context,
         const nucleotide_sequence_t& sequence)
 {
         double ml1 = pt_ln_marginal_likelihood(pt, counts);
@@ -194,7 +135,7 @@ static
 void parsmm_test() {
         abstract_set_t* as = as_create(ALPHABET_SIZE);
         static_pars_tree_t* pt = pt_create(as, PARSMM_DEPTH);
-        size_t counts_length = counts_offset(PARSMM_DEPTH+1);;
+        size_t counts_length = context_t::counts_size(ALPHABET_SIZE, PARSMM_DEPTH);;
         count_t* counts = (count_t*)malloc(counts_length*sizeof(count_t));
 
         /* init data structures */
@@ -203,8 +144,7 @@ void parsmm_test() {
 
         /* test nucleotide sequence */
         const nucleotide_sequence_t sequence("GGGGGACGTCGATGCGTGATCGACTACGGCT");
-//        const nucleotide_sequence_t sequence("AAAAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-        const context_t context(sequence, PARSMM_DEPTH, ALPHABET_SIZE);
+        const seq_context_t context(sequence, PARSMM_DEPTH, ALPHABET_SIZE);
         cout << "Coded sequence:" << endl << sequence << endl << endl;
         cout << "Tree depth: "    << PARSMM_DEPTH << endl << endl;
 
@@ -218,7 +158,6 @@ void parsmm_test() {
          */
         add_subsequence(counts, 0, sequence.size(), context, sequence);
         print_counts(counts, counts_length);
-
 
         cout << "\nPredictive probability for subsequence GTGATCG at (15:21).\n"
              << "                        GGGGGACGTCGATGCGTGATCGACTACGGCT\n"
@@ -234,10 +173,11 @@ void parsmm_test() {
         as_free(as);
 }
 
-void sanity_check() {
+static void sanity_check() __attribute__((unused));
+static void sanity_check() {
         abstract_set_t* as = as_create(ALPHABET_SIZE);
         static_pars_tree_t* pt = pt_create(as, PARSMM_DEPTH);
-        size_t counts_length = counts_offset(PARSMM_DEPTH+1);
+        size_t counts_length = context_t::counts_size(ALPHABET_SIZE, PARSMM_DEPTH);
         count_t* counts1 = (count_t*)malloc(counts_length*sizeof(count_t));
         count_t* counts2 = (count_t*)malloc(counts_length*sizeof(count_t));
 
@@ -249,7 +189,7 @@ void sanity_check() {
         const nucleotide_sequence_t sequence2("AGGGGACGTCGATGCGTGATCGACTACGGC");
 
         // use counts2 as reference
-        const context_t context2(sequence2, PARSMM_DEPTH, ALPHABET_SIZE);
+        const seq_context_t context2(sequence2, PARSMM_DEPTH, ALPHABET_SIZE);
         add_subsequence(counts2, 0, sequence2.size(), context2, sequence2);
         print_counts(counts2, counts_length);
         double ml_ref = pt_ln_marginal_likelihood(pt, counts2);
@@ -264,7 +204,7 @@ void sanity_check() {
                 for (short j = 0; j < (short)ALPHABET_SIZE; j++) {
                         n_str[n_str.length()-1] = n[j];
                         const nucleotide_sequence_t sequence1(n_str);
-                        const context_t context1(sequence1, PARSMM_DEPTH, ALPHABET_SIZE);
+                        const seq_context_t context1(sequence1, PARSMM_DEPTH, ALPHABET_SIZE);
                         add_subsequence(counts1, 0, sequence1.size(), context1, sequence1);
 
                         ml = pt_ln_marginal_likelihood(pt, counts1);
@@ -291,8 +231,8 @@ void sanity_check() {
 
 int main()
 {
-        parsmm_test();
-        //sanity_check();
+        //parsmm_test();
+        sanity_check();
 
         return 0;
 }

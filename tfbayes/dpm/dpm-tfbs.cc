@@ -120,9 +120,69 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
 
         ////////////////////////////////////////////////////////////////////////////////
         //test();
+        //test_background();
 }
 
 DpmTfbs::~DpmTfbs() {
+}
+
+void
+DpmTfbs::test_background() {
+        seq_index_t index1(0,0);
+        seq_index_t index2(0,10);
+        seq_index_t index3(0,11);
+        seq_index_t index4(0,12);
+        seq_index_t index5(0,13);
+        seq_index_t index6(0,22);
+
+        Cluster& cluster1 = _clustermanager.get_free_cluster(_model_tags[0]);
+        cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
+        cout << "Adding index1:" << index1 << " to cluster:" << cluster_tag1 << endl;
+        remove(index1, bg_cluster_tag);
+        add(index1, cluster_tag1);
+        cout << "Adding index6:" << index6<< " to cluster:" << cluster_tag1 << endl;
+        remove(index6, bg_cluster_tag);
+        add(index6, cluster_tag1);
+        cout << endl;
+
+        cout << _cluster_assignments << endl;
+
+        Cluster& cluster2 = _clustermanager.get_free_cluster(_model_tags[0]);
+        cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
+
+        cout << "Adding index2:" << index2 << " to cluster:" << cluster_tag2 << endl;
+        remove(index2, bg_cluster_tag);
+        add(index2, cluster_tag2);
+        cout << _cluster_assignments;
+        remove(index2, cluster_tag2);
+        add(index2, bg_cluster_tag);
+        cout << "Removing index2:" << index2 << " from cluster:" << cluster_tag2 << endl << endl;
+
+        cout << "Adding index3:" << index3 << " to cluster:" << cluster_tag2 << endl;
+        remove(index3, bg_cluster_tag);
+        add(index3, cluster_tag2);
+        cout << _cluster_assignments;
+        remove(index3, cluster_tag2);
+        add(index3, bg_cluster_tag);
+        cout << "Removing index3:" << index2 << " from cluster:" << cluster_tag2 << endl << endl;
+
+        cout << "Adding index4:" << index4 << " to cluster:" << cluster_tag2 << endl;
+        remove(index4, bg_cluster_tag);
+        add(index4, cluster_tag2);
+        cout << _cluster_assignments;
+        remove(index4, cluster_tag2);
+        add(index4, bg_cluster_tag);
+        cout << "Removing index4:" << index2 << " from cluster:" << cluster_tag2 << endl << endl;
+
+        cout << "Adding index5:" << index4 << " to cluster:" << cluster_tag2 << endl;
+        remove(index5, bg_cluster_tag);
+        add(index5, cluster_tag2);
+        cout << _cluster_assignments;
+        remove(index5, cluster_tag2);
+        add(index5, bg_cluster_tag);
+        cout << "Removing index5:" << index2 << " from cluster:" << cluster_tag2 << endl;
+
+        exit(EXIT_SUCCESS);
 }
 
 void
