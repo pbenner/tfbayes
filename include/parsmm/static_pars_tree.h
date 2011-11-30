@@ -33,17 +33,6 @@
 
 __BEGIN_DECLS
 
-#define GET_CHILD_OFFSET(as, node, subset) ((node)*(as)->nb_subsets+(subset))
-
-#define GET_PARENT_OFFSET(as, node) (((node) - 1)/(as)->nb_subsets)
-
-#define GET_SUBSET(as, node) ((subset_t)(((node) - 1) % (as)->nb_subsets) + 1)
-
-#define GET_COUNTS(tree, node) ((tree)->counts + (tree)->as->size * (node))
-
-#define GET_DIR_PARAMS(tree, node) ((tree)->dirichlet_params + (tree)->as->size * (node))
-
-
 typedef struct static_pars_tree static_pars_tree_t;
 
 typedef unsigned long count_t;
@@ -55,8 +44,7 @@ typedef unsigned long node_t;
 /*! Index of a context word (written in reverse) */
 typedef unsigned long word_t;
 
-typedef enum {MV_UP, MV_DOWN, MV_SIBLING } move_t;
-
+typedef enum {MV_UP, MV_DOWN, MV_SIBLING} move_t;
 typedef enum {PRIOR_BD, PRIOR_CONSTANT} prior_family_t;
 
 struct static_pars_tree {
@@ -74,6 +62,7 @@ struct static_pars_tree {
 static_pars_tree_t * pt_create(const abstract_set_t * as,
                                depth_t depth);
 
+void pt_init(static_pars_tree_t* pt);
 void pt_free(static_pars_tree_t* tree);
 
 

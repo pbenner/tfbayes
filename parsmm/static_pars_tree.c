@@ -26,6 +26,12 @@
 #include <tfbayes/exception.h>
 #include <tfbayes/logarithmetic.h>
 
+#define GET_CHILD_OFFSET(as, node, subset) ((node)*(as)->nb_subsets+(subset))
+#define GET_PARENT_OFFSET(as, node) (((node) - 1)/(as)->nb_subsets)
+#define GET_SUBSET(as, node) ((subset_t)(((node) - 1) % (as)->nb_subsets) + 1)
+#define GET_COUNTS(tree, node) ((tree)->counts + (tree)->as->size * (node))
+#define GET_DIR_PARAMS(tree, node) ((tree)->dirichlet_params + (tree)->as->size * (node))
+
 static
 void sum_counts(count_t* dest, const count_t* src1, const count_t* src2, size_t size) 
 {
@@ -48,6 +54,14 @@ unsigned long pt_size(
                 powk = powk * as->nb_subsets;
         }
         return (powk - 1) / (as->nb_subsets - 1);
+}
+
+void pt_init(static_pars_tree_t* pt) {
+        size_t i;
+
+        for (i = 0 ; i < pt->size * pt->as->size ; i++) {
+                pt->dirichlet_params[i] = 1.0;
+        }
 }
 
 static_pars_tree_t * pt_create(
@@ -193,13 +207,18 @@ double pt_ln_marginal_likelihood(
                         ii = 0;
                         do {
                                 if (as_subset_size(GET_SUBSET(tree->as, tree->node_ids[ii])) <= 1) {
-                                        sum_counts(GET_COUNTS(tree, tree->node_ids[ii]), GET_COUNTS(tree, tree->node_ids[ii]), obs + context_id * tree->as->size, tree->as->size);
+                                        sum_counts(GET_COUNTS(tree, tree->node_ids[ii]),
+                                                   GET_COUNTS(tree, tree->node_ids[ii]),
+                                                   obs + context_id * tree->as->size, tree->as->size);
                                         print_debug("Copying counts - src: %lu\tdst: %lu\n", context_id, tree->node_ids[ii]);
                                 }
                                 else if (GET_SUBSET(tree->as, tree->node_ids[ii]) < (1 << (symbol + 1)))
                                 {
                                         print_debug("Summing counts - current: %lu\n", tree->node_ids[ii]);
-                                        sum_counts(GET_COUNTS(tree, tree->node_ids[ii]), GET_COUNTS(tree, tree->node_ids[ii] - (1 << symbol)), GET_COUNTS(tree, GET_CHILD_OFFSET(tree->as,GET_PARENT_OFFSET(tree->as,tree->node_ids[ii]),(1 << symbol))),tree->as->size);
+                                        sum_counts(GET_COUNTS(tree, tree->node_ids[ii]),
+                                                   GET_COUNTS(tree, tree->node_ids[ii] - (1 << symbol)),
+                                                   GET_COUNTS(tree, GET_CHILD_OFFSET(tree->as,GET_PARENT_OFFSET(tree->as,tree->node_ids[ii]),(1 << symbol))),
+                                                   tree->as->size);
                                 }
                                 if (context_id * tree->as->size + 2 > context_id_max) {
                                         tree->scores[tree->node_ids[ii]] = get_ln_score(tree, tree->node_ids[ii]);
@@ -230,7 +249,10 @@ double pt_ln_marginal_likelihood(
                         kk = 0;
                         do {
                                 for (jj = 0; jj < container_max; jj++) {
-                                        tree->new_node_ids[kk++] = GET_CHILD_OFFSET(tree->as, tree->node_ids[ii],tree->as->containers[0][jj]);
+                                        tree->new_node_ids[kk++] =
+                                                GET_CHILD_OFFSET(tree->as,
+                                                                 tree->node_ids[ii],
+                                                                 tree->as->containers[0][jj]);
                                 }
                                 ii++;
                         }
@@ -246,7 +268,10 @@ double pt_ln_marginal_likelihood(
                         kk = 0;
                         do {
                                 for (jj = 0; jj < container_max; jj++) {
-                                        tree->new_node_ids[kk++] = GET_CHILD_OFFSET(tree->as, GET_PARENT_OFFSET(tree->as,tree->node_ids[ii]), tree->as->containers[(context_id - 1) % 4][jj]);
+                                        tree->new_node_ids[kk++] =
+                                                GET_CHILD_OFFSET(tree->as,
+                                                                 GET_PARENT_OFFSET(tree->as, tree->node_ids[ii]),
+                                                                 tree->as->containers[(context_id - 1) % 4][jj]);
                                 }
                                 ii += container_max;
                         }

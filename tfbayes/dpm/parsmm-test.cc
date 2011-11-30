@@ -105,13 +105,6 @@ void remove_subsequence(
 ////////////////////////////////////////////////////////////////////////////////
 
 static
-void pt_init(static_pars_tree_t* pt) {
-        for (size_t i = 0 ; i < pt->size * pt->as->size ; i++) {
-                pt->dirichlet_params[i] = 1.0;
-        }
-}
-
-static
 double predictive(
         count_t* counts,
         size_t from, size_t to,
@@ -135,7 +128,7 @@ static
 void parsmm_test() {
         abstract_set_t* as = as_create(ALPHABET_SIZE);
         static_pars_tree_t* pt = pt_create(as, PARSMM_DEPTH);
-        size_t counts_length = context_t::counts_size(ALPHABET_SIZE, PARSMM_DEPTH);;
+        size_t counts_length = context_t::counts_size(ALPHABET_SIZE, PARSMM_DEPTH);
         count_t* counts = (count_t*)malloc(counts_length*sizeof(count_t));
 
         /* init data structures */

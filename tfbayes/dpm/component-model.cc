@@ -144,13 +144,6 @@ double ProductDirichlet::log_likelihood() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static
-void pt_init(static_pars_tree_t* pt) {
-        for (size_t i = 0 ; i < pt->size * pt->as->size ; i++) {
-                pt->dirichlet_params[i] = 1.0;
-        }
-}
-
 ParsimoniousTree::ParsimoniousTree(
         size_t alphabet_size, size_t tree_depth,
         const sequence_data_t<short>& data,
