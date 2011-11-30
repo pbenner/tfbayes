@@ -274,14 +274,14 @@ ParsimoniousTree::count(const range_t& range) {
 }
 
 double ParsimoniousTree::predictive(const range_t& range) {
-        double ml1 = pt_ln_marginal_likelihood(_pt, _counts); add(range);
-        double ml2 = pt_ln_marginal_likelihood(_pt, _counts); remove(range);
+        const double ml1 = pt_ln_marginal_likelihood(_pt, _counts); add(range);
+        const double ml2 = pt_ln_marginal_likelihood(_pt, _counts); remove(range);
         return exp(ml2-ml1);
 }
 
 double ParsimoniousTree::log_predictive(const range_t& range) {
-        double ml1 = pt_ln_marginal_likelihood(_pt, _counts); add(range);
-        double ml2 = pt_ln_marginal_likelihood(_pt, _counts); remove(range);
+        const double ml1 = pt_ln_marginal_likelihood(_pt, _counts); add(range);
+        const double ml2 = pt_ln_marginal_likelihood(_pt, _counts); remove(range);
         return ml2-ml1;
 }
 
