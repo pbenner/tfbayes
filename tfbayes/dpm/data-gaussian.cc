@@ -24,6 +24,7 @@
 #include <gsl/gsl_randist.h>
 
 #include <data-gaussian.hh>
+#include <init.hh>
 
 using namespace std;
 

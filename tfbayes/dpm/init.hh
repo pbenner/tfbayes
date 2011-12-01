@@ -22,6 +22,10 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <gsl/gsl_rng.h>
+
+extern gsl_rng* _r;
+
 void __dpm_init__();
 
 #endif /* INIT_HH */

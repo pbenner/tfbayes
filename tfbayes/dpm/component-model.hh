@@ -42,8 +42,6 @@
 #include <parsmm/abstract_set.h>
 #include <parsmm/static_pars_tree.h>
 
-extern gsl_rng* _r;
-
 class ComponentModel : public clonable {
 public:
         ComponentModel() {}
