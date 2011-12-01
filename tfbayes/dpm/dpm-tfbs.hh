@@ -38,6 +38,7 @@ typedef struct {
         double alpha;
         double discount;
         double lambda;
+        size_t context;
         std::string process_prior;
         std::string background_model;
         std::vector<double> baseline_weights;
@@ -82,7 +83,6 @@ public:
         static const size_t BG_LENGTH   = 1;
                const size_t TFBS_LENGTH;
         static const size_t ALPHABET_SIZE = 4;
-        static const size_t CONTEXT = 2;
 
 private:
         // baseline models

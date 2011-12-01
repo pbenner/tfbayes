@@ -40,6 +40,7 @@ typedef struct {
         double alpha;
         double discount;
         double lambda;
+        size_t context;
         const char* process_prior;
         const char* background_model;
         vector_t*  baseline_weights;
@@ -64,6 +65,7 @@ operator<<(std::ostream& o, const options_t& options) {
           << "-> alpha            = " << options.alpha            << endl
           << "-> discount         = " << options.discount         << endl
           << "-> lambda           = " << options.lambda           << endl
+          << "-> context          = " << options.context          << endl
           << "-> population_size  = " << options.population_size  << endl;
         return o;
 }
@@ -218,6 +220,7 @@ void _dpm_tfbs_init(const char* filename)
         tfbs_options.alpha            = _options.alpha;
         tfbs_options.lambda           = _options.lambda;
         tfbs_options.discount         = _options.discount;
+        tfbs_options.context          = _options.context;
         tfbs_options.tfbs_length      = _options.tfbs_length;
         tfbs_options.process_prior    = _options.process_prior;
         tfbs_options.background_model = _options.background_model;

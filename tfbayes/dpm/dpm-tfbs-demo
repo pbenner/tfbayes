@@ -60,6 +60,7 @@ options = {
     'alpha'            : 0.05,
     'discount'         : 0.0,
     'lambda'           : 0.01,
+    'context'          : 2,
     'process_prior'    : "pitman-yor process",
     'background_model' : "independence",
     'samples'          : (1000,100),
@@ -101,6 +102,8 @@ def parse_config(config_file):
         options['discount'] = float(config_parser.get('TFBS-Sampler', 'discount'))
     if config_parser.has_option('TFBS-Sampler', 'lambda'):
         options['lambda'] = float(config_parser.get('TFBS-Sampler', 'lambda'))
+    if config_parser.has_option('TFBS-Sampler', 'context'):
+        options['context'] = int(config_parser.get('TFBS-Sampler', 'context'))
     if config_parser.has_option('TFBS-Sampler', 'process-prior'):
         options['process_prior'] = config_parser.get('TFBS-Sampler', 'process-prior').strip()
     if config_parser.has_option('TFBS-Sampler', 'background-model'):
@@ -132,6 +135,7 @@ def usage():
     print "       --alpha=ALPHA              - alpha parameter for the dirichlet process"
     print "       --discount=DISCOUNT        - Pitman-Yor discount (0 <= d < 1)"
     print "       --lambda=LAMBDA            - lambda mixture weight"
+    print "       --context=INT              - context of the background model"
     print "       --process-prior=NAME       - possible process priors:"
     print "                                    pitman-yor process (default),"
     print "                                    uniform process, poppe process"
@@ -297,8 +301,8 @@ def main():
     global options
     try:
         longopts   = ["help", "verbose", "alpha=", "lambda=", "discount=",
-                      "process-prior=", "backround-model=", "tfbs-length=",
-                      "save=", "samples="]
+                      "context=", "process-prior=", "backround-model=",
+                      "tfbs-length=", "save=", "samples="]
         opts, tail = getopt.getopt(sys.argv[1:], "is:vh", longopts)
     except getopt.GetoptError:
         usage()
@@ -326,6 +330,8 @@ def main():
                 return 1
         if o == "--lambda":
             options['lambda'] = float(a)
+        if o == "--context":
+            options['context'] = int(a)
         if o == "--process-prior":
             options['process_prior'] = a
         if o == "--background-model":

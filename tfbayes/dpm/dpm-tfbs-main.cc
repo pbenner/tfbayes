@@ -43,6 +43,7 @@ typedef struct _options_t {
         double alpha;
         double discount;
         double lambda;
+        size_t context;
         const char* process_prior;
         const char* background_model;
         size_t population_size;
@@ -54,6 +55,7 @@ typedef struct _options_t {
                   alpha(0.05),
                   discount(0.0),
                   lambda(0.01),
+                  context(2),
                   process_prior("pitman-yor process"),
                   background_model("independence"),
                   population_size(1),
@@ -64,16 +66,17 @@ typedef struct _options_t {
 ostream&
 operator<<(std::ostream& o, const _options_t& options) {
         o << "Options:"              << endl
-          << "-> samples          = " << options.samples         << endl
-          << "-> burnin           = " << options.burnin          << endl
-          << "-> tfbs_length      = " << options.tfbs_length     << endl
-          << "-> alpha            = " << options.alpha           << endl
-          << "-> discount         = " << options.discount        << endl
-          << "-> lambda           = " << options.lambda          << endl
+          << "-> samples          = " << options.samples          << endl
+          << "-> burnin           = " << options.burnin           << endl
+          << "-> tfbs_length      = " << options.tfbs_length      << endl
+          << "-> alpha            = " << options.alpha            << endl
+          << "-> discount         = " << options.discount         << endl
+          << "-> lambda           = " << options.lambda           << endl
+          << "-> context          = " << options.context          << endl
           << "-> process prior    = " << options.process_prior    << endl
           << "-> background model = " << options.background_model << endl
-          << "-> population_size  = " << options.population_size << endl
-          << "-> save             = " << options.save            << endl;
+          << "-> population_size  = " << options.population_size  << endl
+          << "-> save             = " << options.save             << endl;
         return o;
 }
 
@@ -245,6 +248,7 @@ void run_dpm(const char* file_name)
         tfbs_options.lambda           = options.lambda;
         tfbs_options.discount         = options.discount;
         tfbs_options.tfbs_length      = options.tfbs_length;
+        tfbs_options.context          = options.context;
         tfbs_options.process_prior    = options.process_prior;
         tfbs_options.background_model = options.background_model;
         tfbs_options.baseline_weights = baseline_weights;
@@ -304,6 +308,7 @@ int main(int argc, char *argv[])
 		static struct option long_options[] = {
                         { "alpha",           1, 0, 'a' },
                         { "lambda",          1, 0, 'l' },
+                        { "context",         1, 0, 'c' },
                         { "samples",         1, 0, 's' },
                         { "tfbs-length",     1, 0, 't' },
                         { "population-size", 1, 0, 'p' },
@@ -331,6 +336,9 @@ int main(int argc, char *argv[])
                         break;
                 case 'l':
                         options.lambda = atof(optarg);
+                        break;
+                case 'c':
+                        options.context = atoi(optarg);
                         break;
                 case 'e':
                         options.save = string(optarg);
