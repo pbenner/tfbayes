@@ -34,7 +34,8 @@
 
 using namespace std;
 
-gsl_rng* _r;
+// Multinomial/Dirichlet Model
+////////////////////////////////////////////////////////////////////////////////
 
 ProductDirichlet::ProductDirichlet(const matrix<double>& _alpha, const sequence_data_t<short>& data)
         : _data(data), _size1(_alpha.size()), _size2(_alpha[0].size())
@@ -142,6 +143,189 @@ double ProductDirichlet::log_likelihood() const {
         return result;
 }
 
+// Markov Chain Mixture
+////////////////////////////////////////////////////////////////////////////////
+
+MarkovChainMixture::MarkovChainMixture(
+        size_t alphabet_size, size_t max_context,
+        const sequence_data_t<short>& data,
+        const sequence_data_t<cluster_tag_t>& cluster_assignments,
+        cluster_tag_t cluster_tag)
+        : _data(data), _cluster_assignments(cluster_assignments),
+          _cluster_tag(cluster_tag), _max_context(max_context)
+{
+        _length = context_t::counts_size(alphabet_size, max_context);
+        _alpha  = (double*)malloc(_length*sizeof(double));
+        _counts = (double*)malloc(_length*sizeof(double));
+        _counts_sum = (double*)malloc((_max_context+1)*sizeof(double));
+
+        /* init data structures */
+        for (size_t i = 0; i < _length; i++) {
+                _alpha[i]  = 1.0;
+                _counts[i] = 0.0;
+        }
+        for (size_t c = 0; c <= _max_context; c++) {
+                _counts_sum[c] = 0.0;
+                size_t i_from = context_t::counts_offset(alphabet_size, c);
+                size_t i_to   = context_t::counts_offset(alphabet_size, c+1);
+                for (size_t i = i_from; i < i_to; i++) {
+                        _counts_sum[c] += _alpha[i] + _counts[i];
+                }
+        }
+
+        /* compute context */
+        for (size_t i = 0; i < _data.size(); i++) {
+                const nucleotide_sequence_t& seq = (const nucleotide_sequence_t&)_data[i];
+                _context.push_back(seq_context_t(seq, _max_context, alphabet_size));
+        }
+}
+
+MarkovChainMixture::MarkovChainMixture(const MarkovChainMixture& distribution)
+        : _length(distribution._length),
+          _data(distribution._data),
+          _context(distribution._context),
+          _cluster_assignments(distribution._cluster_assignments),
+          _cluster_tag(distribution._cluster_tag),
+          _max_context(distribution._max_context)
+{
+        _alpha  = (double*)malloc(_length*sizeof(double));
+        _counts = (double*)malloc(_length*sizeof(double));
+        _counts_sum = (double*)malloc((_max_context+1)*sizeof(double));
+
+        /* init data structures */
+        memcpy(_alpha,  distribution._alpha,  _length*sizeof(double));
+        memcpy(_counts, distribution._counts, _length*sizeof(double));
+        memcpy(_counts_sum, distribution._counts_sum, (_max_context+1)*sizeof(double));
+}
+
+MarkovChainMixture::~MarkovChainMixture() {
+        free(_alpha);
+        free(_counts);
+        free(_counts_sum);
+}
+
+MarkovChainMixture*
+MarkovChainMixture::clone() const {
+        return new MarkovChainMixture(*this);
+}
+
+size_t
+MarkovChainMixture::max_from_context(const range_t& range) const
+{
+        const size_t sequence = range.index[0];
+        const size_t position = range.index[1];
+        ssize_t from = position;
+
+        for (size_t i = 0; i < _max_context && from > 0 && _cluster_assignments[seq_index_t(sequence, from-1)] == _cluster_tag; i++) {
+                from--;
+        }
+
+        return position-from;
+}
+
+size_t
+MarkovChainMixture::max_to_context(const range_t& range) const
+{
+        const size_t sequence = range.index[0];
+        const size_t position = range.index[1];
+        const size_t length   = range.length;
+        const ssize_t sequence_length = _data.size(sequence);
+        ssize_t to = position+length-1;
+
+        for (size_t i = 0; i < _max_context && to < sequence_length-1 && _cluster_assignments[seq_index_t(sequence, to + 1)] == _cluster_tag; i++) {
+                to++;
+        }
+
+        return to-position-length+1;
+}
+
+size_t
+MarkovChainMixture::add(const range_t& range) {
+        const size_t sequence     = range.index[0];
+        const size_t length       = range.length;
+        const size_t from_context = max_from_context(range);
+        const size_t   to_context = max_to_context(range);
+
+        for (size_t i = 0; i < length+to_context; i++) {
+                const size_t pos   = range.index[1]+i;
+                const size_t c_max = min(from_context+i, _max_context);
+                const size_t c_min = i < length ? 0 : i-(length-1);
+                for (size_t c = c_min; c <= c_max; c++) {
+                        if (_context[sequence][pos][c] != -1) {
+                                _counts[_context[sequence][pos][c]]++;
+                                _counts_sum[c]++;
+                        }
+                }
+        }
+
+        return range.length;
+}
+
+size_t
+MarkovChainMixture::remove(const range_t& range) {
+        const size_t sequence     = range.index[0];
+        const size_t length       = range.length;
+        const size_t from_context = max_from_context(range);
+        const size_t   to_context = max_to_context(range);
+
+        for (size_t i = 0; i < length+to_context; i++) {
+                const size_t pos   = range.index[1]+i;
+                const size_t c_max = min(from_context+i, _max_context);
+                const size_t c_min = i < length ? 0 : i-(length-1);
+                for (size_t c = c_min; c <= c_max; c++) {
+                        if (_context[sequence][pos][c] != -1) {
+                                _counts[_context[sequence][pos][c]]--;
+                                _counts_sum[c]--;
+                        }
+                }
+        }
+
+        return range.length;
+}
+
+size_t
+MarkovChainMixture::count(const range_t& range) {
+        return range.length;
+}
+
+double MarkovChainMixture::predictive(const range_t& range) {
+        const size_t sequence     = range.index[0];
+        const size_t length       = range.length;
+        const size_t from_context = max_from_context(range);
+        const size_t   to_context = max_to_context(range);
+        vector<double> partial_result(_max_context+1, 1.0);
+        double result = 0;
+
+        for (size_t i = 0; i < length+to_context; i++) {
+                const size_t pos   = range.index[1]+i;
+                const size_t c_max = min(from_context+i, _max_context);
+                const size_t c_min = i < length ? 0 : i-(length-1);
+                for (size_t c = c_min; c <= c_max; c++) {
+                        if (_context[sequence][pos][c] != -1) {
+                                partial_result[c] *=
+                                        (_counts[_context[sequence][pos][c]]+
+                                         _alpha[_context[sequence][pos][c]])/
+                                        _counts_sum[c];
+                        }
+                }
+        }
+
+        for (size_t c = 0; c <= _max_context; c++) {
+                result += partial_result[c];
+        }
+
+        return result/(double)(_max_context+1);
+}
+
+double MarkovChainMixture::log_predictive(const range_t& range) {
+        return log(predictive(range));
+}
+
+double MarkovChainMixture::log_likelihood() const {
+        return 0;
+}
+
+// Variable Order Markov Chain
 ////////////////////////////////////////////////////////////////////////////////
 
 ParsimoniousTree::ParsimoniousTree(
@@ -289,6 +473,7 @@ double ParsimoniousTree::log_likelihood() const {
         return 0;
 }
 
+// Bivariate Gaussian
 ////////////////////////////////////////////////////////////////////////////////
 
 BivariateNormal::BivariateNormal(

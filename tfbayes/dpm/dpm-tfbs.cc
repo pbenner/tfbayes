@@ -78,8 +78,12 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
                 ProductDirichlet* bg = new ProductDirichlet(bg_alpha, _data);
                 bg_cluster_tag = _clustermanager.add_cluster(bg);
         }
+        else if (options.background_model == "markov chain mixture") {
+                MarkovChainMixture* bg = new MarkovChainMixture(ALPHABET_SIZE, CONTEXT, _data, _cluster_assignments, 0);
+                bg_cluster_tag = _clustermanager.add_cluster(bg);
+        }
         else if (options.background_model == "parsimonious tree") {
-                ParsimoniousTree* bg = new ParsimoniousTree(ALPHABET_SIZE, PARSMM_DEPTH, _data, _cluster_assignments, 0);
+                ParsimoniousTree* bg = new ParsimoniousTree(ALPHABET_SIZE, CONTEXT, _data, _cluster_assignments, 0);
                 bg_cluster_tag = _clustermanager.add_cluster(bg);
         }
         else {

@@ -70,7 +70,6 @@ public:
                 return counts_offset(alphabet_size, max_context+1);
         }
 
-protected:
         static size_t counts_offset(size_t alphabet_size, size_t context) {
                 size_t offset = 0;
 
@@ -81,6 +80,7 @@ protected:
                 return offset - 1;
         }
 
+protected:
         static size_t counts_position(size_t alphabet_size, size_t context, const AbysmalStack<short>& stack) {
                 size_t position = 0;
 

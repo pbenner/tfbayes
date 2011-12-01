@@ -27,7 +27,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-#include <init.hh>
+gsl_rng* _r;
 
 using namespace std;
 

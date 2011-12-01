@@ -42,6 +42,9 @@
 #include <parsmm/abstract_set.h>
 #include <parsmm/static_pars_tree.h>
 
+// ComponentModel Interface
+////////////////////////////////////////////////////////////////////////////////
+
 class ComponentModel : public clonable {
 public:
         ComponentModel() {}
@@ -60,6 +63,9 @@ public:
 
         virtual ComponentModel* clone() const = 0;
 };
+
+// Multinomial/Dirichlet Model
+////////////////////////////////////////////////////////////////////////////////
 
 class ProductDirichlet : public ComponentModel {
 public:
@@ -92,6 +98,50 @@ private:
         const size_t _size2;
 };
 
+// Markov Chain Mixture
+////////////////////////////////////////////////////////////////////////////////
+
+class MarkovChainMixture : public ComponentModel {
+public:
+         MarkovChainMixture(size_t alphabet_size, size_t max_order,
+                            const sequence_data_t<short>& data,
+                            const sequence_data_t<cluster_tag_t>& cluster_assignments,
+                            cluster_tag_t cluster_tag);
+         MarkovChainMixture(const MarkovChainMixture& distribution);
+        ~MarkovChainMixture();
+
+        size_t add(const range_t& range);
+        size_t remove(const range_t& range);
+        size_t count(const range_t& range);
+        double predictive(const range_t& range);
+        double log_predictive(const range_t& range);
+        double log_likelihood() const;
+        MarkovChainMixture* clone() const;
+
+        friend std::ostream& operator<< (std::ostream& o, const MarkovChainMixture& pd);
+
+private:
+        size_t  _length;
+        double* _counts;
+        double* _alpha;
+        /* sum of pseudocounts and real counts for each context */
+        double* _counts_sum;
+
+        const sequence_data_t<short>&         _data;
+              sequence_data_t<context_t>      _context;
+        const sequence_data_t<cluster_tag_t>& _cluster_assignments;
+
+        const cluster_tag_t _cluster_tag;
+        const size_t        _max_context;
+
+        // internal methods
+        size_t max_from_context(const range_t& range) const;
+        size_t max_to_context(const range_t& range) const;
+};
+
+// Variable Order Markov Chain
+////////////////////////////////////////////////////////////////////////////////
+
 class ParsimoniousTree : public ComponentModel {
 public:
          ParsimoniousTree(size_t alphabet_size, size_t tree_depth,
@@ -100,10 +150,6 @@ public:
                           cluster_tag_t cluster_tag);
          ParsimoniousTree(const ParsimoniousTree& distribution);
         ~ParsimoniousTree();
-
-        // datatypes
-        typedef std::vector<std::vector<size_t> > alpha_t;
-        typedef std::vector<std::vector<size_t> > counts_t;
 
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
@@ -132,6 +178,9 @@ private:
         size_t max_from_context(const range_t& range) const;
         size_t max_to_context(const range_t& range) const;
 };
+
+// Bivariate Gaussian
+////////////////////////////////////////////////////////////////////////////////
 
 class BivariateNormal : public ComponentModel {
 public:

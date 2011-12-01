@@ -81,8 +81,8 @@ public:
         ////////////////////////////////////////////////////////////////////////
         static const size_t BG_LENGTH   = 1;
                const size_t TFBS_LENGTH;
-        static const size_t PARSMM_DEPTH = 2;
         static const size_t ALPHABET_SIZE = 4;
+        static const size_t CONTEXT = 2;
 
 private:
         // baseline models
