@@ -206,6 +206,9 @@ public:
         virtual const std::vector<T>& operator[](size_t i) const {
                 return _data[i];
         }
+        virtual std::vector<T>& operator[](size_t i) {
+                return _data[i];
+        }
         virtual size_t size() const {
                 return _data.size();
         }

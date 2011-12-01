@@ -152,25 +152,21 @@ MarkovChainMixture::MarkovChainMixture(
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
         cluster_tag_t cluster_tag)
         : _data(data), _cluster_assignments(cluster_assignments),
-          _cluster_tag(cluster_tag), _max_context(max_context)
+          _cluster_tag(cluster_tag), _max_context(max_context),
+          _alphabet_size(alphabet_size)
 {
         _length = context_t::counts_size(alphabet_size, max_context);
         _alpha  = (double*)malloc(_length*sizeof(double));
         _counts = (double*)malloc(_length*sizeof(double));
-        _counts_sum = (double*)malloc((_max_context+1)*sizeof(double));
+        _counts_sum = (double*)malloc(_length/_alphabet_size*sizeof(double));
 
         /* init data structures */
         for (size_t i = 0; i < _length; i++) {
                 _alpha[i]  = 1.0;
                 _counts[i] = 0.0;
         }
-        for (size_t c = 0; c <= _max_context; c++) {
-                _counts_sum[c] = 0.0;
-                size_t i_from = context_t::counts_offset(alphabet_size, c);
-                size_t i_to   = context_t::counts_offset(alphabet_size, c+1);
-                for (size_t i = i_from; i < i_to; i++) {
-                        _counts_sum[c] += _alpha[i] + _counts[i];
-                }
+        for (size_t i = 0; i < _length/_alphabet_size; i++) {
+                _counts_sum[i] = _alphabet_size;
         }
 
         /* compute context */
@@ -186,16 +182,17 @@ MarkovChainMixture::MarkovChainMixture(const MarkovChainMixture& distribution)
           _context(distribution._context),
           _cluster_assignments(distribution._cluster_assignments),
           _cluster_tag(distribution._cluster_tag),
-          _max_context(distribution._max_context)
+          _max_context(distribution._max_context),
+          _alphabet_size(distribution._alphabet_size)
 {
         _alpha  = (double*)malloc(_length*sizeof(double));
         _counts = (double*)malloc(_length*sizeof(double));
-        _counts_sum = (double*)malloc((_max_context+1)*sizeof(double));
+        _counts_sum = (double*)malloc(_length/_alphabet_size*sizeof(double));
 
         /* init data structures */
         memcpy(_alpha,  distribution._alpha,  _length*sizeof(double));
         memcpy(_counts, distribution._counts, _length*sizeof(double));
-        memcpy(_counts_sum, distribution._counts_sum, (_max_context+1)*sizeof(double));
+        memcpy(_counts_sum, distribution._counts_sum, _length/_alphabet_size*sizeof(double));
 }
 
 MarkovChainMixture::~MarkovChainMixture() {
@@ -251,9 +248,10 @@ MarkovChainMixture::add(const range_t& range) {
                 const size_t c_max = min(from_context+i, _max_context);
                 const size_t c_min = i < length ? 0 : i-(length-1);
                 for (size_t c = c_min; c <= c_max; c++) {
-                        if (_context[sequence][pos][c] != -1) {
-                                _counts[_context[sequence][pos][c]]++;
-                                _counts_sum[c]++;
+                        const short code = _context[sequence][pos][c];
+                        if (code != -1) {
+                                _counts[code]++;
+                                _counts_sum[code/_alphabet_size]++;
                         }
                 }
         }
@@ -273,9 +271,10 @@ MarkovChainMixture::remove(const range_t& range) {
                 const size_t c_max = min(from_context+i, _max_context);
                 const size_t c_min = i < length ? 0 : i-(length-1);
                 for (size_t c = c_min; c <= c_max; c++) {
-                        if (_context[sequence][pos][c] != -1) {
-                                _counts[_context[sequence][pos][c]]--;
-                                _counts_sum[c]--;
+                        const short code = _context[sequence][pos][c];
+                        if (code != -1) {
+                                _counts[code]--;
+                                _counts_sum[code/_alphabet_size]--;
                         }
                 }
         }
@@ -301,11 +300,11 @@ double MarkovChainMixture::predictive(const range_t& range) {
                 const size_t c_max = min(from_context+i, _max_context);
                 const size_t c_min = i < length ? 0 : i-(length-1);
                 for (size_t c = c_min; c <= c_max; c++) {
-                        if (_context[sequence][pos][c] != -1) {
+                        const short code = _context[sequence][pos][c];
+                        if (code != -1) {
                                 partial_result[c] *=
-                                        (_counts[_context[sequence][pos][c]]+
-                                         _alpha[_context[sequence][pos][c]])/
-                                        _counts_sum[c];
+                                        (_counts[code]+_alpha[code])/
+                                        _counts_sum[code/_alphabet_size];
                         }
                 }
         }

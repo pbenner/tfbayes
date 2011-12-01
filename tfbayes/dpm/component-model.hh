@@ -133,6 +133,7 @@ private:
 
         const cluster_tag_t _cluster_tag;
         const size_t        _max_context;
+        const size_t        _alphabet_size;
 
         // internal methods
         size_t max_from_context(const range_t& range) const;
