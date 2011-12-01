@@ -50,7 +50,7 @@ data_gaussian_t::data_gaussian_t(const data_gaussian_t& data)
 
         // generate a randomized list of indices
         for (data_gaussian_t::const_iterator it = data.begin(); it != data.end(); it++) {
-                index_t* index = (**it).clone();
+                index_i* index = (**it).clone();
                 indices.push_back(index);
                 sampling_indices.push_back(index);
         }

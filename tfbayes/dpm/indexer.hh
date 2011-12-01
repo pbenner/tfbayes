@@ -35,10 +35,10 @@ public:
         virtual ~Indexer() {}
 
         // type definitions
-        typedef std::vector<index_t*>::iterator iterator;
-        typedef std::vector<index_t*>::const_iterator const_iterator;
+        typedef std::vector<index_i*>::iterator iterator;
+        typedef std::vector<index_i*>::const_iterator const_iterator;
 
-        typedef std::vector<index_t*>::const_iterator sampling_iterator;
+        typedef std::vector<index_i*>::const_iterator sampling_iterator;
 
         // iterators
         ////////////////////////////////////////////////////////////////////////

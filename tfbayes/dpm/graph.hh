@@ -31,7 +31,7 @@
 //#include <datatypes.hh>
 
 static inline
-const index_t& imin(const index_t& index1, const index_t& index2) {
+const index_i& imin(const index_i& index1, const index_i& index2) {
         if ((index1[0] <  index2[0]) ||
             (index1[0] == index2[0] && index1[1] <= index2[1])) {
                 return index1;
@@ -42,7 +42,7 @@ const index_t& imin(const index_t& index1, const index_t& index2) {
 }
 
 static inline
-const index_t& imax(const index_t& index1, const index_t& index2) {
+const index_i& imax(const index_i& index1, const index_i& index2) {
         if ((index1[0] >  index2[0]) ||
             (index1[0] == index2[0] && index1[1] > index2[1])) {
                 return index1;
@@ -53,7 +53,7 @@ const index_t& imax(const index_t& index1, const index_t& index2) {
 }
 
 typedef struct _edge_t {
-        _edge_t(const index_t& i1, const index_t& i2)
+        _edge_t(const index_i& i1, const index_i& i2)
                 : index1(imin(i1,i2)), index2(imax(i1,i2)) { }
 
         bool operator==(const _edge_t& edge) const {
@@ -64,8 +64,8 @@ typedef struct _edge_t {
                 return false;
 
         }
-        const index_t& index1;
-        const index_t& index2;
+        const index_i& index1;
+        const index_i& index2;
 } edge_t;
 
 static inline

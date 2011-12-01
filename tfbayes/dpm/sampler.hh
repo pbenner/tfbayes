@@ -50,7 +50,7 @@ public:
 
 private:
         // private methods
-        bool _sample(const index_t& index);
+        bool _sample(const index_i& index);
 
         // the mixture model
         DPM& _dpm;

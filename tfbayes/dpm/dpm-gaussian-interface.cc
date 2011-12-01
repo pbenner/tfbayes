@@ -141,7 +141,7 @@ vector_t* _dpm_gaussian_cluster_assignments() {
         // copy posterior
         for (data_gaussian_t::const_iterator it = _data->begin();
              it != _data->end(); it++) {
-                const index_t& index = **it;
+                const index_i& index = **it;
                 result->vec[index[0]] = _gdpm->clustermanager()[index];
         }
         return result;

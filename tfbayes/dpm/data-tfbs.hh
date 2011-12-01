@@ -64,8 +64,8 @@ public:
 
 private:
         // all nucleotide positions in a vector (used for the gibbs sampler)
-        std::vector<index_t*> indices;
-        std::vector<index_t*> sampling_indices;
+        std::vector<index_i*> indices;
+        std::vector<index_i*> sampling_indices;
 
         // the raw nucleotide sequences
         const std::vector<std::string> sequences;

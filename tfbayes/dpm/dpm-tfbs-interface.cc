@@ -151,8 +151,8 @@ void save_result(ostream& file)
         file << "graph = ";
         for (Graph::const_iterator it = posterior.graph.begin();
              it != posterior.graph.end(); it++) {
-                file << (*it).first.index1 << "-"
-                     << (*it).first.index2 << "="
+                file << *static_cast<const seq_index_t*>(&(*it).first.index1) << "-"
+                     << *static_cast<const seq_index_t*>(&(*it).first.index2) << "="
                      << static_cast<double>((*it).second)/static_cast<double>(_pmcmc->sampling_steps()) << " ";
         }
         file << endl;
@@ -302,7 +302,7 @@ matrix_t* _dpm_tfbs_cluster_assignments() {
         // copy posterior
         for (data_tfbs_t::const_iterator it = _gdpm->data().begin();
              it != _gdpm->data().end(); it++) {
-                const index_t& index = **it;
+                const index_i& index = **it;
                 result->mat[index[0]][index[1]] = _gdpm->clustermanager()[index];
         }
         return result;

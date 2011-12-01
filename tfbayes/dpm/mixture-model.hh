@@ -43,12 +43,12 @@ public:
         virtual size_t mixture_components() const = 0;
         virtual size_t baseline_components() const = 0;
         // compute cumulative mixture weights on log scale (not normalized!)
-        virtual void   mixture_weights(const index_t& index, double log_weights[], cluster_tag_t tags[]) = 0;
-        virtual void   add(const index_t& index, cluster_tag_t tag) = 0;
-        virtual void   remove(const index_t& index, cluster_tag_t tag) = 0;
+        virtual void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[]) = 0;
+        virtual void   add(const index_i& index, cluster_tag_t tag) = 0;
+        virtual void   remove(const index_i& index, cluster_tag_t tag) = 0;
         virtual void   update_posterior(size_t sampling_steps) = 0;
         virtual double likelihood() const = 0;
-        virtual bool   valid_for_sampling(const index_t& index) const = 0;
+        virtual bool   valid_for_sampling(const index_i& index) const = 0;
         virtual posterior_t& posterior() = 0;
         virtual const ClusterManager& clustermanager() const = 0;
 };

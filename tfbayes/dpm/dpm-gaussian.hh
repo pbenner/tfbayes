@@ -50,12 +50,12 @@ public:
         ////////////////////////////////////////////////////////////////////////
         size_t baseline_components() const { return 1; }
         size_t mixture_components() const;
-        void   mixture_weights(const index_t& index, double log_weights[], cluster_tag_t tags[]);
-        void   add(const index_t& index, cluster_tag_t tag);
-        void   remove(const index_t& index, cluster_tag_t tag);
+        void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[]);
+        void   add(const index_i& index, cluster_tag_t tag);
+        void   remove(const index_i& index, cluster_tag_t tag);
         void   update_posterior(size_t sampling_steps);
         double likelihood() const;
-        bool   valid_for_sampling(const index_t& index) const;
+        bool   valid_for_sampling(const index_i& index) const;
         posterior_t& posterior();
         const ClusterManager& clustermanager() const;
         gsl_matrix* means() const;

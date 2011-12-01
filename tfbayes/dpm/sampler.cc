@@ -57,7 +57,7 @@ GibbsSampler::clone() const {
 }
 
 bool
-GibbsSampler::_sample(const index_t& index) {
+GibbsSampler::_sample(const index_i& index) {
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
         if (!_dpm.valid_for_sampling(index)) {

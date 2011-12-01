@@ -230,7 +230,7 @@ DpmTfbs::clone() const {
 }
 
 bool
-DpmTfbs::valid_for_sampling(const index_t& index) const
+DpmTfbs::valid_for_sampling(const index_i& index) const
 {
         const size_t sequence = index[0];
         const size_t position = index[1];
@@ -255,7 +255,7 @@ DpmTfbs::valid_for_sampling(const index_t& index) const
 }
 
 void
-DpmTfbs::add(const index_t& index, cluster_tag_t tag)
+DpmTfbs::add(const index_i& index, cluster_tag_t tag)
 {
         const range_t range(index, TFBS_LENGTH);
 
@@ -270,7 +270,7 @@ DpmTfbs::add(const index_t& index, cluster_tag_t tag)
 }
 
 void
-DpmTfbs::remove(const index_t& index, cluster_tag_t tag)
+DpmTfbs::remove(const index_i& index, cluster_tag_t tag)
 {
         const range_t range(index, TFBS_LENGTH);
 
@@ -348,7 +348,7 @@ DpmTfbs::poppe_prior(Cluster& cluster)
 }
 
 void
-DpmTfbs::mixture_weights(const index_t& index, double log_weights[], cluster_tag_t cluster_tags[])
+DpmTfbs::mixture_weights(const index_i& index, double log_weights[], cluster_tag_t cluster_tags[])
 {
         const range_t range(index, TFBS_LENGTH);
         ssize_t mixture_n  = mixture_components();
@@ -400,7 +400,7 @@ DpmTfbs::likelihood() const {
 void
 DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
 {
-        std::list<const index_t*> binding_sites;
+        std::list<const index_i*> binding_sites;
         // find all binding sites
         for (Indexer::sampling_iterator it = _data.sampling_begin();
              it != _data.sampling_end(); it++) {
@@ -409,14 +409,14 @@ DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
                 }
         }
         // iterate over binding sites
-        for (std::list<const index_t*>::const_iterator it = binding_sites.begin();
+        for (std::list<const index_i*>::const_iterator it = binding_sites.begin();
              it != binding_sites.end(); it++) {
                 // if there still is a binding site
                 if (tfbs_start_positions[**it] == 1) {
                         cluster_tag_t tag = _cluster_assignments[**it];
                         tfbs_start_positions[**it] = 0;
                         // find sites with the same cluster assignment
-                        for (std::list<const index_t*>::const_iterator is = it;
+                        for (std::list<const index_i*>::const_iterator is = it;
                              is != binding_sites.end(); is++) {
                                 if (tfbs_start_positions[**is] == 1 && _cluster_assignments[**is] == tag) {
                                         _posterior.graph[edge_t(**it, **is)]++;
@@ -429,7 +429,7 @@ DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
 void
 DpmTfbs::update_hypergraph(sequence_data_t<short> tfbs_start_positions)
 {
-        list<const index_t*> binding_sites;
+        list<const index_i*> binding_sites;
         stringstream ss;
         // find all binding sites
         for (Indexer::sampling_iterator it = _data.sampling_begin();
@@ -439,18 +439,18 @@ DpmTfbs::update_hypergraph(sequence_data_t<short> tfbs_start_positions)
                 }
         }
         // iterate over binding sites
-        for (list<const index_t*>::const_iterator it = binding_sites.begin();
+        for (list<const index_i*>::const_iterator it = binding_sites.begin();
              it != binding_sites.end(); it++) {
                 // if there still is a binding site
                 if (tfbs_start_positions[**it] == 1) {
                         cluster_tag_t tag = _cluster_assignments[**it];
                         tfbs_start_positions[**it] = 0;
-                        ss << "{ " << **it;
+                        ss << "{ " << *static_cast<const seq_index_t*>(*it);
                         // find sites with the same cluster assignment
-                        for (list<const index_t*>::const_iterator is = it;
+                        for (list<const index_i*>::const_iterator is = it;
                              is != binding_sites.end(); is++) {
                                 if (tfbs_start_positions[**is] == 1 && _cluster_assignments[**is] == tag) {
-                                        ss << " " << **is;
+                                        ss << " " << *static_cast<const seq_index_t*>(*is);
                                 }
                         }
                         ss << " } ";
@@ -468,7 +468,7 @@ DpmTfbs::update_posterior(size_t sampling_steps) {
         }
         for (data_tfbs_t::const_iterator it = _data.begin();
              it != _data.end(); it++) {
-                const index_t& index  = **it;
+                const index_i& index  = **it;
                 const size_t sequence = index[0];
                 const size_t position = index[1];
                 if (_clustermanager[index] == bg_cluster_tag) {

@@ -62,19 +62,19 @@ DPM_Gaussian::clone() const {
 }
 
 bool
-DPM_Gaussian::valid_for_sampling(const index_t& index) const
+DPM_Gaussian::valid_for_sampling(const index_i& index) const
 {
         return true;
 }
 
 void
-DPM_Gaussian::add(const index_t& index, cluster_tag_t cluster_tag)
+DPM_Gaussian::add(const index_i& index, cluster_tag_t cluster_tag)
 {
         _clustermanager[cluster_tag].add_observations(range_t(index,1));
 }
 
 void
-DPM_Gaussian::remove(const index_t& index, cluster_tag_t cluster_tag)
+DPM_Gaussian::remove(const index_i& index, cluster_tag_t cluster_tag)
 {
         _clustermanager[cluster_tag].remove_observations(range_t(index,1));
 }
@@ -86,7 +86,7 @@ DPM_Gaussian::mixture_components() const
 }
 
 void
-DPM_Gaussian::mixture_weights(const index_t& index, double log_weights[], cluster_tag_t cluster_tags[])
+DPM_Gaussian::mixture_weights(const index_i& index, double log_weights[], cluster_tag_t cluster_tags[])
 {
         size_t components = mixture_components();
         double sum        = -HUGE_VAL;

@@ -55,7 +55,7 @@ typedef struct _options_t {
                   discount(0.0),
                   lambda(0.01),
                   process_prior("pitman-yor process"),
-                  background_model("parsimonious tree"),
+                  background_model("independence"),
                   population_size(1),
                   save()
                 { }
@@ -216,8 +216,8 @@ void save_result(ostream& file, Sampler& sampler)
         file << "graph = ";
         for (Graph::const_iterator it = posterior.graph.begin();
              it != posterior.graph.end(); it++) {
-                file << (*it).first.index1 << "-"
-                     << (*it).first.index2 << "="
+                file << *static_cast<const seq_index_t*>(&(*it).first.index1) << "-"
+                     << *static_cast<const seq_index_t*>(&(*it).first.index2) << "="
                      << static_cast<double>((*it).second)/static_cast<double>(sampler.sampling_steps()) << " ";
         }
         file << endl;

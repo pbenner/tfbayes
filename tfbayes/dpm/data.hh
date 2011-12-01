@@ -63,7 +63,7 @@ template <typename T>
 class iterator_t
 {
 public:
-        iterator_t(data_t<T>& data, const index_t& index, size_t length)
+        iterator_t(data_t<T>& data, const index_i& index, size_t length)
                 : _data(data), _index(index), _pos(*index.clone()), _length(length), _i(0) {
         }
         ~iterator_t() {
@@ -92,8 +92,8 @@ public:
 
 private:
         data_t<T>& _data;
-        const index_t& _index;
-        index_t& _pos;
+        const index_i& _index;
+        index_i& _pos;
         size_t _length, _i;
 };
 
@@ -101,7 +101,7 @@ template <typename T>
 class const_iterator_t
 {
 public:
-        const_iterator_t(const data_t<T>& data, const index_t& index, size_t length)
+        const_iterator_t(const data_t<T>& data, const index_i& index, size_t length)
                 : _data(data), _index(index), _pos(*index.clone()), _length(length), _i(0) {
         }
         ~const_iterator_t() {
@@ -127,8 +127,8 @@ public:
 
 private:
         const data_t<T>& _data;
-        const index_t& _index;
-        index_t& _pos;
+        const index_i& _index;
+        index_i& _pos;
         size_t _length, _i;
 };
 
@@ -156,10 +156,10 @@ public:
         virtual iterator_t<T> operator[](const range_t& range) {
                 return iterator_t<T>(*this, range.index, range.length);
         }
-        virtual const T& operator[](const index_t& index) const {
+        virtual const T& operator[](const index_i& index) const {
                 return _data[index[0]];
         }
-        virtual T& operator[](const index_t& index) {
+        virtual T& operator[](const index_i& index) {
                 return _data[index[0]];
         }
 
@@ -197,10 +197,10 @@ public:
         virtual iterator_t<T> operator[](const range_t& range) {
                 return iterator_t<T>(*this, range.index, range.length);
         }
-        virtual const T& operator[](const index_t& index) const {
+        virtual const T& operator[](const index_i& index) const {
                 return _data[index[0]][index[1]];
         }
-        virtual T& operator[](const index_t& index) {
+        virtual T& operator[](const index_i& index) {
                 return _data[index[0]][index[1]];
         }
         virtual const std::vector<T>& operator[](size_t i) const {

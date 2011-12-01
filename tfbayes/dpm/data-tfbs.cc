@@ -37,7 +37,7 @@
 using namespace std;
 
 static inline
-bool valid_sampling_index(const vector<string>& sequences, const index_t& index, size_t tfbs_length)
+bool valid_sampling_index(const vector<string>& sequences, const index_i& index, size_t tfbs_length)
 {
         if (sequences[index[0]].size() - index[1] < tfbs_length) {
                 return false;
@@ -60,7 +60,7 @@ data_tfbs_t::data_tfbs_t(const vector<string>& sequences, size_t tfbs_length)
                 // and a list of indices
                 for(size_t j = 0; j < sequences[i].size(); j++) {
                         if (sequences[i][j] != 'N') {
-                                index_t* index = new seq_index_t(i,j);
+                                index_i* index = new seq_index_t(i,j);
                                 indices.push_back(index);
                                 if (valid_sampling_index(sequences, *index, tfbs_length)) {
                                         sampling_indices.push_back(index);
@@ -77,7 +77,7 @@ data_tfbs_t::data_tfbs_t(const data_tfbs_t& data)
           _n_sequences(data._n_sequences), _elements(data._elements)
 {
         for (data_tfbs_t::const_iterator it = data.begin(); it != data.end(); it++) {
-                index_t* index = (**it).clone();
+                index_i* index = (**it).clone();
                 indices.push_back(index);
                 sampling_indices.push_back(index);
         }

@@ -59,8 +59,8 @@ public:
         gsl_vector* original_cluster_assignments();
 
 private:
-        std::vector<index_t*> indices;
-        std::vector<index_t*> sampling_indices;
+        std::vector<index_i*> indices;
+        std::vector<index_i*> sampling_indices;
 
         const size_t _elements;
         const size_t _length;
