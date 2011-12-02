@@ -163,13 +163,6 @@ void save_result(ostream& file)
              it != posterior.hypergraph.end(); it++) {
                 file << "\t" << *it << endl;
         }
-        for (ClusterManager::const_iterator it = cm.begin();
-             it != cm.end(); it++) {
-                if ((*it)->cluster_tag() == 0) {
-                        file << "cluster_bg" << " =" << endl;
-                        file << static_cast<const ProductDirichlet&>((*it)->model());
-                }
-        }
 }
 
 #undef __BEGIN_DECLS
