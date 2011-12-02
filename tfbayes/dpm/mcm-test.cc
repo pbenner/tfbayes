@@ -53,6 +53,9 @@ static void sanity_check() {
         size_t k = ALPHABET_SIZE*ALPHABET_SIZE;
         char n[4] = {'A', 'C', 'T', 'G'};
         string n_str("AGGGGACGTCGATGCGTGATCGACTACGGCXX");
+//        string n_str("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXX");
+//        string n_str("ACGTACGTACGTACGTACGTACGTACGTACXX");
+//        string n_str("CGGCATCCCACTGACTTAGCGCTAGCTTACXX");
         vector<size_t> sizes(k, n_str.length());
         sequence_data_t<short> data;
         sequence_data_t<cluster_tag_t> cluster_assignments(sizes, 0);

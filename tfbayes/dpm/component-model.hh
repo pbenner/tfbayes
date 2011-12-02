@@ -124,8 +124,10 @@ private:
         size_t  _length;
         double* _counts;
         double* _alpha;
-        /* sum of pseudocounts and real counts for each context */
+        /* sum of pseudocounts and real counts for each character
+         * followed by a specific context */
         double* _counts_sum;
+        double* _entropy;
 
         const sequence_data_t<short>&         _data;
               sequence_data_t<context_t>      _context;
@@ -134,10 +136,12 @@ private:
         const cluster_tag_t _cluster_tag;
         const size_t        _max_context;
         const size_t        _alphabet_size;
+        const double        _entropy_max;
 
         // internal methods
         size_t max_from_context(const range_t& range) const;
         size_t max_to_context(const range_t& range) const;
+        void update_entropy(short code);
 };
 
 // Variable Order Markov Chain
