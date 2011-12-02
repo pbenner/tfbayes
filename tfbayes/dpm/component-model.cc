@@ -107,8 +107,8 @@ double ProductDirichlet::predictive(const range_t& range) {
 
         for (size_t i = 0; i < length; i++) {
                 const char code = _data[seq_index_t(sequence, position+i)];
-                result *= (counts[i%_size1][ code ]+alpha[i%_size1][ code ])
-                         /(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
+                result *= (double)(counts[i%_size1][ code ]+alpha[i%_size1][ code ])
+                        /(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
         }
         return result;
 }
