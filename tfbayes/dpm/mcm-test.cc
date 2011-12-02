@@ -69,14 +69,12 @@ static void sanity_check() {
                         data.push_back(sequence);
                 }
         }
-        //cout << data << endl;
 
         double sum = 0;
         for (size_t i = 0; i < k; i++) {
                 cluster_assignments[i][n_str.length()-1] = 2;
                 cluster_assignments[i][n_str.length()-2] = 2;
         }
-        //cout << cluster_assignments << endl;
         MarkovChainMixture model(ALPHABET_SIZE, CONTEXT, data, cluster_assignments, 0);
         for (size_t i = 0; i < k; i++) {
                 cluster_assignments[i][n_str.length()-1] = 1;
@@ -92,7 +90,6 @@ static void sanity_check() {
                      << endl;
         }
 
-        // fill counts1 with sequences
         cout << "Sum: " << sum << endl;
 }
 
