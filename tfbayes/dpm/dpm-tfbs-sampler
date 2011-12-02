@@ -42,7 +42,9 @@ options = {
     'alpha'            : 0.05,
     'discount'         : 0.0,
     'lambda'           : 0.01,
+    'context'          : 2,
     'process_prior'    : "pitman-yor process",
+    'background_model' : "independence",
     'samples'          : (1000,100),
     'population_size'  : 1,
     'tfbs_length'      : 10,
@@ -65,9 +67,14 @@ def usage():
     print "       --alpha=ALPHA              - alpha parameter for the dirichlet process"
     print "       --discount=DISCOUNT        - Pitman-Yor discount (0 <= d < 1)"
     print "       --lambda=LAMBDA            - lambda mixture weight"
+    print "       --context=CONTEXT          - context of the background model"
     print "       --process-prior=NAME       - possible process priors:"
     print "                                    pitman-yor process (default),"
     print "                                    uniform process, poppe process"
+    print "       --background-model=NAME    - possible background models:"
+    print "                                    independence (default),"
+    print "                                    markov chain mixture,"
+    print "                                    parsimonious tree"
     print "       --tfbs-length=LENGTH       - length of the tfbs"
     print
     print "   -s, --save=FILE                - save posterior to FILE"
@@ -107,8 +114,12 @@ def parse_config(config_file):
         options['discount'] = float(config_parser.get('TFBS-Sampler', 'discount'))
     if config_parser.has_option('TFBS-Sampler', 'lambda'):
         options['lambda'] = float(config_parser.get('TFBS-Sampler', 'lambda'))
+    if config_parser.has_option('TFBS-Sampler', 'context'):
+        options['context'] = int(config_parser.get('TFBS-Sampler', 'context'))
     if config_parser.has_option('TFBS-Sampler', 'process-prior'):
         options['process_prior'] = config_parser.get('TFBS-Sampler', 'process-prior').strip()
+    if config_parser.has_option('TFBS-Sampler', 'background-model'):
+        options['background_model'] = config_parser.get('TFBS-Sampler', 'background-model').strip()
     if config_parser.has_option('TFBS-Sampler', 'tfbs-length'):
         options['tfbs_length'] = int(config_parser.get('TFBS-Sampler', 'tfbs-length'))
     if config_parser.has_option('TFBS-Sampler', 'population-size'):
@@ -149,8 +160,8 @@ def main():
     global options
     try:
         longopts   = ["help", "verbose", "alpha=", "lambda=", "discount=",
-                      "process-prior=", "population-size=", "tfbs-length=",
-                      "save=", "samples="]
+                      "context", "process-prior=", "backround-model=",
+                      "population-size=", "tfbs-length=", "save=", "samples="]
         opts, tail = getopt.getopt(sys.argv[1:], "s:vh", longopts)
     except getopt.GetoptError:
         usage()
@@ -179,8 +190,12 @@ def main():
                 return 1
         if o == "--lambda":
             options['lambda'] = float(a)
+        if o == "--context":
+            options['context'] = int(a)
         if o == "--process-prior":
             options['process_prior'] = a
+        if o == "--background-model":
+            options['background_model'] = a
         if o == "--tfbs-length":
             options['tfbs_length'] = int(a)
         if o == "--population-size":
