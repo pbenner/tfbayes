@@ -81,6 +81,7 @@ static void sanity_check() {
                 cluster_assignments[i][n_str.length()-2] = 1;
         }
         model.add(range_t(seq_index_t(0,0), n_str.length()-2));
+        cout << "likelihood: " << model.log_likelihood() << endl;
         for (size_t i = 0; i < k; i++) {
                 double p = model.predictive(range_t(seq_index_t(i,n_str.length()-2), 2));
                 sum += p;

@@ -127,7 +127,11 @@ private:
         /* sum of pseudocounts and real counts for each character
          * followed by a specific context */
         double* _counts_sum;
+        /* temporary copy of counts and counts_sum to compute
+         * likelihoods */
+        double* _counts_tmp;
         double* _entropy;
+        short * _parents;
 
         const sequence_data_t<short>&         _data;
               sequence_data_t<context_t>      _context;
@@ -142,6 +146,8 @@ private:
         size_t max_from_context(const range_t& range) const;
         size_t max_to_context(const range_t& range) const;
         void update_entropy(short code);
+        double log_likelihood(size_t pos) const;
+        void substract_counts(size_t pos) const;
 };
 
 // Variable Order Markov Chain

@@ -113,7 +113,6 @@ void save_result(ostream& file)
 {
         const posterior_t& posterior      = _pmcmc->posterior();
         const sampling_history_t& history = _pmcmc->sampling_history();
-        const ClusterManager& cm          = _gdpm->clustermanager();
 
         file.setf(ios::showpoint);
 

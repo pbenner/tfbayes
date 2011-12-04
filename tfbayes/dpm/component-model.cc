@@ -160,17 +160,33 @@ MarkovChainMixture::MarkovChainMixture(
         _counts = (double*)malloc(_length*sizeof(double));
         _counts_sum = (double*)malloc(_length/_alphabet_size*sizeof(double));
         _entropy    = (double*)malloc(_length/_alphabet_size*sizeof(double));
+        _parents    = (short*)malloc(_length*sizeof(short));
+
+        /* for likelihood computations */
+        _counts_tmp = (double*)malloc(_length*sizeof(double));
 
         /* init data structures */
         for (size_t i = 0; i < _length; i++) {
                 _alpha[i]  = 1.0;
                 _counts[i] = 0.0;
         }
+        /* init counts_sum and entropies */
         for (size_t i = 0; i < _length/_alphabet_size; i++) {
                 _counts_sum[i] = _alphabet_size;
                 _entropy[i]    = 1;
         }
-
+        /* for each node compute its parent */
+        for (size_t i = 0; i < _length/_alphabet_size; i++) {
+                for (size_t j = 0; j < _alphabet_size; j++) {
+                        if (i == 0) {
+                                _parents[j] = -1;
+                        }
+                        else {
+                                _parents[_alphabet_size*i + j] =
+                                        _alphabet_size*((i-1)/_alphabet_size) + j;
+                        }
+                }
+        }
         /* compute context */
         for (size_t i = 0; i < _data.size(); i++) {
                 const nucleotide_sequence_t& seq = (const nucleotide_sequence_t&)_data[i];
@@ -188,22 +204,29 @@ MarkovChainMixture::MarkovChainMixture(const MarkovChainMixture& distribution)
           _alphabet_size(distribution._alphabet_size),
           _entropy_max(distribution._entropy_max)
 {
-        _alpha  = (double*)malloc(_length*sizeof(double));
-        _counts = (double*)malloc(_length*sizeof(double));
+        _alpha      = (double*)malloc(_length*sizeof(double));
+        _counts     = (double*)malloc(_length*sizeof(double));
         _counts_sum = (double*)malloc(_length/_alphabet_size*sizeof(double));
         _entropy    = (double*)malloc(_length/_alphabet_size*sizeof(double));
+        _parents    = (short*)malloc(_length*sizeof(short));
+
+        /* for likelihood computations */
+        _counts_tmp = (double*)malloc(_length*sizeof(double));
 
         /* init data structures */
-        memcpy(_alpha,  distribution._alpha,  _length*sizeof(double));
-        memcpy(_counts, distribution._counts, _length*sizeof(double));
+        memcpy(_alpha,   distribution._alpha,   _length*sizeof(double));
+        memcpy(_counts,  distribution._counts,  _length*sizeof(double));
         memcpy(_counts_sum, distribution._counts_sum, _length/_alphabet_size*sizeof(double));
         memcpy(_entropy, distribution._counts_sum, _length/_alphabet_size*sizeof(double));
+        memcpy(_parents, distribution._parents, _length*sizeof(short));
 }
 
 MarkovChainMixture::~MarkovChainMixture() {
         free(_alpha);
         free(_counts);
+        free(_parents);
         free(_counts_sum);
+        free(_counts_tmp);
 }
 
 MarkovChainMixture*
@@ -349,8 +372,69 @@ double MarkovChainMixture::log_predictive(const range_t& range) {
         return log(predictive(range));
 }
 
+double MarkovChainMixture::log_likelihood(size_t pos) const
+{
+        const double n = _counts_tmp[pos];
+        double weight = 0;
+        double weight_sum = 0;
+        double result = 0;
+        vector<short> path;
+
+        // compute the path up the tree
+        for (short i = pos; i != -1; i = _parents[i]) {
+                path.push_back(i);
+        }
+        // compute likelihood for this node
+        for (size_t c = 0; c < path.size(); c++) {
+                const short code = path[path.size()-c-1];
+                // compute mixture weight
+                if (c == path.size()) {
+                        weight = 1 - weight_sum;
+                }
+                else {
+                        weight = (1 - _entropy[code/_alphabet_size])*(1 - weight_sum);
+                }
+                weight_sum += weight;
+                // compute mixture component
+                result += weight*(_counts[code]+_alpha[code])/
+                        _counts_sum[code/_alphabet_size];
+        }
+        return n*log(result);
+}
+
+void MarkovChainMixture::substract_counts(size_t pos) const
+{
+        const double n = _counts_tmp[pos];
+
+        for (short i = pos; i != -1; i = _parents[i]) {
+                _counts_tmp[i] -= n;
+        }
+}
+
 double MarkovChainMixture::log_likelihood() const {
-        return 0;
+        memcpy(_counts_tmp, _counts, _length*sizeof(double));
+        double result = 0;
+
+        for(size_t i = 0; i <= _max_context; i++) {
+                const size_t context = _max_context - i;
+                const size_t offset_from = context_t::counts_offset(_alphabet_size, context);
+                const size_t offset_to   = context_t::counts_offset(_alphabet_size, context+1);
+
+                // compute likelihood for each node
+                for(size_t j = offset_from; j < offset_to; j++) {
+                        if (_counts_tmp[j] > 0) {
+                                result += log_likelihood(j);
+                        }
+                }
+                // propagate used counts up the tree
+                for(size_t j = offset_from; j < offset_to; j++) {
+                        if (_counts_tmp[j] > 0) {
+                                substract_counts(j);
+                        }
+                }
+        }
+
+        return result;
 }
 
 // Variable Order Markov Chain
