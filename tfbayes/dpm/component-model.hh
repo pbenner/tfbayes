@@ -131,7 +131,7 @@ private:
          * likelihoods */
         double* _counts_tmp;
         double* _entropy;
-        short * _parents;
+        int * _parents;
 
         const sequence_data_t<short>&         _data;
               sequence_data_t<context_t>      _context;
@@ -145,7 +145,7 @@ private:
         // internal methods
         size_t max_from_context(const range_t& range) const;
         size_t max_to_context(const range_t& range) const;
-        void update_entropy(short code);
+        void update_entropy(int code);
         double log_likelihood(size_t pos) const;
         void substract_counts(size_t pos) const;
 };

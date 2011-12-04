@@ -160,7 +160,7 @@ MarkovChainMixture::MarkovChainMixture(
         _counts = (double*)malloc(_length*sizeof(double));
         _counts_sum = (double*)malloc(_length/_alphabet_size*sizeof(double));
         _entropy    = (double*)malloc(_length/_alphabet_size*sizeof(double));
-        _parents    = (short*)malloc(_length*sizeof(short));
+        _parents    = (int*)malloc(_length*sizeof(int));
 
         /* for likelihood computations */
         _counts_tmp = (double*)malloc(_length*sizeof(double));
@@ -208,7 +208,7 @@ MarkovChainMixture::MarkovChainMixture(const MarkovChainMixture& distribution)
         _counts     = (double*)malloc(_length*sizeof(double));
         _counts_sum = (double*)malloc(_length/_alphabet_size*sizeof(double));
         _entropy    = (double*)malloc(_length/_alphabet_size*sizeof(double));
-        _parents    = (short*)malloc(_length*sizeof(short));
+        _parents    = (int*)malloc(_length*sizeof(int));
 
         /* for likelihood computations */
         _counts_tmp = (double*)malloc(_length*sizeof(double));
@@ -218,7 +218,7 @@ MarkovChainMixture::MarkovChainMixture(const MarkovChainMixture& distribution)
         memcpy(_counts,  distribution._counts,  _length*sizeof(double));
         memcpy(_counts_sum, distribution._counts_sum, _length/_alphabet_size*sizeof(double));
         memcpy(_entropy, distribution._counts_sum, _length/_alphabet_size*sizeof(double));
-        memcpy(_parents, distribution._parents, _length*sizeof(short));
+        memcpy(_parents, distribution._parents, _length*sizeof(int));
 }
 
 MarkovChainMixture::~MarkovChainMixture() {
@@ -265,10 +265,10 @@ MarkovChainMixture::max_to_context(const range_t& range) const
 }
 
 void
-MarkovChainMixture::update_entropy(short code)
+MarkovChainMixture::update_entropy(int code)
 {
-        const short from = code - (code%_alphabet_size);
-        const short k    = code/_alphabet_size;
+        const int from = code - (code%_alphabet_size);
+        const int k    = code/_alphabet_size;
 
         _entropy[k] = 0;
         for (size_t i = from; i < from+_alphabet_size; i++) {
@@ -290,7 +290,7 @@ MarkovChainMixture::add(const range_t& range) {
                 const size_t c_max = min(from_context+i, _max_context);
                 const size_t c_min = i < length ? 0 : i-(length-1);
                 for (size_t c = c_min; c <= c_max; c++) {
-                        const short code = _context[sequence][pos][c];
+                        const int code = _context[sequence][pos][c];
                         if (code != -1) {
                                 _counts[code]++;
                                 _counts_sum[code/_alphabet_size]++;
@@ -314,7 +314,7 @@ MarkovChainMixture::remove(const range_t& range) {
                 const size_t c_max = min(from_context+i, _max_context);
                 const size_t c_min = i < length ? 0 : i-(length-1);
                 for (size_t c = c_min; c <= c_max; c++) {
-                        const short code = _context[sequence][pos][c];
+                        const int code = _context[sequence][pos][c];
                         if (code != -1) {
                                 _counts[code]--;
                                 _counts_sum[code/_alphabet_size]--;
@@ -346,7 +346,7 @@ double MarkovChainMixture::predictive(const range_t& range) {
                 double weight_sum = 0;
                 double partial_result = 0;
                 for (size_t c = c_min; c <= c_max; c++) {
-                        const short code = _context[sequence][pos][c];
+                        const int code = _context[sequence][pos][c];
                         assert(code != -1);
                         // compute mixture weight
                         if (c == c_max) {
@@ -378,15 +378,15 @@ double MarkovChainMixture::log_likelihood(size_t pos) const
         double weight = 0;
         double weight_sum = 0;
         double result = 0;
-        vector<short> path;
+        vector<int> path;
 
         // compute the path up the tree
-        for (short i = pos; i != -1; i = _parents[i]) {
+        for (int i = pos; i != -1; i = _parents[i]) {
                 path.push_back(i);
         }
         // compute likelihood for this node
         for (size_t c = 0; c < path.size(); c++) {
-                const short code = path[path.size()-c-1];
+                const int code = path[path.size()-c-1];
                 // compute mixture weight
                 if (c == path.size()) {
                         weight = 1 - weight_sum;
@@ -406,7 +406,7 @@ void MarkovChainMixture::substract_counts(size_t pos) const
 {
         const double n = _counts_tmp[pos];
 
-        for (short i = pos; i != -1; i = _parents[i]) {
+        for (int i = pos; i != -1; i = _parents[i]) {
                 _counts_tmp[i] -= n;
         }
 }

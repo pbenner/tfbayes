@@ -48,7 +48,7 @@ private:
         const std::string _sequence;
 };
 
-class context_t : public std::vector<short>
+class context_t : public std::vector<int>
 {
 public:
         context_t(size_t alphabet_size, const AbysmalStack<short>& stack) {
