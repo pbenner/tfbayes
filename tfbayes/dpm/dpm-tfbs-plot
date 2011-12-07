@@ -136,16 +136,36 @@ def parseConfig(config_file):
 
 def plot_likehood(likelihood, show):
     fig = pyplot.figure()
-    ax  = fig.add_subplot(111, title="Log Likelihood")
+    fig.subplots_adjust(left=0.15)
+    ax  = fig.add_subplot(111)
+    ax.set_xlabel("sample")
+    ax.set_ylabel("log likelihood")
     for l in likelihood:
         ax.plot(l)
     show()
 
 def plot_components(components, show):
     fig = pyplot.figure()
-    ax  = fig.add_subplot(111, title="Components")
+    ax  = fig.add_subplot(111)
+    ax.set_xlabel("sample")
+    ax.set_ylabel("components")
     for c in components:
         ax.plot(c)
+    show()
+
+def plot_likelihood_and_components(likelihood, components, show):
+    fig = pyplot.figure()
+    fig.subplots_adjust(left=0.15)
+    ax1 = fig.add_subplot(111)
+    ax2 = ax1.twinx()
+    ax1.set_xlabel("sample")
+    ax1.set_ylabel("log likelihood")
+    ax2.set_ylabel("components")
+    for l in likelihood:
+        p1 = ax1.plot(l, 'b')
+    for c in components:
+        p2 = ax2.plot(c, 'r')
+    ax1.legend([p1, p2], ['log likelihood', 'components'], ncol=2, mode='expand', loc=3, frameon=False, borderaxespad=0.)
     show()
 
 def split_len(seq, length):
@@ -187,6 +207,7 @@ def plot_result(results_file):
     posterior, likelihood, components = parseConfig(results_file)
     plot_likehood(likelihood, show)
     plot_components(components, show)
+#    plot_likelihood_and_components(likelihood, components, show)
     if options['sequences']:
         descriptions, sequences = readSequences(options['sequences'])
         plot_sequences(descriptions, sequences, posterior, show)

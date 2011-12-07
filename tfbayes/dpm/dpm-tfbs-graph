@@ -274,7 +274,15 @@ def __main__():
             config_parser_load.read(options['load'])
             bg, motifs, components = fileio.load_motifs(config_parser_load)
         else:
-            bg_counts = read_matrix(config_parser_results, 'Result', 'cluster_bg', int)
+            if config_parser_results.has_option('Result', 'cluster_bg'):
+                bg_counts = read_matrix(config_parser_results, 'Result', 'cluster_bg', int)
+            else:
+                print "Warning: using default background counts."
+                bg_counts = [[0], [0], [0], [0]]
+                bg_counts[DNA.code('G')][0] = 2000
+                bg_counts[DNA.code('A')][0] = 3000
+                bg_counts[DNA.code('T')][0] = 3000
+                bg_counts[DNA.code('C')][0] = 2000
             bg = tools.compute_frequencies(bg_counts)
             motifs, components = generate_motifs(sequences, G, options['tfbs_length'])
         if options['plot']:
