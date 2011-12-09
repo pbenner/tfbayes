@@ -74,8 +74,7 @@ public:
         ~ProductDirichlet();
 
         // datatypes
-        typedef std::vector<std::vector<size_t> > alpha_t;
-        typedef std::vector<std::vector<size_t> > counts_t;
+        typedef std::vector<double> counts_t;
 
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
@@ -89,8 +88,8 @@ public:
         friend std::ostream& operator<< (std::ostream& o, const ProductDirichlet& pd);
 
 private:
-        alpha_t alpha;
-        counts_t counts;
+        std::vector<counts_t> alpha;
+        std::vector<counts_t> counts;
 
         const sequence_data_t<short>& _data;
 

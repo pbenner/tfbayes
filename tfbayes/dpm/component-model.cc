@@ -41,9 +41,9 @@ ProductDirichlet::ProductDirichlet(const matrix<double>& _alpha, const sequence_
         : _data(data), _size1(_alpha.size()), _size2(_alpha[0].size())
 {
         for (size_t i = 0; i < _alpha.size(); i++) {
-                size_t sum = 0;
-                alpha.push_back (vector<size_t>(_size2+1, 0));
-                counts.push_back(vector<size_t>(_size2+1, 0));
+                double sum = 0;
+                alpha.push_back (counts_t(_size2+1, 0.0));
+                counts.push_back(counts_t(_size2+1, 0.0));
                 for (size_t j = 0; j < _alpha[i].size(); j++) {
                         alpha[i][j] = _alpha[i][j];
                         sum        +=  alpha[i][j];
@@ -107,8 +107,8 @@ double ProductDirichlet::predictive(const range_t& range) {
 
         for (size_t i = 0; i < length; i++) {
                 const char code = _data[seq_index_t(sequence, position+i)];
-                result *= (double)(counts[i%_size1][ code ]+alpha[i%_size1][ code ])
-                        /(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
+                result *= (counts[i%_size1][ code ]+alpha[i%_size1][ code ])
+                         /(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
         }
         return result;
 }

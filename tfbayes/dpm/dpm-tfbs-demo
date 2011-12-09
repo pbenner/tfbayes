@@ -120,7 +120,7 @@ def parse_config(config_file):
         options['baseline_weights'] = read_vector(config_parser, 'TFBS-Sampler', 'baseline-weights', int)
     if config_parser.has_option('TFBS-Sampler', 'baseline-priors'):
         for prior_name in read_vector(config_parser, 'TFBS-Sampler', 'baseline-priors', str):
-            prior = read_matrix(config_parser, 'TFBS-Sampler', prior_name, int)
+            prior = read_matrix(config_parser, 'TFBS-Sampler', prior_name, float)
             options['baseline_priors'].append(prior)
 
 # usage
