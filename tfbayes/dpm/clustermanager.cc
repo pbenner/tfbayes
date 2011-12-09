@@ -51,7 +51,7 @@ ClusterManager::~ClusterManager() {
 ClusterManager::ClusterManager(const ClusterManager& cm)
         : used_clusters_size(cm.used_clusters_size),
           free_clusters_size(cm.free_clusters_size),
-          cluster_assignments(*cm.cluster_assignments.clone())
+          cluster_assignments(cm.cluster_assignments)
 {
         for (size_t i = 0; i < cm.clusters.size(); i++) {
                 Cluster* c = new Cluster(*cm.clusters[i]);
