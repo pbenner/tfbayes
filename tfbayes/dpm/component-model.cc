@@ -167,7 +167,7 @@ MarkovChainMixture::MarkovChainMixture(
 
         /* init data structures */
         for (size_t i = 0; i < _length; i++) {
-                _alpha[i]  = 1.0;
+                _alpha[i]  = 0.5;
                 _counts[i] = 0.0;
         }
         /* init counts_sum and entropies */
