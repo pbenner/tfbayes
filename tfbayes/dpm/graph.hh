@@ -22,13 +22,9 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <list>
-#include <map>
 #include <boost/unordered_map.hpp> 
 
 #include <index.hh>
-//#include <indexer.hh>
-//#include <datatypes.hh>
 
 static inline
 const index_i& imin(const index_i& index1, const index_i& index2) {

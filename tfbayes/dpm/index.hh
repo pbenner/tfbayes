@@ -27,6 +27,8 @@
 #include <clonable.hh>
 #include <iostream>
 
+#include <boost/functional/hash.hpp> 
+
 // index_t and range_t
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,6 +40,7 @@ public:
         virtual bool operator==(const index_i& index) const = 0;
         virtual void operator=(const index_i& index) = 0;
         virtual void operator++(int i) = 0;
+        virtual size_t hash() const = 0;
 };
 
 class index_t : public index_i {
@@ -67,6 +70,11 @@ public:
         }
         virtual __inline__ void operator++(int i) {
                 _x0++;
+        }
+        virtual size_t hash() const {
+                boost::hash<size_t> hasher;
+
+                return hasher(_x0);
         }
 
 protected:
@@ -106,6 +114,13 @@ public:
         virtual __inline__ void operator++(int i) {
                 _x[1]++;
         }
+        virtual size_t hash() const {
+                size_t seed = 0; 
+                boost::hash<size_t> hasher;
+                boost::hash_combine(seed, hasher(_x[0]));
+                boost::hash_combine(seed, hasher(_x[1]));
+                return seed;
+        }
 
 protected:
         size_t _x[2];
@@ -117,8 +132,18 @@ public:
                 : index(index), length(length) {
         }
 
+        bool operator==(const range_t& range) const {
+                return range.index == index && range.length == length;
+        }
+
         const index_i& index;
         const size_t length;
 };
+
+static inline
+size_t hash_value(const range_t& range)
+{
+        return range.index.hash();
+}
 
 #endif /* INDEX_HH */

@@ -126,7 +126,7 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
 
         ////////////////////////////////////////////////////////////////////////////////
         //test();
-        //test_background();
+        test_background();
 }
 
 DpmTfbs::~DpmTfbs() {

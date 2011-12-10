@@ -28,22 +28,16 @@
 
 using namespace std;
 
-Cluster::Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag)
-        : _model(model), _cluster_tag(cluster_tag), _model_tag(model_tag), _destructible(true), _size(0)
+Cluster::Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
+                 bool destructible, bool record)
+        : _model(model), _cluster_tag(cluster_tag), _model_tag(model_tag),
+          _destructible(destructible), _record(record), _size(0)
 { }
 
-Cluster::Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag, bool destructible)
-        : _model(model), _cluster_tag(cluster_tag), _model_tag(model_tag), _destructible(destructible), _size(0)
-{ }
-
-Cluster::Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag, Observer<cluster_event_t>* observer)
-        : _model(model), _cluster_tag(cluster_tag), _model_tag(model_tag), _destructible(true), _size(0)
-{
-        set_observer(observer);
-}
-
-Cluster::Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag, Observer<cluster_event_t>* observer, bool destructible)
-        : _model(model), _cluster_tag(cluster_tag), _model_tag(model_tag), _destructible(destructible), _size(0)
+Cluster::Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
+                 Observer<cluster_event_t>* observer, bool destructible, bool record)
+        : _model(model), _cluster_tag(cluster_tag), _model_tag(model_tag),
+          _destructible(destructible), _record(record), _size(0)
 {
         set_observer(observer);
 }
@@ -53,6 +47,7 @@ Cluster::Cluster(const Cluster& cluster)
           _cluster_tag(cluster._cluster_tag),
           _model_tag(cluster._model_tag),
           _destructible(cluster._destructible),
+          _record(cluster._record),
           _size(cluster._size)
 {
         set_observer(cluster.observer);
@@ -73,6 +68,10 @@ Cluster::add_observations(const range_t& range)
                 _size += _model->add(range);
         }
         notify(cluster_event_add_word, range);
+
+        if (_record) {
+                _elements.insert(range);
+        }
 }
 
 void
@@ -84,6 +83,10 @@ Cluster::remove_observations(const range_t& range)
                         notify(cluster_event_empty);
                 }
                 notify(cluster_event_remove_word, range);
+
+                if (_record) {
+                        _elements.erase(range);
+                }
         }
 }
 

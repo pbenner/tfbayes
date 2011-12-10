@@ -31,6 +31,8 @@
 #include <datatypes.hh>
 #include <observer.hh>
 
+#include <boost/unordered_set.hpp> 
+
 ////////////////////////////////////////////////////////////////////////////////
 // This class represents a single cluster for the dirichlet process
 // mixture. Each cluster is linked to a probability distribution and
@@ -39,12 +41,26 @@
 
 class Cluster : public Observed<cluster_event_t> {
 public:
-         Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag);
-         Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag, bool destructible);
-         Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag, Observer<cluster_event_t>* observer);
-         Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag, Observer<cluster_event_t>* observer, bool destructible);
+         Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
+                 bool destructible = true, bool record = false);
+         Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
+                 Observer<cluster_event_t>* observer, bool destructible = true, bool record = false);
          Cluster(const Cluster& cluster);
         ~Cluster();
+
+        // types
+        //typedef boost::unordered_map<range_t, size_t> map_t;
+        typedef boost::unordered_set<range_t> map_t;
+
+        typedef map_t::iterator iterator;
+        typedef map_t::const_iterator const_iterator;
+
+        // iterators
+        iterator begin() { return _elements.begin(); }
+        iterator end()   { return _elements.end();   }
+
+        const_iterator begin() const { return _elements.begin(); }
+        const_iterator end()   const { return _elements.end();   }
 
         // friends
         friend std::ostream& operator<< (std::ostream& o, const Cluster& cluster);
@@ -60,9 +76,12 @@ public:
 
 private:
         ComponentModel* _model;
-        cluster_tag_t _cluster_tag;
-        model_tag_t _model_tag;
-        bool _destructible;
+        const cluster_tag_t _cluster_tag;
+        const model_tag_t _model_tag;
+        const bool _destructible;
+        const bool _record;
+        map_t _elements;
+
         // number of elements in the cluster
         size_t _size;
 };

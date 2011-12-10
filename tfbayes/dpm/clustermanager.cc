@@ -83,7 +83,7 @@ ClusterManager::add_cluster(ComponentModel* model)
         // of free clusters, so we do not need to observe it
         // and we can simply push it to the list of used
         // clusters
-        Cluster* c = new Cluster(model, cluster_tag, -1, this, false);
+        Cluster* c = new Cluster(model, cluster_tag, -1, this, false, false);
         clusters.push_back(c);
         used_clusters.push_back(clusters.back());
         used_clusters_size++;
@@ -99,7 +99,7 @@ ClusterManager::add_cluster(model_tag_t model_tag)
 
         cluster_tag_t cluster_tag = clusters.size();
 
-        Cluster* c = new Cluster(baseline_models[model_tag]->clone(), cluster_tag, model_tag, this);
+        Cluster* c = new Cluster(baseline_models[model_tag]->clone(), cluster_tag, model_tag, this, true, true);
         clusters.push_back(c);
         // this cluster is empty, so place it into the list
         // of free clusters
