@@ -90,6 +90,12 @@ Cluster::remove_observations(const range_t& range)
         }
 }
 
+Cluster::elements_t
+Cluster::elements() const
+{
+        return _elements;
+}
+
 size_t
 Cluster::size() const
 {

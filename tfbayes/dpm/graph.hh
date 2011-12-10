@@ -49,8 +49,14 @@ const index_i& imax(const index_i& index1, const index_i& index2) {
 }
 
 typedef struct _edge_t {
-        _edge_t(const index_i& i1, const index_i& i2)
-                : index1(imin(i1,i2)), index2(imax(i1,i2)) { }
+         _edge_t(const index_i& i1, const index_i& i2)
+                : index1(*imin(i1,i2).clone()), index2(*imax(i1,i2).clone()) { }
+         _edge_t(const _edge_t& edge)
+                : index1(*edge.index1.clone()), index2(*edge.index2.clone()) { }
+        ~_edge_t() {
+                delete(&index1);
+                delete(&index2);
+        }
 
         bool operator==(const _edge_t& edge) const {
                 if ((index1 == edge.index1 && index2 == edge.index2) ||

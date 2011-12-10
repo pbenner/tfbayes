@@ -128,8 +128,14 @@ protected:
 
 class range_t {
 public:
-        range_t(const index_i& index, size_t length) 
-                : index(index), length(length) {
+         range_t(const index_i& index, size_t length) 
+                : index(*index.clone()), length(length) {
+         }
+         range_t(const range_t& range)
+                : index(*range.index.clone()), length(range.length) {
+         }
+        ~range_t() {
+                delete(&index);
         }
 
         bool operator==(const range_t& range) const {

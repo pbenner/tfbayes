@@ -77,6 +77,11 @@ public:
         const Graph& graph() const;
         void test();
         void test_background();
+        void test_moves();
+
+        // metropolis hastings
+        void move_left(Cluster& cluster);
+        void move_right(Cluster& cluster);
 
         // constants
         ////////////////////////////////////////////////////////////////////////

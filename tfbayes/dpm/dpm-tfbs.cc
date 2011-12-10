@@ -126,7 +126,8 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
 
         ////////////////////////////////////////////////////////////////////////////////
         //test();
-        test_background();
+        //test_background();
+        test_moves();
 }
 
 DpmTfbs::~DpmTfbs() {
@@ -306,28 +307,61 @@ DpmTfbs::likelihood() const {
 }
 
 void
-DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
+DpmTfbs::move_left(Cluster& cluster)
 {
-        std::list<const index_i*> binding_sites;
-        // find all binding sites
-        for (Indexer::sampling_iterator it = _data.sampling_begin();
-             it != _data.sampling_end(); it++) {
-                if (tfbs_start_positions[**it] == 1) {
-                        binding_sites.push_back(*it);
+        const Cluster::elements_t elements(cluster.elements());
+
+        for (Cluster::iterator is = elements.begin(); is != elements.end(); is++) {
+                const range_t& range = *is;
+                const size_t sequence = range.index[0];
+                const size_t position = range.index[1];
+                const seq_index_t index(sequence, position-1);
+                remove(range.index, cluster.cluster_tag());
+                add(range.index, bg_cluster_tag);
+                if (position > 0 && valid_for_sampling(index)) {
+                        remove(index, bg_cluster_tag);
+                        add(index, cluster.cluster_tag());
                 }
         }
-        // iterate over binding sites
-        for (std::list<const index_i*>::const_iterator it = binding_sites.begin();
-             it != binding_sites.end(); it++) {
-                // if there still is a binding site
-                if (tfbs_start_positions[**it] == 1) {
-                        cluster_tag_t tag = _cluster_assignments[**it];
-                        tfbs_start_positions[**it] = 0;
-                        // find sites with the same cluster assignment
-                        for (std::list<const index_i*>::const_iterator is = it;
-                             is != binding_sites.end(); is++) {
-                                if (tfbs_start_positions[**is] == 1 && _cluster_assignments[**is] == tag) {
-                                        _posterior.graph[edge_t(**it, **is)]++;
+}
+
+void
+DpmTfbs::move_right(Cluster& cluster)
+{
+        const Cluster::elements_t elements(cluster.elements());
+
+        for (Cluster::const_iterator is = elements.begin(); is != elements.end(); is++) {
+                const range_t range(*is);
+                const size_t sequence = range.index[0];
+                const size_t position = range.index[1];
+                const size_t sequence_length = _data.size(sequence);
+                const seq_index_t index(sequence, position+1);
+                remove(range.index, cluster.cluster_tag());
+                add(range.index, bg_cluster_tag);
+                if (position+1 < sequence_length && valid_for_sampling(index)) {
+                        remove(index, bg_cluster_tag);
+                        add(index, cluster.cluster_tag());
+                }
+        }
+}
+
+void
+DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
+{
+        typedef ClusterManager::const_iterator cm_iterator;
+        typedef Cluster::const_iterator cl_iterator;
+
+        // loop through all clusters
+        for (cm_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {
+                const Cluster& cluster = **it;
+                if (cluster.cluster_tag() != bg_cluster_tag) {
+                        // loop through cluster elements
+                        for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
+                                cl_iterator iu = is; iu++;
+                                while (iu != cluster.end()) {
+                                        // record edge
+                                        _posterior.graph[edge_t(is->index, iu->index)]++;
+                                        iu++;
                                 }
                         }
                 }

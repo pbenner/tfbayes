@@ -27,6 +27,40 @@
 using namespace std;
 
 void
+DpmTfbs::test_moves() {
+        seq_index_t index1(0,0);
+        seq_index_t index2(0,10);
+        seq_index_t index3(1,10);
+        seq_index_t index4(1,20);
+        seq_index_t index5(0,13);
+        seq_index_t index6(0,22);
+
+        Cluster& cluster1 = _clustermanager.get_free_cluster(_model_tags[0]);
+        cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
+
+        remove(index1, bg_cluster_tag);
+        add(index1, cluster_tag1);
+
+        remove(index2, bg_cluster_tag);
+        add(index2, cluster_tag1);
+
+        remove(index3, bg_cluster_tag);
+        add(index3, cluster_tag1);
+
+        Cluster& cluster2 = _clustermanager.get_free_cluster(_model_tags[0]);
+        cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
+
+        remove(index4, bg_cluster_tag);
+        add(index4, cluster_tag2);
+
+        cout << _cluster_assignments << endl;
+        move_left(cluster1);
+        cout << _cluster_assignments << endl;
+
+        exit(EXIT_SUCCESS);
+}
+
+void
 DpmTfbs::test_background() {
         seq_index_t index1(0,0);
         seq_index_t index2(0,10);

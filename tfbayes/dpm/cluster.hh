@@ -49,16 +49,12 @@ public:
         ~Cluster();
 
         // types
-        //typedef boost::unordered_map<range_t, size_t> map_t;
-        typedef boost::unordered_set<range_t> map_t;
+        typedef boost::unordered_set<range_t> elements_t;
 
-        typedef map_t::iterator iterator;
-        typedef map_t::const_iterator const_iterator;
+        typedef elements_t::iterator iterator;
+        typedef elements_t::const_iterator const_iterator;
 
         // iterators
-        iterator begin() { return _elements.begin(); }
-        iterator end()   { return _elements.end();   }
-
         const_iterator begin() const { return _elements.begin(); }
         const_iterator end()   const { return _elements.end();   }
 
@@ -73,6 +69,7 @@ public:
         model_tag_t model_tag() const;
         bool destructible() const;
         ComponentModel& model();
+        elements_t elements() const;
 
 private:
         ComponentModel* _model;
@@ -80,7 +77,7 @@ private:
         const model_tag_t _model_tag;
         const bool _destructible;
         const bool _record;
-        map_t _elements;
+        elements_t _elements;
 
         // number of elements in the cluster
         size_t _size;
