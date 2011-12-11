@@ -102,7 +102,7 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
 
         ////////////////////////////////////////////////////////////////////////////////
         // assign all elements to the background
-        for (data_tfbs_t::const_iterator it = _data.begin();
+        for (da_iterator it = _data.begin();
              it != _data.end(); it++) {
                 range_t range(**it, 1);
                 _clustermanager[bg_cluster_tag].add_observations(range);
@@ -127,7 +127,8 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
         ////////////////////////////////////////////////////////////////////////////////
         //test();
         //test_background();
-        test_moves();
+        //test_moves();
+        test_metropolis_hastings();
 }
 
 DpmTfbs::~DpmTfbs() {
@@ -267,7 +268,7 @@ DpmTfbs::mixture_weights(const index_i& index, double log_weights[], cluster_tag
         cluster_tag_t i = 0;
         ////////////////////////////////////////////////////////////////////////
         // loop through existing clusters
-        for (ClusterManager::const_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {
+        for (cm_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {
                 Cluster& cluster = **it;
                 cluster_tags[i] = cluster.cluster_tag();
                 if (cluster.cluster_tag() == bg_cluster_tag) {
@@ -298,7 +299,7 @@ double
 DpmTfbs::likelihood() const {
         double result = 0;
 
-        for (ClusterManager::const_iterator it = _clustermanager.begin();
+        for (cm_iterator it = _clustermanager.begin();
              it != _clustermanager.end(); it++) {
                 Cluster& cluster = **it;
                 result += cluster.model().log_likelihood();
@@ -311,7 +312,7 @@ DpmTfbs::move_left(Cluster& cluster)
 {
         const Cluster::elements_t elements(cluster.elements());
 
-        for (Cluster::iterator is = elements.begin(); is != elements.end(); is++) {
+        for (cl_iterator is = elements.begin(); is != elements.end(); is++) {
                 const range_t& range = *is;
                 const size_t sequence = range.index[0];
                 const size_t position = range.index[1];
@@ -330,7 +331,7 @@ DpmTfbs::move_right(Cluster& cluster)
 {
         const Cluster::elements_t elements(cluster.elements());
 
-        for (Cluster::const_iterator is = elements.begin(); is != elements.end(); is++) {
+        for (cl_iterator is = elements.begin(); is != elements.end(); is++) {
                 const range_t range(*is);
                 const size_t sequence = range.index[0];
                 const size_t position = range.index[1];
@@ -348,9 +349,6 @@ DpmTfbs::move_right(Cluster& cluster)
 void
 DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
 {
-        typedef ClusterManager::const_iterator cm_iterator;
-        typedef Cluster::const_iterator cl_iterator;
-
         // loop through all clusters
         for (cm_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {
                 const Cluster& cluster = **it;
@@ -408,7 +406,7 @@ DpmTfbs::update_posterior(size_t sampling_steps) {
         if (sampling_steps % 100 == 0) {
                 _tfbs_graph.cleanup(1);
         }
-        for (data_tfbs_t::const_iterator it = _data.begin();
+        for (da_iterator it = _data.begin();
              it != _data.end(); it++) {
                 const index_i& index  = **it;
                 const size_t sequence = index[0];

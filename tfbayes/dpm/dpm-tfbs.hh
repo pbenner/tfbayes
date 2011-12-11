@@ -52,6 +52,12 @@ public:
 
         DpmTfbs* clone() const;
 
+        // auxiliary types
+        ////////////////////////////////////////////////////////////////////////
+        typedef ClusterManager::const_iterator cm_iterator;
+        typedef Cluster::const_iterator cl_iterator;
+        typedef data_tfbs_t::const_iterator da_iterator;
+
         // operators
         ////////////////////////////////////////////////////////////////////////
               Cluster& operator[](cluster_tag_t c)       { return _clustermanager[c]; }
@@ -75,9 +81,13 @@ public:
         const data_tfbs_t& data() const;
         const ClusterManager& clustermanager() const;
         const Graph& graph() const;
+
+        // test methods
+        ////////////////////////////////////////////////////////////////////////
         void test();
         void test_background();
         void test_moves();
+        void test_metropolis_hastings();
 
         // metropolis hastings
         void move_left(Cluster& cluster);

@@ -27,6 +27,37 @@
 using namespace std;
 
 void
+DpmTfbs::test_metropolis_hastings() {
+        seq_index_t index1(0,53);
+        seq_index_t index2(1,26);
+        double l1, l2;
+
+        Cluster& cluster1 = _clustermanager.get_free_cluster(_model_tags[0]);
+        cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
+
+        cout.precision(10);
+
+        remove(index1, bg_cluster_tag);
+        add(index1, cluster_tag1);
+
+        remove(index2, bg_cluster_tag);
+        add(index2, cluster_tag1);
+
+        l1 = likelihood();
+        cout << _cluster_assignments << endl;
+        cout << "likelihood: " << l1 << endl;
+
+        move_right(cluster1);
+        l2 = likelihood();
+        cout << _cluster_assignments << endl;
+        cout << "likelihood: " << l2 << endl;
+
+        cout << "ratio: " << exp(l2-l1) << endl;
+
+        exit(EXIT_SUCCESS);
+}
+
+void
 DpmTfbs::test_moves() {
         seq_index_t index1(0,0);
         seq_index_t index2(0,10);
