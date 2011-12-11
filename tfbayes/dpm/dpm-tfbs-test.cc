@@ -47,7 +47,8 @@ DpmTfbs::test_metropolis_hastings() {
         cout << _cluster_assignments << endl;
         cout << "likelihood: " << l1 << endl;
 
-        move_right(cluster1);
+        //proposal(cluster1);
+        metropolis_hastings();
         l2 = likelihood();
         cout << _cluster_assignments << endl;
         cout << "likelihood: " << l2 << endl;

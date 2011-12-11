@@ -346,6 +346,58 @@ DpmTfbs::move_right(Cluster& cluster)
         }
 }
 
+bool
+DpmTfbs::proposal(Cluster& cluster)
+{
+        double likelihood_ref = likelihood();
+        double likelihood_new;
+
+        // save state
+        size_t num_tfbs_old = num_tfbs;
+        sequence_data_t<cluster_tag_t> cluster_assignments_old(_cluster_assignments);
+        Cluster cluster_old(cluster);
+
+        // propose move to right
+        move_right(cluster);
+        likelihood_new = likelihood();
+
+        if (likelihood_new > likelihood_ref) {
+                cout << "move to right accepted" << endl;
+                return true;
+        }
+
+        // if not accepted, restore state
+        num_tfbs = num_tfbs_old;
+        _cluster_assignments = cluster_assignments_old;
+        _clustermanager[cluster.cluster_tag()] = cluster_old;
+
+        // propose move to right
+        move_left(cluster);
+        likelihood_new = likelihood();
+
+        if (likelihood_new > likelihood_ref) {
+                cout << "move to left accepted" << endl;
+                return true;
+        }
+
+        // if not accepted, restore state
+        num_tfbs = num_tfbs_old;
+        _cluster_assignments = cluster_assignments_old;
+
+        return false;
+}
+
+void
+DpmTfbs::metropolis_hastings()
+{
+        for (cm_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {
+                Cluster& cluster = **it;
+                if (cluster.cluster_tag() != bg_cluster_tag && cluster.size() > 1) {
+                        proposal(cluster);
+                }
+        }
+}
+
 void
 DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
 {

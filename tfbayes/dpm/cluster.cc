@@ -58,6 +58,14 @@ Cluster::~Cluster() {
 }
 
 void
+Cluster::operator=(const Cluster& cluster)
+{
+        delete(cluster._model);
+        _model = cluster._model->clone();
+        _elements = _elements;
+}
+
+void
 Cluster::add_observations(const range_t& range)
 {
         if (_size == 0) {
