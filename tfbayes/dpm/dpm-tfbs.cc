@@ -128,7 +128,7 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
         //test();
         //test_background();
         //test_moves();
-        test_metropolis_hastings();
+        //test_metropolis_hastings();
 }
 
 DpmTfbs::~DpmTfbs() {
@@ -455,6 +455,7 @@ DpmTfbs::update_hypergraph(sequence_data_t<short> tfbs_start_positions)
 
 void
 DpmTfbs::update_posterior(size_t sampling_steps) {
+        metropolis_hastings();
         if (sampling_steps % 100 == 0) {
                 _tfbs_graph.cleanup(1);
         }
