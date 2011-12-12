@@ -60,7 +60,7 @@ Cluster::~Cluster() {
 void
 Cluster::operator=(const Cluster& cluster)
 {
-        delete(cluster._model);
+        delete(_model);
         _model = cluster._model->clone();
         _elements = _elements;
 }
