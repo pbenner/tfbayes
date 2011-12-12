@@ -92,8 +92,8 @@ public:
         // metropolis hastings
         void metropolis_hastings();
         bool proposal(Cluster& cluster);
-        void move_left(Cluster& cluster);
-        void move_right(Cluster& cluster);
+        bool move_left(Cluster& cluster);
+        bool move_right(Cluster& cluster);
 
         // constants
         ////////////////////////////////////////////////////////////////////////

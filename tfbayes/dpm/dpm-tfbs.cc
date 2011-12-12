@@ -153,9 +153,15 @@ DpmTfbs::valid_for_sampling(const index_i& index) const
                 if (_clustermanager[index] != bg_cluster_tag) {
                         return false;
                 }
+                if (_cluster_assignments[seq_index_t(sequence, position)] == -1) {
+                        return false;
+                }
                 // check if there is a tfbs starting within the word
                 for (size_t i = 1; i < TFBS_LENGTH; i++) {
                         if (_tfbs_start_positions[seq_index_t(sequence, position+i)] == 1) {
+                                return false;
+                        }
+                        if (_cluster_assignments[seq_index_t(sequence, position+i)] == -1) {
                                 return false;
                         }
                 }
@@ -307,12 +313,15 @@ DpmTfbs::likelihood() const {
         return result;
 }
 
-void
+bool
 DpmTfbs::move_left(Cluster& cluster)
 {
         const Cluster::elements_t elements(cluster.elements());
 
         for (cl_iterator is = elements.begin(); is != elements.end(); is++) {
+                if (cluster.size() == 1) {
+                        return false;
+                }
                 const range_t& range = *is;
                 const size_t sequence = range.index[0];
                 const size_t position = range.index[1];
@@ -324,14 +333,19 @@ DpmTfbs::move_left(Cluster& cluster)
                         add(index, cluster.cluster_tag());
                 }
         }
+
+        return true;
 }
 
-void
+bool
 DpmTfbs::move_right(Cluster& cluster)
 {
         const Cluster::elements_t elements(cluster.elements());
 
         for (cl_iterator is = elements.begin(); is != elements.end(); is++) {
+                if (cluster.size() == 1) {
+                        return false;
+                }
                 const range_t range(*is);
                 const size_t sequence = range.index[0];
                 const size_t position = range.index[1];
@@ -339,11 +353,13 @@ DpmTfbs::move_right(Cluster& cluster)
                 const seq_index_t index(sequence, position+1);
                 remove(range.index, cluster.cluster_tag());
                 add(range.index, bg_cluster_tag);
-                if (position+1 < sequence_length && valid_for_sampling(index)) {
+                if (position+TFBS_LENGTH < sequence_length && valid_for_sampling(index)) {
                         remove(index, bg_cluster_tag);
                         add(index, cluster.cluster_tag());
                 }
         }
+
+        return true;
 }
 
 bool
@@ -355,34 +371,49 @@ DpmTfbs::proposal(Cluster& cluster)
         // save state
         size_t num_tfbs_old = num_tfbs;
         sequence_data_t<cluster_tag_t> cluster_assignments_old(_cluster_assignments);
+        sequence_data_t<short> tfbs_start_positions_old(_tfbs_start_positions);
         Cluster cluster_old(cluster);
+        Cluster bg_cluster_old(_clustermanager[bg_cluster_tag]);
 
         // propose move to right
-        move_right(cluster);
-        likelihood_new = likelihood();
+        if (move_right(cluster)) {
+                likelihood_new = likelihood();
 
-        if (likelihood_new > likelihood_ref) {
-                cout << "move to right accepted" << endl;
-                return true;
+                if (likelihood_new > likelihood_ref) {
+                        cout << "cluster "
+                             << cluster.cluster_tag()
+                             << ": move to right accepted"
+                             << endl;
+                        return true;
+                }
         }
 
         // if not accepted, restore state
         num_tfbs = num_tfbs_old;
         _cluster_assignments = cluster_assignments_old;
+        _tfbs_start_positions = tfbs_start_positions_old;
         _clustermanager[cluster.cluster_tag()] = cluster_old;
+        _clustermanager[bg_cluster_tag] = bg_cluster_old;
 
         // propose move to right
-        move_left(cluster);
-        likelihood_new = likelihood();
+        if (move_left(cluster)) {
+                likelihood_new = likelihood();
 
-        if (likelihood_new > likelihood_ref) {
-                cout << "move to left accepted" << endl;
-                return true;
+                if (likelihood_new > likelihood_ref) {
+                        cout << "cluster "
+                             << cluster.cluster_tag()
+                             << ": move to left accepted"
+                             << endl;
+                        return true;
+                }
         }
 
         // if not accepted, restore state
         num_tfbs = num_tfbs_old;
         _cluster_assignments = cluster_assignments_old;
+        _tfbs_start_positions = tfbs_start_positions_old;
+        _clustermanager[cluster.cluster_tag()] = cluster_old;
+        _clustermanager[bg_cluster_tag] = bg_cluster_old;
 
         return false;
 }
