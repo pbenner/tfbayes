@@ -29,7 +29,6 @@
 #include <dpm-gaussian.hh>
 
 #include <tfbayes/logarithmetic.h>
-#include <tfbayes/fastlog.h>
 
 using namespace std;
 

@@ -29,7 +29,6 @@
 #include <nucleotide-sequence.hh>
 
 #include <tfbayes/logarithmetic.h>
-#include <tfbayes/fastlog.h>
 
 #include <parsmm/abstract_set.h>
 #include <parsmm/static_pars_tree.h>

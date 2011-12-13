@@ -43,7 +43,7 @@ libdpm_la_SOURCES =                                                           \
 	index.cc index.hh indexer.hh clonable.hh observer.hh statistics.hh    \
 	datatypes.hh graph.hh                                                 \
 	data.hh data-tfbs.cc data-tfbs.hh data-gaussian.cc data-gaussian.hh   \
-	dpm-tfbs.cc dpm-tfbs.hh dpm-tfbs-test.cc                              \
+	dpm-tfbs.cc dpm-tfbs.hh dpm-tfbs-priors.cc dpm-tfbs-test.cc           \
 	dpm-gaussian.cc dpm-gaussian.hh                                       \
 	clustermanager.cc clustermanager.hh                                   \
 	cluster.cc cluster.hh                                                 \
