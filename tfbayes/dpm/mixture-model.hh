@@ -50,7 +50,7 @@ public:
         virtual double likelihood() const = 0;
         virtual bool   valid_for_sampling(const index_i& index) const = 0;
         virtual posterior_t& posterior() = 0;
-        virtual const mixture_state_t& clustermanager() const = 0;
+        virtual const mixture_state_t& state() const = 0;
 };
 
 #endif /* MIXTURE_MODEL_HH */

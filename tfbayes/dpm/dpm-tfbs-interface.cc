@@ -241,7 +241,7 @@ void _dpm_tfbs_save(const char* filename)
 }
 
 unsigned int _dpm_tfbs_num_clusters() {
-        return _gdpm->clustermanager().size();
+        return _gdpm->state().size();
 }
 
 matrix_t* _dpm_tfbs_get_posterior() {
@@ -298,7 +298,7 @@ matrix_t* _dpm_tfbs_cluster_assignments() {
         for (data_tfbs_t::const_iterator it = _gdpm->data().begin();
              it != _gdpm->data().end(); it++) {
                 const index_i& index = **it;
-                result->mat[index[0]][index[1]] = _gdpm->clustermanager()[index];
+                result->mat[index[0]][index[1]] = _gdpm->state()[index];
         }
         return result;
 }

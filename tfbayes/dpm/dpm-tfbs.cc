@@ -66,7 +66,7 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        // add background model to the clustermanager
+        // add background model to the state
         if (options.background_model == "independence" || options.background_model == "") {
                 const matrix<double>& bg_alpha = init_alpha(BG_LENGTH);
                 ProductDirichlet* bg = new ProductDirichlet(bg_alpha, _data);
@@ -311,13 +311,7 @@ DpmTfbs::proposal(Cluster& cluster)
         double likelihood_ref = likelihood();
         double likelihood_new;
 
-        // save state
-        size_t num_tfbs_old = _state.num_tfbs;
-        sequence_data_t<cluster_tag_t> cluster_assignments_old(_state.cluster_assignments);
-        sequence_data_t<short> tfbs_start_positions_old(_state.tfbs_start_positions);
-        Cluster cluster_old(cluster);
-        Cluster bg_cluster_old(_state[bg_cluster_tag]);
-
+        _state.save(cluster.cluster_tag(), bg_cluster_tag);
         // propose move to right
         if (move_right(cluster)) {
                 likelihood_new = likelihood();
@@ -332,12 +326,7 @@ DpmTfbs::proposal(Cluster& cluster)
         }
 
         // if not accepted, restore state
-        _state.num_tfbs = num_tfbs_old;
-        _state.cluster_assignments = cluster_assignments_old;
-        _state.tfbs_start_positions = tfbs_start_positions_old;
-        _state[cluster.cluster_tag()] = cluster_old;
-        _state[bg_cluster_tag] = bg_cluster_old;
-
+        _state.restore();
         // propose move to right
         if (move_left(cluster)) {
                 likelihood_new = likelihood();
@@ -352,11 +341,7 @@ DpmTfbs::proposal(Cluster& cluster)
         }
 
         // if not accepted, restore state
-        _state.num_tfbs = num_tfbs_old;
-        _state.cluster_assignments = cluster_assignments_old;
-        _state.tfbs_start_positions = tfbs_start_positions_old;
-        _state[cluster.cluster_tag()] = cluster_old;
-        _state[bg_cluster_tag] = bg_cluster_old;
+        _state.restore();
 
         return false;
 }
@@ -463,7 +448,7 @@ DpmTfbs::data() const {
 }
 
 const mixture_state_t&
-DpmTfbs::clustermanager() const {
+DpmTfbs::state() const {
         return _state;
 }
 

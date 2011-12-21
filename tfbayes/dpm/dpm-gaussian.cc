@@ -40,15 +40,15 @@ DPM_Gaussian::DPM_Gaussian(
         const data_gaussian_t& data)
         : _data(data),
           _cluster_assignments(_data.elements(), -1),
-          _clustermanager(_cluster_assignments),
+          _state(_cluster_assignments),
           // strength parameter for the dirichlet process
           alpha(alpha)
 {
-        _model_tag = _clustermanager.add_baseline_model(new BivariateNormal(Sigma, Sigma_0, mu_0, data));
-        cluster_tag_t cluster_tag = _clustermanager.get_free_cluster(_model_tag).cluster_tag();
+        _model_tag = _state.add_baseline_model(new BivariateNormal(Sigma, Sigma_0, mu_0, data));
+        cluster_tag_t cluster_tag = _state.get_free_cluster(_model_tag).cluster_tag();
         for (data_gaussian_t::const_iterator it = _data.begin();
              it != _data.end(); it++) {
-                _clustermanager[cluster_tag].add_observations(range_t(**it,1));
+                _state[cluster_tag].add_observations(range_t(**it,1));
         }
 }
 
@@ -69,19 +69,19 @@ DPM_Gaussian::valid_for_sampling(const index_i& index) const
 void
 DPM_Gaussian::add(const index_i& index, cluster_tag_t cluster_tag)
 {
-        _clustermanager[cluster_tag].add_observations(range_t(index,1));
+        _state[cluster_tag].add_observations(range_t(index,1));
 }
 
 void
 DPM_Gaussian::remove(const index_i& index, cluster_tag_t cluster_tag)
 {
-        _clustermanager[cluster_tag].remove_observations(range_t(index,1));
+        _state[cluster_tag].remove_observations(range_t(index,1));
 }
 
 size_t
 DPM_Gaussian::mixture_components() const
 {
-        return _clustermanager.size();
+        return _state.size();
 }
 
 void
@@ -93,7 +93,7 @@ DPM_Gaussian::mixture_weights(const index_i& index, double log_weights[], cluste
         range_t range(index, 1);
 
         cluster_tag_t i = 0;
-        for (mixture_state_t::const_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {
+        for (mixture_state_t::const_iterator it = _state.begin(); it != _state.end(); it++) {
                 Cluster& cluster = **it;
                 cluster_tags[i] = cluster.cluster_tag();
                 double num_elements = (double)cluster.size();
@@ -104,8 +104,8 @@ DPM_Gaussian::mixture_weights(const index_i& index, double log_weights[], cluste
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
-        cluster_tags[components] = _clustermanager.get_free_cluster(_model_tag).cluster_tag();
-        sum = logadd(sum, log(alpha/(alpha + N)) + _clustermanager[cluster_tags[components]].model().log_predictive(range));
+        cluster_tags[components] = _state.get_free_cluster(_model_tag).cluster_tag();
+        sum = logadd(sum, log(alpha/(alpha + N)) + _state[cluster_tags[components]].model().log_predictive(range));
         log_weights[components] = sum;
 }
 
@@ -118,8 +118,8 @@ DPM_Gaussian::means() const {
         gsl_matrix* means = gsl_matrix_alloc(mixture_components(), 2);
 
         size_t i = 0;
-        for (mixture_state_t::const_iterator it = _clustermanager.begin();
-             it != _clustermanager.end(); it++) {
+        for (mixture_state_t::const_iterator it = _state.begin();
+             it != _state.end(); it++) {
                 Cluster& cluster = **it;
                 BivariateNormal& bg = static_cast<BivariateNormal&>(cluster.model());
                 gsl_matrix_set(means, i, 0, gsl_vector_get(bg.mean(), 0));
@@ -134,8 +134,8 @@ double
 DPM_Gaussian::likelihood() const {
         double result = 0;
 
-        for (mixture_state_t::const_iterator it = _clustermanager.begin();
-             it != _clustermanager.end(); it++) {
+        for (mixture_state_t::const_iterator it = _state.begin();
+             it != _state.end(); it++) {
                 Cluster& cluster = **it;
                 result += cluster.model().log_likelihood();
         }
@@ -152,8 +152,8 @@ DPM_Gaussian::posterior() {
 }
 
 const mixture_state_t&
-DPM_Gaussian::clustermanager() const {
-        return _clustermanager;
+DPM_Gaussian::state() const {
+        return _state;
 }
 
 // misc methods

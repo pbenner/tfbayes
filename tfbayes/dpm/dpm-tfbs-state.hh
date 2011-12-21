@@ -28,7 +28,7 @@
 
 class dpm_tfbs_state_t : public mixture_state_t {
 public:
-        dpm_tfbs_state_t(const std::vector<size_t> sizes)
+        dpm_tfbs_state_t(const std::vector<size_t>& sizes)
                 : mixture_state_t(cluster_assignments),
                   cluster_assignments(sizes, -1),
                   // starting positions of tfbs
@@ -38,20 +38,31 @@ public:
                   // auxiliary variables
                   num_tfbs_p(0),
                   cluster_assignments_p(sizes, -1),
-                  tfbs_start_positions_p(sizes, 0)
+                  tfbs_start_positions_p(sizes, 0),
+                  cluster_p(NULL),
+                  cluster_bg_p(NULL)
                 { }
 
-        void save(cluster_tag_t cluster_tag) {
+        void save(cluster_tag_t cluster_tag, cluster_tag_t cluster_bg_tag) {
+                if (cluster_p != NULL) {
+                        delete(cluster_p);
+                }
+                if (cluster_bg_p != NULL) {
+                        delete(cluster_bg_p);
+                }
                 num_tfbs_p = num_tfbs;
-                cluster_assignments_p = cluster_assignments;
+                cluster_assignments_p  = cluster_assignments;
                 tfbs_start_positions_p = tfbs_start_positions;
-                cluster_p = new Cluster((*this)[cluster_tag]);
+                cluster_p    = new Cluster((*this)[cluster_tag]);
+                cluster_bg_p = new Cluster((*this)[cluster_bg_tag]);
         }
 
         void restore() {
                 num_tfbs = num_tfbs_p;
-                cluster_assignments = cluster_assignments_p;
+                cluster_assignments  = cluster_assignments_p;
                 tfbs_start_positions = tfbs_start_positions_p;
+                (*this)[cluster_p->cluster_tag()]    = *cluster_p;
+                (*this)[cluster_bg_p->cluster_tag()] = *cluster_bg_p;
         }
 
         // assignments of nucleotides to clusters
@@ -72,6 +83,7 @@ public:
         sequence_data_t<cluster_tag_t> cluster_assignments_p;
         sequence_data_t<short> tfbs_start_positions_p;
         Cluster* cluster_p;
+        Cluster* cluster_bg_p;
 };
 
 #endif /* DPM_TFBS_STATE_HH */

@@ -68,31 +68,31 @@ void _dpm_gaussian_init(
 }
 
 unsigned int _dpm_gaussian_num_clusters() {
-        return _gdpm->clustermanager().size();
+        return _gdpm->state().size();
 }
 
 vector_t* _dpm_gaussian_cluster_tags() {
-        size_t cluster = _gdpm->clustermanager().size();
+        size_t cluster = _gdpm->state().size();
         vector_t* cluster_tags = alloc_vector(cluster);
-        const mixture_state_t& clustermanager = _gdpm->clustermanager();
+        const mixture_state_t& state = _gdpm->state();
 
         size_t i = 0;
-        for (mixture_state_t::const_iterator it = clustermanager.begin();
-             it != clustermanager.end(); it++) {
+        for (mixture_state_t::const_iterator it = state.begin();
+             it != state.end(); it++) {
                 cluster_tags->vec[i++] = (*it)->cluster_tag();
         }
         return cluster_tags;
 }
 
 matrix_t* _dpm_gaussian_cluster_elements(int tag) {
-        const mixture_state_t& clustermanager = _gdpm->clustermanager();
-        const Cluster& cluster = clustermanager[(cluster_tag_t)tag];
+        const mixture_state_t& state = _gdpm->state();
+        const Cluster& cluster = state[(cluster_tag_t)tag];
         matrix_t* elements = alloc_matrix(cluster.size(), 2);
 
         size_t i = 0;
         for (data_gaussian_t::const_iterator it = _data->begin();
              it != _data->end(); it++) {
-                if (clustermanager[**it] == (cluster_tag_t)tag) {
+                if (state[**it] == (cluster_tag_t)tag) {
                         elements->mat[i][0] = (*_data)[**it][0];
                         elements->mat[i][1] = (*_data)[**it][1];
                         i++;
@@ -142,7 +142,7 @@ vector_t* _dpm_gaussian_cluster_assignments() {
         for (data_gaussian_t::const_iterator it = _data->begin();
              it != _data->end(); it++) {
                 const index_i& index = **it;
-                result->vec[index[0]] = _gdpm->clustermanager()[index];
+                result->vec[index[0]] = _gdpm->state()[index];
         }
         return result;
 }

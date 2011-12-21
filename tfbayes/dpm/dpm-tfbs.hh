@@ -79,7 +79,7 @@ public:
         bool   valid_for_sampling(const index_i& index) const;
         posterior_t& posterior();
         const data_tfbs_t& data() const;
-        const mixture_state_t& clustermanager() const;
+        const mixture_state_t& state() const;
         const Graph& graph() const;
 
         // test methods
