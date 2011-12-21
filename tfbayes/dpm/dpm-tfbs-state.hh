@@ -34,8 +34,25 @@ public:
                   // starting positions of tfbs
                   tfbs_start_positions(sizes, 0),
                   // number of transcription factor binding sites
-                  num_tfbs(0)
+                  num_tfbs(0),
+                  // auxiliary variables
+                  num_tfbs_p(0),
+                  cluster_assignments_p(sizes, -1),
+                  tfbs_start_positions_p(sizes, 0)
                 { }
+
+        void save(cluster_tag_t cluster_tag) {
+                num_tfbs_p = num_tfbs;
+                cluster_assignments_p = cluster_assignments;
+                tfbs_start_positions_p = tfbs_start_positions;
+                cluster_p = new Cluster((*this)[cluster_tag]);
+        }
+
+        void restore() {
+                num_tfbs = num_tfbs_p;
+                cluster_assignments = cluster_assignments_p;
+                tfbs_start_positions = tfbs_start_positions_p;
+        }
 
         // assignments of nucleotides to clusters
         sequence_data_t<cluster_tag_t> cluster_assignments;
@@ -49,6 +66,12 @@ public:
 
         // keep track of the number of transcription factor binding sites
         size_t num_tfbs;
+
+        // auxiliary variables to save the current state
+        size_t num_tfbs_p;
+        sequence_data_t<cluster_tag_t> cluster_assignments_p;
+        sequence_data_t<short> tfbs_start_positions_p;
+        Cluster* cluster_p;
 };
 
 #endif /* DPM_TFBS_STATE_HH */
