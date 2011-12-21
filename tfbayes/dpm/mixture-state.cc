@@ -25,20 +25,20 @@
 #include <list>
 #include <assert.h>
 
-#include <clustermanager.hh>
+#include <mixture-state.hh>
 
 using namespace std;
 
-ClusterManager::ClusterManager(data_t<cluster_tag_t>& cluster_assignments)
+mixture_state_t::mixture_state_t(data_t<cluster_tag_t>& cluster_assignments)
         : used_clusters_size(0), free_clusters_size(0),
           cluster_assignments(cluster_assignments)
 {
 }
 
-ClusterManager::~ClusterManager() {
+mixture_state_t::~mixture_state_t() {
         // free clusters
-        for (ClusterManager::iterator_all it = begin_all();
-             it != end_all(); it++) {
+        for (mixture_state_t::iterator_all it = clusters.begin();
+             it != clusters.end(); it++) {
                 delete(*it);
         }
         // free baseline models
@@ -48,7 +48,7 @@ ClusterManager::~ClusterManager() {
         }
 }
 
-ClusterManager::ClusterManager(const ClusterManager& cm)
+mixture_state_t::mixture_state_t(const mixture_state_t& cm)
         : used_clusters_size(cm.used_clusters_size),
           free_clusters_size(cm.free_clusters_size),
           cluster_assignments(cm.cluster_assignments)
@@ -74,7 +74,7 @@ ClusterManager::ClusterManager(const ClusterManager& cm)
 // not be destructible (for other components of the mixture model)
 // and not included in the baseline measures
 cluster_tag_t
-ClusterManager::add_cluster(ComponentModel* model)
+mixture_state_t::add_cluster(ComponentModel* model)
 {
         cluster_tag_t cluster_tag = clusters.size();
 
@@ -93,7 +93,7 @@ ClusterManager::add_cluster(ComponentModel* model)
 
 // add cluster with default model
 cluster_tag_t
-ClusterManager::add_cluster(model_tag_t model_tag)
+mixture_state_t::add_cluster(model_tag_t model_tag)
 {
         assert(model_tag < (model_tag_t)baseline_models.size());
 
@@ -110,7 +110,7 @@ ClusterManager::add_cluster(model_tag_t model_tag)
 }
 
 model_tag_t
-ClusterManager::add_baseline_model(ComponentModel* distribution)
+mixture_state_t::add_baseline_model(ComponentModel* distribution)
 {
         // add a baseline model to the list of distributions
         baseline_models.push_back(distribution);
@@ -120,7 +120,7 @@ ClusterManager::add_baseline_model(ComponentModel* distribution)
 }
 
 Cluster&
-ClusterManager::get_free_cluster(model_tag_t model_tag) {
+mixture_state_t::get_free_cluster(model_tag_t model_tag) {
         // check free clusters
         for (std::list<Cluster*>::iterator it = free_clusters.begin();
              it != free_clusters.end(); it++) {
@@ -135,7 +135,7 @@ ClusterManager::get_free_cluster(model_tag_t model_tag) {
 }
 
 void
-ClusterManager::update(Observed<cluster_event_t>* observed, cluster_event_t event)
+mixture_state_t::update(Observed<cluster_event_t>* observed, cluster_event_t event)
 {
         Cluster* cluster = (Cluster*)observed;
 
@@ -162,7 +162,7 @@ ClusterManager::update(Observed<cluster_event_t>* observed, cluster_event_t even
 }
 
 void
-ClusterManager::update(Observed<cluster_event_t>* observed, cluster_event_t event, const range_t& range)
+mixture_state_t::update(Observed<cluster_event_t>* observed, cluster_event_t event, const range_t& range)
 {
         Cluster* cluster = (Cluster*)observed;
         iterator_t<cluster_tag_t> iterator = cluster_assignments[range];
@@ -183,9 +183,9 @@ ClusterManager::update(Observed<cluster_event_t>* observed, cluster_event_t even
         }
 }
 
-std::ostream& operator<< (std::ostream& o, const ClusterManager& cm) {
+std::ostream& operator<< (std::ostream& o, const mixture_state_t& cm) {
         o << "(" << cm.size() << "): ";
-        for (ClusterManager::const_iterator it = cm.begin(); it != cm.end(); it++) {
+        for (mixture_state_t::const_iterator it = cm.begin(); it != cm.end(); it++) {
                 o << **it << " ";
         }
 

@@ -28,18 +28,19 @@
 #include <cluster.hh>
 #include <component-model.hh>
 #include <datatypes.hh>
+#include <state.hh>
 
-// ClusterManager
+// mixture_state_t
 ////////////////////////////////////////////////////////////////////////////////
 
 // The cluster manager has a list of clusters and keeps track which of
 // them are used. If needed it allocates more free clusters.
 
-class ClusterManager : public Observer<cluster_event_t> {
+class mixture_state_t : public state_t, public Observer<cluster_event_t> {
 public:
-         ClusterManager(data_t<cluster_tag_t>& cluster_assignments);
-         ClusterManager(const ClusterManager& cm);
-        ~ClusterManager();
+         mixture_state_t(data_t<cluster_tag_t>& cluster_assignments);
+         mixture_state_t(const mixture_state_t& cm);
+        ~mixture_state_t();
 
         // iterators
         ////////////////////////////////////////////////////////////////////////
@@ -55,19 +56,13 @@ public:
         typedef std::vector<Cluster*>::iterator iterator_all;
         typedef std::vector<Cluster*>::const_iterator const_iterator_all;
 
-        iterator_all begin_all() { return clusters.begin(); }
-        iterator_all end_all()   { return clusters.end();   }
-
-        const_iterator_all begin_all() const { return clusters.begin(); }
-        const_iterator_all end_all()   const { return clusters.end();   }
-
         // operators
         ////////////////////////////////////////////////////////////////////////
         __inline__       Cluster& operator[](cluster_tag_t c)            { return *clusters[c];                }
         __inline__ const Cluster& operator[](cluster_tag_t c)      const { return *clusters[c];                }
         __inline__  cluster_tag_t operator[](const index_i& index) const { return  cluster_assignments[index]; }
 
-        friend std::ostream& operator<< (std::ostream& o, const ClusterManager& cm);
+        friend std::ostream& operator<< (std::ostream& o, const mixture_state_t& cm);
 
         // methods
         ////////////////////////////////////////////////////////////////////////

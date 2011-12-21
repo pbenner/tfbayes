@@ -57,7 +57,7 @@ public:
         double likelihood() const;
         bool   valid_for_sampling(const index_i& index) const;
         posterior_t& posterior();
-        const ClusterManager& clustermanager() const;
+        const mixture_state_t& clustermanager() const;
         gsl_matrix* means() const;
 
 private:
@@ -75,7 +75,7 @@ private:
         // data and clusters
         const data_gaussian_t& _data;
         data_t<cluster_tag_t> _cluster_assignments;
-        ClusterManager _clustermanager;
+        mixture_state_t _clustermanager;
 
         // parameters
         const double alpha;

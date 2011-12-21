@@ -25,10 +25,10 @@ double
 DpmTfbs::py_prior(Cluster& cluster)
 {
         if (cluster.size() == 0) {
-                return log(alpha + discount*(mixture_components()-1)) - log(num_tfbs + alpha);
+                return log(alpha + discount*(mixture_components()-1)) - log(_state.num_tfbs + alpha);
         }
         else {
-                return log(cluster.size()-discount) - log(num_tfbs + alpha);
+                return log(cluster.size()-discount) - log(_state.num_tfbs + alpha);
         }
 }
 
@@ -49,7 +49,7 @@ double
 DpmTfbs::poppe_prior(Cluster& cluster)
 {
         double K = mixture_components()-1;
-        double N = num_tfbs;
+        double N = _state.num_tfbs;
 
         if (K == 0 && cluster.size() == 0) {
                 return 0;

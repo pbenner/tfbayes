@@ -93,7 +93,7 @@ DPM_Gaussian::mixture_weights(const index_i& index, double log_weights[], cluste
         range_t range(index, 1);
 
         cluster_tag_t i = 0;
-        for (ClusterManager::const_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {
+        for (mixture_state_t::const_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {
                 Cluster& cluster = **it;
                 cluster_tags[i] = cluster.cluster_tag();
                 double num_elements = (double)cluster.size();
@@ -118,7 +118,7 @@ DPM_Gaussian::means() const {
         gsl_matrix* means = gsl_matrix_alloc(mixture_components(), 2);
 
         size_t i = 0;
-        for (ClusterManager::const_iterator it = _clustermanager.begin();
+        for (mixture_state_t::const_iterator it = _clustermanager.begin();
              it != _clustermanager.end(); it++) {
                 Cluster& cluster = **it;
                 BivariateNormal& bg = static_cast<BivariateNormal&>(cluster.model());
@@ -134,7 +134,7 @@ double
 DPM_Gaussian::likelihood() const {
         double result = 0;
 
-        for (ClusterManager::const_iterator it = _clustermanager.begin();
+        for (mixture_state_t::const_iterator it = _clustermanager.begin();
              it != _clustermanager.end(); it++) {
                 Cluster& cluster = **it;
                 result += cluster.model().log_likelihood();
@@ -151,7 +151,7 @@ DPM_Gaussian::posterior() {
         return _posterior;
 }
 
-const ClusterManager&
+const mixture_state_t&
 DPM_Gaussian::clustermanager() const {
         return _clustermanager;
 }

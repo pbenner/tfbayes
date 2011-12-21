@@ -32,7 +32,7 @@ DpmTfbs::test_metropolis_hastings() {
         seq_index_t index2(1,26);
         double l1, l2;
 
-        Cluster& cluster1 = _clustermanager.get_free_cluster(_model_tags[0]);
+        Cluster& cluster1 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
 
         cout.precision(10);
@@ -44,13 +44,13 @@ DpmTfbs::test_metropolis_hastings() {
         add(index2, cluster_tag1);
 
         l1 = likelihood();
-        cout << _cluster_assignments << endl;
+        cout << _state.cluster_assignments << endl;
         cout << "likelihood: " << l1 << endl;
 
         //proposal(cluster1);
         metropolis_hastings();
         l2 = likelihood();
-        cout << _cluster_assignments << endl;
+        cout << _state.cluster_assignments << endl;
         cout << "likelihood: " << l2 << endl;
 
         cout << "ratio: " << exp(l2-l1) << endl;
@@ -67,7 +67,7 @@ DpmTfbs::test_moves() {
         seq_index_t index5(0,13);
         seq_index_t index6(0,22);
 
-        Cluster& cluster1 = _clustermanager.get_free_cluster(_model_tags[0]);
+        Cluster& cluster1 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
 
         remove(index1, bg_cluster_tag);
@@ -79,15 +79,15 @@ DpmTfbs::test_moves() {
         remove(index3, bg_cluster_tag);
         add(index3, cluster_tag1);
 
-        Cluster& cluster2 = _clustermanager.get_free_cluster(_model_tags[0]);
+        Cluster& cluster2 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
 
         remove(index4, bg_cluster_tag);
         add(index4, cluster_tag2);
 
-        cout << _cluster_assignments << endl;
+        cout << _state.cluster_assignments << endl;
         move_left(cluster1);
-        cout << _cluster_assignments << endl;
+        cout << _state.cluster_assignments << endl;
 
         exit(EXIT_SUCCESS);
 }
@@ -101,7 +101,7 @@ DpmTfbs::test_background() {
         seq_index_t index5(0,13);
         seq_index_t index6(0,22);
 
-        Cluster& cluster1 = _clustermanager.get_free_cluster(_model_tags[0]);
+        Cluster& cluster1 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
         cout << "Adding index1:" << index1 << " to cluster:" << cluster_tag1 << endl;
         remove(index1, bg_cluster_tag);
@@ -111,15 +111,15 @@ DpmTfbs::test_background() {
         add(index6, cluster_tag1);
         cout << endl;
 
-        cout << _cluster_assignments << endl;
+        cout << _state.cluster_assignments << endl;
 
-        Cluster& cluster2 = _clustermanager.get_free_cluster(_model_tags[0]);
+        Cluster& cluster2 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
 
         cout << "Adding index2:" << index2 << " to cluster:" << cluster_tag2 << endl;
         remove(index2, bg_cluster_tag);
         add(index2, cluster_tag2);
-        cout << _cluster_assignments;
+        cout << _state.cluster_assignments;
         remove(index2, cluster_tag2);
         add(index2, bg_cluster_tag);
         cout << "Removing index2:" << index2 << " from cluster:" << cluster_tag2 << endl << endl;
@@ -127,7 +127,7 @@ DpmTfbs::test_background() {
         cout << "Adding index3:" << index3 << " to cluster:" << cluster_tag2 << endl;
         remove(index3, bg_cluster_tag);
         add(index3, cluster_tag2);
-        cout << _cluster_assignments;
+        cout << _state.cluster_assignments;
         remove(index3, cluster_tag2);
         add(index3, bg_cluster_tag);
         cout << "Removing index3:" << index2 << " from cluster:" << cluster_tag2 << endl << endl;
@@ -135,7 +135,7 @@ DpmTfbs::test_background() {
         cout << "Adding index4:" << index4 << " to cluster:" << cluster_tag2 << endl;
         remove(index4, bg_cluster_tag);
         add(index4, cluster_tag2);
-        cout << _cluster_assignments;
+        cout << _state.cluster_assignments;
         remove(index4, cluster_tag2);
         add(index4, bg_cluster_tag);
         cout << "Removing index4:" << index2 << " from cluster:" << cluster_tag2 << endl << endl;
@@ -143,7 +143,7 @@ DpmTfbs::test_background() {
         cout << "Adding index5:" << index4 << " to cluster:" << cluster_tag2 << endl;
         remove(index5, bg_cluster_tag);
         add(index5, cluster_tag2);
-        cout << _cluster_assignments;
+        cout << _state.cluster_assignments;
         remove(index5, cluster_tag2);
         add(index5, bg_cluster_tag);
         cout << "Removing index5:" << index2 << " from cluster:" << cluster_tag2 << endl;
@@ -158,11 +158,11 @@ DpmTfbs::test() {
         seq_index_t index3(2,0);
         seq_index_t index4(3,0);
 
-        Cluster& cluster1 = _clustermanager.get_free_cluster(_model_tags[0]);
+        Cluster& cluster1 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
         cout << "Adding index1:" << index1 << " to cluster:" << cluster_tag1 << endl;
         add(index1, cluster_tag1);
-        Cluster& cluster2 = _clustermanager.get_free_cluster(_model_tags[0]);
+        Cluster& cluster2 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
         cout << "Adding index2:" << index2 << " to cluster:" << cluster_tag2 << endl;
         add(index2, cluster_tag2);

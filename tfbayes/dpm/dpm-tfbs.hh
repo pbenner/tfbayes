@@ -26,10 +26,10 @@
 #include <gsl/gsl_matrix.h>
 
 #include <graph.hh>
-#include <clustermanager.hh>
 #include <component-model.hh>
 #include <data-tfbs.hh>
 #include <mixture-model.hh>
+#include <dpm-tfbs-state.hh>
 
 #include <tfbayes/linalg.h>
 
@@ -54,14 +54,14 @@ public:
 
         // auxiliary types
         ////////////////////////////////////////////////////////////////////////
-        typedef ClusterManager::const_iterator cm_iterator;
+        typedef mixture_state_t::const_iterator cm_iterator;
         typedef Cluster::const_iterator cl_iterator;
         typedef data_tfbs_t::const_iterator da_iterator;
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-              Cluster& operator[](cluster_tag_t c)       { return _clustermanager[c]; }
-        const Cluster& operator[](cluster_tag_t c) const { return _clustermanager[c]; }
+              Cluster& operator[](cluster_tag_t c)       { return _state[c]; }
+        const Cluster& operator[](cluster_tag_t c) const { return _state[c]; }
 
         friend std::ostream& operator<<(std::ostream& o, const DpmTfbs& dpm);
 
@@ -79,7 +79,7 @@ public:
         bool   valid_for_sampling(const index_i& index) const;
         posterior_t& posterior();
         const data_tfbs_t& data() const;
-        const ClusterManager& clustermanager() const;
+        const mixture_state_t& clustermanager() const;
         const Graph& graph() const;
 
         // test methods
@@ -108,8 +108,7 @@ private:
 
         // data and clusters
         const data_tfbs_t& _data;
-        sequence_data_t<cluster_tag_t> _cluster_assignments;
-        ClusterManager _clustermanager;
+        dpm_tfbs_state_t _state;
 
         // tags of special clusters
         cluster_tag_t bg_cluster_tag;
@@ -122,16 +121,6 @@ private:
         const double lambda;
         const double lambda_log;
         const double lambda_inv_log;
-
-        // record start positions of tfbs
-        sequence_data_t<short> _tfbs_start_positions;
-
-        // posterior distribution
-        posterior_t _posterior;
-        Graph _tfbs_graph;
-
-        // keep track of the number of transcription factor binding sites
-        size_t num_tfbs;
 
         // process priors
         double py_prior(Cluster& cluster);

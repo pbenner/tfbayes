@@ -74,10 +74,10 @@ unsigned int _dpm_gaussian_num_clusters() {
 vector_t* _dpm_gaussian_cluster_tags() {
         size_t cluster = _gdpm->clustermanager().size();
         vector_t* cluster_tags = alloc_vector(cluster);
-        const ClusterManager& clustermanager = _gdpm->clustermanager();
+        const mixture_state_t& clustermanager = _gdpm->clustermanager();
 
         size_t i = 0;
-        for (ClusterManager::const_iterator it = clustermanager.begin();
+        for (mixture_state_t::const_iterator it = clustermanager.begin();
              it != clustermanager.end(); it++) {
                 cluster_tags->vec[i++] = (*it)->cluster_tag();
         }
@@ -85,7 +85,7 @@ vector_t* _dpm_gaussian_cluster_tags() {
 }
 
 matrix_t* _dpm_gaussian_cluster_elements(int tag) {
-        const ClusterManager& clustermanager = _gdpm->clustermanager();
+        const mixture_state_t& clustermanager = _gdpm->clustermanager();
         const Cluster& cluster = clustermanager[(cluster_tag_t)tag];
         matrix_t* elements = alloc_matrix(cluster.size(), 2);
 

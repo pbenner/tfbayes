@@ -165,9 +165,9 @@ ostream& operator<< (ostream& o, const ProductDirichlet& pd) {
 static
 void save_motifs(ostream& file, const DpmTfbs& dpm)
 {
-        const ClusterManager& cm = dpm.clustermanager();
+        const mixture_state_t& cm = dpm.clustermanager();
 
-        for (ClusterManager::const_iterator it = cm.begin();
+        for (mixture_state_t::const_iterator it = cm.begin();
              it != cm.end(); it++) {
                 if ((*it)->cluster_tag() == 0) {
                         file << "cluster_bg" << " =" << endl;

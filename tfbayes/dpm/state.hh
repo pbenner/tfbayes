@@ -24,13 +24,8 @@
 
 #include <clonable.hh>
 
-class state_t : public clonable {
+class state_t {
 public:
-};
-
-class mixture_state_t : public state_t {
-public:
-
 };
 
 #endif /* STATE_HH */

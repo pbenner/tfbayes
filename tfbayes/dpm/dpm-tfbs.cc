@@ -47,8 +47,7 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
           // raw sequences
           _data(data),
           // cluster manager
-          _cluster_assignments(_data.sizes(), -1),
-          _clustermanager(_cluster_assignments),
+          _state(data.sizes()),
           // strength parameter for the dirichlet process
           alpha(options.alpha),
           alpha_log(log(options.alpha)),
@@ -58,16 +57,12 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
           // mixture weight for the dirichlet process
           lambda(options.lambda),
           lambda_log(log(options.lambda)),
-          lambda_inv_log(log(1-options.lambda)),
-          // starting positions of tfbs
-          _tfbs_start_positions(_data.sizes(), 0),
-          // number of transcription factor binding sites
-          num_tfbs(0)
+          lambda_inv_log(log(1-options.lambda))
 {
         ////////////////////////////////////////////////////////////////////////////////
         // initialize joint posterior
         for (size_t i = 0; i < data.size(); i++) {
-                _posterior.probabilities.push_back(vector<double>(data.size(i), 0.0));
+                _state.posterior.probabilities.push_back(vector<double>(data.size(i), 0.0));
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -75,17 +70,17 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
         if (options.background_model == "independence" || options.background_model == "") {
                 const matrix<double>& bg_alpha = init_alpha(BG_LENGTH);
                 ProductDirichlet* bg = new ProductDirichlet(bg_alpha, _data);
-                bg_cluster_tag = _clustermanager.add_cluster(bg);
+                bg_cluster_tag = _state.add_cluster(bg);
         }
         else if (options.background_model == "markov chain mixture") {
                 assert(options.context >= 0);
-                MarkovChainMixture* bg = new MarkovChainMixture(ALPHABET_SIZE, options.context, _data, _cluster_assignments, 0);
-                bg_cluster_tag = _clustermanager.add_cluster(bg);
+                MarkovChainMixture* bg = new MarkovChainMixture(ALPHABET_SIZE, options.context, _data, _state.cluster_assignments, 0);
+                bg_cluster_tag = _state.add_cluster(bg);
         }
         else if (options.background_model == "parsimonious tree") {
                 assert(options.context >= 0);
-                ParsimoniousTree* bg = new ParsimoniousTree(ALPHABET_SIZE, options.context, _data, _cluster_assignments, 0);
-                bg_cluster_tag = _clustermanager.add_cluster(bg);
+                ParsimoniousTree* bg = new ParsimoniousTree(ALPHABET_SIZE, options.context, _data, _state.cluster_assignments, 0);
+                bg_cluster_tag = _state.add_cluster(bg);
         }
         else {
                 cerr << "Unknown background model." << endl;
@@ -95,7 +90,7 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
         for (size_t i = 0; i < options.baseline_priors.size(); i++) {
                 assert(options.tfbs_length == options.baseline_priors[i].size());
                 ProductDirichlet* dirichlet = new ProductDirichlet(options.baseline_priors[i], _data);
-                const model_tag_t model_tag = _clustermanager.add_baseline_model(dirichlet);
+                const model_tag_t model_tag = _state.add_baseline_model(dirichlet);
                 _model_tags.push_back(model_tag);
         }
 
@@ -104,7 +99,7 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
         for (da_iterator it = _data.begin();
              it != _data.end(); it++) {
                 range_t range(**it, 1);
-                _clustermanager[bg_cluster_tag].add_observations(range);
+                _state[bg_cluster_tag].add_observations(range);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -146,21 +141,21 @@ DpmTfbs::valid_for_sampling(const index_i& index) const
 
         // check if there is a tfbs starting here, if not check
         // succeeding positions
-        if (_tfbs_start_positions[index] == 0) {
+        if (_state.tfbs_start_positions[index] == 0) {
                 // check if this element belongs to a tfbs that starts
                 // earlier in the sequence
-                if (_clustermanager[index] != bg_cluster_tag) {
+                if (_state[index] != bg_cluster_tag) {
                         return false;
                 }
-                if (_cluster_assignments[seq_index_t(sequence, position)] == -1) {
+                if (_state.cluster_assignments[seq_index_t(sequence, position)] == -1) {
                         return false;
                 }
                 // check if there is a tfbs starting within the word
                 for (size_t i = 1; i < TFBS_LENGTH; i++) {
-                        if (_tfbs_start_positions[seq_index_t(sequence, position+i)] == 1) {
+                        if (_state.tfbs_start_positions[seq_index_t(sequence, position+i)] == 1) {
                                 return false;
                         }
-                        if (_cluster_assignments[seq_index_t(sequence, position+i)] == -1) {
+                        if (_state.cluster_assignments[seq_index_t(sequence, position+i)] == -1) {
                                 return false;
                         }
                 }
@@ -175,12 +170,12 @@ DpmTfbs::add(const index_i& index, cluster_tag_t tag)
         const range_t range(index, TFBS_LENGTH);
 
         if (tag == bg_cluster_tag) {
-                _clustermanager[tag].add_observations(range);
+                _state[tag].add_observations(range);
         }
         else {
-                _clustermanager[tag].add_observations(range);
-                num_tfbs++;
-                _tfbs_start_positions[index] = 1;
+                _state[tag].add_observations(range);
+                _state.num_tfbs++;
+                _state.tfbs_start_positions[index] = 1;
         }
 }
 
@@ -190,19 +185,19 @@ DpmTfbs::remove(const index_i& index, cluster_tag_t tag)
         const range_t range(index, TFBS_LENGTH);
 
         if (tag == bg_cluster_tag) {
-                _clustermanager[tag].remove_observations(range);
+                _state[tag].remove_observations(range);
         }
         else {
-                _clustermanager[tag].remove_observations(range);
-                num_tfbs--;
-                _tfbs_start_positions[index] = 0;
+                _state[tag].remove_observations(range);
+                _state.num_tfbs--;
+                _state.tfbs_start_positions[index] = 0;
         }
 }
 
 size_t
 DpmTfbs::mixture_components() const
 {
-        return _clustermanager.size();
+        return _state.size();
 }
 
 size_t
@@ -222,7 +217,7 @@ DpmTfbs::mixture_weights(const index_i& index, double log_weights[], cluster_tag
         cluster_tag_t i = 0;
         ////////////////////////////////////////////////////////////////////////
         // loop through existing clusters
-        for (cm_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {
+        for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
                 Cluster& cluster = **it;
                 cluster_tags[i] = cluster.cluster_tag();
                 if (cluster.cluster_tag() == bg_cluster_tag) {
@@ -241,7 +236,7 @@ DpmTfbs::mixture_weights(const index_i& index, double log_weights[], cluster_tag
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         for (i = 0; i < baseline_n; i++) {
-                Cluster& cluster = _clustermanager.get_free_cluster(_model_tags[i]);
+                Cluster& cluster = _state.get_free_cluster(_model_tags[i]);
                 cluster_tags[mixture_n+i] = cluster.cluster_tag();
                 sum = logadd(sum, lambda_log + __process_prior(cluster) + log(_baseline_weights[i]) +
                              cluster.model().log_predictive(range));
@@ -253,8 +248,8 @@ double
 DpmTfbs::likelihood() const {
         double result = 0;
 
-        for (cm_iterator it = _clustermanager.begin();
-             it != _clustermanager.end(); it++) {
+        for (cm_iterator it = _state.begin();
+             it != _state.end(); it++) {
                 Cluster& cluster = **it;
                 result += cluster.model().log_likelihood();
         }
@@ -317,11 +312,11 @@ DpmTfbs::proposal(Cluster& cluster)
         double likelihood_new;
 
         // save state
-        size_t num_tfbs_old = num_tfbs;
-        sequence_data_t<cluster_tag_t> cluster_assignments_old(_cluster_assignments);
-        sequence_data_t<short> tfbs_start_positions_old(_tfbs_start_positions);
+        size_t num_tfbs_old = _state.num_tfbs;
+        sequence_data_t<cluster_tag_t> cluster_assignments_old(_state.cluster_assignments);
+        sequence_data_t<short> tfbs_start_positions_old(_state.tfbs_start_positions);
         Cluster cluster_old(cluster);
-        Cluster bg_cluster_old(_clustermanager[bg_cluster_tag]);
+        Cluster bg_cluster_old(_state[bg_cluster_tag]);
 
         // propose move to right
         if (move_right(cluster)) {
@@ -337,11 +332,11 @@ DpmTfbs::proposal(Cluster& cluster)
         }
 
         // if not accepted, restore state
-        num_tfbs = num_tfbs_old;
-        _cluster_assignments = cluster_assignments_old;
-        _tfbs_start_positions = tfbs_start_positions_old;
-        _clustermanager[cluster.cluster_tag()] = cluster_old;
-        _clustermanager[bg_cluster_tag] = bg_cluster_old;
+        _state.num_tfbs = num_tfbs_old;
+        _state.cluster_assignments = cluster_assignments_old;
+        _state.tfbs_start_positions = tfbs_start_positions_old;
+        _state[cluster.cluster_tag()] = cluster_old;
+        _state[bg_cluster_tag] = bg_cluster_old;
 
         // propose move to right
         if (move_left(cluster)) {
@@ -357,11 +352,11 @@ DpmTfbs::proposal(Cluster& cluster)
         }
 
         // if not accepted, restore state
-        num_tfbs = num_tfbs_old;
-        _cluster_assignments = cluster_assignments_old;
-        _tfbs_start_positions = tfbs_start_positions_old;
-        _clustermanager[cluster.cluster_tag()] = cluster_old;
-        _clustermanager[bg_cluster_tag] = bg_cluster_old;
+        _state.num_tfbs = num_tfbs_old;
+        _state.cluster_assignments = cluster_assignments_old;
+        _state.tfbs_start_positions = tfbs_start_positions_old;
+        _state[cluster.cluster_tag()] = cluster_old;
+        _state[bg_cluster_tag] = bg_cluster_old;
 
         return false;
 }
@@ -369,7 +364,7 @@ DpmTfbs::proposal(Cluster& cluster)
 void
 DpmTfbs::metropolis_hastings()
 {
-        for (cm_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {
+        for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
                 Cluster& cluster = **it;
                 if (cluster.cluster_tag() != bg_cluster_tag && cluster.size() > 1) {
                         proposal(cluster);
@@ -381,7 +376,7 @@ void
 DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
 {
         // loop through all clusters
-        for (cm_iterator it = _clustermanager.begin(); it != _clustermanager.end(); it++) {
+        for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
                 const Cluster& cluster = **it;
                 if (cluster.cluster_tag() != bg_cluster_tag) {
                         // loop through cluster elements
@@ -389,7 +384,7 @@ DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
                                 cl_iterator iu = is; iu++;
                                 while (iu != cluster.end()) {
                                         // record edge
-                                        _posterior.graph[edge_t(is->index, iu->index)]++;
+                                        _state.posterior.graph[edge_t(is->index, iu->index)]++;
                                         iu++;
                                 }
                         }
@@ -414,13 +409,13 @@ DpmTfbs::update_hypergraph(sequence_data_t<short> tfbs_start_positions)
              it != binding_sites.end(); it++) {
                 // if there still is a binding site
                 if (tfbs_start_positions[**it] == 1) {
-                        cluster_tag_t tag = _cluster_assignments[**it];
+                        cluster_tag_t tag = _state.cluster_assignments[**it];
                         tfbs_start_positions[**it] = 0;
                         ss << "{ " << *static_cast<const seq_index_t*>(*it);
                         // find sites with the same cluster assignment
                         for (list<const index_i*>::const_iterator is = it;
                              is != binding_sites.end(); is++) {
-                                if (tfbs_start_positions[**is] == 1 && _cluster_assignments[**is] == tag) {
+                                if (tfbs_start_positions[**is] == 1 && _state.cluster_assignments[**is] == tag) {
                                         ss << " " << *static_cast<const seq_index_t*>(*is);
                                 }
                         }
@@ -428,7 +423,7 @@ DpmTfbs::update_hypergraph(sequence_data_t<short> tfbs_start_positions)
                 }
         }
         if (!ss.str().size() == 0) {
-                _posterior.hypergraph.push_back(ss.str());
+                _state.posterior.hypergraph.push_back(ss.str());
         }
 }
 
@@ -436,30 +431,30 @@ void
 DpmTfbs::update_posterior(size_t sampling_steps) {
         metropolis_hastings();
         if (sampling_steps % 100 == 0) {
-                _tfbs_graph.cleanup(1);
+                _state.tfbs_graph.cleanup(1);
         }
         for (da_iterator it = _data.begin();
              it != _data.end(); it++) {
                 const index_i& index  = **it;
                 const size_t sequence = index[0];
                 const size_t position = index[1];
-                if (_clustermanager[index] == bg_cluster_tag) {
-                        const double tmp   = _posterior.probabilities[sequence][position];
+                if (_state[index] == bg_cluster_tag) {
+                        const double tmp   = _state.posterior.probabilities[sequence][position];
                         const double value = ((double)sampling_steps*tmp)/((double)sampling_steps+1.0);
-                        _posterior.probabilities[sequence][position] = value;
+                        _state.posterior.probabilities[sequence][position] = value;
                 }
                 else {
-                        const double tmp   = _posterior.probabilities[sequence][position];
+                        const double tmp   = _state.posterior.probabilities[sequence][position];
                         const double value = ((double)sampling_steps*tmp+1.0)/((double)sampling_steps+1.0);
-                        _posterior.probabilities[sequence][position] = value;
+                        _state.posterior.probabilities[sequence][position] = value;
                 }
         }
-        update_graph(_tfbs_start_positions);
+        update_graph(_state.tfbs_start_positions);
 }
 
 posterior_t&
 DpmTfbs::posterior() {
-        return _posterior;
+        return _state.posterior;
 }
 
 const data_tfbs_t&
@@ -467,14 +462,14 @@ DpmTfbs::data() const {
         return _data;
 }
 
-const ClusterManager&
+const mixture_state_t&
 DpmTfbs::clustermanager() const {
-        return _clustermanager;
+        return _state;
 }
 
 const Graph&
 DpmTfbs::graph() const {
-        return _tfbs_graph;
+        return _state.tfbs_graph;
 }
 
 std::matrix<double>
@@ -495,13 +490,13 @@ DpmTfbs::init_alpha(size_t length)
 ostream& operator<< (ostream& o, const DpmTfbs& dpm)
 {
         o << "Cluster Assignments:"     << endl;
-        o << dpm._cluster_assignments   << endl;
+        o << dpm._state.cluster_assignments   << endl;
 
         o << "TFBS Start Positions:"    << endl;
-        o << dpm._tfbs_start_positions  << endl;
+        o << dpm._state.tfbs_start_positions  << endl;
 
         o << "Clusters:"                << endl;
-        o << dpm._clustermanager;
+        o << dpm._state;
 
         return o;
 }
