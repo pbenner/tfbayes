@@ -22,12 +22,17 @@
 #include <gsl/gsl_randist.h>
 
 #include <sampler.hh>
+#include <state.hh>
 #include <statistics.hh>
 
 using namespace std;
 
-GibbsSampler::GibbsSampler(DPM& dpm, const Indexer& indexer)
-        : _dpm(dpm), _indexer(indexer), _sampling_steps(0),
+GibbsSampler::GibbsSampler(mixture_model_t& dpm,
+                           gibbs_state_t& state,
+                           const Indexer& indexer)
+        : _dpm(dpm), _state(state),
+          _indexer(indexer),
+          _sampling_steps(0),
           _sampling_history(*new sampling_history_t())
 {
         // for sampling statistics
@@ -40,7 +45,10 @@ GibbsSampler::GibbsSampler(DPM& dpm, const Indexer& indexer)
 }
 
 GibbsSampler::GibbsSampler(const GibbsSampler& sampler)
-        : _dpm(*sampler._dpm.clone()), _indexer(sampler._indexer), _sampling_steps(0),
+        : _dpm(*sampler._dpm.clone()),
+          _state(sampler._state),
+          _indexer(sampler._indexer),
+          _sampling_steps(0),
           _sampling_history(*new sampling_history_t(sampler._sampling_history))
 {
 }
@@ -65,8 +73,8 @@ GibbsSampler::_sample(const index_i& index) {
         }
         ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
-        cluster_tag_t old_cluster_tag = _dpm.state()[index];
-        _dpm.remove(index, old_cluster_tag);
+        cluster_tag_t old_cluster_tag = _state[index];
+        _state.remove(index, old_cluster_tag);
         size_t components = _dpm.mixture_components() + _dpm.baseline_components();
         double log_weights[components];
         cluster_tag_t cluster_tags[components];
@@ -78,7 +86,7 @@ GibbsSampler::_sample(const index_i& index) {
         cluster_tag_t new_cluster_tag = cluster_tags[select_component(components, log_weights)];
 
         ////////////////////////////////////////////////////////////////////////
-        _dpm.add(index, new_cluster_tag);
+        _state.add(index, new_cluster_tag);
 
         return old_cluster_tag != new_cluster_tag;
 }
@@ -104,7 +112,7 @@ GibbsSampler::sample(size_t n, size_t burnin) {
         for (size_t i = 0; i < burnin; i++) {
                 flockfile(stdout);
                 printf("Burn in... [%u]", (unsigned int)i+1);
-                cout << "[ Cluster: " <<_dpm.state() << "]" << endl;
+                cout << "[ Cluster: " << _state << "]" << endl;
                 fflush(stdout);
                 funlockfile(stdout);
                 double sum = 0;
@@ -122,7 +130,7 @@ GibbsSampler::sample(size_t n, size_t burnin) {
                 // loop through all elements
                 flockfile(stdout);
                 printf("Sampling... [%u]", (unsigned int)i+1);
-                cout << "[ Cluster: " <<_dpm.state() << "]" << endl;
+                cout << "[ Cluster: " << _state << "]" << endl;
                 fflush(stdout);
                 funlockfile(stdout);
                 double sum = 0;

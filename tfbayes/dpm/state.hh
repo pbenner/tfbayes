@@ -22,10 +22,34 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <clonable.hh>
+#include <ostream>
 
-class state_t {
+#include <datatypes.hh>
+#include <index.hh>
+
+class gibbs_state_t {
 public:
+        virtual ~gibbs_state_t() {}
+
+        virtual cluster_tag_t operator[](const index_i& index) const = 0;
+
+        virtual void add(const index_i& index, cluster_tag_t tag) = 0;
+        virtual void remove(const index_i& index, cluster_tag_t tag) = 0;
+
+        virtual void print(std::ostream& o) const = 0;
 };
+
+class metropolis_state_t {
+public:
+        virtual ~metropolis_state_t() {}
+
+        virtual void save(cluster_tag_t cluster_tag, cluster_tag_t cluster_bg_tag) = 0;
+        virtual void restore() = 0;
+};
+
+class hybrid_state_t : public gibbs_state_t, public metropolis_state_t {
+};
+
+std::ostream& operator<< (std::ostream& o, const gibbs_state_t& state);
 
 #endif /* STATE_HH */

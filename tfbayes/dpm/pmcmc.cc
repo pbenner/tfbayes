@@ -105,16 +105,10 @@ PopulationMCMC::update_posterior()
                         _posterior->probabilities[i][j] = sum/(double)_size;
                 }
         }
-        // graph and hypergraph updates
+        // graph updates
         for (size_t i = 0; i < _size; i++) {
                 _posterior->graph.insert(_population[i]->posterior().graph);
                 _population[i]->posterior().graph.cleanup();
-                for (vector<string>::const_iterator it = _population[i]->posterior().hypergraph.begin();
-                     it !=  _population[i]->posterior().hypergraph.end(); it++)
-                {
-                        _posterior->hypergraph.push_back(*it);
-                }
-                _population[i]->posterior().hypergraph.clear();
         }
 }
 

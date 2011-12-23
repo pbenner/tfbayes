@@ -182,12 +182,3 @@ mixture_state_t::update(Observed<cluster_event_t>* observed, cluster_event_t eve
                 break;
         }
 }
-
-std::ostream& operator<< (std::ostream& o, const mixture_state_t& cm) {
-        o << "(" << cm.size() << "): ";
-        for (mixture_state_t::const_iterator it = cm.begin(); it != cm.end(); it++) {
-                o << **it << " ";
-        }
-
-        return o;
-}

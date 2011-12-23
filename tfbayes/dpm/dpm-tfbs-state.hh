@@ -24,56 +24,56 @@
 
 #include <vector>
 
-#include <clonable.hh>
+#include <cluster.hh>
+#include <data-tfbs.hh>
+#include <mixture-state.hh>
+#include <state.hh>
 
-class dpm_tfbs_state_t : public mixture_state_t {
+class dpm_tfbs_state_t : public hybrid_state_t, public mixture_state_t {
 public:
-        dpm_tfbs_state_t(const std::vector<size_t>& sizes)
-                : mixture_state_t(cluster_assignments),
-                  cluster_assignments(sizes, -1),
-                  // starting positions of tfbs
-                  tfbs_start_positions(sizes, 0),
-                  // number of transcription factor binding sites
-                  num_tfbs(0),
-                  // auxiliary variables
-                  num_tfbs_p(0),
-                  cluster_assignments_p(sizes, -1),
-                  tfbs_start_positions_p(sizes, 0),
-                  cluster_p(NULL),
-                  cluster_bg_p(NULL)
-                { }
+         dpm_tfbs_state_t(const std::vector<size_t>& sizes,
+                          size_t tfbs_length,
+                          cluster_tag_t bg_cluster_tag,
+                          const data_tfbs_t& data);
+        ~dpm_tfbs_state_t();
 
-        void save(cluster_tag_t cluster_tag, cluster_tag_t cluster_bg_tag) {
-                if (cluster_p != NULL) {
-                        delete(cluster_p);
+        // auxiliary types
+        ////////////////////////////////////////////////////////////////////////
+        typedef Cluster::const_iterator cl_iterator;
+
+        // operators
+        ////////////////////////////////////////////////////////////////////////
+        using mixture_state_t::operator[];
+        __inline__  cluster_tag_t operator[](const index_i& index) const { return  cluster_assignments[index]; }
+
+        // methods
+        ////////////////////////////////////////////////////////////////////////
+        void add(const index_i& index, cluster_tag_t tag);
+        void remove(const index_i& index, cluster_tag_t tag);
+
+        bool move_left(Cluster& cluster);
+        bool move_right(Cluster& cluster);
+
+        void save(cluster_tag_t cluster_tag, cluster_tag_t cluster_bg_tag);
+        void restore();
+
+        bool valid_tfbs_position(const index_i& index) const;
+
+        void print(std::ostream& o) const {
+                o << "(" << size() << "): ";
+                for (const_iterator it = begin(); it != end(); it++) {
+                        o << **it << " ";
                 }
-                if (cluster_bg_p != NULL) {
-                        delete(cluster_bg_p);
-                }
-                num_tfbs_p = num_tfbs;
-                cluster_assignments_p  = cluster_assignments;
-                tfbs_start_positions_p = tfbs_start_positions;
-                cluster_p    = new Cluster((*this)[cluster_tag]);
-                cluster_bg_p = new Cluster((*this)[cluster_bg_tag]);
         }
 
-        void restore() {
-                num_tfbs = num_tfbs_p;
-                cluster_assignments  = cluster_assignments_p;
-                tfbs_start_positions = tfbs_start_positions_p;
-                (*this)[cluster_p->cluster_tag()]    = *cluster_p;
-                (*this)[cluster_bg_p->cluster_tag()] = *cluster_bg_p;
-        }
+        // data
+        ////////////////////////////////////////////////////////////////////////
 
         // assignments of nucleotides to clusters
         sequence_data_t<cluster_tag_t> cluster_assignments;
 
         // record start positions of tfbs
         sequence_data_t<short> tfbs_start_positions;
-
-        // posterior distribution
-        posterior_t posterior;
-        Graph tfbs_graph;
 
         // keep track of the number of transcription factor binding sites
         size_t num_tfbs;
@@ -84,6 +84,12 @@ public:
         sequence_data_t<short> tfbs_start_positions_p;
         Cluster* cluster_p;
         Cluster* cluster_bg_p;
+
+        const data_tfbs_t& _data;
+
+        // constants
+        const size_t TFBS_LENGTH;
+        const cluster_tag_t bg_cluster_tag;
 };
 
 #endif /* DPM_TFBS_STATE_HH */

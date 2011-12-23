@@ -60,7 +60,7 @@ void _dpm_gaussian_init(
 
         _data    = new data_gaussian_t(cluster, (size_t)samples, Sigma, _pi->vec);
         _gdpm    = new DPM_Gaussian(alpha, Sigma, Sigma_0, mu_0, *_data);
-        _sampler = new GibbsSampler(*_gdpm, *_data);
+        _sampler = new GibbsSampler(*_gdpm, *_gdpm, *_data);
 
         gsl_matrix_free(Sigma);
         gsl_matrix_free(Sigma_0);
@@ -92,7 +92,7 @@ matrix_t* _dpm_gaussian_cluster_elements(int tag) {
         size_t i = 0;
         for (data_gaussian_t::const_iterator it = _data->begin();
              it != _data->end(); it++) {
-                if (state[**it] == (cluster_tag_t)tag) {
+                if ((*_gdpm)[**it] == (cluster_tag_t)tag) {
                         elements->mat[i][0] = (*_data)[**it][0];
                         elements->mat[i][1] = (*_data)[**it][1];
                         i++;
@@ -142,7 +142,7 @@ vector_t* _dpm_gaussian_cluster_assignments() {
         for (data_gaussian_t::const_iterator it = _data->begin();
              it != _data->end(); it++) {
                 const index_i& index = **it;
-                result->vec[index[0]] = _gdpm->state()[index];
+                result->vec[index[0]] = (*_gdpm)[index];
         }
         return result;
 }

@@ -27,11 +27,11 @@
 
 #include <mixture-state.hh>
 
-class DPM : public clonable {
+class mixture_model_t : public clonable {
 public:
-        virtual ~DPM() {}
+        virtual ~mixture_model_t() {}
 
-        virtual DPM* clone() const = 0;
+        virtual mixture_model_t* clone() const = 0;
 
         // operators
         ////////////////////////////////////////////////////////////////////////
@@ -44,13 +44,10 @@ public:
         virtual size_t baseline_components() const = 0;
         // compute cumulative mixture weights on log scale (not normalized!)
         virtual void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[]) = 0;
-        virtual void   add(const index_i& index, cluster_tag_t tag) = 0;
-        virtual void   remove(const index_i& index, cluster_tag_t tag) = 0;
         virtual void   update_posterior(size_t sampling_steps) = 0;
         virtual double likelihood() const = 0;
         virtual bool   valid_for_sampling(const index_i& index) const = 0;
         virtual posterior_t& posterior() = 0;
-        virtual const mixture_state_t& state() const = 0;
 };
 
 #endif /* MIXTURE_MODEL_HH */

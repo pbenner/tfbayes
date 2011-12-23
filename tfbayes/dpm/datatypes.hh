@@ -57,7 +57,6 @@ typedef struct {
 
 typedef struct {
         std::vector<std::vector<double> > probabilities;
-        std::vector<std::string> hypergraph;
         Graph graph;
 } posterior_t;
 

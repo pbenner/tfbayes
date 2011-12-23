@@ -27,8 +27,9 @@
 #include <component-model.hh>
 #include <data-gaussian.hh>
 #include <mixture-model.hh>
+#include <state.hh>
 
-class DPM_Gaussian : public DPM {
+class DPM_Gaussian : public mixture_model_t, public gibbs_state_t {
 public:
          DPM_Gaussian(double alpha,
                       gsl_matrix* _Sigma,
@@ -41,8 +42,9 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-              Cluster& operator[](cluster_tag_t c)       { return _state[c]; }
-        const Cluster& operator[](cluster_tag_t c) const { return _state[c]; }
+              Cluster& operator[](cluster_tag_t c)            { return _state[c]; }
+        const Cluster& operator[](cluster_tag_t c)      const { return _state[c]; }
+         cluster_tag_t operator[](const index_i& index) const { return _cluster_assignments[index]; }
 
         friend std::ostream& operator<<(std::ostream& o, const DPM_Gaussian& dpm);
 
@@ -59,6 +61,13 @@ public:
         posterior_t& posterior();
         const mixture_state_t& state() const;
         gsl_matrix* means() const;
+
+        void print(std::ostream& o) const {
+                o << "(" << _state.size() << "): ";
+                for (mixture_state_t::const_iterator it = _state.begin(); it != _state.end(); it++) {
+                        o << **it << " ";
+                }
+        }
 
 private:
         model_tag_t _model_tag;

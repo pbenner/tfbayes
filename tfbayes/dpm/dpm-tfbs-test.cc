@@ -37,11 +37,11 @@ DpmTfbs::test_metropolis_hastings() {
 
         cout.precision(10);
 
-        remove(index1, bg_cluster_tag);
-        add(index1, cluster_tag1);
+        _state.remove(index1, bg_cluster_tag);
+        _state.add(index1, cluster_tag1);
 
-        remove(index2, bg_cluster_tag);
-        add(index2, cluster_tag1);
+        _state.remove(index2, bg_cluster_tag);
+        _state.add(index2, cluster_tag1);
 
         l1 = likelihood();
         cout << _state.cluster_assignments << endl;
@@ -70,23 +70,23 @@ DpmTfbs::test_moves() {
         Cluster& cluster1 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
 
-        remove(index1, bg_cluster_tag);
-        add(index1, cluster_tag1);
+        _state.remove(index1, bg_cluster_tag);
+        _state.add(index1, cluster_tag1);
 
-        remove(index2, bg_cluster_tag);
-        add(index2, cluster_tag1);
+        _state.remove(index2, bg_cluster_tag);
+        _state.add(index2, cluster_tag1);
 
-        remove(index3, bg_cluster_tag);
-        add(index3, cluster_tag1);
+        _state.remove(index3, bg_cluster_tag);
+        _state.add(index3, cluster_tag1);
 
         Cluster& cluster2 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
 
-        remove(index4, bg_cluster_tag);
-        add(index4, cluster_tag2);
+        _state.remove(index4, bg_cluster_tag);
+        _state.add(index4, cluster_tag2);
 
         cout << _state.cluster_assignments << endl;
-        move_left(cluster1);
+        _state.move_left(cluster1);
         cout << _state.cluster_assignments << endl;
 
         exit(EXIT_SUCCESS);
@@ -104,11 +104,11 @@ DpmTfbs::test_background() {
         Cluster& cluster1 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
         cout << "Adding index1:" << index1 << " to cluster:" << cluster_tag1 << endl;
-        remove(index1, bg_cluster_tag);
-        add(index1, cluster_tag1);
+        _state.remove(index1, bg_cluster_tag);
+        _state.add(index1, cluster_tag1);
         cout << "Adding index6:" << index6<< " to cluster:" << cluster_tag1 << endl;
-        remove(index6, bg_cluster_tag);
-        add(index6, cluster_tag1);
+        _state.remove(index6, bg_cluster_tag);
+        _state.add(index6, cluster_tag1);
         cout << endl;
 
         cout << _state.cluster_assignments << endl;
@@ -117,35 +117,35 @@ DpmTfbs::test_background() {
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
 
         cout << "Adding index2:" << index2 << " to cluster:" << cluster_tag2 << endl;
-        remove(index2, bg_cluster_tag);
-        add(index2, cluster_tag2);
+        _state.remove(index2, bg_cluster_tag);
+        _state.add(index2, cluster_tag2);
         cout << _state.cluster_assignments;
-        remove(index2, cluster_tag2);
-        add(index2, bg_cluster_tag);
+        _state.remove(index2, cluster_tag2);
+        _state.add(index2, bg_cluster_tag);
         cout << "Removing index2:" << index2 << " from cluster:" << cluster_tag2 << endl << endl;
 
         cout << "Adding index3:" << index3 << " to cluster:" << cluster_tag2 << endl;
-        remove(index3, bg_cluster_tag);
-        add(index3, cluster_tag2);
+        _state.remove(index3, bg_cluster_tag);
+        _state.add(index3, cluster_tag2);
         cout << _state.cluster_assignments;
-        remove(index3, cluster_tag2);
-        add(index3, bg_cluster_tag);
+        _state.remove(index3, cluster_tag2);
+        _state.add(index3, bg_cluster_tag);
         cout << "Removing index3:" << index2 << " from cluster:" << cluster_tag2 << endl << endl;
 
         cout << "Adding index4:" << index4 << " to cluster:" << cluster_tag2 << endl;
-        remove(index4, bg_cluster_tag);
-        add(index4, cluster_tag2);
+        _state.remove(index4, bg_cluster_tag);
+        _state.add(index4, cluster_tag2);
         cout << _state.cluster_assignments;
-        remove(index4, cluster_tag2);
-        add(index4, bg_cluster_tag);
+        _state.remove(index4, cluster_tag2);
+        _state.add(index4, bg_cluster_tag);
         cout << "Removing index4:" << index2 << " from cluster:" << cluster_tag2 << endl << endl;
 
         cout << "Adding index5:" << index4 << " to cluster:" << cluster_tag2 << endl;
-        remove(index5, bg_cluster_tag);
-        add(index5, cluster_tag2);
+        _state.remove(index5, bg_cluster_tag);
+        _state.add(index5, cluster_tag2);
         cout << _state.cluster_assignments;
-        remove(index5, cluster_tag2);
-        add(index5, bg_cluster_tag);
+        _state.remove(index5, cluster_tag2);
+        _state.add(index5, bg_cluster_tag);
         cout << "Removing index5:" << index2 << " from cluster:" << cluster_tag2 << endl;
 
         exit(EXIT_SUCCESS);
@@ -161,11 +161,11 @@ DpmTfbs::test() {
         Cluster& cluster1 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
         cout << "Adding index1:" << index1 << " to cluster:" << cluster_tag1 << endl;
-        add(index1, cluster_tag1);
+        _state.add(index1, cluster_tag1);
         Cluster& cluster2 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
         cout << "Adding index2:" << index2 << " to cluster:" << cluster_tag2 << endl;
-        add(index2, cluster_tag2);
+        _state.add(index2, cluster_tag2);
 
         cout << "Components: " << mixture_components() << " + " << baseline_components() << endl;
         size_t components = mixture_components() + baseline_components();

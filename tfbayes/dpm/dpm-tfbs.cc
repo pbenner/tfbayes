@@ -47,7 +47,7 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
           // raw sequences
           _data(data),
           // cluster manager
-          _state(data.sizes()),
+          _state(data.sizes(), TFBS_LENGTH, 0, _data),
           // strength parameter for the dirichlet process
           alpha(options.alpha),
           alpha_log(log(options.alpha)),
@@ -62,7 +62,7 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
         ////////////////////////////////////////////////////////////////////////////////
         // initialize joint posterior
         for (size_t i = 0; i < data.size(); i++) {
-                _state.posterior.probabilities.push_back(vector<double>(data.size(i), 0.0));
+                _posterior.probabilities.push_back(vector<double>(data.size(i), 0.0));
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -164,36 +164,6 @@ DpmTfbs::valid_for_sampling(const index_i& index) const
         return true;
 }
 
-void
-DpmTfbs::add(const index_i& index, cluster_tag_t tag)
-{
-        const range_t range(index, TFBS_LENGTH);
-
-        if (tag == bg_cluster_tag) {
-                _state[tag].add_observations(range);
-        }
-        else {
-                _state[tag].add_observations(range);
-                _state.num_tfbs++;
-                _state.tfbs_start_positions[index] = 1;
-        }
-}
-
-void
-DpmTfbs::remove(const index_i& index, cluster_tag_t tag)
-{
-        const range_t range(index, TFBS_LENGTH);
-
-        if (tag == bg_cluster_tag) {
-                _state[tag].remove_observations(range);
-        }
-        else {
-                _state[tag].remove_observations(range);
-                _state.num_tfbs--;
-                _state.tfbs_start_positions[index] = 0;
-        }
-}
-
 size_t
 DpmTfbs::mixture_components() const
 {
@@ -257,55 +227,6 @@ DpmTfbs::likelihood() const {
 }
 
 bool
-DpmTfbs::move_left(Cluster& cluster)
-{
-        const Cluster::elements_t elements(cluster.elements());
-
-        for (cl_iterator is = elements.begin(); is != elements.end(); is++) {
-                if (cluster.size() == 1) {
-                        return false;
-                }
-                const range_t& range = *is;
-                const size_t sequence = range.index[0];
-                const size_t position = range.index[1];
-                const seq_index_t index(sequence, position-1);
-                remove(range.index, cluster.cluster_tag());
-                add(range.index, bg_cluster_tag);
-                if (position > 0 && valid_for_sampling(index)) {
-                        remove(index, bg_cluster_tag);
-                        add(index, cluster.cluster_tag());
-                }
-        }
-
-        return true;
-}
-
-bool
-DpmTfbs::move_right(Cluster& cluster)
-{
-        const Cluster::elements_t elements(cluster.elements());
-
-        for (cl_iterator is = elements.begin(); is != elements.end(); is++) {
-                if (cluster.size() == 1) {
-                        return false;
-                }
-                const range_t range(*is);
-                const size_t sequence = range.index[0];
-                const size_t position = range.index[1];
-                const size_t sequence_length = _data.size(sequence);
-                const seq_index_t index(sequence, position+1);
-                remove(range.index, cluster.cluster_tag());
-                add(range.index, bg_cluster_tag);
-                if (position+TFBS_LENGTH < sequence_length && valid_for_sampling(index)) {
-                        remove(index, bg_cluster_tag);
-                        add(index, cluster.cluster_tag());
-                }
-        }
-
-        return true;
-}
-
-bool
 DpmTfbs::proposal(Cluster& cluster)
 {
         double likelihood_ref = likelihood();
@@ -313,7 +234,7 @@ DpmTfbs::proposal(Cluster& cluster)
 
         _state.save(cluster.cluster_tag(), bg_cluster_tag);
         // propose move to right
-        if (move_right(cluster)) {
+        if (_state.move_right(cluster)) {
                 likelihood_new = likelihood();
 
                 if (likelihood_new > likelihood_ref) {
@@ -328,7 +249,7 @@ DpmTfbs::proposal(Cluster& cluster)
         // if not accepted, restore state
         _state.restore();
         // propose move to right
-        if (move_left(cluster)) {
+        if (_state.move_left(cluster)) {
                 likelihood_new = likelihood();
 
                 if (likelihood_new > likelihood_ref) {
@@ -369,7 +290,7 @@ DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
                                 cl_iterator iu = is; iu++;
                                 while (iu != cluster.end()) {
                                         // record edge
-                                        _state.posterior.graph[edge_t(is->index, iu->index)]++;
+                                        _posterior.graph[edge_t(is->index, iu->index)]++;
                                         iu++;
                                 }
                         }
@@ -378,45 +299,10 @@ DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
 }
 
 void
-DpmTfbs::update_hypergraph(sequence_data_t<short> tfbs_start_positions)
-{
-        list<const index_i*> binding_sites;
-        stringstream ss;
-        // find all binding sites
-        for (Indexer::sampling_iterator it = _data.sampling_begin();
-             it != _data.sampling_end(); it++) {
-                if (tfbs_start_positions[**it] == 1) {
-                        binding_sites.push_back(*it);
-                }
-        }
-        // iterate over binding sites
-        for (list<const index_i*>::const_iterator it = binding_sites.begin();
-             it != binding_sites.end(); it++) {
-                // if there still is a binding site
-                if (tfbs_start_positions[**it] == 1) {
-                        cluster_tag_t tag = _state.cluster_assignments[**it];
-                        tfbs_start_positions[**it] = 0;
-                        ss << "{ " << *static_cast<const seq_index_t*>(*it);
-                        // find sites with the same cluster assignment
-                        for (list<const index_i*>::const_iterator is = it;
-                             is != binding_sites.end(); is++) {
-                                if (tfbs_start_positions[**is] == 1 && _state.cluster_assignments[**is] == tag) {
-                                        ss << " " << *static_cast<const seq_index_t*>(*is);
-                                }
-                        }
-                        ss << " } ";
-                }
-        }
-        if (!ss.str().size() == 0) {
-                _state.posterior.hypergraph.push_back(ss.str());
-        }
-}
-
-void
 DpmTfbs::update_posterior(size_t sampling_steps) {
         metropolis_hastings();
         if (sampling_steps % 100 == 0) {
-                _state.tfbs_graph.cleanup(1);
+                _posterior.graph.cleanup(1);
         }
         for (da_iterator it = _data.begin();
              it != _data.end(); it++) {
@@ -424,14 +310,14 @@ DpmTfbs::update_posterior(size_t sampling_steps) {
                 const size_t sequence = index[0];
                 const size_t position = index[1];
                 if (_state[index] == bg_cluster_tag) {
-                        const double tmp   = _state.posterior.probabilities[sequence][position];
+                        const double tmp   = _posterior.probabilities[sequence][position];
                         const double value = ((double)sampling_steps*tmp)/((double)sampling_steps+1.0);
-                        _state.posterior.probabilities[sequence][position] = value;
+                        _posterior.probabilities[sequence][position] = value;
                 }
                 else {
-                        const double tmp   = _state.posterior.probabilities[sequence][position];
+                        const double tmp   = _posterior.probabilities[sequence][position];
                         const double value = ((double)sampling_steps*tmp+1.0)/((double)sampling_steps+1.0);
-                        _state.posterior.probabilities[sequence][position] = value;
+                        _posterior.probabilities[sequence][position] = value;
                 }
         }
         update_graph(_state.tfbs_start_positions);
@@ -439,7 +325,7 @@ DpmTfbs::update_posterior(size_t sampling_steps) {
 
 posterior_t&
 DpmTfbs::posterior() {
-        return _state.posterior;
+        return _posterior;
 }
 
 const data_tfbs_t&
@@ -447,14 +333,14 @@ DpmTfbs::data() const {
         return _data;
 }
 
-const mixture_state_t&
-DpmTfbs::state() const {
+dpm_tfbs_state_t&
+DpmTfbs::state() {
         return _state;
 }
 
-const Graph&
-DpmTfbs::graph() const {
-        return _state.tfbs_graph;
+const dpm_tfbs_state_t&
+DpmTfbs::state() const {
+        return _state;
 }
 
 std::matrix<double>

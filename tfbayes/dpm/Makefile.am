@@ -44,9 +44,9 @@ libdpm_la_SOURCES =                                                           \
 	datatypes.hh graph.hh                                                 \
 	data.hh data-tfbs.cc data-tfbs.hh data-gaussian.cc data-gaussian.hh   \
 	dpm-tfbs.cc dpm-tfbs.hh dpm-tfbs-priors.cc                            \
-	dpm-tfbs-state.hh dpm-tfbs-test.cc                                    \
+	dpm-tfbs-state.cc dpm-tfbs-state.hh dpm-tfbs-test.cc                  \
 	dpm-gaussian.cc dpm-gaussian.hh                                       \
-	state.hh mixture-state.cc mixture-state.hh                            \
+	state.cc state.hh mixture-state.cc mixture-state.hh                   \
 	cluster.cc cluster.hh                                                 \
 	component-model.cc component-model.hh                                 \
 	mixture-model.hh                                                      \

@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef CLUSTERMANAGER_HH
-#define CLUSTERMANAGER_HH
+#ifndef MIXTURE_STATE_HH
+#define MIXTURE_STATE_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -28,7 +28,6 @@
 #include <cluster.hh>
 #include <component-model.hh>
 #include <datatypes.hh>
-#include <state.hh>
 
 // mixture_state_t
 ////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +35,7 @@
 // The cluster manager has a list of clusters and keeps track which of
 // them are used. If needed it allocates more free clusters.
 
-class mixture_state_t : public state_t, public Observer<cluster_event_t> {
+class mixture_state_t : public Observer<cluster_event_t> {
 public:
          mixture_state_t(data_t<cluster_tag_t>& cluster_assignments);
          mixture_state_t(const mixture_state_t& cm);
@@ -60,9 +59,6 @@ public:
         ////////////////////////////////////////////////////////////////////////
         __inline__       Cluster& operator[](cluster_tag_t c)            { return *clusters[c];                }
         __inline__ const Cluster& operator[](cluster_tag_t c)      const { return *clusters[c];                }
-        __inline__  cluster_tag_t operator[](const index_i& index) const { return  cluster_assignments[index]; }
-
-        friend std::ostream& operator<< (std::ostream& o, const mixture_state_t& cm);
 
         // methods
         ////////////////////////////////////////////////////////////////////////
@@ -91,4 +87,4 @@ private:
         data_t<cluster_tag_t>& cluster_assignments;
 };
 
-#endif /* CLUSTERMANAGER_HH */
+#endif /* MIXTURE_STATE_HH */

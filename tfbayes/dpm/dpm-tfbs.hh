@@ -45,7 +45,7 @@ typedef struct {
         std::vector<std::matrix<double> > baseline_priors;
 } tfbs_options_t;
 
-class DpmTfbs : public DPM {
+class DpmTfbs : public mixture_model_t {
 public:
          DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data);
         ~DpmTfbs();
@@ -70,17 +70,14 @@ public:
         size_t mixture_components() const;
         size_t baseline_components() const;
         void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[]);
-        void   add(const index_i& index, cluster_tag_t tag);
-        void   remove(const index_i& index, cluster_tag_t tag);
         void   update_graph(sequence_data_t<short> tfbs_start_positions);
-        void   update_hypergraph(sequence_data_t<short> tfbs_start_positions);
         void   update_posterior(size_t sampling_steps);
         double likelihood() const;
         bool   valid_for_sampling(const index_i& index) const;
         posterior_t& posterior();
         const data_tfbs_t& data() const;
-        const mixture_state_t& state() const;
-        const Graph& graph() const;
+        dpm_tfbs_state_t& state();
+        const dpm_tfbs_state_t& state() const;
 
         // test methods
         ////////////////////////////////////////////////////////////////////////
@@ -92,8 +89,6 @@ public:
         // metropolis hastings
         void metropolis_hastings();
         bool proposal(Cluster& cluster);
-        bool move_left(Cluster& cluster);
-        bool move_right(Cluster& cluster);
 
         // constants
         ////////////////////////////////////////////////////////////////////////
@@ -121,6 +116,9 @@ private:
         const double lambda;
         const double lambda_log;
         const double lambda_inv_log;
+
+        // posterior distribution
+        posterior_t _posterior;
 
         // process priors
         double py_prior(Cluster& cluster);

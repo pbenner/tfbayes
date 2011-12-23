@@ -24,8 +24,9 @@
 
 #include <clonable.hh>
 #include <datatypes.hh>
-#include <mixture-model.hh>
 #include <indexer.hh>
+#include <mixture-model.hh>
+#include <state.hh>
 
 class Sampler : public clonable {
 public:
@@ -37,7 +38,8 @@ public:
 
 class GibbsSampler : public Sampler {
 public:
-         GibbsSampler(DPM& dpm, const Indexer& indexer);
+         GibbsSampler(mixture_model_t& dpm, gibbs_state_t& state,
+                      const Indexer& indexer);
          GibbsSampler(const GibbsSampler& sampler);
         ~GibbsSampler();
 
@@ -53,7 +55,8 @@ private:
         bool _sample(const index_i& index);
 
         // the mixture model
-        DPM& _dpm;
+        mixture_model_t& _dpm;
+        gibbs_state_t& _state;
         const Indexer& _indexer;
 
         // gibbs sampler history

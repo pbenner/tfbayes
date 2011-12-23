@@ -157,11 +157,6 @@ void save_result(ostream& file)
                      << static_cast<double>((*it).second)/static_cast<double>(_pmcmc->sampling_steps()) << " ";
         }
         file << endl;
-        file << "hypergraph =" << endl;
-        for (vector<string>::const_iterator it = posterior.hypergraph.begin();
-             it != posterior.hypergraph.end(); it++) {
-                file << "\t" << *it << endl;
-        }
 }
 
 #undef __BEGIN_DECLS
@@ -221,7 +216,7 @@ void _dpm_tfbs_init(const char* filename)
 
         _data      = new data_tfbs_t(_sequences, _options.tfbs_length);
         _gdpm      = new DpmTfbs(tfbs_options, *_data);
-        _sampler   = new GibbsSampler(*_gdpm, *_data);
+        _sampler   = new GibbsSampler(*_gdpm, _gdpm->state(), *_data);
         _pmcmc     = new PopulationMCMC(*_sampler, _options.population_size);
 
         cout << _options << endl;
