@@ -187,7 +187,7 @@ HybridSampler::_metropolis_sample() {
                         if (likelihood_new > likelihood_ref) {
                                 cout << "cluster "
                                      << cluster.cluster_tag()
-                                     << ": move to left accepted"
+                                     << ": move accepted"
                                      << endl;
                         }
                         else {

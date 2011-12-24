@@ -51,7 +51,6 @@ public:
                 : state_t(cluster_assignments) {}
 
         virtual bool proposal(Cluster& cluster) = 0;
-        virtual void save(cluster_tag_t cluster_tag, cluster_tag_t cluster_bg_tag) = 0;
         virtual void restore() = 0;
 };
 

@@ -115,7 +115,7 @@ dpm_tfbs_state_t::remove(const index_i& index, cluster_tag_t tag)
 }
 
 void
-dpm_tfbs_state_t::save(cluster_tag_t cluster_tag, cluster_tag_t cluster_bg_tag) {
+dpm_tfbs_state_t::save(cluster_tag_t cluster_tag) {
         if (cluster_p != NULL) {
                 delete(cluster_p);
         }
@@ -126,7 +126,7 @@ dpm_tfbs_state_t::save(cluster_tag_t cluster_tag, cluster_tag_t cluster_bg_tag) 
         cluster_assignments_p  = cluster_assignments;
         tfbs_start_positions_p = tfbs_start_positions;
         cluster_p    = new Cluster((*this)[cluster_tag]);
-        cluster_bg_p = new Cluster((*this)[cluster_bg_tag]);
+        cluster_bg_p = new Cluster((*this)[bg_cluster_tag]);
 }
 
 void
@@ -190,7 +190,7 @@ dpm_tfbs_state_t::move_right(Cluster& cluster)
 bool
 dpm_tfbs_state_t::proposal(Cluster& cluster)
 {
-        save(cluster.cluster_tag(), bg_cluster_tag);
+        save(cluster.cluster_tag());
 
         if (cluster.cluster_tag() != bg_cluster_tag && cluster.size() > 1) {
                 if (rand() % 2 == 0) {

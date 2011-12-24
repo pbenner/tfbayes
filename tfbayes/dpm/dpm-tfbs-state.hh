@@ -50,7 +50,7 @@ public:
         bool move_right(Cluster& cluster);
 
         bool proposal(Cluster& cluster);
-        void save(cluster_tag_t cluster_tag, cluster_tag_t cluster_bg_tag);
+        void save(cluster_tag_t cluster_tag);
         void restore();
 
         bool valid_tfbs_position(const index_i& index) const;
