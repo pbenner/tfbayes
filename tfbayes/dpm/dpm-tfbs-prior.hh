@@ -33,7 +33,7 @@ public:
         dpm_tfbs_prior_t* clone() const = 0;
 
         virtual double predictive(const cluster_t& cluster) const = 0;
-        virtual double likelihood() const = 0;
+        virtual double joint() const = 0;
 };
 
 class pitman_yor_prior : public dpm_tfbs_prior_t {
@@ -44,7 +44,7 @@ public:
         pitman_yor_prior* clone() const;
 
         double predictive(const cluster_t& cluster) const;
-        double likelihood() const;
+        double joint() const;
 
 private:
         typedef mixture_state_t::const_iterator cl_iterator;
@@ -62,7 +62,7 @@ public:
         uniform_prior* clone() const;
 
         double predictive(const cluster_t& cluster) const;
-        double likelihood() const;
+        double joint() const;
 
 private:
         const dpm_tfbs_state_t& state;
@@ -76,7 +76,7 @@ public:
         poppe_prior* clone() const;
 
         double predictive(const cluster_t& cluster) const;
-        double likelihood() const;
+        double joint() const;
 
 private:
         const dpm_tfbs_state_t& state;

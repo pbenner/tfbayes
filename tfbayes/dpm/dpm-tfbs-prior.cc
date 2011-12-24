@@ -51,7 +51,7 @@ pitman_yor_prior::predictive(const cluster_t& cluster) const
 }
 
 double
-pitman_yor_prior::likelihood() const
+pitman_yor_prior::joint() const
 {
         const double N = state.num_tfbs;
 
@@ -92,7 +92,7 @@ uniform_prior::predictive(const cluster_t& cluster) const
 }
 
 double
-uniform_prior::likelihood() const
+uniform_prior::joint() const
 {
         return 0;
 }
@@ -138,7 +138,7 @@ poppe_prior::predictive(const cluster_t& cluster) const
 }
 
 double
-poppe_prior::likelihood() const
+poppe_prior::joint() const
 {
         return 0;
 }
