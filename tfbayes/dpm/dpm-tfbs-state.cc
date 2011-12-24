@@ -40,7 +40,7 @@ dpm_tfbs_state_t::dpm_tfbs_state_t(
           cluster_p(NULL),
           cluster_bg_p(NULL),
           _data(data),
-          TFBS_LENGTH(tfbs_length),
+          tfbs_length(tfbs_length),
           bg_cluster_tag(bg_cluster_tag)
 { }
 
@@ -71,7 +71,7 @@ dpm_tfbs_state_t::valid_tfbs_position(const index_i& index) const
                         return false;
                 }
                 // check if there is a tfbs starting within the word
-                for (size_t i = 1; i < TFBS_LENGTH; i++) {
+                for (size_t i = 1; i < tfbs_length; i++) {
                         if (tfbs_start_positions[seq_index_t(sequence, position+i)] == 1) {
                                 return false;
                         }
@@ -87,7 +87,7 @@ dpm_tfbs_state_t::valid_tfbs_position(const index_i& index) const
 void
 dpm_tfbs_state_t::add(const index_i& index, cluster_tag_t tag)
 {
-        const range_t range(index, TFBS_LENGTH);
+        const range_t range(index, tfbs_length);
 
         if (tag == bg_cluster_tag) {
                 (*this)[tag].add_observations(range);
@@ -102,7 +102,7 @@ dpm_tfbs_state_t::add(const index_i& index, cluster_tag_t tag)
 void
 dpm_tfbs_state_t::remove(const index_i& index, cluster_tag_t tag)
 {
-        const range_t range(index, TFBS_LENGTH);
+        const range_t range(index, tfbs_length);
 
         if (tag == bg_cluster_tag) {
                 (*this)[tag].remove_observations(range);
@@ -125,8 +125,8 @@ dpm_tfbs_state_t::save(cluster_tag_t cluster_tag) {
         num_tfbs_p = num_tfbs;
         cluster_assignments_p  = cluster_assignments;
         tfbs_start_positions_p = tfbs_start_positions;
-        cluster_p    = new Cluster((*this)[cluster_tag]);
-        cluster_bg_p = new Cluster((*this)[bg_cluster_tag]);
+        cluster_p    = new cluster_t((*this)[cluster_tag]);
+        cluster_bg_p = new cluster_t((*this)[bg_cluster_tag]);
 }
 
 void
@@ -139,9 +139,9 @@ dpm_tfbs_state_t::restore() {
 }
 
 bool
-dpm_tfbs_state_t::move_left(Cluster& cluster)
+dpm_tfbs_state_t::move_left(cluster_t& cluster)
 {
-        const Cluster::elements_t elements(cluster.elements());
+        const cluster_t::elements_t elements(cluster.elements());
 
         for (cl_iterator is = elements.begin(); is != elements.end(); is++) {
                 if (cluster.size() == 1) {
@@ -163,9 +163,9 @@ dpm_tfbs_state_t::move_left(Cluster& cluster)
 }
 
 bool
-dpm_tfbs_state_t::move_right(Cluster& cluster)
+dpm_tfbs_state_t::move_right(cluster_t& cluster)
 {
-        const Cluster::elements_t elements(cluster.elements());
+        const cluster_t::elements_t elements(cluster.elements());
 
         for (cl_iterator is = elements.begin(); is != elements.end(); is++) {
                 if (cluster.size() == 1) {
@@ -178,7 +178,7 @@ dpm_tfbs_state_t::move_right(Cluster& cluster)
                 const seq_index_t index(sequence, position+1);
                 remove(range.index, cluster.cluster_tag());
                 add(range.index, bg_cluster_tag);
-                if (position+TFBS_LENGTH < sequence_length && valid_tfbs_position(index)) {
+                if (position+tfbs_length < sequence_length && valid_tfbs_position(index)) {
                         remove(index, bg_cluster_tag);
                         add(index, cluster.cluster_tag());
                 }
@@ -188,7 +188,7 @@ dpm_tfbs_state_t::move_right(Cluster& cluster)
 }
 
 bool
-dpm_tfbs_state_t::proposal(Cluster& cluster)
+dpm_tfbs_state_t::proposal(cluster_t& cluster)
 {
         save(cluster.cluster_tag());
 

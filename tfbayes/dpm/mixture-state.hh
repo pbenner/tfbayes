@@ -43,8 +43,8 @@ public:
 
         // iterators
         ////////////////////////////////////////////////////////////////////////
-        typedef std::list<Cluster*>::iterator iterator;
-        typedef std::list<Cluster*>::const_iterator const_iterator;
+        typedef std::list<cluster_t*>::iterator iterator;
+        typedef std::list<cluster_t*>::const_iterator const_iterator;
 
         iterator begin() { return used_clusters.begin(); }
         iterator end()   { return used_clusters.end();   }
@@ -52,29 +52,29 @@ public:
         const_iterator begin() const { return used_clusters.begin(); }
         const_iterator end()   const { return used_clusters.end();   }
 
-        typedef std::vector<Cluster*>::iterator iterator_all;
-        typedef std::vector<Cluster*>::const_iterator const_iterator_all;
+        typedef std::vector<cluster_t*>::iterator iterator_all;
+        typedef std::vector<cluster_t*>::const_iterator const_iterator_all;
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-        __inline__       Cluster& operator[](cluster_tag_t c)            { return *clusters[c]; }
-        __inline__ const Cluster& operator[](cluster_tag_t c)      const { return *clusters[c]; }
-        __inline__ cluster_tag_t  operator[](const index_i& index) const { return  cluster_assignments[index]; }
+        __inline__       cluster_t& operator[](cluster_tag_t c)            { return *clusters[c]; }
+        __inline__ const cluster_t& operator[](cluster_tag_t c)      const { return *clusters[c]; }
+        __inline__   cluster_tag_t  operator[](const index_i& index) const { return  cluster_assignments[index]; }
 
         // methods
         ////////////////////////////////////////////////////////////////////////
         void update(Observed<cluster_event_t>* cluster, cluster_event_t event);
         void update(Observed<cluster_event_t>* cluster, cluster_event_t event, const range_t& range);
-        model_tag_t add_baseline_model(ComponentModel* distribution);
+        model_tag_t add_baseline_model(component_model_t* distribution);
         cluster_tag_t add_cluster(model_tag_t model_tag);
-        cluster_tag_t add_cluster(ComponentModel* distribution);
-        Cluster& get_free_cluster(model_tag_t model_tag);
+        cluster_tag_t add_cluster(component_model_t* distribution);
+        cluster_t& get_free_cluster(model_tag_t model_tag);
         __inline__ size_t size() const { return used_clusters_size; };
 
 private:
-        std::vector<Cluster*> clusters;
-        std::list<Cluster*> used_clusters;
-        std::list<Cluster*> free_clusters;
+        std::vector<cluster_t*> clusters;
+        std::list<cluster_t*> used_clusters;
+        std::list<cluster_t*> free_clusters;
 
         // list.size() is inefficient, so keep track of
         // the number of elements
@@ -82,7 +82,7 @@ private:
         size_t free_clusters_size;
 
         // distributions that make up the baseline measure for the dirichlet process
-        std::vector<ComponentModel*> baseline_models;
+        std::vector<component_model_t*> baseline_models;
 
         // assignments to clusters
         data_t<cluster_tag_t>& cluster_assignments;

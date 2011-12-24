@@ -50,7 +50,7 @@ public:
         metropolis_state_t(data_t<cluster_tag_t>& cluster_assignments)
                 : state_t(cluster_assignments) {}
 
-        virtual bool proposal(Cluster& cluster) = 0;
+        virtual bool proposal(cluster_t& cluster) = 0;
         virtual void restore() = 0;
 };
 

@@ -39,17 +39,17 @@ public:
 
         // auxiliary types
         ////////////////////////////////////////////////////////////////////////
-        typedef Cluster::const_iterator cl_iterator;
+        typedef cluster_t::const_iterator cl_iterator;
 
         // methods
         ////////////////////////////////////////////////////////////////////////
         void add(const index_i& index, cluster_tag_t tag);
         void remove(const index_i& index, cluster_tag_t tag);
 
-        bool move_left(Cluster& cluster);
-        bool move_right(Cluster& cluster);
+        bool move_left(cluster_t& cluster);
+        bool move_right(cluster_t& cluster);
 
-        bool proposal(Cluster& cluster);
+        bool proposal(cluster_t& cluster);
         void save(cluster_tag_t cluster_tag);
         void restore();
 
@@ -78,13 +78,13 @@ public:
         size_t num_tfbs_p;
         sequence_data_t<cluster_tag_t> cluster_assignments_p;
         sequence_data_t<short> tfbs_start_positions_p;
-        Cluster* cluster_p;
-        Cluster* cluster_bg_p;
+        cluster_t* cluster_p;
+        cluster_t* cluster_bg_p;
 
         const data_tfbs_t& _data;
 
         // constants
-        const size_t TFBS_LENGTH;
+        const size_t tfbs_length;
         const cluster_tag_t bg_cluster_tag;
 };
 

@@ -86,7 +86,7 @@ vector_t* _dpm_gaussian_cluster_tags() {
 
 matrix_t* _dpm_gaussian_cluster_elements(int tag) {
         const mixture_state_t& state = _gdpm->state();
-        const Cluster& cluster = state[(cluster_tag_t)tag];
+        const cluster_t& cluster = state[(cluster_tag_t)tag];
         matrix_t* elements = alloc_matrix(cluster.size(), 2);
 
         size_t i = 0;

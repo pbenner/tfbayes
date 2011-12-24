@@ -28,13 +28,13 @@
 
 using namespace std;
 
-Cluster::Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
+cluster_t::cluster_t(component_model_t* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
                  bool destructible, bool record)
         : _model(model), _cluster_tag(cluster_tag), _model_tag(model_tag),
           _destructible(destructible), _record(record), _size(0)
 { }
 
-Cluster::Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
+cluster_t::cluster_t(component_model_t* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
                  Observer<cluster_event_t>* observer, bool destructible, bool record)
         : _model(model), _cluster_tag(cluster_tag), _model_tag(model_tag),
           _destructible(destructible), _record(record), _size(0)
@@ -42,7 +42,7 @@ Cluster::Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t m
         set_observer(observer);
 }
 
-Cluster::Cluster(const Cluster& cluster)
+cluster_t::cluster_t(const cluster_t& cluster)
         : _model(cluster._model->clone()),
           _cluster_tag(cluster._cluster_tag),
           _model_tag(cluster._model_tag),
@@ -53,12 +53,12 @@ Cluster::Cluster(const Cluster& cluster)
         set_observer(cluster.observer);
 }
 
-Cluster::~Cluster() {
+cluster_t::~cluster_t() {
         delete(_model);
 }
 
 void
-Cluster::operator=(const Cluster& cluster)
+cluster_t::operator=(const cluster_t& cluster)
 {
         delete(_model);
         _model = cluster._model->clone();
@@ -67,7 +67,7 @@ Cluster::operator=(const Cluster& cluster)
 }
 
 void
-Cluster::add_observations(const range_t& range)
+cluster_t::add_observations(const range_t& range)
 {
         if (_size == 0) {
                 _size += _model->add(range);
@@ -84,7 +84,7 @@ Cluster::add_observations(const range_t& range)
 }
 
 void
-Cluster::remove_observations(const range_t& range)
+cluster_t::remove_observations(const range_t& range)
 {
         if (_size >= _model->count(range)) {
                 _size -= _model->remove(range);
@@ -99,44 +99,44 @@ Cluster::remove_observations(const range_t& range)
         }
 }
 
-Cluster::elements_t
-Cluster::elements() const
+cluster_t::elements_t
+cluster_t::elements() const
 {
         return _elements;
 }
 
 size_t
-Cluster::size() const
+cluster_t::size() const
 {
         return _size;
 }
 
 cluster_tag_t
-Cluster::cluster_tag() const
+cluster_t::cluster_tag() const
 {
         return _cluster_tag;
 }
 
 model_tag_t
-Cluster::model_tag() const
+cluster_t::model_tag() const
 {
         return _model_tag;
 }
 
 bool
-Cluster::destructible() const
+cluster_t::destructible() const
 {
         return _destructible;
 }
 
-ComponentModel&
-Cluster::model()
+component_model_t&
+cluster_t::model()
 {
         return *_model;
 }
 
 ostream&
-operator<< (ostream& o, const Cluster& cluster)
+operator<< (ostream& o, const cluster_t& cluster)
 {
         return o << "("
                  << cluster._cluster_tag

@@ -37,27 +37,19 @@
 
 using namespace std;
 
-#define __process_prior ((*this).*(_process_prior))
-
 DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
-        : // length of tfbs
-          TFBS_LENGTH(options.tfbs_length),
-          // baseline
+        : // baseline
           _baseline_weights(options.baseline_weights),
           // raw sequences
           _data(data),
           // cluster manager
-          _state(data.sizes(), TFBS_LENGTH, 0, _data),
-          // strength parameter for the dirichlet process
-          alpha(options.alpha),
-          alpha_log(log(options.alpha)),
-          // pitman-yor discount factor
-          discount(options.discount),
-          discount_log(log(options.discount)),
+          _state(data.sizes(), _tfbs_length, 0, _data),
           // mixture weight for the dirichlet process
-          lambda(options.lambda),
-          lambda_log(log(options.lambda)),
-          lambda_inv_log(log(1-options.lambda))
+          _lambda(options.lambda),
+          _lambda_log(log(options.lambda)),
+          _lambda_inv_log(log(1-options.lambda)),
+          // length of tfbs
+          _tfbs_length(options.tfbs_length)
 {
         ////////////////////////////////////////////////////////////////////////////////
         // initialize joint posterior
@@ -105,13 +97,13 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
         ////////////////////////////////////////////////////////////////////////////////
         // set the process prior
         if (options.process_prior == "pitman-yor process" || options.process_prior == "") {
-                _process_prior = &DpmTfbs::py_prior;
+                _process_prior = new pitman_yor_prior(_state, options.alpha, options.discount);
         }
         else if (options.process_prior == "uniform process") {
-                _process_prior = &DpmTfbs::uniform_prior;
+                _process_prior = new uniform_prior(_state, options.alpha);
         }
         else if (options.process_prior == "poppe process") {
-                _process_prior = &DpmTfbs::poppe_prior;
+                _process_prior = new poppe_prior(_state);
         }
         else {
                 cerr << "Unknown prior process." << endl;
@@ -125,7 +117,29 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
         //test_metropolis_hastings();
 }
 
+DpmTfbs::DpmTfbs(const DpmTfbs& dpm)
+        : // baseline
+          _baseline_weights(dpm._baseline_weights),
+          _model_tags(dpm._model_tags),
+          // raw sequences
+          _data(dpm._data),
+          // cluster manager
+          _state(_state),
+          // mixture weight for the dirichlet process
+          _lambda(dpm._lambda),
+          _lambda_log(dpm._lambda_log),
+          _lambda_inv_log(dpm._lambda_inv_log),
+          // length of tfbs
+          _tfbs_length(dpm._tfbs_length),
+          // posterior
+          _posterior(dpm._posterior),
+          // process prios
+          _process_prior(dpm._process_prior->clone())
+{
+}
+
 DpmTfbs::~DpmTfbs() {
+        delete(_process_prior);
 }
 
 DpmTfbs*
@@ -151,7 +165,7 @@ DpmTfbs::valid_for_sampling(const index_i& index) const
                         return false;
                 }
                 // check if there is a tfbs starting within the word
-                for (size_t i = 1; i < TFBS_LENGTH; i++) {
+                for (size_t i = 1; i < _tfbs_length; i++) {
                         if (_state.tfbs_start_positions[seq_index_t(sequence, position+i)] == 1) {
                                 return false;
                         }
@@ -179,7 +193,7 @@ DpmTfbs::baseline_components() const
 void
 DpmTfbs::mixture_weights(const index_i& index, double log_weights[], cluster_tag_t cluster_tags[])
 {
-        const range_t range(index, TFBS_LENGTH);
+        const range_t range(index, _tfbs_length);
         ssize_t mixture_n  = mixture_components();
         ssize_t baseline_n = baseline_components();
         double sum         = -HUGE_VAL;
@@ -188,17 +202,17 @@ DpmTfbs::mixture_weights(const index_i& index, double log_weights[], cluster_tag
         ////////////////////////////////////////////////////////////////////////
         // loop through existing clusters
         for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
-                Cluster& cluster = **it;
+                cluster_t& cluster = **it;
                 cluster_tags[i] = cluster.cluster_tag();
                 if (cluster.cluster_tag() == bg_cluster_tag) {
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
-                        sum = logadd(sum, lambda_inv_log + cluster.model().log_predictive(range));
+                        sum = logadd(sum, _lambda_inv_log + cluster.model().log_predictive(range));
                 }
                 else {
                         ////////////////////////////////////////////////////////
                         // mixture component 2: dirichlet process
-                        sum = logadd(sum, lambda_log + __process_prior(cluster) + cluster.model().log_predictive(range));
+                        sum = logadd(sum, _lambda_log + _process_prior->predictive(cluster) + cluster.model().log_predictive(range));
                 }
                 log_weights[i] = sum;
                 i++;
@@ -206,9 +220,9 @@ DpmTfbs::mixture_weights(const index_i& index, double log_weights[], cluster_tag
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         for (i = 0; i < baseline_n; i++) {
-                Cluster& cluster = _state.get_free_cluster(_model_tags[i]);
+                cluster_t& cluster = _state.get_free_cluster(_model_tags[i]);
                 cluster_tags[mixture_n+i] = cluster.cluster_tag();
-                sum = logadd(sum, lambda_log + __process_prior(cluster) + log(_baseline_weights[i]) +
+                sum = logadd(sum, _lambda_log + _process_prior->predictive(cluster) + log(_baseline_weights[i]) +
                              cluster.model().log_predictive(range));
                 log_weights[mixture_n+i] = sum;
         }
@@ -220,7 +234,7 @@ DpmTfbs::likelihood() const {
 
         for (cm_iterator it = _state.begin();
              it != _state.end(); it++) {
-                Cluster& cluster = **it;
+                cluster_t& cluster = **it;
                 result += cluster.model().log_likelihood();
         }
         return result;
@@ -231,7 +245,7 @@ DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
 {
         // loop through all clusters
         for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
-                const Cluster& cluster = **it;
+                const cluster_t& cluster = **it;
                 if (cluster.cluster_tag() != bg_cluster_tag) {
                         // loop through cluster elements
                         for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {

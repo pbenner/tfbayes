@@ -39,14 +39,14 @@
 // keeps track of the sufficient statistics assiciated to each cluster.
 ////////////////////////////////////////////////////////////////////////////////
 
-class Cluster : public Observed<cluster_event_t> {
+class cluster_t : public Observed<cluster_event_t> {
 public:
-         Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
-                 bool destructible = true, bool record = false);
-         Cluster(ComponentModel* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
-                 Observer<cluster_event_t>* observer, bool destructible = true, bool record = false);
-         Cluster(const Cluster& cluster);
-        ~Cluster();
+         cluster_t(component_model_t* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
+                   bool destructible = true, bool record = false);
+         cluster_t(component_model_t* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
+                   Observer<cluster_event_t>* observer, bool destructible = true, bool record = false);
+         cluster_t(const cluster_t& cluster);
+        ~cluster_t();
 
         // types
         typedef boost::unordered_set<range_t> elements_t;
@@ -59,10 +59,10 @@ public:
         const_iterator end()   const { return _elements.end();   }
 
         // friends
-        friend std::ostream& operator<< (std::ostream& o, const Cluster& cluster);
+        friend std::ostream& operator<< (std::ostream& o, const cluster_t& cluster);
 
         // operators
-        void operator=(const Cluster& cluster);
+        void operator=(const cluster_t& cluster);
 
         // methods
         void add_observations(const range_t& range);
@@ -71,11 +71,11 @@ public:
         cluster_tag_t cluster_tag() const;
         model_tag_t model_tag() const;
         bool destructible() const;
-        ComponentModel& model();
+        component_model_t& model();
         elements_t elements() const;
 
 private:
-        ComponentModel* _model;
+        component_model_t* _model;
         const cluster_tag_t _cluster_tag;
         const model_tag_t _model_tag;
         const bool _destructible;

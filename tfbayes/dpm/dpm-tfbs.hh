@@ -29,6 +29,8 @@
 #include <component-model.hh>
 #include <data-tfbs.hh>
 #include <mixture-model.hh>
+
+#include <dpm-tfbs-prior.hh>
 #include <dpm-tfbs-state.hh>
 
 #include <tfbayes/linalg.h>
@@ -48,6 +50,7 @@ typedef struct {
 class DpmTfbs : public mixture_model_t {
 public:
          DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data);
+         DpmTfbs(const DpmTfbs& dpm);
         ~DpmTfbs();
 
         DpmTfbs* clone() const;
@@ -55,7 +58,7 @@ public:
         // auxiliary types
         ////////////////////////////////////////////////////////////////////////
         typedef mixture_state_t::const_iterator cm_iterator;
-        typedef Cluster::const_iterator cl_iterator;
+        typedef cluster_t::const_iterator cl_iterator;
         typedef data_tfbs_t::const_iterator da_iterator;
 
         // operators
@@ -85,9 +88,8 @@ public:
 
         // constants
         ////////////////////////////////////////////////////////////////////////
-        static const size_t BG_LENGTH   = 1;
-               const size_t TFBS_LENGTH;
         static const size_t ALPHABET_SIZE = 4;
+        static const size_t BG_LENGTH     = 1;
 
 private:
         // baseline models
@@ -102,23 +104,16 @@ private:
         cluster_tag_t bg_cluster_tag;
 
         // parameters
-        const double alpha;
-        const double alpha_log;
-        const double discount;
-        const double discount_log;
-        const double lambda;
-        const double lambda_log;
-        const double lambda_inv_log;
+        const double _lambda;
+        const double _lambda_log;
+        const double _lambda_inv_log;
+        const size_t _tfbs_length;
 
         // posterior distribution
         posterior_t _posterior;
 
         // process priors
-        double py_prior(Cluster& cluster);
-        double uniform_prior(Cluster& cluster);
-        double poppe_prior(Cluster& cluster);
-        typedef double (DpmTfbs::*prior_fn)(Cluster& cluster);
-        prior_fn _process_prior;
+        dpm_tfbs_prior_t* _process_prior;
 
         // standard priors
         static std::matrix<double> init_alpha(size_t length);

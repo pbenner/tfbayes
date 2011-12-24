@@ -177,22 +177,17 @@ HybridSampler::_sample() {
 bool
 HybridSampler::_metropolis_sample() {
         for (cl_iterator it = _state.begin(); it != _state.end(); it++) {
-                Cluster& cluster = **it;
+                cluster_t& cluster = **it;
                 double likelihood_ref = _dpm.likelihood();
-                double likelihood_new;
-                _state.proposal(cluster);
-                if (_state.proposal(cluster)) {
-                        likelihood_new = _dpm.likelihood();
 
-                        if (likelihood_new > likelihood_ref) {
-                                cout << "cluster "
-                                     << cluster.cluster_tag()
-                                     << ": move accepted"
-                                     << endl;
-                        }
-                        else {
-                                _state.restore();
-                        }
+                if (_state.proposal(cluster) && _dpm.likelihood() > likelihood_ref) {
+                        cout << "cluster "
+                             << cluster.cluster_tag()
+                             << ": move accepted"
+                             << endl;
+                }
+                else {
+                        _state.restore();
                 }
         }
         return true;

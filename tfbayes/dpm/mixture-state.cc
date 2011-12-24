@@ -42,7 +42,7 @@ mixture_state_t::~mixture_state_t() {
                 delete(*it);
         }
         // free baseline models
-        for (vector<ComponentModel*>::iterator it = baseline_models.begin();
+        for (vector<component_model_t*>::iterator it = baseline_models.begin();
              it != baseline_models.end(); it++) {
                 delete(*it);
         }
@@ -54,7 +54,7 @@ mixture_state_t::mixture_state_t(const mixture_state_t& cm)
           cluster_assignments(cm.cluster_assignments)
 {
         for (size_t i = 0; i < cm.clusters.size(); i++) {
-                Cluster* c = new Cluster(*cm.clusters[i]);
+                cluster_t* c = new cluster_t(*cm.clusters[i]);
                 c->set_observer(this);
                 clusters.push_back(c);
                 if (c->size() == 0 && c->destructible()) {
@@ -64,7 +64,7 @@ mixture_state_t::mixture_state_t(const mixture_state_t& cm)
                         used_clusters.push_back(c);
                 }
         }
-        for (vector<ComponentModel*>::const_iterator it = cm.baseline_models.begin();
+        for (vector<component_model_t*>::const_iterator it = cm.baseline_models.begin();
              it != cm.baseline_models.end(); it++) {
                 baseline_models.push_back((*it)->clone());
         }
@@ -74,7 +74,7 @@ mixture_state_t::mixture_state_t(const mixture_state_t& cm)
 // not be destructible (for other components of the mixture model)
 // and not included in the baseline measures
 cluster_tag_t
-mixture_state_t::add_cluster(ComponentModel* model)
+mixture_state_t::add_cluster(component_model_t* model)
 {
         cluster_tag_t cluster_tag = clusters.size();
 
@@ -83,7 +83,7 @@ mixture_state_t::add_cluster(ComponentModel* model)
         // of free clusters, so we do not need to observe it
         // and we can simply push it to the list of used
         // clusters
-        Cluster* c = new Cluster(model, cluster_tag, -1, this, false, false);
+        cluster_t* c = new cluster_t(model, cluster_tag, -1, this, false, false);
         clusters.push_back(c);
         used_clusters.push_back(clusters.back());
         used_clusters_size++;
@@ -99,7 +99,7 @@ mixture_state_t::add_cluster(model_tag_t model_tag)
 
         cluster_tag_t cluster_tag = clusters.size();
 
-        Cluster* c = new Cluster(baseline_models[model_tag]->clone(), cluster_tag, model_tag, this, true, true);
+        cluster_t* c = new cluster_t(baseline_models[model_tag]->clone(), cluster_tag, model_tag, this, true, true);
         clusters.push_back(c);
         // this cluster is empty, so place it into the list
         // of free clusters
@@ -110,7 +110,7 @@ mixture_state_t::add_cluster(model_tag_t model_tag)
 }
 
 model_tag_t
-mixture_state_t::add_baseline_model(ComponentModel* distribution)
+mixture_state_t::add_baseline_model(component_model_t* distribution)
 {
         // add a baseline model to the list of distributions
         baseline_models.push_back(distribution);
@@ -119,10 +119,10 @@ mixture_state_t::add_baseline_model(ComponentModel* distribution)
         return baseline_models.size()-1;
 }
 
-Cluster&
+cluster_t&
 mixture_state_t::get_free_cluster(model_tag_t model_tag) {
         // check free clusters
-        for (std::list<Cluster*>::iterator it = free_clusters.begin();
+        for (std::list<cluster_t*>::iterator it = free_clusters.begin();
              it != free_clusters.end(); it++) {
                 if ((*it)->model_tag() == model_tag) {
                         return **it;
@@ -137,7 +137,7 @@ mixture_state_t::get_free_cluster(model_tag_t model_tag) {
 void
 mixture_state_t::update(Observed<cluster_event_t>* observed, cluster_event_t event)
 {
-        Cluster* cluster = (Cluster*)observed;
+        cluster_t* cluster = (cluster_t*)observed;
 
         switch (event) {
         case cluster_event_empty:
@@ -164,7 +164,7 @@ mixture_state_t::update(Observed<cluster_event_t>* observed, cluster_event_t eve
 void
 mixture_state_t::update(Observed<cluster_event_t>* observed, cluster_event_t event, const range_t& range)
 {
-        Cluster* cluster = (Cluster*)observed;
+        cluster_t* cluster = (cluster_t*)observed;
         iterator_t<cluster_tag_t> iterator = cluster_assignments[range];
 
         switch (event) {

@@ -42,13 +42,13 @@
 #include <parsmm/abstract_set.h>
 #include <parsmm/static_pars_tree.h>
 
-// ComponentModel Interface
+// component_model_t interface
 ////////////////////////////////////////////////////////////////////////////////
 
-class ComponentModel : public clonable {
+class component_model_t : public clonable {
 public:
-        ComponentModel() {}
-        ComponentModel(const ComponentModel& model) {
+        component_model_t() {}
+        component_model_t(const component_model_t& model) {
                 std::cout << "Distribution copy constructor called." << std::endl;
                 exit(EXIT_FAILURE);
         }
@@ -61,13 +61,13 @@ public:
         virtual double log_predictive(const range_t& range) = 0;
         virtual double log_likelihood() const = 0;
 
-        virtual ComponentModel* clone() const = 0;
+        virtual component_model_t* clone() const = 0;
 };
 
 // Multinomial/Dirichlet Model
 ////////////////////////////////////////////////////////////////////////////////
 
-class ProductDirichlet : public ComponentModel {
+class ProductDirichlet : public component_model_t {
 public:
          ProductDirichlet(const std::matrix<double>& alpha, const sequence_data_t<short>& data);
          ProductDirichlet(const ProductDirichlet& distribution);
@@ -100,7 +100,7 @@ private:
 // Markov Chain Mixture
 ////////////////////////////////////////////////////////////////////////////////
 
-class MarkovChainMixture : public ComponentModel {
+class MarkovChainMixture : public component_model_t {
 public:
          MarkovChainMixture(size_t alphabet_size, size_t max_order,
                             const sequence_data_t<short>& data,
@@ -152,7 +152,7 @@ private:
 // Variable Order Markov Chain
 ////////////////////////////////////////////////////////////////////////////////
 
-class ParsimoniousTree : public ComponentModel {
+class ParsimoniousTree : public component_model_t {
 public:
          ParsimoniousTree(size_t alphabet_size, size_t tree_depth,
                           const sequence_data_t<short>& data,
@@ -192,7 +192,7 @@ private:
 // Bivariate Gaussian
 ////////////////////////////////////////////////////////////////////////////////
 
-class BivariateNormal : public ComponentModel {
+class BivariateNormal : public component_model_t {
 public:
          BivariateNormal();
          BivariateNormal(const gsl_matrix* Sigma,

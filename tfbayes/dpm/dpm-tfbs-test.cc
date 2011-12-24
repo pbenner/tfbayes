@@ -32,7 +32,7 @@ DpmTfbs::test_metropolis_hastings() {
         seq_index_t index2(1,26);
         double l1, l2;
 
-        Cluster& cluster1 = _state.get_free_cluster(_model_tags[0]);
+        cluster_t& cluster1 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
 
         cout.precision(10);
@@ -66,7 +66,7 @@ DpmTfbs::test_moves() {
         seq_index_t index5(0,13);
         seq_index_t index6(0,22);
 
-        Cluster& cluster1 = _state.get_free_cluster(_model_tags[0]);
+        cluster_t& cluster1 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
 
         _state.remove(index1, bg_cluster_tag);
@@ -78,7 +78,7 @@ DpmTfbs::test_moves() {
         _state.remove(index3, bg_cluster_tag);
         _state.add(index3, cluster_tag1);
 
-        Cluster& cluster2 = _state.get_free_cluster(_model_tags[0]);
+        cluster_t& cluster2 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
 
         _state.remove(index4, bg_cluster_tag);
@@ -100,7 +100,7 @@ DpmTfbs::test_background() {
         seq_index_t index5(0,13);
         seq_index_t index6(0,22);
 
-        Cluster& cluster1 = _state.get_free_cluster(_model_tags[0]);
+        cluster_t& cluster1 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
         cout << "Adding index1:" << index1 << " to cluster:" << cluster_tag1 << endl;
         _state.remove(index1, bg_cluster_tag);
@@ -112,7 +112,7 @@ DpmTfbs::test_background() {
 
         cout << _state.cluster_assignments << endl;
 
-        Cluster& cluster2 = _state.get_free_cluster(_model_tags[0]);
+        cluster_t& cluster2 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
 
         cout << "Adding index2:" << index2 << " to cluster:" << cluster_tag2 << endl;
@@ -157,11 +157,11 @@ DpmTfbs::test() {
         seq_index_t index3(2,0);
         seq_index_t index4(3,0);
 
-        Cluster& cluster1 = _state.get_free_cluster(_model_tags[0]);
+        cluster_t& cluster1 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
         cout << "Adding index1:" << index1 << " to cluster:" << cluster_tag1 << endl;
         _state.add(index1, cluster_tag1);
-        Cluster& cluster2 = _state.get_free_cluster(_model_tags[0]);
+        cluster_t& cluster2 = _state.get_free_cluster(_model_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
         cout << "Adding index2:" << index2 << " to cluster:" << cluster_tag2 << endl;
         _state.add(index2, cluster_tag2);

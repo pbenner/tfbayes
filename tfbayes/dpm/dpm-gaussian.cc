@@ -96,7 +96,7 @@ DPM_Gaussian::mixture_weights(const index_i& index, double log_weights[], cluste
 
         cluster_tag_t i = 0;
         for (mixture_state_t::const_iterator it = _state.begin(); it != _state.end(); it++) {
-                Cluster& cluster = **it;
+                cluster_t& cluster = **it;
                 cluster_tags[i] = cluster.cluster_tag();
                 double num_elements = (double)cluster.size();
                 // normalization constant
@@ -122,7 +122,7 @@ DPM_Gaussian::means() const {
         size_t i = 0;
         for (mixture_state_t::const_iterator it = _state.begin();
              it != _state.end(); it++) {
-                Cluster& cluster = **it;
+                cluster_t& cluster = **it;
                 BivariateNormal& bg = static_cast<BivariateNormal&>(cluster.model());
                 gsl_matrix_set(means, i, 0, gsl_vector_get(bg.mean(), 0));
                 gsl_matrix_set(means, i, 1, gsl_vector_get(bg.mean(), 1));
@@ -138,7 +138,7 @@ DPM_Gaussian::likelihood() const {
 
         for (mixture_state_t::const_iterator it = _state.begin();
              it != _state.end(); it++) {
-                Cluster& cluster = **it;
+                cluster_t& cluster = **it;
                 result += cluster.model().log_likelihood();
         }
         return result;

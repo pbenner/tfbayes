@@ -42,9 +42,9 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-              Cluster& operator[](cluster_tag_t c)            { return _state[c]; }
-        const Cluster& operator[](cluster_tag_t c)      const { return _state[c]; }
-         cluster_tag_t operator[](const index_i& index) const { return _cluster_assignments[index]; }
+              cluster_t& operator[](cluster_tag_t c)            { return _state[c]; }
+        const cluster_t& operator[](cluster_tag_t c)      const { return _state[c]; }
+         cluster_tag_t   operator[](const index_i& index) const { return _cluster_assignments[index]; }
 
         friend std::ostream& operator<<(std::ostream& o, const DPM_Gaussian& dpm);
 
