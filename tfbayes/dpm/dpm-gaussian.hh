@@ -84,7 +84,7 @@ private:
         // data and clusters
         const data_gaussian_t& _data;
         data_t<cluster_tag_t> _cluster_assignments;
-        mixture_state_t _state;
+        mixture_state_t& _state;
 
         // parameters
         const double alpha;

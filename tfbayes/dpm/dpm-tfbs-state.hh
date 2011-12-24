@@ -29,7 +29,7 @@
 #include <mixture-state.hh>
 #include <state.hh>
 
-class dpm_tfbs_state_t : public hybrid_state_t, public mixture_state_t {
+class dpm_tfbs_state_t : public hybrid_state_t {
 public:
          dpm_tfbs_state_t(const std::vector<size_t>& sizes,
                           size_t tfbs_length,
@@ -41,11 +41,6 @@ public:
         ////////////////////////////////////////////////////////////////////////
         typedef Cluster::const_iterator cl_iterator;
 
-        // operators
-        ////////////////////////////////////////////////////////////////////////
-        using mixture_state_t::operator[];
-        __inline__  cluster_tag_t operator[](const index_i& index) const { return  cluster_assignments[index]; }
-
         // methods
         ////////////////////////////////////////////////////////////////////////
         void add(const index_i& index, cluster_tag_t tag);
@@ -54,6 +49,7 @@ public:
         bool move_left(Cluster& cluster);
         bool move_right(Cluster& cluster);
 
+        bool proposal(Cluster& cluster);
         void save(cluster_tag_t cluster_tag, cluster_tag_t cluster_bg_tag);
         void restore();
 

@@ -257,7 +257,7 @@ void run_dpm(const char* file_name)
         // create data, dpm, and sampler objects
         data_tfbs_t& data     = *new data_tfbs_t(sequences, options.tfbs_length);
         DpmTfbs& gdpm         = *new DpmTfbs(tfbs_options, data);
-        GibbsSampler& sampler = *new GibbsSampler(gdpm, gdpm.state(), data);
+        GibbsSampler& sampler = *new HybridSampler(gdpm, gdpm.state(), data);
         PopulationMCMC& pmcmc = *new PopulationMCMC(sampler, options.population_size);
 
         // execute the sampler

@@ -33,11 +33,6 @@ public:
 
         virtual mixture_model_t* clone() const = 0;
 
-        // operators
-        ////////////////////////////////////////////////////////////////////////
-        virtual       Cluster& operator[](cluster_tag_t c)       = 0;
-        virtual const Cluster& operator[](cluster_tag_t c) const = 0;
-
         // methods
         ////////////////////////////////////////////////////////////////////////
         virtual size_t mixture_components() const = 0;

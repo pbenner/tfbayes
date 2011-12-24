@@ -57,8 +57,9 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-        __inline__       Cluster& operator[](cluster_tag_t c)            { return *clusters[c];                }
-        __inline__ const Cluster& operator[](cluster_tag_t c)      const { return *clusters[c];                }
+        __inline__       Cluster& operator[](cluster_tag_t c)            { return *clusters[c]; }
+        __inline__ const Cluster& operator[](cluster_tag_t c)      const { return *clusters[c]; }
+        __inline__ cluster_tag_t  operator[](const index_i& index) const { return  cluster_assignments[index]; }
 
         // methods
         ////////////////////////////////////////////////////////////////////////

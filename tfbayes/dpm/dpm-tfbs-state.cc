@@ -26,7 +26,8 @@ dpm_tfbs_state_t::dpm_tfbs_state_t(
         size_t tfbs_length,
         cluster_tag_t bg_cluster_tag,
         const data_tfbs_t& data)
-        : mixture_state_t(cluster_assignments),
+        : state_t(cluster_assignments),
+          hybrid_state_t(cluster_assignments),
           cluster_assignments(sizes, -1),
           // starting positions of tfbs
           tfbs_start_positions(sizes, 0),
@@ -184,4 +185,20 @@ dpm_tfbs_state_t::move_right(Cluster& cluster)
         }
 
         return true;
+}
+
+bool
+dpm_tfbs_state_t::proposal(Cluster& cluster)
+{
+        save(cluster.cluster_tag(), bg_cluster_tag);
+
+        if (cluster.cluster_tag() != bg_cluster_tag && cluster.size() > 1) {
+                if (rand() % 2 == 0) {
+                        return move_right(cluster);
+                }
+                else {
+                        return move_left(cluster);
+                }
+        }
+        return false;
 }

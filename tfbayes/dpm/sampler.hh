@@ -38,7 +38,8 @@ public:
 
 class GibbsSampler : public Sampler {
 public:
-         GibbsSampler(mixture_model_t& dpm, gibbs_state_t& state,
+         GibbsSampler(mixture_model_t& dpm,
+                      gibbs_state_t& state,
                       const Indexer& indexer);
          GibbsSampler(const GibbsSampler& sampler);
         ~GibbsSampler();
@@ -50,18 +51,37 @@ public:
         posterior_t& posterior();
         size_t sampling_steps() const;
 
-private:
+protected:
         // private methods
-        bool _sample(const index_i& index);
-
+        virtual bool _sample();
+        size_t _gibbs_sample(const index_i& index);
+        size_t _gibbs_sample();
         // the mixture model
         mixture_model_t& _dpm;
+
+private:
         gibbs_state_t& _state;
         const Indexer& _indexer;
 
         // gibbs sampler history
         size_t _sampling_steps;
         sampling_history_t& _sampling_history;
+};
+
+class HybridSampler : public GibbsSampler {
+public:
+        HybridSampler(mixture_model_t& dpm,
+                      hybrid_state_t& state,
+                      const Indexer& indexer);
+
+protected:
+        virtual bool _sample();
+                bool _metropolis_sample();
+
+private:
+        typedef mixture_state_t::iterator cl_iterator;
+
+        hybrid_state_t& _state;
 };
 
 #endif /* SAMPLER_HH */

@@ -27,6 +27,9 @@
 
 using namespace std;
 
+// Gibbs Sampler
+////////////////////////////////////////////////////////////////////////////////
+
 GibbsSampler::GibbsSampler(mixture_model_t& dpm,
                            gibbs_state_t& state,
                            const Indexer& indexer)
@@ -64,8 +67,8 @@ GibbsSampler::clone() const {
         return new GibbsSampler(*this);
 }
 
-bool
-GibbsSampler::_sample(const index_i& index) {
+size_t
+GibbsSampler::_gibbs_sample(const index_i& index) {
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
         if (!_dpm.valid_for_sampling(index)) {
@@ -91,6 +94,21 @@ GibbsSampler::_sample(const index_i& index) {
         return old_cluster_tag != new_cluster_tag;
 }
 
+size_t
+GibbsSampler::_gibbs_sample() {
+        size_t sum = 0;
+        for (Indexer::sampling_iterator it = _indexer.sampling_begin();
+             it != _indexer.sampling_end(); it++) {
+                if(_gibbs_sample(**it)) sum+=1;
+        }
+        return sum;
+}
+
+bool
+GibbsSampler::_sample() {
+        return _gibbs_sample();
+}
+
 const sampling_history_t&
 GibbsSampler::sampling_history() const {
         return _sampling_history;
@@ -108,6 +126,7 @@ GibbsSampler::sampling_steps() const {
 
 void
 GibbsSampler::sample(size_t n, size_t burnin) {
+        double sum;
         // burn in sampling
         for (size_t i = 0; i < burnin; i++) {
                 flockfile(stdout);
@@ -115,12 +134,7 @@ GibbsSampler::sample(size_t n, size_t burnin) {
                 cout << "[ Cluster: " << _state << "]" << endl;
                 fflush(stdout);
                 funlockfile(stdout);
-                double sum = 0;
-                for (Indexer::sampling_iterator it = _indexer.sampling_begin();
-                     it != _indexer.sampling_end(); it++) {
-                        const bool switched =_sample(**it);
-                        if (switched) sum+=1;
-                }
+                sum = _sample();
                 _sampling_history.likelihood[0].push_back(_dpm.likelihood());
                 _sampling_history.components[0].push_back(_dpm.mixture_components());
                 _sampling_history.switches[0].push_back(sum/(double)_indexer.elements());
@@ -133,16 +147,53 @@ GibbsSampler::sample(size_t n, size_t burnin) {
                 cout << "[ Cluster: " << _state << "]" << endl;
                 fflush(stdout);
                 funlockfile(stdout);
-                double sum = 0;
-                for (Indexer::sampling_iterator it = _indexer.sampling_begin();
-                     it != _indexer.sampling_end(); it++) {
-                        const bool switched = _sample(**it);
-                        if (switched) sum+=1;
-                }
+                sum = _sample();
                 _sampling_history.likelihood[0].push_back(_dpm.likelihood());
                 _sampling_history.components[0].push_back(_dpm.mixture_components());
                 _sampling_history.switches[0].push_back(sum/(double)_indexer.elements());
                 _dpm.update_posterior(_sampling_steps);
                 _sampling_steps++;
         }
+}
+
+// Hybrid Sampler
+////////////////////////////////////////////////////////////////////////////////
+
+HybridSampler::HybridSampler(
+        mixture_model_t& dpm,
+        hybrid_state_t& state,
+        const Indexer& indexer)
+        : GibbsSampler(dpm, state, indexer), _state(state)
+{
+}
+
+bool
+HybridSampler::_sample() {
+        size_t s = _gibbs_sample();
+                   _metropolis_sample();
+        return s;
+}
+
+bool
+HybridSampler::_metropolis_sample() {
+        for (cl_iterator it = _state.begin(); it != _state.end(); it++) {
+                Cluster& cluster = **it;
+                double likelihood_ref = _dpm.likelihood();
+                double likelihood_new;
+                _state.proposal(cluster);
+                if (_state.proposal(cluster)) {
+                        likelihood_new = _dpm.likelihood();
+
+                        if (likelihood_new > likelihood_ref) {
+                                cout << "cluster "
+                                     << cluster.cluster_tag()
+                                     << ": move to left accepted"
+                                     << endl;
+                        }
+                        else {
+                                _state.restore();
+                        }
+                }
+        }
+        return true;
 }

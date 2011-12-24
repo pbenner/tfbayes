@@ -24,30 +24,44 @@
 
 #include <ostream>
 
-#include <datatypes.hh>
-#include <index.hh>
+#include <mixture-state.hh>
 
-class gibbs_state_t {
+class state_t : public mixture_state_t {
 public:
-        virtual ~gibbs_state_t() {}
+        state_t(data_t<cluster_tag_t>& cluster_assignments)
+                : mixture_state_t(cluster_assignments) {}
 
-        virtual cluster_tag_t operator[](const index_i& index) const = 0;
-
-        virtual void add(const index_i& index, cluster_tag_t tag) = 0;
-        virtual void remove(const index_i& index, cluster_tag_t tag) = 0;
+        virtual ~state_t() {}
 
         virtual void print(std::ostream& o) const = 0;
 };
 
-class metropolis_state_t {
+class gibbs_state_t : virtual public state_t {
 public:
-        virtual ~metropolis_state_t() {}
+        gibbs_state_t(data_t<cluster_tag_t>& cluster_assignments)
+                : state_t(cluster_assignments) {}
 
+        virtual void add(const index_i& index, cluster_tag_t tag) = 0;
+        virtual void remove(const index_i& index, cluster_tag_t tag) = 0;
+};
+
+class metropolis_state_t : virtual public state_t {
+public:
+        metropolis_state_t(data_t<cluster_tag_t>& cluster_assignments)
+                : state_t(cluster_assignments) {}
+
+        virtual bool proposal(Cluster& cluster) = 0;
         virtual void save(cluster_tag_t cluster_tag, cluster_tag_t cluster_bg_tag) = 0;
         virtual void restore() = 0;
 };
 
 class hybrid_state_t : public gibbs_state_t, public metropolis_state_t {
+public:
+        hybrid_state_t(data_t<cluster_tag_t>& cluster_assignments)
+                : state_t(cluster_assignments),
+                  gibbs_state_t(cluster_assignments),
+                  metropolis_state_t(cluster_assignments)
+                {}
 };
 
 std::ostream& operator<< (std::ostream& o, const gibbs_state_t& state);

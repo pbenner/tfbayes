@@ -226,58 +226,6 @@ DpmTfbs::likelihood() const {
         return result;
 }
 
-bool
-DpmTfbs::proposal(Cluster& cluster)
-{
-        double likelihood_ref = likelihood();
-        double likelihood_new;
-
-        _state.save(cluster.cluster_tag(), bg_cluster_tag);
-        // propose move to right
-        if (_state.move_right(cluster)) {
-                likelihood_new = likelihood();
-
-                if (likelihood_new > likelihood_ref) {
-                        cout << "cluster "
-                             << cluster.cluster_tag()
-                             << ": move to right accepted"
-                             << endl;
-                        return true;
-                }
-        }
-
-        // if not accepted, restore state
-        _state.restore();
-        // propose move to right
-        if (_state.move_left(cluster)) {
-                likelihood_new = likelihood();
-
-                if (likelihood_new > likelihood_ref) {
-                        cout << "cluster "
-                             << cluster.cluster_tag()
-                             << ": move to left accepted"
-                             << endl;
-                        return true;
-                }
-        }
-
-        // if not accepted, restore state
-        _state.restore();
-
-        return false;
-}
-
-void
-DpmTfbs::metropolis_hastings()
-{
-        for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
-                Cluster& cluster = **it;
-                if (cluster.cluster_tag() != bg_cluster_tag && cluster.size() > 1) {
-                        proposal(cluster);
-                }
-        }
-}
-
 void
 DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
 {
@@ -300,7 +248,6 @@ DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
 
 void
 DpmTfbs::update_posterior(size_t sampling_steps) {
-        metropolis_hastings();
         if (sampling_steps % 100 == 0) {
                 _posterior.graph.cleanup(1);
         }

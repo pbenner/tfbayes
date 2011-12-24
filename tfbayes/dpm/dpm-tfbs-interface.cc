@@ -216,7 +216,7 @@ void _dpm_tfbs_init(const char* filename)
 
         _data      = new data_tfbs_t(_sequences, _options.tfbs_length);
         _gdpm      = new DpmTfbs(tfbs_options, *_data);
-        _sampler   = new GibbsSampler(*_gdpm, _gdpm->state(), *_data);
+        _sampler   = new HybridSampler(*_gdpm, _gdpm->state(), *_data);
         _pmcmc     = new PopulationMCMC(*_sampler, _options.population_size);
 
         cout << _options << endl;

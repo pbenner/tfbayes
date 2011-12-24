@@ -60,9 +60,6 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-              Cluster& operator[](cluster_tag_t c)       { return _state[c]; }
-        const Cluster& operator[](cluster_tag_t c) const { return _state[c]; }
-
         friend std::ostream& operator<<(std::ostream& o, const DpmTfbs& dpm);
 
         // methods
@@ -85,10 +82,6 @@ public:
         void test_background();
         void test_moves();
         void test_metropolis_hastings();
-
-        // metropolis hastings
-        void metropolis_hastings();
-        bool proposal(Cluster& cluster);
 
         // constants
         ////////////////////////////////////////////////////////////////////////
