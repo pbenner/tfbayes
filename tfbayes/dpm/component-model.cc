@@ -218,7 +218,7 @@ MarkovChainMixture::MarkovChainMixture(const MarkovChainMixture& distribution)
         memcpy(_alpha,   distribution._alpha,   _length*sizeof(double));
         memcpy(_counts,  distribution._counts,  _length*sizeof(double));
         memcpy(_counts_sum, distribution._counts_sum, _length/_alphabet_size*sizeof(double));
-        memcpy(_entropy, distribution._counts_sum, _length/_alphabet_size*sizeof(double));
+        memcpy(_entropy, distribution._entropy, _length/_alphabet_size*sizeof(double));
         memcpy(_parents, distribution._parents, _length*sizeof(int));
 }
 
