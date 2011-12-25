@@ -226,6 +226,7 @@ MarkovChainMixture::~MarkovChainMixture() {
         free(_alpha);
         free(_counts);
         free(_parents);
+        free(_entropy);
         free(_counts_sum);
         free(_counts_tmp);
 }
