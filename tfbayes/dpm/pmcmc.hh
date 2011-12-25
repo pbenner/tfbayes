@@ -45,18 +45,18 @@ public:
         size_t size() const;
 
         const sampling_history_t& sampling_history() const;
-        posterior_t& posterior();
+        samples_t& samples();
         size_t sampling_steps() const;
 
 private:
         std::vector<Sampler*> _population;
         const size_t _size;
         sampling_history_t* _sampling_history;
-        posterior_t* _posterior;
+        samples_t* _samples;
 
         // private methods
         ////////////////////////////////////////////////////////////////////////
-        void update_posterior();
+        void update_samples();
         void update_sampling_history();
 };
 

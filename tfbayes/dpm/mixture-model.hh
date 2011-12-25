@@ -39,10 +39,11 @@ public:
         virtual size_t baseline_components() const = 0;
         // compute cumulative mixture weights on log scale (not normalized!)
         virtual void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[]) = 0;
-        virtual void   update_posterior(size_t sampling_steps) = 0;
+        virtual void   update_samples(size_t sampling_steps) = 0;
         virtual double likelihood() const = 0;
+        virtual double posterior() const = 0;
         virtual bool   valid_for_sampling(const index_i& index) const = 0;
-        virtual posterior_t& posterior() = 0;
+        virtual samples_t& samples() = 0;
 };
 
 #endif /* MIXTURE_MODEL_HH */

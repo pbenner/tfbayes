@@ -31,7 +31,7 @@ using namespace std;
 
 PopulationMCMC::PopulationMCMC(Sampler& sampler, size_t n)
         : _population(n, NULL), _size(n),
-          _sampling_history(NULL), _posterior(NULL)
+          _sampling_history(NULL), _samples(NULL)
 {
         assert(n >= 1);
 
@@ -43,7 +43,7 @@ PopulationMCMC::PopulationMCMC(Sampler& sampler, size_t n)
 
 PopulationMCMC::PopulationMCMC(const PopulationMCMC& pmcmc)
         : _population(pmcmc._size, NULL), _size(pmcmc._size),
-          _sampling_history(NULL), _posterior(NULL)
+          _sampling_history(NULL), _samples(NULL)
 {
         for (size_t i = 0; i < _size; i++) {
                 _population[i] = (Sampler*)pmcmc._population[i]->clone();
@@ -58,8 +58,8 @@ PopulationMCMC::~PopulationMCMC()
         if (_sampling_history != NULL) {
                 delete(_sampling_history);
         }
-        if (_posterior != NULL) {
-                delete(_posterior);
+        if (_samples != NULL) {
+                delete(_samples);
         }
 }
 
@@ -83,32 +83,32 @@ PopulationMCMC::update_sampling_history()
 }
 
 void
-PopulationMCMC::update_posterior()
+PopulationMCMC::update_samples()
 {
-        if (_posterior != NULL) {
-                delete(_posterior);
+        if (_samples != NULL) {
+                delete(_samples);
         }
         // allocate memory
-        _posterior = new posterior_t();
-        for (size_t i = 0; i < _population[0]->posterior().probabilities.size(); i++) {
-                _posterior->probabilities.push_back(vector<double>(_population[0]->posterior().probabilities[i].size(), 0));
+        _samples = new samples_t();
+        for (size_t i = 0; i < _population[0]->samples().probabilities.size(); i++) {
+                _samples->probabilities.push_back(vector<double>(_population[0]->samples().probabilities[i].size(), 0));
         }
-        // loop through posterior
-        for (size_t i = 0; i < _population[0]->posterior().probabilities.size(); i++) {
-                for (size_t j = 0; j < _population[0]->posterior().probabilities[i].size(); j++) {
+        // loop through samples
+        for (size_t i = 0; i < _population[0]->samples().probabilities.size(); i++) {
+                for (size_t j = 0; j < _population[0]->samples().probabilities[i].size(); j++) {
                         // average over population
                         double sum = 0;
                         for (size_t k = 0; k < _size; k++) {
-                                sum += _population[k]->posterior().probabilities[i][j];
+                                sum += _population[k]->samples().probabilities[i][j];
                         }
                         // save average
-                        _posterior->probabilities[i][j] = sum/(double)_size;
+                        _samples->probabilities[i][j] = sum/(double)_size;
                 }
         }
         // graph updates
         for (size_t i = 0; i < _size; i++) {
-                _posterior->graph.insert(_population[i]->posterior().graph);
-                _population[i]->posterior().graph.cleanup();
+                _samples->graph.insert(_population[i]->samples().graph);
+                _population[i]->samples().graph.cleanup();
         }
 }
 
@@ -161,7 +161,7 @@ PopulationMCMC::sample(size_t n, size_t burnin)
                 }
         }
         update_sampling_history();
-        update_posterior();
+        update_samples();
 }
 
 const sampling_history_t&
@@ -169,9 +169,9 @@ PopulationMCMC::sampling_history() const {
         return *_sampling_history;
 }
 
-posterior_t&
-PopulationMCMC::posterior() {
-        return *_posterior;
+samples_t&
+PopulationMCMC::samples() {
+        return *_samples;
 }
 
 size_t

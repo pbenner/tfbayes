@@ -52,9 +52,9 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
           _tfbs_length(options.tfbs_length)
 {
         ////////////////////////////////////////////////////////////////////////////////
-        // initialize joint posterior
+        // initialize samples
         for (size_t i = 0; i < data.size(); i++) {
-                _posterior.probabilities.push_back(vector<double>(data.size(i), 0.0));
+                _samples.probabilities.push_back(vector<double>(data.size(i), 0.0));
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -131,8 +131,8 @@ DpmTfbs::DpmTfbs(const DpmTfbs& dpm)
           _lambda_inv_log(dpm._lambda_inv_log),
           // length of tfbs
           _tfbs_length(dpm._tfbs_length),
-          // posterior
-          _posterior(dpm._posterior),
+          // samples
+          _samples(dpm._samples),
           // process prios
           _process_prior(dpm._process_prior->clone())
 {
@@ -240,6 +240,13 @@ DpmTfbs::likelihood() const {
         return result;
 }
 
+double
+DpmTfbs::posterior() const {
+        double result = likelihood();
+
+        return result;
+}
+
 void
 DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
 {
@@ -252,7 +259,7 @@ DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
                                 cl_iterator iu = is; iu++;
                                 while (iu != cluster.end()) {
                                         // record edge
-                                        _posterior.graph[edge_t(is->index, iu->index)]++;
+                                        _samples.graph[edge_t(is->index, iu->index)]++;
                                         iu++;
                                 }
                         }
@@ -261,9 +268,9 @@ DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
 }
 
 void
-DpmTfbs::update_posterior(size_t sampling_steps) {
+DpmTfbs::update_samples(size_t sampling_steps) {
         if (sampling_steps % 100 == 0) {
-                _posterior.graph.cleanup(1);
+                _samples.graph.cleanup(1);
         }
         for (da_iterator it = _data.begin();
              it != _data.end(); it++) {
@@ -271,27 +278,22 @@ DpmTfbs::update_posterior(size_t sampling_steps) {
                 const size_t sequence = index[0];
                 const size_t position = index[1];
                 if (_state[index] == bg_cluster_tag) {
-                        const double tmp   = _posterior.probabilities[sequence][position];
+                        const double tmp   = _samples.probabilities[sequence][position];
                         const double value = ((double)sampling_steps*tmp)/((double)sampling_steps+1.0);
-                        _posterior.probabilities[sequence][position] = value;
+                        _samples.probabilities[sequence][position] = value;
                 }
                 else {
-                        const double tmp   = _posterior.probabilities[sequence][position];
+                        const double tmp   = _samples.probabilities[sequence][position];
                         const double value = ((double)sampling_steps*tmp+1.0)/((double)sampling_steps+1.0);
-                        _posterior.probabilities[sequence][position] = value;
+                        _samples.probabilities[sequence][position] = value;
                 }
         }
         update_graph(_state.tfbs_start_positions);
 }
 
-posterior_t&
-DpmTfbs::posterior() {
-        return _posterior;
-}
-
-const data_tfbs_t&
-DpmTfbs::data() const {
-        return _data;
+samples_t&
+DpmTfbs::samples() {
+        return _samples;
 }
 
 dpm_tfbs_state_t&

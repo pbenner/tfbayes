@@ -111,17 +111,17 @@ void read_file(const char* file_name, vector<string>& sequences)
 static
 void save_result(ostream& file)
 {
-        const posterior_t& posterior      = _pmcmc->posterior();
+        const samples_t& samples          = _pmcmc->samples();
         const sampling_history_t& history = _pmcmc->sampling_history();
 
         file.setf(ios::showpoint);
 
         file << "[Result]" << endl;
         file << "posterior =" << endl;
-        for (size_t i = 0; i < posterior.probabilities.size(); i++) {
+        for (size_t i = 0; i < samples.probabilities.size(); i++) {
                 file << "\t";
-                for (size_t j = 0; j < posterior.probabilities[i].size(); j++) {
-                        file << (float)posterior.probabilities[i][j] << " ";
+                for (size_t j = 0; j < samples.probabilities[i].size(); j++) {
+                        file << (float)samples.probabilities[i][j] << " ";
                 }
                 file << endl;
         }
@@ -150,8 +150,8 @@ void save_result(ostream& file)
                 file << endl;
         }
         file << "graph = ";
-        for (Graph::const_iterator it = posterior.graph.begin();
-             it != posterior.graph.end(); it++) {
+        for (Graph::const_iterator it = samples.graph.begin();
+             it != samples.graph.end(); it++) {
                 file << *static_cast<const seq_index_t*>(&(*it).first.index1) << "-"
                      << *static_cast<const seq_index_t*>(&(*it).first.index2) << "="
                      << static_cast<double>((*it).second)/static_cast<double>(_pmcmc->sampling_steps()) << " ";
@@ -241,7 +241,7 @@ unsigned int _dpm_tfbs_num_clusters() {
 
 matrix_t* _dpm_tfbs_get_posterior() {
         matrix_t* result;
-        const vector<vector<double> >& probabilities = _gdpm->posterior().probabilities;
+        const vector<vector<double> >& probabilities = _gdpm->samples().probabilities;
         size_t n = probabilities.size();
         size_t m = 0;
 
@@ -254,7 +254,7 @@ matrix_t* _dpm_tfbs_get_posterior() {
 
         // allocate matrix
         result = alloc_matrix(n, m);
-        // copy posterior
+        // copy samples
         for (size_t i = 0; i < n; i++) {
                 for (size_t j = 0; j < m; j++) {
                         if (j < probabilities[i].size()) {
@@ -271,13 +271,13 @@ matrix_t* _dpm_tfbs_get_posterior() {
 
 matrix_t* _dpm_tfbs_cluster_assignments() {
         matrix_t* result;
-        size_t n = _gdpm->data().size();
+        size_t n = _data->size();
         size_t m = 0;
 
         // compute maximum length
         for (size_t i = 0; i < n; i++) {
-                if (m < _gdpm->data().size(i)) {
-                        m = _gdpm->data().size(i);
+                if (m < _data->size(i)) {
+                        m = _data->size(i);
                 }
         }
 
@@ -289,9 +289,9 @@ matrix_t* _dpm_tfbs_cluster_assignments() {
                         result->mat[i][j] = -1;
                 }
         }
-        // copy posterior
-        for (data_tfbs_t::const_iterator it = _gdpm->data().begin();
-             it != _gdpm->data().end(); it++) {
+        // copy samples
+        for (data_tfbs_t::const_iterator it = _data->begin();
+             it != _data->end(); it++) {
                 const index_i& index = **it;
                 result->mat[index[0]][index[1]] = _gdpm->state()[index];
         }

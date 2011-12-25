@@ -144,13 +144,18 @@ DPM_Gaussian::likelihood() const {
         return result;
 }
 
-void
-DPM_Gaussian::update_posterior(size_t sampling_steps) {
+double
+DPM_Gaussian::posterior() const {
+        return 0;
 }
 
-posterior_t&
-DPM_Gaussian::posterior() {
-        return _posterior;
+void
+DPM_Gaussian::update_samples(size_t sampling_steps) {
+}
+
+samples_t&
+DPM_Gaussian::samples() {
+        return _samples;
 }
 
 const mixture_state_t&

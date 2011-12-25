@@ -114,9 +114,9 @@ GibbsSampler::sampling_history() const {
         return _sampling_history;
 }
 
-posterior_t&
-GibbsSampler::posterior() {
-        return _dpm.posterior();
+samples_t&
+GibbsSampler::samples() {
+        return _dpm.samples();
 }
 
 size_t
@@ -151,7 +151,7 @@ GibbsSampler::sample(size_t n, size_t burnin) {
                 _sampling_history.likelihood[0].push_back(_dpm.likelihood());
                 _sampling_history.components[0].push_back(_dpm.mixture_components());
                 _sampling_history.switches[0].push_back(sum/(double)_indexer.elements());
-                _dpm.update_posterior(_sampling_steps);
+                _dpm.update_samples(_sampling_steps);
                 _sampling_steps++;
         }
 }
@@ -178,9 +178,9 @@ bool
 HybridSampler::_metropolis_sample() {
         for (cl_iterator it = _state.begin(); it != _state.end(); it++) {
                 cluster_t& cluster = **it;
-                double likelihood_ref = _dpm.likelihood();
+                double posterior_ref = _dpm.posterior();
 
-                if (_state.proposal(cluster) && _dpm.likelihood() > likelihood_ref) {
+                if (_state.proposal(cluster) && _dpm.posterior() > posterior_ref) {
                         cout << "cluster "
                              << cluster.cluster_tag()
                              << ": move accepted"

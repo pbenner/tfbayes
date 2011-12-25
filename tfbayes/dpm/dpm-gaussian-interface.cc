@@ -104,7 +104,7 @@ matrix_t* _dpm_gaussian_cluster_elements(int tag) {
 
 matrix_t* _dpm_gaussian_get_posterior() {
         matrix_t* result;
-        const vector<vector<double> >& probabilities = _gdpm->posterior().probabilities;
+        const vector<vector<double> >& probabilities = _gdpm->samples().probabilities;
         size_t n = probabilities.size();
         size_t m = 0;
 
@@ -117,7 +117,7 @@ matrix_t* _dpm_gaussian_get_posterior() {
 
         // allocate matrix
         result = alloc_matrix(n, m);
-        // copy posterior
+        // copy samples
         for (size_t i = 0; i < n; i++) {
                 for (size_t j = 0; j < m; j++) {
                         if (j < probabilities[i].size()) {
@@ -138,7 +138,7 @@ vector_t* _dpm_gaussian_cluster_assignments() {
 
         // allocate matrix
         result = alloc_vector(n);
-        // copy posterior
+        // copy samples
         for (data_gaussian_t::const_iterator it = _data->begin();
              it != _data->end(); it++) {
                 const index_i& index = **it;

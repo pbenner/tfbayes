@@ -179,16 +179,16 @@ void save_motifs(ostream& file, const DpmTfbs& dpm)
 static
 void save_result(ostream& file, Sampler& sampler)
 {
-        const posterior_t& posterior      = sampler.posterior();
+        const samples_t& samples          = sampler.samples();
         const sampling_history_t& history = sampler.sampling_history();
         file.setf(ios::showpoint);
 
         file << "[Result]" << endl;
         file << "posterior =" << endl;
-        for (size_t i = 0; i < posterior.probabilities.size(); i++) {
+        for (size_t i = 0; i < samples.probabilities.size(); i++) {
                 file << "\t";
-                for (size_t j = 0; j < posterior.probabilities[i].size(); j++) {
-                        file << (float)posterior.probabilities[i][j] << " ";
+                for (size_t j = 0; j < samples.probabilities[i].size(); j++) {
+                        file << (float)samples.probabilities[i][j] << " ";
                 }
                 file << endl;
         }
@@ -217,8 +217,8 @@ void save_result(ostream& file, Sampler& sampler)
                 file << endl;
         }
         file << "graph = ";
-        for (Graph::const_iterator it = posterior.graph.begin();
-             it != posterior.graph.end(); it++) {
+        for (Graph::const_iterator it = samples.graph.begin();
+             it != samples.graph.end(); it++) {
                 file << *static_cast<const seq_index_t*>(&(*it).first.index1) << "-"
                      << *static_cast<const seq_index_t*>(&(*it).first.index2) << "="
                      << static_cast<double>((*it).second)/static_cast<double>(sampler.sampling_steps()) << " ";
@@ -255,10 +255,10 @@ void run_dpm(const char* file_name)
         tfbs_options.baseline_priors  = baseline_priors;
 
         // create data, dpm, and sampler objects
-        data_tfbs_t& data     = *new data_tfbs_t(sequences, options.tfbs_length);
-        DpmTfbs& gdpm         = *new DpmTfbs(tfbs_options, data);
-        GibbsSampler& sampler = *new HybridSampler(gdpm, gdpm.state(), data);
-        PopulationMCMC& pmcmc = *new PopulationMCMC(sampler, options.population_size);
+        data_tfbs_t& data      = *new data_tfbs_t(sequences, options.tfbs_length);
+        DpmTfbs& gdpm          = *new DpmTfbs(tfbs_options, data);
+        HybridSampler& sampler = *new HybridSampler(gdpm, gdpm.state(), data);
+        PopulationMCMC& pmcmc  = *new PopulationMCMC(sampler, options.population_size);
 
         // execute the sampler
         pmcmc.sample(options.samples, options.burnin);

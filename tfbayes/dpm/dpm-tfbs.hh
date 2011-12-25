@@ -71,13 +71,15 @@ public:
         size_t baseline_components() const;
         void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[]);
         void   update_graph(sequence_data_t<short> tfbs_start_positions);
-        void   update_posterior(size_t sampling_steps);
+        void   update_samples(size_t sampling_steps);
         double likelihood() const;
+        double posterior() const;
         bool   valid_for_sampling(const index_i& index) const;
-        posterior_t& posterior();
-        const data_tfbs_t& data() const;
-        dpm_tfbs_state_t& state();
+
         const dpm_tfbs_state_t& state() const;
+              dpm_tfbs_state_t& state();
+
+              samples_t& samples();
 
         // test methods
         ////////////////////////////////////////////////////////////////////////
@@ -109,8 +111,8 @@ private:
         const double _lambda_inv_log;
         const size_t _tfbs_length;
 
-        // posterior distribution
-        posterior_t _posterior;
+        // samples
+        samples_t _samples;
 
         // process priors
         dpm_tfbs_prior_t* _process_prior;

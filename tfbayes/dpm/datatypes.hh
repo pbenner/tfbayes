@@ -58,6 +58,6 @@ typedef struct {
 typedef struct {
         std::vector<std::vector<double> > probabilities;
         Graph graph;
-} posterior_t;
+} samples_t;
 
 #endif /* DATATYPES_HH */

@@ -21,6 +21,8 @@
 
 #include <dpm-tfbs-state.hh>
 
+using namespace std;
+
 dpm_tfbs_state_t::dpm_tfbs_state_t(
         const std::vector<size_t>& sizes,
         size_t tfbs_length,

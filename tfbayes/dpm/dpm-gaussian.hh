@@ -55,12 +55,14 @@ public:
         void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[]);
         void   add(const index_i& index, cluster_tag_t tag);
         void   remove(const index_i& index, cluster_tag_t tag);
-        void   update_posterior(size_t sampling_steps);
+        void   update_samples(size_t sampling_steps);
         double likelihood() const;
+        double posterior() const;
         bool   valid_for_sampling(const index_i& index) const;
-        posterior_t& posterior();
-        const mixture_state_t& state() const;
         gsl_matrix* means() const;
+
+        const mixture_state_t& state() const;
+              samples_t& samples();
 
         void print(std::ostream& o) const {
                 o << "(" << _state.size() << "): ";
@@ -89,8 +91,8 @@ private:
         // parameters
         const double alpha;
 
-        // posterior distribution
-        posterior_t _posterior;
+        // samples
+        samples_t _samples;
 };
 
 #endif /* DPM_GAUSSIAN_HH */
