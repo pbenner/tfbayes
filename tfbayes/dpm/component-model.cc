@@ -170,10 +170,14 @@ MarkovChainMixture::MarkovChainMixture(
                 _alpha[i]  = 0.5;
                 _counts[i] = 0.0;
         }
-        /* init counts_sum and entropies */
+        /* init entropies */
         for (size_t i = 0; i < _length/_alphabet_size; i++) {
-                _counts_sum[i] = _alphabet_size;
                 _entropy[i]    = 1;
+                _counts_sum[i] = 0; /* also init counts_sum to zero */
+        }
+        /* init counts_sum */
+        for (size_t i = 0; i < _length; i++) {
+                _counts_sum[i/_alphabet_size] += _alpha[i] + _counts[i];
         }
         /* for each node compute its parent */
         for (size_t i = 0; i < _length/_alphabet_size; i++) {
