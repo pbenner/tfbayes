@@ -28,8 +28,10 @@
 
 pitman_yor_prior::pitman_yor_prior(
         const dpm_tfbs_state_t& state,
-        double alpha, double discount)
-        : state(state), alpha(alpha), discount(discount)
+        double alpha, double discount,
+        cluster_tag_t bg_cluster_tag)
+        : state(state), alpha(alpha), discount(discount),
+          bg_cluster_tag(bg_cluster_tag)
 {}
 
 pitman_yor_prior*
@@ -59,7 +61,9 @@ pitman_yor_prior::joint() const
 
         for (cl_iterator it = state.begin(); it != state.end(); it++) {
                 cluster_t& cluster = **it;
-                sum += gsl_sf_lngamma(cluster.size());
+                if (cluster.cluster_tag() != bg_cluster_tag) {
+                        sum += gsl_sf_lngamma(cluster.size());
+                }
         }
 
         return sum;

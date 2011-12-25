@@ -39,7 +39,8 @@ public:
 class pitman_yor_prior : public dpm_tfbs_prior_t {
 public:
         pitman_yor_prior(const dpm_tfbs_state_t& state,
-                         double alpha, double discount);
+                         double alpha, double discount,
+                         cluster_tag_t bg_cluster_tag);
 
         pitman_yor_prior* clone() const;
 
@@ -52,6 +53,7 @@ private:
         const dpm_tfbs_state_t& state;
         const double alpha;
         const double discount;
+        const cluster_tag_t bg_cluster_tag;
 };
 
 class uniform_prior : public dpm_tfbs_prior_t {

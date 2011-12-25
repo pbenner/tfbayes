@@ -97,7 +97,7 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
         ////////////////////////////////////////////////////////////////////////////////
         // set the process prior
         if (options.process_prior == "pitman-yor process" || options.process_prior == "") {
-                _process_prior = new pitman_yor_prior(_state, options.alpha, options.discount);
+                _process_prior = new pitman_yor_prior(_state, options.alpha, options.discount, bg_cluster_tag);
         }
         else if (options.process_prior == "uniform process") {
                 _process_prior = new uniform_prior(_state, options.alpha);
