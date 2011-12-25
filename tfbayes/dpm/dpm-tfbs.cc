@@ -43,7 +43,7 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
           // raw sequences
           _data(data),
           // cluster manager
-          _state(data.sizes(), _tfbs_length, 0, _data),
+          _state(data.sizes(), options.tfbs_length, 0, _data),
           // mixture weight for the dirichlet process
           _lambda(options.lambda),
           _lambda_log(log(options.lambda)),
