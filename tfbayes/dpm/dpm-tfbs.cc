@@ -244,6 +244,10 @@ double
 DpmTfbs::posterior() const {
         double result = likelihood();
 
+        result += _state.num_tfbs*_lambda_log;
+        result += _state[bg_cluster_tag].size()*_lambda_inv_log;
+        result += _process_prior->joint();
+
         return result;
 }
 
