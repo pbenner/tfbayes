@@ -165,18 +165,15 @@ MarkovChainMixture::MarkovChainMixture(
         /* for likelihood computations */
         _counts_tmp = (double*)malloc(_length*sizeof(double));
 
-        /* init data structures */
-        for (size_t i = 0; i < _length; i++) {
-                _alpha[i]  = 0.5;
-                _counts[i] = 0.0;
-        }
         /* init entropies */
         for (size_t i = 0; i < _length/_alphabet_size; i++) {
                 _entropy[i]    = 1;
                 _counts_sum[i] = 0; /* also init counts_sum to zero */
         }
-        /* init counts_sum */
+        /* init counts */
         for (size_t i = 0; i < _length; i++) {
+                _alpha[i]  = 0.5;
+                _counts[i] = 0.0;
                 _counts_sum[i/_alphabet_size] += _alpha[i] + _counts[i];
         }
         /* for each node compute its parent */
