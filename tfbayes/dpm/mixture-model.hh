@@ -27,11 +27,9 @@
 
 #include <mixture-state.hh>
 
-class mixture_model_t : public clonable {
+class mixture_model_t {
 public:
         virtual ~mixture_model_t() {}
-
-        virtual mixture_model_t* clone() const = 0;
 
         // methods
         ////////////////////////////////////////////////////////////////////////
@@ -44,6 +42,8 @@ public:
         virtual double posterior() const = 0;
         virtual bool   valid_for_sampling(const index_i& index) const = 0;
         virtual samples_t& samples() = 0;
+        virtual mixture_state_t& state() = 0;
+        virtual const mixture_state_t& state() const = 0;
 };
 
 #endif /* MIXTURE_MODEL_HH */

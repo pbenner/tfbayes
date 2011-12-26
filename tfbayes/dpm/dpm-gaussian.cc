@@ -163,6 +163,11 @@ DPM_Gaussian::state() const {
         return _state;
 }
 
+mixture_state_t&
+DPM_Gaussian::state() {
+        return _state;
+}
+
 // misc methods
 ////////////////////////////////////////////////////////////////////////////////
 

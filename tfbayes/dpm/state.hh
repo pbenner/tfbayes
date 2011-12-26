@@ -26,7 +26,7 @@
 
 #include <mixture-state.hh>
 
-class state_t : public mixture_state_t {
+class state_t : public mixture_state_t, public clonable {
 public:
         state_t(data_t<cluster_tag_t>& cluster_assignments)
                 : mixture_state_t(cluster_assignments) {}

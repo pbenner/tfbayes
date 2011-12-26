@@ -51,7 +51,7 @@ GibbsSampler::GibbsSampler(mixture_model_t& dpm,
 }
 
 GibbsSampler::GibbsSampler(const GibbsSampler& sampler)
-        : _dpm(*sampler._dpm.clone()),
+        : _dpm(sampler._dpm),
           _name(sampler._name),
           _state(sampler._state),
           _indexer(sampler._indexer),
@@ -178,6 +178,11 @@ HybridSampler::HybridSampler(
         : GibbsSampler(dpm, state, indexer, name),
           _state(state)
 {
+}
+
+HybridSampler*
+HybridSampler::clone() const {
+        return new HybridSampler(*this);
 }
 
 bool

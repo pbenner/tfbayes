@@ -53,7 +53,7 @@ public:
          DpmTfbs(const DpmTfbs& dpm);
         ~DpmTfbs();
 
-        DpmTfbs* clone() const;
+        virtual DpmTfbs* clone() const;
 
         // auxiliary types
         ////////////////////////////////////////////////////////////////////////

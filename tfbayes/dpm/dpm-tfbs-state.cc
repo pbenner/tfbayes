@@ -55,6 +55,11 @@ dpm_tfbs_state_t::~dpm_tfbs_state_t() {
         }
 }
 
+dpm_tfbs_state_t*
+dpm_tfbs_state_t::clone() const {
+        return new dpm_tfbs_state_t(*this);
+}
+
 bool
 dpm_tfbs_state_t::valid_tfbs_position(const index_i& index) const
 {

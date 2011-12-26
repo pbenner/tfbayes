@@ -62,6 +62,7 @@ public:
         gsl_matrix* means() const;
 
         const mixture_state_t& state() const;
+              mixture_state_t& state();
               samples_t& samples();
 
         void print(std::ostream& o) const {

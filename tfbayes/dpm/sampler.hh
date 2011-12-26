@@ -80,6 +80,8 @@ public:
                       const Indexer& indexer,
                       const std::string name = "");
 
+        HybridSampler* clone() const;
+
 protected:
         virtual bool _sample();
                 bool _metropolis_sample();

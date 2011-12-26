@@ -37,6 +37,8 @@ public:
                           const data_tfbs_t& data);
         ~dpm_tfbs_state_t();
 
+        virtual dpm_tfbs_state_t* clone() const;
+
         // auxiliary types
         ////////////////////////////////////////////////////////////////////////
         typedef cluster_t::const_iterator cl_iterator;
