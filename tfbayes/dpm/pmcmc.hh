@@ -47,6 +47,7 @@ public:
         const sampling_history_t& sampling_history() const;
         samples_t& samples();
         size_t sampling_steps() const;
+        void set_name(const std::string name);
 
 private:
         std::vector<Sampler*> _population;

@@ -34,13 +34,16 @@ public:
         virtual const sampling_history_t& sampling_history() const = 0;
         virtual samples_t& samples() = 0;
         virtual size_t sampling_steps() const = 0;
+        virtual void set_name(const std::string name) = 0;
+protected:
 };
 
 class GibbsSampler : public Sampler {
 public:
          GibbsSampler(mixture_model_t& dpm,
                       gibbs_state_t& state,
-                      const Indexer& indexer);
+                      const Indexer& indexer,
+                      const std::string name = "");
          GibbsSampler(const GibbsSampler& sampler);
         ~GibbsSampler();
 
@@ -50,6 +53,7 @@ public:
         const sampling_history_t& sampling_history() const;
         samples_t& samples();
         size_t sampling_steps() const;
+        void set_name(const std::string name);
 
 protected:
         // private methods
@@ -58,6 +62,7 @@ protected:
         size_t _gibbs_sample();
         // the mixture model
         mixture_model_t& _dpm;
+        std::string _name;
 
 private:
         gibbs_state_t& _state;
@@ -72,7 +77,8 @@ class HybridSampler : public GibbsSampler {
 public:
         HybridSampler(mixture_model_t& dpm,
                       hybrid_state_t& state,
-                      const Indexer& indexer);
+                      const Indexer& indexer,
+                      const std::string name = "");
 
 protected:
         virtual bool _sample();

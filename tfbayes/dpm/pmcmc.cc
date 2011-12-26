@@ -20,6 +20,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <iostream>
+#include <sstream>
 
 #include <assert.h>
 #include <pthread.h>
@@ -36,8 +37,12 @@ PopulationMCMC::PopulationMCMC(Sampler& sampler, size_t n)
         assert(n >= 1);
 
         _population[0] = &sampler;
+        _population[0]->set_name("Sampler 0");
         for (size_t i = 1; i < _size; i++) {
+                stringstream ss;
+                ss << "Sampler " << i;
                 _population[i] = (Sampler*)sampler.clone();
+                _population[0]->set_name(ss.str());
         }
 }
 
@@ -182,4 +187,9 @@ PopulationMCMC::size() const {
 size_t
 PopulationMCMC::sampling_steps() const {
         return _population[0]->sampling_steps();
+}
+
+void
+PopulationMCMC::set_name(const string name)
+{
 }

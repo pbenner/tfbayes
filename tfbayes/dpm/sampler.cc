@@ -32,8 +32,11 @@ using namespace std;
 
 GibbsSampler::GibbsSampler(mixture_model_t& dpm,
                            gibbs_state_t& state,
-                           const Indexer& indexer)
-        : _dpm(dpm), _state(state),
+                           const Indexer& indexer,
+                           const string name)
+        : _dpm(dpm),
+          _name(name),
+          _state(state),
           _indexer(indexer),
           _sampling_steps(0),
           _sampling_history(*new sampling_history_t())
@@ -49,6 +52,7 @@ GibbsSampler::GibbsSampler(mixture_model_t& dpm,
 
 GibbsSampler::GibbsSampler(const GibbsSampler& sampler)
         : _dpm(*sampler._dpm.clone()),
+          _name(sampler._name),
           _state(sampler._state),
           _indexer(sampler._indexer),
           _sampling_steps(0),
@@ -125,11 +129,17 @@ GibbsSampler::sampling_steps() const {
 }
 
 void
+GibbsSampler::set_name(const string name) {
+        _name = name;
+}
+
+void
 GibbsSampler::sample(size_t n, size_t burnin) {
         double sum;
         // burn in sampling
         for (size_t i = 0; i < burnin; i++) {
                 flockfile(stdout);
+                cout << _name << ": ";
                 printf("Burn in... [%u]", (unsigned int)i+1);
                 cout << "[ Cluster: " << _state << "]" << endl;
                 fflush(stdout);
@@ -143,6 +153,7 @@ GibbsSampler::sample(size_t n, size_t burnin) {
         for (size_t i = 0; i < n; i++) {
                 // loop through all elements
                 flockfile(stdout);
+                cout << _name << ": ";
                 printf("Sampling... [%u]", (unsigned int)i+1);
                 cout << "[ Cluster: " << _state << "]" << endl;
                 fflush(stdout);
@@ -162,8 +173,10 @@ GibbsSampler::sample(size_t n, size_t burnin) {
 HybridSampler::HybridSampler(
         mixture_model_t& dpm,
         hybrid_state_t& state,
-        const Indexer& indexer)
-        : GibbsSampler(dpm, state, indexer), _state(state)
+        const Indexer& indexer,
+        const string name)
+        : GibbsSampler(dpm, state, indexer, name),
+          _state(state)
 {
 }
 
@@ -182,7 +195,8 @@ HybridSampler::_metropolis_sample() {
 
                 if (_state.proposal(cluster) && _dpm.posterior() > posterior_ref) {
                         flockfile(stdout);
-                        cout << "cluster "
+                        cout << _name << ": "
+                             << "cluster "
                              << cluster.cluster_tag()
                              << ": move accepted"
                              << endl;
