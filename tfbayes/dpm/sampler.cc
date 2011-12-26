@@ -181,10 +181,13 @@ HybridSampler::_metropolis_sample() {
                 double posterior_ref = _dpm.posterior();
 
                 if (_state.proposal(cluster) && _dpm.posterior() > posterior_ref) {
+                        flockfile(stdout);
                         cout << "cluster "
                              << cluster.cluster_tag()
                              << ": move accepted"
                              << endl;
+                        fflush(stdout);
+                        funlockfile(stdout);
                 }
                 else {
                         _state.restore();
