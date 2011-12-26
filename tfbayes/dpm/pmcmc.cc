@@ -37,12 +37,12 @@ PopulationMCMC::PopulationMCMC(Sampler& sampler, size_t n)
         assert(n >= 1);
 
         _population[0] = &sampler;
-        _population[0]->set_name("Sampler 0");
+        _population[0]->set_name("Sampler 1");
         for (size_t i = 1; i < _size; i++) {
                 stringstream ss;
-                ss << "Sampler " << i;
+                ss << "Sampler " << i+1;
                 _population[i] = (Sampler*)sampler.clone();
-                _population[0]->set_name(ss.str());
+                _population[i]->set_name(ss.str());
         }
 }
 
