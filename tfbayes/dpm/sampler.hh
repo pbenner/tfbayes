@@ -34,7 +34,6 @@ public:
         virtual const sampling_history_t& sampling_history() const = 0;
         virtual samples_t& samples() = 0;
         virtual size_t sampling_steps() const = 0;
-        virtual void set_name(const std::string name) = 0;
 protected:
 };
 
@@ -53,7 +52,6 @@ public:
         const sampling_history_t& sampling_history() const;
         samples_t& samples();
         size_t sampling_steps() const;
-        void set_name(const std::string name);
 
 protected:
         // private methods
@@ -78,18 +76,20 @@ public:
         HybridSampler(mixture_model_t& dpm,
                       hybrid_state_t& state,
                       const Indexer& indexer,
-                      const std::string name = "");
+                      const std::string name = "",
+                      bool optimize = false);
 
         HybridSampler* clone() const;
 
 protected:
         virtual bool _sample();
                 bool _metropolis_sample();
-
+                bool _metropolis_sample(cluster_t& cluster);
 private:
         typedef mixture_state_t::iterator cl_iterator;
 
         hybrid_state_t& _state;
+        const bool _optimize;
 };
 
 #endif /* SAMPLER_HH */

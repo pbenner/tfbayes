@@ -152,6 +152,7 @@ dpm_tfbs_state_t::move_left(cluster_t& cluster)
 
         for (cl_iterator is = elements.begin(); is != elements.end(); is++) {
                 if (cluster.size() == 1) {
+                        restore();
                         return false;
                 }
                 const range_t& range  = *is;
@@ -176,6 +177,7 @@ dpm_tfbs_state_t::move_right(cluster_t& cluster)
 
         for (cl_iterator is = elements.begin(); is != elements.end(); is++) {
                 if (cluster.size() == 1) {
+                        restore();
                         return false;
                 }
                 const range_t range(*is);

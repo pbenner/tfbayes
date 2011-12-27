@@ -44,6 +44,7 @@ typedef struct _options_t {
         double discount;
         double lambda;
         size_t context;
+        bool metropolis_optimize;
         const char* process_prior;
         const char* background_model;
         size_t population_size;
@@ -56,6 +57,7 @@ typedef struct _options_t {
                   discount(0.0),
                   lambda(0.01),
                   context(2),
+                  metropolis_optimize(true),
                   process_prior("pitman-yor process"),
                   background_model("independence"),
                   population_size(1),
@@ -66,17 +68,18 @@ typedef struct _options_t {
 ostream&
 operator<<(std::ostream& o, const _options_t& options) {
         o << "Options:"              << endl
-          << "-> samples          = " << options.samples          << endl
-          << "-> burnin           = " << options.burnin           << endl
-          << "-> tfbs_length      = " << options.tfbs_length      << endl
-          << "-> alpha            = " << options.alpha            << endl
-          << "-> discount         = " << options.discount         << endl
-          << "-> lambda           = " << options.lambda           << endl
-          << "-> context          = " << options.context          << endl
-          << "-> process prior    = " << options.process_prior    << endl
-          << "-> background model = " << options.background_model << endl
-          << "-> population_size  = " << options.population_size  << endl
-          << "-> save             = " << options.save             << endl;
+          << "-> samples             = " << options.samples             << endl
+          << "-> burnin              = " << options.burnin              << endl
+          << "-> tfbs_length         = " << options.tfbs_length         << endl
+          << "-> alpha               = " << options.alpha               << endl
+          << "-> discount            = " << options.discount            << endl
+          << "-> lambda              = " << options.lambda              << endl
+          << "-> context             = " << options.context             << endl
+          << "-> metropolis_optimize = " << options.metropolis_optimize << endl
+          << "-> process prior       = " << options.process_prior       << endl
+          << "-> background model    = " << options.background_model    << endl
+          << "-> population_size     = " << options.population_size     << endl
+          << "-> save                = " << options.save                << endl;
         return o;
 }
 
@@ -230,15 +233,16 @@ void run_dpm(const char* file_name)
 
         // tfbs options
         tfbs_options_t tfbs_options;
-        tfbs_options.alpha            = options.alpha;
-        tfbs_options.lambda           = options.lambda;
-        tfbs_options.discount         = options.discount;
-        tfbs_options.tfbs_length      = options.tfbs_length;
-        tfbs_options.context          = options.context;
-        tfbs_options.process_prior    = options.process_prior;
-        tfbs_options.background_model = options.background_model;
-        tfbs_options.baseline_weights = baseline_weights;
-        tfbs_options.baseline_priors  = baseline_priors;
+        tfbs_options.alpha               = options.alpha;
+        tfbs_options.lambda              = options.lambda;
+        tfbs_options.discount            = options.discount;
+        tfbs_options.tfbs_length         = options.tfbs_length;
+        tfbs_options.context             = options.context;
+        tfbs_options.metropolis_optimize = options.metropolis_optimize;
+        tfbs_options.process_prior       = options.process_prior;
+        tfbs_options.background_model    = options.background_model;
+        tfbs_options.baseline_weights    = baseline_weights;
+        tfbs_options.baseline_priors     = baseline_priors;
 
         // create data, dpm, and sampler objects
         dpm_tfbs_sampler_t pmcmc(tfbs_options, sequences, options.population_size);

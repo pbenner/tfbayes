@@ -41,6 +41,7 @@ typedef struct {
         double discount;
         double lambda;
         size_t context;
+        bool metropolis_optimize;
         const char* process_prior;
         const char* background_model;
         vector_t*  baseline_weights;
@@ -56,14 +57,15 @@ static vector<string> _sequences;
 ostream&
 operator<<(std::ostream& o, const options_t& options) {
         o << "Options:"              << endl
-          << "-> tfbs_length      = " << options.tfbs_length      << endl
-          << "-> process prior    = " << options.process_prior    << endl
-          << "-> background model = " << options.background_model << endl
-          << "-> alpha            = " << options.alpha            << endl
-          << "-> discount         = " << options.discount         << endl
-          << "-> lambda           = " << options.lambda           << endl
-          << "-> context          = " << options.context          << endl
-          << "-> population_size  = " << options.population_size  << endl;
+          << "-> tfbs_length         = " << options.tfbs_length         << endl
+          << "-> process prior       = " << options.process_prior       << endl
+          << "-> background model    = " << options.background_model    << endl
+          << "-> alpha               = " << options.alpha               << endl
+          << "-> discount            = " << options.discount            << endl
+          << "-> lambda              = " << options.lambda              << endl
+          << "-> context             = " << options.context             << endl
+          << "-> metropolis_optimize = " << options.metropolis_optimize << endl
+          << "-> population_size     = " << options.population_size     << endl;
         return o;
 }
 
@@ -201,15 +203,16 @@ void _dpm_tfbs_init(const char* filename)
 
         // tfbs options
         tfbs_options_t tfbs_options;
-        tfbs_options.alpha            = _options.alpha;
-        tfbs_options.lambda           = _options.lambda;
-        tfbs_options.discount         = _options.discount;
-        tfbs_options.context          = _options.context;
-        tfbs_options.tfbs_length      = _options.tfbs_length;
-        tfbs_options.process_prior    = _options.process_prior;
-        tfbs_options.background_model = _options.background_model;
-        tfbs_options.baseline_weights = baseline_weights;
-        tfbs_options.baseline_priors  = baseline_priors;
+        tfbs_options.alpha               = _options.alpha;
+        tfbs_options.lambda              = _options.lambda;
+        tfbs_options.discount            = _options.discount;
+        tfbs_options.context             = _options.context;
+        tfbs_options.metropolis_optimize = _options.metropolis_optimize;
+        tfbs_options.tfbs_length         = _options.tfbs_length;
+        tfbs_options.process_prior       = _options.process_prior;
+        tfbs_options.background_model    = _options.background_model;
+        tfbs_options.baseline_weights    = baseline_weights;
+        tfbs_options.baseline_priors     = baseline_priors;
 
         _pmcmc = new dpm_tfbs_sampler_t(tfbs_options, _sequences, _options.population_size);
 

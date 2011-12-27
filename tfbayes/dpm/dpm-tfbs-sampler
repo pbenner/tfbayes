@@ -39,20 +39,21 @@ from tfbayes.dpm.dpm_tfbs_interface import *
 # ------------------------------------------------------------------------------
 
 options = {
-    'alpha'            : 0.05,
-    'discount'         : 0.0,
-    'lambda'           : 0.01,
-    'context'          : 2,
-    'process_prior'    : "pitman-yor process",
-    'background_model' : "independence",
-    'samples'          : (1000,100),
-    'population_size'  : 1,
-    'tfbs_length'      : 10,
-    'save'             : None,
-    'input_file'       : None,
-    'verbose'          : False,
-    'baseline_weights' : [1.0],
-    'baseline_priors'  : []
+    'alpha'               : 0.05,
+    'discount'            : 0.0,
+    'lambda'              : 0.01,
+    'context'             : 2,
+    'metropolis_optimize' : True,
+    'process_prior'       : "pitman-yor process",
+    'background_model'    : "independence",
+    'samples'             : (1000,100),
+    'population_size'     : 1,
+    'tfbs_length'         : 10,
+    'save'                : None,
+    'input_file'          : None,
+    'verbose'             : False,
+    'baseline_weights'    : [1.0],
+    'baseline_priors'     : []
     }
 
 # usage
@@ -88,6 +89,9 @@ def usage():
 # parse config
 # ------------------------------------------------------------------------------
 
+def str2bool(v):
+    return v.lower() in ("yes", "true", "t", "1")
+
 def read_vector(config_parser, section, option, converter):
     vector_str = config_parser.get(section, option).replace('  ',' ').strip()
     vector     = map(converter, vector_str.split(' '))
@@ -122,6 +126,8 @@ def parse_config(config_file):
         options['background_model'] = config_parser.get('TFBS-Sampler', 'background-model').strip()
     if config_parser.has_option('TFBS-Sampler', 'tfbs-length'):
         options['tfbs_length'] = int(config_parser.get('TFBS-Sampler', 'tfbs-length'))
+    if config_parser.has_option('TFBS-Sampler', 'metropolis-optimize'):
+        options['metropolis_optimize'] = str2bool(config_parser.get('TFBS-Sampler', 'metropolis-optimize'))
     if config_parser.has_option('TFBS-Sampler', 'population-size'):
         options['population_size'] = int(config_parser.get('TFBS-Sampler', 'population-size'))
     if config_parser.has_option('TFBS-Sampler', 'save'):

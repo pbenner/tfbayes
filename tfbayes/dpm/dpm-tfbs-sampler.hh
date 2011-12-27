@@ -36,13 +36,10 @@ public:
                   _data(sequences, options.tfbs_length),
                   _gdpm(n, NULL) {
                 for (size_t i = 0; i < _size; i++) {
-                        std::stringstream ss;
-                        DpmTfbs* gdpm          = new DpmTfbs(options, _data);
-                        HybridSampler* sampler = new HybridSampler(*gdpm, gdpm->state(), _data);
-                        ss << "Sampler " << i+1;
-                        _population[i] = sampler;
-                        _population[i]->set_name(ss.str());
-                        _gdpm[i] = gdpm;
+                        std::stringstream ss; ss << "Sampler " << i+1;
+                        _gdpm[i]       = new DpmTfbs(options, _data);
+                        _population[i] = new HybridSampler(*_gdpm[i], _gdpm[i]->state(), _data, ss.str(),
+                                                           options.metropolis_optimize);
                 }
         }
 

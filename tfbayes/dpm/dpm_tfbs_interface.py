@@ -56,17 +56,18 @@ class MATRIX(Structure):
                  ("mat",     POINTER(POINTER(c_double)))]
 
 class OPTIONS(Structure):
-     _fields_ = [("tfbs_length",       c_ulong),
-                 ("alpha",             c_double),
-                 ("discount",          c_double),
-                 ("lambda_",           c_double),
-                 ("context",           c_ulong),
-                 ("process_prior",     c_char_p),
-                 ("background_model",  c_char_p),
-                 ("baseline_weights",  POINTER(VECTOR)),
-                 ("baseline_priors",   POINTER(POINTER(MATRIX))),
-                 ("baseline_n",        c_ulong),
-                 ("population_size",   c_ulong)]
+     _fields_ = [("tfbs_length",         c_ulong),
+                 ("alpha",               c_double),
+                 ("discount",            c_double),
+                 ("lambda_",             c_double),
+                 ("context",             c_ulong),
+                 ("metropolis_optimize", c_bool),
+                 ("process_prior",       c_char_p),
+                 ("background_model",    c_char_p),
+                 ("baseline_weights",    POINTER(VECTOR)),
+                 ("baseline_priors",     POINTER(POINTER(MATRIX))),
+                 ("baseline_n",          c_ulong),
+                 ("population_size",     c_ulong)]
 
 # function prototypes
 # ------------------------------------------------------------------------------
@@ -154,6 +155,7 @@ def dpm_init(options, input_file):
      c_options.contents.discount = options['discount']
      c_options.contents.lambda_ = options['lambda']
      c_options.contents.context = options['context']
+     c_options.contents.metropolis_optimize = options['metropolis_optimize']
      c_options.contents.process_prior = options['process_prior']
      c_options.contents.background_model = options['background_model']
      c_options.contents.tfbs_length = options['tfbs_length']

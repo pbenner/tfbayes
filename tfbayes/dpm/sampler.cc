@@ -129,19 +129,15 @@ GibbsSampler::sampling_steps() const {
 }
 
 void
-GibbsSampler::set_name(const string name) {
-        _name = name;
-}
-
-void
 GibbsSampler::sample(size_t n, size_t burnin) {
         double sum;
         // burn in sampling
         for (size_t i = 0; i < burnin; i++) {
                 flockfile(stdout);
-                cout << _name << ": ";
-                printf("Burn in... [%u]", (unsigned int)i+1);
-                cout << "[ Cluster: " << _state << "]" << endl;
+                cout << _name << ": "
+                     << "Burn in... [" << i+1 << "]"
+                     << "[ Cluster: " << _state << "]"
+                     << endl;
                 fflush(stdout);
                 funlockfile(stdout);
                 sum = _sample();
@@ -153,9 +149,10 @@ GibbsSampler::sample(size_t n, size_t burnin) {
         for (size_t i = 0; i < n; i++) {
                 // loop through all elements
                 flockfile(stdout);
-                cout << _name << ": ";
-                printf("Sampling... [%u]", (unsigned int)i+1);
-                cout << "[ Cluster: " << _state << "]" << endl;
+                cout << _name << ": "
+                     << "Sampling... [" << i+1 << "]"
+                     << "[ Cluster: " << _state << "]"
+                     << endl;
                 fflush(stdout);
                 funlockfile(stdout);
                 sum = _sample();
@@ -174,9 +171,10 @@ HybridSampler::HybridSampler(
         mixture_model_t& dpm,
         hybrid_state_t& state,
         const Indexer& indexer,
-        const string name)
+        const string name,
+        bool optimize)
         : GibbsSampler(dpm, state, indexer, name),
-          _state(state)
+          _state(state), _optimize(optimize)
 {
 }
 
@@ -193,24 +191,44 @@ HybridSampler::_sample() {
 }
 
 bool
+HybridSampler::_metropolis_sample(cluster_t& cluster) {
+        double posterior_ref = _dpm.posterior();
+        double posterior_tmp;
+
+        if (_state.proposal(cluster)) {
+                posterior_tmp = _dpm.posterior();
+
+                if (_optimize && posterior_tmp > posterior_ref) {
+                        goto accepted;
+                }
+                if (!_optimize) {
+                        const double r = (double)rand()/RAND_MAX;
+                        if (r <= min(posterior_tmp/posterior_ref, 1.0)) {
+                                goto accepted;
+                        }
+                }
+                _state.restore();
+        }
+        return false;
+
+accepted:
+        flockfile(stdout);
+        cout << _name << ": "
+             << "cluster "
+             << cluster.cluster_tag()
+             << ": move accepted"
+             << endl;
+        fflush(stdout);
+        funlockfile(stdout);
+
+        return true;
+}
+
+bool
 HybridSampler::_metropolis_sample() {
         for (cl_iterator it = _state.begin(); it != _state.end(); it++) {
-                cluster_t& cluster = **it;
-                double posterior_ref = _dpm.posterior();
-
-                if (_state.proposal(cluster) && _dpm.posterior() > posterior_ref) {
-                        flockfile(stdout);
-                        cout << _name << ": "
-                             << "cluster "
-                             << cluster.cluster_tag()
-                             << ": move accepted"
-                             << endl;
-                        fflush(stdout);
-                        funlockfile(stdout);
-                }
-                else {
-                        _state.restore();
-                }
+                _metropolis_sample(**it);
         }
+
         return true;
 }

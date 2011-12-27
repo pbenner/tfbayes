@@ -41,6 +41,7 @@ typedef struct {
         double discount;
         double lambda;
         size_t context;
+        bool metropolis_optimize;
         std::string process_prior;
         std::string background_model;
         std::vector<double> baseline_weights;
