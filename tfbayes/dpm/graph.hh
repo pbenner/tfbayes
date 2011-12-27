@@ -78,12 +78,12 @@ size_t hash_value(const edge_t& edge)
         return hasher(edge.index1[0]*edge.index1[1]) + hasher(edge.index2[1]);
 }
 
-// Graph
+// graph_t
 ////////////////////////////////////////////////////////////////////////////////
 
-class Graph {
+class graph_t {
 public:
-        Graph() {}
+        graph_t() {}
 
         // typedefs
         ////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +111,7 @@ public:
         void insert(const edge_t& edge) {
                 _edges[edge]++;
         }
-        void insert(const Graph& graph) {
+        void insert(const graph_t& graph) {
                 for (const_iterator it = graph.begin(); it != graph.end(); it++) {
                         _edges[(*it).first] += (*it).second;
                 }

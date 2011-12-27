@@ -149,7 +149,7 @@ void save_result(ostream& file)
                 file << endl;
         }
         file << "graph = ";
-        for (Graph::const_iterator it = samples.graph.begin();
+        for (graph_t::const_iterator it = samples.graph.begin();
              it != samples.graph.end(); it++) {
                 file << *static_cast<const seq_index_t*>(&(*it).first.index1) << "-"
                      << *static_cast<const seq_index_t*>(&(*it).first.index2) << "="
