@@ -114,17 +114,11 @@ double product_dirichlet_t::predictive(const range_t& range) {
 }
 
 double product_dirichlet_t::log_predictive(const range_t& range) {
-        const size_t sequence = range.index[0];
-        const size_t position = range.index[1];
-        const size_t length   = range.length;
-        double result = 0;
+        const double result = predictive(range);
 
-        for (size_t i = 0; i < length; i++) {
-                const char code = _data[seq_index_t(sequence, position+i)];
-                result += log(counts[i%_size1][ code ]+alpha[i%_size1][ code ])
-                        - log(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
-        }
-        return result;
+        assert(result != 0);
+
+        return log(result);
 }
 
 //
