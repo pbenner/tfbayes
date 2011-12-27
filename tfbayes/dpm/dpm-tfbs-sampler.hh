@@ -41,6 +41,7 @@ public:
                         _population[i] = new hybrid_sampler_t(*_gdpm[i], _gdpm[i]->state(), _data, ss.str(),
                                                               options.metropolis_optimize);
                 }
+                update_samples();
         }
 
         data_tfbs_t _data;

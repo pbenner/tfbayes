@@ -51,7 +51,7 @@ typedef struct {
 } options_t;
 
 static options_t _options;
-static dpm_tfbs_sampler_t* _pmcmc;
+static dpm_tfbs_sampler_t* _sampler;
 static vector<string> _sequences;
 
 ostream&
@@ -110,8 +110,8 @@ void read_file(const char* file_name, vector<string>& sequences)
 static
 void save_result(ostream& file)
 {
-        const samples_t& samples          = _pmcmc->samples();
-        const sampling_history_t& history = _pmcmc->sampling_history();
+        const samples_t& samples          = _sampler->samples();
+        const sampling_history_t& history = _sampler->sampling_history();
 
         file.setf(ios::showpoint);
 
@@ -153,7 +153,7 @@ void save_result(ostream& file)
              it != samples.graph.end(); it++) {
                 file << *static_cast<const seq_index_t*>(&(*it).first.index1) << "-"
                      << *static_cast<const seq_index_t*>(&(*it).first.index2) << "="
-                     << static_cast<double>((*it).second)/static_cast<double>(_pmcmc->sampling_steps()) << " ";
+                     << static_cast<double>((*it).second)/static_cast<double>(_sampler->sampling_steps()) << " ";
         }
         file << endl;
 }
@@ -214,7 +214,7 @@ void _dpm_tfbs_init(const char* filename)
         tfbs_options.baseline_weights    = baseline_weights;
         tfbs_options.baseline_priors     = baseline_priors;
 
-        _pmcmc = new dpm_tfbs_sampler_t(tfbs_options, _sequences, _options.population_size);
+        _sampler = new dpm_tfbs_sampler_t(tfbs_options, _sequences, _options.population_size);
 
         cout << _options << endl;
 }
@@ -233,12 +233,12 @@ void _dpm_tfbs_save(const char* filename)
 }
 
 unsigned int _dpm_tfbs_num_clusters() {
-        return _pmcmc->_gdpm[0]->state().size();
+        return _sampler->_gdpm[0]->state().size();
 }
 
 matrix_t* _dpm_tfbs_get_posterior() {
         matrix_t* result;
-        const vector<vector<double> >& probabilities = _pmcmc->samples().probabilities;
+        const vector<vector<double> >& probabilities = _sampler->samples().probabilities;
         size_t n = probabilities.size();
         size_t m = 0;
 
@@ -268,13 +268,13 @@ matrix_t* _dpm_tfbs_get_posterior() {
 
 matrix_t* _dpm_tfbs_cluster_assignments() {
         matrix_t* result;
-        size_t n = _pmcmc->_data.size();
+        size_t n = _sampler->_data.size();
         size_t m = 0;
 
         // compute maximum length
         for (size_t i = 0; i < n; i++) {
-                if (m < _pmcmc->_data.size(i)) {
-                        m = _pmcmc->_data.size(i);
+                if (m < _sampler->_data.size(i)) {
+                        m = _sampler->_data.size(i);
                 }
         }
 
@@ -287,16 +287,16 @@ matrix_t* _dpm_tfbs_cluster_assignments() {
                 }
         }
         // copy samples
-        for (data_tfbs_t::const_iterator it = _pmcmc->_data.begin();
-             it != _pmcmc->_data.end(); it++) {
+        for (data_tfbs_t::const_iterator it = _sampler->_data.begin();
+             it != _sampler->_data.end(); it++) {
                 const index_i& index = **it;
-                result->mat[index[0]][index[1]] = _pmcmc->_gdpm[0]->state()[index];
+                result->mat[index[0]][index[1]] = _sampler->_gdpm[0]->state()[index];
         }
         return result;
 }
 
 vector_t* _dpm_tfbs_hist_likelihood() {
-        const vector<double>& likelihood = _pmcmc->sampling_history().likelihood[0];
+        const vector<double>& likelihood = _sampler->sampling_history().likelihood[0];
         size_t size = likelihood.size();
         vector_t* result = alloc_vector(size);
 
@@ -308,7 +308,7 @@ vector_t* _dpm_tfbs_hist_likelihood() {
 }
 
 vector_t* _dpm_tfbs_hist_switches() {
-        const vector<double>& switches = _pmcmc->sampling_history().switches[0];
+        const vector<double>& switches = _sampler->sampling_history().switches[0];
         size_t size = switches.size();
         vector_t* result = alloc_vector(size);
 
@@ -320,15 +320,15 @@ vector_t* _dpm_tfbs_hist_switches() {
 }
 
 void _dpm_tfbs_print() {
-        cout << _pmcmc->_gdpm[0] << endl;
+        cout << _sampler->_gdpm[0] << endl;
 }
 
 void _dpm_tfbs_sample(unsigned int n, unsigned int burnin) {
-        _pmcmc->sample((size_t)n, (size_t)burnin);
+        _sampler->sample((size_t)n, (size_t)burnin);
 }
 
 void _dpm_tfbs_free() {
-        delete(_pmcmc);
+        delete(_sampler);
 }
 
 __END_DECLS
