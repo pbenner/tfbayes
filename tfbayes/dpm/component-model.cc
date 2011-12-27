@@ -37,7 +37,7 @@ using namespace std;
 // Multinomial/Dirichlet Model
 ////////////////////////////////////////////////////////////////////////////////
 
-ProductDirichlet::ProductDirichlet(const matrix<double>& _alpha, const sequence_data_t<short>& data)
+product_dirichlet_t::product_dirichlet_t(const matrix<double>& _alpha, const sequence_data_t<short>& data)
         : _data(data), _size1(_alpha.size()), _size2(_alpha[0].size())
 {
         for (size_t i = 0; i < _alpha.size(); i++) {
@@ -52,22 +52,22 @@ ProductDirichlet::ProductDirichlet(const matrix<double>& _alpha, const sequence_
         }
 }
 
-ProductDirichlet::ProductDirichlet(const ProductDirichlet& distribution)
+product_dirichlet_t::product_dirichlet_t(const product_dirichlet_t& distribution)
         : alpha(distribution.alpha), counts(distribution.counts), _data(distribution._data),
           _size1(distribution._size1), _size2(distribution._size2)
 {
 }
 
-ProductDirichlet::~ProductDirichlet() {
+product_dirichlet_t::~product_dirichlet_t() {
 }
 
-ProductDirichlet*
-ProductDirichlet::clone() const {
-        return new ProductDirichlet(*this);
+product_dirichlet_t*
+product_dirichlet_t::clone() const {
+        return new product_dirichlet_t(*this);
 }
 
 size_t
-ProductDirichlet::add(const range_t& range) {
+product_dirichlet_t::add(const range_t& range) {
         const size_t sequence = range.index[0];
         const size_t position = range.index[1];
         const size_t length   = range.length;
@@ -81,7 +81,7 @@ ProductDirichlet::add(const range_t& range) {
 }
 
 size_t
-ProductDirichlet::remove(const range_t& range) {
+product_dirichlet_t::remove(const range_t& range) {
         const size_t sequence = range.index[0];
         const size_t position = range.index[1];
         const size_t length   = range.length;
@@ -95,11 +95,11 @@ ProductDirichlet::remove(const range_t& range) {
 }
 
 size_t
-ProductDirichlet::count(const range_t& range) {
+product_dirichlet_t::count(const range_t& range) {
         return range.length/_size1;
 }
 
-double ProductDirichlet::predictive(const range_t& range) {
+double product_dirichlet_t::predictive(const range_t& range) {
         const size_t sequence = range.index[0];
         const size_t position = range.index[1];
         const size_t length   = range.length;
@@ -113,7 +113,7 @@ double ProductDirichlet::predictive(const range_t& range) {
         return result;
 }
 
-double ProductDirichlet::log_predictive(const range_t& range) {
+double product_dirichlet_t::log_predictive(const range_t& range) {
         const size_t sequence = range.index[0];
         const size_t position = range.index[1];
         const size_t length   = range.length;
@@ -130,7 +130,7 @@ double ProductDirichlet::log_predictive(const range_t& range) {
 //
 // \sum_{x \in X} n_x log(\frac{n_x + \alpha_x}{\sum_{x' \in X} n_{x'} + \alpha_{x'}})
 //
-double ProductDirichlet::log_likelihood() const {
+double product_dirichlet_t::log_likelihood() const {
         double result = 0;
 
         for (size_t j = 0; j < _size1; j++) {
@@ -146,7 +146,7 @@ double ProductDirichlet::log_likelihood() const {
 // Markov Chain Mixture
 ////////////////////////////////////////////////////////////////////////////////
 
-MarkovChainMixture::MarkovChainMixture(
+markov_chain_mixture_t::markov_chain_mixture_t(
         size_t alphabet_size, size_t max_context,
         const sequence_data_t<short>& data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
@@ -195,7 +195,7 @@ MarkovChainMixture::MarkovChainMixture(
         }
 }
 
-MarkovChainMixture::MarkovChainMixture(const MarkovChainMixture& distribution)
+markov_chain_mixture_t::markov_chain_mixture_t(const markov_chain_mixture_t& distribution)
         : _length(distribution._length),
           _data(distribution._data),
           _context(distribution._context),
@@ -222,7 +222,7 @@ MarkovChainMixture::MarkovChainMixture(const MarkovChainMixture& distribution)
         memcpy(_parents, distribution._parents, _length*sizeof(int));
 }
 
-MarkovChainMixture::~MarkovChainMixture() {
+markov_chain_mixture_t::~markov_chain_mixture_t() {
         free(_alpha);
         free(_counts);
         free(_parents);
@@ -231,13 +231,13 @@ MarkovChainMixture::~MarkovChainMixture() {
         free(_counts_tmp);
 }
 
-MarkovChainMixture*
-MarkovChainMixture::clone() const {
-        return new MarkovChainMixture(*this);
+markov_chain_mixture_t*
+markov_chain_mixture_t::clone() const {
+        return new markov_chain_mixture_t(*this);
 }
 
 size_t
-MarkovChainMixture::max_from_context(const range_t& range) const
+markov_chain_mixture_t::max_from_context(const range_t& range) const
 {
         const size_t sequence = range.index[0];
         const size_t position = range.index[1];
@@ -251,7 +251,7 @@ MarkovChainMixture::max_from_context(const range_t& range) const
 }
 
 size_t
-MarkovChainMixture::max_to_context(const range_t& range) const
+markov_chain_mixture_t::max_to_context(const range_t& range) const
 {
         const size_t sequence = range.index[0];
         const size_t position = range.index[1];
@@ -267,7 +267,7 @@ MarkovChainMixture::max_to_context(const range_t& range) const
 }
 
 void
-MarkovChainMixture::update_entropy(int code)
+markov_chain_mixture_t::update_entropy(int code)
 {
         const int from = code - (code%_alphabet_size);
         const int k    = code/_alphabet_size;
@@ -281,7 +281,7 @@ MarkovChainMixture::update_entropy(int code)
 }
 
 size_t
-MarkovChainMixture::add(const range_t& range) {
+markov_chain_mixture_t::add(const range_t& range) {
         const size_t sequence     = range.index[0];
         const size_t length       = range.length;
         const size_t from_context = max_from_context(range);
@@ -305,7 +305,7 @@ MarkovChainMixture::add(const range_t& range) {
 }
 
 size_t
-MarkovChainMixture::remove(const range_t& range) {
+markov_chain_mixture_t::remove(const range_t& range) {
         const size_t sequence     = range.index[0];
         const size_t length       = range.length;
         const size_t from_context = max_from_context(range);
@@ -329,11 +329,11 @@ MarkovChainMixture::remove(const range_t& range) {
 }
 
 size_t
-MarkovChainMixture::count(const range_t& range) {
+markov_chain_mixture_t::count(const range_t& range) {
         return range.length;
 }
 
-double MarkovChainMixture::predictive(const range_t& range) {
+double markov_chain_mixture_t::predictive(const range_t& range) {
         const size_t sequence     = range.index[0];
         const size_t length       = range.length;
         const size_t from_context = max_from_context(range);
@@ -370,11 +370,11 @@ double MarkovChainMixture::predictive(const range_t& range) {
         return result;
 }
 
-double MarkovChainMixture::log_predictive(const range_t& range) {
+double markov_chain_mixture_t::log_predictive(const range_t& range) {
         return log(predictive(range));
 }
 
-double MarkovChainMixture::log_likelihood(size_t pos) const
+double markov_chain_mixture_t::log_likelihood(size_t pos) const
 {
         const double n = _counts_tmp[pos];
         double weight = 0;
@@ -404,7 +404,7 @@ double MarkovChainMixture::log_likelihood(size_t pos) const
         return n*log(result);
 }
 
-void MarkovChainMixture::substract_counts(size_t pos) const
+void markov_chain_mixture_t::substract_counts(size_t pos) const
 {
         const double n = _counts_tmp[pos];
 
@@ -413,7 +413,7 @@ void MarkovChainMixture::substract_counts(size_t pos) const
         }
 }
 
-double MarkovChainMixture::log_likelihood() const {
+double markov_chain_mixture_t::log_likelihood() const {
         memcpy(_counts_tmp, _counts, _length*sizeof(double));
         double result = 0;
 
@@ -442,7 +442,7 @@ double MarkovChainMixture::log_likelihood() const {
 // Variable Order Markov Chain
 ////////////////////////////////////////////////////////////////////////////////
 
-ParsimoniousTree::ParsimoniousTree(
+parsimonious_tree_t::parsimonious_tree_t(
         size_t alphabet_size, size_t tree_depth,
         const sequence_data_t<short>& data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
@@ -466,7 +466,7 @@ ParsimoniousTree::ParsimoniousTree(
         }
 }
 
-ParsimoniousTree::ParsimoniousTree(const ParsimoniousTree& distribution)
+parsimonious_tree_t::parsimonious_tree_t(const parsimonious_tree_t& distribution)
         : _counts_length(distribution._counts_length),
           _data(distribution._data),
           _context(distribution._context),
@@ -483,19 +483,19 @@ ParsimoniousTree::ParsimoniousTree(const ParsimoniousTree& distribution)
         memcpy(_counts, distribution._counts, _counts_length*sizeof(count_t));
 }
 
-ParsimoniousTree::~ParsimoniousTree() {
+parsimonious_tree_t::~parsimonious_tree_t() {
         free(_counts);
         pt_free(_pt);
         as_free(_as);
 }
 
-ParsimoniousTree*
-ParsimoniousTree::clone() const {
-        return new ParsimoniousTree(*this);
+parsimonious_tree_t*
+parsimonious_tree_t::clone() const {
+        return new parsimonious_tree_t(*this);
 }
 
 size_t
-ParsimoniousTree::max_from_context(const range_t& range) const
+parsimonious_tree_t::max_from_context(const range_t& range) const
 {
         const size_t sequence = range.index[0];
         const size_t position = range.index[1];
@@ -509,7 +509,7 @@ ParsimoniousTree::max_from_context(const range_t& range) const
 }
 
 size_t
-ParsimoniousTree::max_to_context(const range_t& range) const
+parsimonious_tree_t::max_to_context(const range_t& range) const
 {
         const size_t sequence = range.index[0];
         const size_t position = range.index[1];
@@ -525,7 +525,7 @@ ParsimoniousTree::max_to_context(const range_t& range) const
 }
 
 size_t
-ParsimoniousTree::add(const range_t& range) {
+parsimonious_tree_t::add(const range_t& range) {
         const size_t sequence     = range.index[0];
         const size_t length       = range.length;
         const size_t from_context = max_from_context(range);
@@ -546,7 +546,7 @@ ParsimoniousTree::add(const range_t& range) {
 }
 
 size_t
-ParsimoniousTree::remove(const range_t& range) {
+parsimonious_tree_t::remove(const range_t& range) {
         const size_t sequence     = range.index[0];
         const size_t length       = range.length;
         const size_t from_context = max_from_context(range);
@@ -567,30 +567,30 @@ ParsimoniousTree::remove(const range_t& range) {
 }
 
 size_t
-ParsimoniousTree::count(const range_t& range) {
+parsimonious_tree_t::count(const range_t& range) {
         return range.length;
 }
 
-double ParsimoniousTree::predictive(const range_t& range) {
+double parsimonious_tree_t::predictive(const range_t& range) {
         const double ml1 = pt_ln_marginal_likelihood(_pt, _counts); add(range);
         const double ml2 = pt_ln_marginal_likelihood(_pt, _counts); remove(range);
         return exp(ml2-ml1);
 }
 
-double ParsimoniousTree::log_predictive(const range_t& range) {
+double parsimonious_tree_t::log_predictive(const range_t& range) {
         const double ml1 = pt_ln_marginal_likelihood(_pt, _counts); add(range);
         const double ml2 = pt_ln_marginal_likelihood(_pt, _counts); remove(range);
         return ml2-ml1;
 }
 
-double ParsimoniousTree::log_likelihood() const {
+double parsimonious_tree_t::log_likelihood() const {
         return 0;
 }
 
 // Bivariate Gaussian
 ////////////////////////////////////////////////////////////////////////////////
 
-BivariateNormal::BivariateNormal(
+bivariate_normal_t::bivariate_normal_t(
         const gsl_matrix* Sigma,
         const gsl_matrix* Sigma_0,
         const gsl_vector* mu_0,
@@ -631,7 +631,7 @@ BivariateNormal::BivariateNormal(
         inverse(_Sigma_N_inv, _Sigma_N);
 }
 
-BivariateNormal::BivariateNormal(const BivariateNormal& bn)
+bivariate_normal_t::bivariate_normal_t(const bivariate_normal_t& bn)
         : _N(bn._N), _dimension(bn._dimension), _data(bn._data)
 {
         // alloc tmp
@@ -669,7 +669,7 @@ BivariateNormal::BivariateNormal(const BivariateNormal& bn)
         gsl_vector_memcpy(_mu_N,        bn._mu_N);
 }
 
-BivariateNormal::~BivariateNormal()
+bivariate_normal_t::~bivariate_normal_t()
 {
         // tmp
         gsl_matrix_free(_inv_tmp);
@@ -692,13 +692,13 @@ BivariateNormal::~BivariateNormal()
         gsl_vector_free(_mu_N);
 }
 
-BivariateNormal*
-BivariateNormal::clone() const {
-        return new BivariateNormal(*this);
+bivariate_normal_t*
+bivariate_normal_t::clone() const {
+        return new bivariate_normal_t(*this);
 }
 
 void
-BivariateNormal::inverse(gsl_matrix* dst, const gsl_matrix* src) {
+bivariate_normal_t::inverse(gsl_matrix* dst, const gsl_matrix* src) {
         int _inv_s = 0;
         gsl_matrix_memcpy(_inv_tmp, src);
         gsl_linalg_LU_decomp(_inv_tmp, _inv_perm, &_inv_s);
@@ -706,7 +706,7 @@ BivariateNormal::inverse(gsl_matrix* dst, const gsl_matrix* src) {
 }
 
 void
-BivariateNormal::update()
+bivariate_normal_t::update()
 {
         // update _mu_N and _Sigma_N
 
@@ -732,7 +732,7 @@ BivariateNormal::update()
 }
 
 size_t
-BivariateNormal::add(const range_t& range)
+bivariate_normal_t::add(const range_t& range)
 {
         const_iterator_t<vector<double> > iterator = _data[range];
 
@@ -749,7 +749,7 @@ BivariateNormal::add(const range_t& range)
 }
 
 size_t
-BivariateNormal::remove(const range_t& range)
+bivariate_normal_t::remove(const range_t& range)
 {
         const_iterator_t<vector<double> > iterator = _data[range];
 
@@ -771,11 +771,11 @@ BivariateNormal::remove(const range_t& range)
 }
 
 size_t
-BivariateNormal::count(const range_t& range) {
+bivariate_normal_t::count(const range_t& range) {
         return range.length;
 }
 
-double BivariateNormal::predictive(const range_t& range) {
+double bivariate_normal_t::predictive(const range_t& range) {
         const_iterator_t<vector<double> > iterator = _data[range];
 
         double mu_x = gsl_vector_get(_mu_N, 0);
@@ -792,18 +792,18 @@ double BivariateNormal::predictive(const range_t& range) {
         return result;
 }
 
-double BivariateNormal::log_predictive(const range_t& range) {
+double bivariate_normal_t::log_predictive(const range_t& range) {
         return log(predictive(range));
 }
 
 double
-BivariateNormal::log_likelihood() const
+bivariate_normal_t::log_likelihood() const
 {
         return 0;
 }
 
 const gsl_vector*
-BivariateNormal::mean() const
+bivariate_normal_t::mean() const
 {
         return _mu;
 }

@@ -46,7 +46,7 @@ DPM_Gaussian::DPM_Gaussian(
           // strength parameter for the dirichlet process
           alpha(alpha)
 {
-        _model_tag = _state.add_baseline_model(new BivariateNormal(Sigma, Sigma_0, mu_0, data));
+        _model_tag = _state.add_baseline_model(new bivariate_normal_t(Sigma, Sigma_0, mu_0, data));
         cluster_tag_t cluster_tag = _state.get_free_cluster(_model_tag).cluster_tag();
         for (data_gaussian_t::const_iterator it = _data.begin();
              it != _data.end(); it++) {
@@ -123,7 +123,7 @@ DPM_Gaussian::means() const {
         for (mixture_state_t::const_iterator it = _state.begin();
              it != _state.end(); it++) {
                 cluster_t& cluster = **it;
-                BivariateNormal& bg = static_cast<BivariateNormal&>(cluster.model());
+                bivariate_normal_t& bg = static_cast<bivariate_normal_t&>(cluster.model());
                 gsl_matrix_set(means, i, 0, gsl_vector_get(bg.mean(), 0));
                 gsl_matrix_set(means, i, 1, gsl_vector_get(bg.mean(), 1));
                 i++;

@@ -37,7 +37,7 @@
 
 using namespace std;
 
-DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
+dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
         : // baseline
           _baseline_weights(options.baseline_weights),
           // raw sequences
@@ -61,17 +61,17 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
         // add background model to the state
         if (options.background_model == "independence" || options.background_model == "") {
                 const matrix<double>& bg_alpha = init_alpha(BG_LENGTH);
-                ProductDirichlet* bg = new ProductDirichlet(bg_alpha, _data);
+                product_dirichlet_t* bg = new product_dirichlet_t(bg_alpha, _data);
                 bg_cluster_tag = _state.add_cluster(bg);
         }
         else if (options.background_model == "markov chain mixture") {
                 assert(options.context >= 0);
-                MarkovChainMixture* bg = new MarkovChainMixture(ALPHABET_SIZE, options.context, _data, _state.cluster_assignments, 0);
+                markov_chain_mixture_t* bg = new markov_chain_mixture_t(ALPHABET_SIZE, options.context, _data, _state.cluster_assignments, 0);
                 bg_cluster_tag = _state.add_cluster(bg);
         }
         else if (options.background_model == "parsimonious tree") {
                 assert(options.context >= 0);
-                ParsimoniousTree* bg = new ParsimoniousTree(ALPHABET_SIZE, options.context, _data, _state.cluster_assignments, 0);
+                parsimonious_tree_t* bg = new parsimonious_tree_t(ALPHABET_SIZE, options.context, _data, _state.cluster_assignments, 0);
                 bg_cluster_tag = _state.add_cluster(bg);
         }
         else {
@@ -81,7 +81,7 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
         // add model components for the baseline measure
         for (size_t i = 0; i < options.baseline_priors.size(); i++) {
                 assert(options.tfbs_length == options.baseline_priors[i].size());
-                ProductDirichlet* dirichlet = new ProductDirichlet(options.baseline_priors[i], _data);
+                product_dirichlet_t* dirichlet = new product_dirichlet_t(options.baseline_priors[i], _data);
                 const model_tag_t model_tag = _state.add_baseline_model(dirichlet);
                 _model_tags.push_back(model_tag);
         }
@@ -117,7 +117,7 @@ DpmTfbs::DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data)
         //test_metropolis_hastings();
 }
 
-DpmTfbs::DpmTfbs(const DpmTfbs& dpm)
+dpm_tfbs_t::dpm_tfbs_t(const dpm_tfbs_t& dpm)
         : // baseline
           _baseline_weights(dpm._baseline_weights),
           _model_tags(dpm._model_tags),
@@ -138,17 +138,17 @@ DpmTfbs::DpmTfbs(const DpmTfbs& dpm)
 {
 }
 
-DpmTfbs::~DpmTfbs() {
+dpm_tfbs_t::~dpm_tfbs_t() {
         delete(_process_prior);
 }
 
-DpmTfbs*
-DpmTfbs::clone() const {
-        return new DpmTfbs(*this);
+dpm_tfbs_t*
+dpm_tfbs_t::clone() const {
+        return new dpm_tfbs_t(*this);
 }
 
 bool
-DpmTfbs::valid_for_sampling(const index_i& index) const
+dpm_tfbs_t::valid_for_sampling(const index_i& index) const
 {
         const size_t sequence = index[0];
         const size_t position = index[1];
@@ -179,19 +179,19 @@ DpmTfbs::valid_for_sampling(const index_i& index) const
 }
 
 size_t
-DpmTfbs::mixture_components() const
+dpm_tfbs_t::mixture_components() const
 {
         return _state.size();
 }
 
 size_t
-DpmTfbs::baseline_components() const
+dpm_tfbs_t::baseline_components() const
 {
         return _model_tags.size();
 }
 
 void
-DpmTfbs::mixture_weights(const index_i& index, double log_weights[], cluster_tag_t cluster_tags[])
+dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_tag_t cluster_tags[])
 {
         const range_t range(index, _tfbs_length);
         ssize_t mixture_n  = mixture_components();
@@ -229,7 +229,7 @@ DpmTfbs::mixture_weights(const index_i& index, double log_weights[], cluster_tag
 }
 
 double
-DpmTfbs::likelihood() const {
+dpm_tfbs_t::likelihood() const {
         double result = 0;
 
         for (cm_iterator it = _state.begin();
@@ -244,7 +244,7 @@ DpmTfbs::likelihood() const {
 }
 
 double
-DpmTfbs::posterior() const {
+dpm_tfbs_t::posterior() const {
         double result = likelihood();
 
         result += _state.num_tfbs*_lambda_log;
@@ -257,7 +257,7 @@ DpmTfbs::posterior() const {
 }
 
 void
-DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
+dpm_tfbs_t::update_graph(sequence_data_t<short> tfbs_start_positions)
 {
         // loop through all clusters
         for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
@@ -277,7 +277,7 @@ DpmTfbs::update_graph(sequence_data_t<short> tfbs_start_positions)
 }
 
 void
-DpmTfbs::update_samples(size_t sampling_steps) {
+dpm_tfbs_t::update_samples(size_t sampling_steps) {
         if (sampling_steps % 100 == 0) {
                 _samples.graph.cleanup(1);
         }
@@ -301,22 +301,22 @@ DpmTfbs::update_samples(size_t sampling_steps) {
 }
 
 samples_t&
-DpmTfbs::samples() {
+dpm_tfbs_t::samples() {
         return _samples;
 }
 
 dpm_tfbs_state_t&
-DpmTfbs::state() {
+dpm_tfbs_t::state() {
         return _state;
 }
 
 const dpm_tfbs_state_t&
-DpmTfbs::state() const {
+dpm_tfbs_t::state() const {
         return _state;
 }
 
 std::matrix<double>
-DpmTfbs::init_alpha(size_t length)
+dpm_tfbs_t::init_alpha(size_t length)
 {
         std::matrix<double> alpha;
 
@@ -330,7 +330,7 @@ DpmTfbs::init_alpha(size_t length)
 // misc methods
 ////////////////////////////////////////////////////////////////////////////////
 
-ostream& operator<< (ostream& o, const DpmTfbs& dpm)
+ostream& operator<< (ostream& o, const dpm_tfbs_t& dpm)
 {
         o << "Cluster Assignments:"     << endl;
         o << dpm._state.cluster_assignments   << endl;

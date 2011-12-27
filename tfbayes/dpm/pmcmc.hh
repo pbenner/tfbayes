@@ -26,18 +26,18 @@
 
 #include <sampler.hh>
 
-class PopulationMCMC : public Sampler {
+class population_mcmc_t : public sampler_t {
 public:
-        PopulationMCMC(size_t n);
-        PopulationMCMC(const PopulationMCMC& pmcmc);
-        virtual ~PopulationMCMC();
+        population_mcmc_t(size_t n);
+        population_mcmc_t(const population_mcmc_t& pmcmc);
+        virtual ~population_mcmc_t();
 
-        PopulationMCMC* clone() const;
+        population_mcmc_t* clone() const;
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-              Sampler& operator[](size_t i)       { return *_population[i]; }
-        const Sampler& operator[](size_t i) const { return *_population[i]; }
+              sampler_t& operator[](size_t i)       { return *_population[i]; }
+        const sampler_t& operator[](size_t i) const { return *_population[i]; }
 
         // methods
         ////////////////////////////////////////////////////////////////////////
@@ -50,7 +50,7 @@ public:
         void set_name(const std::string name);
 
 protected:
-        std::vector<Sampler*> _population;
+        std::vector<sampler_t*> _population;
         const size_t _size;
         sampling_history_t* _sampling_history;
         samples_t* _samples;

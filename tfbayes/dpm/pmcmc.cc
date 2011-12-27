@@ -29,23 +29,23 @@
 
 using namespace std;
 
-PopulationMCMC::PopulationMCMC(size_t n)
+population_mcmc_t::population_mcmc_t(size_t n)
         : _population(n, NULL),
           _size(n), _sampling_history(NULL), _samples(NULL)
 {
         assert(n >= 1);
 }
 
-PopulationMCMC::PopulationMCMC(const PopulationMCMC& pmcmc)
+population_mcmc_t::population_mcmc_t(const population_mcmc_t& pmcmc)
         : _population(pmcmc._size, NULL), _size(pmcmc._size),
           _sampling_history(NULL), _samples(NULL)
 {
         for (size_t i = 0; i < _size; i++) {
-                _population[i] = (Sampler*)pmcmc._population[i]->clone();
+                _population[i] = (sampler_t*)pmcmc._population[i]->clone();
         }
 }
 
-PopulationMCMC::~PopulationMCMC()
+population_mcmc_t::~population_mcmc_t()
 {
         for (size_t i = 0; i < _size; i++) {
                 delete(_population[i]);
@@ -58,13 +58,13 @@ PopulationMCMC::~PopulationMCMC()
         }
 }
 
-PopulationMCMC*
-PopulationMCMC::clone() const {
-        return new PopulationMCMC(*this);
+population_mcmc_t*
+population_mcmc_t::clone() const {
+        return new population_mcmc_t(*this);
 }
 
 void
-PopulationMCMC::update_sampling_history()
+population_mcmc_t::update_sampling_history()
 {
         if (_sampling_history != NULL) {
                 delete(_sampling_history);
@@ -78,7 +78,7 @@ PopulationMCMC::update_sampling_history()
 }
 
 void
-PopulationMCMC::update_samples()
+population_mcmc_t::update_samples()
 {
         if (_samples != NULL) {
                 delete(_samples);
@@ -108,7 +108,7 @@ PopulationMCMC::update_samples()
 }
 
 typedef struct {
-        Sampler* sampler;
+        sampler_t* sampler;
         size_t n;
         size_t burnin;
 } pthread_data_t;
@@ -117,7 +117,7 @@ static
 void * sample_thread(void* _data)
 {
         pthread_data_t* data  = (pthread_data_t*)_data;
-        Sampler* sampler      = data->sampler;
+        sampler_t* sampler    = data->sampler;
         const size_t n        = data->n;
         const size_t burnin   = data->burnin;
 
@@ -127,7 +127,7 @@ void * sample_thread(void* _data)
 }
 
 void
-PopulationMCMC::sample(size_t n, size_t burnin)
+population_mcmc_t::sample(size_t n, size_t burnin)
 {
         pthread_data_t data[_size];
         pthread_t threads[_size];
@@ -160,26 +160,26 @@ PopulationMCMC::sample(size_t n, size_t burnin)
 }
 
 const sampling_history_t&
-PopulationMCMC::sampling_history() const {
+population_mcmc_t::sampling_history() const {
         return *_sampling_history;
 }
 
 samples_t&
-PopulationMCMC::samples() {
+population_mcmc_t::samples() {
         return *_samples;
 }
 
 size_t
-PopulationMCMC::size() const {
+population_mcmc_t::size() const {
         return _size;
 }
 
 size_t
-PopulationMCMC::sampling_steps() const {
+population_mcmc_t::sampling_steps() const {
         return _population[0]->sampling_steps();
 }
 
 void
-PopulationMCMC::set_name(const string name)
+population_mcmc_t::set_name(const string name)
 {
 }

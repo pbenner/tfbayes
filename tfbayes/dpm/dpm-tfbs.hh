@@ -48,13 +48,13 @@ typedef struct {
         std::vector<std::matrix<double> > baseline_priors;
 } tfbs_options_t;
 
-class DpmTfbs : public mixture_model_t {
+class dpm_tfbs_t : public mixture_model_t {
 public:
-         DpmTfbs(const tfbs_options_t& options, const data_tfbs_t& data);
-         DpmTfbs(const DpmTfbs& dpm);
-        ~DpmTfbs();
+         dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data);
+         dpm_tfbs_t(const dpm_tfbs_t& dpm);
+        ~dpm_tfbs_t();
 
-        virtual DpmTfbs* clone() const;
+        virtual dpm_tfbs_t* clone() const;
 
         // auxiliary types
         ////////////////////////////////////////////////////////////////////////
@@ -64,7 +64,7 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-        friend std::ostream& operator<<(std::ostream& o, const DpmTfbs& dpm);
+        friend std::ostream& operator<<(std::ostream& o, const dpm_tfbs_t& dpm);
 
         // methods
         ////////////////////////////////////////////////////////////////////////

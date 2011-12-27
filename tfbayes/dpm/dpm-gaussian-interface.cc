@@ -29,7 +29,7 @@ using namespace std;
 
 static DPM_Gaussian* _gdpm;
 static data_gaussian_t* _data;
-static GibbsSampler* _sampler;
+static gibbs_sampler_t* _sampler;
 
 #undef __BEGIN_DECLS
 #undef __END_DECLS
@@ -60,7 +60,7 @@ void _dpm_gaussian_init(
 
         _data    = new data_gaussian_t(cluster, (size_t)samples, Sigma, _pi->vec);
         _gdpm    = new DPM_Gaussian(alpha, Sigma, Sigma_0, mu_0, *_data);
-        _sampler = new GibbsSampler(*_gdpm, *_gdpm, *_data);
+        _sampler = new gibbs_sampler_t(*_gdpm, *_gdpm, *_data);
 
         gsl_matrix_free(Sigma);
         gsl_matrix_free(Sigma_0);

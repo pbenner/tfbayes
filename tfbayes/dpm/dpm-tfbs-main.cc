@@ -153,7 +153,7 @@ char * readfile(const char* file_name, vector<string>& sequences)
         return NULL;
 }
 
-ostream& operator<< (ostream& o, const ProductDirichlet& pd) {
+ostream& operator<< (ostream& o, const product_dirichlet_t& pd) {
         for (size_t j = 0; j < pd.alpha[0].size() - 1; j++) {
                 o << "\t";
                 for (size_t i = 0; i < pd.alpha.size(); i++) {
@@ -166,7 +166,7 @@ ostream& operator<< (ostream& o, const ProductDirichlet& pd) {
 }
 
 static
-void save_result(ostream& file, Sampler& sampler)
+void save_result(ostream& file, sampler_t& sampler)
 {
         const samples_t& samples          = sampler.samples();
         const sampling_history_t& history = sampler.sampling_history();

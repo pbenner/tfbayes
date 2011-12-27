@@ -30,9 +30,9 @@ using namespace std;
 // Gibbs Sampler
 ////////////////////////////////////////////////////////////////////////////////
 
-GibbsSampler::GibbsSampler(mixture_model_t& dpm,
+gibbs_sampler_t::gibbs_sampler_t(mixture_model_t& dpm,
                            gibbs_state_t& state,
-                           const Indexer& indexer,
+                           const indexer_t& indexer,
                            const string name)
         : _dpm(dpm),
           _name(name),
@@ -50,7 +50,7 @@ GibbsSampler::GibbsSampler(mixture_model_t& dpm,
         _sampling_history.components[0].push_back(1);
 }
 
-GibbsSampler::GibbsSampler(const GibbsSampler& sampler)
+gibbs_sampler_t::gibbs_sampler_t(const gibbs_sampler_t& sampler)
         : _dpm(sampler._dpm),
           _name(sampler._name),
           _state(sampler._state),
@@ -60,19 +60,19 @@ GibbsSampler::GibbsSampler(const GibbsSampler& sampler)
 {
 }
 
-GibbsSampler::~GibbsSampler()
+gibbs_sampler_t::~gibbs_sampler_t()
 {
         delete(&_dpm);
         delete(&_sampling_history);
 }
 
-GibbsSampler*
-GibbsSampler::clone() const {
-        return new GibbsSampler(*this);
+gibbs_sampler_t*
+gibbs_sampler_t::clone() const {
+        return new gibbs_sampler_t(*this);
 }
 
 size_t
-GibbsSampler::_gibbs_sample(const index_i& index) {
+gibbs_sampler_t::_gibbs_sample(const index_i& index) {
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
         if (!_dpm.valid_for_sampling(index)) {
@@ -99,9 +99,9 @@ GibbsSampler::_gibbs_sample(const index_i& index) {
 }
 
 size_t
-GibbsSampler::_gibbs_sample() {
+gibbs_sampler_t::_gibbs_sample() {
         size_t sum = 0;
-        for (Indexer::sampling_iterator it = _indexer.sampling_begin();
+        for (indexer_t::sampling_iterator it = _indexer.sampling_begin();
              it != _indexer.sampling_end(); it++) {
                 if(_gibbs_sample(**it)) sum+=1;
         }
@@ -109,27 +109,27 @@ GibbsSampler::_gibbs_sample() {
 }
 
 bool
-GibbsSampler::_sample() {
+gibbs_sampler_t::_sample() {
         return _gibbs_sample();
 }
 
 const sampling_history_t&
-GibbsSampler::sampling_history() const {
+gibbs_sampler_t::sampling_history() const {
         return _sampling_history;
 }
 
 samples_t&
-GibbsSampler::samples() {
+gibbs_sampler_t::samples() {
         return _dpm.samples();
 }
 
 size_t
-GibbsSampler::sampling_steps() const {
+gibbs_sampler_t::sampling_steps() const {
         return _sampling_steps;
 }
 
 void
-GibbsSampler::sample(size_t n, size_t burnin) {
+gibbs_sampler_t::sample(size_t n, size_t burnin) {
         double sum;
         // burn in sampling
         for (size_t i = 0; i < burnin; i++) {
@@ -167,31 +167,31 @@ GibbsSampler::sample(size_t n, size_t burnin) {
 // Hybrid Sampler
 ////////////////////////////////////////////////////////////////////////////////
 
-HybridSampler::HybridSampler(
+hybrid_sampler_t::hybrid_sampler_t(
         mixture_model_t& dpm,
         hybrid_state_t& state,
-        const Indexer& indexer,
+        const indexer_t& indexer,
         const string name,
         bool optimize)
-        : GibbsSampler(dpm, state, indexer, name),
+        : gibbs_sampler_t(dpm, state, indexer, name),
           _state(state), _optimize(optimize)
 {
 }
 
-HybridSampler*
-HybridSampler::clone() const {
-        return new HybridSampler(*this);
+hybrid_sampler_t*
+hybrid_sampler_t::clone() const {
+        return new hybrid_sampler_t(*this);
 }
 
 bool
-HybridSampler::_sample() {
+hybrid_sampler_t::_sample() {
         size_t s = _gibbs_sample();
                    _metropolis_sample();
         return s;
 }
 
 bool
-HybridSampler::_metropolis_sample(cluster_t& cluster) {
+hybrid_sampler_t::_metropolis_sample(cluster_t& cluster) {
         double posterior_ref = _dpm.posterior();
         double posterior_tmp;
 
@@ -225,7 +225,7 @@ accepted:
 }
 
 bool
-HybridSampler::_metropolis_sample() {
+hybrid_sampler_t::_metropolis_sample() {
         for (cl_iterator it = _state.begin(); it != _state.end(); it++) {
                 _metropolis_sample(**it);
         }

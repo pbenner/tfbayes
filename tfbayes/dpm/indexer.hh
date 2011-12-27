@@ -30,9 +30,9 @@
 // Interface for (randomly) indexing data structures
 //
 
-class Indexer {
+class indexer_t {
 public:
-        virtual ~Indexer() {}
+        virtual ~indexer_t() {}
 
         // type definitions
         typedef std::vector<index_i*>::iterator iterator;

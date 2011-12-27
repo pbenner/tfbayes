@@ -67,11 +67,11 @@ public:
 // Multinomial/Dirichlet Model
 ////////////////////////////////////////////////////////////////////////////////
 
-class ProductDirichlet : public component_model_t {
+class product_dirichlet_t : public component_model_t {
 public:
-         ProductDirichlet(const std::matrix<double>& alpha, const sequence_data_t<short>& data);
-         ProductDirichlet(const ProductDirichlet& distribution);
-        ~ProductDirichlet();
+         product_dirichlet_t(const std::matrix<double>& alpha, const sequence_data_t<short>& data);
+         product_dirichlet_t(const product_dirichlet_t& distribution);
+        ~product_dirichlet_t();
 
         // datatypes
         typedef std::vector<double> counts_t;
@@ -83,9 +83,9 @@ public:
         double log_predictive(const range_t& range);
         double log_likelihood() const;
 
-        ProductDirichlet* clone() const;
+        product_dirichlet_t* clone() const;
 
-        friend std::ostream& operator<< (std::ostream& o, const ProductDirichlet& pd);
+        friend std::ostream& operator<< (std::ostream& o, const product_dirichlet_t& pd);
 
 private:
         std::vector<counts_t> alpha;
@@ -100,14 +100,14 @@ private:
 // Markov Chain Mixture
 ////////////////////////////////////////////////////////////////////////////////
 
-class MarkovChainMixture : public component_model_t {
+class markov_chain_mixture_t : public component_model_t {
 public:
-         MarkovChainMixture(size_t alphabet_size, size_t max_order,
-                            const sequence_data_t<short>& data,
-                            const sequence_data_t<cluster_tag_t>& cluster_assignments,
-                            cluster_tag_t cluster_tag);
-         MarkovChainMixture(const MarkovChainMixture& distribution);
-        ~MarkovChainMixture();
+         markov_chain_mixture_t(size_t alphabet_size, size_t max_order,
+                                const sequence_data_t<short>& data,
+                                const sequence_data_t<cluster_tag_t>& cluster_assignments,
+                                cluster_tag_t cluster_tag);
+         markov_chain_mixture_t(const markov_chain_mixture_t& distribution);
+        ~markov_chain_mixture_t();
 
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
@@ -115,9 +115,9 @@ public:
         double predictive(const range_t& range);
         double log_predictive(const range_t& range);
         double log_likelihood() const;
-        MarkovChainMixture* clone() const;
+        markov_chain_mixture_t* clone() const;
 
-        friend std::ostream& operator<< (std::ostream& o, const MarkovChainMixture& pd);
+        friend std::ostream& operator<< (std::ostream& o, const markov_chain_mixture_t& pd);
 
 private:
         size_t  _length;
@@ -152,14 +152,14 @@ private:
 // Variable Order Markov Chain
 ////////////////////////////////////////////////////////////////////////////////
 
-class ParsimoniousTree : public component_model_t {
+class parsimonious_tree_t : public component_model_t {
 public:
-         ParsimoniousTree(size_t alphabet_size, size_t tree_depth,
-                          const sequence_data_t<short>& data,
-                          const sequence_data_t<cluster_tag_t>& cluster_assignments,
-                          cluster_tag_t cluster_tag);
-         ParsimoniousTree(const ParsimoniousTree& distribution);
-        ~ParsimoniousTree();
+         parsimonious_tree_t(size_t alphabet_size, size_t tree_depth,
+                             const sequence_data_t<short>& data,
+                             const sequence_data_t<cluster_tag_t>& cluster_assignments,
+                             cluster_tag_t cluster_tag);
+         parsimonious_tree_t(const parsimonious_tree_t& distribution);
+        ~parsimonious_tree_t();
 
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
@@ -167,9 +167,9 @@ public:
         double predictive(const range_t& range);
         double log_predictive(const range_t& range);
         double log_likelihood() const;
-        ParsimoniousTree* clone() const;
+        parsimonious_tree_t* clone() const;
 
-        friend std::ostream& operator<< (std::ostream& o, const ParsimoniousTree& pd);
+        friend std::ostream& operator<< (std::ostream& o, const parsimonious_tree_t& pd);
 
 private:
         abstract_set_t* _as;
@@ -192,15 +192,15 @@ private:
 // Bivariate Gaussian
 ////////////////////////////////////////////////////////////////////////////////
 
-class BivariateNormal : public component_model_t {
+class bivariate_normal_t : public component_model_t {
 public:
-         BivariateNormal();
-         BivariateNormal(const gsl_matrix* Sigma,
-                         const gsl_matrix* Sigma_0,
-                         const gsl_vector* mu_0,
-                         const data_t<std::vector<double> >& data);
-         BivariateNormal(const BivariateNormal& bn);
-        ~BivariateNormal();
+         bivariate_normal_t();
+         bivariate_normal_t(const gsl_matrix* Sigma,
+                            const gsl_matrix* Sigma_0,
+                            const gsl_vector* mu_0,
+                            const data_t<std::vector<double> >& data);
+         bivariate_normal_t(const bivariate_normal_t& bn);
+        ~bivariate_normal_t();
 
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
@@ -210,9 +210,9 @@ public:
         double log_likelihood() const;
         const gsl_vector* mean() const;
 
-        BivariateNormal* clone() const;
+        bivariate_normal_t* clone() const;
 
-        friend std::ostream& operator<< (std::ostream& o, const BivariateNormal& pd);
+        friend std::ostream& operator<< (std::ostream& o, const bivariate_normal_t& pd);
 
 private:
         // prior

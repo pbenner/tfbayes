@@ -27,7 +27,7 @@
 using namespace std;
 
 void
-DpmTfbs::test_metropolis_hastings() {
+dpm_tfbs_t::test_metropolis_hastings() {
         seq_index_t index1(0,53);
         seq_index_t index2(1,26);
         double l1, l2;
@@ -58,7 +58,7 @@ DpmTfbs::test_metropolis_hastings() {
 }
 
 void
-DpmTfbs::test_moves() {
+dpm_tfbs_t::test_moves() {
         seq_index_t index1(0,0);
         seq_index_t index2(0,10);
         seq_index_t index3(1,10);
@@ -92,7 +92,7 @@ DpmTfbs::test_moves() {
 }
 
 void
-DpmTfbs::test_background() {
+dpm_tfbs_t::test_background() {
         seq_index_t index1(0,0);
         seq_index_t index2(0,10);
         seq_index_t index3(0,11);
@@ -151,7 +151,7 @@ DpmTfbs::test_background() {
 }
 
 void
-DpmTfbs::test() {
+dpm_tfbs_t::test() {
         seq_index_t index1(0,0);
         seq_index_t index2(1,0);
         seq_index_t index3(2,0);

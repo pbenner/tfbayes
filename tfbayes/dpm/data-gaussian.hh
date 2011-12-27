@@ -31,7 +31,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-class data_gaussian_t : public Indexer, public data_t<std::vector<double> > {
+class data_gaussian_t : public indexer_t, public data_t<std::vector<double> > {
 public:
          data_gaussian_t(size_t cluster, size_t samples, gsl_matrix* Sigma, const double* pi);
          data_gaussian_t(const data_gaussian_t& data);

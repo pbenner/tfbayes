@@ -28,7 +28,7 @@
 #include <mixture-model.hh>
 #include <state.hh>
 
-class Sampler : public clonable {
+class sampler_t : public clonable {
 public:
         virtual void sample(size_t n, size_t burnin) = 0;
         virtual const sampling_history_t& sampling_history() const = 0;
@@ -37,16 +37,16 @@ public:
 protected:
 };
 
-class GibbsSampler : public Sampler {
+class gibbs_sampler_t : public sampler_t {
 public:
-         GibbsSampler(mixture_model_t& dpm,
-                      gibbs_state_t& state,
-                      const Indexer& indexer,
-                      const std::string name = "");
-         GibbsSampler(const GibbsSampler& sampler);
-        ~GibbsSampler();
+         gibbs_sampler_t(mixture_model_t& dpm,
+                         gibbs_state_t& state,
+                         const indexer_t& indexer,
+                         const std::string name = "");
+         gibbs_sampler_t(const gibbs_sampler_t& sampler);
+        ~gibbs_sampler_t();
 
-        GibbsSampler* clone() const;
+        gibbs_sampler_t* clone() const;
 
         void sample(size_t n, size_t burnin);
         const sampling_history_t& sampling_history() const;
@@ -64,22 +64,22 @@ protected:
 
 private:
         gibbs_state_t& _state;
-        const Indexer& _indexer;
+        const indexer_t& _indexer;
 
         // gibbs sampler history
         size_t _sampling_steps;
         sampling_history_t& _sampling_history;
 };
 
-class HybridSampler : public GibbsSampler {
+class hybrid_sampler_t : public gibbs_sampler_t {
 public:
-        HybridSampler(mixture_model_t& dpm,
-                      hybrid_state_t& state,
-                      const Indexer& indexer,
-                      const std::string name = "",
-                      bool optimize = false);
+        hybrid_sampler_t(mixture_model_t& dpm,
+                         hybrid_state_t& state,
+                         const indexer_t& indexer,
+                         const std::string name = "",
+                         bool optimize = false);
 
-        HybridSampler* clone() const;
+        hybrid_sampler_t* clone() const;
 
 protected:
         virtual bool _sample();

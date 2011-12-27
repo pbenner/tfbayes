@@ -29,22 +29,22 @@
 #include <dpm-tfbs.hh>
 #include <pmcmc.hh>
 
-class dpm_tfbs_sampler_t : public PopulationMCMC {
+class dpm_tfbs_sampler_t : public population_mcmc_t {
 public:
         dpm_tfbs_sampler_t(const tfbs_options_t& options, const std::vector<std::string>& sequences, size_t n)
-                : PopulationMCMC(n),
+                : population_mcmc_t(n),
                   _data(sequences, options.tfbs_length),
                   _gdpm(n, NULL) {
                 for (size_t i = 0; i < _size; i++) {
                         std::stringstream ss; ss << "Sampler " << i+1;
-                        _gdpm[i]       = new DpmTfbs(options, _data);
-                        _population[i] = new HybridSampler(*_gdpm[i], _gdpm[i]->state(), _data, ss.str(),
-                                                           options.metropolis_optimize);
+                        _gdpm[i]       = new dpm_tfbs_t(options, _data);
+                        _population[i] = new hybrid_sampler_t(*_gdpm[i], _gdpm[i]->state(), _data, ss.str(),
+                                                              options.metropolis_optimize);
                 }
         }
 
         data_tfbs_t _data;
-        std::vector<DpmTfbs*> _gdpm;
+        std::vector<dpm_tfbs_t*> _gdpm;
 };
 
 #endif /* DPM_TFBS_HH */

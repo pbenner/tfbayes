@@ -75,7 +75,7 @@ static void sanity_check() {
                 cluster_assignments[i][n_str.length()-1] = 2;
                 cluster_assignments[i][n_str.length()-2] = 2;
         }
-        MarkovChainMixture model(ALPHABET_SIZE, CONTEXT, data, cluster_assignments, 0);
+        markov_chain_mixture_t model(ALPHABET_SIZE, CONTEXT, data, cluster_assignments, 0);
         for (size_t i = 0; i < k; i++) {
                 cluster_assignments[i][n_str.length()-1] = 1;
                 cluster_assignments[i][n_str.length()-2] = 1;

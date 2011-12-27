@@ -32,7 +32,7 @@
 #include <component-model.hh>
 #include <indexer.hh>
 
-class data_tfbs_t : public Indexer, public sequence_data_t<short> {
+class data_tfbs_t : public indexer_t, public sequence_data_t<short> {
 public:
          data_tfbs_t(const std::vector<std::string>& sequences, size_t tfbs_length);
          data_tfbs_t(const data_tfbs_t& data);
