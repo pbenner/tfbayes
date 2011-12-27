@@ -51,7 +51,7 @@ libdpm_la_SOURCES =                                                           \
 	component-model.cc component-model.hh                                 \
 	mixture-model.hh                                                      \
 	pmcmc.cc pmcmc.hh                                                     \
-	sampler.cc sampler.hh                                                 \
+	sampler.cc sampler.hh dpm-tfbs-sampler.hh                             \
 	init.cc init.hh                                                       \
 	interface.cc interface.hh                                             \
 	dpm-gaussian-interface.cc dpm-gaussian-interface.hh                   \

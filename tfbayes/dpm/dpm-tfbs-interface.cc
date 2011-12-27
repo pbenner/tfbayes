@@ -24,7 +24,7 @@
 #include <init.hh>
 #include <dpm-tfbs-interface.hh>
 #include <dpm-tfbs.hh>
-#include <pmcmc.hh>
+#include <dpm-tfbs-sampler.hh>
 
 #include <tfbayes/exception.h>
 #include <tfbayes/fasta.hh>
@@ -50,10 +50,7 @@ typedef struct {
 } options_t;
 
 static options_t _options;
-static DpmTfbs* _gdpm;
-static data_tfbs_t* _data;
-static GibbsSampler* _sampler;
-static PopulationMCMC* _pmcmc;
+static dpm_tfbs_sampler_t* _pmcmc;
 static vector<string> _sequences;
 
 ostream&
@@ -214,10 +211,7 @@ void _dpm_tfbs_init(const char* filename)
         tfbs_options.baseline_weights = baseline_weights;
         tfbs_options.baseline_priors  = baseline_priors;
 
-        _data      = new data_tfbs_t(_sequences, _options.tfbs_length);
-        _gdpm      = new DpmTfbs(tfbs_options, *_data);
-        _sampler   = new HybridSampler(*_gdpm, _gdpm->state(), *_data);
-        _pmcmc     = new PopulationMCMC(*_sampler, _options.population_size);
+        _pmcmc = new dpm_tfbs_sampler_t(tfbs_options, _sequences, _options.population_size);
 
         cout << _options << endl;
 }
@@ -236,12 +230,12 @@ void _dpm_tfbs_save(const char* filename)
 }
 
 unsigned int _dpm_tfbs_num_clusters() {
-        return _gdpm->state().size();
+        return _pmcmc->_gdpm[0]->state().size();
 }
 
 matrix_t* _dpm_tfbs_get_posterior() {
         matrix_t* result;
-        const vector<vector<double> >& probabilities = _gdpm->samples().probabilities;
+        const vector<vector<double> >& probabilities = _pmcmc->samples().probabilities;
         size_t n = probabilities.size();
         size_t m = 0;
 
@@ -271,13 +265,13 @@ matrix_t* _dpm_tfbs_get_posterior() {
 
 matrix_t* _dpm_tfbs_cluster_assignments() {
         matrix_t* result;
-        size_t n = _data->size();
+        size_t n = _pmcmc->_data.size();
         size_t m = 0;
 
         // compute maximum length
         for (size_t i = 0; i < n; i++) {
-                if (m < _data->size(i)) {
-                        m = _data->size(i);
+                if (m < _pmcmc->_data.size(i)) {
+                        m = _pmcmc->_data.size(i);
                 }
         }
 
@@ -290,10 +284,10 @@ matrix_t* _dpm_tfbs_cluster_assignments() {
                 }
         }
         // copy samples
-        for (data_tfbs_t::const_iterator it = _data->begin();
-             it != _data->end(); it++) {
+        for (data_tfbs_t::const_iterator it = _pmcmc->_data.begin();
+             it != _pmcmc->_data.end(); it++) {
                 const index_i& index = **it;
-                result->mat[index[0]][index[1]] = _gdpm->state()[index];
+                result->mat[index[0]][index[1]] = _pmcmc->_gdpm[0]->state()[index];
         }
         return result;
 }
@@ -323,7 +317,7 @@ vector_t* _dpm_tfbs_hist_switches() {
 }
 
 void _dpm_tfbs_print() {
-        cout << *_gdpm << endl;
+        cout << _pmcmc->_gdpm[0] << endl;
 }
 
 void _dpm_tfbs_sample(unsigned int n, unsigned int burnin) {
@@ -331,8 +325,6 @@ void _dpm_tfbs_sample(unsigned int n, unsigned int burnin) {
 }
 
 void _dpm_tfbs_free() {
-        delete(_data);
-        delete(_gdpm);
         delete(_pmcmc);
 }
 

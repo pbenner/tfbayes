@@ -237,6 +237,9 @@ DpmTfbs::likelihood() const {
                 cluster_t& cluster = **it;
                 result += cluster.model().log_likelihood();
         }
+
+        assert(!isnan(result));
+
         return result;
 }
 
@@ -247,6 +250,8 @@ DpmTfbs::posterior() const {
         result += _state.num_tfbs*_lambda_log;
         result += _state[bg_cluster_tag].size()*_lambda_inv_log;
         result += _process_prior->joint();
+
+        assert(!isnan(result));
 
         return result;
 }

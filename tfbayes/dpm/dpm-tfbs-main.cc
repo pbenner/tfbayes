@@ -29,7 +29,7 @@
 
 #include <init.hh>
 #include <dpm-tfbs.hh>
-#include <pmcmc.hh>
+#include <dpm-tfbs-sampler.hh>
 
 #include <tfbayes/exception.h>
 #include <tfbayes/fasta.hh>
@@ -163,20 +163,6 @@ ostream& operator<< (ostream& o, const ProductDirichlet& pd) {
 }
 
 static
-void save_motifs(ostream& file, const DpmTfbs& dpm)
-{
-        const mixture_state_t& cm = dpm.state();
-
-        for (mixture_state_t::const_iterator it = cm.begin();
-             it != cm.end(); it++) {
-                if ((*it)->cluster_tag() == 0) {
-                        file << "cluster_bg" << " =" << endl;
-                        file << static_cast<const ProductDirichlet&>((*it)->model());
-                }
-        }
-}
-
-static
 void save_result(ostream& file, Sampler& sampler)
 {
         const samples_t& samples          = sampler.samples();
@@ -255,10 +241,7 @@ void run_dpm(const char* file_name)
         tfbs_options.baseline_priors  = baseline_priors;
 
         // create data, dpm, and sampler objects
-        data_tfbs_t& data      = *new data_tfbs_t(sequences, options.tfbs_length);
-        DpmTfbs& gdpm          = *new DpmTfbs(tfbs_options, data);
-        HybridSampler& sampler = *new HybridSampler(gdpm, gdpm.state(), data);
-        PopulationMCMC& pmcmc  = *new PopulationMCMC(sampler, options.population_size);
+        dpm_tfbs_sampler_t pmcmc(tfbs_options, sequences, options.population_size);
 
         // execute the sampler
         pmcmc.sample(options.samples, options.burnin);
@@ -266,19 +249,13 @@ void run_dpm(const char* file_name)
         // save result
         if (options.save == "") {
                 save_result(cout, pmcmc);
-                save_motifs(cout, gdpm);
         }
         else {
                 ofstream file;
                 file.open(options.save.c_str());
                 save_result(file, pmcmc);
-                save_motifs(file, gdpm);
                 file.close();
         }
-
-        // free memory
-        free(&data);
-        free(&pmcmc);
 }
 
 static

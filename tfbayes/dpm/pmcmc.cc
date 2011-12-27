@@ -20,7 +20,6 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <iostream>
-#include <sstream>
 
 #include <assert.h>
 #include <pthread.h>
@@ -30,20 +29,11 @@
 
 using namespace std;
 
-PopulationMCMC::PopulationMCMC(Sampler& sampler, size_t n)
-        : _population(n, NULL), _size(n),
-          _sampling_history(NULL), _samples(NULL)
+PopulationMCMC::PopulationMCMC(size_t n)
+        : _population(n, NULL),
+          _size(n), _sampling_history(NULL), _samples(NULL)
 {
         assert(n >= 1);
-
-        _population[0] = &sampler;
-        _population[0]->set_name("Sampler 1");
-        for (size_t i = 1; i < _size; i++) {
-                stringstream ss;
-                ss << "Sampler " << i+1;
-                _population[i] = (Sampler*)sampler.clone();
-                _population[i]->set_name(ss.str());
-        }
 }
 
 PopulationMCMC::PopulationMCMC(const PopulationMCMC& pmcmc)

@@ -28,9 +28,9 @@
 
 class PopulationMCMC : public Sampler {
 public:
-         PopulationMCMC(Sampler& sampler, size_t n);
-         PopulationMCMC(const PopulationMCMC& pmcmc);
-        ~PopulationMCMC();
+        PopulationMCMC(size_t n);
+        PopulationMCMC(const PopulationMCMC& pmcmc);
+        virtual ~PopulationMCMC();
 
         PopulationMCMC* clone() const;
 
@@ -49,7 +49,7 @@ public:
         size_t sampling_steps() const;
         void set_name(const std::string name);
 
-private:
+protected:
         std::vector<Sampler*> _population;
         const size_t _size;
         sampling_history_t* _sampling_history;
