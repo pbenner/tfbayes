@@ -116,7 +116,7 @@ double product_dirichlet_t::predictive(const range_t& range) {
 double product_dirichlet_t::log_predictive(const range_t& range) {
         const double result = predictive(range);
 
-        assert(result != 0);
+        assert(result != 0.0);
 
         return log(result);
 }
