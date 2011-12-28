@@ -42,10 +42,12 @@ options = {
     'alpha'               : 0.05,
     'discount'            : 0.0,
     'lambda'              : 0.01,
-    'context'             : 2,
     'metropolis_optimize' : True,
     'process_prior'       : "pitman-yor process",
     'background_model'    : "independence",
+    'background_alpha'    : 0.5,
+    'background_context'  : 2,
+    'background_weights'  : 'decay',
     'samples'             : (1000,100),
     'population_size'     : 1,
     'tfbs_length'         : 10,
@@ -118,12 +120,16 @@ def parse_config(config_file):
         options['discount'] = float(config_parser.get('TFBS-Sampler', 'discount'))
     if config_parser.has_option('TFBS-Sampler', 'lambda'):
         options['lambda'] = float(config_parser.get('TFBS-Sampler', 'lambda'))
-    if config_parser.has_option('TFBS-Sampler', 'context'):
-        options['context'] = int(config_parser.get('TFBS-Sampler', 'context'))
     if config_parser.has_option('TFBS-Sampler', 'process-prior'):
         options['process_prior'] = config_parser.get('TFBS-Sampler', 'process-prior').strip()
     if config_parser.has_option('TFBS-Sampler', 'background-model'):
         options['background_model'] = config_parser.get('TFBS-Sampler', 'background-model').strip()
+    if config_parser.has_option('TFBS-Sampler', 'background-alpha'):
+        options['background_alpha'] = float(config_parser.get('TFBS-Sampler', 'background-alpha'))
+    if config_parser.has_option('TFBS-Sampler', 'background-context'):
+        options['background_context'] = int(config_parser.get('TFBS-Sampler', 'background-context'))
+    if config_parser.has_option('TFBS-Sampler', 'background-weights'):
+        options['background_weights'] = config_parser.get('TFBS-Sampler', 'background-weights')
     if config_parser.has_option('TFBS-Sampler', 'tfbs-length'):
         options['tfbs_length'] = int(config_parser.get('TFBS-Sampler', 'tfbs-length'))
     if config_parser.has_option('TFBS-Sampler', 'metropolis-optimize'):

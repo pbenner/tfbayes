@@ -141,21 +141,30 @@ double product_dirichlet_t::log_likelihood() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 markov_chain_mixture_t::markov_chain_mixture_t(
-        size_t alphabet_size, size_t max_context,
+        size_t alphabet_size,
+        const tfbs_options_t& options,
         const sequence_data_t<short>& data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
         cluster_tag_t cluster_tag)
         : _data(data), _cluster_assignments(cluster_assignments),
-          _cluster_tag(cluster_tag), _max_context(max_context),
+          _cluster_tag(cluster_tag), _max_context(options.background_context),
           _alphabet_size(alphabet_size)
 {
-        _length = context_t::counts_size(alphabet_size, max_context);
+        _length = context_t::counts_size(alphabet_size, _max_context);
         _alpha  = (double*)malloc(_length*sizeof(double));
         _counts = (double*)malloc(_length*sizeof(double));
         _counts_sum = (double*)malloc(_length/_alphabet_size*sizeof(double));
         _parents = (int*)malloc(_length*sizeof(int));
-        _weights = new entropy_weights_t(_length, _alphabet_size);
-//        _weights = new decay_weights_t();
+        if (options.background_weights == "entropy") {
+                _weights = new entropy_weights_t(_length, _alphabet_size);
+        }
+        else if (options.background_weights == "decay") {
+                _weights = new decay_weights_t();
+        }
+        else {
+                cerr << "Error: Unknown background weights." << endl;
+                exit(EXIT_FAILURE);
+        }
 
         /* for likelihood computations */
         _counts_tmp = (double*)malloc(_length*sizeof(double));
@@ -166,7 +175,7 @@ markov_chain_mixture_t::markov_chain_mixture_t(
         }
         /* init counts */
         for (size_t i = 0; i < _length; i++) {
-                _alpha[i]  = 0.5;
+                _alpha[i]  = options.background_alpha;
                 _counts[i] = 0.0;
                 _counts_sum[i/_alphabet_size] += _alpha[i] + _counts[i];
         }

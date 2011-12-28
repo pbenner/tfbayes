@@ -43,10 +43,12 @@ typedef struct _options_t {
         double alpha;
         double discount;
         double lambda;
-        size_t context;
         bool metropolis_optimize;
         const char* process_prior;
         const char* background_model;
+        double background_alpha;
+        size_t background_context;
+        const char* background_weights;
         size_t population_size;
         string save;
         _options_t()
@@ -56,10 +58,12 @@ typedef struct _options_t {
                   alpha(0.05),
                   discount(0.0),
                   lambda(0.01),
-                  context(2),
                   metropolis_optimize(true),
                   process_prior("pitman-yor process"),
                   background_model("independence"),
+                  background_alpha(0.5),
+                  background_context(2),
+                  background_weights("decay"),
                   population_size(1),
                   save()
                 { }
@@ -70,14 +74,16 @@ operator<<(std::ostream& o, const _options_t& options) {
         o << "Options:"              << endl
           << "-> samples             = " << options.samples             << endl
           << "-> burnin              = " << options.burnin              << endl
-          << "-> tfbs_length         = " << options.tfbs_length         << endl
           << "-> alpha               = " << options.alpha               << endl
           << "-> discount            = " << options.discount            << endl
           << "-> lambda              = " << options.lambda              << endl
-          << "-> context             = " << options.context             << endl
-          << "-> metropolis_optimize = " << options.metropolis_optimize << endl
+          << "-> tfbs_length         = " << options.tfbs_length         << endl
           << "-> process prior       = " << options.process_prior       << endl
           << "-> background model    = " << options.background_model    << endl
+          << "-> background_alpha    = " << options.background_alpha    << endl
+          << "-> background_context  = " << options.background_context  << endl
+          << "-> background_weights  = " << options.background_weights  << endl
+          << "-> metropolis_optimize = " << options.metropolis_optimize << endl
           << "-> population_size     = " << options.population_size     << endl
           << "-> save                = " << options.save                << endl;
         return o;
@@ -237,10 +243,12 @@ void run_dpm(const char* file_name)
         tfbs_options.lambda              = options.lambda;
         tfbs_options.discount            = options.discount;
         tfbs_options.tfbs_length         = options.tfbs_length;
-        tfbs_options.context             = options.context;
         tfbs_options.metropolis_optimize = options.metropolis_optimize;
         tfbs_options.process_prior       = options.process_prior;
         tfbs_options.background_model    = options.background_model;
+        tfbs_options.background_alpha    = options.background_alpha;
+        tfbs_options.background_context  = options.background_context;
+        tfbs_options.background_weights  = options.background_weights;
         tfbs_options.baseline_weights    = baseline_weights;
         tfbs_options.baseline_priors     = baseline_priors;
 
@@ -319,7 +327,7 @@ int main(int argc, char *argv[])
                         options.lambda = atof(optarg);
                         break;
                 case 'c':
-                        options.context = atoi(optarg);
+                        options.background_context = atoi(optarg);
                         break;
                 case 'e':
                         options.save = string(optarg);

@@ -30,23 +30,11 @@
 #include <data-tfbs.hh>
 #include <mixture-model.hh>
 
+#include <dpm-tfbs-options.hh>
 #include <dpm-tfbs-prior.hh>
 #include <dpm-tfbs-state.hh>
 
 #include <tfbayes/linalg.h>
-
-typedef struct {
-        size_t tfbs_length;
-        double alpha;
-        double discount;
-        double lambda;
-        size_t context;
-        bool metropolis_optimize;
-        std::string process_prior;
-        std::string background_model;
-        std::vector<double> baseline_weights;
-        std::vector<std::matrix<double> > baseline_priors;
-} tfbs_options_t;
 
 class dpm_tfbs_t : public mixture_model_t {
 public:

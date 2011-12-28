@@ -65,13 +65,13 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
                 bg_cluster_tag = _state.add_cluster(bg);
         }
         else if (options.background_model == "markov chain mixture") {
-                assert(options.context >= 0);
-                markov_chain_mixture_t* bg = new markov_chain_mixture_t(ALPHABET_SIZE, options.context, _data, _state.cluster_assignments, 0);
+                assert(options.background_context >= 0);
+                markov_chain_mixture_t* bg = new markov_chain_mixture_t(ALPHABET_SIZE, options, _data, _state.cluster_assignments, 0);
                 bg_cluster_tag = _state.add_cluster(bg);
         }
         else if (options.background_model == "parsimonious tree") {
-                assert(options.context >= 0);
-                parsimonious_tree_t* bg = new parsimonious_tree_t(ALPHABET_SIZE, options.context, _data, _state.cluster_assignments, 0);
+                assert(options.background_context >= 0);
+                parsimonious_tree_t* bg = new parsimonious_tree_t(ALPHABET_SIZE, options.background_context, _data, _state.cluster_assignments, 0);
                 bg_cluster_tag = _state.add_cluster(bg);
         }
         else {

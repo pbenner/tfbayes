@@ -39,6 +39,7 @@
 #include <datatypes.hh>
 #include <mixture-weights.hh>
 #include <nucleotide-sequence.hh>
+#include <dpm-tfbs-options.hh>
 
 #include <parsmm/abstract_set.h>
 #include <parsmm/static_pars_tree.h>
@@ -103,7 +104,8 @@ private:
 
 class markov_chain_mixture_t : public component_model_t {
 public:
-         markov_chain_mixture_t(size_t alphabet_size, size_t max_order,
+         markov_chain_mixture_t(size_t alphabet_size,
+                                const tfbs_options_t& options,
                                 const sequence_data_t<short>& data,
                                 const sequence_data_t<cluster_tag_t>& cluster_assignments,
                                 cluster_tag_t cluster_tag);

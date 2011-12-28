@@ -75,7 +75,11 @@ static void sanity_check() {
                 cluster_assignments[i][n_str.length()-1] = 2;
                 cluster_assignments[i][n_str.length()-2] = 2;
         }
-        markov_chain_mixture_t model(ALPHABET_SIZE, CONTEXT, data, cluster_assignments, 0);
+        tfbs_options_t options;
+        options.background_alpha   = 0.5;
+        options.background_context = CONTEXT;
+        options.background_weights = "entropy";
+        markov_chain_mixture_t model(ALPHABET_SIZE, options, data, cluster_assignments, 0);
         for (size_t i = 0; i < k; i++) {
                 cluster_assignments[i][n_str.length()-1] = 1;
                 cluster_assignments[i][n_str.length()-2] = 1;
