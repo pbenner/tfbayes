@@ -147,22 +147,22 @@ markov_chain_mixture_t::markov_chain_mixture_t(
         cluster_tag_t cluster_tag)
         : _data(data), _cluster_assignments(cluster_assignments),
           _cluster_tag(cluster_tag), _max_context(max_context),
-          _alphabet_size(alphabet_size), _entropy_max(log(_alphabet_size))
+          _alphabet_size(alphabet_size)
 {
         _length = context_t::counts_size(alphabet_size, max_context);
         _alpha  = (double*)malloc(_length*sizeof(double));
         _counts = (double*)malloc(_length*sizeof(double));
         _counts_sum = (double*)malloc(_length/_alphabet_size*sizeof(double));
-        _entropy    = (double*)malloc(_length/_alphabet_size*sizeof(double));
-        _parents    = (int*)malloc(_length*sizeof(int));
+        _parents = (int*)malloc(_length*sizeof(int));
+        _weights = new entropy_weights_t(_length, _alphabet_size);
+//        _weights = new decay_weights_t();
 
         /* for likelihood computations */
         _counts_tmp = (double*)malloc(_length*sizeof(double));
 
-        /* init entropies */
+        /* init counts_sum to zero */
         for (size_t i = 0; i < _length/_alphabet_size; i++) {
-                _entropy[i]    = 1;
-                _counts_sum[i] = 0; /* also init counts_sum to zero */
+                _counts_sum[i] = 0;
         }
         /* init counts */
         for (size_t i = 0; i < _length; i++) {
@@ -191,18 +191,17 @@ markov_chain_mixture_t::markov_chain_mixture_t(
 
 markov_chain_mixture_t::markov_chain_mixture_t(const markov_chain_mixture_t& distribution)
         : _length(distribution._length),
+          _weights(distribution._weights->clone()),
           _data(distribution._data),
           _context(distribution._context),
           _cluster_assignments(distribution._cluster_assignments),
           _cluster_tag(distribution._cluster_tag),
           _max_context(distribution._max_context),
-          _alphabet_size(distribution._alphabet_size),
-          _entropy_max(distribution._entropy_max)
+          _alphabet_size(distribution._alphabet_size)
 {
         _alpha      = (double*)malloc(_length*sizeof(double));
         _counts     = (double*)malloc(_length*sizeof(double));
         _counts_sum = (double*)malloc(_length/_alphabet_size*sizeof(double));
-        _entropy    = (double*)malloc(_length/_alphabet_size*sizeof(double));
         _parents    = (int*)malloc(_length*sizeof(int));
 
         /* for likelihood computations */
@@ -212,7 +211,6 @@ markov_chain_mixture_t::markov_chain_mixture_t(const markov_chain_mixture_t& dis
         memcpy(_alpha,   distribution._alpha,   _length*sizeof(double));
         memcpy(_counts,  distribution._counts,  _length*sizeof(double));
         memcpy(_counts_sum, distribution._counts_sum, _length/_alphabet_size*sizeof(double));
-        memcpy(_entropy, distribution._entropy, _length/_alphabet_size*sizeof(double));
         memcpy(_parents, distribution._parents, _length*sizeof(int));
 }
 
@@ -220,9 +218,9 @@ markov_chain_mixture_t::~markov_chain_mixture_t() {
         free(_alpha);
         free(_counts);
         free(_parents);
-        free(_entropy);
         free(_counts_sum);
         free(_counts_tmp);
+        delete(_weights);
 }
 
 markov_chain_mixture_t*
@@ -260,20 +258,6 @@ markov_chain_mixture_t::max_to_context(const range_t& range) const
         return to-position-length+1;
 }
 
-void
-markov_chain_mixture_t::update_entropy(int code)
-{
-        const int from = code - (code%_alphabet_size);
-        const int k    = code/_alphabet_size;
-
-        _entropy[k] = 0;
-        for (size_t i = from; i < from+_alphabet_size; i++) {
-                const double p = (_counts[i]+_alpha[i])/_counts_sum[k];
-                _entropy[k] -= p*log(p);
-        }
-        _entropy[k] /= _entropy_max;
-}
-
 size_t
 markov_chain_mixture_t::add(const range_t& range) {
         const size_t sequence     = range.index[0];
@@ -290,7 +274,7 @@ markov_chain_mixture_t::add(const range_t& range) {
                         if (code != -1) {
                                 _counts[code]++;
                                 _counts_sum[code/_alphabet_size]++;
-                                update_entropy(code);
+                                _weights->update(code, _alpha, _counts, _counts_sum);
                         }
                 }
         }
@@ -314,7 +298,7 @@ markov_chain_mixture_t::remove(const range_t& range) {
                         if (code != -1) {
                                 _counts[code]--;
                                 _counts_sum[code/_alphabet_size]--;
-                                update_entropy(code);
+                                _weights->update(code, _alpha, _counts, _counts_sum);
                         }
                 }
         }
@@ -338,25 +322,16 @@ double markov_chain_mixture_t::predictive(const range_t& range) {
                 const size_t pos   = range.index[1]+i;
                 const size_t c_max = min(from_context+i, _max_context);
                 const size_t c_min = i < length ? 0 : i-(length-1);
-                double weight = 0;
-                double weight_sum = 0;
                 double partial_result = 0;
                 for (size_t c = c_min; c <= c_max; c++) {
                         const int code = _context[sequence][pos][c];
-                        assert(code != -1);
-                        // compute mixture weight
-                        if (c == c_max) {
-                                weight = 1 - weight_sum;
-                        }
-                        else {
-                                weight = (1 - _entropy[code/_alphabet_size])*(1 - weight_sum);
-                        }
-                        weight_sum += weight;
                         // compute mixture component
                         partial_result +=
-                                weight*(_counts[code]+_alpha[code])/
+                                _weights->next(code, c, c_max)*
+                                (_counts[code]+_alpha[code])/
                                 _counts_sum[code/_alphabet_size];
                 }
+                _weights->reset();
                 // save result
                 result *= partial_result;
         }
@@ -371,8 +346,6 @@ double markov_chain_mixture_t::log_predictive(const range_t& range) {
 double markov_chain_mixture_t::log_likelihood(size_t pos) const
 {
         const double n = _counts_tmp[pos];
-        double weight = 0;
-        double weight_sum = 0;
         double result = 0;
         vector<int> path;
 
@@ -383,18 +356,13 @@ double markov_chain_mixture_t::log_likelihood(size_t pos) const
         // compute likelihood for this node
         for (size_t c = 0; c < path.size(); c++) {
                 const int code = path[path.size()-c-1];
-                // compute mixture weight
-                if (c == path.size()) {
-                        weight = 1 - weight_sum;
-                }
-                else {
-                        weight = (1 - _entropy[code/_alphabet_size])*(1 - weight_sum);
-                }
-                weight_sum += weight;
                 // compute mixture component
-                result += weight*(_counts[code]+_alpha[code])/
+                result += _weights->next(code, c, path.size())*
+                        (_counts[code]+_alpha[code])/
                         _counts_sum[code/_alphabet_size];
         }
+        _weights->reset();
+
         return n*log(result);
 }
 

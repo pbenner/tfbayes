@@ -37,6 +37,7 @@
 #include <clonable.hh>
 #include <data.hh>
 #include <datatypes.hh>
+#include <mixture-weights.hh>
 #include <nucleotide-sequence.hh>
 
 #include <parsmm/abstract_set.h>
@@ -129,8 +130,9 @@ private:
         /* temporary copy of counts and counts_sum to compute
          * likelihoods */
         double* _counts_tmp;
-        double* _entropy;
         int * _parents;
+
+        mixture_weights_t* _weights;
 
         const sequence_data_t<short>&         _data;
               sequence_data_t<context_t>      _context;
@@ -139,12 +141,10 @@ private:
         const cluster_tag_t _cluster_tag;
         const size_t        _max_context;
         const size_t        _alphabet_size;
-        const double        _entropy_max;
 
         // internal methods
         size_t max_from_context(const range_t& range) const;
         size_t max_to_context(const range_t& range) const;
-        void update_entropy(int code);
         double log_likelihood(size_t pos) const;
         void substract_counts(size_t pos) const;
 };
