@@ -367,7 +367,7 @@ double markov_chain_mixture_t::log_likelihood(size_t pos) const
         for (int i = pos; i != -1; i = _parents[i]) {
                 path.push_back(i);
         }
-        std::reverse(path.begin(), path.end());
+        reverse(path.begin(), path.end());
         // compute likelihood for this node
         _weights->init(path);
         for (size_t c = 0; c < path.size(); c++) {
