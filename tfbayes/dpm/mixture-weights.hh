@@ -98,10 +98,16 @@ public:
         virtual void init(const std::vector<int>& codes) {
                 const size_t n = codes.size();
                 double weights_sum = 0.0;
+                double certainty_sum = 0.0;
                 std::vector<double> weights(n, 0.0);
 
                 for (size_t i = 0; i < n; i++) {
-                        weights[i] = (1.0 - entropy[codes[i]/alphabet_size])*(1 - weights_sum);
+                        certainty_sum += (1.0 - entropy[codes[i]/alphabet_size]);
+                }
+                for (size_t i = 0; i < n; i++) {
+                        const double certainty = certainty_sum == 0.0 ?
+                                1.0/n : (1.0 - entropy[codes[i]/alphabet_size])/certainty_sum;
+                        weights[i] = certainty*(1 - weights_sum);
                         weights_sum += weights[i];
                 }
                 for (size_t i = 0; i < n; i++) {
