@@ -105,7 +105,7 @@ public:
                 for (size_t i = 0; i < n; i++) {
                         const double h  = entropy[codes[i]/alphabet_size];
                         const double c  = (2.0 - h)/certainty_sum1;
-                        operator[](i)   = c*(1 - certainty_sum2);
+                        operator[](i)   = c*(1.0 - certainty_sum2);
                         weights_sum    += operator[](i);
                         certainty_sum2 += c;
                 }
