@@ -201,10 +201,8 @@ static void sanity_check() {
 
                         ml = pt_ln_marginal_likelihood(pt, counts1);
                         cout.precision(10);
-                        cout << "Predictive: "
-                             << "P(" << sequence1 << ")/P(" << sequence2 << ")"
-                             << " = "
-                             << ml << " - " << ml_ref << " = "
+                        cout << sequence1
+                             << ": "
                              << exp(ml-ml_ref)
                              << endl;
                         sum += exp(ml-ml_ref);

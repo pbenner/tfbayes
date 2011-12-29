@@ -76,7 +76,7 @@ static void sanity_check() {
                 cluster_assignments[i][n_str.length()-2] = 2;
         }
         tfbs_options_t options;
-        options.background_alpha   = 0.5;
+        options.background_alpha   = 1;
         options.background_context = CONTEXT;
         options.background_weights = "entropy";
         markov_chain_mixture_t model(ALPHABET_SIZE, options, data, cluster_assignments, 0);

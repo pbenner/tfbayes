@@ -159,7 +159,7 @@ markov_chain_mixture_t::markov_chain_mixture_t(
                 _weights = new entropy_weights_t(_alphabet_size, _max_context, _length);
         }
         else if (options.background_weights == "decay") {
-                _weights = new decay_weights_t();
+                _weights = new decay_weights_t(_max_context);
         }
         else {
                 cerr << "Error: Unknown background weights." << endl;
