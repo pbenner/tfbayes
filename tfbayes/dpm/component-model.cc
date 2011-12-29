@@ -156,7 +156,7 @@ markov_chain_mixture_t::markov_chain_mixture_t(
         _counts_sum = (double*)malloc(_length/_alphabet_size*sizeof(double));
         _parents = (int*)malloc(_length*sizeof(int));
         if (options.background_weights == "entropy") {
-                _weights = new entropy_weights_t(_length, _alphabet_size);
+                _weights = new entropy_weights_t(_alphabet_size, _max_context, _length);
         }
         else if (options.background_weights == "decay") {
                 _weights = new decay_weights_t();
@@ -331,16 +331,20 @@ double markov_chain_mixture_t::predictive(const range_t& range) {
                 const size_t pos   = range.index[1]+i;
                 const size_t c_max = min(from_context+i, _max_context);
                 const size_t c_min = i < length ? 0 : i-(length-1);
+                vector<int> codes(c_max-c_min+1, 0);
+                for (size_t c = c_min; c <= c_max; c++) {
+                        codes[c] = _context[sequence][pos][c];
+                }
                 double partial_result = 0;
+                _weights->init(codes);
                 for (size_t c = c_min; c <= c_max; c++) {
                         const int code = _context[sequence][pos][c];
                         // compute mixture component
                         partial_result +=
-                                _weights->next(code, c, c_max)*
+                                (*_weights)[c-c_min]*
                                 (_counts[code]+_alpha[code])/
                                 _counts_sum[code/_alphabet_size];
                 }
-                _weights->reset();
                 // save result
                 result *= partial_result;
         }
@@ -357,20 +361,22 @@ double markov_chain_mixture_t::log_likelihood(size_t pos) const
         const double n = _counts_tmp[pos];
         double result = 0;
         vector<int> path;
+        vector<int> path_rev;
 
         // compute the path up the tree
         for (int i = pos; i != -1; i = _parents[i]) {
                 path.push_back(i);
         }
+        std::reverse(path.begin(), path.end());
         // compute likelihood for this node
+        _weights->init(path);
         for (size_t c = 0; c < path.size(); c++) {
-                const int code = path[path.size()-c-1];
+                const int code = path[c];
                 // compute mixture component
-                result += _weights->next(code, c, path.size())*
+                result += (*_weights)[c]*
                         (_counts[code]+_alpha[code])/
                         _counts_sum[code/_alphabet_size];
         }
-        _weights->reset();
 
         return n*log(result);
 }

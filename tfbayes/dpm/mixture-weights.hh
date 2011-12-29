@@ -31,49 +31,53 @@ public:
 
         virtual mixture_weights_t* clone() const = 0;
 
-        virtual void reset() = 0;
-        virtual double next(int code, size_t c, size_t c_max) = 0;
+        virtual const double& operator[](size_t i) const = 0;
+
+        virtual void init(const std::vector<int>& codes) = 0;
         virtual void update(int code, const double *alpha, const double *counts, const double *counts_sum) = 0;
 };
 
 class decay_weights_t : public mixture_weights_t {
 public:
-        decay_weights_t()
-                : weight(1.0) {
-        }
-
         virtual decay_weights_t* clone() const {
                 return new decay_weights_t(*this);
         }
 
-        virtual void reset() {
-                weight = 1.0;
+        virtual const double& operator[](size_t i) const {
+                return weights[i];
         }
-        virtual double next(int code, size_t c, size_t c_max) {
-                if (c != c_max) {
-                        weight *= 0.5;
+        virtual void init(const std::vector<int>& codes) {
+                const size_t n = codes.size();
+                std::vector<double> weights(n, 0.0);
+                double k = 1.0;
+
+                for (size_t i = 0; i < n; i++) {
+                        if (i < n-1) { k *= 0.5; }
+                        weights[i] = k;
                 }
-                return weight;
+                this->weights = weights;
         }
         virtual void update(int code, const double *alpha, const double *counts, const double *counts_sum) {
         }
 private:
-        double weight;
+        std::vector<double> weights;
 };
 
 class entropy_weights_t : public mixture_weights_t {
 public:
-        entropy_weights_t(size_t length, size_t alphabet_size)
-                : length(length), alphabet_size(alphabet_size),
-                  weight(0.0), weight_sum(0.0), entropy_max(log(alphabet_size)) {
+        entropy_weights_t(size_t alphabet_size, size_t max_context, size_t length)
+                : alphabet_size(alphabet_size),
+                  max_context(max_context),
+                  length(length),
+                  entropy_max(log(alphabet_size)) {
                 entropy = (double*)malloc(length/alphabet_size*sizeof(double));
         }
         entropy_weights_t(const entropy_weights_t& weights)
-                : length(weights.length),
-                  alphabet_size(weights.alphabet_size),
-                  weight(weights.weight),
-                  weight_sum(weights.weight_sum),
-                  entropy_max(weights.entropy_max) {
+                : alphabet_size(weights.alphabet_size),
+                  max_context(weights.max_context),
+                  length(weights.length),
+                  entropy_max(weights.entropy_max),
+                  weights(weights.weights) {
                 entropy = (double*)malloc(length/alphabet_size*sizeof(double));
                 memcpy(entropy, weights.entropy, length/alphabet_size*sizeof(double));
                 for (size_t i = 0; i < length/alphabet_size; i++) {
@@ -88,20 +92,22 @@ public:
                 return new entropy_weights_t(*this);
         }
 
-        virtual void reset() {
-                weight = 0.0;
-                weight_sum = 0.0;
+        virtual const double& operator[](size_t i) const {
+                return weights[i];
         }
-        virtual double next(int code, size_t c, size_t c_max) {
-                if (c == c_max) {
-                        weight = 1 - weight_sum;
-                }
-                else {
-                        weight = (1 - entropy[code/alphabet_size])*(1 - weight_sum);
-                }
-                weight_sum += weight;
+        virtual void init(const std::vector<int>& codes) {
+                const size_t n = codes.size();
+                double weights_sum = 0.0;
+                std::vector<double> weights(n, 0.0);
 
-                return weight;
+                for (size_t i = 0; i < n; i++) {
+                        weights[i] = (1.0 - entropy[codes[i]/alphabet_size])*(1 - weights_sum);
+                        weights_sum += weights[i];
+                }
+                for (size_t i = 0; i < n; i++) {
+                        weights[i] /= weights_sum;
+                }
+                this->weights = weights;
         }
         virtual void update(int code, const double *alpha, const double *counts, const double *counts_sum) {
                 const int from = code - (code%alphabet_size);
@@ -115,12 +121,13 @@ public:
                 entropy[k] /= entropy_max;
         }
 private:
-        size_t  length;
         size_t  alphabet_size;
-        double  weight;
-        double  weight_sum;
+        size_t  max_context;
+        size_t  length;
         double *entropy;
         double  entropy_max;
+
+        std::vector<double> weights;
 };
 
 #endif /* MIXTURE_WEIGHTS_HH */
