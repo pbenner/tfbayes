@@ -24,8 +24,13 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <vector>
 
-class mixture_weights_t : virtual public std::vector<int>, public clonable {
+#include <math.h>
+
+#include <clonable.hh>
+
+class mixture_weights_t : virtual public std::vector<double>, public clonable {
 public:
         virtual ~mixture_weights_t() {}
 
@@ -38,7 +43,7 @@ public:
 class decay_weights_t : public mixture_weights_t {
 public:
         decay_weights_t(size_t max_context)
-                : std::vector<int>(max_context, 0.0) { }
+                : std::vector<double>(max_context+1, 0.0) { }
 
         virtual decay_weights_t* clone() const {
                 return new decay_weights_t(*this);
@@ -46,12 +51,11 @@ public:
 
         virtual void init(const std::vector<int>& codes) {
                 const size_t n = codes.size();
-                std::vector<double> weights(n, 0.0);
                 double k = 1.0;
 
                 for (size_t i = 0; i < n; i++) {
                         if (i < n-1) { k *= 0.5; }
-                        (*this)[i] = k;
+                        operator[](i) = k;
                 }
         }
         virtual void update(int code, const double *alpha, const double *counts, const double *counts_sum) {
@@ -61,14 +65,15 @@ public:
 class entropy_weights_t : public mixture_weights_t {
 public:
         entropy_weights_t(size_t alphabet_size, size_t max_context, size_t length)
-                : alphabet_size(alphabet_size),
+                : std::vector<double>(max_context+1, 0.0),
+                  alphabet_size(alphabet_size),
                   max_context(max_context),
                   length(length),
                   entropy_max(log(alphabet_size)) {
                 entropy = (double*)malloc(length/alphabet_size*sizeof(double));
         }
         entropy_weights_t(const entropy_weights_t& weights)
-                : std::vector<int>(*this),
+                : std::vector<double>(weights.max_context+1, 0.0),
                   alphabet_size(weights.alphabet_size),
                   max_context(weights.max_context),
                   length(weights.length),
@@ -76,7 +81,7 @@ public:
                 entropy = (double*)malloc(length/alphabet_size*sizeof(double));
                 memcpy(entropy, weights.entropy, length/alphabet_size*sizeof(double));
                 for (size_t i = 0; i < length/alphabet_size; i++) {
-                        entropy[i] = 1;
+                        entropy[i] = 1.0;
                 }
         }
         virtual ~entropy_weights_t() {
@@ -100,12 +105,12 @@ public:
                 for (size_t i = 0; i < n; i++) {
                         const double h  = entropy[codes[i]/alphabet_size];
                         const double c  = (2.0 - h)/certainty_sum1;
-                        (*this)[i]      = c*(1 - certainty_sum2);
-                        weights_sum    += (*this)[i];
+                        operator[](i)   = c*(1 - certainty_sum2);
+                        weights_sum    += operator[](i);
                         certainty_sum2 += c;
                 }
                 for (size_t i = 0; i < n; i++) {
-                        (*this)[i] /= weights_sum;
+                        operator[](i) /= weights_sum;
                 }
         }
         virtual void update(int code, const double *alpha, const double *counts, const double *counts_sum) {

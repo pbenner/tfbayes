@@ -333,7 +333,7 @@ double markov_chain_mixture_t::predictive(const range_t& range) {
                 const size_t c_min = i < length ? 0 : i-(length-1);
                 vector<int> codes(c_max-c_min+1, 0);
                 for (size_t c = c_min; c <= c_max; c++) {
-                        codes[c] = _context[sequence][pos][c];
+                        codes[c-c_min] = _context[sequence][pos][c];
                 }
                 double partial_result = 0;
                 _weights->init(codes);

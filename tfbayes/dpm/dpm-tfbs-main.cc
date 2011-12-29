@@ -60,10 +60,10 @@ typedef struct _options_t {
                   lambda(0.01),
                   metropolis_optimize(true),
                   process_prior("pitman-yor process"),
-                  background_model("independence"),
+                  background_model("markov chain mixture"),
                   background_alpha(0.5),
                   background_context(2),
-                  background_weights("decay"),
+                  background_weights("entropy"),
                   population_size(1),
                   save()
                 { }
