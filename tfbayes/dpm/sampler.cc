@@ -19,6 +19,8 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <sstream>
+
 #include <gsl/gsl_randist.h>
 
 #include <sampler.hh>
@@ -194,8 +196,10 @@ bool
 hybrid_sampler_t::_metropolis_sample(cluster_t& cluster) {
         double posterior_ref = _dpm.posterior();
         double posterior_tmp;
+        stringstream ss;
+        size_t size = cluster.size();
 
-        if (_state.proposal(cluster)) {
+        if (_state.proposal(cluster, ss)) {
                 posterior_tmp = _dpm.posterior();
 
                 if (_optimize && posterior_tmp > posterior_ref) {
@@ -216,7 +220,12 @@ accepted:
         cout << _name << ": "
              << "cluster "
              << cluster.cluster_tag()
-             << ": move accepted"
+             << ": "
+             << ss.str()
+             << " accepted "
+             << "("  << size
+             << "->" << cluster.size()
+             << ")"
              << endl;
         fflush(stdout);
         funlockfile(stdout);

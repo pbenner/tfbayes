@@ -51,7 +51,7 @@ public:
         bool move_left(cluster_t& cluster);
         bool move_right(cluster_t& cluster);
 
-        bool proposal(cluster_t& cluster);
+        bool proposal(cluster_t& cluster, std::stringstream& ss);
         void save(cluster_tag_t cluster_tag);
         void restore();
 

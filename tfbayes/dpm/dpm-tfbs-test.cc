@@ -20,6 +20,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <iostream>
+#include <sstream>
 
 #include <dpm-tfbs.hh>
 #include <statistics.hh>
@@ -47,7 +48,8 @@ dpm_tfbs_t::test_metropolis_hastings() {
         cout << _state.cluster_assignments << endl;
         cout << "likelihood: " << l1 << endl;
 
-        _state.proposal(cluster1);
+        stringstream ss;
+        _state.proposal(cluster1, ss);
         l2 = likelihood();
         cout << _state.cluster_assignments << endl;
         cout << "likelihood: " << l2 << endl;

@@ -19,6 +19,8 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <sstream>
+
 #include <dpm-tfbs-state.hh>
 
 using namespace std;
@@ -197,15 +199,17 @@ dpm_tfbs_state_t::move_right(cluster_t& cluster)
 }
 
 bool
-dpm_tfbs_state_t::proposal(cluster_t& cluster)
+dpm_tfbs_state_t::proposal(cluster_t& cluster, stringstream& ss)
 {
         save(cluster.cluster_tag());
 
         if (cluster.cluster_tag() != bg_cluster_tag && cluster.size() > 1) {
                 if (rand() % 2 == 0) {
+                        ss << "move to right";
                         return move_right(cluster);
                 }
                 else {
+                        ss << "move to left";
                         return move_left(cluster);
                 }
         }
