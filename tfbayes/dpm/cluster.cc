@@ -43,14 +43,13 @@ cluster_t::cluster_t(component_model_t* model, cluster_tag_t cluster_tag, model_
 }
 
 cluster_t::cluster_t(const cluster_t& cluster)
-        : _model(cluster._model->clone()),
+        : _model(NULL),
           _cluster_tag(cluster._cluster_tag),
           _model_tag(cluster._model_tag),
           _destructible(cluster._destructible),
-          _record(cluster._record),
-          _size(cluster._size)
+          _record(cluster._record)
 {
-        set_observer(cluster.observer);
+        operator=(cluster);
 }
 
 cluster_t::~cluster_t() {
@@ -60,10 +59,14 @@ cluster_t::~cluster_t() {
 cluster_t&
 cluster_t::operator=(const cluster_t& cluster)
 {
-        delete(_model);
-        _model = cluster._model->clone();
+        if (_model) {
+                delete(_model);
+        }
+        _model    = cluster._model->clone();
         _elements = cluster._elements;
-        _size = cluster._size;
+        _size     = cluster._size;
+
+        set_observer(cluster.observer);
 
         return *this;
 }

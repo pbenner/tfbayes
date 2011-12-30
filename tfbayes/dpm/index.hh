@@ -91,8 +91,8 @@ public:
                 _x[1] = x1;
         }
         __inline__ seq_index_t(const seq_index_t& seq_index) {
-                _x[0] = seq_index._x[0];
-                _x[1] = seq_index._x[1];
+                _x[0] = seq_index[0];
+                _x[1] = seq_index[1];
         }
 
         virtual index_i* clone() const { return new seq_index_t(*this); }

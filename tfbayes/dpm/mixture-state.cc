@@ -131,7 +131,7 @@ mixture_state_t::get_free_cluster(model_tag_t model_tag) {
         // create new cluster
         cluster_tag_t cluster_tag = add_cluster(model_tag);
 
-        return (*this)[cluster_tag];
+        return operator[](cluster_tag);
 }
 
 void

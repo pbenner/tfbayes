@@ -67,7 +67,7 @@ public:
         }
 
         size_t top() const {
-                return (*this)[_depth-1];
+                return operator[](_depth-1);
         }
 
         friend std::ostream& operator<< (std::ostream& o, const AbysmalStack<T>& stack) {

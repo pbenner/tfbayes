@@ -73,7 +73,7 @@ dpm_tfbs_state_t::valid_tfbs_position(const index_i& index) const
         if (tfbs_start_positions[index] == 0) {
                 // check if this element belongs to a tfbs that starts
                 // earlier in the sequence
-                if ((*this)[index] != bg_cluster_tag) {
+                if (operator[](index) != bg_cluster_tag) {
                         return false;
                 }
                 if (cluster_assignments[seq_index_t(sequence, position)] == -1) {
@@ -99,10 +99,10 @@ dpm_tfbs_state_t::add(const index_i& index, cluster_tag_t tag)
         const range_t range(index, tfbs_length);
 
         if (tag == bg_cluster_tag) {
-                (*this)[tag].add_observations(range);
+                operator[](tag).add_observations(range);
         }
         else {
-                (*this)[tag].add_observations(range);
+                operator[](tag).add_observations(range);
                 num_tfbs++;
                 tfbs_start_positions[index] = 1;
         }
@@ -114,10 +114,10 @@ dpm_tfbs_state_t::remove(const index_i& index, cluster_tag_t tag)
         const range_t range(index, tfbs_length);
 
         if (tag == bg_cluster_tag) {
-                (*this)[tag].remove_observations(range);
+                operator[](tag).remove_observations(range);
         }
         else {
-                (*this)[tag].remove_observations(range);
+                operator[](tag).remove_observations(range);
                 num_tfbs--;
                 tfbs_start_positions[index] = 0;
         }
@@ -134,8 +134,8 @@ dpm_tfbs_state_t::save(cluster_tag_t cluster_tag) {
         num_tfbs_p = num_tfbs;
         cluster_assignments_p  = cluster_assignments;
         tfbs_start_positions_p = tfbs_start_positions;
-        cluster_p    = new cluster_t((*this)[cluster_tag]);
-        cluster_bg_p = new cluster_t((*this)[bg_cluster_tag]);
+        cluster_p    = new cluster_t(operator[](cluster_tag));
+        cluster_bg_p = new cluster_t(operator[](bg_cluster_tag));
 }
 
 void
@@ -143,8 +143,8 @@ dpm_tfbs_state_t::restore() {
         num_tfbs = num_tfbs_p;
         cluster_assignments  = cluster_assignments_p;
         tfbs_start_positions = tfbs_start_positions_p;
-        (*this)[cluster_p->cluster_tag()]    = *cluster_p;
-        (*this)[cluster_bg_p->cluster_tag()] = *cluster_bg_p;
+        operator[](cluster_p->cluster_tag())    = *cluster_p;
+        operator[](cluster_bg_p->cluster_tag()) = *cluster_bg_p;
 }
 
 bool

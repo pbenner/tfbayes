@@ -58,6 +58,7 @@ public:
                         operator[](i) = k;
                 }
         }
+
         virtual void update(int code, const double *alpha, const double *counts, const double *counts_sum) {
         }
 };
@@ -123,6 +124,7 @@ public:
                         operator[](i) /= weights_sum;
                 }
         }
+
         virtual void update(int code, const double *alpha, const double *counts, const double *counts_sum) {
                 const int from = code - (code%alphabet_size);
                 const int k    = code/alphabet_size;
