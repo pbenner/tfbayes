@@ -38,7 +38,7 @@ public:
         virtual const size_t& operator[](size_t i) const = 0;
         virtual size_t& operator[](size_t i) = 0;
         virtual bool operator==(const index_i& index) const = 0;
-        virtual void operator=(const index_i& index) = 0;
+        virtual index_i& operator=(const index_i& index) = 0;
         virtual void operator++(int i) = 0;
         virtual size_t hash() const = 0;
 };
@@ -65,8 +65,9 @@ public:
         virtual __inline__ bool operator==(const index_i& index) const {
                 return _x0 == index[0];
         }
-        virtual __inline__ void operator=(const index_i& index) {
+        virtual __inline__ index_t& operator=(const index_i& index) {
                 _x0 = index[0];
+                return *this;
         }
         virtual __inline__ void operator++(int i) {
                 _x0++;
@@ -107,9 +108,10 @@ public:
         virtual __inline__ bool operator==(const index_i& seq_index) const {
                 return _x[0] == seq_index[0] && _x[1] == seq_index[1];
         }
-        virtual __inline__ void operator=(const index_i& seq_index) {
+        virtual __inline__ seq_index_t& operator=(const index_i& seq_index) {
                 _x[0] = seq_index[0];
                 _x[1] = seq_index[1];
+                return *this;
         }
         virtual __inline__ void operator++(int i) {
                 _x[1]++;

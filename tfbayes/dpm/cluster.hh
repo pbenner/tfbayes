@@ -62,7 +62,7 @@ public:
         friend std::ostream& operator<< (std::ostream& o, const cluster_t& cluster);
 
         // operators
-        void operator=(const cluster_t& cluster);
+        cluster_t& operator=(const cluster_t& cluster);
 
         // methods
         void add_observations(const range_t& range);

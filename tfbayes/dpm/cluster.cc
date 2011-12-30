@@ -57,13 +57,15 @@ cluster_t::~cluster_t() {
         delete(_model);
 }
 
-void
+cluster_t&
 cluster_t::operator=(const cluster_t& cluster)
 {
         delete(_model);
         _model = cluster._model->clone();
         _elements = cluster._elements;
         _size = cluster._size;
+
+        return *this;
 }
 
 void
