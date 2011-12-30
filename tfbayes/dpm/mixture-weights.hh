@@ -71,21 +71,31 @@ public:
                   length(length),
                   entropy_max(log(alphabet_size)) {
                 entropy = (double*)malloc(length/alphabet_size*sizeof(double));
+                for (size_t i = 0; i < length/alphabet_size; i++) {
+                        entropy[i] = 1.0;
+                }
         }
         entropy_weights_t(const entropy_weights_t& weights)
-                : std::vector<double>(weights.max_context+1, 0.0),
+                : std::vector<double>(weights),
                   alphabet_size(weights.alphabet_size),
                   max_context(weights.max_context),
                   length(weights.length),
                   entropy_max(weights.entropy_max) {
                 entropy = (double*)malloc(length/alphabet_size*sizeof(double));
-                memcpy(entropy, weights.entropy, length/alphabet_size*sizeof(double));
                 for (size_t i = 0; i < length/alphabet_size; i++) {
-                        entropy[i] = 1.0;
+                        entropy[i] = weights.entropy[i];
                 }
         }
         virtual ~entropy_weights_t() {
                 free(entropy);
+        }
+
+        virtual entropy_weights_t& operator=(const entropy_weights_t& weights) {
+                std::vector<double>::operator=(weights);
+                for (size_t i = 0; i < length/alphabet_size; i++) {
+                        entropy[i] = weights.entropy[i];
+                }
+                return *this;
         }
 
         virtual entropy_weights_t* clone() const {
@@ -117,7 +127,7 @@ public:
                 const int from = code - (code%alphabet_size);
                 const int k    = code/alphabet_size;
 
-                entropy[k] = 0;
+                entropy[k] = 0.0;
                 for (size_t i = from; i < from+alphabet_size; i++) {
                         const double p = (counts[i]+alpha[i])/counts_sum[k];
                         entropy[k] -= p*log(p);
@@ -125,11 +135,11 @@ public:
                 entropy[k] /= entropy_max;
         }
 private:
-        size_t  alphabet_size;
-        size_t  max_context;
-        size_t  length;
+        const size_t  alphabet_size;
+        const size_t  max_context;
+        const size_t  length;
+        const double  entropy_max;
         double *entropy;
-        double  entropy_max;
 };
 
 #endif /* MIXTURE_WEIGHTS_HH */
