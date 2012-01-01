@@ -29,7 +29,8 @@
 
 #include <init.hh>
 #include <dpm-tfbs.hh>
-#include <dpm-tfbs-sampler.hh>
+#include <pmcmc.hh>
+#include <utility.hh>
 
 #include <tfbayes/exception.h>
 #include <tfbayes/fasta.hh>
@@ -268,17 +269,6 @@ void run_dpm(const char* file_name)
                 save_result(file, pmcmc);
                 file.close();
         }
-}
-
-static
-vector<string> token(const string& str, char t) {
-        string token;
-        vector<string> tokens;
-        istringstream iss(str);
-        while (getline(iss, token, t)) {
-                tokens.push_back(token);
-        }
-        return tokens;
 }
 
 int main(int argc, char *argv[])

@@ -69,7 +69,8 @@ class OPTIONS(Structure):
                  ("baseline_weights",    POINTER(VECTOR)),
                  ("baseline_priors",     POINTER(POINTER(MATRIX))),
                  ("baseline_n",          c_ulong),
-                 ("population_size",     c_ulong)]
+                 ("population_size",     c_ulong),
+                 ("socket_file",         c_char_p)]
 
 # function prototypes
 # ------------------------------------------------------------------------------
@@ -164,6 +165,7 @@ def dpm_init(options, input_file):
      c_options.contents.background_weights = options['background_weights']
      c_options.contents.tfbs_length = options['tfbs_length']
      c_options.contents.population_size = options['population_size']
+     c_options.contents.socket_file = options['socket_file']
      c_input_file = c_char_p(input_file)
      if not len(options['baseline_priors']) == len(options['baseline_weights']):
           raise IOError('Length mismatch between baseline priors and weights')

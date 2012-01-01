@@ -55,7 +55,8 @@ options = {
     'input_file'          : None,
     'verbose'             : False,
     'baseline_weights'    : [1.0],
-    'baseline_priors'     : []
+    'baseline_priors'     : [],
+    'socket_file'         : ''
     }
 
 # usage
@@ -146,6 +147,8 @@ def parse_config(config_file):
         for prior_name in read_vector(config_parser, 'TFBS-Sampler', 'baseline-priors', str):
             prior = read_matrix(config_parser, 'TFBS-Sampler', prior_name, float)
             options['baseline_priors'].append(prior)
+    if config_parser.has_option('TFBS-Sampler', 'socket-file'):
+        options['socket_file'] = config_parser.get('TFBS-Sampler', 'socket-file').strip()
 
 # sample
 # ------------------------------------------------------------------------------

@@ -236,7 +236,11 @@ accepted:
 bool
 hybrid_sampler_t::_metropolis_sample() {
         for (cl_iterator it = _state.begin(); it != _state.end(); it++) {
+                cout << "---------------------------------" << endl;
+                cout << "Cluster " << (**it).cluster_tag()
+                     << endl;
                 _metropolis_sample(**it);
+                cout << "---------------------------------" << endl;
         }
 
         return true;

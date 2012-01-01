@@ -20,6 +20,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <iostream>
+#include <sstream>
 
 #include <assert.h>
 #include <pthread.h>
@@ -179,7 +180,54 @@ population_mcmc_t::sampling_steps() const {
         return _population[0]->sampling_steps();
 }
 
+// TFBS Sampler
+////////////////////////////////////////////////////////////////////////////////
+
+using namespace std;
+using namespace boost::asio;
+using namespace boost::asio::local;
+
+dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
+        const tfbs_options_t& options,
+        const std::vector<std::string>& sequences,
+        size_t n)
+        : population_mcmc_t(n),
+          _data(sequences, options.tfbs_length),
+          _gdpm(n, NULL),
+          _socket_file(options.socket_file),
+          _server(NULL),
+          _bt(NULL) {
+        for (size_t i = 0; i < _size; i++) {
+                std::stringstream ss; ss << "Sampler " << i+1;
+                //_command_queue.push_back(save_queue_t<command_t*>());
+                _gdpm[i]       = new dpm_tfbs_t(options, _data);
+                _population[i] = new hybrid_sampler_t(*_gdpm[i], _gdpm[i]->state(), _data, ss.str(),
+                                                      options.metropolis_optimize);
+        }
+        update_samples();
+        _start_server();
+}
+
+dpm_tfbs_sampler_t::~dpm_tfbs_sampler_t() {
+        _stop_server();
+}
+
 void
-population_mcmc_t::set_name(const string name)
-{
+dpm_tfbs_sampler_t::_start_server() {
+        if (_socket_file != "" && _server == NULL) {
+                remove(_socket_file.c_str());
+                _server = new server_t(_ios, _socket_file, _command_queue, _output_queue);
+                _bt     = new boost::thread(boost::bind(&io_service::run, &_ios));
+        }
+}
+
+void
+dpm_tfbs_sampler_t::_stop_server() {
+        if (_socket_file != "" && _server != NULL) {
+                _ios.stop();
+                _bt->join();
+                delete(_bt);
+                delete(_server);
+                remove(_socket_file.c_str());
+        }
 }

@@ -97,6 +97,14 @@ AC_SUBST(LIB_PTHREAD)
 AX_BOOST_BASE([1.37.0],,
 	AC_MSG_ERROR([this library is required]))
 
+AC_CHECK_LIB([boost_system], [main], LIB_BOOST_SYSTEM="-lboost_system",
+  AC_MSG_ERROR([this library is required]))
+AC_CHECK_LIB([boost_thread], [main], LIB_BOOST_THREAD="-lboost_thread",
+  AC_MSG_ERROR([this library is required]))
+
+AC_SUBST(LIB_BOOST_SYSTEM)
+AC_SUBST(LIB_BOOST_THREAD)
+
 dnl ,---------------------------- 
 dnl | GETOPT_LONG
 dnl `----------------------------

@@ -24,7 +24,7 @@
 #include <init.hh>
 #include <dpm-tfbs-interface.hh>
 #include <dpm-tfbs.hh>
-#include <dpm-tfbs-sampler.hh>
+#include <pmcmc.hh>
 
 #include <tfbayes/exception.h>
 #include <tfbayes/fasta.hh>
@@ -50,6 +50,7 @@ typedef struct {
         matrix_t** baseline_priors;
         size_t baseline_n;
         size_t population_size;
+        const char* socket_file;
 } options_t;
 
 static options_t _options;
@@ -69,7 +70,8 @@ operator<<(std::ostream& o, const options_t& options) {
           << "-> background_context  = " << options.background_context  << endl
           << "-> background_weights  = " << options.background_weights  << endl
           << "-> metropolis_optimize = " << options.metropolis_optimize << endl
-          << "-> population_size     = " << options.population_size     << endl;
+          << "-> population_size     = " << options.population_size     << endl
+          << "-> socket_file         = " << options.socket_file         << endl;
         return o;
 }
 
@@ -219,6 +221,7 @@ void _dpm_tfbs_init(const char* filename)
         tfbs_options.background_weights  = _options.background_weights;
         tfbs_options.baseline_weights    = baseline_weights;
         tfbs_options.baseline_priors     = baseline_priors;
+        tfbs_options.socket_file         = _options.socket_file;
 
         _sampler = new dpm_tfbs_sampler_t(tfbs_options, _sequences, _options.population_size);
 

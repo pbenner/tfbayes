@@ -38,6 +38,7 @@ typedef struct {
         std::string background_weights;
         std::vector<double> baseline_weights;
         std::vector<std::matrix<double> > baseline_priors;
+        std::string socket_file;
 } tfbs_options_t;
 
 #endif /* DPM_TFBS_OPTIONS_HH */
