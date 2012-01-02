@@ -252,20 +252,11 @@ dpm_tfbs_t::likelihood() const {
 
 double
 dpm_tfbs_t::posterior() const {
-        cout << "Posterior: " << endl;
         double result = likelihood();
-        cout << "-> likelihood: " << result << endl;
+
         result += _state.num_tfbs*_lambda_log;
         result += _state[bg_cluster_tag].size()*_lambda_inv_log;
         result += _process_prior->joint();
-
-        cout << "-> num_tfbs: " << _state.num_tfbs << endl;
-        cout << "-> num_tfbs*log(lambda): " << _state.num_tfbs*_lambda_log << endl;
-        cout << "-> bg size: " << _state[bg_cluster_tag].size() << endl;
-        cout << "-> bg size*log(1-lambda): " << _state[bg_cluster_tag].size()*_lambda_inv_log << endl;
-        cout << "-> process prior: " << _process_prior->joint() << endl
-             << "-> result: " << result << endl
-             << endl;
 
         assert(!isnan(result));
 
