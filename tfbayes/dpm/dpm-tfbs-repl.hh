@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef REPL_SERVER_HH
-#define REPL_SERVER_HH
+#ifndef DPM_TFBS_REPL_HH
+#define DPM_TFBS_REPL_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -36,38 +36,14 @@
 #include <boost/thread.hpp>
 
 #include <data-tfbs.hh>
-#include <dpm-tfbs.hh>
 #include <utility.hh>
 
-class command_t {
-public:
-        virtual std::string operator()(const dpm_tfbs_state_t& state) const = 0;
-};
-
-class print_cluster_elements_t : public command_t {
-public:
-        print_cluster_elements_t(ssize_t cluster_tag)
-                : _cluster_tag(cluster_tag)
-                { }
-        std::string operator()(const dpm_tfbs_state_t& state) const {
-                std::stringstream ss;
-
-                for (dpm_tfbs_state_t::const_iterator it = state.begin(); it != state.end(); it++) {
-                        cluster_t& cluster = **it;
-                        if (_cluster_tag == cluster.cluster_tag()) {
-                                ss << cluster;
-                        }
-                }
-                return ss.str();
-        }
-private:
-        ssize_t _cluster_tag;
-};
+#include <dpm-tfbs-command.hh>
 
 class repl_t {
 public:
         repl_t(std::vector<char>& data,
-               std::vector<save_queue_t<command_t*> >& command_queue,
+               std::vector<save_queue_t<command_t*>* >& command_queue,
                save_queue_t<std::string>& output_queue);
 
         void prompt(std::stringstream& ss) const;
@@ -81,7 +57,7 @@ public:
 private:
         std::vector<char>& _data;
 
-        std::vector<save_queue_t<command_t*> >& _command_queue;
+        std::vector<save_queue_t<command_t*>* >& _command_queue;
         save_queue_t<std::string>& _output_queue;
 };
 
@@ -89,7 +65,7 @@ class session_t : public boost::enable_shared_from_this<session_t>
 {
 public:
         session_t(boost::asio::io_service& ios,
-                  std::vector<save_queue_t<command_t*> >& command_queue,
+                  std::vector<save_queue_t<command_t*>* >& command_queue,
                   save_queue_t<std::string>& output_queue);
 
         boost::asio::local::stream_protocol::socket& socket();
@@ -109,7 +85,7 @@ class server_t {
 public:
         server_t(boost::asio::io_service& ios,
                  const std::string& file,
-                 std::vector<save_queue_t<command_t*> >& command_queue,
+                 std::vector<save_queue_t<command_t*>* >& command_queue,
                  save_queue_t<std::string>& output_queue);
 
         void handle_accept(boost::shared_ptr<session_t> new_session,
@@ -119,8 +95,8 @@ private:
         boost::asio::io_service& _ios;
         boost::asio::local::stream_protocol::acceptor _acceptor;
 
-        std::vector<save_queue_t<command_t*> >& _command_queue;
+        std::vector<save_queue_t<command_t*>* >& _command_queue;
         save_queue_t<std::string>& _output_queue;
 };
 
-#endif /* REPL_SERVER_HH */
+#endif /* DPM_TFBS_REPL_HH */

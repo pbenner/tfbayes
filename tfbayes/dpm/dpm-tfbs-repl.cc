@@ -19,7 +19,8 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <repl-server.hh>
+#include <dpm-tfbs-repl.hh>
+#include <dpm-tfbs-sampler.hh>
 
 using namespace std;
 using namespace boost::asio;
@@ -29,7 +30,7 @@ using namespace boost::asio::local;
 ////////////////////////////////////////////////////////////////////////////////
 
 repl_t::repl_t(vector<char>& data,
-               vector<save_queue_t<command_t*> >& command_queue,
+               vector<save_queue_t<command_t*>* >& command_queue,
                save_queue_t<string>&output_queue)
         : _data(data),
           _command_queue(command_queue),
@@ -97,7 +98,7 @@ repl_t::command_print(const vector<string>& t, stringstream& ss) const {
                 if (t[1] == "cluster_elements" || t[1] == "cluster_counts") {
                         const size_t sampler = atoi(t[2].c_str());
                         if (sampler < _command_queue.size()) {
-                                _command_queue[sampler].push(new print_cluster_elements_t(atoi(t[3].c_str())));
+                                _command_queue[sampler]->push(new print_cluster_elements_t(atoi(t[3].c_str())));
                                 ss << "Command queued."
                                    << endl;
                         }
@@ -133,7 +134,7 @@ repl_t::copy(const stringstream& ss) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 session_t::session_t(io_service& ios,
-                     vector<save_queue_t<command_t*> >& command_queue,
+                     vector<save_queue_t<command_t*>* >& command_queue,
                      save_queue_t<string>& output_queue)
         : _socket(ios), _data(1024, 0), _repl(_data, command_queue, output_queue) {
 }
@@ -183,7 +184,7 @@ session_t::handle_write(const boost::system::error_code& error) {
 typedef boost::shared_ptr<session_t> session_ptr;
 
 server_t::server_t(io_service& ios, const string& file,
-                   vector<save_queue_t<command_t*> >& command_queue,
+                   vector<save_queue_t<command_t*>* >& command_queue,
                    save_queue_t<string>& output_queue)
         : _ios(ios),
           _acceptor(ios, stream_protocol::endpoint(file)),

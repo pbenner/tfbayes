@@ -29,7 +29,7 @@
 
 #include <init.hh>
 #include <dpm-tfbs.hh>
-#include <pmcmc.hh>
+#include <dpm-tfbs-sampler.hh>
 #include <utility.hh>
 
 #include <tfbayes/exception.h>
@@ -254,7 +254,7 @@ void run_dpm(const char* file_name)
         tfbs_options.baseline_priors     = baseline_priors;
 
         // create data, dpm, and sampler objects
-        dpm_tfbs_sampler_t pmcmc(tfbs_options, sequences, options.population_size);
+        dpm_tfbs_pmcmc_t pmcmc(tfbs_options, sequences, options.population_size);
 
         // execute the sampler
         pmcmc.sample(options.samples, options.burnin);

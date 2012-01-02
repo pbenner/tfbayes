@@ -33,9 +33,6 @@ pkgpythondir = $(pyexecdir)/tfbayes/dpm
 ## compile python files
 pkgpython_PYTHON = __init__.py dpm_gaussian_interface.py dpm_tfbs_interface.py
 
-## scripts
-dist_bin_SCRIPTS = dpm-gaussian-demo dpm-tfbs-align dpm-tfbs-demo dpm-tfbs-graph dpm-tfbs-plot dpm-tfbs-sampler dpm-tfbs-scan dpm-tfbs-tools dpm-tfbs-weblogo
-
 ## dpm library
 lib_LTLIBRARIES  = libdpm.la
 libdpm_la_SOURCES =                                                           \
@@ -44,10 +41,12 @@ libdpm_la_SOURCES =                                                           \
 	datatypes.hh graph.hh                                                 \
 	data.hh data-tfbs.cc data-tfbs.hh data-gaussian.cc data-gaussian.hh   \
 	dpm-tfbs.cc dpm-tfbs.hh dpm-tfbs-prior.cc dpm-tfbs-prior.hh           \
+	dpm-tfbs-command.cc dpm-tfbs-command.hh                               \
 	dpm-tfbs-options.hh mixture-weights.hh                                \
+	dpm-tfbs-repl.cc dpm-tfbs-repl.hh                                     \
 	dpm-tfbs-state.cc dpm-tfbs-state.hh dpm-tfbs-test.cc                  \
+	dpm-tfbs-sampler.cc dpm-tfbs-sampler.hh                               \
 	dpm-gaussian.cc dpm-gaussian.hh                                       \
-	repl-server.cc repl-server.hh                                         \
 	state.cc state.hh mixture-state.cc mixture-state.hh                   \
 	cluster.cc cluster.hh                                                 \
 	component-model.cc component-model.hh                                 \
@@ -63,9 +62,6 @@ libdpm_la_LIBADD += $(top_builddir)/parsmm/libparsmm.la
 libdpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libfasta.la
 libdpm_la_LIBADD += $(LIB_PTHREAD) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 libdpm_la_LDFLAGS = -no-undefined -version-info 0:0:0
-
-## extra dist
-EXTRA_DIST = dpm-tfbs-demo-1.cfg dpm-tfbs-demo-1.fa dpm-tfbs-demo-2.cfg dpm-tfbs-demo-2.fa
 
 ## clean python files
 clean-local:

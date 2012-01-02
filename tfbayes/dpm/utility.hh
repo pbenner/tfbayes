@@ -22,7 +22,9 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <queue>
+#include <string>
+#include <vector>
+#include <sstream>
 
 static inline
 std::vector<std::string> token(const std::string& str, char t) {
@@ -37,6 +39,9 @@ std::vector<std::string> token(const std::string& str, char t) {
         }
         return tokens;
 }
+
+#include <queue>
+#include <boost/thread.hpp>
 
 template<typename D>
 class save_queue_t

@@ -60,29 +60,4 @@ protected:
         void update_sampling_history();
 };
 
-#include <data-tfbs.hh>
-#include <dpm-tfbs.hh>
-#include <repl-server.hh>
-
-class dpm_tfbs_sampler_t : public population_mcmc_t {
-public:
-        dpm_tfbs_sampler_t(const tfbs_options_t& options, const std::vector<std::string>& sequences, size_t n);
-        virtual ~dpm_tfbs_sampler_t();
-
-        data_tfbs_t _data;
-        std::vector<dpm_tfbs_t*> _gdpm;
-
-private:
-        void _start_server();
-        void _stop_server();
-
-        std::string _socket_file;
-        boost::asio::io_service _ios;
-        server_t* _server;
-        boost::thread* _bt;
-
-        std::vector<save_queue_t<command_t*> > _command_queue;
-        save_queue_t<std::string> _output_queue;
-};
-
 #endif /* PMCMC_HH */

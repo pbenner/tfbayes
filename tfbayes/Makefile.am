@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = fasta humandb dpm motif uipac
+SUBDIRS = fasta humandb dpm motif uipac tools
 
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes

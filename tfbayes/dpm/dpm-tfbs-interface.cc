@@ -24,7 +24,7 @@
 #include <init.hh>
 #include <dpm-tfbs-interface.hh>
 #include <dpm-tfbs.hh>
-#include <pmcmc.hh>
+#include <dpm-tfbs-sampler.hh>
 
 #include <tfbayes/exception.h>
 #include <tfbayes/fasta.hh>
@@ -54,7 +54,7 @@ typedef struct {
 } options_t;
 
 static options_t _options;
-static dpm_tfbs_sampler_t* _sampler;
+static dpm_tfbs_pmcmc_t* _sampler;
 static vector<string> _sequences;
 
 ostream&
@@ -223,7 +223,7 @@ void _dpm_tfbs_init(const char* filename)
         tfbs_options.baseline_priors     = baseline_priors;
         tfbs_options.socket_file         = _options.socket_file;
 
-        _sampler = new dpm_tfbs_sampler_t(tfbs_options, _sequences, _options.population_size);
+        _sampler = new dpm_tfbs_pmcmc_t(tfbs_options, _sequences, _options.population_size);
 
         cout << _options << endl;
 }
