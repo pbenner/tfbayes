@@ -76,7 +76,7 @@ public:
         void handle_write(const boost::system::error_code& error);
 
 private:
-        static const size_t BUFSIZE = 4096;
+        static const size_t BUFSIZE = 16384;
 
         boost::asio::local::stream_protocol::socket _socket;
         std::vector<char> _data;
