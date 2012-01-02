@@ -20,6 +20,7 @@ import ConfigParser
 import getopt
 import math
 import os
+import subprocess
 import sys
 import Bio.Motif as Motif
 
@@ -43,6 +44,10 @@ def usage():
     """Print usage."""
     print
     print "dpm-tfbs-weblogo [option]... CLUSTER_CONFIG"
+    print "dpm-tfbs-weblogo [option]..."
+    print
+    print "If no CLUSTER_CONFIG is specified, then the count matrix is"
+    print "read from stdin and xpdf is called on the generated logo."
     print
     print "Options:"
     print "   -r                             - plot reverse complements"
@@ -59,6 +64,15 @@ def read_config(config_file):
     config_parser.read(config_file)
     bg, motifs, components = fileio.load_motifs(config_parser)
     plot.plot_motifs(motifs, components, os.path.splitext(os.path.split(config_file)[1])[0], revcomp=options['revcomp'])
+
+def read_stdin():
+    matrix_str = sys.stdin.readlines();
+    motif = []
+    for line in matrix_str:
+        motif.append(map(int, line.strip().split(' ')))
+    plot.plot_motif(motif, '.weblogo.pdf', '')
+    subprocess.call(['xpdf', '.weblogo.pdf'])
+    os.remove('.weblogo.pdf')
 
 # main
 # ------------------------------------------------------------------------------
@@ -83,6 +97,8 @@ def main():
             options['revcomp'] = True
     if len(tail) == 1:
         read_config(tail[0])
+    elif len(tail) == 0:
+        read_stdin()
     else:
         usage()
         return 1
