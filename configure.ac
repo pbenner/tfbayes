@@ -332,6 +332,7 @@ AC_CONFIG_FILES([
 	tfbayes/dpm/Makefile
 	tfbayes/motif/Makefile
 	tfbayes/uipac/Makefile
+	tfbayes/tools/Makefile
  	])
 
 AC_OUTPUT
