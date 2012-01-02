@@ -166,6 +166,11 @@ gibbs_sampler_t::sample(size_t n, size_t burnin) {
         }
 }
 
+string
+gibbs_sampler_t::name() const {
+        return _name;
+}
+
 // Hybrid Sampler
 ////////////////////////////////////////////////////////////////////////////////
 

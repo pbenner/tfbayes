@@ -55,6 +55,8 @@ public:
                 exit(EXIT_FAILURE);
         }
 
+        virtual component_model_t* clone() const = 0;
+
         // purely virtual functions
         virtual size_t add(const range_t& range) = 0;
         virtual size_t remove(const range_t& range) = 0;
@@ -62,8 +64,7 @@ public:
         virtual double predictive(const range_t& range) = 0;
         virtual double log_predictive(const range_t& range) = 0;
         virtual double log_likelihood() const = 0;
-
-        virtual component_model_t* clone() const = 0;
+        virtual std::string print_counts() const { return std::string(); }
 };
 
 // Multinomial/Dirichlet Model
@@ -75,6 +76,8 @@ public:
          product_dirichlet_t(const product_dirichlet_t& distribution);
         ~product_dirichlet_t();
 
+        product_dirichlet_t* clone() const;
+
         // datatypes
         typedef std::vector<double> counts_t;
 
@@ -84,8 +87,7 @@ public:
         double predictive(const range_t& range);
         double log_predictive(const range_t& range);
         double log_likelihood() const;
-
-        product_dirichlet_t* clone() const;
+        virtual std::string print_counts() const;
 
         friend std::ostream& operator<< (std::ostream& o, const product_dirichlet_t& pd);
 
@@ -112,13 +114,14 @@ public:
          markov_chain_mixture_t(const markov_chain_mixture_t& distribution);
         ~markov_chain_mixture_t();
 
+        markov_chain_mixture_t* clone() const;
+
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
         double predictive(const range_t& range);
         double log_predictive(const range_t& range);
         double log_likelihood() const;
-        markov_chain_mixture_t* clone() const;
 
         friend std::ostream& operator<< (std::ostream& o, const markov_chain_mixture_t& pd);
 
@@ -163,13 +166,14 @@ public:
          parsimonious_tree_t(const parsimonious_tree_t& distribution);
         ~parsimonious_tree_t();
 
+        parsimonious_tree_t* clone() const;
+
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
         double predictive(const range_t& range);
         double log_predictive(const range_t& range);
         double log_likelihood() const;
-        parsimonious_tree_t* clone() const;
 
         friend std::ostream& operator<< (std::ostream& o, const parsimonious_tree_t& pd);
 
@@ -204,6 +208,8 @@ public:
          bivariate_normal_t(const bivariate_normal_t& bn);
         ~bivariate_normal_t();
 
+        bivariate_normal_t* clone() const;
+
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
@@ -211,8 +217,6 @@ public:
         double log_predictive(const range_t& range);
         double log_likelihood() const;
         const gsl_vector* mean() const;
-
-        bivariate_normal_t* clone() const;
 
         friend std::ostream& operator<< (std::ostream& o, const bivariate_normal_t& pd);
 

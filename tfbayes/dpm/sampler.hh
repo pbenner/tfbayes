@@ -34,6 +34,7 @@ public:
         virtual const sampling_history_t& sampling_history() const = 0;
         virtual samples_t& samples() = 0;
         virtual size_t sampling_steps() const = 0;
+        virtual std::string name() const { return std::string(); }
 protected:
 };
 
@@ -52,6 +53,7 @@ public:
         const sampling_history_t& sampling_history() const;
         samples_t& samples();
         size_t sampling_steps() const;
+        std::string name() const;
 
 protected:
         // private methods

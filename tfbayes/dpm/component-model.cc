@@ -21,6 +21,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <sstream>
 #include <vector>
 
 #include <gsl/gsl_blas.h>
@@ -135,6 +136,18 @@ double product_dirichlet_t::log_likelihood() const {
                 }
         }
         return result;
+}
+
+string
+product_dirichlet_t::print_counts() const {
+        stringstream ss;
+        for (size_t k = 0; k < _size2; k++) {
+                for (size_t j = 0; j < _size1; j++) {
+                        ss << counts[j][k] << " ";
+                }
+                ss << endl;
+        }
+        return ss.str();
 }
 
 // Markov Chain Mixture

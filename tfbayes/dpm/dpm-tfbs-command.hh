@@ -32,6 +32,16 @@ public:
         virtual std::string operator()(const dpm_tfbs_state_t& state, dpm_tfbs_sampler_t& sampler) const = 0;
 };
 
+class print_cluster_counts_t : public command_t {
+public:
+        print_cluster_counts_t(ssize_t cluster_tag);
+
+        std::string operator()(const dpm_tfbs_state_t& state, dpm_tfbs_sampler_t& sampler) const;
+
+private:
+        ssize_t _cluster_tag;
+};
+
 class print_cluster_elements_t : public command_t {
 public:
         print_cluster_elements_t(ssize_t cluster_tag);
