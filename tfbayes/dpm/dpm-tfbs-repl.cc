@@ -85,7 +85,7 @@ repl_t::parse_command(size_t n) const {
 void
 repl_t::command_help(const vector<string>& t, stringstream& ss) const {
         ss << "TFBS Sampler:"                                      << endl
-           << " Usage: [COMMAND] [OPTION]..."                      << endl
+           << " Usage: [COMMAND] [ARGUMENT]"                       << endl
            << endl
            << " Commands:"                                         << endl
            << "   help           - show usage"                     << endl
@@ -93,6 +93,7 @@ repl_t::command_help(const vector<string>& t, stringstream& ss) const {
            << "   save           - save current state to file"     << endl
            << endl
            << " Arguments:"                                        << endl
+           << "   print cluster          SAMPLER CLUSTER"          << endl
            << "   print cluster_elements SAMPLER CLUSTER"          << endl
            << "   print cluster_counts   SAMPLER CLUSTER"          << endl
            << "   print likelihood       SAMPLER"                  << endl
@@ -102,8 +103,21 @@ repl_t::command_help(const vector<string>& t, stringstream& ss) const {
 
 void
 repl_t::command_print(const vector<string>& t, stringstream& ss) const {
-        if (t.size() == 4 && t[1] == "cluster_counts") {
-                const size_t sampler = atoi(t[2].c_str());
+        if (t.size() == 4 && t[1] == "cluster") {
+                const size_t sampler = atoi(t[2].c_str())-1;
+                if (sampler < _command_queue.size()) {
+                        _command_queue[sampler]->push(new print_cluster_elements_t(atoi(t[3].c_str())));
+                        _command_queue[sampler]->push(new print_cluster_counts_t(atoi(t[3].c_str())));
+                        ss << "Command queued."
+                           << endl;
+                }
+                else {
+                        ss << "Sampler does not exist."
+                           << endl;
+                }
+        }
+        else if (t.size() == 4 && t[1] == "cluster_counts") {
+                const size_t sampler = atoi(t[2].c_str())-1;
                 if (sampler < _command_queue.size()) {
                         _command_queue[sampler]->push(new print_cluster_counts_t(atoi(t[3].c_str())));
                         ss << "Command queued."
@@ -115,7 +129,7 @@ repl_t::command_print(const vector<string>& t, stringstream& ss) const {
                 }
         }
         else if (t.size() == 4 && t[1] == "cluster_elements") {
-                const size_t sampler = atoi(t[2].c_str());
+                const size_t sampler = atoi(t[2].c_str())-1;
                 if (sampler < _command_queue.size()) {
                         _command_queue[sampler]->push(new print_cluster_elements_t(atoi(t[3].c_str())));
                         ss << "Command queued."
@@ -127,7 +141,7 @@ repl_t::command_print(const vector<string>& t, stringstream& ss) const {
                 }
         }
         else if (t.size() == 3 && t[1] == "likelihood") {
-                const size_t sampler = atoi(t[2].c_str());
+                const size_t sampler = atoi(t[2].c_str())-1;
                 if (sampler < _command_queue.size()) {
                         _command_queue[sampler]->push(new print_likelihood_t());
                         ss << "Command queued."
