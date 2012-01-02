@@ -236,13 +236,6 @@ dpm_tfbs_t::likelihood() const {
              it != _state.end(); it++) {
                 cluster_t& cluster = **it;
                 result += cluster.model().log_likelihood();
-                if (cluster.size() > 100) {
-                        cout << "-> cluster likelihood "
-                             << cluster.cluster_tag()
-                             << ": "
-                             << cluster.model().log_likelihood()
-                             << endl;
-                }
         }
 
         assert(!isnan(result));
