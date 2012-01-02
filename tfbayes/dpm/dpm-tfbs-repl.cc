@@ -70,6 +70,13 @@ repl_t::parse_command(size_t n) const {
                         ss << "Unknown command" << endl;
                 }
         }
+        else {
+                while(!_output_queue.empty()) {
+                        ss << _output_queue.front() << endl;
+                        _output_queue.pop();
+                }
+        }
+
         prompt(ss);
 
         return copy(ss);

@@ -44,6 +44,12 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
 
 bool dpm_tfbs_sampler_t::_sample() {
         size_t s = hybrid_sampler_t::_sample();
+        flockfile(stdout);
+        cout << _name << ": "
+             << "Processing commands."
+             << endl;
+        fflush(stdout);
+        funlockfile(stdout);
         while (!_command_queue.empty()) {
                 stringstream ss;
                 command_t* command = _command_queue.front();
