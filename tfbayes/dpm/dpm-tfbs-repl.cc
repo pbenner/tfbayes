@@ -57,7 +57,7 @@ repl_t::parse_command(size_t n) const {
         vector<string> t = token(str, ' ');
 
         if (t.size() != 0) {
-                if (t[0] == "help") {
+                if (t[0] == "help" || t[0] == "?") {
                         command_help(t, ss);
                 }
                 else if (t[0] == "print") {
