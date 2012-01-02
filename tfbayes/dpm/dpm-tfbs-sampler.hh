@@ -37,7 +37,10 @@ public:
                 const std::string name,
                 bool optimize,
                 save_queue_t<command_t*>& command_queue,
-                save_queue_t<std::string>& output_queue);
+                save_queue_t<std::string>& output_queue,
+                const std::vector<std::string> sequences);
+
+        const std::vector<std::string> sequences;
 
 protected:
         bool _sample();
@@ -72,6 +75,7 @@ private:
 
         std::vector<save_queue_t<command_t*>* > _command_queue;
         save_queue_t<std::string> _output_queue;
+        const std::vector<std::string> _sequences;
 };
 
 #endif /* DPM_TFBS_SAMPLER_HH */

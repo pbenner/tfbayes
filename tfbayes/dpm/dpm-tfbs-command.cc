@@ -19,6 +19,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <iomanip>
 #include <sstream>
 
 #include <cluster.hh>
@@ -71,7 +72,19 @@ print_cluster_elements_t::operator()(const dpm_tfbs_state_t& state, dpm_tfbs_sam
                            << endl;
                         cluster_t::elements_t elements = cluster.elements();
                         for (cluster_t::elements_t::const_iterator it = elements.begin(); it != elements.end(); it++) {
-                                ss << *static_cast<const seq_index_t*>(&it->index) << " ";
+                                const range_t& range(*it);
+                                const size_t sequence = range.index[0];
+                                const size_t position = range.index[1];
+                                const size_t length = range.length;
+                                ss << setfill('0')
+                                   << setw(5)
+                                   << sequence << ":"
+                                   << setw(5)
+                                   << position << ": ";
+                                for (size_t i = 0; i < length; i++) {
+                                        ss << sampler.sequences[sequence][position+i];
+                                }
+                                ss << endl;
                         }
                 }
         }

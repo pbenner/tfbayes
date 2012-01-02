@@ -35,8 +35,10 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
         const string name,
         bool optimize,
         save_queue_t<command_t*>& command_queue,
-        save_queue_t<string>& output_queue)
+        save_queue_t<string>& output_queue,
+        const std::vector<std::string> sequences)
         : hybrid_sampler_t(dpm, state, indexer, name, optimize),
+          sequences(sequences),
           _command_queue(command_queue),
           _output_queue(output_queue),
           _state(state) {
@@ -73,7 +75,8 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
           _gdpm(n, NULL),
           _socket_file(options.socket_file),
           _server(NULL),
-          _bt(NULL) {
+          _bt(NULL),
+          _sequences(sequences) {
         for (size_t i = 0; i < _size; i++) {
                 std::stringstream ss; ss << "Sampler " << i+1;
                 save_queue_t<command_t*>* command_queue = new save_queue_t<command_t*>();
@@ -84,7 +87,8 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
                                                         ss.str(),
                                                         options.metropolis_optimize,
                                                         *command_queue,
-                                                        _output_queue);
+                                                        _output_queue,
+                                                        _sequences);
         }
         update_samples();
         _start_server();
