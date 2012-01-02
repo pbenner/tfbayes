@@ -21,6 +21,8 @@
 
 #include <sstream>
 
+#include <cluster.hh>
+
 #include <dpm-tfbs-command.hh>
 #include <dpm-tfbs-sampler.hh>
 #include <dpm-tfbs-state.hh>
@@ -38,8 +40,24 @@ print_cluster_elements_t::operator()(const dpm_tfbs_state_t& state, dpm_tfbs_sam
         for (dpm_tfbs_state_t::const_iterator it = state.begin(); it != state.end(); it++) {
                 cluster_t& cluster = **it;
                 if (_cluster_tag == cluster.cluster_tag()) {
-                        ss << cluster;
+                        cluster_t::elements_t elements = cluster.elements();
+                        for (cluster_t::elements_t::const_iterator it = elements.begin(); it != elements.end(); it++) {
+                                ss << *static_cast<const seq_index_t*>(&it->index) << " ";
+                        }
                 }
         }
+        return ss.str();
+}
+
+
+string
+print_likelihood_t::operator()(const dpm_tfbs_state_t& state, dpm_tfbs_sampler_t& sampler) const {
+        const sampling_history_t& history = sampler.sampling_history();
+        stringstream ss;
+
+        for (size_t i = 0; i < history.likelihood[i].size(); i++) {
+                ss << history.likelihood[0][i] << " ";
+        }
+
         return ss.str();
 }

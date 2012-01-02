@@ -95,34 +95,39 @@ repl_t::command_help(const vector<string>& t, stringstream& ss) const {
            << " Arguments:"                                        << endl
            << "   print cluster_elements SAMPLER CLUSTER"          << endl
            << "   print cluster_counts   SAMPLER CLUSTER"          << endl
+           << "   print likelihood       SAMPLER"                  << endl
            << "   save FILENAME"                                   << endl
            << endl;
 }
 
 void
 repl_t::command_print(const vector<string>& t, stringstream& ss) const {
-        if (t.size() == 4) {
-                if (t[1] == "cluster_elements" || t[1] == "cluster_counts") {
-                        const size_t sampler = atoi(t[2].c_str());
-                        if (sampler < _command_queue.size()) {
-                                _command_queue[sampler]->push(new print_cluster_elements_t(atoi(t[3].c_str())));
-                                ss << "Command queued."
-                                   << endl;
-                        }
-                        else {
-                                ss << "Sampler does not exist."
-                                   << endl;
-                        }
+        if (t.size() == 4 && t[1] == "cluster_elements") {
+                const size_t sampler = atoi(t[2].c_str());
+                if (sampler < _command_queue.size()) {
+                        _command_queue[sampler]->push(new print_cluster_elements_t(atoi(t[3].c_str())));
+                        ss << "Command queued."
+                           << endl;
                 }
                 else {
-                        ss << "print: `"
-                           << t[1]
-                           << "' invalid argument."
+                        ss << "Sampler does not exist."
+                           << endl;
+                }
+        }
+        if (t.size() == 3 && t[1] == "likelihood") {
+                const size_t sampler = atoi(t[2].c_str());
+                if (sampler < _command_queue.size()) {
+                        _command_queue[sampler]->push(new print_likelihood_t());
+                        ss << "Command queued."
+                           << endl;
+                }
+                else {
+                        ss << "Sampler does not exist."
                            << endl;
                 }
         }
         else {
-                ss << "print: Invalid number of arguments." << endl;
+                ss << "print: Invalid argument list." << endl;
         }
 }
 
@@ -143,7 +148,7 @@ repl_t::copy(const stringstream& ss) const {
 session_t::session_t(io_service& ios,
                      vector<save_queue_t<command_t*>* >& command_queue,
                      save_queue_t<string>& output_queue)
-        : _socket(ios), _data(1024, 0), _repl(_data, command_queue, output_queue) {
+        : _socket(ios), _data(BUFSIZE, 0), _repl(_data, command_queue, output_queue) {
 }
 
 stream_protocol::socket&
