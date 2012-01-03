@@ -164,8 +164,9 @@ repl_t::command_save(const vector<string>& t, stringstream& ss) const {
 size_t
 repl_t::copy(const stringstream& ss) const {
         string str(ss.str());
-        std::copy(str.begin(), str.begin()+min(str.length(), _data.size()), _data.begin());
-        return str.length();
+        const size_t length = min(str.length(), _data.size());
+        std::copy(str.begin(), str.begin()+length, _data.begin());
+        return length;
 }
 
 // session class
