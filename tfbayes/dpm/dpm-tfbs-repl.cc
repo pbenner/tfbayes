@@ -164,7 +164,7 @@ repl_t::command_save(const vector<string>& t, stringstream& ss) const {
 size_t
 repl_t::copy(const stringstream& ss) const {
         string str(ss.str());
-        std::copy(str.begin(), str.end(), _data.begin());
+        std::copy(str.begin(), str.begin()+min(str.length(), _data.size()), _data.begin());
         return str.length();
 }
 
