@@ -39,7 +39,7 @@ import matplotlib.path     as     path
 # local imports
 ################################################################################
 
-from dpm_gaussian_interface import *
+from tfbayes.dpm.dpm_gaussian_interface import *
 
 # Gaussian DPM
 ################################################################################
