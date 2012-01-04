@@ -44,7 +44,8 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
           _state(state) {
 }
 
-bool dpm_tfbs_sampler_t::_sample() {
+bool
+dpm_tfbs_sampler_t::_sample() {
         size_t s = hybrid_sampler_t::_sample();
         flockfile(stdout);
         cout << _name << ": "
