@@ -1,4 +1,4 @@
-/* Copyright (C) 2010 Philipp Benner
+/* Copyright (C) 2012 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,29 +15,25 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _LOGARITHMETIC_H_
-#define _LOGARITHMETIC_H_
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <stdlib.h>
-#include <math.h>
+#include <phylotree.hh>
 
-/* Log Sum of Exponentials Algorithm */
-
-static inline
-double logadd(double a, double b)
-{
-        if (a < b) return a == -HUGE_VAL ? b : b + log1p(exp(a-b));
-        else       return b == -HUGE_VAL ? a : a + log1p(exp(b-a));
+pt_node_t::pt_node_t(short x, double d, pt_node_t* left, pt_node_t* right) {
+        this->x = x;
+        this->d = d;
+        this->left  = left;
+        this->right = right;
 }
 
-static inline
-double logsub(double a, double b)
-{
-        return b == -HUGE_VAL ? a : a + log(1-exp(b-a));
+bool
+pt_node_t::leaf() const {
+        return left == NULL && right == NULL;
 }
 
-#endif /* _LOGARITHMETIC_H_ */
+bool
+pt_node_t::root() const {
+        return d == 0.0;
+}

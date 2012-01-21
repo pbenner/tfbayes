@@ -18,6 +18,10 @@
 #ifndef EXCEPTION_H
 # define EXCEPTION_H
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #include <stdarg.h>
 
 extern int verbose;
