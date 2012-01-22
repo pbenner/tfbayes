@@ -72,6 +72,13 @@ public:
                 }
                 return *this;
         }
+        double eval(const boost::array<double, S>& val) const {
+                double result = _coefficient;
+                for (size_t i = 0; i < S; i++) {
+                        result *= pow(val[i], operator[](i));
+                }
+                return result;
+        }
 
 protected:
         double _coefficient;
@@ -152,8 +159,10 @@ public:
                 return *this;
         }
         polynomial_t<T, S>& operator+=(const polynomial_term_t<T, S>& term) {
-                if (count(term) == 0 && term.coefficient() != 0) {
-                        insert(term);
+                if (count(term) == 0) {
+                        if (term.coefficient() != 0) {
+                                insert(term);
+                        }
                 }
                 else {
                         polynomial_term_t<T, S> tmp(*find(term));
@@ -166,10 +175,12 @@ public:
                 return *this;
         }
         polynomial_t<T, S>& operator-=(const polynomial_term_t<T, S>& term) {
-                if (count(term) == 0 && term.coefficient() != 0) {
-                        polynomial_term_t<T, S> tmp(term);
-                        tmp.coefficient() = -tmp.coefficient();
-                        insert(tmp);
+                if (count(term) == 0) {
+                        if (term.coefficient() != 0) {
+                                polynomial_term_t<T, S> tmp(term);
+                                tmp.coefficient() = -tmp.coefficient();
+                                insert(tmp);
+                        }
                 }
                 else {
                         polynomial_term_t<T, S> tmp(*find(term));
@@ -181,37 +192,66 @@ public:
                 }
                 return *this;
         }
+        polynomial_t<T, S>& operator+=(const polynomial_t<T, S>& poly) {
+                for (const_iterator it = poly.begin(); it != poly.end(); it++) {
+                        operator+=(*it);
+                }
+                _constant += poly.constant();
+                return *this;
+        }
+        polynomial_t<T, S>& operator-=(const polynomial_t<T, S>& poly) {
+                for (const_iterator it = poly.begin(); it != poly.end(); it++) {
+                        operator-=(*it);
+                }
+                _constant += poly.constant();
+                return *this;
+        }
         polynomial_t<T, S>& operator*=(double constant) {
+                polynomial_t<T, S> tmp;
                 for (iterator it = this->begin(); it != this->end(); it++) {
-                        (*it) *= constant;
+                        tmp += (*it) * constant;
                 }
                 operator+=(_constant*constant);
+                operator =(tmp);
 
                 return *this;
         }
         polynomial_t<T, S>& operator/=(double constant) {
+                polynomial_t<T, S> tmp;
                 for (iterator it = this->begin(); it != this->end(); it++) {
-                        (*it) /= constant;
+                        tmp += (*it) / constant;
                 }
-                operator+=(_constant/constant);
+                operator+=(_constant*constant);
+                operator =(tmp);
 
                 return *this;
         }
         polynomial_t<T, S>& operator*=(const polynomial_term_t<T, S>& term) {
+                polynomial_t<T, S> tmp;
                 for (iterator it = this->begin(); it != this->end(); it++) {
-                        (*it) *= term;
+                        tmp += (*it) * term;
                 }
                 operator+=(_constant*term);
+                operator =(tmp);
 
                 return *this;
         }
         polynomial_t<T, S>& operator/=(const polynomial_term_t<T, S>& term) {
+                polynomial_t<T, S> tmp;
                 for (iterator it = this->begin(); it != this->end(); it++) {
-                        (*it) /= term;
+                        tmp += (*it) / term;
                 }
-                operator+=(_constant/term);
+                operator+=(_constant*term);
+                operator =(tmp);
 
                 return *this;
+        }
+        double eval(const boost::array<double, S>& val) const {
+                double result = _constant;
+                for (iterator it = this->begin(); it != this->end(); it++) {
+                        result += it->eval(val);
+                }
+                return result;
         }
         using boost::unordered_set<polynomial_term_t<T, S> >::insert;
         using boost::unordered_set<polynomial_term_t<T, S> >::count;
@@ -243,6 +283,30 @@ template <typename T, size_t S>
 polynomial_t<T, S> operator-(double constant, const polynomial_t<T, S>& poly) {
         polynomial_t<T, S> tmp(poly);
         tmp -= constant;
+        return tmp;
+}
+template <typename T, size_t S>
+polynomial_t<T, S> operator*(const polynomial_t<T, S>& poly, double constant) {
+        polynomial_t<T, S> tmp(poly);
+        tmp *= constant;
+        return tmp;
+}
+template <typename T, size_t S>
+polynomial_t<T, S> operator/(const polynomial_t<T, S>& poly, double constant) {
+        polynomial_t<T, S> tmp(poly);
+        tmp /= constant;
+        return tmp;
+}
+template <typename T, size_t S>
+polynomial_t<T, S> operator*(double constant, const polynomial_t<T, S>& poly) {
+        polynomial_t<T, S> tmp(poly);
+        tmp *= constant;
+        return tmp;
+}
+template <typename T, size_t S>
+polynomial_t<T, S> operator/(double constant, const polynomial_t<T, S>& poly) {
+        polynomial_t<T, S> tmp(poly);
+        tmp /= constant;
         return tmp;
 }
 template <typename T, size_t S>

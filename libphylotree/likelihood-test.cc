@@ -19,5 +19,10 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <phylotree.hh>
+#include <iostream>
 
+#include <likelihood.hh>
+
+int main(void) {
+        pt_likelihood();
+}

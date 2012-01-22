@@ -15,9 +15,21 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef UTILITY_H
+#define UTILITY_H
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <phylotree.hh>
+#include <tfbayes/polynomial.hh>
 
+#define alphabet_size 4
+typedef unsigned short code_t;
+
+std::ostream& operator<< (std::ostream& o, const polynomial_term_t<code_t, alphabet_size>& term);
+std::ostream& operator<< (std::ostream& o, const polynomial_t<code_t, alphabet_size>& polynomial);
+
+size_t hash_value(const polynomial_term_t<code_t, alphabet_size>& polynomial);
+
+#endif /* UTILITY_H */
