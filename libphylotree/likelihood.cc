@@ -90,23 +90,9 @@ void pt_likelihood_rec(pt_node_t<code_t, alphabet_size>* node) {
         }
 }
 
-double pt_likelihood() {
+polynomial_t<code_t, alphabet_size>
+pt_likelihood(pt_root_t<code_t, alphabet_size>* node) {
+        pt_likelihood_rec(node);
 
-        pt_leaf_t<code_t, alphabet_size> n2(1, 1.0);
-        pt_leaf_t<code_t, alphabet_size> n3(2, 2.0);
-        pt_root_t<code_t, alphabet_size> n1(-1, &n2, &n3);
-
-        pt_likelihood_rec(&n1);
-        cout << n1.poly_sum << endl;
-
-        boost::array<double, alphabet_size> val;
-        val[0] = 0.1;
-        val[1] = 0.3;
-        val[2] = 0.5;
-        val[3] = 0.1;
-        cout << "eval: "
-             << n1.poly_sum.eval(val)
-             << endl;
-
-        return 0.0;
+        return node->poly_sum;
 }

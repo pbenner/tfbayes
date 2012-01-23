@@ -22,7 +22,65 @@
 #include <iostream>
 
 #include <likelihood.hh>
+#include <utility.hh>
+
+using namespace std;
+
+void test_tree1() {
+        cout << "Test 1:" << endl;
+        pt_leaf_t<code_t, alphabet_size> n2(1, 1.0);
+        pt_leaf_t<code_t, alphabet_size> n3(2, 2.0);
+        pt_root_t<code_t, alphabet_size> n1(-1, &n2, &n3);
+
+        polynomial_t<code_t, alphabet_size> result = pt_likelihood(&n1);
+        cout << result << endl
+             << "0.950213 Pa^0 Pc^1 Pg^1 Pt^0 + 0 (correct polynomial)"
+             << endl << endl;
+}
+
+void test_tree2() {
+        cout << "Test 2:" << endl;
+        pt_leaf_t<code_t, alphabet_size> n2(1, 1.0);
+        pt_leaf_t<code_t, alphabet_size> n3(1, 2.0);
+        pt_root_t<code_t, alphabet_size> n1(-1, &n2, &n3);
+
+        polynomial_t<code_t, alphabet_size> result = pt_likelihood(&n1);
+        cout << result << endl
+             << "0.950213 Pa^0 Pc^2 Pg^0 Pt^0 + 0.0497871 Pa^0 Pc^1 Pg^0 Pt^0 + 0 (correct polynomial)"
+             << endl << endl;
+}
+
+void test_tree3() {
+        cout << "Test 3:" << endl;
+        pt_leaf_t<code_t, alphabet_size> n5(1, 2.0);
+        pt_leaf_t<code_t, alphabet_size> n4(1, 1.0);
+        pt_leaf_t<code_t, alphabet_size> n3(2, 1.0);
+        pt_node_t<code_t, alphabet_size> n2(-1, 0.5, &n4, &n5);
+        pt_root_t<code_t, alphabet_size> n1(-1, &n2, &n3);
+
+        polynomial_t<code_t, alphabet_size> result = pt_likelihood(&n1);
+        cout << result << endl;
+}
+
+void test_tree4() {
+        cout << "Test 4:" << endl;
+        pt_leaf_t<code_t, alphabet_size> n7(1, 2.0);
+        pt_leaf_t<code_t, alphabet_size> n6(1, 1.0);
+        pt_leaf_t<code_t, alphabet_size> n5(1, 2.0);
+        pt_leaf_t<code_t, alphabet_size> n4(1, 1.0);
+        pt_node_t<code_t, alphabet_size> n3(-1, 0.5, &n6, &n7);
+        pt_node_t<code_t, alphabet_size> n2(-1, 0.5, &n4, &n5);
+        pt_root_t<code_t, alphabet_size> n1(-1, &n2, &n3);
+
+        polynomial_t<code_t, alphabet_size> result = pt_likelihood(&n1);
+        cout << result << endl;
+}
 
 int main(void) {
-        pt_likelihood();
+        test_tree1();
+        test_tree2();
+        test_tree3();
+        test_tree4();
+
+        return 0.0;
 }

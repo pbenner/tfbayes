@@ -22,6 +22,9 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-double pt_likelihood();
+#include <phylotree.hh>
+
+polynomial_t<code_t, alphabet_size>
+pt_likelihood(pt_root_t<code_t, alphabet_size>* node);
 
 #endif /* LIKELIHOOD_H */
