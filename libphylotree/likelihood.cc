@@ -43,23 +43,23 @@ void pt_likelihood_node(pt_node_t<code_t, alphabet_size>* node) {
         for (size_t i = 0; i < alphabet_size+1; i++) {
                 /* ¬M, M */
                 if (node->left->applicable[i]) {
-                        const double p = exp(-node->left->d)*(1-exp(-node->right->d));
+                        const double p = exp(-node->left->d)*(1.0-exp(-node->right->d));
                         node->carry[i] += p*node->left->carry[i]*node->right->poly_sum;
                         node->applicable[i] = true;
                 }
                 /*  M,¬M */
                 if (node->right->applicable[i]) {
-                        const double p = (1-exp(-node->left->d))*exp(-node->right->d);
+                        const double p = (1.0-exp(-node->left->d))*exp(-node->right->d);
                         node->carry[i] += p*node->left->poly_sum*node->right->carry[i];
                         node->applicable[i] = true;
                 }
                 /* ¬M,¬M */
                 if (node->left->applicable[i] && node->right->applicable[i]) {
-                        const double p = (1-exp(-node->left->d))*(1-exp(-node->right->d));
+                        const double p = (1.0-exp(-node->left->d))*(1.0-exp(-node->right->d));
                         node->carry[i] += p*node->left->carry[i]*node->right->carry[i];
                         node->applicable[i] = true;
-                        }
                 }
+        }
 
         /* generate sum */
         for (size_t i = 0; i < alphabet_size+1; i++) {
