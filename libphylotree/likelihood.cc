@@ -54,26 +54,30 @@ void pt_likelihood_node(pt_node_t<code_t, alphabet_size>* node) {
                         node->applicable[i] = true;
                 }
                 /* ¬M,¬M */
-                if (node->left->applicable[i] && node->right->applicable[i]) {
+                if (node->left->applicable[i] || node->right->applicable[i]) {
                         const double p = exp(-node->left->d)*exp(-node->right->d);
-                        node->carry[i] += p*node->left->carry[i]*node->right->carry[i];
-                        node->applicable[i] = true;
+                        if (node->left->applicable[i] && node->right->applicable[i]) {
+                                node->carry[i] += p*node->left->carry[i]*node->right->carry[i];
+                                node->applicable[i] = true;
+                        }
+                        if (node->left->applicable[i] && i < alphabet_size) {
+                                node->carry[i] += p*node->left->carry[i]*node->right->carry[alphabet_size];
+                                node->applicable[i] = true;
+                        }
+                        if (node->right->applicable[i] && i < alphabet_size) {
+                                node->carry[i] += p*node->left->carry[alphabet_size]*node->right->carry[i];
+                                node->applicable[i] = true;
+                        }
                 }
         }
 
         /* generate sum */
-        for (size_t i = 0; i < alphabet_size+1; i++) {
-                /* if this is the root then multiply by Px */
-                if (node->root() && i < alphabet_size) {
-                        polynomial_term_t<code_t, alphabet_size> term;
-                        term[i] = 1;
-                        node->poly_sum += term*node->carry[i];
-                }
-                /* otherwise just sum up */
-                else {
-                        node->poly_sum += node->carry[i];
-                }
+        for (size_t i = 0; i < alphabet_size; i++) {
+                polynomial_term_t<code_t, alphabet_size> term;
+                term[i] = 1;
+                node->poly_sum += term*node->carry[i];
         }
+        node->poly_sum += node->carry[alphabet_size];
 }
 
 static
