@@ -21,7 +21,10 @@
 
 #include <likelihood.hh>
 
+#include <iostream>
 #include <gsl/gsl_sf_gamma.h>
+
+using namespace std;
 
 double mbeta_log(
         const polynomial_term_t<code_t, alphabet_size>& term,
@@ -50,7 +53,7 @@ pt_marginal_likelihood(
 
         for (polynomial_t<code_t, alphabet_size>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
-                result += mbeta_log(*it, alpha);
+                result += log(it->coefficient()) + mbeta_log(*it, alpha);
         }
 
         return result;

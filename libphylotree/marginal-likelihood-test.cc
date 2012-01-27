@@ -34,7 +34,7 @@ void test_tree1(const polynomial_term_t<code_t, alphabet_size> alpha) {
 
         double result = pt_marginal_likelihood(&n1, alpha);
         cout << result << endl
-             << " (correct value)"
+             << "-4.83856 (correct value)"
              << endl << endl;
 }
 
@@ -46,7 +46,7 @@ void test_tree2(const polynomial_term_t<code_t, alphabet_size> alpha) {
 
         double result = pt_marginal_likelihood(&n1, alpha);
         cout << result << endl
-             << " (correct value)"
+             << "-10.3235 (correct value)"
              << endl << endl;
 }
 
@@ -60,7 +60,7 @@ void test_tree3(const polynomial_term_t<code_t, alphabet_size> alpha) {
 
         double result = pt_marginal_likelihood(&n1, alpha);
         cout << result << endl
-             << " (correct value)"
+             << "-14.0767 (correct value)"
              << endl << endl;
 }
 
@@ -76,7 +76,7 @@ void test_tree4(const polynomial_term_t<code_t, alphabet_size> alpha) {
 
         double result = pt_marginal_likelihood(&n1, alpha);
         cout << result << endl
-             << " (correct value)"
+             << "-30.659 (correct value)"
              << endl << endl;
 }
 
@@ -92,7 +92,7 @@ void test_tree5(const polynomial_term_t<code_t, alphabet_size> alpha) {
 
         double result = pt_marginal_likelihood(&n1, alpha);
         cout << result << endl
-             << " (correct value)"
+             << "-17.8031 (correct value)"
              << endl << endl;
 }
 
