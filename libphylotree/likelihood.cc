@@ -81,7 +81,9 @@ void pt_likelihood_node(pt_node_t<code_t, alphabet_size>* node) {
 }
 
 static
-void pt_likelihood_rec(pt_node_t<code_t, alphabet_size>* node) {
+void pt_likelihood_rec(pt_node_t<code_t, alphabet_size>* node)
+{
+        node->init();
 
         if (node->leaf()) {
                 pt_likelihood_leaf(node);

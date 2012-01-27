@@ -38,9 +38,16 @@ public:
                 this->left  = left;
                 this->right = right;
 
-                for (size_t i = 0; i < ALPHABET_SIZE; i++)
+                init();
+        }
+        void init() {
+                poly_sum = polynomial_t<CODE_TYPE, ALPHABET_SIZE>();
+                for (size_t i = 0; i < ALPHABET_SIZE; i++) {
                         applicable[i] = false;
+                        carry[i]      = polynomial_t<CODE_TYPE, ALPHABET_SIZE>();
+                }
                 applicable[ALPHABET_SIZE] = true;
+                carry     [ALPHABET_SIZE] = polynomial_t<CODE_TYPE, ALPHABET_SIZE>();
         }
 
         bool leaf() const { return left == NULL && right == NULL; }
