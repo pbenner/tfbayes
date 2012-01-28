@@ -20,6 +20,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <likelihood.hh>
+#include <marginal-likelihood.hh>
 
 #include <iostream>
 #include <gsl/gsl_sf_gamma.h>
@@ -27,15 +28,15 @@
 using namespace std;
 
 double mbeta_log(
-        const polynomial_term_t<code_t, alphabet_size>& term,
-        const polynomial_term_t<code_t, alphabet_size>& alpha)
+        const exponent_t<code_t, alphabet_size>& exponent,
+        const exponent_t<code_t, alphabet_size>& alpha)
 {
         double sum1 = 0;
         double sum2 = 0;
 
         for (size_t i = 0; i < alphabet_size; i++) {
-                sum1 += term[i] + alpha[i];
-                sum2 += gsl_sf_lngamma(term[i] + alpha[i]);
+                sum1 += exponent[i] + alpha[i];
+                sum2 += gsl_sf_lngamma(exponent[i] + alpha[i]);
         }
 
         return sum2 - gsl_sf_lngamma(sum1);
@@ -44,7 +45,7 @@ double mbeta_log(
 double
 pt_marginal_likelihood(
         pt_root_t<code_t, alphabet_size>* node,
-        const polynomial_term_t<code_t, alphabet_size> alpha)
+        const exponent_t<code_t, alphabet_size> alpha)
 {
         double result = 0.0;
 
@@ -53,7 +54,8 @@ pt_marginal_likelihood(
 
         for (polynomial_t<code_t, alphabet_size>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
-                result += log(it->coefficient()) + mbeta_log(*it, alpha);
+                const polynomial_term_t<code_t, alphabet_size> term(*it);
+                result += log(term.coefficient()) + mbeta_log(term.exponent(), alpha);
         }
 
         return result;

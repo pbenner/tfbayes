@@ -27,6 +27,6 @@
 double
 pt_marginal_likelihood(
         pt_root_t<code_t, alphabet_size>* node,
-        polynomial_term_t<code_t, alphabet_size> alpha);
+        const exponent_t<code_t, alphabet_size> alpha);
 
 #endif /* MARGINAL_LIKELIHOOD_H */

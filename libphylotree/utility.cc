@@ -22,33 +22,39 @@
 #include <iostream>
 
 #include <phylotree.hh>
+#include <utility.hh>
 
 using namespace std;
 
+ostream& operator<< (ostream& o, const exponent_t<code_t, alphabet_size>& exponent) {
+        o << " Pa^" << exponent[0]
+          << " Pc^" << exponent[1]
+          << " Pg^" << exponent[2]
+          << " Pt^" << exponent[3];
+
+        return o;
+}
 ostream& operator<< (ostream& o, const polynomial_term_t<code_t, alphabet_size>& term) {
         o << term.coefficient()
-          << " Pa^" << term[0]
-          << " Pc^" << term[1]
-          << " Pg^" << term[2]
-          << " Pt^" << term[3];
+          << term.exponent();
 
         return o;
 }
 ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size>& polynomial) {
         for (polynomial_t<code_t, alphabet_size>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
-                o << *it << " + ";
+                o << polynomial_term_t<code_t, alphabet_size>(*it) << " + ";
         }
         o << polynomial.constant();
 
         return o;
 }
 
-size_t hash_value(const polynomial_term_t<code_t, alphabet_size>& polynomial) {
+size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent) {
         size_t seed = 0;
-        boost::hash_combine(seed, polynomial[0]);
-        boost::hash_combine(seed, polynomial[1]);
-        boost::hash_combine(seed, polynomial[2]);
-        boost::hash_combine(seed, polynomial[3]);
+        boost::hash_combine(seed, exponent[0]);
+        boost::hash_combine(seed, exponent[1]);
+        boost::hash_combine(seed, exponent[2]);
+        boost::hash_combine(seed, exponent[3]);
         return seed;
 }

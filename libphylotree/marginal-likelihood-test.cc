@@ -26,7 +26,7 @@
 
 using namespace std;
 
-void test_tree1(const polynomial_term_t<code_t, alphabet_size> alpha) {
+void test_tree1(const exponent_t<code_t, alphabet_size> alpha) {
         cout << "Test 1:" << endl;
         pt_leaf_t<code_t, alphabet_size> n2(1, 1.0);
         pt_leaf_t<code_t, alphabet_size> n3(2, 2.0);
@@ -38,7 +38,7 @@ void test_tree1(const polynomial_term_t<code_t, alphabet_size> alpha) {
              << endl << endl;
 }
 
-void test_tree2(const polynomial_term_t<code_t, alphabet_size> alpha) {
+void test_tree2(const exponent_t<code_t, alphabet_size> alpha) {
         cout << "Test 2:" << endl;
         pt_leaf_t<code_t, alphabet_size> n2(1, 1.0);
         pt_leaf_t<code_t, alphabet_size> n3(1, 2.0);
@@ -50,7 +50,7 @@ void test_tree2(const polynomial_term_t<code_t, alphabet_size> alpha) {
              << endl << endl;
 }
 
-void test_tree3(const polynomial_term_t<code_t, alphabet_size> alpha) {
+void test_tree3(const exponent_t<code_t, alphabet_size> alpha) {
         cout << "Test 3:" << endl;
         pt_leaf_t<code_t, alphabet_size> n5(1, 2.0);
         pt_leaf_t<code_t, alphabet_size> n4(1, 1.0);
@@ -64,7 +64,7 @@ void test_tree3(const polynomial_term_t<code_t, alphabet_size> alpha) {
              << endl << endl;
 }
 
-void test_tree4(const polynomial_term_t<code_t, alphabet_size> alpha) {
+void test_tree4(const exponent_t<code_t, alphabet_size> alpha) {
         cout << "Test 4:" << endl;
         pt_leaf_t<code_t, alphabet_size> n7(1, 2.0);
         pt_leaf_t<code_t, alphabet_size> n6(1, 1.0);
@@ -80,7 +80,7 @@ void test_tree4(const polynomial_term_t<code_t, alphabet_size> alpha) {
              << endl << endl;
 }
 
-void test_tree5(const polynomial_term_t<code_t, alphabet_size> alpha) {
+void test_tree5(const exponent_t<code_t, alphabet_size> alpha) {
         cout << "Test 5:" << endl;
         pt_leaf_t<code_t, alphabet_size> n7(1, 2.0);
         pt_leaf_t<code_t, alphabet_size> n6(1, 1.0);
@@ -97,7 +97,7 @@ void test_tree5(const polynomial_term_t<code_t, alphabet_size> alpha) {
 }
 
 int main(void) {
-        polynomial_term_t<code_t, alphabet_size> alpha;
+        exponent_t<code_t, alphabet_size> alpha;
         alpha[0] = 1;
         alpha[1] = 1;
         alpha[2] = 1;

@@ -25,45 +25,50 @@
 
 using namespace std;
 
+ostream& operator<< (ostream& o, const exponent_t<unsigned short, 4>& exponent) {
+        o << " w^" << exponent[0]
+          << " x^" << exponent[1]
+          << " y^" << exponent[2]
+          << " z^" << exponent[3];
+
+        return o;
+}
 ostream& operator<< (ostream& o, const polynomial_term_t<unsigned short, 4>& term) {
         o << term.coefficient()
-          << " w^" << term[0]
-          << " x^" << term[1]
-          << " y^" << term[2]
-          << " z^" << term[3];
+          << term.exponent();
 
         return o;
 }
 ostream& operator<< (ostream& o, const polynomial_t<unsigned short, 4>& polynomial) {
         for (polynomial_t<unsigned short, 4>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
-                o << *it << " + ";
+                o << polynomial_term_t<unsigned short, 4>(*it) << " + ";
         }
         o << polynomial.constant();
 
         return o;
 }
 
-size_t hash_value(const polynomial_term_t<unsigned short, 4u>& polynomial) {
+size_t hash_value(const exponent_t<unsigned short, 4u>& exponent) {
         size_t seed = 0;
-        boost::hash_combine(seed, polynomial[0]);
-        boost::hash_combine(seed, polynomial[1]);
-        boost::hash_combine(seed, polynomial[2]);
-        boost::hash_combine(seed, polynomial[3]);
+        boost::hash_combine(seed, exponent[0]);
+        boost::hash_combine(seed, exponent[1]);
+        boost::hash_combine(seed, exponent[2]);
+        boost::hash_combine(seed, exponent[3]);
         return seed;
 }
 
 int main() {
         polynomial_term_t<unsigned short, 4> term1;
-        term1[0] = 2;
-        term1[1] = 4;
-        term1[2] = 1;
-        term1[3] = 3;
+        term1.exponent()[0] = 2;
+        term1.exponent()[1] = 4;
+        term1.exponent()[2] = 1;
+        term1.exponent()[3] = 3;
         polynomial_term_t<unsigned short, 4> term2;
-        term2[0] = 1;
-        term2[1] = 1;
-        term2[2] = 1;
-        term2[3] = 3;
+        term2.exponent()[0] = 1;
+        term2.exponent()[1] = 1;
+        term2.exponent()[2] = 1;
+        term2.exponent()[3] = 3;
         polynomial_t<unsigned short, 4> poly1;
         poly1 += term1;
         poly1 += term2;

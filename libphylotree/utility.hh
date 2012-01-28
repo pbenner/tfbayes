@@ -27,9 +27,10 @@
 #define alphabet_size 4
 typedef unsigned short code_t;
 
+std::ostream& operator<< (std::ostream& o, const exponent_t<code_t, alphabet_size>& exponent);
 std::ostream& operator<< (std::ostream& o, const polynomial_term_t<code_t, alphabet_size>& term);
 std::ostream& operator<< (std::ostream& o, const polynomial_t<code_t, alphabet_size>& polynomial);
 
-size_t hash_value(const polynomial_term_t<code_t, alphabet_size>& polynomial);
+size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent);
 
 #endif /* UTILITY_H */

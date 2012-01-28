@@ -29,7 +29,7 @@ using namespace std;
 static
 void pt_likelihood_leaf(pt_node_t<code_t, alphabet_size>* node) {
         polynomial_term_t<code_t, alphabet_size> term;
-        term[node->x] = 1;
+        term.exponent()[node->x]   = 1;
         node->poly_sum            += term;
         node->carry[node->x]      += 1;
         node->applicable[node->x]  = true;
@@ -74,8 +74,8 @@ void pt_likelihood_node(pt_node_t<code_t, alphabet_size>* node) {
         /* generate sum */
         for (size_t i = 0; i < alphabet_size; i++) {
                 polynomial_term_t<code_t, alphabet_size> term;
-                term[i] = 1;
-                node->poly_sum += term*node->carry[i];
+                term.exponent()[i] = 1;
+                node->poly_sum    += term*node->carry[i];
         }
         node->poly_sum += node->carry[alphabet_size];
 }

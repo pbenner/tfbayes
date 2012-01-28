@@ -23,65 +23,90 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <boost/array.hpp>
-#include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
 
 template <typename T, size_t S>
-class polynomial_term_t : public boost::array<T, S> {
+class exponent_t : public boost::array<T, S> {
 public:
-        polynomial_term_t()
-                : _coefficient(1.0) {
+        exponent_t() {
                 for (size_t i = 0; i < S; i++) {
                         operator[](i) = 0;
                 }
         }
-        double& coefficient() {
-                return _coefficient;
-        }
-        const double coefficient() const {
-                return _coefficient;
-        }
-        using boost::array<T, S>::operator[];
 
-        polynomial_term_t<T, S>& operator+=(const polynomial_term_t<T, S>& term) {
-                _coefficient += term.coefficient();
-                return *this;
-        }
-        polynomial_term_t<T, S>& operator-=(const polynomial_term_t<T, S>& term) {
-                _coefficient -= term.coefficient();
-                return *this;
-        }
-        polynomial_term_t<T, S>& operator*=(double constant) {
-                _coefficient *= constant;
-                return *this;
-        }
-        polynomial_term_t<T, S>& operator/=(double constant) {
-                _coefficient /= constant;
-                return *this;
-        }
-        polynomial_term_t<T, S>& operator*=(const polynomial_term_t<T, S>& term) {
-                _coefficient *= term.coefficient();
+        exponent_t<T, S>& operator*=(const exponent_t<T, S>& exponent) {
                 for (size_t i = 0; i < S; i++) {
-                        operator[](i) += term[i];
+                        operator[](i) += exponent[i];
                 }
                 return *this;
         }
-        polynomial_term_t<T, S>& operator/=(const polynomial_term_t<T, S>& term) {
-                _coefficient /= term.coefficient();
+        exponent_t<T, S>& operator/=(const exponent_t<T, S>& exponent) {
                 for (size_t i = 0; i < S; i++) {
-                        operator[](i) -= term[i];
+                        operator[](i) -= exponent[i];
                 }
                 return *this;
         }
         double eval(const boost::array<double, S>& val) const {
-                double result = _coefficient;
+                double result;
                 for (size_t i = 0; i < S; i++) {
                         result *= pow(val[i], operator[](i));
                 }
                 return result;
         }
+        using boost::array<T, S>::operator[];
+};
 
-protected:
-        double _coefficient;
+template <typename T, size_t S>
+class polynomial_term_t : public std::pair<exponent_t<T, S>, double> {
+public:
+        polynomial_term_t()
+                : std::pair<exponent_t<T, S>, double>(exponent_t<T, S>(), 1.0)
+                { }
+        polynomial_term_t(const std::pair<exponent_t<T, S>, double>& pair)
+                : std::pair<exponent_t<T, S>, double>(pair)
+                { }
+        exponent_t<T, S>& exponent() {
+                return std::pair<exponent_t<T, S>, double>::first;
+        }
+        const exponent_t<T, S>& exponent() const {
+                return std::pair<exponent_t<T, S>, double>::first;
+        }
+        double& coefficient() {
+                return std::pair<exponent_t<T, S>, double>::second;
+        }
+        const double& coefficient() const {
+                return std::pair<exponent_t<T, S>, double>::second;
+        }
+
+        polynomial_term_t<T, S>& operator+=(const polynomial_term_t<T, S>& term) {
+                coefficient() += term.coefficient();
+                return *this;
+        }
+        polynomial_term_t<T, S>& operator-=(const polynomial_term_t<T, S>& term) {
+                coefficient() -= term.coefficient();
+                return *this;
+        }
+        polynomial_term_t<T, S>& operator*=(double constant) {
+                coefficient() *= constant;
+                return *this;
+        }
+        polynomial_term_t<T, S>& operator/=(double constant) {
+                coefficient() /= constant;
+                return *this;
+        }
+        polynomial_term_t<T, S>& operator*=(const polynomial_term_t<T, S>& term) {
+                coefficient() *= term.coefficient();
+                exponent()    *= term.exponent();
+                return *this;
+        }
+        polynomial_term_t<T, S>& operator/=(const polynomial_term_t<T, S>& term) {
+                coefficient() /= term.coefficient();
+                exponent()    /= term.exponent();
+                return *this;
+        }
+        double eval(const boost::array<double, S>& val) const {
+                return coefficient()*exponent().eval(val);
+        }
 };
 
 template <typename T, size_t S>
@@ -134,13 +159,12 @@ polynomial_term_t<T, S> operator/(const polynomial_term_t<T, S>& term1, const po
 }
 
 template <typename T, size_t S>
-class polynomial_t : public boost::unordered_set<polynomial_term_t<T, S> > {
+class polynomial_t : public boost::unordered_map<exponent_t<T, S>, double> {
 public:
-        typedef typename polynomial_t<T, S>::iterator iterator;
         typedef typename polynomial_t<T, S>::const_iterator const_iterator;
 
         polynomial_t()
-                : boost::unordered_set<polynomial_term_t<T, S> >(),
+                : boost::unordered_map<exponent_t<T, S>, double>(),
                   _constant(0.0) {}
 
         double& constant() {
@@ -159,42 +183,26 @@ public:
                 return *this;
         }
         polynomial_t<T, S>& operator+=(const polynomial_term_t<T, S>& term) {
-                if (count(term) == 0) {
-                        if (term.coefficient() != 0) {
-                                insert(term);
-                        }
-                }
-                else {
-                        polynomial_term_t<T, S> tmp(*find(term));
-                        erase(term);
-                        tmp += term;
-                        if (tmp.coefficient() != 0.0) {
-                                insert(tmp);
+                if (term.coefficient() != 0.0) {
+                        operator[](term.exponent()) += term.coefficient();
+                        if (operator[](term.exponent()) == 0.0) {
+                                erase(term.exponent());
                         }
                 }
                 return *this;
         }
         polynomial_t<T, S>& operator-=(const polynomial_term_t<T, S>& term) {
-                if (count(term) == 0) {
-                        if (term.coefficient() != 0) {
-                                polynomial_term_t<T, S> tmp(term);
-                                tmp.coefficient() = -tmp.coefficient();
-                                insert(tmp);
-                        }
-                }
-                else {
-                        polynomial_term_t<T, S> tmp(*find(term));
-                        erase(term);
-                        tmp -= term;
-                        if (tmp.coefficient() != 0.0) {
-                                insert(tmp);
+                if (term.coefficient() != 0.0) {
+                        operator[](term.exponent()) -= term.coefficient();
+                        if (operator[](term.exponent()) == 0.0) {
+                                erase(term.exponent());
                         }
                 }
                 return *this;
         }
         polynomial_t<T, S>& operator+=(const polynomial_t<T, S>& poly) {
                 for (const_iterator it = poly.begin(); it != poly.end(); it++) {
-                        operator+=(*it);
+                        operator+=(polynomial_term_t<T, S>(*it));
                 }
                 _constant += poly.constant();
                 return *this;
@@ -208,8 +216,8 @@ public:
         }
         polynomial_t<T, S>& operator*=(double constant) {
                 polynomial_t<T, S> tmp;
-                for (iterator it = this->begin(); it != this->end(); it++) {
-                        tmp += (*it) * constant;
+                for (const_iterator it = this->begin(); it != this->end(); it++) {
+                        tmp += polynomial_term_t<T, S>(*it) * constant;
                 }
                 tmp += _constant*constant;
                 operator=(tmp);
@@ -218,8 +226,8 @@ public:
         }
         polynomial_t<T, S>& operator/=(double constant) {
                 polynomial_t<T, S> tmp;
-                for (iterator it = this->begin(); it != this->end(); it++) {
-                        tmp += (*it) / constant;
+                for (const_iterator it = this->begin(); it != this->end(); it++) {
+                        tmp += polynomial_term_t<T, S>(*it) / constant;
                 }
                 tmp += _constant/constant;
                 operator=(tmp);
@@ -228,8 +236,8 @@ public:
         }
         polynomial_t<T, S>& operator*=(const polynomial_term_t<T, S>& term) {
                 polynomial_t<T, S> tmp;
-                for (iterator it = this->begin(); it != this->end(); it++) {
-                        tmp += (*it) * term;
+                for (const_iterator it = this->begin(); it != this->end(); it++) {
+                        tmp += polynomial_term_t<T, S>(*it) * term;
                 }
                 tmp += _constant*term;
                 operator=(tmp);
@@ -238,8 +246,8 @@ public:
         }
         polynomial_t<T, S>& operator/=(const polynomial_term_t<T, S>& term) {
                 polynomial_t<T, S> tmp;
-                for (iterator it = this->begin(); it != this->end(); it++) {
-                        tmp += (*it) / term;
+                for (const_iterator it = this->begin(); it != this->end(); it++) {
+                        tmp += polynomial_term_t<T, S>(*it) / term;
                 }
                 tmp += _constant/term;
                 operator=(tmp);
@@ -251,13 +259,13 @@ public:
 
                 for (typename polynomial_t<T, S>::const_iterator it = this->begin(); it != this->end(); it++) {
                         for (typename polynomial_t<T, S>::const_iterator is = poly.begin(); is != poly.end(); is++) {
-                                tmp += (*it)*(*is);
+                                tmp += polynomial_term_t<T, S>(*it)*polynomial_term_t<T, S>(*is);
                         }
-                        tmp += (*it)*poly.constant();
+                        tmp += polynomial_term_t<T, S>(*it)*poly.constant();
                 }
                 if (constant() != 0.0) {
                         for (typename polynomial_t<T, S>::const_iterator is = poly.begin(); is != poly.end(); is++) {
-                                tmp += constant()*(*is);
+                                tmp += constant()*polynomial_term_t<T, S>(*is);
                         }
                         tmp += constant()*poly.constant();
                 }
@@ -267,14 +275,13 @@ public:
         }
         double eval(const boost::array<double, S>& val) const {
                 double result = _constant;
-                for (iterator it = this->begin(); it != this->end(); it++) {
+                for (const_iterator it = this->begin(); it != this->end(); it++) {
                         result += it->eval(val);
                 }
                 return result;
         }
-        using boost::unordered_set<polynomial_term_t<T, S> >::insert;
-        using boost::unordered_set<polynomial_term_t<T, S> >::count;
-        using boost::unordered_set<polynomial_term_t<T, S> >::find;
+        using boost::unordered_map<exponent_t<T, S>, double>::operator[];
+        using boost::unordered_map<exponent_t<T, S>, double>::erase;
 
 protected:
         double _constant;
