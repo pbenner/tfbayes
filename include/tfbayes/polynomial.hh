@@ -22,6 +22,8 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <utility>
+
 #include <boost/array.hpp>
 #include <boost/unordered_map.hpp>
 
