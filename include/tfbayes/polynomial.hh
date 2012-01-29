@@ -227,7 +227,7 @@ public:
         polynomial_t<T, S>& operator/=(double constant) {
                 polynomial_t<T, S> tmp;
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
-                        tmp += polynomial_term_t<T, S>(*it) / constant;
+                        tmp += (*it) / constant;
                 }
                 tmp += _constant/constant;
                 operator=(tmp);
@@ -237,7 +237,7 @@ public:
         polynomial_t<T, S>& operator*=(const polynomial_term_t<T, S>& term) {
                 polynomial_t<T, S> tmp;
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
-                        tmp += polynomial_term_t<T, S>(*it) * term;
+                        tmp += (*it) * term;
                 }
                 tmp += _constant*term;
                 operator=(tmp);
@@ -247,7 +247,7 @@ public:
         polynomial_t<T, S>& operator/=(const polynomial_term_t<T, S>& term) {
                 polynomial_t<T, S> tmp;
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
-                        tmp += polynomial_term_t<T, S>(*it) / term;
+                        tmp += (*it) / term;
                 }
                 tmp += _constant/term;
                 operator=(tmp);
@@ -259,13 +259,13 @@ public:
 
                 for (typename polynomial_t<T, S>::const_iterator it = this->begin(); it != this->end(); it++) {
                         for (typename polynomial_t<T, S>::const_iterator is = poly.begin(); is != poly.end(); is++) {
-                                tmp += polynomial_term_t<T, S>(*it)*polynomial_term_t<T, S>(*is);
+                                tmp += (*it)*(*is);
                         }
-                        tmp += polynomial_term_t<T, S>(*it)*poly.constant();
+                        tmp += (*it)*poly.constant();
                 }
                 if (constant() != 0.0) {
                         for (typename polynomial_t<T, S>::const_iterator is = poly.begin(); is != poly.end(); is++) {
-                                tmp += constant()*polynomial_term_t<T, S>(*is);
+                                tmp += constant()*(*is);
                         }
                         tmp += constant()*poly.constant();
                 }
