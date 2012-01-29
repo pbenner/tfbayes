@@ -54,8 +54,7 @@ pt_marginal_likelihood(
 
         for (polynomial_t<code_t, alphabet_size>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
-                const polynomial_term_t<code_t, alphabet_size> term(*it);
-                result += log(term.coefficient()) + mbeta_log(term.exponent(), alpha);
+                result += log(it->coefficient()) + mbeta_log(it->exponent(), alpha);
         }
 
         return result;

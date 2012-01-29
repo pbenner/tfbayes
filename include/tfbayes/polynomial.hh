@@ -163,8 +163,6 @@ polynomial_term_t<T, S> operator/(const polynomial_term_t<T, S>& term1, const po
 template <typename T, size_t S>
 class polynomial_t : public boost::unordered_map<exponent_t<T, S>, double> {
 public:
-        typedef typename polynomial_t<T, S>::const_iterator const_iterator;
-
         polynomial_t()
                 : boost::unordered_map<exponent_t<T, S>, double>(),
                   _constant(0.0) {}
@@ -204,7 +202,7 @@ public:
         }
         polynomial_t<T, S>& operator+=(const polynomial_t<T, S>& poly) {
                 for (const_iterator it = poly.begin(); it != poly.end(); it++) {
-                        operator+=(polynomial_term_t<T, S>(*it));
+                        operator+=(*it);
                 }
                 _constant += poly.constant();
                 return *this;
@@ -219,7 +217,7 @@ public:
         polynomial_t<T, S>& operator*=(double constant) {
                 polynomial_t<T, S> tmp;
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
-                        tmp += polynomial_term_t<T, S>(*it) * constant;
+                        tmp += (*it) * constant;
                 }
                 tmp += _constant*constant;
                 operator=(tmp);
@@ -284,6 +282,28 @@ public:
         }
         using boost::unordered_map<exponent_t<T, S>, double>::operator[];
         using boost::unordered_map<exponent_t<T, S>, double>::erase;
+
+        // Iterator
+        ////////////////////////////////////////////////////////////////////////
+        class const_iterator : public boost::unordered_map<exponent_t<T, S>, double>::const_iterator
+        {
+        public:
+                const_iterator(typename boost::unordered_map<exponent_t<T, S>, double>::const_iterator iterator)
+                        : boost::unordered_map<exponent_t<T, S>, double>::const_iterator(iterator)
+                        {}
+
+                const polynomial_term_t<T, S>* operator->() const
+                {
+                        return (const polynomial_term_t<T, S>*)boost::unordered_map<exponent_t<T, S>, double>::const_iterator::operator->();
+                }
+                const polynomial_term_t<T, S> operator*() const
+                {
+                        return *operator->();
+                }
+        };
+        const_iterator begin() const {
+                return const_iterator(boost::unordered_map<exponent_t<T, S>, double>::begin());
+        }
 
 protected:
         double _constant;

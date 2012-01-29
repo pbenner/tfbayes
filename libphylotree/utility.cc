@@ -43,7 +43,7 @@ ostream& operator<< (ostream& o, const polynomial_term_t<code_t, alphabet_size>&
 ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size>& polynomial) {
         for (polynomial_t<code_t, alphabet_size>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
-                o << polynomial_term_t<code_t, alphabet_size>(*it) << " + ";
+                o << *it << " + ";
         }
         o << polynomial.constant();
 

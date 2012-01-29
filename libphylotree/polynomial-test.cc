@@ -42,7 +42,7 @@ ostream& operator<< (ostream& o, const polynomial_term_t<unsigned short, 4>& ter
 ostream& operator<< (ostream& o, const polynomial_t<unsigned short, 4>& polynomial) {
         for (polynomial_t<unsigned short, 4>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
-                o << polynomial_term_t<unsigned short, 4>(*it) << " + ";
+                o << *it << " + ";
         }
         o << polynomial.constant();
 
