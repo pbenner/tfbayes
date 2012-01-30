@@ -170,7 +170,7 @@ public:
         double& constant() {
                 return _constant;
         }
-        const double constant() const {
+        const double& constant() const {
                 return _constant;
         }
 

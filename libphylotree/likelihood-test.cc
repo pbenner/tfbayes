@@ -34,7 +34,7 @@ void test_tree1() {
 
         polynomial_t<code_t, alphabet_size> result = pt_likelihood(&n1);
         cout << result << endl
-             << "0.950213 Pa^0 Pc^1 Pg^1 Pt^0 + 0 (correct polynomial)"
+             << "0.950213 Pc^1 Pg^1 (correct polynomial)"
              << endl << endl;
 }
 
@@ -46,7 +46,7 @@ void test_tree2() {
 
         polynomial_t<code_t, alphabet_size> result = pt_likelihood(&n1);
         cout << result << endl
-             << "0.950213 Pa^0 Pc^2 Pg^0 Pt^0 + 0.0497871 Pa^0 Pc^1 Pg^0 Pt^0 + 0 (correct polynomial)"
+             << "0.950213 Pc^2 + 0.0497871 Pc^1 (correct polynomial)"
              << endl << endl;
 }
 
@@ -60,7 +60,7 @@ void test_tree3() {
 
         polynomial_t<code_t, alphabet_size> result = pt_likelihood(&n1);
         cout << result << endl
-             << "0.0386781 Pa^0 Pc^1 Pg^1 Pt^0 + 0.860149 Pa^0 Pc^2 Pg^1 Pt^0 + 0 (correct polynomial)"
+             << "0.0386781 Pc^1 Pg^1 + 0.860149 Pc^2 Pg^1 (correct polynomial)"
              << endl << endl;
 }
 
@@ -76,7 +76,7 @@ void test_tree4() {
 
         polynomial_t<code_t, alphabet_size> result = pt_likelihood(&n1);
         cout << result << endl
-             << "0.0163527 Pa^0 Pc^2 Pg^0 Pt^0 + 0.000911882 Pa^0 Pc^1 Pg^0 Pt^0 + 0.842968 Pa^0 Pc^4 Pg^0 Pt^0 + 0.139768 Pa^0 Pc^3 Pg^0 Pt^0 + 0 (correct polynomial)"
+             << "0.0163527 Pc^2 + 0.000911882 Pc^1 + 0.842968 Pc^4 + 0.139768 Pc^3 (correct polynomial)"
              << endl << endl;
 }
 
@@ -92,7 +92,7 @@ void test_tree5() {
 
         polynomial_t<code_t, alphabet_size> result = pt_likelihood(&n1);
         cout << result << endl
-             << "0.0399154 Pa^0 Pc^1 Pg^1 Pt^1 + 0.842968 Pa^0 Pc^2 Pg^1 Pt^1 + 0 (correct polynomial)"
+             << "0.0399154 Pc^1 Pg^1 Pt^1 + 0.842968 Pc^2 Pg^1 Pt^1 (correct polynomial)"
              << endl << endl;
 }
 

@@ -27,10 +27,10 @@
 using namespace std;
 
 ostream& operator<< (ostream& o, const exponent_t<code_t, alphabet_size>& exponent) {
-        o << " Pa^" << exponent[0]
-          << " Pc^" << exponent[1]
-          << " Pg^" << exponent[2]
-          << " Pt^" << exponent[3];
+        if(exponent[0]) o << " Pa^" << exponent[0];
+        if(exponent[1]) o << " Pc^" << exponent[1];
+        if(exponent[2]) o << " Pg^" << exponent[2];
+        if(exponent[3]) o << " Pt^" << exponent[3];
 
         return o;
 }
@@ -43,9 +43,16 @@ ostream& operator<< (ostream& o, const polynomial_term_t<code_t, alphabet_size>&
 ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size>& polynomial) {
         for (polynomial_t<code_t, alphabet_size>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
-                o << *it << " + ";
+                if (it != polynomial.begin()) {
+                        o << " + " << *it;
+                }
+                else {
+                        o << *it;
+                }
         }
-        o << polynomial.constant();
+        if (polynomial.constant()) {
+                o << " + " << polynomial.constant();
+        }
 
         return o;
 }
