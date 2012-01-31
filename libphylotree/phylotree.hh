@@ -85,7 +85,4 @@ public:
                 : pt_node_t<CODE_TYPE, ALPHABET_SIZE>(x, d, NULL, NULL) { }
 };
 
-#define alphabet_size 4
-typedef unsigned short code_t;
-
 #endif /* PHYLOTREE_H */

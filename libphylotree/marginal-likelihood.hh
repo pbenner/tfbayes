@@ -23,6 +23,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <phylotree.hh>
+#include <likelihood.hh>
 
 double
 pt_marginal_likelihood(
