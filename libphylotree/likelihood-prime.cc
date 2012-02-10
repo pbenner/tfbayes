@@ -43,30 +43,41 @@ size_t hash_value(const incomplete_term_t term) {
 }
 
 static
-void pt_likelihood_leaf(pt_node_t<code_t, alphabet_size>* node) {
+incomplete_polynomial_t
+pt_likelihood_leaf(pt_node_t<code_t, alphabet_size>* node) {
         incomplete_polynomial_t poly;
         incomplete_term_t term;
         term.incomplete.push_back(node);
         poly[term] = 1;
+
+        return poly;
 }
 
 static
-void pt_likelihood_node(pt_node_t<code_t, alphabet_size>* node) {
+incomplete_polynomial_t
+pt_likelihood_node(
+        pt_node_t<code_t, alphabet_size>* node,
+        const incomplete_polynomial_t& poly_left,
+        const incomplete_polynomial_t& poly_right) {
+        incomplete_polynomial_t poly;
+
+        return poly;
 }
 
 static
-void pt_likelihood_rec(pt_node_t<code_t, alphabet_size>* node)
+incomplete_polynomial_t
+pt_likelihood_rec(pt_node_t<code_t, alphabet_size>* node)
 {
         node->init();
 
         if (node->leaf()) {
-                pt_likelihood_leaf(node);
+                return pt_likelihood_leaf(node);
         }
         else {
-                pt_likelihood_rec(node->left);
-                pt_likelihood_rec(node->right);
+                const incomplete_polynomial_t poly_left  = pt_likelihood_rec(node->left);
+                const incomplete_polynomial_t poly_right = pt_likelihood_rec(node->right);
 
-                pt_likelihood_node(node);
+                return pt_likelihood_node(node, poly_left, poly_right);
         }
 }
 
