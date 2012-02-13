@@ -30,10 +30,16 @@
 class node_set_t : public std::vector<pt_node_t<code_t, alphabet_size>*> {
 };
 
-class incomplete_term_t {
+class incomplete_node_set_t : public node_set_t {
 public:
-        std::vector<node_set_t> phi;
-        node_set_t incomplete;
+        bool empty() const {
+                return size() == 0;
+        }
+};
+
+class incomplete_term_t : public std::vector<node_set_t> {
+public:
+        incomplete_node_set_t incomplete;
 };
 
 class incomplete_polynomial_t : public boost::unordered_map<incomplete_term_t, double> {
