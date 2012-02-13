@@ -28,7 +28,7 @@
 
 using namespace std;
 
-size_t hash_value(const node_set_t set) {
+size_t hash_value(const node_set_t& set) {
         size_t seed = 0;
         for (node_set_t::const_iterator it = set.begin(); it != set.end(); it++) {
                 boost::hash_combine(seed, (void*)*it);
@@ -36,15 +36,23 @@ size_t hash_value(const node_set_t set) {
         return seed;
 }
 
-size_t hash_value(const incomplete_term_t term) {
+size_t hash_value(const incomplete_term_t& term) {
         size_t seed = 0;
+        for (incomplete_term_t::const_iterator it = term.begin(); it != term.end(); it++) {
+                boost::hash_combine(seed, hash_value(*it));
+        }
         boost::hash_combine(seed, hash_value(term.incomplete));
         return seed;
 }
 
 static
-incomplete_polynomial_t
-pt_likelihood_leaf(pt_node_t<code_t, alphabet_size>* node) {
+double mutation_probability(pt_node_t<code_t, alphabet_size>* node)
+{
+        return 1.0-exp(-node->d);
+}
+
+static
+void pt_likelihood_leaf(pt_node_t<code_t, alphabet_size>* node) {
         incomplete_polynomial_t poly;
         incomplete_term_t term;
         term.incomplete.push_back(node);
