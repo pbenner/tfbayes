@@ -52,7 +52,8 @@ double mutation_probability(pt_node_t<code_t, alphabet_size>* node)
 }
 
 static
-void pt_likelihood_leaf(pt_node_t<code_t, alphabet_size>* node) {
+incomplete_polynomial_t
+pt_likelihood_leaf(pt_node_t<code_t, alphabet_size>* node) {
         incomplete_polynomial_t poly;
         incomplete_term_t term;
         term.incomplete.push_back(node);
