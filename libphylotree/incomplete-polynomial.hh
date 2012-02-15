@@ -36,11 +36,16 @@ public:
 
 class incomplete_exponent_t : public std::vector<node_set_t> {
 public:
+        void complete() {
+                push_back(incomplete);
+                incomplete = node_set_t();
+        }
+
         incomplete_exponent_t& operator*=(const incomplete_exponent_t& exponent) {
                 for (incomplete_exponent_t::const_iterator it = exponent.begin(); it != exponent.end(); it++) {
                         push_back(*it);
                 }
-                for (node_set_t::const_iterator it = incomplete.begin(); it != incomplete.end(); it++) {
+                for (node_set_t::const_iterator it = exponent.incomplete.begin(); it != exponent.incomplete.end(); it++) {
                         incomplete.push_back(*it);
                 }
 
@@ -115,7 +120,7 @@ public:
         public:
                 const_iterator(boost::unordered_map<incomplete_exponent_t, double>::const_iterator iterator)
                         : boost::unordered_map<incomplete_exponent_t, double>::const_iterator(iterator)
-                        {}
+                        { }
 
                 const incomplete_term_t* operator->() const
                 {
@@ -130,5 +135,11 @@ public:
                 return const_iterator(boost::unordered_map<incomplete_exponent_t, double>::begin());
         }
 };
+
+incomplete_polynomial_t operator*(const incomplete_polynomial_t& poly1, const incomplete_polynomial_t& poly2) {
+        incomplete_polynomial_t result(poly1);
+        result *= poly2;
+        return result;
+}
 
 #endif /* INCOMPLETE_POLYNOMIAL_H */

@@ -28,6 +28,52 @@
 
 using namespace std;
 
+ostream& operator<< (ostream& o, const node_set_t& node_set) {
+        for (node_set_t::const_iterator it = node_set.begin(); it != node_set.end(); it++) {
+                if (it != node_set.begin()) {
+                        o << ",";
+                }
+                o << (*it)->x;
+        }
+
+        return o;
+}
+
+ostream& operator<< (ostream& o, const incomplete_exponent_t& exponent) {
+        for (incomplete_exponent_t::const_iterator it = exponent.begin(); it != exponent.end(); it++) {
+                o << "phi("
+                  << *it
+                  << ")";
+        }
+        if (!exponent.incomplete.empty()) {
+                o << "I("
+                  << exponent.incomplete
+                  << ")";
+        }
+        return o;
+}
+
+ostream& operator<< (ostream& o, const incomplete_term_t& term) {
+        if (term.coefficient() != 1.0) {
+                o << term.coefficient()
+                  << " ";
+        }
+        o << (const incomplete_exponent_t&)term;
+
+        return o;
+}
+
+ostream& operator<< (ostream& o, const incomplete_polynomial_t& polynomial) {
+        for (incomplete_polynomial_t::const_iterator it = polynomial.begin(); it != polynomial.end(); it++) {
+                if (it != polynomial.begin()) {
+                        o << " + ";
+                }
+                o << *it;
+        }
+
+        return o;
+}
+
 size_t hash_value(const node_set_t& set) {
         size_t seed = 0;
         for (node_set_t::const_iterator it = set.begin(); it != set.end(); it++) {
@@ -67,10 +113,25 @@ incomplete_polynomial_t
 pt_likelihood_node(
         pt_node_t<code_t, alphabet_size>* node,
         const incomplete_polynomial_t& poly_left,
-        const incomplete_polynomial_t& poly_right) {
-        incomplete_polynomial_t poly;
+        const incomplete_polynomial_t& poly_right)
+{
+        incomplete_polynomial_t poly1 = poly_left*poly_right;
+        incomplete_polynomial_t poly2;
 
-        return poly;
+        for (incomplete_polynomial_t::const_iterator it = poly1.begin(); it != poly1.end(); it++) {
+                incomplete_term_t term(*it);
+
+                if (term.incomplete.empty()) {
+                        poly2 += term;
+                }
+                else {
+                        poly2 += term;
+                        term.complete();
+                        poly2 += term;
+                }
+        }
+
+        return poly2;
 }
 
 static
@@ -92,7 +153,7 @@ pt_likelihood_rec(pt_node_t<code_t, alphabet_size>* node)
 
 polynomial_t<code_t, alphabet_size>
 pt_likelihood_prime(pt_root_t<code_t, alphabet_size>* node) {
-        pt_likelihood_rec(node);
+        cout << pt_likelihood_rec(node);
 
         return node->poly_sum;
 }
