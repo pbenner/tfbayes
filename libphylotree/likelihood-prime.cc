@@ -77,7 +77,7 @@ ostream& operator<< (ostream& o, const incomplete_polynomial_t& polynomial) {
 size_t hash_value(const node_set_t& set) {
         size_t seed = 0;
         for (node_set_t::const_iterator it = set.begin(); it != set.end(); it++) {
-                boost::hash_combine(seed, (void*)*it);
+                seed += (size_t)*it;
         }
         return seed;
 }
@@ -147,6 +147,7 @@ pt_likelihood_node(
                         poly2 +=      mutation_probability(node) *term.complete();
                 }
         }
+        cout << poly2 << endl;
 
         return poly2;
 }

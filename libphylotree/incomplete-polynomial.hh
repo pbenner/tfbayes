@@ -35,6 +35,8 @@ public:
         }
 };
 
+std::ostream& operator<< (std::ostream& o, const node_set_t& node_set);
+
 class incomplete_exponent_t : public boost::unordered_set<node_set_t> {
 public:
         incomplete_exponent_t& complete() {
@@ -62,7 +64,7 @@ public:
         }
         bool operator==(const incomplete_exponent_t& exponent) const {
                 return (const boost::unordered_set<node_set_t>&)*this == (const boost::unordered_set<node_set_t>&)exponent &&
-                       incomplete() == exponent.incomplete();
+                        incomplete() == exponent.incomplete();
         }
 
 private:
