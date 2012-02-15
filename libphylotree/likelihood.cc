@@ -32,42 +32,26 @@ void pt_likelihood_leaf(pt_node_t<code_t, alphabet_size>* node) {
         term.exponent()[node->x]   = 1;
         node->poly_sum            += term;
         node->carry[node->x]      += 1;
-        node->applicable[node->x]  = true;
 }
 
 static
 void pt_likelihood_node(pt_node_t<code_t, alphabet_size>* node) {
         /*  M, M */
-        const double p = (1.0-exp(-node->left->d))*(1.0-exp(-node->right->d));
+        double p = (1.0-exp(-node->left->d))*(1.0-exp(-node->right->d));
         node->carry[alphabet_size] += p*node->left->poly_sum*node->right->poly_sum;
         for (size_t i = 0; i < alphabet_size+1; i++) {
                 /* ¬M, M */
-                if (node->left->applicable[i]) {
-                        const double p = exp(-node->left->d)*(1.0-exp(-node->right->d));
-                        node->carry[i] += p*node->left->carry[i]*node->right->poly_sum;
-                        node->applicable[i] = true;
-                }
+                p = exp(-node->left->d)*(1.0-exp(-node->right->d));
+                node->carry[i] += p*node->left->carry[i]*node->right->poly_sum;
                 /*  M,¬M */
-                if (node->right->applicable[i]) {
-                        const double p = (1.0-exp(-node->left->d))*exp(-node->right->d);
-                        node->carry[i] += p*node->left->poly_sum*node->right->carry[i];
-                        node->applicable[i] = true;
-                }
+                p = (1.0-exp(-node->left->d))*exp(-node->right->d);
+                node->carry[i] += p*node->left->poly_sum*node->right->carry[i];
                 /* ¬M,¬M */
-                if (node->left->applicable[i] || node->right->applicable[i]) {
-                        const double p = exp(-node->left->d)*exp(-node->right->d);
-                        if (node->left->applicable[i] && node->right->applicable[i]) {
-                                node->carry[i] += p*node->left->carry[i]*node->right->carry[i];
-                                node->applicable[i] = true;
-                        }
-                        if (node->left->applicable[i] && i < alphabet_size) {
-                                node->carry[i] += p*node->left->carry[i]*node->right->carry[alphabet_size];
-                                node->applicable[i] = true;
-                        }
-                        if (node->right->applicable[i] && i < alphabet_size) {
-                                node->carry[i] += p*node->left->carry[alphabet_size]*node->right->carry[i];
-                                node->applicable[i] = true;
-                        }
+                p = exp(-node->left->d)*exp(-node->right->d);
+                node->carry[i] += p*node->left->carry[i]*node->right->carry[i];
+                if (i < alphabet_size) {
+                        node->carry[i] += p*node->left->carry[i]*node->right->carry[alphabet_size];
+                        node->carry[i] += p*node->left->carry[alphabet_size]*node->right->carry[i];
                 }
         }
 

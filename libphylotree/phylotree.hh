@@ -43,11 +43,9 @@ public:
         void init() {
                 poly_sum = polynomial_t<CODE_TYPE, ALPHABET_SIZE>();
                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                        applicable[i] = false;
-                        carry[i]      = polynomial_t<CODE_TYPE, ALPHABET_SIZE>();
+                        carry[i] = polynomial_t<CODE_TYPE, ALPHABET_SIZE>();
                 }
-                applicable[ALPHABET_SIZE] = true;
-                carry     [ALPHABET_SIZE] = polynomial_t<CODE_TYPE, ALPHABET_SIZE>();
+                carry[ALPHABET_SIZE] = polynomial_t<CODE_TYPE, ALPHABET_SIZE>();
         }
 
         bool leaf() const { return left == NULL && right == NULL; }
@@ -61,9 +59,6 @@ public:
         pt_node_t<CODE_TYPE, ALPHABET_SIZE>* left;
         /* right child */
         pt_node_t<CODE_TYPE, ALPHABET_SIZE>* right;
-        /* array that tells if it is possible to carry
-         * a certain nucleotide upwards the tree */
-        boost::array<bool, ALPHABET_SIZE+1> applicable;
         /* polynomial */
         boost::array<polynomial_t<CODE_TYPE, ALPHABET_SIZE>, ALPHABET_SIZE+1> carry;
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum;
