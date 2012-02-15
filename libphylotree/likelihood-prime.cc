@@ -45,9 +45,9 @@ ostream& operator<< (ostream& o, const incomplete_exponent_t& exponent) {
                   << *it
                   << ")";
         }
-        if (!exponent.incomplete.empty()) {
+        if (!exponent.incomplete().empty()) {
                 o << "I("
-                  << exponent.incomplete
+                  << exponent.incomplete()
                   << ")";
         }
         return o;
@@ -82,12 +82,12 @@ size_t hash_value(const node_set_t& set) {
         return seed;
 }
 
-size_t hash_value(const incomplete_term_t& term) {
+size_t hash_value(const incomplete_exponent_t& exponent) {
         size_t seed = 0;
-        for (incomplete_term_t::const_iterator it = term.begin(); it != term.end(); it++) {
+        for (incomplete_exponent_t::const_iterator it = exponent.begin(); it != exponent.end(); it++) {
                 boost::hash_combine(seed, hash_value(*it));
         }
-        boost::hash_combine(seed, hash_value(term.incomplete));
+        boost::hash_combine(seed, hash_value(exponent.incomplete()));
         return seed;
 }
 
@@ -102,10 +102,28 @@ incomplete_polynomial_t
 pt_likelihood_leaf(pt_node_t<code_t, alphabet_size>* node) {
         incomplete_polynomial_t poly;
         incomplete_term_t term;
-        term.incomplete.push_back(node);
-        poly[term] = 1;
+        term.incomplete().insert(node);
+        poly += term;
 
         return poly;
+}
+
+static
+incomplete_polynomial_t
+pt_likelihood_root(
+        pt_node_t<code_t, alphabet_size>* node,
+        const incomplete_polynomial_t& poly_left,
+        const incomplete_polynomial_t& poly_right)
+{
+        incomplete_polynomial_t poly1 = poly_left*poly_right;
+        incomplete_polynomial_t poly2;
+
+        for (incomplete_polynomial_t::const_iterator it = poly1.begin(); it != poly1.end(); it++) {
+                incomplete_term_t term(*it);
+                poly2 += term.complete();
+        }
+
+        return poly2;
 }
 
 static
@@ -121,13 +139,12 @@ pt_likelihood_node(
         for (incomplete_polynomial_t::const_iterator it = poly1.begin(); it != poly1.end(); it++) {
                 incomplete_term_t term(*it);
 
-                if (term.incomplete.empty()) {
+                if (term.incomplete().empty()) {
                         poly2 += term;
                 }
                 else {
-                        poly2 += term;
-                        term.complete();
-                        poly2 += term;
+                        poly2 += (1.0-mutation_probability(node))*term;
+                        poly2 +=      mutation_probability(node) *term.complete();
                 }
         }
 
@@ -147,7 +164,12 @@ pt_likelihood_rec(pt_node_t<code_t, alphabet_size>* node)
                 const incomplete_polynomial_t poly_left  = pt_likelihood_rec(node->left);
                 const incomplete_polynomial_t poly_right = pt_likelihood_rec(node->right);
 
-                return pt_likelihood_node(node, poly_left, poly_right);
+                if (node->root()) {
+                        return pt_likelihood_root(node, poly_left, poly_right);
+                }
+                else {
+                        return pt_likelihood_node(node, poly_left, poly_right);
+                }
         }
 }
 

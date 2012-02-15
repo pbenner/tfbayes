@@ -23,45 +23,68 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 
 #include <phylotree.hh>
 #include <utility.hh>
 
-class node_set_t : public std::vector<pt_node_t<code_t, alphabet_size>*> {
+class node_set_t : public boost::unordered_set<pt_node_t<code_t, alphabet_size>*> {
 public:
         bool empty() const {
                 return size() == 0;
         }
 };
 
-class incomplete_exponent_t : public std::vector<node_set_t> {
+class incomplete_exponent_t : public boost::unordered_set<node_set_t> {
 public:
-        void complete() {
-                push_back(incomplete);
-                incomplete = node_set_t();
+        incomplete_exponent_t& complete() {
+                insert(incomplete());
+                incomplete() = node_set_t();
+                return *this;
+        }
+
+        node_set_t& incomplete() {
+                return _incomplete;
+        }
+        const node_set_t& incomplete() const {
+                return _incomplete;
         }
 
         incomplete_exponent_t& operator*=(const incomplete_exponent_t& exponent) {
                 for (incomplete_exponent_t::const_iterator it = exponent.begin(); it != exponent.end(); it++) {
-                        push_back(*it);
+                        insert(*it);
                 }
-                for (node_set_t::const_iterator it = exponent.incomplete.begin(); it != exponent.incomplete.end(); it++) {
-                        incomplete.push_back(*it);
+                for (node_set_t::const_iterator it = exponent.incomplete().begin(); it != exponent.incomplete().end(); it++) {
+                        incomplete().insert(*it);
                 }
 
                 return *this;
         }
+        bool operator==(const incomplete_exponent_t& exponent) const {
+                return (const boost::unordered_set<node_set_t>&)*this == (const boost::unordered_set<node_set_t>&)exponent &&
+                       incomplete() == exponent.incomplete();
+        }
 
-        node_set_t incomplete;
+private:
+        node_set_t _incomplete;
 };
 
 class incomplete_term_t : public incomplete_exponent_t {
 public:
         incomplete_term_t()
-                : incomplete_exponent_t() { }
+                : incomplete_exponent_t(), _coefficient(1.0) { }
         incomplete_term_t(std::pair<const incomplete_exponent_t, double>& pair)
                 : incomplete_exponent_t(pair.first), _coefficient(pair.second) { }
 
+        incomplete_term_t& complete() {
+                incomplete_exponent_t::complete();
+                return *this;
+        }
+
+        incomplete_term_t& operator*=(double constant) {
+                coefficient() *= constant;
+                return *this;
+        }
         incomplete_term_t& operator*=(const incomplete_term_t& term) {
                 incomplete_exponent_t::operator*=(term);
                 coefficient() *= term.coefficient();
@@ -79,6 +102,16 @@ private:
         double _coefficient;
 };
 
+incomplete_term_t operator*(double constant, const incomplete_term_t& term) {
+        incomplete_term_t result(term);
+        result *= constant;
+        return result;
+}
+incomplete_term_t operator*(const incomplete_term_t& term, double constant) {
+        incomplete_term_t result(term);
+        result *= constant;
+        return result;
+}
 incomplete_term_t operator*(const incomplete_term_t& term1, const incomplete_term_t& term2) {
         incomplete_term_t result(term1);
         result *= term2;
@@ -94,9 +127,32 @@ public:
                 }
                 return *this;
         }
+        incomplete_polynomial_t& operator-=(const incomplete_term_t& term) {
+                operator[](term) -= term.coefficient();
+                if (operator[](term) == 0.0) {
+                        erase(term);
+                }
+                return *this;
+        }
+        incomplete_polynomial_t& operator*=(const incomplete_term_t& term) {
+                incomplete_polynomial_t tmp;
+
+                for (incomplete_polynomial_t::const_iterator it = this->begin(); it != this->end(); it++) {
+                        tmp += (*it)*term;
+                }
+                operator=(tmp);
+        
+                return *this;
+        }
         incomplete_polynomial_t& operator+=(const incomplete_polynomial_t& poly) {
                 for (incomplete_polynomial_t::const_iterator it = poly.begin(); it != poly.end(); it++) {
                         operator+=(*it);
+                }
+                return *this;
+        }
+        incomplete_polynomial_t& operator-=(const incomplete_polynomial_t& poly) {
+                for (incomplete_polynomial_t::const_iterator it = poly.begin(); it != poly.end(); it++) {
+                        operator-=(*it);
                 }
                 return *this;
         }

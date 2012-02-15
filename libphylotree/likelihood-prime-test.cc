@@ -96,12 +96,31 @@ void test_tree5() {
              << endl << endl;
 }
 
+void test_tree6() {
+        cout << "Test 6:" << endl;
+        pt_leaf_t<code_t, alphabet_size> n9( 9, 9.0);
+        pt_leaf_t<code_t, alphabet_size> n8( 8, 8.0);
+        pt_leaf_t<code_t, alphabet_size> n7( 7, 7.0);
+        pt_leaf_t<code_t, alphabet_size> n6( 6, 6.0);
+        pt_node_t<code_t, alphabet_size> n5(-1, 5.0, &n8, &n9);
+        pt_node_t<code_t, alphabet_size> n4(-1, 4.0, &n6, &n7);
+        pt_leaf_t<code_t, alphabet_size> n3( 3, 3.0);
+        pt_node_t<code_t, alphabet_size> n2(-1, 2.0, &n4, &n5);
+        pt_root_t<code_t, alphabet_size> n1(-1, &n2, &n3);
+
+        polynomial_t<code_t, alphabet_size> result = pt_likelihood_prime(&n1);
+        cout << result << endl
+             << "0.0399154 Pc^1 Pg^1 Pt^1 + 0.842968 Pc^2 Pg^1 Pt^1 (correct polynomial)"
+             << endl << endl;
+}
+
 int main(void) {
         test_tree1();
         test_tree2();
         test_tree3();
         test_tree4();
         test_tree5();
+        test_tree6();
 
         return 0.0;
 }
