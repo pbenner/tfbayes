@@ -44,13 +44,12 @@ double mbeta_log(
 
 double
 pt_marginal_likelihood(
-        pt_root_t<code_t, alphabet_size>* node,
+        pt_root_t* node,
         const exponent_t<code_t, alphabet_size> alpha)
 {
         double result = 0.0;
 
-        pt_likelihood(node);
-        const polynomial_t<code_t, alphabet_size>& polynomial = node->poly_sum;
+        const polynomial_t<code_t, alphabet_size> polynomial = pt_likelihood(node);;
 
         for (polynomial_t<code_t, alphabet_size>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {

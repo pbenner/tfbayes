@@ -26,63 +26,77 @@
 
 using namespace std;
 
-static
-void pt_likelihood_leaf(pt_node_t<code_t, alphabet_size>* node) {
-        polynomial_term_t<code_t, alphabet_size> term;
-        term.exponent()[node->x]   = 1;
-        node->poly_sum            += term;
-        node->carry[node->x]      += 1;
-}
+typedef boost::array<polynomial_t<code_t, alphabet_size>, alphabet_size+1> carry_t;
 
 static
-void pt_likelihood_node(pt_node_t<code_t, alphabet_size>* node) {
-        /*  M, M */
-        double p = (1.0-exp(-node->left->d))*(1.0-exp(-node->right->d));
-        node->carry[alphabet_size] += p*node->left->poly_sum*node->right->poly_sum;
-        for (size_t i = 0; i < alphabet_size+1; i++) {
-                /* ¬M, M */
-                p = exp(-node->left->d)*(1.0-exp(-node->right->d));
-                node->carry[i] += p*node->left->carry[i]*node->right->poly_sum;
-                /*  M,¬M */
-                p = (1.0-exp(-node->left->d))*exp(-node->right->d);
-                node->carry[i] += p*node->left->poly_sum*node->right->carry[i];
-                /* ¬M,¬M */
-                p = exp(-node->left->d)*exp(-node->right->d);
-                node->carry[i] += p*node->left->carry[i]*node->right->carry[i];
-                if (i < alphabet_size) {
-                        node->carry[i] += p*node->left->carry[i]*node->right->carry[alphabet_size];
-                        node->carry[i] += p*node->left->carry[alphabet_size]*node->right->carry[i];
-                }
-        }
+polynomial_t<code_t, alphabet_size> poly_sum(const carry_t& carry)
+{
+        polynomial_t<code_t, alphabet_size> poly_sum;
 
-        /* generate sum */
         for (size_t i = 0; i < alphabet_size; i++) {
                 polynomial_term_t<code_t, alphabet_size> term;
                 term.exponent()[i] = 1;
-                node->poly_sum    += term*node->carry[i];
+                poly_sum += term*carry[i];
         }
-        node->poly_sum += node->carry[alphabet_size];
+        poly_sum += carry[alphabet_size];
+
+        return poly_sum;
 }
 
 static
-void pt_likelihood_rec(pt_node_t<code_t, alphabet_size>* node)
-{
-        node->init();
+carry_t pt_likelihood_leaf(pt_node_t* node) {
+        carry_t carry;
+        carry[node->x] += 1;
+        return carry;
+}
 
+static
+carry_t pt_likelihood_node(
+        const pt_node_t* node,
+        const carry_t& carry_left,
+        const carry_t& carry_right)
+{
+        carry_t carry;
+        const polynomial_t<code_t, alphabet_size> poly_sum_left  = poly_sum(carry_left);
+        const polynomial_t<code_t, alphabet_size> poly_sum_right = poly_sum(carry_right);
+
+        /*  M, M */
+        double p = (1.0-exp(-node->left->d))*(1.0-exp(-node->right->d));
+        carry[alphabet_size] += p*poly_sum_left*poly_sum_right;
+        for (size_t i = 0; i < alphabet_size+1; i++) {
+                /* ¬M, M */
+                p = exp(-node->left->d)*(1.0-exp(-node->right->d));
+                carry[i] += p*carry_left[i]*poly_sum_right;
+                /*  M,¬M */
+                p = (1.0-exp(-node->left->d))*exp(-node->right->d);
+                carry[i] += p*poly_sum_left*carry_right[i];
+                /* ¬M,¬M */
+                p = exp(-node->left->d)*exp(-node->right->d);
+                carry[i] += p*carry_left[i]*carry_right[i];
+                if (i < alphabet_size) {
+                        carry[i] += p*carry_left[i]*carry_right[alphabet_size];
+                        carry[i] += p*carry_left[alphabet_size]*carry_right[i];
+                }
+        }
+
+        return carry;
+}
+
+static
+carry_t pt_likelihood_rec(pt_node_t* node)
+{
         if (node->leaf()) {
-                pt_likelihood_leaf(node);
+                return pt_likelihood_leaf(node);
         }
         else {
-                pt_likelihood_rec(node->left);
-                pt_likelihood_rec(node->right);
+                const carry_t carry_left  = pt_likelihood_rec(node->left);
+                const carry_t carry_right = pt_likelihood_rec(node->right);
 
-                pt_likelihood_node(node);
+                return pt_likelihood_node(node, carry_left, carry_right);
         }
 }
 
 polynomial_t<code_t, alphabet_size>
-pt_likelihood(pt_root_t<code_t, alphabet_size>* node) {
-        pt_likelihood_rec(node);
-
-        return node->poly_sum;
+pt_likelihood(pt_root_t* node) {
+        return poly_sum(pt_likelihood_rec(node));
 }

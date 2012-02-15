@@ -27,7 +27,6 @@
 #define alphabet_size 4
 typedef unsigned short code_t;
 
-polynomial_t<code_t, alphabet_size>
-pt_likelihood_prime(pt_root_t<code_t, alphabet_size>* node);
+polynomial_t<code_t, alphabet_size> pt_likelihood_prime(pt_root_t* node);
 
 #endif /* LIKELIHOOD_H */

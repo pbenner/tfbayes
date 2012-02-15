@@ -28,7 +28,7 @@
 #include <phylotree.hh>
 #include <utility.hh>
 
-class node_set_t : public boost::unordered_set<pt_node_t<code_t, alphabet_size>*> {
+class node_set_t : public boost::unordered_set<pt_node_t*> {
 public:
         bool empty() const {
                 return size() == 0;

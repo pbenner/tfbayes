@@ -27,25 +27,15 @@
 
 #include <tfbayes/polynomial.hh>
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_node_t {
 public:
         pt_node_t(short x = -1, double d = 0.0,
-                  pt_node_t<CODE_TYPE, ALPHABET_SIZE>* left  = NULL,
-                  pt_node_t<CODE_TYPE, ALPHABET_SIZE>* right = NULL) {
+                  pt_node_t* left  = NULL,
+                  pt_node_t* right = NULL) {
                 this->x = x;
                 this->d = d;
                 this->left  = left;
                 this->right = right;
-
-                init();
-        }
-        void init() {
-                poly_sum = polynomial_t<CODE_TYPE, ALPHABET_SIZE>();
-                for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                        carry[i] = polynomial_t<CODE_TYPE, ALPHABET_SIZE>();
-                }
-                carry[ALPHABET_SIZE] = polynomial_t<CODE_TYPE, ALPHABET_SIZE>();
         }
 
         bool leaf() const { return left == NULL && right == NULL; }
@@ -56,28 +46,23 @@ public:
         /* distance to ancestor */
         double d;
         /* left child */
-        pt_node_t<CODE_TYPE, ALPHABET_SIZE>* left;
+        pt_node_t* left;
         /* right child */
-        pt_node_t<CODE_TYPE, ALPHABET_SIZE>* right;
-        /* polynomial */
-        boost::array<polynomial_t<CODE_TYPE, ALPHABET_SIZE>, ALPHABET_SIZE+1> carry;
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum;
+        pt_node_t* right;
 };
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-class pt_root_t : public pt_node_t<CODE_TYPE, ALPHABET_SIZE> {
+class pt_root_t : public pt_node_t {
 public:
         pt_root_t(short x = -1,
-                  pt_node_t<CODE_TYPE, ALPHABET_SIZE>* left = NULL,
-                  pt_node_t<CODE_TYPE, ALPHABET_SIZE>* right = NULL)
-                : pt_node_t<CODE_TYPE, ALPHABET_SIZE>(x, 0.0, left, right) { }
+                  pt_node_t* left = NULL,
+                  pt_node_t* right = NULL)
+                : pt_node_t(x, 0.0, left, right) { }
 };
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-class pt_leaf_t : public pt_node_t<CODE_TYPE, ALPHABET_SIZE> {
+class pt_leaf_t : public pt_node_t {
 public:
         pt_leaf_t(short x, double d)
-                : pt_node_t<CODE_TYPE, ALPHABET_SIZE>(x, d, NULL, NULL) { }
+                : pt_node_t(x, d, NULL, NULL) { }
 };
 
 #endif /* PHYLOTREE_H */

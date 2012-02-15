@@ -24,10 +24,11 @@
 
 #include <phylotree.hh>
 #include <likelihood.hh>
+#include <utility.hh>
 
 double
 pt_marginal_likelihood(
-        pt_root_t<code_t, alphabet_size>* node,
+        pt_root_t* node,
         const exponent_t<code_t, alphabet_size> alpha);
 
 #endif /* MARGINAL_LIKELIHOOD_H */

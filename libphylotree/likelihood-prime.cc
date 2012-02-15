@@ -92,14 +92,14 @@ size_t hash_value(const incomplete_exponent_t& exponent) {
 }
 
 static
-double mutation_probability(pt_node_t<code_t, alphabet_size>* node)
+double mutation_probability(pt_node_t* node)
 {
         return 1.0-exp(-node->d);
 }
 
 static
 incomplete_polynomial_t
-pt_likelihood_leaf(pt_node_t<code_t, alphabet_size>* node) {
+pt_likelihood_leaf(pt_node_t* node) {
         incomplete_polynomial_t poly;
         incomplete_term_t term;
         term.incomplete().insert(node);
@@ -111,7 +111,7 @@ pt_likelihood_leaf(pt_node_t<code_t, alphabet_size>* node) {
 static
 incomplete_polynomial_t
 pt_likelihood_root(
-        pt_node_t<code_t, alphabet_size>* node,
+        pt_node_t* node,
         const incomplete_polynomial_t& poly_left,
         const incomplete_polynomial_t& poly_right)
 {
@@ -129,7 +129,7 @@ pt_likelihood_root(
 static
 incomplete_polynomial_t
 pt_likelihood_node(
-        pt_node_t<code_t, alphabet_size>* node,
+        pt_node_t* node,
         const incomplete_polynomial_t& poly_left,
         const incomplete_polynomial_t& poly_right)
 {
@@ -154,10 +154,8 @@ pt_likelihood_node(
 
 static
 incomplete_polynomial_t
-pt_likelihood_rec(pt_node_t<code_t, alphabet_size>* node)
+pt_likelihood_rec(pt_node_t* node)
 {
-        node->init();
-
         if (node->leaf()) {
                 return pt_likelihood_leaf(node);
         }
@@ -175,8 +173,10 @@ pt_likelihood_rec(pt_node_t<code_t, alphabet_size>* node)
 }
 
 polynomial_t<code_t, alphabet_size>
-pt_likelihood_prime(pt_root_t<code_t, alphabet_size>* node) {
+pt_likelihood_prime(pt_root_t* node) {
+        polynomial_t<code_t, alphabet_size> poly_sum;
+
         cout << pt_likelihood_rec(node);
 
-        return node->poly_sum;
+        return poly_sum;
 }

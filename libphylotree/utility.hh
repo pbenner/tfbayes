@@ -24,8 +24,7 @@
 
 #include <tfbayes/polynomial.hh>
 
-#define alphabet_size 4
-typedef unsigned short code_t;
+#include <likelihood.hh>
 
 std::ostream& operator<< (std::ostream& o, const exponent_t<code_t, alphabet_size>& exponent);
 std::ostream& operator<< (std::ostream& o, const polynomial_term_t<code_t, alphabet_size>& term);
