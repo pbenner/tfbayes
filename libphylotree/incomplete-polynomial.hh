@@ -40,8 +40,10 @@ std::ostream& operator<< (std::ostream& o, const node_set_t& node_set);
 class incomplete_exponent_t : public boost::unordered_set<node_set_t> {
 public:
         incomplete_exponent_t& complete() {
-                insert(incomplete());
-                incomplete() = node_set_t();
+                if (!incomplete().empty()) {
+                        insert(incomplete());
+                        incomplete() = node_set_t();
+                }
                 return *this;
         }
 
