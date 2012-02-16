@@ -51,11 +51,26 @@ double mbeta_log(
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 double pt_marginal_likelihood(
         pt_root_t* node,
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha)
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
 {
         double result = 0.0;
 
         const pt_polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial(node);
+
+        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = polynomial.begin();
+             it != polynomial.end(); it++) {
+                result += log(it->coefficient()) + mbeta_log(it->exponent(), alpha);
+        }
+
+        return result;
+}
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+double pt_marginal_likelihood(
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& polynomial,
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+{
+        double result = 0.0;
 
         for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {

@@ -33,6 +33,8 @@ void test_tree1() {
         pt_leaf_t n3( 2, 2.0, "n3");
         pt_root_t n1(-1, &n2, &n3);
 
+        cout << "(n1 (n2 C) (n3 G))" << endl;
+
         incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
         polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
         cout << incomplete_polynomial << endl
@@ -46,6 +48,8 @@ void test_tree2() {
         pt_leaf_t n2( 1, 1.0, "n2");
         pt_leaf_t n3( 1, 2.0, "n3");
         pt_root_t n1(-1, &n2, &n3);
+
+        cout << "(n1 (n2 C) (n3 C))" << endl;
 
         incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
         polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
@@ -62,6 +66,9 @@ void test_tree3() {
         pt_leaf_t n3( 2, 1.0, "n3");
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
+
+        cout << "(n1 (n2 (n4 C) (n5 C))" << endl
+             << "    (n3 G))"            << endl;
 
         incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
         polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
@@ -81,6 +88,9 @@ void test_tree4() {
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
+        cout << "(n1 (n2 (n4 C) (n5 C))"  << endl
+             << "    (n3 (n6 C) (n7 C)))" << endl;
+
         incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
         polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
         cout << incomplete_polynomial << endl
@@ -98,6 +108,9 @@ void test_tree5() {
         pt_node_t n3(-1, 0.5, &n6, &n7);
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
+
+        cout << "(n1 (n2 (n4 T) (n5 G))"  << endl
+             << "    (n3 (n6 C) (n7 C)))" << endl;
 
         incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
         polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
