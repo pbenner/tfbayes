@@ -15,20 +15,54 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef MARGINAL_LIKELIHOOD_H
-#define MARGINAL_LIKELIHOOD_H
+#ifndef MARGINAL_LIKELIHOOD_HH
+#define MARGINAL_LIKELIHOOD_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <tfbayes/polynomial.hh>
+
 #include <phylotree.hh>
-#include <likelihood.hh>
-#include <utility.hh>
+#include <phylotree-polynomial.hh>
 
-double
-pt_marginal_likelihood(
+#include <math.h>
+#include <gsl/gsl_sf_gamma.h>
+
+using namespace std;
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+double mbeta_log(
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& exponent,
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+{
+        double sum1 = 0;
+        double sum2 = 0;
+
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                sum1 += exponent[i] + alpha[i];
+                sum2 += gsl_sf_lngamma(exponent[i] + alpha[i]);
+        }
+
+        return sum2 - gsl_sf_lngamma(sum1);
+}
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+double pt_marginal_likelihood(
         pt_root_t* node,
-        const exponent_t<code_t, alphabet_size> alpha);
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha)
+{
+        double result = 0.0;
 
-#endif /* MARGINAL_LIKELIHOOD_H */
+        const pt_polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial(node);
+
+        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = polynomial.begin();
+             it != polynomial.end(); it++) {
+                result += log(it->coefficient()) + mbeta_log(it->exponent(), alpha);
+        }
+
+        return result;
+}
+
+#endif /* MARGINAL_LIKELIHOOD_HH */

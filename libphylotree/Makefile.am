@@ -24,11 +24,11 @@ noinst_LTLIBRARIES = libphylotree.la
 libphylotree_la_SOURCES = \
 	phylotree.hh \
 	phylotree-expand.hh \
+	phylotree-polynomial.hh \
+	phylotree-simplify.cc \
+	phylotree-simplify.hh \
 	incomplete-polynomial.cc \
 	incomplete-polynomial.hh \
-	likelihood.cc \
-	likelihood.hh \
-	marginal-likelihood.cc \
 	marginal-likelihood.hh \
 	utility.cc \
 	utility.hh

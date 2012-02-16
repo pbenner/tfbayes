@@ -15,19 +15,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef LIKELIHOOD_H
-#define LIKELIHOOD_H
+#ifndef PHYLOTREE_SIMPLIFY_HH
+#define PHYLOTREE_SIMPLIFY_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
 #include <phylotree.hh>
-#include <tfbayes/polynomial.hh>
+#include <incomplete-polynomial.hh>
 
-#define alphabet_size 4
-typedef unsigned short code_t;
+incomplete_polynomial_t pt_simplify(pt_root_t* node);
 
-polynomial_t<code_t, alphabet_size> pt_likelihood(pt_root_t* node);
-
-#endif /* LIKELIHOOD_H */
+#endif /* PHYLOTREE_SIMPLIFY_HH */

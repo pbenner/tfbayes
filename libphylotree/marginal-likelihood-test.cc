@@ -32,7 +32,7 @@ void test_tree1(const exponent_t<code_t, alphabet_size> alpha) {
         pt_leaf_t n3(2, 2.0);
         pt_root_t n1(-1, &n2, &n3);
 
-        double result = pt_marginal_likelihood(&n1, alpha);
+        double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl
              << "-4.83856 (correct value)"
              << endl << endl;
@@ -44,7 +44,7 @@ void test_tree2(const exponent_t<code_t, alphabet_size> alpha) {
         pt_leaf_t n3(1, 2.0);
         pt_root_t n1(-1, &n2, &n3);
 
-        double result = pt_marginal_likelihood(&n1, alpha);
+        double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl
              << "-10.3235 (correct value)"
              << endl << endl;
@@ -58,7 +58,7 @@ void test_tree3(const exponent_t<code_t, alphabet_size> alpha) {
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        double result = pt_marginal_likelihood(&n1, alpha);
+        double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl
              << "-14.0767 (correct value)"
              << endl << endl;
@@ -74,7 +74,7 @@ void test_tree4(const exponent_t<code_t, alphabet_size> alpha) {
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        double result = pt_marginal_likelihood(&n1, alpha);
+        double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl
              << "-30.659 (correct value)"
              << endl << endl;
@@ -90,7 +90,7 @@ void test_tree5(const exponent_t<code_t, alphabet_size> alpha) {
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        double result = pt_marginal_likelihood(&n1, alpha);
+        double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl
              << "-17.8031 (correct value)"
              << endl << endl;
@@ -108,7 +108,7 @@ void test_tree6(const exponent_t<code_t, alphabet_size> alpha) {
         pt_node_t n2(-1, 2.0, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        double result = pt_marginal_likelihood(&n1, alpha);
+        double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl
              << "-33.4375 (correct value)"
              << endl << endl;

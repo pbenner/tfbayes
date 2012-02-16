@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef UTILITY_H
-#define UTILITY_H
+#ifndef UTILITY_HH
+#define UTILITY_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -25,7 +25,9 @@
 #include <tfbayes/polynomial.hh>
 
 #include <incomplete-polynomial.hh>
-#include <likelihood.hh>
+
+#define alphabet_size 4
+typedef unsigned short code_t;
 
 std::ostream& operator<< (std::ostream& o, const exponent_t<code_t, alphabet_size>& exponent);
 std::ostream& operator<< (std::ostream& o, const polynomial_term_t<code_t, alphabet_size>& term);
@@ -33,4 +35,4 @@ std::ostream& operator<< (std::ostream& o, const polynomial_t<code_t, alphabet_s
 
 size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent);
 
-#endif /* UTILITY_H */
+#endif /* UTILITY_HH */

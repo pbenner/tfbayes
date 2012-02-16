@@ -21,6 +21,7 @@
 
 #include <iostream>
 
+#include <phylotree-simplify.hh>
 #include <phylotree-expand.hh>
 #include <utility.hh>
 
@@ -32,7 +33,7 @@ void test_tree1() {
         pt_leaf_t n3( 2, 2.0);
         pt_root_t n1(-1, &n2, &n3);
 
-        pt_incomplete_polynomial_t incomplete_polynomial(&n1);
+        incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
         polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
         cout << incomplete_polynomial << endl
              << result << endl
@@ -46,7 +47,7 @@ void test_tree2() {
         pt_leaf_t n3( 1, 2.0);
         pt_root_t n1(-1, &n2, &n3);
 
-        pt_incomplete_polynomial_t incomplete_polynomial(&n1);
+        incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
         polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
         cout << incomplete_polynomial << endl
              << result << endl
@@ -62,7 +63,7 @@ void test_tree3() {
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        pt_incomplete_polynomial_t incomplete_polynomial(&n1);
+        incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
         polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
         cout << incomplete_polynomial << endl
              << result << endl
@@ -80,7 +81,7 @@ void test_tree4() {
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        pt_incomplete_polynomial_t incomplete_polynomial(&n1);
+        incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
         polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
         cout << incomplete_polynomial << endl
              << result << endl
@@ -98,7 +99,7 @@ void test_tree5() {
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        pt_incomplete_polynomial_t incomplete_polynomial(&n1);
+        incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
         polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
         cout << incomplete_polynomial << endl
              << result << endl
@@ -118,7 +119,7 @@ void test_tree6() {
         pt_node_t n2(-1, 2.0, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        pt_incomplete_polynomial_t incomplete_polynomial(&n1);
+        incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
         polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
         cout << incomplete_polynomial << endl
              << result << endl
