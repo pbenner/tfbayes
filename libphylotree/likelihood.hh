@@ -23,6 +23,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <phylotree.hh>
+#include <tfbayes/polynomial.hh>
 
 #define alphabet_size 4
 typedef unsigned short code_t;

@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef INCOMPLETE_POLYNOMIAL_H
-#define INCOMPLETE_POLYNOMIAL_H
+#ifndef INCOMPLETE_POLYNOMIAL_HH
+#define INCOMPLETE_POLYNOMIAL_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -26,7 +26,6 @@
 #include <boost/unordered_set.hpp>
 
 #include <phylotree.hh>
-#include <utility.hh>
 
 class node_set_t : public boost::unordered_set<pt_node_t*> {
 public:
@@ -104,21 +103,9 @@ private:
         double _coefficient;
 };
 
-incomplete_term_t operator*(double constant, const incomplete_term_t& term) {
-        incomplete_term_t result(term);
-        result *= constant;
-        return result;
-}
-incomplete_term_t operator*(const incomplete_term_t& term, double constant) {
-        incomplete_term_t result(term);
-        result *= constant;
-        return result;
-}
-incomplete_term_t operator*(const incomplete_term_t& term1, const incomplete_term_t& term2) {
-        incomplete_term_t result(term1);
-        result *= term2;
-        return result;
-}
+incomplete_term_t operator*(double constant, const incomplete_term_t& term);
+incomplete_term_t operator*(const incomplete_term_t& term, double constant);
+incomplete_term_t operator*(const incomplete_term_t& term1, const incomplete_term_t& term2);
 
 class incomplete_polynomial_t : public boost::unordered_map<incomplete_exponent_t, double> {
 public:
@@ -194,10 +181,94 @@ public:
         }
 };
 
-incomplete_polynomial_t operator*(const incomplete_polynomial_t& poly1, const incomplete_polynomial_t& poly2) {
-        incomplete_polynomial_t result(poly1);
-        result *= poly2;
-        return result;
-}
+incomplete_polynomial_t operator*(const incomplete_polynomial_t& poly1, const incomplete_polynomial_t& poly2);
 
-#endif /* INCOMPLETE_POLYNOMIAL_H */
+////////////////////////////////////////////////////////////////////////////////
+
+class pt_incomplete_polynomial_t : public incomplete_polynomial_t {
+public:
+        pt_incomplete_polynomial_t()
+                : incomplete_polynomial_t() { }
+        pt_incomplete_polynomial_t(incomplete_polynomial_t poly)
+                : incomplete_polynomial_t(poly) { }
+        pt_incomplete_polynomial_t(pt_root_t* node) {
+                simplify(node);
+        }
+
+        incomplete_polynomial_t simplify(pt_root_t* node) {
+                operator=(simplify_rec(node));
+                return *this;
+        }
+
+private:
+        incomplete_polynomial_t simplify_leaf(pt_node_t* node) {
+                incomplete_polynomial_t poly;
+                incomplete_term_t term;
+                term.incomplete().insert(node);
+                poly += term;
+
+                return poly;
+        }
+
+        incomplete_polynomial_t simplify_root(
+                pt_node_t* node,
+                const incomplete_polynomial_t& poly_left,
+                const incomplete_polynomial_t& poly_right) {
+                incomplete_polynomial_t poly1 = poly_left*poly_right;
+                incomplete_polynomial_t poly2;
+
+                for (incomplete_polynomial_t::const_iterator it = poly1.begin(); it != poly1.end(); it++) {
+                        incomplete_term_t term(*it);
+                        poly2 += term.complete();
+                }
+                return poly2;
+        }
+
+        incomplete_polynomial_t simplify_node(
+                pt_node_t* node,
+                const incomplete_polynomial_t& poly_left,
+                const incomplete_polynomial_t& poly_right) {
+                incomplete_polynomial_t poly1 = poly_left*poly_right;
+                incomplete_polynomial_t poly2;
+
+                for (incomplete_polynomial_t::const_iterator it = poly1.begin(); it != poly1.end(); it++) {
+                        incomplete_term_t term(*it);
+                        if (term.incomplete().empty()) {
+                                poly2 += term;
+                        }
+                        else {
+                                poly2 += (1.0-node->mutation_probability())*term;
+                                poly2 +=      node->mutation_probability() *term.complete();
+                        }
+                }
+                return poly2;
+        }
+
+        incomplete_polynomial_t simplify_rec(pt_node_t* node) {
+                if (node->leaf()) {
+                        return simplify_leaf(node);
+                }
+                else {
+                        const incomplete_polynomial_t poly_left  = simplify_rec(node->left);
+                        const incomplete_polynomial_t poly_right = simplify_rec(node->right);
+
+                        if (node->root()) {
+                                return simplify_root(node, poly_left, poly_right);
+                        }
+                        else {
+                                return simplify_node(node, poly_left, poly_right);
+                        }
+                }
+        }
+};
+
+#include <ostream>
+
+std::ostream& operator<< (std::ostream& o, const incomplete_exponent_t& exponent);
+std::ostream& operator<< (std::ostream& o, const incomplete_term_t& term);
+std::ostream& operator<< (std::ostream& o, const incomplete_polynomial_t& polynomial);
+
+size_t hash_value(const node_set_t& set);
+size_t hash_value(const incomplete_exponent_t& exponent);
+
+#endif /* INCOMPLETE_POLYNOMIAL_HH */

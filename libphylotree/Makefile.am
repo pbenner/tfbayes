@@ -21,5 +21,15 @@ marginal_likelihood_test_LDADD  += libphylotree.la
 
 noinst_LTLIBRARIES = libphylotree.la
 
-libphylotree_la_SOURCES = phylotree.hh likelihood.cc likelihood.hh likelihood-prime.cc likelihood-prime.hh marginal-likelihood.cc marginal-likelihood.hh utility.cc utility.hh
+libphylotree_la_SOURCES = \
+	phylotree.hh \
+	phylotree-expand.hh \
+	incomplete-polynomial.cc \
+	incomplete-polynomial.hh \
+	likelihood.cc \
+	likelihood.hh \
+	marginal-likelihood.cc \
+	marginal-likelihood.hh \
+	utility.cc \
+	utility.hh
 libphylotree_la_LIBADD  = -lm

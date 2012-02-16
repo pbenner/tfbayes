@@ -24,6 +24,7 @@
 
 #include <tfbayes/polynomial.hh>
 
+#include <incomplete-polynomial.hh>
 #include <likelihood.hh>
 
 std::ostream& operator<< (std::ostream& o, const exponent_t<code_t, alphabet_size>& exponent);

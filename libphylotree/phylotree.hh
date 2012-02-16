@@ -15,17 +15,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef PHYLOTREE_H
-#define PHYLOTREE_H
+#ifndef PHYLOTREE_HH
+#define PHYLOTREE_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <cstring>
-#include <boost/array.hpp>
-
-#include <tfbayes/polynomial.hh>
+#include <math.h>
+#include <cstddef>
 
 class pt_node_t {
 public:
@@ -41,6 +39,10 @@ public:
         bool leaf() const { return left == NULL && right == NULL; }
         bool root() const { return d == 0.0; }
 
+        double mutation_probability() const {
+                return 1.0-exp(-d);
+        }
+
         /* coded nucleotide */
         short x;
         /* distance to ancestor */
@@ -54,7 +56,7 @@ public:
 class pt_root_t : public pt_node_t {
 public:
         pt_root_t(short x = -1,
-                  pt_node_t* left = NULL,
+                  pt_node_t* left  = NULL,
                   pt_node_t* right = NULL)
                 : pt_node_t(x, 0.0, left, right) { }
 };
@@ -65,4 +67,4 @@ public:
                 : pt_node_t(x, d, NULL, NULL) { }
 };
 
-#endif /* PHYLOTREE_H */
+#endif /* PHYLOTREE_HH */

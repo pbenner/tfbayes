@@ -21,7 +21,7 @@
 
 #include <iostream>
 
-#include <likelihood-prime.hh>
+#include <phylotree-expand.hh>
 #include <utility.hh>
 
 using namespace std;
@@ -32,8 +32,10 @@ void test_tree1() {
         pt_leaf_t n3( 2, 2.0);
         pt_root_t n1(-1, &n2, &n3);
 
-        polynomial_t<code_t, alphabet_size> result = pt_likelihood_prime(&n1);
-        cout << result << endl
+        pt_incomplete_polynomial_t incomplete_polynomial(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
+        cout << incomplete_polynomial << endl
+             << result << endl
              << "0.950213 Pc^1 Pg^1 (correct polynomial)"
              << endl << endl;
 }
@@ -44,8 +46,10 @@ void test_tree2() {
         pt_leaf_t n3( 1, 2.0);
         pt_root_t n1(-1, &n2, &n3);
 
-        polynomial_t<code_t, alphabet_size> result = pt_likelihood_prime(&n1);
-        cout << result << endl
+        pt_incomplete_polynomial_t incomplete_polynomial(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
+        cout << incomplete_polynomial << endl
+             << result << endl
              << "0.950213 Pc^2 + 0.0497871 Pc^1 (correct polynomial)"
              << endl << endl;
 }
@@ -58,8 +62,10 @@ void test_tree3() {
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        polynomial_t<code_t, alphabet_size> result = pt_likelihood_prime(&n1);
-        cout << result << endl
+        pt_incomplete_polynomial_t incomplete_polynomial(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
+        cout << incomplete_polynomial << endl
+             << result << endl
              << "0.0386781 Pc^1 Pg^1 + 0.860149 Pc^2 Pg^1 (correct polynomial)"
              << endl << endl;
 }
@@ -74,8 +80,10 @@ void test_tree4() {
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        polynomial_t<code_t, alphabet_size> result = pt_likelihood_prime(&n1);
-        cout << result << endl
+        pt_incomplete_polynomial_t incomplete_polynomial(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
+        cout << incomplete_polynomial << endl
+             << result << endl
              << "0.0163527 Pc^2 + 0.000911882 Pc^1 + 0.842968 Pc^4 + 0.139768 Pc^3 (correct polynomial)"
              << endl << endl;
 }
@@ -90,8 +98,10 @@ void test_tree5() {
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        polynomial_t<code_t, alphabet_size> result = pt_likelihood_prime(&n1);
-        cout << result << endl
+        pt_incomplete_polynomial_t incomplete_polynomial(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
+        cout << incomplete_polynomial << endl
+             << result << endl
              << "0.0399154 Pc^1 Pg^1 Pt^1 + 0.842968 Pc^2 Pg^1 Pt^1 (correct polynomial)"
              << endl << endl;
 }
@@ -108,8 +118,10 @@ void test_tree6() {
         pt_node_t n2(-1, 2.0, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        polynomial_t<code_t, alphabet_size> result = pt_likelihood_prime(&n1);
-        cout << result << endl
+        pt_incomplete_polynomial_t incomplete_polynomial(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
+        cout << incomplete_polynomial << endl
+             << result << endl
              << "0.000122107 Pa^2 Pc^2 Pg^1 Pt^1 + 0.999875 Pa^2 Pc^1 Pg^1 Pt^1 + 3.05622e-07 Pa^1 Pc^1 Pg^1 Pt^1 + 0.000122107 Pa^2 Pc^1 Pg^1 Pt^2 + 0.000122107 Pa^2 Pc^1 Pg^2 Pt^1 + 0.000122107 Pa^3 Pc^1 Pg^1 Pt^1 (correct polynomial)"
              << endl << endl;
 }

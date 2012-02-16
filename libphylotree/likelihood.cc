@@ -21,7 +21,7 @@
 
 #include <iostream>
 
-#include <phylotree.hh>
+//#include <phylotree.hh>
 #include <utility.hh>
 
 using namespace std;
