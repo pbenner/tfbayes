@@ -173,6 +173,27 @@ pt_likelihood_rec(pt_node_t* node)
 }
 
 polynomial_t<code_t, alphabet_size>
+expand(const node_set_t& node_set) {
+        vector<bool> applicable(alphabet_size, false);
+        polynomial_t<code_t, alphabet_size> result;
+        polynomial_t<code_t, alphabet_size> remainder(1.0);
+
+        for (node_set_t::const_iterator it = node_set.begin(); it != node_set.end(); it++) {
+                applicable[(*it)->x] = true;
+        }
+        for (code_t i = 0; i < alphabet_size; i++) {
+                if (applicable[i]) {
+                        polynomial_term_t<code_t, alphabet_size> term;
+                        term.exponent()[i] = 1;
+                        for (node_set_t::const_iterator it = node_set.begin(); it != node_set.end(); it++) {
+                                applicable[(*it)->x] = true;
+                        }
+                }
+        }
+        return result;
+}
+
+polynomial_t<code_t, alphabet_size>
 pt_likelihood_prime(pt_root_t* node) {
         polynomial_t<code_t, alphabet_size> poly_sum;
 

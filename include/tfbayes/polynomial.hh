@@ -166,6 +166,14 @@ public:
         polynomial_t()
                 : boost::unordered_map<exponent_t<T, S>, double>(),
                   _constant(0.0) {}
+        polynomial_t(double constant)
+                : boost::unordered_map<exponent_t<T, S>, double>(),
+                  _constant(constant) {}
+        polynomial_t(const polynomial_term_t<T, S>& term)
+                : boost::unordered_map<exponent_t<T, S>, double>(),
+                  _constant(0.0) {
+                operator+=(term);
+        }
 
         double& constant() {
                 return _constant;
