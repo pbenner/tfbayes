@@ -25,9 +25,11 @@
 #include <math.h>
 #include <cstddef>
 
+typedef short nucleotide_t;
+
 class pt_node_t {
 public:
-        pt_node_t(short x = -1, double d = 0.0,
+        pt_node_t(nucleotide_t x = -1, double d = 0.0,
                   pt_node_t* left  = NULL,
                   pt_node_t* right = NULL) {
                 this->x = x;
@@ -44,7 +46,7 @@ public:
         }
 
         /* coded nucleotide */
-        short x;
+        nucleotide_t x;
         /* distance to ancestor */
         double d;
         /* left child */

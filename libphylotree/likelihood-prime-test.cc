@@ -119,6 +119,10 @@ void test_tree6() {
         pt_node_t n2(-1, 2.0, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
+        cout << "(node1 (node2 (node4 (node6 A) (node7 C))"  << endl
+             << "              (node5 (node8 G) (node9 T)))" << endl
+             << "       (node3 A))"                          << endl;
+
         incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
         polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
         cout << incomplete_polynomial << endl
