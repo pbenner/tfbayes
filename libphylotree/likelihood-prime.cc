@@ -96,6 +96,11 @@ double mutation_probability(pt_node_t* node)
 {
         return 1.0-exp(-node->d);
 }
+static
+double mutation_probability(double d)
+{
+        return 1.0-exp(-d);
+}
 
 static
 incomplete_polynomial_t
@@ -147,7 +152,6 @@ pt_likelihood_node(
                         poly2 +=      mutation_probability(node) *term.complete();
                 }
         }
-        cout << poly2 << endl;
 
         return poly2;
 }
@@ -172,6 +176,26 @@ pt_likelihood_rec(pt_node_t* node)
         }
 }
 
+static
+polynomial_term_t<code_t, alphabet_size>
+nucleotide_probability(code_t x) {
+        polynomial_term_t<code_t, alphabet_size> px;
+        px.exponent()[x] = 1;
+        return px;
+}
+
+static
+polynomial_t<code_t, alphabet_size>
+mutation_model(code_t x, code_t y, double d) {
+        polynomial_t<code_t, alphabet_size> poly;
+        polynomial_term_t<code_t, alphabet_size> px = nucleotide_probability(x);
+        poly += mutation_probability(d)*px;
+        if (x == y) {
+                poly += (1-mutation_probability(d));
+        }
+        return poly;
+}
+
 polynomial_t<code_t, alphabet_size>
 expand(const node_set_t& node_set) {
         vector<bool> applicable(alphabet_size, false);
@@ -181,23 +205,50 @@ expand(const node_set_t& node_set) {
         for (node_set_t::const_iterator it = node_set.begin(); it != node_set.end(); it++) {
                 applicable[(*it)->x] = true;
         }
-        for (code_t i = 0; i < alphabet_size; i++) {
-                if (applicable[i]) {
-                        polynomial_term_t<code_t, alphabet_size> term;
-                        term.exponent()[i] = 1;
+        for (code_t y = 0; y < alphabet_size; y++) {
+                if (applicable[y]) {
+                        polynomial_term_t<code_t, alphabet_size> px = nucleotide_probability(y);
+                        polynomial_t<code_t, alphabet_size> tmp(px);
+                        remainder -= px;
                         for (node_set_t::const_iterator it = node_set.begin(); it != node_set.end(); it++) {
-                                applicable[(*it)->x] = true;
+                                tmp *= mutation_model((*it)->x, y, (*it)->d);
                         }
+                        result += tmp;
                 }
         }
+        if (remainder.size() < alphabet_size) {
+                polynomial_t<code_t, alphabet_size> tmp(remainder);
+                for (node_set_t::const_iterator it = node_set.begin(); it != node_set.end(); it++) {
+                        tmp *= mutation_model((*it)->x, alphabet_size, (*it)->d);
+                }
+                result += tmp;
+        }
+        return result;
+}
+
+polynomial_t<code_t, alphabet_size>
+expand(const incomplete_term_t& term) {
+        polynomial_t<code_t, alphabet_size> result(1.0);
+        for (incomplete_term_t::const_iterator it = term.begin(); it != term.end(); it++) {
+                result *= expand(*it);
+        }
+        return term.coefficient()*result;
+}
+
+polynomial_t<code_t, alphabet_size>
+expand(const incomplete_polynomial_t& poly) {
+        polynomial_t<code_t, alphabet_size> result;
+        for (incomplete_polynomial_t::const_iterator it = poly.begin(); it != poly.end(); it++) {
+                result += expand(*it);
+        }
+
         return result;
 }
 
 polynomial_t<code_t, alphabet_size>
 pt_likelihood_prime(pt_root_t* node) {
         polynomial_t<code_t, alphabet_size> poly_sum;
+        incomplete_polynomial_t incomplete_poly = pt_likelihood_rec(node);
 
-        cout << pt_likelihood_rec(node);
-
-        return poly_sum;
+        return expand(incomplete_poly);
 }
