@@ -29,8 +29,8 @@ using namespace std;
 
 void test_tree1() {
         cout << "Test 1:" << endl;
-        pt_leaf_t n2( 1, 1.0);
-        pt_leaf_t n3( 2, 2.0);
+        pt_leaf_t n2( 1, 1.0, "n2");
+        pt_leaf_t n3( 2, 2.0, "n3");
         pt_root_t n1(-1, &n2, &n3);
 
         incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
@@ -43,8 +43,8 @@ void test_tree1() {
 
 void test_tree2() {
         cout << "Test 2:" << endl;
-        pt_leaf_t n2( 1, 1.0);
-        pt_leaf_t n3( 1, 2.0);
+        pt_leaf_t n2( 1, 1.0, "n2");
+        pt_leaf_t n3( 1, 2.0, "n3");
         pt_root_t n1(-1, &n2, &n3);
 
         incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
@@ -57,9 +57,9 @@ void test_tree2() {
 
 void test_tree3() {
         cout << "Test 3:" << endl;
-        pt_leaf_t n5( 1, 2.0);
-        pt_leaf_t n4( 1, 1.0);
-        pt_leaf_t n3( 2, 1.0);
+        pt_leaf_t n5( 1, 2.0, "n5");
+        pt_leaf_t n4( 1, 1.0, "n4");
+        pt_leaf_t n3( 2, 1.0, "n3");
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
@@ -73,10 +73,10 @@ void test_tree3() {
 
 void test_tree4() {
         cout << "Test 4:" << endl;
-        pt_leaf_t n7( 1, 2.0);
-        pt_leaf_t n6( 1, 1.0);
-        pt_leaf_t n5( 1, 2.0);
-        pt_leaf_t n4( 1, 1.0);
+        pt_leaf_t n7( 1, 2.0, "n7");
+        pt_leaf_t n6( 1, 1.0, "n6");
+        pt_leaf_t n5( 1, 2.0, "n5");
+        pt_leaf_t n4( 1, 1.0, "n4");
         pt_node_t n3(-1, 0.5, &n6, &n7);
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
@@ -91,10 +91,10 @@ void test_tree4() {
 
 void test_tree5() {
         cout << "Test 5:" << endl;
-        pt_leaf_t n7( 1, 2.0);
-        pt_leaf_t n6( 1, 1.0);
-        pt_leaf_t n5( 2, 2.0);
-        pt_leaf_t n4( 3, 1.0);
+        pt_leaf_t n7( 1, 2.0, "n7");
+        pt_leaf_t n6( 1, 1.0, "n6");
+        pt_leaf_t n5( 2, 2.0, "n5");
+        pt_leaf_t n4( 3, 1.0, "n4");
         pt_node_t n3(-1, 0.5, &n6, &n7);
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
@@ -109,19 +109,19 @@ void test_tree5() {
 
 void test_tree6() {
         cout << "Test 6:" << endl;
-        pt_leaf_t n9( 3, 9.0);
-        pt_leaf_t n8( 2, 8.0);
-        pt_leaf_t n7( 1, 7.0);
-        pt_leaf_t n6( 0, 6.0);
+        pt_leaf_t n9( 3, 9.0, "n9");
+        pt_leaf_t n8( 2, 8.0, "n8");
+        pt_leaf_t n7( 1, 7.0, "n7");
+        pt_leaf_t n6( 0, 6.0, "n6");
         pt_node_t n5(-1, 5.0, &n8, &n9);
         pt_node_t n4(-1, 4.0, &n6, &n7);
-        pt_leaf_t n3( 0, 3.0);
+        pt_leaf_t n3( 0, 3.0, "n3");
         pt_node_t n2(-1, 2.0, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        cout << "(node1 (node2 (node4 (node6 A) (node7 C))"  << endl
-             << "              (node5 (node8 G) (node9 T)))" << endl
-             << "       (node3 A))"                          << endl;
+        cout << "(n1 (n2 (n4 (n6 A) (n7 C))"  << endl
+             << "        (n5 (n8 G) (n9 T)))" << endl
+             << "    (n3 A))"                 << endl;
 
         incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
         polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);

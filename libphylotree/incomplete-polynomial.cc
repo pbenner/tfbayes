@@ -23,24 +23,12 @@
 
 using namespace std;
 
-static
-const char decode_nucleotide(nucleotide_t nucleotide) {
-        switch (nucleotide) {
-        case 0: return 'A';
-        case 1: return 'C';
-        case 2: return 'G';
-        case 3: return 'T';
-        default:
-                return 'N';
-        }
-}
-
 ostream& operator<< (ostream& o, const node_set_t& node_set) {
         for (node_set_t::const_iterator it = node_set.begin(); it != node_set.end(); it++) {
                 if (it != node_set.begin()) {
                         o << ",";
                 }
-                o << decode_nucleotide((*it)->x);
+                o << (*it)->name;
         }
 
         return o;
