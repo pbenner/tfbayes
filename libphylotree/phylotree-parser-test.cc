@@ -23,20 +23,40 @@
 
 #include <iostream>
 
+#include <phylotree.hh>
+
 using namespace std;
 
 extern char yytext[];
 extern size_t line_count;
+extern pt_root_t* root;
 
 int yyparse(void);
 
 int yyerror(const char *msg) {
-        printf("%s at line %ld new `%s'", msg, line_count, yytext);
+        printf("%s at line %ld near `%s'\n", msg, line_count, yytext);
+        return 0;
+}
+
+void print_tree(pt_node_t* node)
+{
+        if (node->leaf()) {
+                cout << "(leaf " << node->name << ")";
+        }
+        else {
+                cout << "(node ";
+                print_tree(node->left);
+                cout << " ";
+                print_tree(node->right);
+                cout << ")";
+        }
 }
 
 int main(void) {
 
         yyparse();
+        print_tree(root);
+        cout << endl;
 
         return 0.0;
 }

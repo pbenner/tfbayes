@@ -1,25 +1,27 @@
 %{
-#include <math.h>
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #include <stdio.h>
-#define YYSTYPE double
+#include <phylotree.hh>
+
+#define YYSTYPE pt_node_t *
+
 int yylex (void);
 void yyerror (const char *);
+
+pt_root_t* root;
+extern char yytext[];
+
 %}
 
-%token LPAREN RPAREN ID NUM STR
+%token LPAREN RPAREN ROOT NODE LEAF ID NUM STR
 
 %%
-sexpr: atom                  {printf("matched sexpr\n");}
-    | list
+root: LPAREN ROOT node node RPAREN { root = new pt_root_t(-1, $3, $4, ""); printf("now at root\n"); }
+    | LPAREN LEAF NUM RPAREN       { root = new pt_root_t( 1, NULL, NULL, ""); }
     ;
-list: LPAREN members RPAREN  {printf("matched list\n");}
-    | LPAREN RPAREN          {printf("matched empty list\n");}
-    ;
-members: sexpr               {printf("members 1\n");}
-    | sexpr members          {printf("members 2\n");}
-    ;
-atom: ID                     {printf("ID\n");}
-    | NUM                    {printf("NUM\n");}
-    | STR                    {printf("STR\n");}
-    ;
+node: LPAREN NODE node node RPAREN { $$ = new pt_node_t(-1, 0.0, $3, $4, ""); printf("now at node\n"); }
+    | LPAREN LEAF NUM RPAREN       { $$ = new pt_leaf_t(-1, 0.0, "burp"); printf("now at leaf\n"); }
 %%
