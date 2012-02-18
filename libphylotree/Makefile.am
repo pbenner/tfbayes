@@ -2,10 +2,21 @@
 
 INCLUDES = -I$(top_srcdir)/include
 
-bin_PROGRAMS = polynomial-test likelihood-test likelihood-prime-test marginal-likelihood-test
+## flex/bison
+LEX  = flex
+YACC = bison -y
+BUILT_SOURCES = phylotree-parser.h
+AM_YFLAGS = -d
+AM_LFLAGS = -o$(LEX_OUTPUT_ROOT).c
+
+bin_PROGRAMS = polynomial-test phylotree-parser-test likelihood-test likelihood-prime-test marginal-likelihood-test
 
 polynomial_test_SOURCES = polynomial-test.cc
 polynomial_test_LDADD   = -lm
+
+phylotree_parser_test_SOURCES = phylotree-parser-test.cc
+phylotree_parser_test_LDADD   = -lm
+phylotree_parser_test_LDADD  += libphylotree.la
 
 likelihood_test_SOURCES = likelihood-test.cc
 likelihood_test_LDADD   = -lm
@@ -25,6 +36,8 @@ libphylotree_la_SOURCES = \
 	phylotree.hh \
 	phylotree-expand.hh \
 	phylotree-polynomial.hh \
+	phylotree-lexer.ll \
+	phylotree-parser.yy \
 	phylotree-simplify.cc \
 	phylotree-simplify.hh \
 	incomplete-polynomial.cc \

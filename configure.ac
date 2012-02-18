@@ -34,6 +34,8 @@ AC_ISC_POSIX
 AC_PROG_INSTALL
 AM_PROG_CC_C_O
 AC_PROG_LN_S
+AM_PROG_LEX
+AC_PROG_YACC
 
 dnl ,---------------------------- 
 dnl | GENERAL PACKAGE INFO
