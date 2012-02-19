@@ -38,6 +38,8 @@ libphylotree_la_SOURCES = \
 	phylotree-polynomial.hh \
 	phylotree-lexer.ll \
 	phylotree-parser.yy \
+	phylotree-parsetree.cc \
+	phylotree-parsetree.hh \
 	phylotree-simplify.cc \
 	phylotree-simplify.hh \
 	incomplete-polynomial.cc \

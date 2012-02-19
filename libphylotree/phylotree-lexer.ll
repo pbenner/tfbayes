@@ -5,20 +5,23 @@ size_t line_count;
 extern int yylval;
 %}
 
-WHITESPACE [\ \t]
+COLON :
+COMMA ,
+SEMICOLON ;
+DIGIT [0-9]
 NEWLINE [\n]
+WHITESPACE [\ \t]
 
 %%
 {WHITESPACE}+              { }
 {NEWLINE}                  { line_count++; }
-root                       { return ROOT; }
-node                       { return NODE; }
-leaf                       { return LEAF; }
-[a-zA-Z][a-zA-Z0-9]*       { return ID; }
+{COLON}                    { return COLON; }
+{COMMA}                    { return COMMA; }
+{SEMICOLON}                { return SEMICOLON; }
+[a-zA-Z][a-zA-Z0-9]*       { return NAME; }
 \)                         { return RPAREN; }
 \(                         { return LPAREN; }
-[0-9]+                     { yylval = atoi(yytext); return NUM; }
-\"[^\"\n]*\"               { return STR; }
+{DIGIT}+("."{DIGIT}*)?     { return FLOAT; }
 .                          { return yytext[0]; }
 %%
 int yywrap(void) {

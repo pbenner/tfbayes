@@ -15,53 +15,45 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef PHYLOTREE_PARSETREE_HH
+#define PHYLOTREE_PARSETREE_HH
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <stdio.h>
-
-#include <iostream>
+#include <cstdarg>
+#include <ostream>
 
 #include <phylotree.hh>
-#include <phylotree-parsetree.hh>
 
-using namespace std;
+typedef enum {
+        /* Root node, internal node, and leaf */
+        ROOT_N, NODE_N, LEAF_N,
 
-extern char* yytext;
-extern size_t line_count;
-extern pt_parsetree_t* root;
+        /* Species name */
+        NAME_N,
 
-int yyparse(void);
+        /* Distance to ancestor */
+        DISTANCE_N,
 
-int yyerror(const char *msg) {
-        printf("%s at line %ld near `%s'\n", msg, line_count, yytext);
-        return 0;
-}
+        /* Nucleotide */
+        NUCLEOTIDE_N
+} nodetype_t;
 
-void print_tree(pt_node_t* node)
-{
-        if (node->leaf()) {
-                cout << "(leaf " << node->name << ")";
-        }
-        else {
-                cout << "(node ";
-                print_tree(node->left);
-                cout << " ";
-                print_tree(node->right);
-                cout << ")";
-        }
-}
+class pt_parsetree_t {
+public:
+         pt_parsetree_t(nodetype_t type, size_t n_children, void *data, ...);
+        ~pt_parsetree_t();
 
-int main(void) {
+        pt_node_t* convert() const;
 
-        yyparse();
-        cout << root
-             << endl;
+        void * const data;
+        const nodetype_t type;
+        const size_t n_children;
+        pt_parsetree_t **children;
+};
 
-        pt_node_t* pt_root = root->convert();
+std::ostream& operator<< (std::ostream& o, pt_parsetree_t* const tree);
 
-        delete(root);
-
-        return 0.0;
-}
+#endif /* PHYLOTREE_PARSETREE_HH */

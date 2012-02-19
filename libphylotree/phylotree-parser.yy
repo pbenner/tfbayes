@@ -4,24 +4,42 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
-#include <phylotree.hh>
+#include <stdlib.h>
+#include <inttypes.h>
+#include <string.h>
 
-#define YYSTYPE pt_node_t *
+#include <phylotree-parsetree.hh>
+
+#define YYSTYPE pt_parsetree_t *
 
 int yylex (void);
 void yyerror (const char *);
 
-pt_root_t* root;
-extern char yytext[];
+pt_parsetree_t* root;
+extern char *yytext;
 
 %}
 
-%token LPAREN RPAREN ROOT NODE LEAF ID NUM STR
+%token COLON COMMA SEMICOLON LPAREN RPAREN NAME FLOAT
 
 %%
-root: LPAREN ROOT node node RPAREN { root = new pt_root_t(-1, $3, $4, ""); printf("now at root\n"); }
-    | LPAREN LEAF NUM RPAREN       { root = new pt_root_t( 1, NULL, NULL, ""); }
+root: LPAREN node COMMA node RPAREN SEMICOLON
+      { root = new pt_parsetree_t(ROOT_N, 2, NULL, $2, $4);; }
+    | LPAREN node COMMA node RPAREN
+      { root = new pt_parsetree_t(ROOT_N, 2, NULL, $2, $4);; }
     ;
-node: LPAREN NODE node node RPAREN { $$ = new pt_node_t(-1, 0.0, $3, $4, ""); printf("now at node\n"); }
-    | LPAREN LEAF NUM RPAREN       { $$ = new pt_leaf_t(-1, 0.0, "burp"); printf("now at leaf\n"); }
+node: LPAREN node COMMA node RPAREN COLON distance
+      { $$ = new pt_parsetree_t(NODE_N, 3, NULL, $2, $4, $7); }
+    | name COLON distance
+      { $$ = new pt_parsetree_t(LEAF_N, 2, NULL, $1, $3); }
+    ;
+name: NAME { $$ = new pt_parsetree_t(NAME_N, 0, strdup(yytext)); }
+    ;
+distance:
+      FLOAT
+      {
+        $$ = new pt_parsetree_t(DISTANCE_N, 0, calloc(1, sizeof(double)));
+        *((double *)$$->data) = atof(yytext);
+      }
+    ;
 %%
