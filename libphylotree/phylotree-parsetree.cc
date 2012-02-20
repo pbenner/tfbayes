@@ -15,6 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <assert.h>
+
 #include <phylotree-parsetree.hh>
 
 using namespace std;
@@ -54,22 +56,30 @@ pt_parsetree_t::convert() const
         switch (type)
         {
         case NODE_N:
+                assert(children[2]->type == DISTANCE_N);
                 node = new pt_node_t(-1,
                                      *(double *)children[2]->data,
                                      children[0]->convert(),
                                      children[1]->convert());
                 break;
         case LEAF_N:
+                assert(children[0]->type == NAME_N);
+                assert(children[1]->type == DISTANCE_N);
                 node = new pt_leaf_t(-1,
-                                    *(double *)children[0]->data,
-                                     (char   *)children[1]->data);
+                                    *(double *)children[1]->data,
+                                     (char   *)children[0]->data);
                 break;
         case ROOT_N:
+                assert(children[0]->type == NODE_N ||
+                       children[0]->type == LEAF_N);
+                assert(children[1]->type == NODE_N ||
+                       children[1]->type == LEAF_N);
                 node = new pt_root_t(-1,
-                                     children[0]->convert(),
-                                     children[1]->convert());
+                                     children[1]->convert(),
+                                     children[0]->convert());
                 break;
         default:
+                assert(false);
                 break;
         }
 
