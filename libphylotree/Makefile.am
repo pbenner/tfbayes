@@ -33,6 +33,7 @@ marginal_likelihood_test_LDADD  += libphylotree.la
 noinst_LTLIBRARIES = libphylotree.la
 
 libphylotree_la_SOURCES = \
+	phylotree.cc \
 	phylotree.hh \
 	phylotree-expand.hh \
 	phylotree-polynomial.hh \

@@ -39,20 +39,6 @@ int yyerror(const char *msg) {
         return 0;
 }
 
-void print_tree(pt_node_t* node)
-{
-        if (node->leaf()) {
-                cout << "(leaf " << node->name << ")";
-        }
-        else {
-                cout << "(node ";
-                print_tree(node->left);
-                cout << " ";
-                print_tree(node->right);
-                cout << ")";
-        }
-}
-
 int main(void) {
 
         yyparse();
@@ -62,6 +48,7 @@ int main(void) {
         pt_node_t* pt_root = root->convert();
 
         delete(root);
+        cout << pt_root << endl;
 
         return 0.0;
 }

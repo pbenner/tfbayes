@@ -71,4 +71,6 @@ public:
                 : pt_node_t(x, d, NULL, NULL, name) { }
 };
 
+std::ostream& operator<< (std::ostream& o, pt_node_t* const node);
+
 #endif /* PHYLOTREE_HH */
