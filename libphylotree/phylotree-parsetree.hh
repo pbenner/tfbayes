@@ -46,6 +46,8 @@ public:
          pt_parsetree_t(nodetype_t type, size_t n_children, void *data, ...);
         ~pt_parsetree_t();
 
+        void destroy();
+
         pt_node_t* convert() const;
 
         void * const data;

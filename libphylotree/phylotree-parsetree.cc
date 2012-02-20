@@ -39,13 +39,18 @@ pt_parsetree_t::pt_parsetree_t(
 }
 
 pt_parsetree_t::~pt_parsetree_t() {
-        for(size_t i = 0; i < n_children; i++) {
-                delete(children[i]);
-        }
         if (data) {
                 free(data);
         }
         free(children);
+}
+
+void
+pt_parsetree_t::destroy() {
+        for(size_t i = 0; i < n_children; i++) {
+                children[i]->destroy();
+        }
+        delete(this);
 }
 
 pt_node_t*

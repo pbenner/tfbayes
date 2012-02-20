@@ -37,6 +37,14 @@ public:
                 : x(x), d(d), left(left), right(right), name(name)
                 { }
 
+        void destroy() {
+                if (!leaf()) {
+                        left->destroy();
+                        right->destroy();
+                }
+                delete(this);
+        }
+
         bool leaf() const { return left == NULL && right == NULL; }
         bool root() const { return d == 0.0; }
 

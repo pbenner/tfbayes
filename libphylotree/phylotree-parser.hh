@@ -15,33 +15,19 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef PHYLOTREE_PARSER_HH
+#define PHYLOTREE_PARSER_HH
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <stdio.h>
+#include <phylotree-parsetree.hh>
 
-#include <iostream>
+extern char* yytext;
+extern size_t line_count;
+extern pt_parsetree_t* pt_parsetree;
 
-#include <phylotree.hh>
-#include <phylotree-parser.hh>
+int yyparse(void);
 
-using namespace std;
-
-int main(void) {
-
-        yyparse();
-
-        pt_node_t* pt_root = pt_parsetree->convert();
-
-        cout << "Parsetree:" << endl
-             << pt_parsetree << endl;
-
-        cout << "Phylogenetic tree:" << endl
-             << pt_root              << endl;
-
-        pt_parsetree->destroy();
-        pt_root->destroy();
-
-        return 0.0;
-}
+#endif /* PHYLOTREE_PARSER_HH */

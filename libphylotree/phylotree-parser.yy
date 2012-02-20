@@ -13,10 +13,15 @@
 #define YYSTYPE pt_parsetree_t *
 
 int yylex (void);
-void yyerror (const char *);
 
-pt_parsetree_t* root;
+pt_parsetree_t* pt_parsetree;
 extern char *yytext;
+extern size_t line_count;
+
+int yyerror(const char *msg) {
+        fprintf(stderr, "%s at line %ld near `%s'\n", msg, line_count, yytext);
+        exit(EXIT_FAILURE);
+}
 
 %}
 
@@ -24,9 +29,9 @@ extern char *yytext;
 
 %%
 root: LPAREN node COMMA node RPAREN SEMICOLON
-      { root = new pt_parsetree_t(ROOT_N, 2, NULL, $2, $4);; }
+      { pt_parsetree = new pt_parsetree_t(ROOT_N, 2, NULL, $2, $4);; }
     | LPAREN node COMMA node RPAREN
-      { root = new pt_parsetree_t(ROOT_N, 2, NULL, $2, $4);; }
+      { pt_parsetree = new pt_parsetree_t(ROOT_N, 2, NULL, $2, $4);; }
     ;
 node: LPAREN node COMMA node RPAREN COLON distance
       { $$ = new pt_parsetree_t(NODE_N, 3, NULL, $2, $4, $7); }

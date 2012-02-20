@@ -38,6 +38,7 @@ libphylotree_la_SOURCES = \
 	phylotree-expand.hh \
 	phylotree-polynomial.hh \
 	phylotree-lexer.ll \
+	phylotree-parser.hh \
 	phylotree-parser.yy \
 	phylotree-parsetree.cc \
 	phylotree-parsetree.hh \
