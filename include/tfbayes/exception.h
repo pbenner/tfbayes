@@ -94,9 +94,9 @@ __attribute__ ((format(printf,2,0), noreturn));
 
 #define MET_INIT clock_t exception_met_start__;
 
-#define MET(MSG, CODE)                          \
+#define MET(MSG, ...)                           \
         exception_met_start__ = clock();        \
-        CODE;                                   \
+        __VA_ARGS__;                            \
         fprintf(stderr, DEBUG_COLOR(""__FILE__":%i: " MSG " took %f seconds\n"), \
                 __LINE__, ((double)clock()-exception_met_start__)/CLOCKS_PER_SEC);
 

@@ -31,7 +31,10 @@
 #include <phylotree-polynomial.hh>
 #include <phylotree-simplify.hh>
 #include <phylotree-expand.hh>
+#include <marginal-likelihood.hh>
 #include <utility.hh>
+
+#include <tfbayes/exception.h>
 
 using namespace std;
 
@@ -56,8 +59,15 @@ void init() {
 
 int main(void) {
 
+        MET_INIT;
         init();
         yyparse();
+
+        exponent_t<code_t, alphabet_size> alpha;
+        alpha[0] = 1;
+        alpha[1] = 1;
+        alpha[2] = 1;
+        alpha[3] = 1;
 
         pt_root_t* pt_root = (pt_root_t*)pt_parsetree->convert();
 
@@ -69,12 +79,28 @@ int main(void) {
         cout << "Phylogenetic tree:" << endl
              << pt_root              << endl;
 
-
-        incomplete_polynomial_t incomplete_polynomial = pt_simplify(pt_root);
-// //        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
+        MET("Simplifying",
+            incomplete_polynomial_t incomplete_polynomial = pt_simplify(pt_root));
 
         cout << "Simplified polynomial:" << endl
              << incomplete_polynomial    << endl;
+
+        MET("Expanding",
+            polynomial_t<code_t, alphabet_size> result1 = pt_expand<code_t, alphabet_size>(incomplete_polynomial));
+
+        cout << "Expanded polynomial:" << endl
+             << result1                << endl;
+
+        MET("Direct computation",
+            pt_polynomial_t<code_t, alphabet_size> result2(pt_root));
+
+        cout << "Direct polynomial:" << endl
+             << result2              << endl;
+
+
+        cout << "Marginal result1: " << pt_marginal_likelihood<code_t, alphabet_size>(result1, alpha) << endl
+             << "Marginal result2: " << pt_marginal_likelihood<code_t, alphabet_size>(result2, alpha) << endl
+             << endl;
 
         pt_parsetree->destroy();
         pt_root->destroy();
