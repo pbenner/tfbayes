@@ -50,8 +50,12 @@ ostream& print_phylotree(
                 cout << "("
                      << node->name
                      << " "
-                     << node->d
-                     << ")";
+                     << node->d;
+                if (node->x != -1) {
+                        cout << " "
+                             << node->x;
+                }
+                cout << ")";
         }
         else {
                 cout << endl;

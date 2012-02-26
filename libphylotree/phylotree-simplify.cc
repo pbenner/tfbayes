@@ -54,7 +54,7 @@ incomplete_polynomial_t pt_simplify_node(
         for (incomplete_polynomial_t::const_iterator it = poly1.begin(); it != poly1.end(); it++) {
                 incomplete_term_t term(*it);
                 if (term.incomplete().empty()) {
-                                poly2 += term;
+                        poly2 += term;
                 }
                 else {
                         poly2 += (1.0-node->mutation_probability())*term;

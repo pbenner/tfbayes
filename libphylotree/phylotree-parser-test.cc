@@ -19,26 +19,62 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <stdio.h>
-
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
 #include <iostream>
+
+#include <sys/time.h>
 
 #include <phylotree.hh>
 #include <phylotree-parser.hh>
+#include <phylotree-polynomial.hh>
+#include <phylotree-simplify.hh>
+#include <phylotree-expand.hh>
+#include <utility.hh>
 
 using namespace std;
 
+void pt_random_init(pt_node_t* node) {
+
+        if (node->leaf()) {
+                node->x = rand()%alphabet_size;
+        }
+        else {
+                pt_random_init(node->left);
+                pt_random_init(node->right);
+        }
+}
+
+void init() {
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        time_t seed = tv.tv_sec*tv.tv_usec;
+
+        srand(seed);
+}
+
 int main(void) {
 
+        init();
         yyparse();
 
-        pt_node_t* pt_root = pt_parsetree->convert();
+        pt_root_t* pt_root = (pt_root_t*)pt_parsetree->convert();
+
+        pt_random_init(pt_root);
 
         cout << "Parsetree:" << endl
              << pt_parsetree << endl;
 
         cout << "Phylogenetic tree:" << endl
              << pt_root              << endl;
+
+
+        incomplete_polynomial_t incomplete_polynomial = pt_simplify(pt_root);
+// //        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
+
+        cout << "Simplified polynomial:" << endl
+             << incomplete_polynomial    << endl;
 
         pt_parsetree->destroy();
         pt_root->destroy();
