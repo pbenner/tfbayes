@@ -22,6 +22,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <tfbayes/logarithmetic.h>
 #include <tfbayes/polynomial.hh>
 
 #include <phylotree.hh>
@@ -31,6 +32,21 @@
 #include <gsl/gsl_sf_gamma.h>
 
 using namespace std;
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+double mbeta_log(
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+{
+        double sum1 = 0;
+        double sum2 = 0;
+
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                sum1 += alpha[i];
+                sum2 += gsl_sf_lngamma(alpha[i]);
+        }
+
+        return sum2 - gsl_sf_lngamma(sum1);
+}
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 double mbeta_log(
@@ -50,16 +66,17 @@ double mbeta_log(
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 double pt_marginal_likelihood(
-        pt_root_t* node,
+        const pt_root_t* const node,
         const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
 {
-        double result = 0.0;
+        double result = -HUGE_VAL;
+        double mbeta_alpha = mbeta_log(alpha);
 
         const pt_polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial(node);
 
         for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
-                result += log(it->coefficient()) + mbeta_log(it->exponent(), alpha);
+                result = logadd(result, log(it->coefficient()) + mbeta_log(it->exponent(), alpha) - mbeta_alpha);
         }
 
         return result;
@@ -70,11 +87,12 @@ double pt_marginal_likelihood(
         const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& polynomial,
         const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
 {
-        double result = 0.0;
+        double result = -HUGE_VAL;
+        double mbeta_alpha = mbeta_log(alpha);
 
         for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
-                result += log(it->coefficient()) + mbeta_log(it->exponent(), alpha);
+                result = logadd(result, log(it->coefficient()) + mbeta_log(it->exponent(), alpha) - mbeta_alpha);
         }
 
         return result;

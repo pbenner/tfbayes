@@ -39,7 +39,7 @@ void test_tree1(const exponent_t<code_t, alphabet_size> alpha) {
         //double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         double result = pt_marginal_likelihood<code_t, alphabet_size>(polynomial, alpha);
         cout << result << endl
-             << "-4.83856 (correct value)"
+             << "-3.0468 (correct value)"
              << endl << endl;
 }
 
@@ -51,7 +51,7 @@ void test_tree2(const exponent_t<code_t, alphabet_size> alpha) {
 
         double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl
-             << "-10.3235 (correct value)"
+             << "-2.23056 (correct value)"
              << endl << endl;
 }
 
@@ -65,7 +65,7 @@ void test_tree3(const exponent_t<code_t, alphabet_size> alpha) {
 
         double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl
-             << "-14.0767 (correct value)"
+             << "-4.11845 (correct value)"
              << endl << endl;
 }
 
@@ -81,7 +81,7 @@ void test_tree4(const exponent_t<code_t, alphabet_size> alpha) {
 
         double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl
-             << "-30.659 (correct value)"
+             << "-3.41318 (correct value)"
              << endl << endl;
 }
 
@@ -97,7 +97,7 @@ void test_tree5(const exponent_t<code_t, alphabet_size> alpha) {
 
         double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl
-             << "-17.8031 (correct value)"
+             << "-6.05774 (correct value)"
              << endl << endl;
 }
 
@@ -115,7 +115,7 @@ void test_tree6(const exponent_t<code_t, alphabet_size> alpha) {
 
         double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl
-             << "-33.4375 (correct value)"
+             << "-8.1197 (correct value)"
              << endl << endl;
 }
 

@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
+#include <map>
 
 #include <sys/time.h>
 
@@ -38,14 +39,23 @@
 
 using namespace std;
 
-void pt_random_init(pt_node_t* node) {
-
-        if (node->leaf()) {
+void pt_init_leaf(const map<string, code_t>& observations, pt_node_t* node) {
+        if (observations.find(node->name) == observations.end()) {
                 node->x = rand()%alphabet_size;
         }
         else {
-                pt_random_init(node->left);
-                pt_random_init(node->right);
+                node->x = (*observations.find(node->name)).second;
+        }
+}
+
+void pt_init(const map<string, code_t>& observations, pt_node_t* node) {
+
+        if (node->leaf()) {
+                pt_init_leaf(observations, node);
+        }
+        else {
+                pt_init(observations, node->left);
+                pt_init(observations, node->right);
         }
 }
 
@@ -63,15 +73,30 @@ int main(void) {
         init();
         yyparse();
 
+        map<string, code_t> observations;
+        observations["hg19"]    = 1;
+        observations["panTro2"] = 2;
+        observations["gorGor1"] = 0;
+        observations["ponAbe2"] = 1;
+        observations["rheMac2"] = 0;
+        observations["papHam1"] = 1;
+        observations["calJac1"] = 3;
+        observations["tarSyr1"] = 0;
+
         exponent_t<code_t, alphabet_size> alpha;
         alpha[0] = 1;
         alpha[1] = 1;
         alpha[2] = 1;
         alpha[3] = 1;
+        exponent_t<double, alphabet_size> p;
+        p[0] = 0.3;
+        p[1] = 0.25;
+        p[2] = 0.4;
+        p[3] = 0.05;
 
         pt_root_t* pt_root = (pt_root_t*)pt_parsetree->convert();
 
-        pt_random_init(pt_root);
+        pt_init(observations, pt_root);
 
         cout << "Parsetree:" << endl
              << pt_parsetree << endl;
@@ -100,6 +125,10 @@ int main(void) {
 
         cout << "Marginal result1: " << pt_marginal_likelihood<code_t, alphabet_size>(result1, alpha) << endl
              << "Marginal result2: " << pt_marginal_likelihood<code_t, alphabet_size>(result2, alpha) << endl
+             << endl;
+
+        cout << "Eval result1: " << result1.eval(p) << endl
+             << "Eval result2: " << result2.eval(p) << endl
              << endl;
 
         pt_parsetree->destroy();
