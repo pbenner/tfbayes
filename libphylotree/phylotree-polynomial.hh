@@ -67,14 +67,28 @@ private:
                 const pt_node_t* node,
                 const carry_t& carry_left,
                 const carry_t& carry_right) {
+                double p;
                 carry_t carry;
                 const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_left  = poly_sum(carry_left);
                 const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_right = poly_sum(carry_right);
 
                 /*  M, M */
-                double p = (1.0-exp(-node->left->d))*(1.0-exp(-node->right->d));
+                p = (1.0-exp(-node->left->d))*(1.0-exp(-node->right->d));
                 carry[ALPHABET_SIZE] += p*poly_sum_left*poly_sum_right;
-                for (size_t i = 0; i < ALPHABET_SIZE+1; i++) {
+                /* ¬M, M */
+                p = exp(-node->left->d)*(1.0-exp(-node->right->d));
+                carry[ALPHABET_SIZE] += p*carry_left[ALPHABET_SIZE]*poly_sum_right;
+                /*  M,¬M */
+                p = (1.0-exp(-node->left->d))*exp(-node->right->d);
+                carry[ALPHABET_SIZE] += p*poly_sum_left*carry_right[ALPHABET_SIZE];
+                /* ¬M,¬M */
+                p = exp(-node->left->d)*exp(-node->right->d);
+                carry[ALPHABET_SIZE] += p*carry_left[ALPHABET_SIZE]*carry_right[ALPHABET_SIZE];
+
+                for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                        /*  M, M */
+                        carry[i] += p*carry_left[i]*carry_right[ALPHABET_SIZE];
+                        carry[i] += p*carry_left[ALPHABET_SIZE]*carry_right[i];
                         /* ¬M, M */
                         p = exp(-node->left->d)*(1.0-exp(-node->right->d));
                         carry[i] += p*carry_left[i]*poly_sum_right;
@@ -84,10 +98,6 @@ private:
                         /* ¬M,¬M */
                         p = exp(-node->left->d)*exp(-node->right->d);
                         carry[i] += p*carry_left[i]*carry_right[i];
-                        if (i < ALPHABET_SIZE) {
-                                carry[i] += p*carry_left[i]*carry_right[ALPHABET_SIZE];
-                                carry[i] += p*carry_left[ALPHABET_SIZE]*carry_right[i];
-                        }
                 }
                 return carry;
         }
