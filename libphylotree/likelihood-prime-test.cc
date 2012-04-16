@@ -140,7 +140,7 @@ void test_tree6() {
         polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
         cout << incomplete_polynomial << endl
              << result << endl
-             << "0.000122107 Pa^2 Pc^2 Pg^1 Pt^1 + 0.999875 Pa^2 Pc^1 Pg^1 Pt^1 + 3.05622e-07 Pa^1 Pc^1 Pg^1 Pt^1 + 0.000122107 Pa^2 Pc^1 Pg^1 Pt^2 + 0.000122107 Pa^2 Pc^1 Pg^2 Pt^1 + 0.000122107 Pa^3 Pc^1 Pg^1 Pt^1 (correct polynomial)"
+             << "0.999997 Pa^2 Pc^1 Pg^1 Pt^1 + 3.05622e-07 Pa^1 Pc^1 Pg^1 Pt^1 (correct polynomial)"
              << endl << endl;
 }
 

@@ -21,6 +21,8 @@
 
 #include <phylotree-simplify.hh>
 
+using namespace std;
+
 incomplete_polynomial_t pt_simplify_leaf(pt_node_t* node) {
         incomplete_polynomial_t poly;
         incomplete_term_t term;

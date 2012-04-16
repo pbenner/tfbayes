@@ -48,33 +48,40 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> mutation_model(const pt_node_t* u, CODE_T
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(const node_set_t& node_set) {
-        std::vector<bool> applicable(ALPHABET_SIZE, false);
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> result;
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> remainder(1.0);
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
+        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> term,
+        node_set_t::const_iterator it,
+        node_set_t::const_iterator end,
+        CODE_TYPE condition)
+{
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE> result(0.0);
+        if(it == end) {
+                /* leaf */
+                if (condition != ALPHABET_SIZE) {
+                        term *= nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(condition);
+                }
+                result += term;
+        }
+        else {
+                const double pm   = (*it)->mutation_probability();
+                const CODE_TYPE x = (*it)->x; it++;
 
-        for (node_set_t::const_iterator it = node_set.begin(); it != node_set.end(); it++) {
-                applicable[(*it)->x] = true;
-        }
-        for (CODE_TYPE y = 0; y < ALPHABET_SIZE; y++) {
-                if (applicable[y]) {
-                        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> px = nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(y);
-                        polynomial_t<CODE_TYPE, ALPHABET_SIZE> tmp(px);
-                        remainder -= px;
-                        for (node_set_t::const_iterator it = node_set.begin(); it != node_set.end(); it++) {
-                                tmp *= mutation_model<CODE_TYPE, ALPHABET_SIZE>(*it, y);
-                        }
-                        result += tmp;
+                /* no mutation */
+                if (condition == ALPHABET_SIZE || condition == x) {
+                        result += pt_expand_rec((1.0-pm)*term, it, end, x);
                 }
-        }
-        if (remainder.size() < ALPHABET_SIZE) {
-                polynomial_t<CODE_TYPE, ALPHABET_SIZE> tmp(remainder);
-                for (node_set_t::const_iterator it = node_set.begin(); it != node_set.end(); it++) {
-                        tmp *= mutation_model<CODE_TYPE, ALPHABET_SIZE>(*it, ALPHABET_SIZE);
-                }
-                result += tmp;
+                /* mutation */
+                term   *= nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(x);
+                result += pt_expand_rec(pm*term, it, end, condition);
         }
         return result;
+}
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(const node_set_t& node_set) {
+        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> term(1.0);
+
+        return pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(term, node_set.begin(), node_set.end(), ALPHABET_SIZE);
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>

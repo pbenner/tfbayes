@@ -36,8 +36,15 @@ public:
 
 class incomplete_exponent_t : public boost::unordered_set<node_set_t> {
 public:
+        bool is_complete() const {
+                if (incomplete().empty()) {
+                        return true;
+                }
+                return false;
+        }
+
         incomplete_exponent_t& complete() {
-                if (!incomplete().empty()) {
+                if (!is_complete()) {
                         insert(incomplete());
                         incomplete() = node_set_t();
                 }
@@ -109,6 +116,19 @@ incomplete_term_t operator*(const incomplete_term_t& term1, const incomplete_ter
 
 class incomplete_polynomial_t : public boost::unordered_map<incomplete_exponent_t, double> {
 public:
+        std::pair<size_t, size_t> size() {
+                size_t   complete = 0;
+                size_t incomplete = 0;
+                for (incomplete_polynomial_t::const_iterator it = begin(); it != end(); it++) {
+                        if (it->is_complete()) {
+                                complete++;
+                        }
+                        else {
+                                incomplete++;
+                        }
+                }
+                return std::pair<size_t, size_t>(complete, incomplete);
+        }
         incomplete_polynomial_t& operator+=(const incomplete_term_t& term) {
                 operator[](term) += term.coefficient();
                 if (operator[](term) == 0.0) {
