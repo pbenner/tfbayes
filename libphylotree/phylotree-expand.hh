@@ -31,7 +31,7 @@
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> nucleotide_probability(CODE_TYPE x) {
-        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> px;
+        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> px(1.0);
         px.exponent()[x] = 1;
         return px;
 }
@@ -79,9 +79,7 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(const node_set_t& node_set) {
-        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> term(1.0);
-
-        return pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(term, node_set.begin(), node_set.end(), ALPHABET_SIZE);
+        return pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(1.0, node_set.begin(), node_set.end(), ALPHABET_SIZE);
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>

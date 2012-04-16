@@ -49,7 +49,7 @@ private:
                 polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum;
 
                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> term;
+                        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> term(1.0);
                         term.exponent()[i] = 1;
                         poly_sum += term*carry[i];
                 }

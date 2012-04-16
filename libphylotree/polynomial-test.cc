@@ -59,12 +59,12 @@ size_t hash_value(const exponent_t<unsigned short, 4u>& exponent) {
 }
 
 int main() {
-        polynomial_term_t<unsigned short, 4> term1;
+        polynomial_term_t<unsigned short, 4> term1(1.0);
         term1.exponent()[0] = 2;
         term1.exponent()[1] = 4;
         term1.exponent()[2] = 1;
         term1.exponent()[3] = 3;
-        polynomial_term_t<unsigned short, 4> term2;
+        polynomial_term_t<unsigned short, 4> term2(1.0);
         term2.exponent()[0] = 1;
         term2.exponent()[1] = 1;
         term2.exponent()[2] = 1;
