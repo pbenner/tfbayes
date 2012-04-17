@@ -27,7 +27,7 @@
 #include <tfbayes/polynomial.hh>
 
 #include <phylotree.hh>
-#include <incomplete-polynomial.hh>
+#include <incomplete-expression.hh>
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> nucleotide_probability(CODE_TYPE x) {
@@ -49,9 +49,57 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> mutation_model(const pt_node_t* u, CODE_T
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
+        nodeset_t::const_iterator it,
+        nodeset_t::const_iterator end,
+        CODE_TYPE condition)
+{
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE> result(0.0);
+
+        if(it == end) {
+                if (condition == ALPHABET_SIZE) {
+                        result += 1.0;
+                }
+        }
+        else {
+                const CODE_TYPE x = (*it)->x;
+                const double pm   = (*it)->mutation_probability();
+                const polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> px =
+                        nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(x);
+
+                polynomial_t<CODE_TYPE, ALPHABET_SIZE> tmp = pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(++it, end, condition);
+
+                result += pm*px*tmp;
+
+                if (condition == x) {
+                        result += (1.0-pm)*tmp;
+                        result += (1.0-pm)*pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(it, end, ALPHABET_SIZE);
+                }
+        }
+        return result;
+}
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
+        nodeset_t::const_iterator it,
+        nodeset_t::const_iterator end)
+{
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE> result(0.0);
+
+        for (CODE_TYPE x = 0; x < ALPHABET_SIZE; x++) {
+                const polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> px =
+                        nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(x);
+                result += px*pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(it, end, x);
+        }
+        result += pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(it, end, ALPHABET_SIZE);
+
+        return result;
+}
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
         polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> term,
-        node_set_t::const_iterator it,
-        node_set_t::const_iterator end,
+        nodeset_t::const_iterator it,
+        nodeset_t::const_iterator end,
         CODE_TYPE condition)
 {
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> result(0.0);
@@ -78,23 +126,26 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(const node_set_t& node_set) {
-        return pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(1.0, node_set.begin(), node_set.end(), ALPHABET_SIZE);
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(const nodeset_t& nodeset) {
+        /* Algorithm 1 */
+//        return pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(1.0, nodeset.begin(), nodeset.end(), ALPHABET_SIZE);
+        /* Algorithm 2 */
+        return pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(nodeset.begin(), nodeset.end());
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(const incomplete_term_t& term) {
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(const incomplete_nodeterm_t& nodeterm) {
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> result(1.0);
-        for (incomplete_term_t::const_iterator it = term.begin(); it != term.end(); it++) {
+        for (incomplete_nodeterm_t::const_iterator it = nodeterm.begin(); it != nodeterm.end(); it++) {
                 result *= pt_expand<CODE_TYPE, ALPHABET_SIZE>(*it);
         }
-        return term.coefficient()*result;
+        return nodeterm.coefficient()*result;
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(const incomplete_polynomial_t& poly) {
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(const incomplete_expression_t& expression) {
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> result;
-        for (incomplete_polynomial_t::const_iterator it = poly.begin(); it != poly.end(); it++) {
+        for (incomplete_expression_t::const_iterator it = expression.begin(); it != expression.end(); it++) {
                 result += pt_expand<CODE_TYPE, ALPHABET_SIZE>(*it);
         }
 

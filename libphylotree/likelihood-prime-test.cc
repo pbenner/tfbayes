@@ -35,9 +35,9 @@ void test_tree1() {
 
         cout << "(n1 (n2 C) (n3 G))" << endl;
 
-        incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
-        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
-        cout << incomplete_polynomial << endl
+        incomplete_expression_t incomplete_expression = pt_simplify(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_expression);
+        cout << incomplete_expression << endl
              << result << endl
              << "0.950213 Pc^1 Pg^1 (correct polynomial)"
              << endl << endl;
@@ -51,9 +51,9 @@ void test_tree2() {
 
         cout << "(n1 (n2 C) (n3 C))" << endl;
 
-        incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
-        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
-        cout << incomplete_polynomial << endl
+        incomplete_expression_t incomplete_expression = pt_simplify(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_expression);
+        cout << incomplete_expression << endl
              << result << endl
              << "0.950213 Pc^2 + 0.0497871 Pc^1 (correct polynomial)"
              << endl << endl;
@@ -70,9 +70,9 @@ void test_tree3() {
         cout << "(n1 (n2 (n4 C) (n5 C))" << endl
              << "    (n3 G))"            << endl;
 
-        incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
-        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
-        cout << incomplete_polynomial << endl
+        incomplete_expression_t incomplete_expression = pt_simplify(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_expression);
+        cout << incomplete_expression << endl
              << result << endl
              << "0.0386781 Pc^1 Pg^1 + 0.860149 Pc^2 Pg^1 (correct polynomial)"
              << endl << endl;
@@ -91,9 +91,9 @@ void test_tree4() {
         cout << "(n1 (n2 (n4 C) (n5 C))"  << endl
              << "    (n3 (n6 C) (n7 C)))" << endl;
 
-        incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
-        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
-        cout << incomplete_polynomial << endl
+        incomplete_expression_t incomplete_expression = pt_simplify(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_expression);
+        cout << incomplete_expression << endl
              << result << endl
              << "0.0163527 Pc^2 + 0.000911882 Pc^1 + 0.842968 Pc^4 + 0.139768 Pc^3 (correct polynomial)"
              << endl << endl;
@@ -112,9 +112,9 @@ void test_tree5() {
         cout << "(n1 (n2 (n4 T) (n5 G))"  << endl
              << "    (n3 (n6 C) (n7 C)))" << endl;
 
-        incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
-        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
-        cout << incomplete_polynomial << endl
+        incomplete_expression_t incomplete_expression = pt_simplify(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_expression);
+        cout << incomplete_expression << endl
              << result << endl
              << "0.0399154 Pc^1 Pg^1 Pt^1 + 0.842968 Pc^2 Pg^1 Pt^1 (correct polynomial)"
              << endl << endl;
@@ -136,9 +136,9 @@ void test_tree6() {
              << "        (n5 (n8 G) (n9 T)))" << endl
              << "    (n3 A))"                 << endl;
 
-        incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
-        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
-        cout << incomplete_polynomial << endl
+        incomplete_expression_t incomplete_expression = pt_simplify(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_expand<code_t, alphabet_size>(incomplete_expression);
+        cout << incomplete_expression << endl
              << result << endl
              << "0.999997 Pa^2 Pc^1 Pg^1 Pt^1 + 3.05622e-07 Pa^1 Pc^1 Pg^1 Pt^1 (correct polynomial)"
              << endl << endl;

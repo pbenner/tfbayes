@@ -23,66 +23,66 @@
 
 using namespace std;
 
-incomplete_polynomial_t pt_simplify_leaf(pt_node_t* node) {
-        incomplete_polynomial_t poly;
-        incomplete_term_t term;
+incomplete_expression_t pt_simplify_leaf(pt_node_t* node) {
+        incomplete_expression_t expression;
+        incomplete_nodeterm_t term;
         term.incomplete().insert(node);
-        poly += term;
+        expression += term;
 
-        return poly;
+        return expression;
 }
 
-incomplete_polynomial_t pt_simplify_root(
+incomplete_expression_t pt_simplify_root(
         pt_node_t* node,
-        const incomplete_polynomial_t& poly_left,
-        const incomplete_polynomial_t& poly_right) {
-        incomplete_polynomial_t poly1 = poly_left*poly_right;
-        incomplete_polynomial_t poly2;
+        const incomplete_expression_t& expression_left,
+        const incomplete_expression_t& expression_right) {
+        incomplete_expression_t expression1 = expression_left*expression_right;
+        incomplete_expression_t expression2;
 
-        for (incomplete_polynomial_t::const_iterator it = poly1.begin(); it != poly1.end(); it++) {
-                incomplete_term_t term(*it);
-                poly2 += term.complete();
+        for (incomplete_expression_t::const_iterator it = expression1.begin(); it != expression1.end(); it++) {
+                incomplete_nodeterm_t term(*it);
+                expression2 += term.complete();
         }
-        return poly2;
+        return expression2;
 }
 
-incomplete_polynomial_t pt_simplify_node(
+incomplete_expression_t pt_simplify_node(
         pt_node_t* node,
-        const incomplete_polynomial_t& poly_left,
-        const incomplete_polynomial_t& poly_right) {
-        incomplete_polynomial_t poly1 = poly_left*poly_right;
-        incomplete_polynomial_t poly2;
+        const incomplete_expression_t& expression_left,
+        const incomplete_expression_t& expression_right) {
+        incomplete_expression_t expression1 = expression_left*expression_right;
+        incomplete_expression_t expression2;
 
-        for (incomplete_polynomial_t::const_iterator it = poly1.begin(); it != poly1.end(); it++) {
-                incomplete_term_t term(*it);
+        for (incomplete_expression_t::const_iterator it = expression1.begin(); it != expression1.end(); it++) {
+                incomplete_nodeterm_t term(*it);
                 if (term.incomplete().empty()) {
-                        poly2 += term;
+                        expression2 += term;
                 }
                 else {
-                        poly2 += (1.0-node->mutation_probability())*term;
-                        poly2 +=      node->mutation_probability() *term.complete();
+                        expression2 += (1.0-node->mutation_probability())*term;
+                        expression2 +=      node->mutation_probability() *term.complete();
                 }
         }
-        return poly2;
+        return expression2;
 }
 
-incomplete_polynomial_t pt_simplify_rec(pt_node_t* node) {
+incomplete_expression_t pt_simplify_rec(pt_node_t* node) {
         if (node->leaf()) {
                 return pt_simplify_leaf(node);
         }
         else {
-                const incomplete_polynomial_t poly_left  = pt_simplify_rec(node->left);
-                const incomplete_polynomial_t poly_right = pt_simplify_rec(node->right);
+                const incomplete_expression_t expression_left  = pt_simplify_rec(node->left);
+                const incomplete_expression_t expression_right = pt_simplify_rec(node->right);
 
                 if (node->root()) {
-                        return pt_simplify_root(node, poly_left, poly_right);
+                        return pt_simplify_root(node, expression_left, expression_right);
                 }
                 else {
-                        return pt_simplify_node(node, poly_left, poly_right);
+                        return pt_simplify_node(node, expression_left, expression_right);
                 }
         }
 }
 
-incomplete_polynomial_t pt_simplify(pt_root_t* node) {
+incomplete_expression_t pt_simplify(pt_root_t* node) {
         return pt_simplify_rec(node);
 }

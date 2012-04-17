@@ -19,7 +19,25 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <incomplete-polynomial.hh>
+#include <nodeset.hh>
 
 using namespace std;
 
+ostream& operator<< (ostream& o, const nodeset_t& nodeset) {
+        for (nodeset_t::const_iterator it = nodeset.begin(); it != nodeset.end(); it++) {
+                if (it != nodeset.begin()) {
+                        o << ",";
+                }
+                o << (*it)->name;
+        }
+
+        return o;
+}
+
+size_t hash_value(const nodeset_t& set) {
+        size_t seed = 0;
+        for (nodeset_t::const_iterator it = set.begin(); it != set.end(); it++) {
+                seed += (size_t)*it;
+        }
+        return seed;
+}

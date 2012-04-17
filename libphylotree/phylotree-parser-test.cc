@@ -105,13 +105,13 @@ int main(void) {
              << pt_root              << endl;
 
         MET("Simplifying",
-            incomplete_polynomial_t incomplete_polynomial = pt_simplify(pt_root));
+            incomplete_expression_t incomplete_expression = pt_simplify(pt_root));
 
         cout << "Simplified polynomial:" << endl
-             << incomplete_polynomial    << endl;
+             << incomplete_expression    << endl;
 
         MET("Expanding",
-            polynomial_t<code_t, alphabet_size> result1 = pt_expand<code_t, alphabet_size>(incomplete_polynomial));
+            polynomial_t<code_t, alphabet_size> result1 = pt_expand<code_t, alphabet_size>(incomplete_expression));
 
         cout << "Expanded polynomial:" << endl
              << result1                << endl;
