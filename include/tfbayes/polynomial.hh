@@ -62,7 +62,10 @@ template <typename T, size_t S>
 class polynomial_term_t : public std::pair<exponent_t<T, S>, double> {
 public:
         polynomial_term_t()
-                : std::pair<exponent_t<T, S>, double>(exponent_t<T, S>(), 1.0)
+                : std::pair<exponent_t<T, S>, double>(exponent_t<T, S>(), 0.0)
+                { }
+        polynomial_term_t(const double constant)
+                : std::pair<exponent_t<T, S>, double>(exponent_t<T, S>(), constant)
                 { }
         polynomial_term_t(const std::pair<exponent_t<T, S>, double>& pair)
                 : std::pair<exponent_t<T, S>, double>(pair)

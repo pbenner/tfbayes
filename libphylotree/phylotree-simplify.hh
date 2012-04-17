@@ -23,8 +23,8 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <phylotree.hh>
-#include <incomplete-polynomial.hh>
+#include <incomplete-expression.hh>
 
-incomplete_polynomial_t pt_simplify(pt_root_t* node);
+incomplete_expression_t pt_simplify(pt_root_t* node);
 
 #endif /* PHYLOTREE_SIMPLIFY_HH */

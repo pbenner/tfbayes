@@ -34,8 +34,8 @@ void test_tree1(const exponent_t<code_t, alphabet_size> alpha) {
         pt_leaf_t n3(2, 2.0);
         pt_root_t n1(-1, &n2, &n3);
 
-        incomplete_polynomial_t incomplete_polynomial = pt_simplify(&n1);
-        polynomial_t<code_t, alphabet_size> polynomial = pt_expand<code_t, alphabet_size>(incomplete_polynomial);
+        incomplete_expression_t incomplete_expression = pt_simplify(&n1);
+        polynomial_t<code_t, alphabet_size> polynomial = pt_expand<code_t, alphabet_size>(incomplete_expression);
         //double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         double result = pt_marginal_likelihood<code_t, alphabet_size>(polynomial, alpha);
         cout << result << endl

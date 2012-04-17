@@ -33,6 +33,8 @@ marginal_likelihood_test_LDADD  += libphylotree.la
 noinst_LTLIBRARIES = libphylotree.la
 
 libphylotree_la_SOURCES = \
+	nodeset.cc \
+	nodeset.hh \
 	phylotree.cc \
 	phylotree.hh \
 	phylotree-expand.hh \
@@ -44,6 +46,8 @@ libphylotree_la_SOURCES = \
 	phylotree-parsetree.hh \
 	phylotree-simplify.cc \
 	phylotree-simplify.hh \
+	incomplete-expression.cc \
+	incomplete-expression.hh \
 	incomplete-polynomial.cc \
 	incomplete-polynomial.hh \
 	marginal-likelihood.hh \

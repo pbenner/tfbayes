@@ -15,11 +15,28 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef NODESET_HH
+#define NODESET_HH
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <incomplete-polynomial.hh>
+#include <boost/unordered_set.hpp>
 
-using namespace std;
+#include <phylotree.hh>
 
+class nodeset_t : public boost::unordered_set<const pt_node_t*> {
+public:
+        bool empty() const {
+                return size() == 0;
+        }
+};
+
+#include <ostream>
+
+size_t hash_value(const nodeset_t& set);
+
+std::ostream& operator<< (std::ostream& o, const nodeset_t& nodeset);
+
+#endif /* NODESET_HH */
