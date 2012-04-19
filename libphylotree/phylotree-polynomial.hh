@@ -167,7 +167,6 @@ private:
                                 poly2 +=      node->mutation_probability() *term.complete();
                         }
                 }
-                std::cerr << "poly2: " << poly2 << std::endl;
                 return poly2;
         }
 

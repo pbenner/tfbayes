@@ -19,6 +19,8 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <iostream>
+
 #include <phylotree-simplify.hh>
 
 using namespace std;
