@@ -95,9 +95,6 @@ private:
                 carry[ALPHABET_SIZE] += p*carry_left[ALPHABET_SIZE]*carry_right[ALPHABET_SIZE];
 
                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                        /*  M, M */
-                        carry[i] += p*carry_left[i]*carry_right[ALPHABET_SIZE];
-                        carry[i] += p*carry_left[ALPHABET_SIZE]*carry_right[i];
                         /* ¬M, M */
                         p = exp(-node->left->d)*(1.0-exp(-node->right->d));
                         carry[i] += p*carry_left[i]*poly_sum_right;
@@ -107,6 +104,8 @@ private:
                         /* ¬M,¬M */
                         p = exp(-node->left->d)*exp(-node->right->d);
                         carry[i] += p*carry_left[i]*carry_right[i];
+                        carry[i] += p*carry_left[i]*carry_right[ALPHABET_SIZE];
+                        carry[i] += p*carry_left[ALPHABET_SIZE]*carry_right[i];
                 }
                 return carry;
         }

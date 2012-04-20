@@ -74,14 +74,14 @@ int main(void) {
         yyparse();
 
         map<string, code_t> observations;
-        observations["hg19"]    = 1;
-        observations["panTro2"] = 2;
-        observations["gorGor1"] = 0;
-        observations["ponAbe2"] = 1;
-        observations["rheMac2"] = 0;
-        observations["papHam1"] = 1;
-        observations["calJac1"] = 3;
-        observations["tarSyr1"] = 0;
+        // observations["hg19"]    = 1;
+        // observations["panTro2"] = 2;
+        // observations["gorGor1"] = 0;
+        // observations["ponAbe2"] = 1;
+        // observations["rheMac2"] = 0;
+        // observations["papHam1"] = 1;
+        // observations["calJac1"] = 3;
+        // observations["tarSyr1"] = 0;
 
         exponent_t<code_t, alphabet_size> alpha;
         alpha[0] = 1;
