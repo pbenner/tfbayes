@@ -9,10 +9,14 @@ BUILT_SOURCES = phylotree-parser.h
 AM_YFLAGS = -d
 AM_LFLAGS = -o$(LEX_OUTPUT_ROOT).c
 
-bin_PROGRAMS = polynomial-test phylotree-parser-test likelihood-test likelihood-prime-test marginal-likelihood-test
+bin_PROGRAMS = polynomial-test phylotree-expand-test phylotree-parser-test likelihood-test likelihood-prime-test marginal-likelihood-test
 
 polynomial_test_SOURCES = polynomial-test.cc
 polynomial_test_LDADD   = -lm
+
+phylotree_expand_test_SOURCES = phylotree-expand-test.cc
+phylotree_expand_test_LDADD   = -lm
+phylotree_expand_test_LDADD  += libphylotree.la
 
 phylotree_parser_test_SOURCES = phylotree-parser-test.cc
 phylotree_parser_test_LDADD   = -lm
@@ -48,8 +52,6 @@ libphylotree_la_SOURCES = \
 	phylotree-simplify.hh \
 	incomplete-expression.cc \
 	incomplete-expression.hh \
-	incomplete-polynomial.cc \
-	incomplete-polynomial.hh \
 	marginal-likelihood.hh \
 	utility.cc \
 	utility.hh

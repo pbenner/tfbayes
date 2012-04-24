@@ -47,6 +47,15 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> mutation_model(const pt_node_t* u, CODE_T
         return poly;
 }
 
+/*
+ * phi(y  ; x) = P(nM) : if x == y; 0 : otherwise
+ * phi(nil; x) = P( M) P(x)
+ *
+ * phi(y  ; x_1, x_2, ..., x_n) = 1[x_n == y] P(nM) { phi(y  ; x_1, x_2, ..., x_{n-1})   +
+ *                                                    phi(nil; x_1, x_2, ..., x_{n-1}) } +
+ *                                P(M) P(x_n) phi(y  ; x_1, x_2, ..., x_{n-1})
+ * phi(nil; x_1, x_2, ..., x_n) = P(M) P(x_n) phi(nil; x_1, x_2, ..., x_{n-1})
+ */
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
         nodeset_t::const_iterator it,
@@ -78,6 +87,10 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
         return result;
 }
 
+/*
+ * phi(x_1, x_2, ..., x_n) = phi(nil; x_1, x_2, x_{n-1})
+ *                         + sum_y p(y) phi(y; x_1, x_2, ..., x_{n-1})
+ */
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
         nodeset_t::const_iterator it,

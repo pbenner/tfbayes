@@ -31,6 +31,11 @@ public:
         bool empty() const {
                 return size() == 0;
         }
+        void join(const nodeset_t& nodeset) {
+                for (nodeset_t::const_iterator it = nodeset.begin(); it != nodeset.end(); it++) {
+                        insert(*it);
+                }
+        }
 };
 
 #include <ostream>

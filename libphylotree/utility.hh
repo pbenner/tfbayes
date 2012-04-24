@@ -24,7 +24,7 @@
 
 #include <tfbayes/polynomial.hh>
 
-#include <incomplete-polynomial.hh>
+#include <incomplete-expression.hh>
 
 #define alphabet_size 4
 typedef unsigned short code_t;

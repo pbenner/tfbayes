@@ -25,7 +25,6 @@
 #include <tfbayes/polynomial.hh>
 
 #include <phylotree.hh>
-#include <incomplete-polynomial.hh>
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_polynomial_t : public polynomial_t<CODE_TYPE, ALPHABET_SIZE> {
@@ -39,11 +38,6 @@ public:
 
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> likelihood_py(const pt_root_t* root) {
                 operator=(poly_sum(likelihood_py_rec(root)));
-                return *this;
-        }
-
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> likelihood(const pt_root_t* root) {
-                operator=(likelihood_rec(root).complete());
                 return *this;
         }
 
@@ -119,70 +113,6 @@ private:
                         const carry_t carry_right = likelihood_py_rec(node->right);
 
                         return likelihood_py_node(node, carry_left, carry_right);
-                }
-        }
-
-        /******************************************************************************
-         * Algorithm by PB
-         ******************************************************************************/
-
-        incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE> likelihood_leaf(const pt_node_t* node) {
-                incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly;
-                incomplete_term_t<CODE_TYPE, ALPHABET_SIZE> term;
-                term.incomplete().insert(node);
-                poly += term;
-
-                return poly;
-        }
-
-        incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE> likelihood_root(
-                const pt_node_t* node,
-                const incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly_left,
-                const incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly_right) {
-                incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly1 = poly_left*poly_right;
-                incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly2;
-
-                for (typename incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = poly1.begin(); it != poly1.end(); it++) {
-                        incomplete_term_t<CODE_TYPE, ALPHABET_SIZE> term(*it);
-                        poly2 += term.complete();
-                }
-                return poly2;
-        }
-
-        incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE> likelihood_node(
-                const pt_node_t* node,
-                const incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly_left,
-                const incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly_right) {
-                incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly1 = poly_left*poly_right;
-                incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly2;
-
-                for (typename incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = poly1.begin(); it != poly1.end(); it++) {
-                        incomplete_term_t<CODE_TYPE, ALPHABET_SIZE> term(*it);
-                        if (term.incomplete().empty()) {
-                                poly2 += term;
-                        }
-                        else {
-                                poly2 += (1.0-node->mutation_probability())*term;
-                                poly2 +=      node->mutation_probability() *term.complete();
-                        }
-                }
-                return poly2;
-        }
-
-        incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE> likelihood_rec(const pt_node_t* node) {
-                if (node->leaf()) {
-                        return likelihood_leaf(node);
-                }
-                else {
-                        const incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_left  = likelihood_rec(node->left);
-                        const incomplete_polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_right = likelihood_rec(node->right);
-
-                        if (node->root()) {
-                                return likelihood_root(node, poly_left, poly_right);
-                        }
-                        else {
-                                return likelihood_node(node, poly_left, poly_right);
-                        }
                 }
         }
 };
