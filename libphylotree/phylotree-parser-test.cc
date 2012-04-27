@@ -33,6 +33,7 @@
 #include <phylotree-simplify.hh>
 #include <phylotree-expand.hh>
 #include <marginal-likelihood.hh>
+#include <posterior.hh>
 #include <utility.hh>
 
 #include <tfbayes/exception.h>
@@ -130,6 +131,14 @@ int main(void) {
         cout << "Eval result1: " << result1.eval(p) << endl
              << "Eval result2: " << result2.eval(p) << endl
              << endl;
+
+        double sum = 0;
+        boost::array<double, alphabet_size> exp = pt_posterior_expectation<code_t, alphabet_size>(result2, alpha);
+        for (code_t i = 0; i < alphabet_size; i++) {
+                cout << "Expectation " << i << ": " << exp[i] << endl;
+                sum += exp[i];
+        }
+        cout << "Sum: " << sum << endl;
 
         pt_parsetree->destroy();
         pt_root->destroy();

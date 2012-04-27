@@ -50,6 +50,7 @@ libphylotree_la_SOURCES = \
 	phylotree-parsetree.hh \
 	phylotree-simplify.cc \
 	phylotree-simplify.hh \
+	posterior.hh \
 	incomplete-expression.cc \
 	incomplete-expression.hh \
 	marginal-likelihood.hh \
