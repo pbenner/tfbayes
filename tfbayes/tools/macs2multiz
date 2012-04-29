@@ -130,6 +130,8 @@ def parse_macs():
         m = pattern.match(line)
         if m:
             n = n + 1
+            if options['verbose']:
+                print >> sys.stderr, 'Processing peak %d.' % n
             alignment = get_alignment(m.group(1), int(m.group(2)), int(m.group(3)))
             process_alignment(alignment, 'peak_%d' % n)
 

@@ -10,6 +10,7 @@ dist_bin_SCRIPTS = \
 	dpm-tfbs-demo \
 	dpm-tfbs-graph \
 	dpm-tfbs-generate \
+	dpm-tfbs-motifformat \
 	dpm-tfbs-plot \
 	dpm-tfbs-sampler \
 	dpm-tfbs-scan \

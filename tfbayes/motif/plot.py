@@ -29,7 +29,7 @@ from ..uipac.alphabet import DNA
 # motif plotting
 # ------------------------------------------------------------------------------
 
-def plot_motif(motif, file_name, title):
+def plot_motif(motif, file_name, title, fout=None):
     print 'Generating %s...' % file_name
     counts = [ [ int(round(motif[j][i]*1000)) for j in range(len(motif)) ] for i in range(len(motif[0])) ]
     alphabet = Alphabet(DNA.letters, zip(DNA.letters.lower(), DNA.letters))
@@ -41,8 +41,12 @@ def plot_motif(motif, file_name, title):
     options.fineprint = ''
     options.stacks_per_line = 60
     format = LogoFormat(data, options)
-    fout = open(file_name, 'w')
-    pdf_formatter(data, format, fout)
+    if not fout:
+        fout = open(file_name, 'w')
+        pdf_formatter(data, format, fout)
+        fout.close()
+    else:
+        pdf_formatter(data, format, fout)
 
 def plot_motifs(motifs, components, basename, revcomp=False):
     for n, motif, comp in zip(range(0, len(motifs)), motifs, components):

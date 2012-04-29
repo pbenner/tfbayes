@@ -1,0 +1,122 @@
+#! /usr/bin/env python
+
+# Copyright (C) 2011 Philipp Benner
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+import ConfigParser
+import getopt
+import math
+import os
+import re
+import subprocess
+import sys
+import Bio.Motif as Motif
+
+from tfbayes.motif import fileio
+from tfbayes.motif import information
+from tfbayes.motif import tools
+from tfbayes.motif import plot
+
+# global options
+# ------------------------------------------------------------------------------
+
+options = {
+    'revcomp'     : False,
+    'verbose'     : False,
+    }
+
+# usage
+# ------------------------------------------------------------------------------
+
+def usage():
+    """Print usage."""
+    print
+    print "dpm-tfbs-motifformat [option]... FILE OUTPUT_BASENAME"
+    print
+    print "If no CLUSTER_CONFIG is specified, then the count matrix is"
+    print "read from stdin and xpdf is called on the generated logo."
+    print
+    print "Options:"
+    print "   -h, --help                     - print help"
+    print "   -v, --verbose                  - be verbose"
+    print
+
+# parse results config
+# ------------------------------------------------------------------------------
+
+def parse_motif(fin, name, output_file):
+    position = fin.tell()
+    pattern  = re.compile('^([0-9.]+) ([0-9.]+) ([0-9.]+) ([0-9.]+)$')
+    motif    = [[],[],[],[]]
+    while True:
+        line = fin.readline()
+        if not line:
+            break
+        result = pattern.match(line)
+        if result:
+            motif[0].append(float(result.group(1)))
+            motif[1].append(float(result.group(2)))
+            motif[2].append(float(result.group(3)))
+            motif[3].append(float(result.group(4)))
+            position = fin.tell()
+        else:
+            fin.seek(position)
+            break
+    plot.plot_motif(motif, output_file, name)
+
+def parse_motifformat(file_name, output_base):
+    fin = open(file_name,   'r')
+    pattern = re.compile('^>(.*)$')
+    while True:
+        line = fin.readline()
+        if not line:
+            break
+        result = pattern.match(line)
+        if result:
+            parse_motif(fin, result.group(1), '%s_%s.pdf' % (output_base, result.group(1)))
+        else:
+            print "Invalid file format."
+            exit(1)
+    fin.close()
+
+# main
+# ------------------------------------------------------------------------------
+
+def main():
+    global options
+    try:
+        longopts   = ["help", "verbose"]
+        opts, tail = getopt.getopt(sys.argv[1:], "hv", longopts)
+    except getopt.GetoptError:
+        usage()
+        return 2
+    output = None
+    for o, a in opts:
+        if o in ("-v", "--verbose"):
+            sys.stderr.write("Verbose mode turned on.\n")
+            options["verbose"] = True
+        if o in ("-h", "--help"):
+            usage()
+            return 0
+    if len(tail) == 2:
+        parse_motifformat(*tail)
+    else:
+        usage()
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
