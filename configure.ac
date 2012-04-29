@@ -332,6 +332,7 @@ AC_CONFIG_FILES([
 	tfbayes/Makefile
 	tfbayes/fasta/Makefile
 	tfbayes/humandb/Makefile
+	tfbayes/phylotree/Makefile
 	tfbayes/dpm/Makefile
 	tfbayes/motif/Makefile
 	tfbayes/uipac/Makefile

@@ -38,33 +38,33 @@ ostream& print_phylotree(
         size_t nesting)
 {
         if (node->root()) {
-                cout << "(root";
+                o << "(root";
                 print_phylotree(o, node->left,  nesting+1);
                 print_phylotree(o, node->right, nesting+1);
-                cout << ")"
-                     << endl;
+                o << ")"
+                  << endl;
         }
         else if (node->leaf()) {
-                cout << endl;
+                o << endl;
                 indent(o, nesting);
-                cout << "("
-                     << node->name
-                     << " "
-                     << node->d;
+                o << "("
+                  << node->name
+                  << " "
+                  << node->d;
                 if (node->x != -1) {
-                        cout << " "
-                             << node->x;
+                        o << " "
+                          << node->x;
                 }
-                cout << ")";
+                o << ")";
         }
         else {
-                cout << endl;
+                o << endl;
                 indent(o, nesting);
-                cout << "(node "
-                     << node->d;
+                o << "(node "
+                  << node->d;
                 print_phylotree(o, node->left,  nesting+1);
                 print_phylotree(o, node->right, nesting+1);
-                cout << ")";
+                o << ")";
         }
 
         return o;

@@ -34,9 +34,11 @@ marginal_likelihood_test_SOURCES = marginal-likelihood-test.cc
 marginal_likelihood_test_LDADD   = -lm
 marginal_likelihood_test_LDADD  += libphylotree.la
 
-noinst_LTLIBRARIES = libphylotree.la
+lib_LTLIBRARIES = libphylotree.la
 
 libphylotree_la_SOURCES = \
+	interface.hh \
+	interface.cc \
 	nodeset.cc \
 	nodeset.hh \
 	phylotree.cc \
@@ -57,3 +59,4 @@ libphylotree_la_SOURCES = \
 	utility.cc \
 	utility.hh
 libphylotree_la_LIBADD  = -lm
+libphylotree_la_LIBADD += $(top_builddir)/libexception/libexception.la

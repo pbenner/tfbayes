@@ -24,6 +24,19 @@
 
 #include <stdarg.h>
 
+
+#undef __BEGIN_DECLS
+#undef __END_DECLS
+#ifdef __cplusplus
+# define __BEGIN_DECLS extern "C" {
+# define __END_DECLS }
+#else
+# define __BEGIN_DECLS /* empty */
+# define __END_DECLS /* empty */
+#endif
+
+__BEGIN_DECLS
+
 extern int verbose;
 
 extern void std_warn(int mode, const char *msg, ...)
@@ -99,5 +112,7 @@ __attribute__ ((format(printf,2,0), noreturn));
         __VA_ARGS__;                            \
         fprintf(stderr, DEBUG_COLOR(""__FILE__":%i: " MSG " took %f seconds\n"), \
                 __LINE__, ((double)clock()-exception_met_start__)/CLOCKS_PER_SEC);
+
+__END_DECLS
 
 #endif /* EXCEPTION_H */

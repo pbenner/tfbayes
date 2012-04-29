@@ -281,7 +281,7 @@ public:
                         tmp += constant()*poly.constant();
                 }
                 operator=(tmp);
-        
+
                 return *this;
         }
         double eval(const boost::array<double, S>& val) const {
@@ -418,6 +418,12 @@ polynomial_t<T, S> operator/(const polynomial_term_t<T, S>& term, const polynomi
 }
 template <typename T, size_t S>
 polynomial_t<T, S> operator*(const polynomial_t<T, S>& poly1, const polynomial_t<T, S>& poly2) {
+        if (poly1.size() == 0 && poly1.constant() == 0.0) {
+                return polynomial_t<T, S>();
+        }
+        if (poly2.size() == 0 && poly2.constant() == 0.0) {
+                return polynomial_t<T, S>();
+        }
         polynomial_t<T, S> tmp(poly1);
         tmp *= poly2;
         return tmp;
