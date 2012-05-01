@@ -23,6 +23,10 @@ import getopt
 import re
 import sys
 
+import Queue
+import threading
+import thread
+
 from Bio         import AlignIO
 from Bio.AlignIO import MafIO
 
@@ -45,6 +49,7 @@ def usage():
     print "                                    the expected sequence logos"
     print "       --prior=Px:Px:Px:Px:Px     - counts for the prior"
     print "   -r REFSEQ                      - reference sequence [default: hg18]"
+    print "   -t, threads=N                  - run N jobs in parallel"
     print
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
@@ -58,6 +63,7 @@ options = {
     'macs_file'     : None,
     'phylotree'     : None,
     'leafmap'       : None,
+    'threads'       : 1,
     'prior'         : [1.0, 1.0, 1.0, 1.0, 1.0],
     'refseq'        : 'hg18',
     'output_format' : 'maf',
@@ -67,10 +73,15 @@ options = {
 # multiz2logo
 # ------------------------------------------------------------------------------
 
-def reweight_and_print(expectation):
-    for i in range(4):
-        print '%.10f' % (expectation[i]/(1.0-expectation[4])),
-    print
+def print_result(result):
+    print '>%s' % result['name']
+    for expectation in result['expectations']:
+        for i in range(4):
+            print '%.10f' % expectation[i],
+        print
+
+def reweight(expectation):
+    return [ expectation[i]/(1.0-expectation[4]) for i in range(4) ]
 
 def code_nucleotide(char):
     if char == 'N' or char == 'n' or char == "-":
@@ -78,14 +89,13 @@ def code_nucleotide(char):
     else:
         return float(DNA.code(char))
 
-def alignment_to_logo(multiple_alignment, name):
+def alignment_to_logo(multiple_alignment):
     phylotree = options['phylotree']
     leafmap   = options['leafmap']
     num_leafs = pt_num_leafs(phylotree)
     observations = [ 4.0 ]*num_leafs
 
-    print '>%s' % name
-
+    result = []
     for i in range(len(multiple_alignment[0])):
         # fill observations array
         for alignment in multiple_alignment:
@@ -94,9 +104,10 @@ def alignment_to_logo(multiple_alignment, name):
                 observations[leafmap[name]] = code_nucleotide(alignment.seq[i])
         # call phylotree library
         expectation = pt_expectation(phylotree, observations, options['prior'])
-        reweight_and_print(expectation)
+        result.append(reweight(expectation))
+    return result
 
-# macs2multiz
+# database operations
 # ------------------------------------------------------------------------------
 
 def get_alignment(chromosome, seq_start, seq_end):
@@ -116,11 +127,62 @@ def get_alignment(chromosome, seq_start, seq_end):
 
     return multiple_alignment
 
-def process_alignment(alignment, name):
+# threading
+# ------------------------------------------------------------------------------
+
+class ComputationThread(threading.Thread):
+    def __init__(self, queue_in, queue_out, mutex):
+        threading.Thread.__init__(self)
+        self.queue_in  = queue_in
+        self.queue_out = queue_out
+        self.mutex     = mutex
+    def run(self):
+        while True:
+            job = self.queue_in.get()
+            self.mutex.acquire()
+            if options['verbose']:
+                print >> sys.stderr, 'Processing %s.' % job['name']
+            self.mutex.release()
+            alignment = get_alignment(job['chromosome'], job['seq_start'], job['seq_end'])
+            result = {
+                'expectations' : alignment_to_logo(alignment),
+                'name'         : job['name'],
+                'id'           : job['id'] }
+            self.queue_out.put((job['id'], result))
+            self.queue_in.task_done()
+
+def threaded_logo_computation(alignments):
+    mutex     = thread.allocate_lock()
+    queue_in  = Queue.Queue()
+    queue_out = Queue.PriorityQueue()
+    threads   = []
+    # launch daemon threads
+    if not threads:
+        for i in range(options['threads']):
+            t = ComputationThread(queue_in, queue_out, mutex)
+            t.setDaemon(True)
+            t.start()
+            threads += [t]
+    # fill input queue
+    for elem in alignments:
+        queue_in.put(elem)
+    queue_in.join()
+    # process output
+    while not queue_out.empty():
+        result = queue_out.get()[1]
+        print_result(result)
+
+# parse macs file
+# ------------------------------------------------------------------------------
+
+def process_entries(entries):
     if options['phylotree']:
-        alignment_to_logo(alignment, name)
+        threaded_logo_computation(entries)
     else:
-        AlignIO.write(alignment, sys.stdout, options['output_format'])
+        for entry in entries:
+            alignment = get_alignment(entry['chromosome'], entry['seq_start'], entry['seq_end']),
+            AlignIO.write(alignment, sys.stdout, options['output_format'])
+
 
 def parse_macs():
     fp = open(options['macs_file'], 'r')
@@ -135,16 +197,21 @@ def parse_macs():
         print >> sys.stderr, '%s:%f' % ('Nil', options['prior'][4])
 
     # parse macs file
+    entries = []
     for line in fp:
         m = pattern.match(line)
         if m:
             n = n + 1
-            if options['verbose']:
-                print >> sys.stderr, 'Processing peak %04d.' % n
-            alignment = get_alignment(m.group(1), int(m.group(2)), int(m.group(3)))
-            process_alignment(alignment, 'peak_%04d' % n)
+            entry = {
+                'chromosome' : m.group(1),
+                'seq_start'  : int(m.group(2)),
+                'seq_end'    : int(m.group(3)),
+                'name'      : 'peak_%04d' % n,
+                'id'        : n }
+            entries.append(entry)
 
     fp.close()
+    process_entries(entries)
 
 # main
 # ------------------------------------------------------------------------------
@@ -152,8 +219,8 @@ def parse_macs():
 def main():
     global options
     try:
-        longopts   = ["help", "verbose","prior="]
-        opts, tail = getopt.getopt(sys.argv[1:], "d:f:p:r:hv", longopts)
+        longopts   = ["prior=", "threads=", "help", "verbose"]
+        opts, tail = getopt.getopt(sys.argv[1:], "d:f:p:r:t:hv", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -181,6 +248,11 @@ def main():
         if o == "--prior":
             options['prior'] = map(float, a.split(':'))
             if not len(options['prior']) == 5:
+                usage()
+                return 1
+        if o in ("-t", "--threads"):
+            options['threads'] = int(a)
+            if not options['threads'] >= 1:
                 usage()
                 return 1
     # tail
