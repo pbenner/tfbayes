@@ -44,12 +44,11 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-motifformat [option]... FILE OUTPUT_BASENAME"
-    print
-    print "If no CLUSTER_CONFIG is specified, then the count matrix is"
-    print "read from stdin and xpdf is called on the generated logo."
+    print "dpm-tfbs-motifformat [option]... FILE"
     print
     print "Options:"
+    print "   -j, --join                     - join plots with pdftk"
+    print
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
     print
@@ -77,20 +76,34 @@ def parse_motif(fin, name, output_file):
             break
     plot.plot_motif(motif, output_file, name)
 
-def parse_motifformat(file_name, output_base):
+def join_plots(basename, files):
+    cmd = 'pdftk %s cat output %s.pdf' % (' '.join(files), basename)
+    print cmd
+    os.system(cmd)
+    cmd = 'rm -f %s' % ' '.join(files)
+    print cmd
+    os.system(cmd)
+
+def parse_motifformat(file_name):
     fin = open(file_name,   'r')
     pattern = re.compile('^>(.*)$')
+    output_base = os.path.splitext(file_name)[0]
+    files = []
     while True:
         line = fin.readline()
         if not line:
             break
         result = pattern.match(line)
         if result:
-            parse_motif(fin, result.group(1), '%s_%s.pdf' % (output_base, result.group(1)))
+            output_file = '%s_%s.pdf' % (output_base, result.group(1))
+            parse_motif(fin, result.group(1), output_file)
+            files.append(output_file)
         else:
             print "Invalid file format."
             exit(1)
     fin.close()
+    if options['join']:
+        join_plots(output_base, files)
 
 # main
 # ------------------------------------------------------------------------------
@@ -98,8 +111,8 @@ def parse_motifformat(file_name, output_base):
 def main():
     global options
     try:
-        longopts   = ["help", "verbose"]
-        opts, tail = getopt.getopt(sys.argv[1:], "hv", longopts)
+        longopts   = ["join", "help", "verbose"]
+        opts, tail = getopt.getopt(sys.argv[1:], "jhv", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -111,7 +124,9 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
-    if len(tail) == 2:
+        if o in ("-j", "--join"):
+            options['join'] = True
+    if len(tail) == 1:
         parse_motifformat(*tail)
     else:
         usage()

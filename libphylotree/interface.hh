@@ -31,7 +31,8 @@
 #include <tfbayes/linalg.h>
 
 #define alphabet_size 5
-typedef unsigned short code_t;
+//typedef unsigned short code_t;
+typedef float code_t;
 
 #define EXTERN_C_START extern "C" {
 #define EXTERN_C_END   }
