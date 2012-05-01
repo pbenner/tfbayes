@@ -51,6 +51,14 @@ public:
         double mutation_probability() const {
                 return 1.0-exp(-d);
         }
+        /* scale distances in the tree by a constant factor */
+        void scale(double c) {
+                d *= c;
+                if (!leaf()) {
+                        left->scale(c);
+                        right->scale(c);
+                }
+        }
 
         /* coded nucleotide */
         nucleotide_t x;

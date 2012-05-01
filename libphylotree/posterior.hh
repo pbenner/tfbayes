@@ -40,7 +40,7 @@ boost::array<double, ALPHABET_SIZE> pt_posterior_expectation(
                 norm = logadd(norm, log(it->coefficient()) + mbeta_log(it->exponent(), alpha));
         }
         /* initialize result */
-        for (CODE_TYPE i = 0; i < ALPHABET_SIZE; i++) {
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
                 result[i] = 0;
         }
         /* posterior expectation */
@@ -48,10 +48,10 @@ boost::array<double, ALPHABET_SIZE> pt_posterior_expectation(
              it != polynomial.end(); it++) {
                 double sum = 0;
                 double tmp;
-                for (CODE_TYPE i = 0; i < ALPHABET_SIZE; i++) {
+                for (size_t i = 0; i < ALPHABET_SIZE; i++) {
                         sum += it->exponent()[i] + alpha[i];
                 }
-                for (CODE_TYPE i = 0; i < ALPHABET_SIZE; i++) {
+                for (size_t i = 0; i < ALPHABET_SIZE; i++) {
                         tmp  = log(it->coefficient());
                         tmp += mbeta_log(it->exponent(), alpha);
                         tmp -= norm;

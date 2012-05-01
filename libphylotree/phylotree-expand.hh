@@ -98,7 +98,7 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
 {
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> result(0.0);
 
-        for (CODE_TYPE x = 0; x < ALPHABET_SIZE; x++) {
+        for (size_t x = 0; x < ALPHABET_SIZE; x++) {
                 const polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> px =
                         nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(x);
                 result += px*pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(it, end, x);
