@@ -102,6 +102,10 @@ def alignment_to_logo(multiple_alignment):
         if options['refseq'] == name:
             refindex = i
 
+    if not refindex == None:
+        print >> sys.stderr, 'Reference sequence not found in multiple alignment.'
+        exit(1)
+
     result = []
     for i in range(len(multiple_alignment[0])):
         # filter all positions where the reference sequence has a gap
