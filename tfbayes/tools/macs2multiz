@@ -95,8 +95,18 @@ def alignment_to_logo(multiple_alignment):
     num_leafs = pt_num_leafs(phylotree)
     observations = [ 4.0 ]*num_leafs
 
+    # get reference index
+    refindex = None
+    for i in range(len(multiple_alignment)):
+        name = multiple_alignment[i].name.split(".")[0]
+        if options['refseq'] == name:
+            refindex = i
+
     result = []
     for i in range(len(multiple_alignment[0])):
+        # filter all positions where the reference sequence has a gap
+        if multiple_alignment[refindex][i] == '-':
+            continue
         # fill observations array
         for alignment in multiple_alignment:
             name = alignment.name.split(".")[0]
