@@ -102,9 +102,9 @@ def alignment_to_logo(multiple_alignment):
         if options['refseq'] == name:
             refindex = i
 
-    if not refindex == None:
+    if refindex == None:
         print >> sys.stderr, 'Reference sequence not found in multiple alignment.'
-        exit(1)
+        return None
 
     result = []
     for i in range(len(multiple_alignment[0])):
@@ -158,11 +158,13 @@ class ComputationThread(threading.Thread):
                 print >> sys.stderr, 'Processing %s.' % job['name']
             self.mutex.release()
             alignment = get_alignment(job['chromosome'], job['seq_start'], job['seq_end'])
-            result = {
-                'expectations' : alignment_to_logo(alignment),
-                'name'         : job['name'],
-                'id'           : job['id'] }
-            self.queue_out.put((job['id'], result))
+            logo      = alignment_to_logo(alignment)
+            if logo:
+                result = {
+                    'expectations' : logo,
+                    'name'         : job['name'],
+                    'id'           : job['id'] }
+                self.queue_out.put((job['id'], result))
             self.queue_in.task_done()
 
 def threaded_logo_computation(alignments):
