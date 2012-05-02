@@ -33,11 +33,17 @@ using namespace std;
 
 size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent) {
         size_t seed = 0;
-        boost::hash_combine(seed, boost::hash_value(exponent[0]));
-        boost::hash_combine(seed, boost::hash_value(exponent[1]));
-        boost::hash_combine(seed, boost::hash_value(exponent[2]));
-        boost::hash_combine(seed, boost::hash_value(exponent[3]));
-        boost::hash_combine(seed, boost::hash_value(exponent[4]));
+        // boost::hash_combine(seed, boost::hash_value(exponent[0]));
+        // boost::hash_combine(seed, boost::hash_value(exponent[1]));
+        // boost::hash_combine(seed, boost::hash_value(exponent[2]));
+        // boost::hash_combine(seed, boost::hash_value(exponent[3]));
+        // boost::hash_combine(seed, boost::hash_value(exponent[4]));
+        seed += (size_t)exponent[0] << 0;
+        seed += (size_t)exponent[1] << 2;
+        seed += (size_t)exponent[2] << 4;
+        seed += (size_t)exponent[3] << 6;
+        seed += (size_t)exponent[4] << 8;
+
         return seed;
 }
 
