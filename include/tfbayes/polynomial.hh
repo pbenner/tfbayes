@@ -417,6 +417,12 @@ polynomial_t<T, S> operator/(const polynomial_term_t<T, S>& term, const polynomi
         return tmp;
 }
 template <typename T, size_t S>
+polynomial_t<T, S> operator+(const polynomial_t<T, S>& poly1, const polynomial_t<T, S>& poly2) {
+        polynomial_t<T, S> tmp(poly1);
+        tmp += poly2;
+        return tmp;
+}
+template <typename T, size_t S>
 polynomial_t<T, S> operator*(const polynomial_t<T, S>& poly1, const polynomial_t<T, S>& poly2) {
         if (poly1.size() == 0 && poly1.constant() == 0.0) {
                 return polynomial_t<T, S>();

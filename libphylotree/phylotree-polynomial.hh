@@ -37,15 +37,11 @@ public:
                 : polynomial_t<CODE_TYPE, ALPHABET_SIZE>(poly) { }
 
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> likelihood_py(const pt_root_t* root) {
-                operator=(poly_sum(likelihood_py_rec(root)));
+                operator=(poly_sum(likelihood_rec(root)));
                 return *this;
         }
 
 private:
-
-        /******************************************************************************
-         * Algorithm by PY and ST
-         ******************************************************************************/
         typedef boost::array<polynomial_t<CODE_TYPE, ALPHABET_SIZE>, ALPHABET_SIZE+1> carry_t;
 
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum(const carry_t& carry) {
@@ -61,9 +57,13 @@ private:
                 return poly_sum;
         }
 
+        /******************************************************************************
+         * Algorithm by PY and ST
+         ******************************************************************************/
+
         carry_t likelihood_py_leaf(const pt_node_t* node) {
                 carry_t carry;
-                carry[node->x] += 1;
+                carry[node->x] += 1.0;
                 return carry;
         }
         carry_t likelihood_py_node(
@@ -113,6 +113,51 @@ private:
                         const carry_t carry_right = likelihood_py_rec(node->right);
 
                         return likelihood_py_node(node, carry_left, carry_right);
+                }
+        }
+
+        /******************************************************************************
+         * Algorithm by PB
+         ******************************************************************************/
+
+        carry_t likelihood_leaf(const pt_node_t* node) {
+                carry_t carry;
+                carry[node->x] += 1.0;
+                return carry;
+        }
+        carry_t likelihood_node(
+                const pt_node_t* node,
+                const carry_t& carry_left,
+                const carry_t& carry_right) {
+                double pm_left  = 1.0-exp(-node->left->d);
+                double pm_right = 1.0-exp(-node->right->d);
+                carry_t carry;
+                const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_left  = poly_sum(carry_left);
+                const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_right = poly_sum(carry_right);
+
+                carry[ALPHABET_SIZE] +=
+                        ((1.0-pm_left )*carry_left [ALPHABET_SIZE] + pm_left *poly_sum_left)*
+                        ((1.0-pm_right)*carry_right[ALPHABET_SIZE] + pm_right*poly_sum_right);
+
+                for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                        carry[i] += (1.0-pm_left )*(1.0-pm_right)*carry_left [i]*carry_right[ALPHABET_SIZE];
+                        carry[i] += (1.0-pm_left )*     pm_right *carry_left [i]*poly_sum_right;
+                        carry[i] += (1.0-pm_right)*(1.0-pm_left )*carry_right[i]*carry_left [ALPHABET_SIZE];
+                        carry[i] += (1.0-pm_right)*     pm_left  *carry_right[i]*poly_sum_left;
+                        carry[i] += (1.0-pm_left)*(1.0-pm_right)*carry_left[i]*carry_right[i];
+                }
+                return carry;
+        }
+
+        carry_t likelihood_rec(const pt_node_t* node) {
+                if (node->leaf()) {
+                        return likelihood_leaf(node);
+                }
+                else {
+                        const carry_t carry_left  = likelihood_rec(node->left);
+                        const carry_t carry_right = likelihood_rec(node->right);
+
+                        return likelihood_node(node, carry_left, carry_right);
                 }
         }
 };
