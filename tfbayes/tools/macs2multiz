@@ -49,6 +49,8 @@ def usage():
     print "                                    the expected sequence logos"
     print "       --prior=Px:Px:Px:Px:Px     - counts for the prior"
     print "   -r REFSEQ                      - reference sequence [default: hg18]"
+    print "   -s SEQ                         - strip '-' characters from SEQ instead of the"
+    print "                                    reference sequence"
     print "   -t, threads=N                  - run N jobs in parallel"
     print
     print "   -h, --help                     - print help"
@@ -67,6 +69,7 @@ options = {
     'prior'         : [1.0, 1.0, 1.0, 1.0, 1.0],
     'refseq'        : 'hg18',
     'output_format' : 'maf',
+    'strip'         : None,
     'verbose'       : False,
     }
 
@@ -97,9 +100,16 @@ def alignment_to_logo(multiple_alignment):
 
     # get reference index
     refindex = None
+    # if strip is set, then use this sequence as reference to
+    # strip all '-' from it
+    if options['strip']:
+        refseq = options['strip']
+    else:
+        refseq = options['refseq']
+
     for i in range(len(multiple_alignment)):
         name = multiple_alignment[i].name.split(".")[0]
-        if options['refseq'] == name:
+        if refseq == name:
             refindex = i
 
     if refindex == None:
@@ -236,7 +246,7 @@ def main():
     global options
     try:
         longopts   = ["prior=", "threads=", "help", "verbose"]
-        opts, tail = getopt.getopt(sys.argv[1:], "d:f:p:r:t:hv", longopts)
+        opts, tail = getopt.getopt(sys.argv[1:], "d:f:p:r:s:t:hv", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -258,6 +268,8 @@ def main():
             options['output_format'] = a
         if o == "-r":
             options['refseq'] = a
+        if o == "-s":
+            options['strip'] = a
         if o == "-p":
             options['phylotree'] = pt_parse_file(a)
             options['leafmap']   = pt_create_map(options['phylotree'])
