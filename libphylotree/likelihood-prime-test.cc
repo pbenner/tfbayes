@@ -144,63 +144,6 @@ void test_tree6() {
              << endl << endl;
 }
 
-#include <marginal-likelihood.hh>
-
-void test_tree7() {
-        cout << "Test 7:" << endl;
-        pt_leaf_t n11( 1, 1.1, "n11");
-        pt_leaf_t n10( 2, 1.0, "n10");
-        pt_leaf_t n9(  3, 0.9, "n9");
-        pt_leaf_t n8(  2, 0.8, "n8");
-        pt_leaf_t n7(  1, 0.7, "n7");
-        pt_leaf_t n6(  0, 0.6, "n6");
-        pt_node_t n5( -1, 0.5, &n10, &n11);
-        pt_node_t n4( -1, 0.4, &n8,  &n9);
-        pt_node_t n3( -1, 0.3, &n6,  &n7);
-        pt_node_t n2( -1, 0.2, &n4,  &n5);
-        pt_root_t n1( -1, &n2, &n3);
-
-        cout << "(n1 (n2 (n4 (n8  A) (n9  C))"  << endl
-             << "        (n5 (n10 G) (n11 T)))" << endl
-             << "    (n3 (n6 A) (n7 C)))"     << endl;
-
-        incomplete_expression_t incomplete_expression = pt_simplify(&n1);
-        polynomial_t<code_t, alphabet_size> result1 = pt_expand<code_t, alphabet_size>(incomplete_expression);
-        cout << incomplete_expression << endl
-             << result1 << endl
-             << "0.0112811 Pa^1 Pc^2 Pg^1 Pt^1 + 0.354665 Pa^1 Pc^2 Pg^2 Pt^1 + 0.00847229 Pa^1 Pc^1 Pg^2 Pt^1 (correct polynomial)"
-             << endl << endl;
-
-        nodeset_t nodeset;
-        nodeset.insert(&n1);
-        nodeset.insert(&n2);
-        nodeset.insert(&n3);
-        nodeset.insert(&n4);
-        nodeset.insert(&n5);
-        nodeset.insert(&n6);
-        nodeset.insert(&n7);
-        nodeset.insert(&n8);
-        nodeset.insert(&n9);
-        nodeset.insert(&n10);
-        nodeset.insert(&n11);
-
-        polynomial_t<code_t, alphabet_size> result2 =
-                pt_expand<code_t, alphabet_size>(nodeset);
-
-        cout << ""
-             << result2
-             << endl;
-
-        exponent_t<code_t, alphabet_size> alpha;
-        alpha[0] = 1;
-        alpha[1] = 1;
-        alpha[2] = 1;
-        alpha[3] = 1;
-        cout << "marginal 1: " <<  pt_marginal_likelihood<code_t, alphabet_size>(result1, alpha) << endl;
-        cout << "marginal 2: " <<  pt_marginal_likelihood<code_t, alphabet_size>(result2, alpha) << endl;
-
-}
-
 int main(void) {
         test_tree1();
         test_tree2();
@@ -208,7 +151,6 @@ int main(void) {
         test_tree4();
         test_tree5();
         test_tree6();
-        test_tree7();
 
         return 0.0;
 }
