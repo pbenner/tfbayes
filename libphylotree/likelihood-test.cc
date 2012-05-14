@@ -149,6 +149,7 @@ void test_tree7() {
 
                 pt_polynomial_t<code_t, alphabet_size> result(&n1, &n2);
                 gradient += result.derivative().eval(p)/result.eval(p);
+                cout << result.derivative() << endl;
         }
         cout << "gradient for n2: " << gradient
              << endl;
