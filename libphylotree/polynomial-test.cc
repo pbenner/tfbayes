@@ -25,7 +25,7 @@
 
 using namespace std;
 
-ostream& operator<< (ostream& o, const exponent_t<unsigned short, 4>& exponent) {
+ostream& operator<< (ostream& o, const exponent_t<short, 4>& exponent) {
         o << " w^" << exponent[0]
           << " x^" << exponent[1]
           << " y^" << exponent[2]
@@ -33,23 +33,22 @@ ostream& operator<< (ostream& o, const exponent_t<unsigned short, 4>& exponent) 
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_term_t<unsigned short, 4>& term) {
+ostream& operator<< (ostream& o, const polynomial_term_t<short, 4>& term) {
         o << term.coefficient()
           << term.exponent();
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_t<unsigned short, 4>& polynomial) {
-        for (polynomial_t<unsigned short, 4>::const_iterator it = polynomial.begin();
+ostream& operator<< (ostream& o, const polynomial_t<short, 4>& polynomial) {
+        for (polynomial_t<short, 4>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 o << *it << " + ";
         }
-        o << polynomial.constant();
 
         return o;
 }
 
-size_t hash_value(const exponent_t<unsigned short, 4u>& exponent) {
+size_t hash_value(const exponent_t<short, 4u>& exponent) {
         size_t seed = 0;
         boost::hash_combine(seed, exponent[0]);
         boost::hash_combine(seed, exponent[1]);
@@ -59,24 +58,24 @@ size_t hash_value(const exponent_t<unsigned short, 4u>& exponent) {
 }
 
 int main() {
-        polynomial_term_t<unsigned short, 4> term1(1.0);
+        polynomial_term_t<short, 4> term1(1.0);
         term1.exponent()[0] = 2;
         term1.exponent()[1] = 4;
         term1.exponent()[2] = 1;
         term1.exponent()[3] = 3;
-        polynomial_term_t<unsigned short, 4> term2(1.0);
+        polynomial_term_t<short, 4> term2(1.0);
         term2.exponent()[0] = 1;
         term2.exponent()[1] = 1;
         term2.exponent()[2] = 1;
         term2.exponent()[3] = 3;
-        polynomial_t<unsigned short, 4> poly1;
+        polynomial_t<short, 4> poly1;
         poly1 += term1;
         poly1 += term2;
         poly1 += term2;
         poly1 -= term2;
         poly1 -= term2;
         poly1 -= term2;
-        polynomial_t<unsigned short, 4> poly2;
+        polynomial_t<short, 4> poly2;
         poly2 += ((2*term1) * (3*term2));
 
         cout << "poly1: " << poly1

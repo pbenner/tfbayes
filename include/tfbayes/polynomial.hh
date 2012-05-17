@@ -146,8 +146,8 @@ polynomial_term_t<T, S> operator*(double constant, const polynomial_term_t<T, S>
 }
 template <typename T, size_t S>
 polynomial_term_t<T, S> operator/(double constant, const polynomial_term_t<T, S>& term) {
-        polynomial_term_t<T, S> tmp(term);
-        tmp /= constant;
+        polynomial_term_t<T, S> tmp(constant);
+        tmp /= term;
         return tmp;
 }
 template <typename T, size_t S>
@@ -167,30 +167,22 @@ template <typename T, size_t S>
 class polynomial_t : public boost::unordered_map<exponent_t<T, S>, double> {
 public:
         polynomial_t()
-                : boost::unordered_map<exponent_t<T, S>, double>(),
-                  _constant(0.0) {}
+                : boost::unordered_map<exponent_t<T, S>, double>() {}
         polynomial_t(double constant)
-                : boost::unordered_map<exponent_t<T, S>, double>(),
-                  _constant(constant) {}
+                : boost::unordered_map<exponent_t<T, S>, double>() {
+                operator+=(polynomial_term_t<T, S>(constant));
+        }
         polynomial_t(const polynomial_term_t<T, S>& term)
-                : boost::unordered_map<exponent_t<T, S>, double>(),
-                  _constant(0.0) {
+                : boost::unordered_map<exponent_t<T, S>, double>() {
                 operator+=(term);
         }
 
-        double& constant() {
-                return _constant;
-        }
-        const double& constant() const {
-                return _constant;
-        }
-
         polynomial_t<T, S>& operator+=(double constant) {
-                _constant += constant;
+                operator+=(polynomial_term_t<T, S>(constant));
                 return *this;
         }
         polynomial_t<T, S>& operator-=(double constant) {
-                _constant -= constant;
+                operator-=(polynomial_term_t<T, S>(constant));
                 return *this;
         }
         polynomial_t<T, S>& operator+=(const polynomial_term_t<T, S>& term) {
@@ -215,14 +207,12 @@ public:
                 for (const_iterator it = poly.begin(); it != poly.end(); it++) {
                         operator+=(*it);
                 }
-                _constant += poly.constant();
                 return *this;
         }
         polynomial_t<T, S>& operator-=(const polynomial_t<T, S>& poly) {
                 for (const_iterator it = poly.begin(); it != poly.end(); it++) {
                         operator-=(*it);
                 }
-                _constant -= poly.constant();
                 return *this;
         }
         polynomial_t<T, S>& operator*=(double constant) {
@@ -230,7 +220,6 @@ public:
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         tmp += (*it) * constant;
                 }
-                tmp += _constant*constant;
                 operator=(tmp);
 
                 return *this;
@@ -240,7 +229,6 @@ public:
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         tmp += (*it) / constant;
                 }
-                tmp += _constant/constant;
                 operator=(tmp);
 
                 return *this;
@@ -250,7 +238,6 @@ public:
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         tmp += (*it) * term;
                 }
-                tmp += _constant*term;
                 operator=(tmp);
 
                 return *this;
@@ -260,7 +247,6 @@ public:
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         tmp += (*it) / term;
                 }
-                tmp += _constant/term;
                 operator=(tmp);
 
                 return *this;
@@ -272,20 +258,13 @@ public:
                         for (typename polynomial_t<T, S>::const_iterator is = poly.begin(); is != poly.end(); is++) {
                                 tmp += (*it)*(*is);
                         }
-                        tmp += (*it)*poly.constant();
-                }
-                if (constant() != 0.0) {
-                        for (typename polynomial_t<T, S>::const_iterator is = poly.begin(); is != poly.end(); is++) {
-                                tmp += constant()*(*is);
-                        }
-                        tmp += constant()*poly.constant();
                 }
                 operator=(tmp);
 
                 return *this;
         }
         double eval(const boost::array<double, S>& val) const {
-                double result = _constant;
+                double result;
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         result += it->eval(val);
                 }
@@ -315,9 +294,6 @@ public:
         const_iterator begin() const {
                 return const_iterator(boost::unordered_map<exponent_t<T, S>, double>::begin());
         }
-
-protected:
-        double _constant;
 };
 
 template <typename T, size_t S>
@@ -424,10 +400,10 @@ polynomial_t<T, S> operator+(const polynomial_t<T, S>& poly1, const polynomial_t
 }
 template <typename T, size_t S>
 polynomial_t<T, S> operator*(const polynomial_t<T, S>& poly1, const polynomial_t<T, S>& poly2) {
-        if (poly1.size() == 0 && poly1.constant() == 0.0) {
+        if (poly1.size() == 0) {
                 return polynomial_t<T, S>();
         }
-        if (poly2.size() == 0 && poly2.constant() == 0.0) {
+        if (poly2.size() == 0) {
                 return polynomial_t<T, S>();
         }
         polynomial_t<T, S> tmp(poly1);

@@ -33,13 +33,6 @@ public:
                 : polynomial_t<CODE_TYPE, ALPHABET_SIZE>() {
                 likelihood_py(root);
         }
-        pt_polynomial_t(const pt_root_t* root, const pt_node_t* which)
-                : polynomial_t<CODE_TYPE, ALPHABET_SIZE>() {
-
-                partial_t partial(gradient_rec(root, which));
-                operator=(poly_sum(partial));
-                _derivative = poly_sum(partial.derivative);
-        }
 
         pt_polynomial_t(const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly)
                 : polynomial_t<CODE_TYPE, ALPHABET_SIZE>(poly) { }
@@ -47,10 +40,6 @@ public:
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> likelihood_py(const pt_root_t* root) {
                 operator=(poly_sum(likelihood_rec(root)));
                 return *this;
-        }
-
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> derivative() const {
-                return _derivative;
         }
 
 private:
@@ -172,120 +161,6 @@ private:
                         return likelihood_node(node, carry_left, carry_right);
                 }
         }
-
-        /******************************************************************************
-         * Gradient descent
-         ******************************************************************************/
-
-        class partial_t : public carry_t {
-        public:
-                carry_t derivative;
-        };
-
-        partial_t gradient_leaf(const pt_node_t* node) {
-                partial_t partial;
-                partial[node->x] += 1.0;
-                return partial;
-        }
-        partial_t gradient_node(
-                const pt_node_t* node,
-                const partial_t& partial_left,
-                const partial_t& partial_right,
-                const pt_node_t* which) {
-                double pm_left  = 1.0-exp(-node->left->d);
-                double pm_right = 1.0-exp(-node->right->d);
-                partial_t partial;
-                const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_left  = poly_sum(partial_left);
-                const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_right = poly_sum(partial_right);
-                const polynomial_t<CODE_TYPE, ALPHABET_SIZE> deri_sum_left  = poly_sum(partial_left.derivative);
-                const polynomial_t<CODE_TYPE, ALPHABET_SIZE> deri_sum_right = poly_sum(partial_right.derivative);
-
-                partial[ALPHABET_SIZE] +=
-                        ((1.0-pm_left )*partial_left [ALPHABET_SIZE] + pm_left *poly_sum_left)*
-                        ((1.0-pm_right)*partial_right[ALPHABET_SIZE] + pm_right*poly_sum_right);
-
-                for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                        partial[i] += (1.0-pm_left )*(1.0-pm_right)*partial_left [i]*partial_right[ALPHABET_SIZE];
-                        partial[i] += (1.0-pm_left )*     pm_right *partial_left [i]*poly_sum_right;
-                        partial[i] += (1.0-pm_right)*(1.0-pm_left )*partial_right[i]*partial_left [ALPHABET_SIZE];
-                        partial[i] += (1.0-pm_right)*     pm_left  *partial_right[i]*poly_sum_left;
-                        partial[i] += (1.0-pm_left )*(1.0-pm_right)*partial_left [i]*partial_right[i];
-                }
-
-                /* Gradient of sigma
-                 */
-                if (node->left == which) {
-                        partial.derivative[ALPHABET_SIZE] +=
-                                ((pm_left -1.0)*partial_left [ALPHABET_SIZE] + (1.0-pm_left )*poly_sum_left)*
-                                ((1.0-pm_right)*partial_right[ALPHABET_SIZE] +      pm_right *poly_sum_right);
-                }
-                else if (node->right == which) {
-                        partial.derivative[ALPHABET_SIZE] +=
-                                ((1.0-pm_left )*partial_left [ALPHABET_SIZE] +      pm_left  *poly_sum_left)*
-                                ((pm_right-1.0)*partial_right[ALPHABET_SIZE] + (1.0-pm_right)*poly_sum_right);
-                }
-                else {
-                        partial.derivative[ALPHABET_SIZE] +=
-                                ((1.0-pm_left )*partial_left [ALPHABET_SIZE]            + pm_left *poly_sum_left)*
-                                ((1.0-pm_right)*partial_right.derivative[ALPHABET_SIZE] + pm_right*deri_sum_right);
-                        partial.derivative[ALPHABET_SIZE] +=
-                                ((1.0-pm_left )*partial_left.derivative [ALPHABET_SIZE] + pm_left *deri_sum_left)*
-                                ((1.0-pm_right)*partial_right[ALPHABET_SIZE]            + pm_right*poly_sum_right);
-                }
-                /* Gradient of phi
-                 */
-                if (node->left == which) {
-                        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                                partial.derivative[i] += (pm_left -1.0)*(1.0-pm_right)*partial_left [i]*partial_right[ALPHABET_SIZE];
-                                partial.derivative[i] += (pm_left -1.0)*     pm_right *partial_left [i]*poly_sum_right;
-                                partial.derivative[i] += (1.0-pm_right)*(pm_left -1.0)*partial_right[i]*partial_left [ALPHABET_SIZE];
-                                partial.derivative[i] += (1.0-pm_right)*(1.0-pm_left )*partial_right[i]*poly_sum_left;
-                                partial.derivative[i] += (pm_left -1.0)*(1.0-pm_right)*partial_left [i]*partial_right[i];
-                        }
-                }
-                else if (node->right == which) {
-                        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                                partial.derivative[i] += (1.0-pm_left )*(pm_right-1.0)*partial_left [i]*partial_right[ALPHABET_SIZE];
-                                partial.derivative[i] += (1.0-pm_left )*(1.0-pm_right)*partial_left [i]*poly_sum_right;
-                                partial.derivative[i] += (pm_right-1.0)*(1.0-pm_left )*partial_right[i]*partial_left [ALPHABET_SIZE];
-                                partial.derivative[i] += (pm_right-1.0)*     pm_left  *partial_right[i]*poly_sum_left;
-                                partial.derivative[i] += (1.0-pm_left )*(pm_right-1.0)*partial_left [i]*partial_right[i];
-                        }
-                }
-                else {
-                        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                                partial.derivative[i] += (1.0-pm_left )*(1.0-pm_right)*partial_left [i]*partial_right.derivative[ALPHABET_SIZE];
-                                partial.derivative[i] += (1.0-pm_left )*     pm_right *partial_left [i]*deri_sum_right;
-
-                                partial.derivative[i] += (1.0-pm_right)*(1.0-pm_left )*partial_right[i]*partial_left.derivative[ALPHABET_SIZE];
-                                partial.derivative[i] += (1.0-pm_right)*     pm_left  *partial_right[i]*deri_sum_left;
-
-                                partial.derivative[i] += (1.0-pm_right)*(1.0-pm_left )*partial_right.derivative[i]*partial_left [ALPHABET_SIZE];
-                                partial.derivative[i] += (1.0-pm_right)*     pm_left  *partial_right.derivative[i]*poly_sum_left;
-
-                                partial.derivative[i] += (1.0-pm_left )*(1.0-pm_right)*partial_left.derivative[i]*partial_right [ALPHABET_SIZE];
-                                partial.derivative[i] += (1.0-pm_left )*     pm_right *partial_left.derivative[i]*poly_sum_right;
-
-                                partial.derivative[i] += (1.0-pm_left )*(1.0-pm_right)*partial_left [i]*partial_right.derivative[i];
-                                partial.derivative[i] += (1.0-pm_left )*(1.0-pm_right)*partial_right[i]*partial_left.derivative[i];
-                        }
-                }
-                return partial;
-        }
-
-        partial_t gradient_rec(const pt_node_t* node, const pt_node_t* which) {
-                if (node->leaf()) {
-                        return gradient_leaf(node);
-                }
-                else {
-                        const partial_t partial_left  = gradient_rec(node->left,  which);
-                        const partial_t partial_right = gradient_rec(node->right, which);
-
-                        return gradient_node(node, partial_left, partial_right, which);
-                }
-        }
-
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> _derivative;
 };
 
 #endif /* PHYLOTREE_POLYNOMIAL_HH */

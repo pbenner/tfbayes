@@ -49,9 +49,6 @@ ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size>& poly
                         o << *it;
                 }
         }
-        if (polynomial.constant()) {
-                o << " + " << polynomial.constant();
-        }
 
         return o;
 }
