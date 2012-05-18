@@ -112,7 +112,6 @@ private:
                 for (nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
                         const pt_node_t* which = *it;
 
-                        partial_left.derivatives[which];
                         const polynomial_t<CODE_TYPE, ALPHABET_SIZE> deri_sum_left  = poly_sum(partial_left.derivatives[which]);
                         const polynomial_t<CODE_TYPE, ALPHABET_SIZE> deri_sum_right = poly_sum(partial_right.derivatives[which]);
                         /* Gradient of sigma
