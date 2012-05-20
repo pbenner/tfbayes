@@ -51,8 +51,53 @@ void test_tree1() {
              << endl;
 }
 
+#include <tfbayes/fasta.hh>
+
+static
+const string strip(const std::string& str)
+{
+        const std::string& whitespace = " \t\n";
+        const size_t begin = str.find_first_not_of(whitespace);
+        if (begin == string::npos) {
+                return "";
+        }
+        const size_t end   = str.find_last_not_of(whitespace);
+        const size_t range = end - begin + 1;
+
+        return str.substr(begin, range);
+}
+
+static
+vector<string> token(const string& str, char t) {
+        string token;
+        vector<string> tokens;
+        istringstream iss(str);
+        while (getline(iss, token, t)) {
+                tokens.push_back(strip(token));
+        }
+        return tokens;
+}
+
+#include <set>
+#include <boost/unordered_map.hpp>
+
+class alignment_t : public boost::unordered_map<string, string> {
+public:
+        set<string> taxa;
+};
+
 int main(void) {
         test_tree1();
+
+        FastaParser parser("test.fa");
+        string sequence;
+        alignment_t alignment;
+
+        while ((sequence = parser.read_sequence()) != "") {
+                string taxon = token(parser.description()[0], '.')[0];
+                alignment.taxa.insert(taxon);
+                alignment[taxon] = sequence;
+        }
 
         return 0.0;
 }

@@ -25,6 +25,7 @@ phylotree_parser_test_LDADD  += libphylotree.la
 gradient_test_SOURCES = gradient-test.cc
 gradient_test_LDADD   = -lm
 gradient_test_LDADD  += libphylotree.la
+gradient_test_LDADD  += ../tfbayes/fasta/libfasta.la
 
 likelihood_test_SOURCES = likelihood-test.cc
 likelihood_test_LDADD   = -lm
