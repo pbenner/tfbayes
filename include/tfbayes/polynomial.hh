@@ -64,7 +64,7 @@ public:
         polynomial_term_t()
                 : std::pair<exponent_t<T, S>, C>(exponent_t<T, S>(), 0.0)
                 { }
-        polynomial_term_t(const C constant)
+        polynomial_term_t(const C& constant)
                 : std::pair<exponent_t<T, S>, C>(exponent_t<T, S>(), constant)
                 { }
         polynomial_term_t(const std::pair<exponent_t<T, S>, C>& pair)
@@ -83,6 +83,9 @@ public:
                 return std::pair<exponent_t<T, S>, C>::second;
         }
 
+        polynomial_term_t<T, S, C> operator-() const {
+                return std::pair<exponent_t<T, S>, C>(exponent(), -coefficient());
+        }
         polynomial_term_t<T, S, C>& operator+=(const polynomial_term_t<T, S, C>& term) {
                 coefficient() += term.coefficient();
                 return *this;
@@ -139,13 +142,13 @@ polynomial_term_t<T, S, C> operator/(const polynomial_term_t<T, S, C>& term, con
         return tmp;
 }
 template <typename T, size_t S, typename C>
-polynomial_term_t<T, S, C> operator*(C constant, const polynomial_term_t<T, S, C>& term) {
+polynomial_term_t<T, S, C> operator*(const C& constant, const polynomial_term_t<T, S, C>& term) {
         polynomial_term_t<T, S, C> tmp(term);
         tmp *= constant;
         return tmp;
 }
 template <typename T, size_t S, typename C>
-polynomial_term_t<T, S, C> operator/(C constant, const polynomial_term_t<T, S, C>& term) {
+polynomial_term_t<T, S, C> operator/(const C& constant, const polynomial_term_t<T, S, C>& term) {
         polynomial_term_t<T, S, C> tmp(constant);
         tmp /= term;
         return tmp;
@@ -309,13 +312,13 @@ polynomial_t<T, S, C> operator-(const polynomial_t<T, S, C>& poly, const C& cons
         return tmp;
 }
 template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator+(C constant, const polynomial_t<T, S, C>& poly) {
+polynomial_t<T, S, C> operator+(const C& constant, const polynomial_t<T, S, C>& poly) {
         polynomial_t<T, S, C> tmp(poly);
         tmp += constant;
         return tmp;
 }
 template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator-(C constant, const polynomial_t<T, S, C>& poly) {
+polynomial_t<T, S, C> operator-(const C& constant, const polynomial_t<T, S, C>& poly) {
         polynomial_t<T, S, C> tmp(poly);
         tmp -= constant;
         return tmp;
@@ -333,13 +336,13 @@ polynomial_t<T, S, C> operator/(const polynomial_t<T, S, C>& poly, const C& cons
         return tmp;
 }
 template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator*(C constant, const polynomial_t<T, S, C>& poly) {
+polynomial_t<T, S, C> operator*(const C& constant, const polynomial_t<T, S, C>& poly) {
         polynomial_t<T, S, C> tmp(poly);
         tmp *= constant;
         return tmp;
 }
 template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator/(C constant, const polynomial_t<T, S, C>& poly) {
+polynomial_t<T, S, C> operator/(const C& constant, const polynomial_t<T, S, C>& poly) {
         polynomial_t<T, S, C> tmp(poly);
         tmp /= constant;
         return tmp;

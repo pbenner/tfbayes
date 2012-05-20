@@ -81,6 +81,10 @@ class mutation_coefficient_t : public boost::unordered_map<mutation_product_t, d
 public:
         mutation_coefficient_t()
                 : boost::unordered_map<mutation_product_t, double>() {}
+        mutation_coefficient_t(double constant)
+                : boost::unordered_map<mutation_product_t, double>() {
+                operator[](mutation_product_t()) += constant;
+        }
         mutation_coefficient_t(const pmut_t& mutation)
                 : boost::unordered_map<mutation_product_t, double>() {
                 operator[](mutation) += 1.0;
@@ -92,6 +96,13 @@ public:
 
         operator bool() const {
                 return size();
+        }
+        mutation_coefficient_t operator-() const {
+                mutation_coefficient_t coefficient;
+                for (mutation_coefficient_t::const_iterator it = begin(); it != end(); it++) {
+                        coefficient[it->first] = -(find(it->first)->second);
+                }
+                return coefficient;
         }
         mutation_coefficient_t operator+=(
                 const mutation_coefficient_t& coefficient) {
@@ -120,6 +131,8 @@ public:
                 return *this;
         }
 };
+
+//mutation_coefficient_t operator*(const mutation_coefficient_t& c1, const mutation_coefficient_t& c2);
 
 size_t hash_value(const pmut_t& pmut);
 

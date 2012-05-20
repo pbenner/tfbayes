@@ -136,12 +136,23 @@ void test_tree2() {
         cout << poly1*poly2 << endl;
 }
 
+void test_tree3() {
+
+        pt_leaf_t n2( 2, 0.30, "n2");
+        pt_leaf_t n3( 2, 0.30, "n3");
+        pt_root_t n1(-1, &n2, &n3);
+
+        pt_gradient_t<code_t, alphabet_size> result(&n1);
+
+        cout << result.normalization() << endl;
+}
+
 int main(void) {
 //        test_tree1();
-        test_tree2();
+//        test_tree2();
+        test_tree3();
 
         alignment_t alignment("test.fa");
-
 
         return 0.0;
 }

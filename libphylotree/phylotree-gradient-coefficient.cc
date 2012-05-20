@@ -23,6 +23,12 @@
 
 using namespace std;
 
+mutation_coefficient_t operator*(const mutation_coefficient_t& c1, const mutation_coefficient_t& c2) {
+        mutation_coefficient_t tmp(c1);
+        tmp *= c2;
+        return tmp;
+}
+
 size_t
 hash_value(const pmut_t& pmut)
 {
@@ -33,10 +39,10 @@ ostream& operator<< (ostream& o, const mutation_product_t& product) {
         for (mutation_product_t::const_iterator it = product.begin(); it != product.end(); it++) {
                 const pmut_t& mutation = *it;
                 if (mutation) {
-                        o << "(1-M(" << mutation.node->name << ")) ";
+                        o << "M(" << mutation.node->name << ") ";
                 }
                 else {
-                        o << "M(" << mutation.node->name << ") ";
+                        o << "(1-M(" << mutation.node->name << ")) ";
                 }
         }
         return o;
