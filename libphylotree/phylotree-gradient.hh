@@ -103,11 +103,6 @@ private:
                 polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> dpn_left (-pn_left );
                 polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> dpn_right(-pn_right);
 
-                // pmut_t pm_left (node->left,  true);  /* mutation on the left     */
-                // pmut_t pm_right(node->right, true);  /* mutation on the right    */
-                // pmut_t pn_left (node->left,  false); /* no mutation on the left  */
-                // pmut_t pn_right(node->right, false); /* no mutation on the right */
-
                 partial_t partial;
                 const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> poly_sum_left  = poly_sum(partial_left);
                 const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> poly_sum_right = poly_sum(partial_right);
@@ -124,70 +119,70 @@ private:
                         partial[i] += pn_left *pn_right*partial_left [i]*partial_right[i];
                 }
 
-                // for (nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
-                //         const pt_node_t* which = *it;
+                for (nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
+                        const pt_node_t* which = *it;
 
-                //         const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> deri_sum_left  = poly_sum(partial_left.derivatives[which]);
-                //         const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> deri_sum_right = poly_sum(partial_right.derivatives[which]);
-                //         /* Gradient of sigma
-                //          */
-                //         if (node->left == which) {
-                //                 partial.derivatives[which][ALPHABET_SIZE] +=
-                //                         ((pm_left -1.0)*partial_left [ALPHABET_SIZE] + (1.0-pm_left )*poly_sum_left)*
-                //                         ((1.0-pm_right)*partial_right[ALPHABET_SIZE] +      pm_right *poly_sum_right);
-                //         }
-                //         else if (node->right == which) {
-                //                 partial.derivatives[which][ALPHABET_SIZE] +=
-                //                         ((1.0-pm_left )*partial_left [ALPHABET_SIZE] +      pm_left  *poly_sum_left)*
-                //                         ((pm_right-1.0)*partial_right[ALPHABET_SIZE] + (1.0-pm_right)*poly_sum_right);
-                //         }
-                //         else {
-                //                 partial.derivatives[which][ALPHABET_SIZE] +=
-                //                         ((1.0-pm_left )*partial_left [ALPHABET_SIZE]                    + pm_left *poly_sum_left)*
-                //                         ((1.0-pm_right)*partial_right.derivatives[which][ALPHABET_SIZE] + pm_right*deri_sum_right);
-                //                 partial.derivatives[which][ALPHABET_SIZE] +=
-                //                         ((1.0-pm_left )*partial_left.derivatives [which][ALPHABET_SIZE] + pm_left *deri_sum_left)*
-                //                         ((1.0-pm_right)*partial_right[ALPHABET_SIZE]                    + pm_right*poly_sum_right);
-                //         }
-                //         /* Gradient of phi
-                //          */
-                //         if (node->left == which) {
-                //                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                //                         partial.derivatives[which][i] += (pm_left -1.0)*(1.0-pm_right)*partial_left [i]*partial_right[ALPHABET_SIZE];
-                //                         partial.derivatives[which][i] += (pm_left -1.0)*     pm_right *partial_left [i]*poly_sum_right;
-                //                         partial.derivatives[which][i] += (1.0-pm_right)*(pm_left -1.0)*partial_right[i]*partial_left [ALPHABET_SIZE];
-                //                         partial.derivatives[which][i] += (1.0-pm_right)*(1.0-pm_left )*partial_right[i]*poly_sum_left;
-                //                         partial.derivatives[which][i] += (pm_left -1.0)*(1.0-pm_right)*partial_left [i]*partial_right[i];
-                //                 }
-                //         }
-                //         else if (node->right == which) {
-                //                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                //                         partial.derivatives[which][i] += (1.0-pm_left )*(pm_right-1.0)*partial_left [i]*partial_right[ALPHABET_SIZE];
-                //                         partial.derivatives[which][i] += (1.0-pm_left )*(1.0-pm_right)*partial_left [i]*poly_sum_right;
-                //                         partial.derivatives[which][i] += (pm_right-1.0)*(1.0-pm_left )*partial_right[i]*partial_left [ALPHABET_SIZE];
-                //                         partial.derivatives[which][i] += (pm_right-1.0)*     pm_left  *partial_right[i]*poly_sum_left;
-                //                         partial.derivatives[which][i] += (1.0-pm_left )*(pm_right-1.0)*partial_left [i]*partial_right[i];
-                //                 }
-                //         }
-                //         else {
-                //                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                //                         partial.derivatives[which][i] += (1.0-pm_left )*(1.0-pm_right)*partial_left [i]*partial_right.derivatives[which][ALPHABET_SIZE];
-                //                         partial.derivatives[which][i] += (1.0-pm_left )*     pm_right *partial_left [i]*deri_sum_right;
+                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> deri_sum_left  = poly_sum(partial_left.derivatives[which]);
+                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> deri_sum_right = poly_sum(partial_right.derivatives[which]);
+                        /* Gradient of sigma
+                         */
+                        if (node->left == which) {
+                                partial.derivatives[which][ALPHABET_SIZE] +=
+                                        (dpn_left*partial_left [ALPHABET_SIZE] + pn_left*poly_sum_left)*
+                                        (pn_right*partial_right[ALPHABET_SIZE] +      pm_right *poly_sum_right);
+                        }
+                        else if (node->right == which) {
+                                partial.derivatives[which][ALPHABET_SIZE] +=
+                                        (pn_left*partial_left [ALPHABET_SIZE] +      pm_left  *poly_sum_left)*
+                                        (dpn_right*partial_right[ALPHABET_SIZE] + pn_right*poly_sum_right);
+                        }
+                        else {
+                                partial.derivatives[which][ALPHABET_SIZE] +=
+                                        (pn_left *partial_left [ALPHABET_SIZE]                    + pm_left *poly_sum_left)*
+                                        (pn_right*partial_right.derivatives[which][ALPHABET_SIZE] + pm_right*deri_sum_right);
+                                partial.derivatives[which][ALPHABET_SIZE] +=
+                                        (pn_left *partial_left.derivatives [which][ALPHABET_SIZE] + pm_left *deri_sum_left)*
+                                        (pn_right*partial_right[ALPHABET_SIZE]                    + pm_right*poly_sum_right);
+                        }
+                        /* Gradient of phi
+                         */
+                        if (node->left == which) {
+                                for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                                        partial.derivatives[which][i] += dpn_left * pn_right*partial_left [i]*partial_right[ALPHABET_SIZE];
+                                        partial.derivatives[which][i] += dpn_left * pm_right*partial_left [i]*poly_sum_right;
+                                        partial.derivatives[which][i] +=  pn_right*dpn_left *partial_right[i]*partial_left [ALPHABET_SIZE];
+                                        partial.derivatives[which][i] +=  pn_right* pn_left *partial_right[i]*poly_sum_left;
+                                        partial.derivatives[which][i] += dpn_left * pn_right*partial_left [i]*partial_right[i];
+                                }
+                        }
+                        else if (node->right == which) {
+                                for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                                        partial.derivatives[which][i] +=  pn_left *dpn_right*partial_left [i]*partial_right[ALPHABET_SIZE];
+                                        partial.derivatives[which][i] +=  pn_left * pn_right*partial_left [i]*poly_sum_right;
+                                        partial.derivatives[which][i] += dpn_right* pn_left *partial_right[i]*partial_left [ALPHABET_SIZE];
+                                        partial.derivatives[which][i] += dpn_right* pm_left *partial_right[i]*poly_sum_left;
+                                        partial.derivatives[which][i] +=  pn_left *dpn_right*partial_left [i]*partial_right[i];
+                                }
+                        }
+                        else {
+                                for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                                        partial.derivatives[which][i] += pn_left *pn_right*partial_left[i]*partial_right.derivatives[which][ALPHABET_SIZE];
+                                        partial.derivatives[which][i] += pn_left *pm_right*partial_left[i]*deri_sum_right;
 
-                //                         partial.derivatives[which][i] += (1.0-pm_right)*(1.0-pm_left )*partial_right[i]*partial_left.derivatives[which] [ALPHABET_SIZE];
-                //                         partial.derivatives[which][i] += (1.0-pm_right)*     pm_left  *partial_right[i]*deri_sum_left;
+                                        partial.derivatives[which][i] += pn_right*pn_left*partial_right[i]*partial_left.derivatives[which] [ALPHABET_SIZE];
+                                        partial.derivatives[which][i] += pn_right*pm_left*partial_right[i]*deri_sum_left;
 
-                //                         partial.derivatives[which][i] += (1.0-pm_right)*(1.0-pm_left )*partial_right.derivatives[which][i]*partial_left [ALPHABET_SIZE];
-                //                         partial.derivatives[which][i] += (1.0-pm_right)*     pm_left  *partial_right.derivatives[which][i]*poly_sum_left;
+                                        partial.derivatives[which][i] += pn_right*pn_left*partial_right.derivatives[which][i]*partial_left [ALPHABET_SIZE];
+                                        partial.derivatives[which][i] += pn_right*pm_left*partial_right.derivatives[which][i]*poly_sum_left;
 
-                //                         partial.derivatives[which][i] += (1.0-pm_left )*(1.0-pm_right)*partial_left.derivatives[which][i]*partial_right [ALPHABET_SIZE];
-                //                         partial.derivatives[which][i] += (1.0-pm_left )*     pm_right *partial_left.derivatives[which][i]*poly_sum_right;
+                                        partial.derivatives[which][i] += pn_left *pn_right*partial_left.derivatives[which][i]*partial_right [ALPHABET_SIZE];
+                                        partial.derivatives[which][i] += pn_left *pm_right*partial_left.derivatives[which][i]*poly_sum_right;
 
-                //                         partial.derivatives[which][i] += (1.0-pm_left )*(1.0-pm_right)*partial_left [i]*partial_right.derivatives[which][i];
-                //                         partial.derivatives[which][i] += (1.0-pm_left )*(1.0-pm_right)*partial_right[i]*partial_left.derivatives[which][i];
-                //                 }
-                //         }
-                // }
+                                        partial.derivatives[which][i] += pn_left *pn_right*partial_left [i]*partial_right.derivatives[which][i];
+                                        partial.derivatives[which][i] += pn_left *pn_right*partial_right[i]*partial_left.derivatives[which][i];
+                                }
+                        }
+                }
                 return partial;
         }
 
