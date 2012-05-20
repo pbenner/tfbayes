@@ -76,13 +76,13 @@ int main() {
         poly1 -= term2;
         poly1 -= term2;
         polynomial_t<short, 4> poly2;
-        poly2 += ((2*term1) * (3*term2));
+        poly2 += ((2.0*term1) * (3.0*term2));
 
         cout << "poly1: " << poly1
              << endl;
-        cout << "poly2: " << poly2 + 3
+        cout << "poly2: " << poly2 + 3.0
              << endl;
-        cout << "poly1*poly2: " << poly1 * (poly2 + 3)
+        cout << "poly1*poly2: " << poly1 * (poly2 + 3.0)
              << endl;
 
         return 0;

@@ -47,7 +47,8 @@ void test_tree1() {
                 pt_gradient_t<code_t, alphabet_size> result(&n1);
                 gradient += result.eval(&n2, p);
         }
-        cout << "gradient for n2: " << gradient
+        cout << "gradient for n2: "
+             << gradient
              << endl;
 }
 
@@ -83,21 +84,198 @@ vector<string> token(const string& str, char t) {
 
 class alignment_t : public boost::unordered_map<string, string> {
 public:
+        alignment_t(const char* filename)
+                : boost::unordered_map<string, string>() {
+
+                FastaParser parser(filename);
+                string sequence;
+
+                while ((sequence = parser.read_sequence()) != "") {
+                        string taxon = token(parser.description()[0], '.')[0];
+                        taxa.insert(taxon);
+                        operator[](taxon) = sequence;
+                }
+        }
+
         set<string> taxa;
 };
 
+class mutation_t {
+public:
+        mutation_t(pt_node_t* node, bool mutation = true)
+                : node(node), mutation(mutation) { }
+
+        operator bool() const {
+                return mutation;
+        }
+
+        pt_node_t* node;
+
+private:
+        bool mutation;
+};
+
+#include <vector>
+
+class mutation_product_t : public std::vector<mutation_t> {
+public:
+        mutation_product_t()
+                : std::vector<mutation_t>() {}
+        mutation_product_t(const mutation_t& mutation)
+                : std::vector<mutation_t>() {
+                push_back(mutation);
+        }
+
+        mutation_product_t operator*=(const mutation_t& mutation) {
+                push_back(mutation);
+                return *this;
+        }
+        mutation_product_t operator*=(const mutation_product_t& product) {
+
+                for (mutation_product_t::const_iterator it = product.begin(); it != product.end(); it++) {
+                        operator*=(*it);
+                }
+                return *this;
+        }
+};
+
+class mutation_coefficient_t : public std::vector<mutation_product_t> {
+public:
+        mutation_coefficient_t()
+                : std::vector<mutation_product_t>() {}
+        mutation_coefficient_t(const mutation_t& mutation)
+                : std::vector<mutation_product_t>() {
+                push_back(mutation);
+        }
+        mutation_coefficient_t(const mutation_product_t& product)
+                : std::vector<mutation_product_t>() {
+                push_back(product);
+        }
+
+        operator bool() const {
+                return size();
+        }
+        mutation_coefficient_t operator+=(
+                const mutation_product_t& product) {
+                push_back(product);
+                return *this;
+        }
+        mutation_coefficient_t operator+=(
+                const mutation_coefficient_t& coefficient) {
+
+                for (mutation_coefficient_t::const_iterator it = coefficient.begin(); it != coefficient.end(); it++) {
+                        operator+=(*it);
+                }
+                return *this;
+        }
+        mutation_coefficient_t operator*=(
+                const mutation_coefficient_t& coefficient) {
+
+                for (mutation_coefficient_t::iterator it = begin(); it != end(); it++) {
+                        for (mutation_coefficient_t::const_iterator is = coefficient.begin(); is != coefficient.end(); is++) {
+                                (*it) *= (*is);
+                        }
+                }
+                return *this;
+        }
+};
+
+ostream& operator<< (ostream& o, const mutation_product_t product) {
+        for (mutation_product_t::const_iterator it = product.begin(); it != product.end(); it++) {
+                const mutation_t& mutation = *it;
+                if (mutation) {
+                        o << "(1-e^" << mutation.node->name << ") ";
+                }
+                else {
+                        o << "e^" << mutation.node->name << " ";
+                }
+        }
+        return o;
+}
+
+ostream& operator<< (ostream& o, const mutation_coefficient_t coefficient) {
+
+        o << "[ ";
+        for (mutation_coefficient_t::const_iterator it = coefficient.begin(); it != coefficient.end(); it++) {
+                if (it != coefficient.begin()) {
+                        o << "+ ";
+                }
+                o << *it;
+        }
+        o << "]";
+        return o;
+}
+
+ostream& operator<< (ostream& o, const exponent_t<code_t, alphabet_size>& exponent) {
+        if(exponent[0]) o << " Pa^" << exponent[0];
+        if(exponent[1]) o << " Pc^" << exponent[1];
+        if(exponent[2]) o << " Pg^" << exponent[2];
+        if(exponent[3]) o << " Pt^" << exponent[3];
+
+        return o;
+}
+ostream& operator<< (ostream& o, const polynomial_term_t<code_t, alphabet_size, mutation_coefficient_t>& term) {
+        o << term.coefficient()
+          << term.exponent();
+
+        return o;
+}
+ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size, mutation_coefficient_t>& polynomial) {
+        for (polynomial_t<code_t, alphabet_size, mutation_coefficient_t>::const_iterator it = polynomial.begin();
+             it != polynomial.end(); it++) {
+                if (it != polynomial.begin()) {
+                        o << " + " << *it;
+                }
+                else {
+                        o << *it;
+                }
+        }
+
+        return o;
+}
+
+
+void test_tree2() {
+        cout << "Test 2:" << endl;
+
+        pt_leaf_t n2( 1, 0.20, "n2");
+        pt_leaf_t n3( 2, 0.30, "n3");
+        pt_root_t n1(-1, &n2, &n3, "n1");
+
+        mutation_product_t mutation_product1;
+        mutation_product_t mutation_product2;
+        mutation_coefficient_t mutation_coefficient;
+
+        mutation_product1.push_back(mutation_t(&n2, true));
+        mutation_product1.push_back(mutation_t(&n3, false));
+
+        mutation_product2.push_back(mutation_t(&n2, false));
+        mutation_product2.push_back(mutation_t(&n3, false));
+
+        mutation_coefficient += mutation_product1;
+        mutation_coefficient += mutation_product2;
+
+        polynomial_term_t<code_t, alphabet_size, mutation_coefficient_t> term1(mutation_coefficient);
+        term1.exponent()[2] += 2;
+        polynomial_t     <code_t, alphabet_size, mutation_coefficient_t> poly1(term1);
+
+        mutation_coefficient *= mutation_t(&n1, true);
+
+        polynomial_term_t<code_t, alphabet_size, mutation_coefficient_t> term2(mutation_coefficient);
+        term2.exponent()[2] += 2;
+        polynomial_t     <code_t, alphabet_size, mutation_coefficient_t> poly2(term2);
+
+        cout << poly1 << endl;
+        cout << poly2 << endl;
+        cout << poly1*poly2 << endl;
+}
+
 int main(void) {
         test_tree1();
+        test_tree2();
 
-        FastaParser parser("test.fa");
-        string sequence;
-        alignment_t alignment;
+        alignment_t alignment("test.fa");
 
-        while ((sequence = parser.read_sequence()) != "") {
-                string taxon = token(parser.description()[0], '.')[0];
-                alignment.taxa.insert(taxon);
-                alignment[taxon] = sequence;
-        }
 
         return 0.0;
 }
