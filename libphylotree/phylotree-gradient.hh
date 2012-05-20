@@ -128,12 +128,12 @@ private:
                          */
                         if (node->left == which) {
                                 partial.derivatives[which][ALPHABET_SIZE] +=
-                                        (dpn_left*partial_left [ALPHABET_SIZE] + pn_left*poly_sum_left)*
-                                        (pn_right*partial_right[ALPHABET_SIZE] +      pm_right *poly_sum_right);
+                                        (dpn_left*partial_left [ALPHABET_SIZE] + pn_left *poly_sum_left)*
+                                        (pn_right*partial_right[ALPHABET_SIZE] + pm_right*poly_sum_right);
                         }
                         else if (node->right == which) {
                                 partial.derivatives[which][ALPHABET_SIZE] +=
-                                        (pn_left*partial_left [ALPHABET_SIZE] +      pm_left  *poly_sum_left)*
+                                        ( pn_left *partial_left [ALPHABET_SIZE] + pm_left *poly_sum_left)*
                                         (dpn_right*partial_right[ALPHABET_SIZE] + pn_right*poly_sum_right);
                         }
                         else {
