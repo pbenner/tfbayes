@@ -26,31 +26,31 @@
 
 using namespace std;
 
-void test_tree1() {
-        cout << "Test 1:" << endl;
+// void test_tree1() {
+//         cout << "Test 1:" << endl;
 
-        code_t observations[][2] = {
-                {0, 0}, {0, 0}, {1, 0}
-        };
-        boost::array<double, alphabet_size> p;
-        p[0] = 0.25;
-        p[1] = 0.25;
-        p[2] = 0.25;
-        p[3] = 0.25;
+//         code_t observations[][2] = {
+//                 {0, 0}, {0, 0}, {1, 0}
+//         };
+//         boost::array<double, alphabet_size> p;
+//         p[0] = 0.25;
+//         p[1] = 0.25;
+//         p[2] = 0.25;
+//         p[3] = 0.25;
 
-        double gradient = 0;
-        for (size_t i = 0; i < 3; i++) {
-                pt_leaf_t n2( observations[i][0], 0.30, "n2");
-                pt_leaf_t n3( observations[i][1], 0.30, "n3");
-                pt_root_t n1(-1, &n2, &n3);
+//         double gradient = 0;
+//         for (size_t i = 0; i < 3; i++) {
+//                 pt_leaf_t n2( observations[i][0], 0.30, "n2");
+//                 pt_leaf_t n3( observations[i][1], 0.30, "n3");
+//                 pt_root_t n1(-1, &n2, &n3);
 
-                pt_gradient_t<code_t, alphabet_size> result(&n1);
-                gradient += result.eval(&n2, p);
-        }
-        cout << "gradient for n2: "
-             << gradient
-             << endl;
-}
+//                 pt_gradient_t<code_t, alphabet_size> result(&n1);
+//                 gradient += result.eval(&n2, p);
+//         }
+//         cout << "gradient for n2: "
+//              << gradient
+//              << endl;
+// }
 
 #include <tfbayes/fasta.hh>
 
@@ -100,158 +100,6 @@ public:
         set<string> taxa;
 };
 
-class pmut_t {
-public:
-        pmut_t(pt_node_t* node, bool mutation = true)
-                : node(node), mutation(mutation) { }
-
-        operator bool() const {
-                return mutation;
-        }
-        bool operator==(const pmut_t& m) const {
-                return node == m.node && mutation == m.mutation;
-        }
-        bool operator<(const pmut_t& m) const {
-                if (node < m.node) {
-                        return true;
-                }
-                if (node == m.node) {
-                        return mutation < m.mutation;
-                }
-                return false;
-        }
-
-        pt_node_t* node;
-
-private:
-        bool mutation;
-};
-
-size_t
-hash_value(const pmut_t& pmut)
-{
-        return (size_t)pmut.node;
-}
-
-#include <vector>
-#include <set>
-
-class mutation_product_t : public std::multiset<pmut_t> {
-public:
-        mutation_product_t()
-                : std::multiset<pmut_t>() {}
-        mutation_product_t(const pmut_t& mutation)
-                : std::multiset<pmut_t>() {
-                insert(mutation);
-        }
-
-        mutation_product_t operator*=(const pmut_t& mutation) {
-                insert(mutation);
-                return *this;
-        }
-        mutation_product_t operator*=(const mutation_product_t& product) {
-
-                for (mutation_product_t::const_iterator it = product.begin(); it != product.end(); it++) {
-                        operator*=(*it);
-                }
-                return *this;
-        }
-};
-
-class mutation_coefficient_t : public boost::unordered_map<mutation_product_t, double> {
-public:
-        mutation_coefficient_t()
-                : boost::unordered_map<mutation_product_t, double>() {}
-        mutation_coefficient_t(const pmut_t& mutation)
-                : boost::unordered_map<mutation_product_t, double>() {
-                operator[](mutation) += 1.0;
-        }
-        mutation_coefficient_t(const mutation_product_t& product)
-                : boost::unordered_map<mutation_product_t, double>() {
-                operator[](product) += 1.0;
-        }
-
-        operator bool() const {
-                return size();
-        }
-        mutation_coefficient_t operator+=(
-                const mutation_coefficient_t& coefficient) {
-
-                for (mutation_coefficient_t::const_iterator it = coefficient.begin(); it != coefficient.end(); it++) {
-                        operator[](it->first) += it->second;
-                        if (operator[](it->first) == 0.0) {
-                                erase(it->first);
-                        }
-                }
-                return *this;
-        }
-        mutation_coefficient_t operator*=(
-                const mutation_coefficient_t& coefficient) {
-
-                mutation_coefficient_t tmp;
-                for (mutation_coefficient_t::const_iterator it = begin(); it != end(); it++) {
-                        for (mutation_coefficient_t::const_iterator is = coefficient.begin(); is != coefficient.end(); is++) {
-                                mutation_product_t product(it->first);
-                                product *= (is->first);
-                                tmp[product] += (it->second)*(is->second);
-                        }
-                }
-                operator=(tmp);
-
-                return *this;
-        }
-};
-
-ostream& operator<< (ostream& o, const mutation_product_t product) {
-        for (mutation_product_t::const_iterator it = product.begin(); it != product.end(); it++) {
-                const pmut_t& mutation = *it;
-                if (mutation) {
-                        o << "(1-M(" << mutation.node->name << ")) ";
-                }
-                else {
-                        o << "M(" << mutation.node->name << ") ";
-                }
-        }
-        return o;
-}
-
-ostream& operator<< (ostream& o, const mutation_coefficient_t& coefficient) {
-
-        o << "[ ";
-        for (mutation_coefficient_t::const_iterator it = coefficient.begin(); it != coefficient.end(); it++) {
-                if (it != coefficient.begin()) {
-                        o << "+ ";
-                }
-                if (it->second != 1.0) {
-                        o << it->second << " ";
-                }
-                o << it->first;
-        }
-        o << "]";
-        return o;
-}
-
-ostream& operator<< (ostream& o, const polynomial_term_t<code_t, alphabet_size, mutation_coefficient_t>& term) {
-        o << term.coefficient()
-          << term.exponent();
-
-        return o;
-}
-ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size, mutation_coefficient_t>& polynomial) {
-        for (polynomial_t<code_t, alphabet_size, mutation_coefficient_t>::const_iterator it = polynomial.begin();
-             it != polynomial.end(); it++) {
-                if (it != polynomial.begin()) {
-                        o << " + " << *it;
-                }
-                else {
-                        o << *it;
-                }
-        }
-
-        return o;
-}
-
-
 void test_tree2() {
         cout << "Test 2:" << endl;
 
@@ -289,7 +137,7 @@ void test_tree2() {
 }
 
 int main(void) {
-        test_tree1();
+//        test_tree1();
         test_tree2();
 
         alignment_t alignment("test.fa");

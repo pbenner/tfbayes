@@ -25,6 +25,7 @@
 #include <tfbayes/polynomial.hh>
 
 #include <incomplete-expression.hh>
+#include <phylotree-gradient-coefficient.hh>
 
 #define alphabet_size 4
 typedef short code_t;
@@ -32,6 +33,9 @@ typedef short code_t;
 std::ostream& operator<< (std::ostream& o, const exponent_t<code_t, alphabet_size>& exponent);
 std::ostream& operator<< (std::ostream& o, const polynomial_term_t<code_t, alphabet_size>& term);
 std::ostream& operator<< (std::ostream& o, const polynomial_t<code_t, alphabet_size>& polynomial);
+
+std::ostream& operator<< (std::ostream& o, const polynomial_term_t<code_t, alphabet_size, mutation_coefficient_t>& term);
+std::ostream& operator<< (std::ostream& o, const polynomial_t<code_t, alphabet_size, mutation_coefficient_t>& polynomial);
 
 size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent);
 

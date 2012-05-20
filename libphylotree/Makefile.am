@@ -50,6 +50,8 @@ libphylotree_la_SOURCES = \
 	phylotree.hh \
 	phylotree-expand.hh \
 	phylotree-gradient.hh \
+	phylotree-gradient-coefficient.hh \
+	phylotree-gradient-coefficient.cc \
 	phylotree-polynomial.hh \
 	phylotree-lexer.ll \
 	phylotree-parser.hh \

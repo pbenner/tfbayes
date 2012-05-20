@@ -28,6 +28,7 @@
 #include <tfbayes/polynomial.hh>
 
 #include <phylotree.hh>
+#include <phylotree-gradient-coefficient.hh>
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_gradient_t : public boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> > {
