@@ -112,8 +112,10 @@ public:
                 exponent()    /= term.exponent();
                 return *this;
         }
-        double eval(const boost::array<double, S>& val) const {
-                return coefficient()*exponent().eval(val);
+        C eval(const boost::array<double, S>& val) const {
+                C c(coefficient());
+                c *= exponent().eval(val);
+                return c;
         }
 };
 
@@ -266,8 +268,8 @@ public:
 
                 return *this;
         }
-        double eval(const boost::array<double, S>& val) const {
-                double result;
+        C eval(const boost::array<double, S>& val) const {
+                C result(0.0);
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         result += it->eval(val);
                 }

@@ -48,6 +48,14 @@ public:
                 }
                 return false;
         }
+        double eval() const {
+                if (mutation) {
+                        return 1.0-exp(-node->d);
+                }
+                else {
+                        return exp(-node->d);
+                }
+        }
 
         pt_node_t* node;
 
@@ -74,6 +82,13 @@ public:
                         operator*=(*it);
                 }
                 return *this;
+        }
+        double eval() const {
+                double result = 1.0;
+                for (mutation_product_t::const_iterator it = begin(); it != end(); it++) {
+                        result *= it->eval();
+                }
+                return result;
         }
 };
 
@@ -122,7 +137,7 @@ public:
                 for (mutation_coefficient_t::const_iterator it = begin(); it != end(); it++) {
                         for (mutation_coefficient_t::const_iterator is = coefficient.begin(); is != coefficient.end(); is++) {
                                 mutation_product_t product(it->first);
-                                product *= (is->first);
+                                product      *= (is->first);
                                 tmp[product] += (it->second)*(is->second);
                         }
                 }
@@ -130,9 +145,14 @@ public:
 
                 return *this;
         }
+        double eval() const {
+                double result = 0.0;
+                for (mutation_coefficient_t::const_iterator it = begin(); it != end(); it++) {
+                        result += it->first.eval()*it->second;
+                }
+                return result;
+        }
 };
-
-//mutation_coefficient_t operator*(const mutation_coefficient_t& c1, const mutation_coefficient_t& c2);
 
 size_t hash_value(const pmut_t& pmut);
 

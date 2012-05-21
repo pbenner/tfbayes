@@ -21,6 +21,7 @@
 
 #include <iostream>
 
+#include <phylotree-polynomial.hh>
 #include <phylotree-gradient.hh>
 #include <utility.hh>
 
@@ -137,7 +138,7 @@ void test_tree2() {
 }
 
 void test_tree3() {
-
+        cout << "Test 3:" << endl;
         pt_leaf_t n2( 2, 0.30, "n2");
         pt_leaf_t n3( 2, 0.30, "n3");
         pt_root_t n1(-1, &n2, &n3);
@@ -147,10 +148,40 @@ void test_tree3() {
         cout << result.normalization() << endl;
 }
 
+void test_tree4() {
+        cout << "Test 4:" << endl;
+        pt_leaf_t n9( 3, 9.0,           "n9");
+        pt_leaf_t n8( 2, 8.0,           "n8");
+        pt_leaf_t n7( 1, 7.0,           "n7");
+        pt_leaf_t n6( 0, 6.0,           "n6");
+        pt_node_t n5(-1, 5.0, &n8, &n9, "n5");
+        pt_node_t n4(-1, 4.0, &n6, &n7, "n4");
+        pt_leaf_t n3( 0, 3.0,           "n3");
+        pt_node_t n2(-1, 2.0, &n4, &n5, "n2");
+        pt_root_t n1(-1, &n2, &n3,      "n1");
+
+        pt_gradient_t  <code_t, alphabet_size> result1(&n1);
+        pt_polynomial_t<code_t, alphabet_size> result2(&n1);
+
+        cout << result1.normalization() << endl;
+
+        boost::array<double, alphabet_size> p;
+        p[0] = 0.25;
+        p[1] = 0.25;
+        p[2] = 0.25;
+        p[3] = 0.25;
+
+        cout << result1.normalization().eval(p).eval()
+             << endl;
+        cout << result2.eval(p)
+             << endl;
+}
+
 int main(void) {
 //        test_tree1();
 //        test_tree2();
         test_tree3();
+        test_tree4();
 
         alignment_t alignment("test.fa");
 

@@ -23,12 +23,6 @@
 
 using namespace std;
 
-mutation_coefficient_t operator*(const mutation_coefficient_t& c1, const mutation_coefficient_t& c2) {
-        mutation_coefficient_t tmp(c1);
-        tmp *= c2;
-        return tmp;
-}
-
 size_t
 hash_value(const pmut_t& pmut)
 {
