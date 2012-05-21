@@ -88,20 +88,6 @@ public:
                 if (!_right) { delete(_right); _right = NULL; }
         }
 
-        void clean() {
-                if (leaf()) {
-                        return;
-                }
-                if (_left != NULL && !left()) {
-                        delete(_left);
-                        (*this) = right();
-                }
-                if (_right != NULL && !right()) {
-                        delete(_right);
-                        (*this) = left();
-                }
-        }
-
         bool operator==(const mutation_tree_t& tree) const {
                 bool result = true;
                 if ((_left  && tree._left  == NULL) || (_left  == NULL && tree._left )) {
