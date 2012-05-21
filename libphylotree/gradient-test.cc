@@ -177,11 +177,39 @@ void test_tree4() {
              << endl;
 }
 
+void test_tree5() {
+        cout << "Test 5:" << endl;
+        pt_leaf_t n9( 3, 9.0,           "n9");
+        pt_leaf_t n8( 2, 8.0,           "n8");
+        pt_leaf_t n7( 1, 7.0,           "n7");
+        pt_leaf_t n6( 0, 6.0,           "n6");
+        pt_node_t n5(-1, 5.0, &n8, &n9, "n5");
+        pt_node_t n4(-1, 4.0, &n6, &n7, "n4");
+        pt_leaf_t n3( 0, 3.0,           "n3");
+        pt_node_t n2(-1, 2.0, &n4, &n5, "n2");
+        pt_root_t n1(-1, &n2, &n3,      "n1");
+
+        mutation_tree_t tree1(pmut_t(&n9, false));
+        mutation_tree_t tree2(pmut_t(&n8, true));
+
+        tree1 += tree2;
+        tree1 *= tree2;
+
+        cout <<  tree1 << endl;
+        cout << -tree1 << endl;
+        cout <<  tree1 << endl;
+
+        polynomial_t<code_t, alphabet_size, mutation_tree_t> poly1(tree1);
+        cout << poly1*poly1+poly1 << endl;
+
+}
+
 int main(void) {
 //        test_tree1();
 //        test_tree2();
         test_tree3();
         test_tree4();
+        test_tree5();
 
         alignment_t alignment("test.fa");
 

@@ -30,6 +30,8 @@
 
 class pmut_t {
 public:
+        pmut_t()
+                : node(NULL), mutation(false) { }
         pmut_t(pt_node_t* node, bool mutation = true)
                 : node(node), mutation(mutation) { }
 
@@ -90,6 +92,141 @@ public:
                 }
                 return result;
         }
+};
+
+class mutation_tree_t {
+public:
+        mutation_tree_t()
+                : _mult(false), _sum(false), _pmut(), _constant(0.0),
+                  _left(NULL ), _right(NULL) { }
+        mutation_tree_t(const mutation_tree_t& tree)
+                : _mult(tree._mult), _sum(tree._sum), _pmut(tree._pmut), _constant(tree._constant),
+                  _left(NULL), _right(NULL) {
+                if (!tree.leaf()) {
+                        _left  = new mutation_tree_t(*tree._left);
+                        _right = new mutation_tree_t(*tree._right);
+                }
+        }
+        // mutation_tree_t(const mutation_tree_t& left, const mutation_tree_t& right,
+        //                 bool mult = false, bool sum = false)
+        //         : _mult(mult), _sum(sum), _pmut(), _constant(1.0),
+        //           _left(new mutation_tree_t(left)), _right(new mutation_tree_t(right)) { }
+        mutation_tree_t(const pmut_t& pmut)
+                : _mult(false), _sum(false), _pmut(pmut), _constant(1.0),
+                  _left(NULL), _right(NULL) { }
+        ~mutation_tree_t() {
+                if (!_left ) { delete(_left ); }
+                if (!_right) { delete(_right); }
+        }
+
+        void clean() {
+                if (leaf()) {
+                        return;
+                }
+                if (!left()) {
+                        delete(_left);
+                        (*this) = right();
+                }
+                if (!right()) {
+                        delete(_right);
+                        (*this) = left();
+                }
+        }
+
+        operator bool() const {
+                return constant() != 0.0;
+        }
+        mutation_tree_t operator-() const {
+                mutation_tree_t tree(*this);
+                tree *= -1.0;
+                return tree;
+        }
+        mutation_tree_t& operator*=(double c) {
+                _constant *= c;
+                return *this;
+        }
+        mutation_tree_t& operator*=(const mutation_tree_t& tree) {
+                mutation_tree_t* copy_left  = new mutation_tree_t(*this);
+                mutation_tree_t* copy_right = new mutation_tree_t(tree);
+
+                _mult     = true;
+                _sum      = false;
+                _pmut     = pmut_t();
+                _constant = 1.0;
+                _left     = copy_left;
+                _right    = copy_right;
+
+                clean();
+
+                return *this;
+        }
+        mutation_tree_t& operator+=(const mutation_tree_t& tree) {
+                mutation_tree_t* copy_left  = new mutation_tree_t(*this);
+                mutation_tree_t* copy_right = new mutation_tree_t(tree);
+
+                _mult     = false;
+                _sum      = true;
+                _pmut     = pmut_t();
+                _constant = 1.0;
+                _left     = copy_left;
+                _right    = copy_right;
+
+                clean();
+
+                return *this;
+        }
+
+        bool mult() const {
+                return _mult;
+        }
+        bool sum() const {
+                return _sum;
+        }
+        bool leaf() const {
+                return !mult() && !sum();
+        }
+        const pmut_t& pmut() const {
+                return _pmut;
+        }
+        double& constant() {
+                return _constant;
+        }
+        const double& constant() const {
+                return _constant;
+        }
+        mutation_tree_t& left() {
+                return *_left;
+        }
+        const mutation_tree_t& left() const {
+                return *_left;
+        }
+        const mutation_tree_t& right() const {
+                return *_right;
+        }
+        double eval() const {
+                if (leaf()) {
+                        return pmut().eval();
+                }
+                else {
+                        double result1 = left() .eval();
+                        double result2 = right().eval();
+                        if (mult()) {
+                                return constant()*result1*result2;
+                        }
+                        else {
+                                return constant()*(result1+result2);
+                        }
+                }
+        }
+
+private:
+        bool _mult;
+        bool _sum;
+        pmut_t _pmut;
+        double _constant;
+
+        mutation_tree_t* _left;
+        mutation_tree_t* _right;
 };
 
 class mutation_coefficient_t : public boost::unordered_map<mutation_product_t, double> {
@@ -158,5 +295,7 @@ size_t hash_value(const pmut_t& pmut);
 
 std::ostream& operator<< (std::ostream& o, const mutation_product_t& product);
 std::ostream& operator<< (std::ostream& o, const mutation_coefficient_t& coefficient);
+
+std::ostream& operator<< (std::ostream& o, const mutation_tree_t& tree);
 
 #endif /* PHYLOTREE_GRADIENT_COEFFICIENT_HH */

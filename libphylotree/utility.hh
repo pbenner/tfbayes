@@ -37,6 +37,9 @@ std::ostream& operator<< (std::ostream& o, const polynomial_t<code_t, alphabet_s
 std::ostream& operator<< (std::ostream& o, const polynomial_term_t<code_t, alphabet_size, mutation_coefficient_t>& term);
 std::ostream& operator<< (std::ostream& o, const polynomial_t<code_t, alphabet_size, mutation_coefficient_t>& polynomial);
 
+std::ostream& operator<< (std::ostream& o, const polynomial_term_t<code_t, alphabet_size, mutation_tree_t>& term);
+std::ostream& operator<< (std::ostream& o, const polynomial_t<code_t, alphabet_size, mutation_tree_t>& polynomial);
+
 size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent);
 
 #endif /* UTILITY_HH */

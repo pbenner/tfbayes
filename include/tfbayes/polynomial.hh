@@ -173,7 +173,7 @@ class polynomial_t : public boost::unordered_map<exponent_t<T, S>, C> {
 public:
         polynomial_t()
                 : boost::unordered_map<exponent_t<T, S>, C>() {}
-        polynomial_t(C constant)
+        polynomial_t(const C& constant)
                 : boost::unordered_map<exponent_t<T, S>, C>() {
                 operator+=(polynomial_term_t<T, S, C>(constant));
         }
@@ -182,11 +182,11 @@ public:
                 operator+=(term);
         }
 
-        polynomial_t<T, S, C>& operator+=(C constant) {
+        polynomial_t<T, S, C>& operator+=(const C& constant) {
                 operator+=(polynomial_term_t<T, S, C>(constant));
                 return *this;
         }
-        polynomial_t<T, S, C>& operator-=(C constant) {
+        polynomial_t<T, S, C>& operator-=(const C& constant) {
                 operator-=(polynomial_term_t<T, S, C>(constant));
                 return *this;
         }

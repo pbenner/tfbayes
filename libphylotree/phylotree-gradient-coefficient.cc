@@ -57,3 +57,31 @@ ostream& operator<< (ostream& o, const mutation_coefficient_t& coefficient) {
         o << "]";
         return o;
 }
+
+ostream& operator<< (ostream& o, const mutation_tree_t& tree) {
+
+        if (tree.leaf()) {
+                const pmut_t& pmut = tree.pmut();
+                if (pmut) {
+                        o << "M("    << pmut.node->name << ")";
+                }
+                else {
+                        o << "(1-M(" << pmut.node->name << "))";
+                }
+        }
+        else {
+                if (tree.constant() != 1.0) {
+                        o << tree.constant();
+                }
+                o << "(" << tree.left() << ")";
+                if (tree.mult()) {
+                        o << "*";
+                }
+                if (tree.sum()) {
+                        o << "+";
+                }
+                o << "(" << tree.right() << ")";
+        }
+
+        return o;
+}
