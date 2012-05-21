@@ -24,7 +24,6 @@
 
 #include <set>
 #include <boost/unordered_map.hpp>
-#include <ostream>
 
 #include <phylotree.hh>
 
@@ -226,6 +225,8 @@ private:
 };
 
 size_t hash_value(const pmut_t& pmut);
+
+#include <ostream>
 
 std::ostream& operator<< (std::ostream& o, const mutation_tree_t& tree);
 

@@ -95,6 +95,7 @@ void test_tree1() {
         cout << result1.normalization().eval(p).eval()
              << endl;
         cout << result2.eval(p)
+             << endl
              << endl;
 }
 
@@ -113,7 +114,12 @@ void test_tree2() {
         pt_gradient_t  <code_t, alphabet_size> result1(&n1);
         pt_polynomial_t<code_t, alphabet_size> result2(&n1);
 
-        cout << result1.normalization() << endl;
+        cout << "likelihood: "
+             << result1.normalization()
+             << endl << endl;
+        cout << "gradient: "
+             << result1[&n7]
+             << endl << endl;
 
         boost::array<double, alphabet_size> p;
         p[0] = 0.25;
@@ -121,9 +127,11 @@ void test_tree2() {
         p[2] = 0.25;
         p[3] = 0.25;
 
-        cout << result1.normalization().eval(p).eval()
+        cout << "eval: "
+             << result1.normalization().eval(p).eval()
              << endl;
-        cout << result2.eval(p)
+        cout << "eval: "
+             << result2.eval(p)
              << endl;
 }
 
