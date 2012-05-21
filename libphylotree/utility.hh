@@ -34,9 +34,6 @@ std::ostream& operator<< (std::ostream& o, const exponent_t<code_t, alphabet_siz
 std::ostream& operator<< (std::ostream& o, const polynomial_term_t<code_t, alphabet_size>& term);
 std::ostream& operator<< (std::ostream& o, const polynomial_t<code_t, alphabet_size>& polynomial);
 
-std::ostream& operator<< (std::ostream& o, const polynomial_term_t<code_t, alphabet_size, mutation_coefficient_t>& term);
-std::ostream& operator<< (std::ostream& o, const polynomial_t<code_t, alphabet_size, mutation_coefficient_t>& polynomial);
-
 std::ostream& operator<< (std::ostream& o, const polynomial_term_t<code_t, alphabet_size, mutation_tree_t>& term);
 std::ostream& operator<< (std::ostream& o, const polynomial_t<code_t, alphabet_size, mutation_tree_t>& polynomial);
 

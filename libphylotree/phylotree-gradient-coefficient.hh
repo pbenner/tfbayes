@@ -25,7 +25,6 @@
 #include <set>
 #include <boost/unordered_map.hpp>
 #include <ostream>
-#include <iostream>
 
 #include <phylotree.hh>
 
@@ -36,8 +35,8 @@ public:
         pmut_t(pt_node_t* node, bool mutation = true)
                 : node(node), mutation(mutation) { }
 
-        operator bool() const {
-                return node != NULL;
+        bool operator!() const {
+                return node == NULL;
         }
         bool operator==(const pmut_t& m) const {
                 return node == m.node && mutation == m.mutation;
@@ -52,7 +51,7 @@ public:
                 return false;
         }
         double eval() const {
-                if (!operator bool()) {
+                if (operator!()) {
                         return 1.0;
                 }
                 if (mutation) {
@@ -67,35 +66,6 @@ public:
         bool mutation;
 };
 
-class mutation_product_t : public std::multiset<pmut_t> {
-public:
-        mutation_product_t()
-                : std::multiset<pmut_t>() {}
-        mutation_product_t(const pmut_t& mutation)
-                : std::multiset<pmut_t>() {
-                insert(mutation);
-        }
-
-        mutation_product_t operator*=(const pmut_t& mutation) {
-                insert(mutation);
-                return *this;
-        }
-        mutation_product_t operator*=(const mutation_product_t& product) {
-
-                for (mutation_product_t::const_iterator it = product.begin(); it != product.end(); it++) {
-                        operator*=(*it);
-                }
-                return *this;
-        }
-        double eval() const {
-                double result = 1.0;
-                for (mutation_product_t::const_iterator it = begin(); it != end(); it++) {
-                        result *= it->eval();
-                }
-                return result;
-        }
-};
-
 class mutation_tree_t {
 public:
         mutation_tree_t()
@@ -107,21 +77,15 @@ public:
         mutation_tree_t(const mutation_tree_t& tree)
                 : _mult(tree._mult), _sum(tree._sum), _pmut(tree._pmut), _constant(tree._constant),
                   _left(NULL), _right(NULL) {
-                if (!tree.leaf()) {
-                        _left  = new mutation_tree_t(*tree._left);
-                        _right = new mutation_tree_t(*tree._right);
-                }
+                if (tree._left ) { _left  = new mutation_tree_t(*tree._left ); }
+                if (tree._right) { _right = new mutation_tree_t(*tree._right); }
         }
-        // mutation_tree_t(const mutation_tree_t& left, const mutation_tree_t& right,
-        //                 bool mult = false, bool sum = false)
-        //         : _mult(mult), _sum(sum), _pmut(), _constant(1.0),
-        //           _left(new mutation_tree_t(left)), _right(new mutation_tree_t(right)) { }
         mutation_tree_t(const pmut_t& pmut)
                 : _mult(false), _sum(false), _pmut(pmut), _constant(1.0),
                   _left(NULL), _right(NULL) { }
         ~mutation_tree_t() {
-                if (!_left ) { delete(_left ); }
-                if (!_right) { delete(_right); }
+                if (!_left ) { delete(_left ); _left  = NULL; }
+                if (!_right) { delete(_right); _right = NULL; }
         }
 
         void clean() {
@@ -138,24 +102,44 @@ public:
                 }
         }
 
-        operator bool() const {
-                return constant() != 0.0;
+        bool operator==(const mutation_tree_t& tree) const {
+                bool result = true;
+                if ((_left  && tree._left  == NULL) || (_left  == NULL && tree._left )) {
+                        return false;
+                }
+                if ((_right && tree._right == NULL) || (_right == NULL && tree._right)) {
+                        return false;
+                }
+                result = result && (this->sum     () == tree.sum     ());
+                result = result && (this->mult    () == tree.mult    ());
+                result = result && (this->pmut    () == tree.pmut    ());
+                result = result && (this->constant() == tree.constant());
+                if (_left  && tree._left ) {
+                        result = result && (this->left()  == tree.left ());
+                }
+                if (_right && tree._right) {
+                        result = result && (this->right() == tree.right());
+                }
+                return result;
+        }
+        bool operator!=(const mutation_tree_t& tree) const {
+                return !operator==(tree);
+        }
+        bool operator!() const {
+                return constant() == 0.0;
         }
         mutation_tree_t operator-() const {
-                std::cout << "debug '-': " << *this << std::endl;
 
                 mutation_tree_t tree(*this);
                 tree *= -1.0;
                 return tree;
         }
         mutation_tree_t& operator*=(double c) {
-                std::cout << "debug '*=': " << *this << "*" << c << std::endl;
                 _constant *= c;
                 return *this;
         }
         mutation_tree_t& operator*=(const mutation_tree_t& tree) {
-                std::cout << "debug: '*='" << *this << "*" << tree << std::endl;
-                if (tree == mutation_tree_t(1.0)) {
+                if (tree  == mutation_tree_t(1.0)) {
                         return *this;
                 }
                 if (*this == mutation_tree_t(1.0)) {
@@ -173,13 +157,10 @@ public:
                 _left     = copy_left;
                 _right    = copy_right;
 
-                //clean();
-
                 return *this;
         }
         mutation_tree_t& operator+=(const mutation_tree_t& tree) {
-                std::cout << "debug '+=': " << *this << "+" << tree << std::endl;
-                if (tree == mutation_tree_t(0.0)) {
+                if ( tree == mutation_tree_t(0.0)) {
                         return *this;
                 }
                 if (*this == mutation_tree_t(0.0)) {
@@ -196,8 +177,6 @@ public:
                 _constant = 1.0;
                 _left     = copy_left;
                 _right    = copy_right;
-
-                //clean();
 
                 return *this;
         }
@@ -231,8 +210,8 @@ public:
         }
         double eval() const {
                 if (leaf()) {
-                        if (pmut()) {
-                                return constant()*pmut();
+                        if (!!pmut()) {
+                                return constant()*pmut().eval();
                         }
                         else {
                                 return pmut().eval();
@@ -260,72 +239,7 @@ private:
         mutation_tree_t* _right;
 };
 
-class mutation_coefficient_t : public boost::unordered_map<mutation_product_t, double> {
-public:
-        mutation_coefficient_t()
-                : boost::unordered_map<mutation_product_t, double>() {}
-        mutation_coefficient_t(double constant)
-                : boost::unordered_map<mutation_product_t, double>() {
-                operator[](mutation_product_t()) += constant;
-        }
-        mutation_coefficient_t(const pmut_t& mutation)
-                : boost::unordered_map<mutation_product_t, double>() {
-                operator[](mutation) += 1.0;
-        }
-        mutation_coefficient_t(const mutation_product_t& product)
-                : boost::unordered_map<mutation_product_t, double>() {
-                operator[](product) += 1.0;
-        }
-
-        operator bool() const {
-                return size();
-        }
-        mutation_coefficient_t operator-() const {
-                mutation_coefficient_t coefficient;
-                for (mutation_coefficient_t::const_iterator it = begin(); it != end(); it++) {
-                        coefficient[it->first] = -(find(it->first)->second);
-                }
-                return coefficient;
-        }
-        mutation_coefficient_t operator+=(
-                const mutation_coefficient_t& coefficient) {
-
-                for (mutation_coefficient_t::const_iterator it = coefficient.begin(); it != coefficient.end(); it++) {
-                        operator[](it->first) += it->second;
-                        if (operator[](it->first) == 0.0) {
-                                erase(it->first);
-                        }
-                }
-                return *this;
-        }
-        mutation_coefficient_t operator*=(
-                const mutation_coefficient_t& coefficient) {
-
-                mutation_coefficient_t tmp;
-                for (mutation_coefficient_t::const_iterator it = begin(); it != end(); it++) {
-                        for (mutation_coefficient_t::const_iterator is = coefficient.begin(); is != coefficient.end(); is++) {
-                                mutation_product_t product(it->first);
-                                product      *= (is->first);
-                                tmp[product] += (it->second)*(is->second);
-                        }
-                }
-                operator=(tmp);
-
-                return *this;
-        }
-        double eval() const {
-                double result = 0.0;
-                for (mutation_coefficient_t::const_iterator it = begin(); it != end(); it++) {
-                        result += it->first.eval()*it->second;
-                }
-                return result;
-        }
-};
-
 size_t hash_value(const pmut_t& pmut);
-
-std::ostream& operator<< (std::ostream& o, const mutation_product_t& product);
-std::ostream& operator<< (std::ostream& o, const mutation_coefficient_t& coefficient);
 
 std::ostream& operator<< (std::ostream& o, const mutation_tree_t& tree);
 

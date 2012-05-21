@@ -53,26 +53,6 @@ ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size>& poly
         return o;
 }
 
-ostream& operator<< (ostream& o, const polynomial_term_t<code_t, alphabet_size, mutation_coefficient_t>& term) {
-        o << term.coefficient()
-          << term.exponent();
-
-        return o;
-}
-ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size, mutation_coefficient_t>& polynomial) {
-        for (polynomial_t<code_t, alphabet_size, mutation_coefficient_t>::const_iterator it = polynomial.begin();
-             it != polynomial.end(); it++) {
-                if (it != polynomial.begin()) {
-                        o << " + " << *it;
-                }
-                else {
-                        o << *it;
-                }
-        }
-
-        return o;
-}
-
 ostream& operator<< (ostream& o, const polynomial_term_t<code_t, alphabet_size, mutation_tree_t>& term) {
         o << term.coefficient()
           << term.exponent();

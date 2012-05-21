@@ -191,7 +191,7 @@ public:
                 return *this;
         }
         polynomial_t<T, S, C>& operator+=(const polynomial_term_t<T, S, C>& term) {
-                if (term.coefficient()) {
+                if (term.coefficient() != 0.0) {
                         operator[](term.exponent()) += term.coefficient();
                         if (operator[](term.exponent()) == 0.0) {
                                 erase(term.exponent());

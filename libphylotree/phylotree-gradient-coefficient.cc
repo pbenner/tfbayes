@@ -29,40 +29,53 @@ hash_value(const pmut_t& pmut)
         return (size_t)pmut.node;
 }
 
-ostream& operator<< (ostream& o, const mutation_product_t& product) {
-        for (mutation_product_t::const_iterator it = product.begin(); it != product.end(); it++) {
-                const pmut_t& pmut = *it;
-                if (pmut.mutation) {
-                        o << "M("    << pmut.node->name << ") ";
-                }
-                else {
-                        o << "(1-M(" << pmut.node->name << ")) ";
-                }
-        }
-        return o;
-}
+// ostream& operator<< (ostream& o, const mutation_product_t& product) {
+//         for (mutation_product_t::const_iterator it = product.begin(); it != product.end(); it++) {
+//                 const pmut_t& pmut = *it;
+//                 if (pmut.mutation) {
+//                         o << "M("    << pmut.node->name << ") ";
+//                 }
+//                 else {
+//                         o << "(1-M(" << pmut.node->name << ")) ";
+//                 }
+//         }
+//         return o;
+// }
 
-ostream& operator<< (ostream& o, const mutation_coefficient_t& coefficient) {
+// ostream& operator<< (ostream& o, const mutation_coefficient_t& coefficient) {
 
-        o << "[ ";
-        for (mutation_coefficient_t::const_iterator it = coefficient.begin(); it != coefficient.end(); it++) {
-                if (it != coefficient.begin()) {
-                        o << "+ ";
-                }
-                if (it->second != 1.0) {
-                        o << it->second << " ";
-                }
-                o << it->first;
-        }
-        o << "]";
-        return o;
-}
+//         o << "[ ";
+//         for (mutation_coefficient_t::const_iterator it = coefficient.begin(); it != coefficient.end(); it++) {
+//                 if (it != coefficient.begin()) {
+//                         o << "+ ";
+//                 }
+//                 if (it->second != 1.0) {
+//                         o << it->second << " ";
+//                 }
+//                 o << it->first;
+//         }
+//         o << "]";
+//         return o;
+// }
 
 ostream& operator<< (ostream& o, const mutation_tree_t& tree) {
 
         if (tree.leaf()) {
+//                cout << "leaf" << endl;
+                // if (tree.pmut()) {
+                //         cout << "PMUT1 true" << endl;
+                // }
+                // else {
+                //         cout << "PMUT1 false" << endl;
+                // }
                 const pmut_t& pmut = tree.pmut();
-                if (pmut) {
+                // if (pmut) {
+                //         cout << "PMUT2 true" << endl;
+                // }
+                // else {
+                //         cout << "PMUT2 false" << endl;
+                // }
+                if (!!pmut) {
                         if (tree.constant() != 1.0) {
                                 o << tree.constant();
                         }
@@ -78,6 +91,7 @@ ostream& operator<< (ostream& o, const mutation_tree_t& tree) {
                 }
         }
         else {
+//                cout << "no leaf" << endl;
                 if (tree.constant() != 1.0) {
                         o << tree.constant();
                 }
