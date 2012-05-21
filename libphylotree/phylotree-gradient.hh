@@ -31,10 +31,10 @@
 #include <phylotree-gradient-coefficient.hh>
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-class pt_gradient_t : public boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> > {
+class pt_gradient_t : public boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> > {
 public:
         pt_gradient_t(const pt_root_t* root)
-                : boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> >() {
+                : boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> >() {
 
                 get_nodes(root);
                 partial_t partial = gradient_rec(root);
@@ -50,27 +50,27 @@ public:
         double eval(const pt_node_t* which, const boost::array<double, ALPHABET_SIZE>& p) const {
                 return find(which)->second.eval(p)/normalization().eval(p);
         }
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> normalization() const {
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> normalization() const {
                 return _normalization;
         }
 
-        using boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> >::operator[];
-        using boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> >::find;
+        using boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> >::operator[];
+        using boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> >::find;
 
 private:
-        typedef boost::unordered_map<pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> > derivatives_t;
-        typedef boost::array<polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t>, ALPHABET_SIZE+1> carry_t;
+        typedef boost::unordered_map<pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> > derivatives_t;
+        typedef boost::array<polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t>, ALPHABET_SIZE+1> carry_t;
 
         class partial_t : public carry_t {
         public:
                 boost::unordered_map<const pt_node_t*, carry_t> derivatives;
         };
 
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> poly_sum(const carry_t& carry) {
-                polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> poly_sum;
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> poly_sum(const carry_t& carry) {
+                polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> poly_sum;
 
                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> term(1.0);
+                        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> term(1.0);
                         term.exponent()[i] = 1;
                         poly_sum += term*carry[i];
                 }
@@ -93,19 +93,19 @@ private:
                 partial_t& partial_left,
                 partial_t& partial_right) {
 
-                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> pm_left (pmut_t(node->left,  true));
-                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> pm_right(pmut_t(node->right, true));
-                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> pn_left (pmut_t(node->left,  false));
-                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> pn_right(pmut_t(node->right, false));
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> pm_left (pmut_t(node->left,  true));
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> pm_right(pmut_t(node->right, true));
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> pn_left (pmut_t(node->left,  false));
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> pn_right(pmut_t(node->right, false));
 
-                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> dpm_left ( pn_left );
-                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> dpm_right( pn_right);
-                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> dpn_left (-pn_left );
-                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> dpn_right(-pn_right);
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> dpm_left ( pn_left );
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> dpm_right( pn_right);
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> dpn_left (-pn_left );
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> dpn_right(-pn_right);
 
                 partial_t partial;
-                const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> poly_sum_left  = poly_sum(partial_left);
-                const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> poly_sum_right = poly_sum(partial_right);
+                const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> poly_sum_left  = poly_sum(partial_left);
+                const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> poly_sum_right = poly_sum(partial_right);
 
                 partial[ALPHABET_SIZE] +=
                         (pn_left *partial_left [ALPHABET_SIZE] + pm_left *poly_sum_left)*
@@ -122,8 +122,8 @@ private:
                 for (nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
                         const pt_node_t* which = *it;
 
-                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> deri_sum_left  = poly_sum(partial_left.derivatives[which]);
-                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> deri_sum_right = poly_sum(partial_right.derivatives[which]);
+                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> deri_sum_left  = poly_sum(partial_left.derivatives[which]);
+                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> deri_sum_right = poly_sum(partial_right.derivatives[which]);
                         /* Gradient of sigma
                          */
                         if (node->left == which) {
@@ -215,7 +215,7 @@ private:
         }
 
         nodes_t _nodes;
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_coefficient_t> _normalization;
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> _normalization;
 };
 
 #endif /* PHYLOTREE_GRADIENT_HH */

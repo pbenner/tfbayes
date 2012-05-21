@@ -143,9 +143,21 @@ void test_tree3() {
         pt_leaf_t n3( 2, 0.30, "n3");
         pt_root_t n1(-1, &n2, &n3);
 
-        pt_gradient_t<code_t, alphabet_size> result(&n1);
+        pt_gradient_t  <code_t, alphabet_size> result1(&n1);
+        pt_polynomial_t<code_t, alphabet_size> result2(&n1);
 
-        cout << result.normalization() << endl;
+        cout << result1.normalization() << endl;
+
+        boost::array<double, alphabet_size> p;
+        p[0] = 0.25;
+        p[1] = 0.25;
+        p[2] = 0.25;
+        p[3] = 0.25;
+
+        cout << result1.normalization().eval(p).eval()
+             << endl;
+        cout << result2.eval(p)
+             << endl;
 }
 
 void test_tree4() {
@@ -192,23 +204,30 @@ void test_tree5() {
         mutation_tree_t tree1(pmut_t(&n9, false));
         mutation_tree_t tree2(pmut_t(&n8, true));
 
+        cout << tree2 << endl;
+
         tree1 += tree2;
         tree1 *= tree2;
 
         cout <<  tree1 << endl;
-        cout << -tree1 << endl;
-        cout <<  tree1 << endl;
+        // cout << -tree1 << endl;
+        // cout <<  tree1 << endl;
 
-        polynomial_t<code_t, alphabet_size, mutation_tree_t> poly1(tree1);
-        cout << poly1*poly1+poly1 << endl;
+        // polynomial_t<code_t, alphabet_size, mutation_tree_t> poly1(tree1);
+        // polynomial_t<code_t, alphabet_size, mutation_tree_t> poly2(1.0);
+        // polynomial_t<code_t, alphabet_size, mutation_tree_t> poly3(0.0);
+        // cout << poly1*poly1+poly1 << endl;
+        // cout << poly1*poly1*poly2 << endl;
 
+        // poly3 += poly2;
+        // cout << poly3 << endl;
 }
 
 int main(void) {
 //        test_tree1();
 //        test_tree2();
-        test_tree3();
-        test_tree4();
+        // test_tree3();
+        // test_tree4();
         test_tree5();
 
         alignment_t alignment("test.fa");

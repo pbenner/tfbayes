@@ -25,6 +25,7 @@
 #include <set>
 #include <boost/unordered_map.hpp>
 #include <ostream>
+#include <iostream>
 
 #include <phylotree.hh>
 
@@ -36,7 +37,7 @@ public:
                 : node(node), mutation(mutation) { }
 
         operator bool() const {
-                return mutation;
+                return node != NULL;
         }
         bool operator==(const pmut_t& m) const {
                 return node == m.node && mutation == m.mutation;
@@ -51,6 +52,9 @@ public:
                 return false;
         }
         double eval() const {
+                if (!operator bool()) {
+                        return 1.0;
+                }
                 if (mutation) {
                         return 1.0-exp(-node->d);
                 }
@@ -60,8 +64,6 @@ public:
         }
 
         pt_node_t* node;
-
-private:
         bool mutation;
 };
 
@@ -99,6 +101,9 @@ public:
         mutation_tree_t()
                 : _mult(false), _sum(false), _pmut(), _constant(0.0),
                   _left(NULL ), _right(NULL) { }
+        mutation_tree_t(double c)
+                : _mult(false), _sum(false), _pmut(), _constant(c),
+                  _left(NULL ), _right(NULL) { }
         mutation_tree_t(const mutation_tree_t& tree)
                 : _mult(tree._mult), _sum(tree._sum), _pmut(tree._pmut), _constant(tree._constant),
                   _left(NULL), _right(NULL) {
@@ -123,11 +128,11 @@ public:
                 if (leaf()) {
                         return;
                 }
-                if (!left()) {
+                if (_left != NULL && !left()) {
                         delete(_left);
                         (*this) = right();
                 }
-                if (!right()) {
+                if (_right != NULL && !right()) {
                         delete(_right);
                         (*this) = left();
                 }
@@ -137,15 +142,27 @@ public:
                 return constant() != 0.0;
         }
         mutation_tree_t operator-() const {
+                std::cout << "debug '-': " << *this << std::endl;
+
                 mutation_tree_t tree(*this);
                 tree *= -1.0;
                 return tree;
         }
         mutation_tree_t& operator*=(double c) {
+                std::cout << "debug '*=': " << *this << "*" << c << std::endl;
                 _constant *= c;
                 return *this;
         }
         mutation_tree_t& operator*=(const mutation_tree_t& tree) {
+                std::cout << "debug: '*='" << *this << "*" << tree << std::endl;
+                if (tree == mutation_tree_t(1.0)) {
+                        return *this;
+                }
+                if (*this == mutation_tree_t(1.0)) {
+                        *this = tree;
+                        return *this;
+                }
+
                 mutation_tree_t* copy_left  = new mutation_tree_t(*this);
                 mutation_tree_t* copy_right = new mutation_tree_t(tree);
 
@@ -156,11 +173,20 @@ public:
                 _left     = copy_left;
                 _right    = copy_right;
 
-                clean();
+                //clean();
 
                 return *this;
         }
         mutation_tree_t& operator+=(const mutation_tree_t& tree) {
+                std::cout << "debug '+=': " << *this << "+" << tree << std::endl;
+                if (tree == mutation_tree_t(0.0)) {
+                        return *this;
+                }
+                if (*this == mutation_tree_t(0.0)) {
+                        *this = tree;
+                        return *this;
+                }
+
                 mutation_tree_t* copy_left  = new mutation_tree_t(*this);
                 mutation_tree_t* copy_right = new mutation_tree_t(tree);
 
@@ -171,7 +197,7 @@ public:
                 _left     = copy_left;
                 _right    = copy_right;
 
-                clean();
+                //clean();
 
                 return *this;
         }
@@ -183,7 +209,7 @@ public:
                 return _sum;
         }
         bool leaf() const {
-                return !mult() && !sum();
+                return !(mult() || sum());
         }
         const pmut_t& pmut() const {
                 return _pmut;
@@ -205,7 +231,12 @@ public:
         }
         double eval() const {
                 if (leaf()) {
-                        return pmut().eval();
+                        if (pmut()) {
+                                return constant()*pmut();
+                        }
+                        else {
+                                return pmut().eval();
+                        }
                 }
                 else {
                         double result1 = left() .eval();

@@ -31,12 +31,12 @@ hash_value(const pmut_t& pmut)
 
 ostream& operator<< (ostream& o, const mutation_product_t& product) {
         for (mutation_product_t::const_iterator it = product.begin(); it != product.end(); it++) {
-                const pmut_t& mutation = *it;
-                if (mutation) {
-                        o << "M(" << mutation.node->name << ") ";
+                const pmut_t& pmut = *it;
+                if (pmut.mutation) {
+                        o << "M("    << pmut.node->name << ") ";
                 }
                 else {
-                        o << "(1-M(" << mutation.node->name << ")) ";
+                        o << "(1-M(" << pmut.node->name << ")) ";
                 }
         }
         return o;
@@ -63,10 +63,18 @@ ostream& operator<< (ostream& o, const mutation_tree_t& tree) {
         if (tree.leaf()) {
                 const pmut_t& pmut = tree.pmut();
                 if (pmut) {
-                        o << "M("    << pmut.node->name << ")";
+                        if (tree.constant() != 1.0) {
+                                o << tree.constant();
+                        }
+                        if (pmut.mutation) {
+                                o << "M("    << pmut.node->name << ")";
+                        }
+                        else {
+                                o << "(1-M(" << pmut.node->name << "))";
+                        }
                 }
                 else {
-                        o << "(1-M(" << pmut.node->name << "))";
+                        o << tree.constant();
                 }
         }
         else {
