@@ -21,59 +21,15 @@
 
 #include <iostream>
 
+#include <alignment.hh>
+#include <phylotree.hh>
+#include <phylotree-parser.hh>
 #include <phylotree-polynomial.hh>
 #include <phylotree-gradient.hh>
+#include <marginal-likelihood.hh>
 #include <utility.hh>
 
 using namespace std;
-
-#include <tfbayes/fasta.hh>
-
-static
-const string strip(const std::string& str)
-{
-        const std::string& whitespace = " \t\n";
-        const size_t begin = str.find_first_not_of(whitespace);
-        if (begin == string::npos) {
-                return "";
-        }
-        const size_t end   = str.find_last_not_of(whitespace);
-        const size_t range = end - begin + 1;
-
-        return str.substr(begin, range);
-}
-
-static
-vector<string> token(const string& str, char t) {
-        string token;
-        vector<string> tokens;
-        istringstream iss(str);
-        while (getline(iss, token, t)) {
-                tokens.push_back(strip(token));
-        }
-        return tokens;
-}
-
-#include <set>
-#include <boost/unordered_map.hpp>
-
-class alignment_t : public boost::unordered_map<string, string> {
-public:
-        alignment_t(const char* filename)
-                : boost::unordered_map<string, string>() {
-
-                FastaParser parser(filename);
-                string sequence;
-
-                while ((sequence = parser.read_sequence()) != "") {
-                        string taxon = token(parser.description()[0], '.')[0];
-                        taxa.insert(taxon);
-                        operator[](taxon) = sequence;
-                }
-        }
-
-        set<string> taxa;
-};
 
 void test_tree1() {
         cout << "Test 1:" << endl;
@@ -81,7 +37,7 @@ void test_tree1() {
         pt_leaf_t n3( 2, 0.30, "n3");
         pt_root_t n1(-1, &n2, &n3);
 
-        pt_gradient_t  <code_t, alphabet_size> result1(&n1);
+        pt_symbolic_gradient_t  <code_t, alphabet_size> result1(&n1);
         pt_polynomial_t<code_t, alphabet_size> result2(&n1);
 
         cout << result1.normalization() << endl;
@@ -111,13 +67,14 @@ void test_tree2() {
         pt_node_t n2(-1, 2.0, &n4, &n5, "n2");
         pt_root_t n1(-1, &n2, &n3,      "n1");
 
-        pt_gradient_t  <code_t, alphabet_size> result1(&n1);
-        pt_polynomial_t<code_t, alphabet_size> result2(&n1);
+        pt_symbolic_gradient_t  <code_t, alphabet_size> result1(&n1);
+        pt_gradient_t  <code_t, alphabet_size> result2(&n1);
+        pt_polynomial_t<code_t, alphabet_size> result3(&n1);
 
-        cout << "likelihood: "
+        cout << "symbolic likelihood: "
              << result1.normalization()
              << endl << endl;
-        cout << "gradient: "
+        cout << "symbolic gradient: "
              << result1[&n7]
              << endl << endl;
 
@@ -131,7 +88,10 @@ void test_tree2() {
              << result1.normalization().eval(p).eval()
              << endl;
         cout << "eval: "
-             << result2.eval(p)
+             << result2.normalization().eval(p)
+             << endl;
+        cout << "eval: "
+             << result3.eval(p)
              << endl;
 }
 
@@ -163,12 +123,65 @@ void test_tree3() {
         cout << poly1*poly1*poly2 << endl;
 }
 
+void gradient_ascent(alignment_t<code_t>& alignment, const exponent_t<code_t, alphabet_size>& alpha) {
+        pt_node_t::nodes_t nodes = alignment.tree->get_nodes();
+        boost::unordered_map<pt_node_t*, double> sum;
+        gamma_gradient_t gamma_gradient(0.2, 0.4);
+
+        // initialize sum with gradients of the gamma distribution
+        for (pt_node_t::nodes_t::iterator it = nodes.begin(); it != nodes.end(); it++) {
+                sum[*it] = gamma_gradient.eval((*it)->d);
+        }
+
+        // loop through the alignment
+        for (alignment_t<code_t>::iterator it = alignment.begin(); it != alignment.end(); it++) {
+                pt_gradient_t<code_t, alphabet_size> gradient(alignment.tree);
+
+                double norm = 0;
+                // loop over monomials
+                for (polynomial_t<code_t, alphabet_size>::const_iterator ut = gradient.normalization().begin();
+                     ut != gradient.normalization().end(); ut++) {
+                        norm += ut->coefficient()*exp(mbeta_log(ut->exponent(), alpha));
+                }
+                // loop over nodes
+                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                        double result = 0;
+                        for (polynomial_t<code_t, alphabet_size>::const_iterator ut = gradient[*is].begin();
+                             ut != gradient[*is].end(); ut++) {
+                                result += ut->coefficient()*exp(mbeta_log(ut->exponent(), alpha));
+                        }
+                        sum[*is] += result/norm;
+                        cout << "result: "
+                             << result/norm
+                             << endl;
+                }
+        }
+}
+
+void test_tree4() {
+        yyparse();
+        pt_root_t* pt_root = (pt_root_t*)pt_parsetree->convert();
+
+        pt_root->init(alphabet_size);
+
+        alignment_t<code_t> alignment("test.fa", pt_root);
+
+        cout << pt_root
+             << endl;
+
+        exponent_t<code_t, alphabet_size> alpha;
+        alpha[0] = 1;
+        alpha[1] = 1;
+        alpha[2] = 1;
+        alpha[3] = 1;
+        gradient_ascent(alignment, alpha);
+}
+
 int main(void) {
         test_tree1();
         test_tree2();
         test_tree3();
-
-        alignment_t alignment("test.fa");
+        test_tree4();
 
         return 0.0;
 }
