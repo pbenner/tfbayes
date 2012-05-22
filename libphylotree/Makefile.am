@@ -9,7 +9,7 @@ BUILT_SOURCES = phylotree-parser.h
 AM_YFLAGS = -d
 AM_LFLAGS = -o$(LEX_OUTPUT_ROOT).c
 
-bin_PROGRAMS = polynomial-test phylotree-expand-test phylotree-parser-test gradient-test likelihood-test likelihood-prime-test marginal-likelihood-test
+bin_PROGRAMS = polynomial-test phylotree-expand-test phylotree-parser-test gradient-test gradient-ascent-test likelihood-test likelihood-prime-test marginal-likelihood-test
 
 polynomial_test_SOURCES = polynomial-test.cc
 polynomial_test_LDADD   = -lm
@@ -25,7 +25,11 @@ phylotree_parser_test_LDADD  += libphylotree.la
 gradient_test_SOURCES = gradient-test.cc
 gradient_test_LDADD   = -lm
 gradient_test_LDADD  += libphylotree.la
-gradient_test_LDADD  += ../tfbayes/fasta/libfasta.la
+
+gradient_ascent_test_SOURCES = gradient-ascent-test.cc
+gradient_ascent_test_LDADD   = -lm
+gradient_ascent_test_LDADD  += libphylotree.la
+gradient_ascent_test_LDADD  += ../tfbayes/fasta/libfasta.la
 
 likelihood_test_SOURCES = likelihood-test.cc
 likelihood_test_LDADD   = -lm

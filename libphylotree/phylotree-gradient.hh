@@ -48,23 +48,20 @@ public:
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_symbolic_gradient_t : public boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> > {
 public:
-        pt_symbolic_gradient_t(const pt_root_t* root)
+        pt_symbolic_gradient_t(pt_root_t* root)
                 : boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> >() {
 
-                get_nodes(root);
+                _nodes = root->get_nodes();
                 partial_t partial = gradient_rec(root);
                 _normalization = poly_sum(partial);
 
-                for (nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
+                for (pt_node_t::nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
                         const pt_node_t* which = *it;
 
                         operator[](which) = poly_sum(partial.derivatives[which]);
                 }
         }
 
-        double eval(const pt_node_t* which, const boost::array<double, ALPHABET_SIZE>& p) const {
-                return find(which)->second.eval(p)/normalization().eval(p);
-        }
         polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> normalization() const {
                 return _normalization;
         }
@@ -134,7 +131,7 @@ private:
                         partial[i] += pn_left *pn_right*partial_left [i]*partial_right[i];
                 }
 
-                for (nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
+                for (pt_node_t::nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
                         const pt_node_t* which = *it;
 
                         const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> deri_sum_left  = poly_sum(partial_left.derivatives[which]);
@@ -213,47 +210,28 @@ private:
                 }
         }
 
-        /******************************************************************************
-         * Construct a stack of nodes
-         ******************************************************************************/
-
-        typedef std::set<const pt_node_t*> nodes_t;
-
-        void get_nodes(const pt_node_t* node) {
-                if (!node->root()) {
-                        _nodes.insert(node);
-                }
-                if (!node->leaf()) {
-                        get_nodes(node->left);
-                        get_nodes(node->right);
-                }
-        }
-
-        nodes_t _nodes;
+        pt_node_t::nodes_t _nodes;
         polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> _normalization;
 };
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_gradient_t : public boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> > {
 public:
-        pt_gradient_t(const pt_root_t* root)
+        pt_gradient_t(pt_root_t* root)
                 : boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> >() { 
 
-                get_nodes(root);
+                _nodes = root->get_nodes();
                 partial_t partial = gradient_rec(root);
                 _normalization = poly_sum(partial);
 
-                for (nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
+                for (pt_node_t::nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
                         const pt_node_t* which = *it;
 
                         operator[](which) = poly_sum(partial.derivatives[which]);
                 }
         }
 
-        double eval(const pt_node_t* which, const boost::array<double, ALPHABET_SIZE>& p) const {
-                return find(which)->second.eval(p)/normalization().eval(p);
-        }
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> normalization() const {
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& normalization() const {
                 return _normalization;
         }
 
@@ -322,7 +300,7 @@ private:
                         partial[i] += pn_left *pn_right*partial_left [i]*partial_right[i];
                 }
 
-                for (nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
+                for (pt_node_t::nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
                         const pt_node_t* which = *it;
 
                         const polynomial_t<CODE_TYPE, ALPHABET_SIZE> deri_sum_left  = poly_sum(partial_left.derivatives[which]);
@@ -401,24 +379,67 @@ private:
                 }
         }
 
-        /******************************************************************************
-         * Construct a stack of nodes
-         ******************************************************************************/
+        pt_node_t::nodes_t _nodes;
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE> _normalization;
+};
 
-        typedef std::set<const pt_node_t*> nodes_t;
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+class pt_gradient_ascent_t
+{
+public:
+        pt_gradient_ascent_t(alignment_t<CODE_TYPE>& alignment,
+                             const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
+                             double r, double lambda, double epsilon = 0.001)
+                : alignment(alignment), alpha(alpha), gamma_gradient(r, lambda), epsilon(epsilon) { }
 
-        void get_nodes(const pt_node_t* node) {
-                if (!node->root()) {
-                        _nodes.insert(node);
+        void run() {
+                pt_node_t::nodes_t nodes = alignment.tree->get_nodes();
+                boost::unordered_map<pt_node_t*, double> sum;
+
+                // initialize sum with gradients of the gamma distribution
+                for (pt_node_t::nodes_t::iterator it = nodes.begin(); it != nodes.end(); it++) {
+                        sum[*it] = gamma_gradient.eval((*it)->d);
                 }
-                if (!node->leaf()) {
-                        get_nodes(node->left);
-                        get_nodes(node->right);
+
+                // loop through the alignment
+                for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
+                        pt_gradient_t<CODE_TYPE, ALPHABET_SIZE> gradient(alignment.tree);
+
+                        double norm = 0;
+                        // loop over monomials
+                        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = gradient.normalization().begin();
+                             ut != gradient.normalization().end(); ut++) {
+                                norm += ut->coefficient()*exp(mbeta_log(ut->exponent(), alpha));
+                        }
+                        // loop over nodes
+                        for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                                double result = 0;
+                                for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = gradient[*is].begin();
+                                     ut != gradient[*is].end(); ut++) {
+                                        result += ut->coefficient()*exp(mbeta_log(ut->exponent(), alpha));
+                                }
+                                sum[*is] += result/norm;
+                        }
+                }
+                // print result
+                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                        std::cout << "result: "
+                                  << sum[*is]/alignment.length
+                                  << std::endl;
+                }
+        }
+        void run(size_t n) {
+                for (size_t i = 0; i < n; i++) {
+                        run();
                 }
         }
 
-        nodes_t _nodes;
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> _normalization;
+private:
+        alignment_t<CODE_TYPE>& alignment;
+        exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha;
+        gamma_gradient_t gamma_gradient;
+        double epsilon;
 };
+
 
 #endif /* PHYLOTREE_GRADIENT_HH */

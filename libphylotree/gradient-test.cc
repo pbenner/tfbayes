@@ -123,65 +123,10 @@ void test_tree3() {
         cout << poly1*poly1*poly2 << endl;
 }
 
-void gradient_ascent(alignment_t<code_t>& alignment, const exponent_t<code_t, alphabet_size>& alpha) {
-        pt_node_t::nodes_t nodes = alignment.tree->get_nodes();
-        boost::unordered_map<pt_node_t*, double> sum;
-        gamma_gradient_t gamma_gradient(0.2, 0.4);
-
-        // initialize sum with gradients of the gamma distribution
-        for (pt_node_t::nodes_t::iterator it = nodes.begin(); it != nodes.end(); it++) {
-                sum[*it] = gamma_gradient.eval((*it)->d);
-        }
-
-        // loop through the alignment
-        for (alignment_t<code_t>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                pt_gradient_t<code_t, alphabet_size> gradient(alignment.tree);
-
-                double norm = 0;
-                // loop over monomials
-                for (polynomial_t<code_t, alphabet_size>::const_iterator ut = gradient.normalization().begin();
-                     ut != gradient.normalization().end(); ut++) {
-                        norm += ut->coefficient()*exp(mbeta_log(ut->exponent(), alpha));
-                }
-                // loop over nodes
-                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
-                        double result = 0;
-                        for (polynomial_t<code_t, alphabet_size>::const_iterator ut = gradient[*is].begin();
-                             ut != gradient[*is].end(); ut++) {
-                                result += ut->coefficient()*exp(mbeta_log(ut->exponent(), alpha));
-                        }
-                        sum[*is] += result/norm;
-                        cout << "result: "
-                             << result/norm
-                             << endl;
-                }
-        }
-}
-
-void test_tree4() {
-        yyparse();
-        pt_root_t* pt_root = (pt_root_t*)pt_parsetree->convert();
-
-        pt_root->init(alphabet_size);
-
-        alignment_t<code_t> alignment("test.fa", pt_root);
-
-        cout << pt_root
-             << endl;
-
-        exponent_t<code_t, alphabet_size> alpha;
-        alpha[0] = 1;
-        alpha[1] = 1;
-        alpha[2] = 1;
-        alpha[3] = 1;
-        gradient_ascent(alignment, alpha);
-}
-
 int main(void) {
         test_tree1();
         test_tree2();
         test_tree3();
-        test_tree4();
 
         return 0.0;
 }
