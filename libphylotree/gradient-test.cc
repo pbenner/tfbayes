@@ -128,17 +128,15 @@ void test_tree4() {
 
         pt_root->init(alphabet_size);
 
-        alignment_t alignment("test.fa", pt_root);
+        alignment_t<code_t> alignment("test.fa", pt_root);
 
         cout << pt_root
              << endl;
 
-        alignment_t::iterator it = alignment.begin();
-        cout << pt_root
-             << endl;
-        it++;
-        cout << pt_root
-             << endl;
+        for (alignment_t<code_t>::iterator it = alignment.begin(); it != alignment.end(); it++) {
+                cout << pt_root
+                     << endl;
+        }
 }
 
 int main(void) {
