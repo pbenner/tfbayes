@@ -28,6 +28,7 @@
 
 #include <tfbayes/polynomial.hh>
 
+#include <alignment.hh>
 #include <phylotree.hh>
 #include <phylotree-gradient-coefficient.hh>
 
@@ -236,7 +237,7 @@ template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_gradient_t : public boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> > {
 public:
         pt_gradient_t(const pt_root_t* root)
-                : boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> >() {
+                : boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> >() { 
 
                 get_nodes(root);
                 partial_t partial = gradient_rec(root);

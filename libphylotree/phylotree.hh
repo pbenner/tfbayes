@@ -24,6 +24,7 @@
 
 #include <math.h>
 #include <cstddef>
+#include <set>
 #include <string>
 
 typedef short nucleotide_t;
@@ -36,6 +37,9 @@ public:
                   const std::string& name = "")
                 : x(x), d(d), left(left), right(right), name(name)
                 { }
+
+        /* typedef for a set of nodes */
+        typedef std::set<pt_node_t*> nodes_t;
 
         void destroy() {
                 if (!leaf()) {
@@ -54,6 +58,12 @@ public:
                         left ->init(nucleotide);
                         right->init(nucleotide);
                 }
+        }
+
+        nodes_t get_nodes() {
+                nodes_t nodes;
+                get_nodes_rec(this, nodes);
+                return nodes;
         }
 
         double mutation_probability() const {
@@ -78,6 +88,17 @@ public:
         pt_node_t* right;
         /* name of the node */
         const std::string name;
+
+private:
+        void get_nodes_rec(pt_node_t* node, nodes_t& nodes) {
+                if (!node->root()) {
+                        nodes.insert(node);
+                }
+                if (!node->leaf()) {
+                        get_nodes_rec(node->left,  nodes);
+                        get_nodes_rec(node->right, nodes);
+                }
+        }
 };
 
 class pt_root_t : public pt_node_t {
