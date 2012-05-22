@@ -81,7 +81,7 @@ void test_tree1() {
         pt_leaf_t n3( 2, 0.30, "n3");
         pt_root_t n1(-1, &n2, &n3);
 
-        pt_gradient_t  <code_t, alphabet_size> result1(&n1);
+        pt_symbolic_gradient_t  <code_t, alphabet_size> result1(&n1);
         pt_polynomial_t<code_t, alphabet_size> result2(&n1);
 
         cout << result1.normalization() << endl;
@@ -111,13 +111,14 @@ void test_tree2() {
         pt_node_t n2(-1, 2.0, &n4, &n5, "n2");
         pt_root_t n1(-1, &n2, &n3,      "n1");
 
-        pt_gradient_t  <code_t, alphabet_size> result1(&n1);
-        pt_polynomial_t<code_t, alphabet_size> result2(&n1);
+        pt_symbolic_gradient_t  <code_t, alphabet_size> result1(&n1);
+        pt_gradient_t  <code_t, alphabet_size> result2(&n1);
+        pt_polynomial_t<code_t, alphabet_size> result3(&n1);
 
-        cout << "likelihood: "
+        cout << "symbolic likelihood: "
              << result1.normalization()
              << endl << endl;
-        cout << "gradient: "
+        cout << "symbolic gradient: "
              << result1[&n7]
              << endl << endl;
 
@@ -131,7 +132,10 @@ void test_tree2() {
              << result1.normalization().eval(p).eval()
              << endl;
         cout << "eval: "
-             << result2.eval(p)
+             << result2.normalization().eval(p)
+             << endl;
+        cout << "eval: "
+             << result3.eval(p)
              << endl;
 }
 

@@ -125,7 +125,7 @@ int main(void) {
              << result2              << endl;
 
         MET("Gradient computation",
-            pt_gradient_t <code_t, alphabet_size> result3(pt_root););
+            pt_symbolic_gradient_t <code_t, alphabet_size> result3(pt_root););
 
         // cout << "Gradient normalization:" << endl
         //      << result3.normalization()   << endl;
