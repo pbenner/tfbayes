@@ -48,6 +48,14 @@ public:
         bool leaf() const { return left == NULL && right == NULL; }
         bool root() const { return d == 0.0; }
 
+        void init(const nucleotide_t& nucleotide) {
+                this->x = nucleotide;
+                if (!leaf()) {
+                        left ->init(nucleotide);
+                        right->init(nucleotide);
+                }
+        }
+
         double mutation_probability() const {
                 return 1.0-exp(-d);
         }

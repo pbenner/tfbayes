@@ -21,59 +21,14 @@
 
 #include <iostream>
 
+#include <alignment.hh>
+#include <phylotree.hh>
+#include <phylotree-parser.hh>
 #include <phylotree-polynomial.hh>
 #include <phylotree-gradient.hh>
 #include <utility.hh>
 
 using namespace std;
-
-#include <tfbayes/fasta.hh>
-
-static
-const string strip(const std::string& str)
-{
-        const std::string& whitespace = " \t\n";
-        const size_t begin = str.find_first_not_of(whitespace);
-        if (begin == string::npos) {
-                return "";
-        }
-        const size_t end   = str.find_last_not_of(whitespace);
-        const size_t range = end - begin + 1;
-
-        return str.substr(begin, range);
-}
-
-static
-vector<string> token(const string& str, char t) {
-        string token;
-        vector<string> tokens;
-        istringstream iss(str);
-        while (getline(iss, token, t)) {
-                tokens.push_back(strip(token));
-        }
-        return tokens;
-}
-
-#include <set>
-#include <boost/unordered_map.hpp>
-
-class alignment_t : public boost::unordered_map<string, string> {
-public:
-        alignment_t(const char* filename)
-                : boost::unordered_map<string, string>() {
-
-                FastaParser parser(filename);
-                string sequence;
-
-                while ((sequence = parser.read_sequence()) != "") {
-                        string taxon = token(parser.description()[0], '.')[0];
-                        taxa.insert(taxon);
-                        operator[](taxon) = sequence;
-                }
-        }
-
-        set<string> taxa;
-};
 
 void test_tree1() {
         cout << "Test 1:" << endl;
@@ -167,12 +122,30 @@ void test_tree3() {
         cout << poly1*poly1*poly2 << endl;
 }
 
+void test_tree4() {
+        yyparse();
+        pt_root_t* pt_root = (pt_root_t*)pt_parsetree->convert();
+
+        pt_root->init(alphabet_size);
+
+        alignment_t alignment("test.fa", pt_root);
+
+        cout << pt_root
+             << endl;
+
+        alignment_t::iterator it = alignment.begin();
+        cout << pt_root
+             << endl;
+        it++;
+        cout << pt_root
+             << endl;
+}
+
 int main(void) {
         test_tree1();
         test_tree2();
         test_tree3();
-
-        alignment_t alignment("test.fa");
+        test_tree4();
 
         return 0.0;
 }
