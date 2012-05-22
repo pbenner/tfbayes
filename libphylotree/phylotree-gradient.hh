@@ -24,11 +24,25 @@
 
 #include <set>
 #include <boost/unordered_map.hpp>
+#include <cmath>
 
 #include <tfbayes/polynomial.hh>
 
 #include <phylotree.hh>
 #include <phylotree-gradient-coefficient.hh>
+
+class gamma_gradient_t {
+public:
+        gamma_gradient_t(double r, double lambda)
+                : r(r), lambda(lambda) { }
+
+        double eval(double d) {
+                return -1.0/lambda * pow(d, 2.0*r - 3.0) * exp(-2.0*d/lambda) * (d + r - r*lambda);
+        }
+
+        double r;
+        double lambda;
+};
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_symbolic_gradient_t : public boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> > {
