@@ -28,8 +28,12 @@
 #include <phylotree-gradient.hh>
 #include <marginal-likelihood.hh>
 
+#include <tfbayes/exception.h>
+
+#include <getopt.h>
+
 #define alphabet_size 5
-typedef short code_t;
+typedef float code_t;
 
 using namespace std;
 
@@ -72,27 +76,106 @@ size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent) {
         return seed;
 }
 
-void test_tree4() {
-        yyparse();
-        pt_root_t* pt_root = (pt_root_t*)pt_parsetree->convert();
+// Options
+////////////////////////////////////////////////////////////////////////////////
 
+typedef struct _options_t {
+        double alpha;
+        double lambda;
+        double r;
+        size_t max_steps;
+        double min_change;
+        double epsilon;
+        _options_t()
+                : alpha(0.2),
+                  lambda(0.1),
+                  r(2.0),
+                  max_steps(1000),
+                  min_change(0.0005),
+                  epsilon(0.001)
+                { }
+} options_t;
+
+static options_t options;
+
+// Main
+////////////////////////////////////////////////////////////////////////////////
+
+static
+void print_usage(char *pname, FILE *fp)
+{
+        (void)fprintf(fp, "\nUsage: %s [OPTION] TREE ALIGNMENT\n\n", pname);
+        (void)fprintf(fp,
+                      "Options:\n"
+                      "             -a DOUBLE       - pseudo count\n"
+                      "             -m INTEGER      - maximum number of steps\n"
+                      "             -n DOUBLE       - stop gradient ascent if change is smaller than this value\n"
+                      "             -e DOUBLE       - gradient ascent step size\n"
+                      "             -r DOUBLE       - r parameter for the gamma distribution\n"
+                      "             -l DOUBLE       - lambda parameter for the gamma distribution\n"
+                      "\n"
+                      "   --help                    - print help and exit\n"
+                      "   --version                 - print version information and exit\n\n");
+}
+
+void wrong_usage(const char *msg)
+{
+
+        if(msg != NULL) {
+                (void)fprintf(stderr, "%s\n", msg);
+        }
+        (void)fprintf(stderr,
+                      "Try `gradient-ascent-test --help' for more information.\n");
+
+        exit(EXIT_FAILURE);
+
+}
+
+static
+void print_version(FILE *fp)
+{
+        (void)fprintf(fp,
+                      "This is free software, and you are welcome to redistribute it\n"
+                      "under certain conditions; see the source for copying conditions.\n"
+                      "There is NO warranty; not even for MERCHANTABILITY or FITNESS\n"
+                      "FOR A PARTICULAR PURPOSE.\n\n");
+}
+
+extern FILE *yyin;
+
+pt_root_t* parse_tree_file(const char* file_tree)
+{
+        yyin = fopen(file_tree, "r");
+        if (yyin == NULL) {
+                std_err(PERR, "Could not open phylogenetic tree");
+        }
+        yyparse();
+        fclose(yyin);
+
+        return (pt_root_t*)pt_parsetree->convert();
+}
+
+void run_gradient_ascent(const char* file_tree, const char* file_alignment)
+{
+        /* phylogenetic tree */
+        pt_root_t* pt_root = parse_tree_file(file_tree);
         pt_root->init(alphabet_size);
 
-        alignment_t<code_t> alignment("test.fa", pt_root);
-//        alignment_t<code_t> alignment("test2.fa", pt_root);
+        /* pseudo counts */
         exponent_t<code_t, alphabet_size> alpha;
-        alpha[0] = 1;
-        alpha[1] = 1;
-        alpha[2] = 1;
-        alpha[3] = 1;
-        alpha[4] = 1;
+        for (size_t i = 0; i < alphabet_size; i++) {
+                alpha[i] = options.alpha;
+        }
 
-        cout << pt_root
+        /* alignment */
+        alignment_t<code_t> alignment(file_alignment, pt_root);
+
+        cerr << pt_root
              << endl;
 
-        pt_gradient_ascent_t<code_t, alphabet_size> pt_gradient_ascent(alignment, alpha, 2.0, 0.1, 0.001);
+        pt_gradient_ascent_t<code_t, alphabet_size> pt_gradient_ascent(alignment, alpha, options.r, options.lambda, options.epsilon);
 
-        pt_gradient_ascent.run(1, 0.0005);
+        pt_gradient_ascent.run(options.max_steps, options.min_change);
 
         stringstream ss;
         pt_root->print(ss, true);
@@ -100,8 +183,64 @@ void test_tree4() {
              << endl;
 }
 
-int main(void) {
-        test_tree4();
+int main(int argc, char *argv[])
+{
+        const char* file_tree;
+        const char* file_alignment;
 
-        return 0.0;
+        for(;;) {
+                int c, option_index = 0;
+                static struct option long_options[] = {
+                        { "help",            0, 0, 'h' },
+                        { "version",         0, 0, 'v' }
+                };
+
+                c = getopt_long(argc, argv, "a:e:m:n:r:l:hv",
+                                long_options, &option_index);
+
+                if(c == -1) {
+                        break;
+                }
+
+                switch(c) {
+                case 'a':
+                        options.alpha = atof(optarg);
+                        break;
+                case 'e':
+                        options.epsilon = atof(optarg);
+                        break;
+                case 'm':
+                        options.max_steps = atoi(optarg);
+                        break;
+                case 'n':
+                        options.min_change = atof(optarg);
+                        break;
+                case 'r':
+                        options.r = atof(optarg);
+                        break;
+                case 'l':
+                        options.lambda = atof(optarg);
+                        break;
+                case 'h':
+                        print_usage(argv[0], stdout);
+                        exit(EXIT_SUCCESS);
+                case 'v':
+                        print_version(stdout);
+                        exit(EXIT_SUCCESS);
+                default:
+                        wrong_usage(NULL);
+                        exit(EXIT_FAILURE);
+                }
+        }
+        if(optind+2 != argc) {
+                wrong_usage("Wrong number of arguments.");
+                exit(EXIT_FAILURE);
+        }
+
+        file_tree      = argv[optind];
+        file_alignment = argv[optind+1];
+
+        run_gradient_ascent(file_tree, file_alignment);
+
+        return 0;
 }
