@@ -432,8 +432,8 @@ public:
         void run(size_t max, double stop = 0.0) {
                 for (size_t i = 0; i < max; i++) {
                         double total = run();
-                        std::cout << "total change: " << total << std::endl;
-                        std::cout << alignment.tree << std::endl;
+                        std::cerr << "total change: " << total << std::endl;
+                        std::cerr << alignment.tree            << std::endl;
                         if (total < stop) {
                                 break;
                         }
