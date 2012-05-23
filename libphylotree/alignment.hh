@@ -201,7 +201,7 @@ public:
                 return iterator(tree, 0, length, alignments, taxa_mapping);
         }
         iterator end() {
-                return iterator(tree, length, length, alignments, taxa_mapping);
+                return iterator(tree, length-1, length, alignments, taxa_mapping);
         }
 
         pt_root_t* tree;

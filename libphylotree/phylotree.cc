@@ -21,56 +21,7 @@
 
 using namespace std;
 
-#define TAB_WIDTH 2
-
-static
-void indent(ostream& o, size_t nesting)
-{
-        for(size_t i = 0; i < nesting*TAB_WIDTH; i++) {
-                o << " ";
-        }
-}
-
-static
-ostream& print_phylotree(
-        ostream& o,
-        pt_node_t* const node,
-        size_t nesting)
-{
-        if (node->root()) {
-                o << "(root";
-                print_phylotree(o, node->left,  nesting+1);
-                print_phylotree(o, node->right, nesting+1);
-                o << ")"
-                  << endl;
-        }
-        else if (node->leaf()) {
-                o << endl;
-                indent(o, nesting);
-                o << "("
-                  << node->name
-                  << " "
-                  << node->d;
-                if (node->x != -1) {
-                        o << " "
-                          << node->x;
-                }
-                o << ")";
-        }
-        else {
-                o << endl;
-                indent(o, nesting);
-                o << "(node "
-                  << node->d;
-                print_phylotree(o, node->left,  nesting+1);
-                print_phylotree(o, node->right, nesting+1);
-                o << ")";
-        }
-
-        return o;
-}
-
 ostream& operator<< (ostream& o, pt_node_t* const node) {
-        print_phylotree(o, node, 0);
+        node->print(o);
         return o;
 }

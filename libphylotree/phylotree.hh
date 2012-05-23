@@ -26,6 +26,7 @@
 #include <cstddef>
 #include <set>
 #include <string>
+#include <ostream>
 
 typedef short nucleotide_t;
 
@@ -62,7 +63,7 @@ public:
 
         nodes_t get_nodes() {
                 nodes_t nodes;
-                get_nodes_rec(this, nodes);
+                get_nodes(nodes);
                 return nodes;
         }
 
@@ -78,6 +79,99 @@ public:
                 }
         }
 
+        std::ostream& print_distances(std::ostream& o) {
+                if (root()) { 
+                        o << "{";
+                        left ->print_distances(o);
+                        o  << ", ";
+                        right->print_distances(o);
+                        o << "}";
+                }
+                else {
+                        o << d;
+                        if (!leaf()) {
+                                o  << ", ";
+                                left ->print_distances(o);
+                                o  << ", ";
+                                right->print_distances(o);
+                        }
+                }
+                return o;
+        }
+        std::ostream& print_phylotree(std::ostream& o, size_t nesting) const {
+                if (root()) {
+                        o << "(root";
+                        left ->print_phylotree(o, nesting+1);
+                        right->print_phylotree(o, nesting+1);
+                        o << ")"
+                          << std::endl;
+                }
+                else if (leaf()) {
+                        o << std::endl;
+                        indent(o, nesting);
+                        o << "("
+                          << name
+                          << " "
+                          << d;
+                        if (x != -1) {
+                                o << " "
+                                  << x;
+                        }
+                        o << ")";
+                }
+                else {
+                        o << std::endl;
+                        indent(o, nesting);
+                        o << "(node "
+                          << d;
+                        left ->print_phylotree(o, nesting+1);
+                        right->print_phylotree(o, nesting+1);
+                        o << ")";
+                }
+                return o;
+        }
+        std::ostream& print_phylotree(std::ostream& o) const {
+                return print_phylotree(o, 0);
+        }
+        std::ostream& print_newick(std::ostream& o, size_t nesting) const {
+                if (root()) {
+                        o << "(";
+                        left ->print_newick(o, nesting+1);
+                        o << ",";
+                        right->print_newick(o, nesting+1);
+                        o << ");"
+                          << std::endl;
+                }
+                else if (leaf()) {
+                        o << std::endl;
+                        indent(o, nesting);
+                o << name
+                  << ":"
+                  << d;
+                }
+                else {
+                        o << "(";
+                        left ->print_newick(o, nesting+1);
+                        o << ",";
+                        right->print_newick(o, nesting+1);
+                        o << "):"
+                          << d;
+                }
+                return o;
+        }
+        std::ostream& print_newick(std::ostream& o) const {
+                return print_newick(o, 0);
+        }
+        std::ostream& print(std::ostream& o, bool newick = false) const {
+                if (newick) {
+                        return print_newick(o);
+                }
+                else {
+                        return print_phylotree(o);
+                }
+                return o;
+        }
+
         /* coded nucleotide */
         nucleotide_t x;
         /* distance to ancestor */
@@ -90,13 +184,20 @@ public:
         const std::string name;
 
 private:
-        void get_nodes_rec(pt_node_t* node, nodes_t& nodes) {
-                if (!node->root()) {
-                        nodes.insert(node);
+        void get_nodes(nodes_t& nodes) {
+                if (!root()) {
+                        nodes.insert(this);
                 }
-                if (!node->leaf()) {
-                        get_nodes_rec(node->left,  nodes);
-                        get_nodes_rec(node->right, nodes);
+                if (!leaf()) {
+                        left ->get_nodes(nodes);
+                        right->get_nodes(nodes);
+                }
+        }
+        static const short TAB_WIDTH = 2;
+        static
+        void indent(std::ostream& o, size_t nesting) {
+                for(size_t i = 0; i < nesting*TAB_WIDTH; i++) {
+                        o << " ";
                 }
         }
 };

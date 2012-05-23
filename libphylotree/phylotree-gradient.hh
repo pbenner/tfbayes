@@ -38,7 +38,7 @@ public:
                 : r(r), lambda(lambda) { }
 
         double eval(double d) {
-                return -1.0/lambda * pow(d, 2.0*r - 3.0) * exp(-2.0*d/lambda) * (d + r - r*lambda);
+                return (r-1.0)/d - 1.0/lambda;
         }
 
         double r;
@@ -392,20 +392,20 @@ public:
                              double r, double lambda, double epsilon = 0.001)
                 : alignment(alignment), alpha(alpha), gamma_gradient(r, lambda), epsilon(epsilon) { }
 
-        void run() {
+        double run() {
                 pt_node_t::nodes_t nodes = alignment.tree->get_nodes();
                 boost::unordered_map<pt_node_t*, double> sum;
+                double total = 0.0;
 
                 // initialize sum with gradients of the gamma distribution
                 for (pt_node_t::nodes_t::iterator it = nodes.begin(); it != nodes.end(); it++) {
                         sum[*it] = gamma_gradient.eval((*it)->d);
                 }
-
                 // loop through the alignment
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
                         pt_gradient_t<CODE_TYPE, ALPHABET_SIZE> gradient(alignment.tree);
 
-                        double norm = 0;
+                        double norm = 0.0;
                         // loop over monomials
                         for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = gradient.normalization().begin();
                              ut != gradient.normalization().end(); ut++) {
@@ -421,16 +421,22 @@ public:
                                 sum[*is] += result/norm;
                         }
                 }
-                // print result
+                // apply result
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
-                        std::cout << "result: "
-                                  << sum[*is]/alignment.length
-                                  << std::endl;
+                        double tmp = epsilon/(double)alignment.length*sum[*is];
+                        (*is)->d += tmp;
+                        total    += fabs(tmp);
                 }
+                return total;
         }
-        void run(size_t n) {
-                for (size_t i = 0; i < n; i++) {
-                        run();
+        void run(size_t max, double stop = 0.0) {
+                for (size_t i = 0; i < max; i++) {
+                        double total = run();
+                        std::cout << "total change: " << total << std::endl;
+                        std::cout << alignment.tree << std::endl;
+                        if (total < stop) {
+                                break;
+                        }
                 }
         }
 

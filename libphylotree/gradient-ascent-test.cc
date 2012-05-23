@@ -79,6 +79,7 @@ void test_tree4() {
         pt_root->init(alphabet_size);
 
         alignment_t<code_t> alignment("test.fa", pt_root);
+//        alignment_t<code_t> alignment("test2.fa", pt_root);
         exponent_t<code_t, alphabet_size> alpha;
         alpha[0] = 1;
         alpha[1] = 1;
@@ -89,9 +90,14 @@ void test_tree4() {
         cout << pt_root
              << endl;
 
-        pt_gradient_ascent_t<code_t, alphabet_size> pt_gradient_ascent(alignment, alpha, 0.2, 0.4);
+        pt_gradient_ascent_t<code_t, alphabet_size> pt_gradient_ascent(alignment, alpha, 2.0, 0.1, 0.001);
 
-        pt_gradient_ascent.run(1);
+        pt_gradient_ascent.run(1, 0.0005);
+
+        stringstream ss;
+        pt_root->print(ss, true);
+        cout << ss.str()
+             << endl;
 }
 
 int main(void) {
