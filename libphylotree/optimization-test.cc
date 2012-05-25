@@ -81,18 +81,22 @@ size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent) {
 
 typedef struct _options_t {
         double alpha;
+        size_t burnin;
         double lambda;
         double r;
         size_t max_steps;
         double min_change;
         double epsilon;
+        double sigma;
         _options_t()
                 : alpha(0.2),
+                  burnin(1000),
                   lambda(0.1),
                   r(2.0),
                   max_steps(1000),
                   min_change(0.0005),
-                  epsilon(0.001)
+                  epsilon(0.001),
+                  sigma(0.01)
                 { }
 } options_t;
 
@@ -104,15 +108,19 @@ static options_t options;
 static
 void print_usage(char *pname, FILE *fp)
 {
-        (void)fprintf(fp, "\nUsage: %s [OPTION] TREE ALIGNMENT\n\n", pname);
+        (void)fprintf(fp, "\nUsage: %s [OPTION] METHOD TREE ALIGNMENT\n\n", pname);
         (void)fprintf(fp,
+                      "Methods: gradient-ascent, metropolis-hastings\n"
+                      "\n"
                       "Options:\n"
                       "             -a DOUBLE       - pseudo count\n"
+                      "             -b INTEGER      - number of burn-in samples for metropolis-hastings\n"
                       "             -m INTEGER      - maximum number of steps\n"
                       "             -n DOUBLE       - stop gradient ascent if change is smaller than this value\n"
                       "             -e DOUBLE       - gradient ascent step size\n"
                       "             -r DOUBLE       - r parameter for the gamma distribution\n"
                       "             -l DOUBLE       - lambda parameter for the gamma distribution\n"
+                      "             -s DOUBLE       - sigma^2 parameter for proposal distribution\n"
                       "\n"
                       "   --help                    - print help and exit\n"
                       "   --version                 - print version information and exit\n\n");
@@ -125,7 +133,7 @@ void wrong_usage(const char *msg)
                 (void)fprintf(stderr, "%s\n", msg);
         }
         (void)fprintf(stderr,
-                      "Try `gradient-ascent-test --help' for more information.\n");
+                      "Try `optimization-test --help' for more information.\n");
 
         exit(EXIT_FAILURE);
 
@@ -155,7 +163,7 @@ pt_root_t* parse_tree_file(const char* file_tree)
         return (pt_root_t*)pt_parsetree->convert();
 }
 
-void run_gradient_ascent(const char* file_tree, const char* file_alignment)
+void run_optimization(const string& method, const char* file_tree, const char* file_alignment)
 {
         /* phylogenetic tree */
         pt_root_t* pt_root = parse_tree_file(file_tree);
@@ -173,9 +181,19 @@ void run_gradient_ascent(const char* file_tree, const char* file_alignment)
         cerr << pt_root
              << endl;
 
-        pt_gradient_ascent_t<code_t, alphabet_size> pt_gradient_ascent(alignment, alpha, options.r, options.lambda, options.epsilon);
-
-        pt_gradient_ascent.run(options.max_steps, options.min_change);
+        if (method == "gradient-ascent") {
+                pt_gradient_ascent_t<code_t, alphabet_size> pt_gradient_ascent(alignment, alpha, options.r, options.lambda, options.epsilon);
+                pt_gradient_ascent.run(options.max_steps, options.min_change);
+        }
+        else if (method == "metropolis-hastings") {
+                pt_metropolis_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(alignment, alpha, options.r, options.lambda, options.sigma);
+                pt_metropolis_hastings.sample(options.burnin, options.max_steps);
+        }
+        else {
+                cerr << "Unknown optimization method: " << method
+                     << endl;
+                exit(EXIT_FAILURE);
+        }
 
         stringstream ss;
         pt_root->print(ss, true);
@@ -195,7 +213,7 @@ int main(int argc, char *argv[])
                         { "version",         0, 0, 'v' }
                 };
 
-                c = getopt_long(argc, argv, "a:e:m:n:r:l:hv",
+                c = getopt_long(argc, argv, "a:b:e:m:n:r:l:s:hv",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -205,6 +223,9 @@ int main(int argc, char *argv[])
                 switch(c) {
                 case 'a':
                         options.alpha = atof(optarg);
+                        break;
+                case 'b':
+                        options.burnin = atoi(optarg);
                         break;
                 case 'e':
                         options.epsilon = atof(optarg);
@@ -221,6 +242,9 @@ int main(int argc, char *argv[])
                 case 'l':
                         options.lambda = atof(optarg);
                         break;
+                case 's':
+                        options.sigma = atof(optarg);
+                        break;
                 case 'h':
                         print_usage(argv[0], stdout);
                         exit(EXIT_SUCCESS);
@@ -232,15 +256,16 @@ int main(int argc, char *argv[])
                         exit(EXIT_FAILURE);
                 }
         }
-        if(optind+2 != argc) {
+        if(optind+3 != argc) {
                 wrong_usage("Wrong number of arguments.");
                 exit(EXIT_FAILURE);
         }
 
-        file_tree      = argv[optind];
-        file_alignment = argv[optind+1];
+        string method(argv[optind]);
+        file_tree      = argv[optind+1];
+        file_alignment = argv[optind+2];
 
-        run_gradient_ascent(file_tree, file_alignment);
+        run_optimization(method, file_tree, file_alignment);
 
         return 0;
 }

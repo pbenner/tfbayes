@@ -25,24 +25,41 @@
 #include <set>
 #include <boost/unordered_map.hpp>
 #include <cmath>
+#include <algorithm> /* std::min */
 
+#include <tfbayes/exception.h>
 #include <tfbayes/polynomial.hh>
 
 #include <alignment.hh>
 #include <phylotree.hh>
 #include <phylotree-gradient-coefficient.hh>
 
-class gamma_gradient_t {
-public:
-        gamma_gradient_t(double r, double lambda)
-                : r(r), lambda(lambda) { }
+#include <gsl/gsl_sf_gamma.h>
+#include <gsl/gsl_randist.h>
 
-        double eval(double d) {
+class gamma_distribution_t {
+public:
+        gamma_distribution_t(double r, double lambda)
+                : r(r), r_gamma(gsl_sf_gamma(r)), lambda(lambda),
+                  lambda_pow_r(pow(lambda, r)) { }
+
+        double pdf(double d) {
+                if (d > 0.0) {
+                        return 1.0/lambda_pow_r * 1.0/r_gamma * pow(d, r-1.0) * exp(-d/lambda);
+                }
+                else {
+                        return 0.0;
+                }
+        }
+
+        double log_gradient(double d) {
                 return (r-1.0)/d - 1.0/lambda;
         }
 
         double r;
+        double r_gamma;
         double lambda;
+        double lambda_pow_r;
 };
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
@@ -390,7 +407,28 @@ public:
         pt_gradient_ascent_t(alignment_t<CODE_TYPE>& alignment,
                              const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
                              double r, double lambda, double epsilon = 0.001)
-                : alignment(alignment), alpha(alpha), gamma_gradient(r, lambda), epsilon(epsilon) { }
+                : alignment(alignment), alpha(alpha), gamma_distribution(r, lambda), epsilon(epsilon) { }
+
+        /* posterior (not normalized) */
+        double log_posterior(pt_node_t::nodes_t& nodes) {
+                double result = 0;
+                // initialize sum with gradients of the gamma distribution
+                for (pt_node_t::nodes_t::iterator it = nodes.begin(); it != nodes.end(); it++) {
+                        result += log(gamma_distribution.pdf((*it)->d));
+                }
+
+                for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
+                        const pt_polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial(alignment.tree);
+                        // loop over monomials
+                        double tmp = -HUGE_VAL;
+                        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = polynomial.begin();
+                             ut != polynomial.end(); ut++) {
+                                tmp = logadd(tmp, log(ut->coefficient()) + mbeta_log(ut->exponent(), alpha) - mbeta_log(alpha));
+                        }
+                        result += tmp;
+                }
+                return result;
+        }
 
         double run() {
                 pt_node_t::nodes_t nodes = alignment.tree->get_nodes();
@@ -399,7 +437,7 @@ public:
 
                 // initialize sum with gradients of the gamma distribution
                 for (pt_node_t::nodes_t::iterator it = nodes.begin(); it != nodes.end(); it++) {
-                        sum[*it] = gamma_gradient.eval((*it)->d);
+                        sum[*it] = gamma_distribution.log_gradient((*it)->d);
                 }
                 // loop through the alignment
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
@@ -414,6 +452,7 @@ public:
                         // loop over nodes
                         for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
                                 double result = 0;
+                                // loop over monomials
                                 for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = gradient[*is].begin();
                                      ut != gradient[*is].end(); ut++) {
                                         result += ut->coefficient()*exp(mbeta_log(ut->exponent(), alpha));
@@ -421,6 +460,7 @@ public:
                                 sum[*is] += result/norm;
                         }
                 }
+                print_debug("log posterior: %f\n", log_posterior(nodes));
                 // apply result
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
                         double tmp = epsilon/(double)alignment.length*sum[*is];
@@ -443,9 +483,103 @@ public:
 private:
         alignment_t<CODE_TYPE>& alignment;
         exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha;
-        gamma_gradient_t gamma_gradient;
+        gamma_distribution_t gamma_distribution;
         double epsilon;
 };
 
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+class pt_metropolis_hastings_t
+{
+public:
+        pt_metropolis_hastings_t(alignment_t<CODE_TYPE>& alignment,
+                                 const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
+                                 double r, double lambda, double sigma_square = 0.05)
+                : alignment(alignment), alpha(alpha), gamma_distribution(r, lambda), sigma_square(sigma_square) {
+
+                _r = gsl_rng_alloc(gsl_rng_default);
+        }
+        ~pt_metropolis_hastings_t() {
+
+                gsl_rng_free(_r);
+        }
+
+        double log_likelihood() {
+                double result = 0;
+                for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
+                        const pt_polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial(alignment.tree);
+                        // loop over monomials
+                        double tmp = -HUGE_VAL;
+                        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = polynomial.begin();
+                             ut != polynomial.end(); ut++) {
+                                tmp = logadd(tmp, log(ut->coefficient()) + mbeta_log(ut->exponent(), alpha) - mbeta_log(alpha));
+                        }
+                        result += tmp;
+                }
+                return result;
+        }
+        double sample(boost::unordered_map<pt_node_t*, double>& means, size_t i, pt_node_t* node, double log_likelihood_ref) {
+                double rho;
+                double x;
+                double log_likelihood_new;
+
+                do {
+                        double old_d = node->d;
+                        double new_d = old_d+gsl_ran_gaussian(_r, sigma_square);
+
+                        // compute new log likelihood
+                        node->d            = new_d;
+                        log_likelihood_new = log_likelihood();
+
+                        // compute acceptance probability
+                        rho = std::min(1.0, exp(log_likelihood_new-log_likelihood_ref)*gamma_distribution.pdf(new_d)/gamma_distribution.pdf(old_d));
+                        x   = gsl_ran_flat(_r, 0.0, 1.0);
+                        if (x < rho) {
+                                // sample accepted
+                                std::cout << "Sample accepted: " << new_d << std::endl;
+                        }
+                        else {
+                                // sample rejected
+                                std::cout << "Sample rejected: " << new_d << std::endl;
+                                node->d = old_d;
+                        }
+                } while (x > rho);
+                return log_likelihood_new;
+        }
+        double sample(boost::unordered_map<pt_node_t*, double>& means, size_t i, pt_node_t::nodes_t& nodes) {
+                double log_likelihood_ref = log_likelihood();
+                // loop over nodes
+                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                        log_likelihood_ref = sample(means, i, *is, log_likelihood_ref);
+                }
+                // update means
+                std::cout << alignment.tree << std::endl;
+                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                        means[*is] = ((double)i*means[*is] + (*is)->d)/(double)(i+1);
+                        std::cout << "mean: " << means[*is] << std::endl;
+                }
+                return log_likelihood_ref;
+        }
+        double sample(size_t burnin, size_t n) {
+                boost::unordered_map<pt_node_t*, double> means;
+                pt_node_t::nodes_t nodes = alignment.tree->get_nodes();
+                // burn in
+                for (size_t i = 0; i < burnin; i++) {
+                        sample(means, i, nodes);
+                }
+                // sample n times
+                for (size_t i = 0; i < n-1; i++) {
+                        sample(means, i, nodes);
+                }
+                return sample(means, n, nodes);
+        }
+
+private:
+        alignment_t<CODE_TYPE>& alignment;
+        exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha;
+        gamma_distribution_t gamma_distribution;
+        double sigma_square;
+
+        gsl_rng * _r;
+};
 
 #endif /* PHYLOTREE_GRADIENT_HH */
