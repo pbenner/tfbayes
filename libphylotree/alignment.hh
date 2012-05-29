@@ -161,12 +161,13 @@ public:
                         : tree(tree), i(i), length(length), alignments(alignments),
                           taxa_mapping(taxa_mapping) { 
                         //
-                        if (i < length) {
-                                insert_observables();
-                        }
+                        insert_observables();
                 }
 
                 void insert_observables() {
+                        if (i >= length) {
+                                return;
+                        }
                         for (taxa_mapping_type::const_iterator it = taxa_mapping.begin();
                              it != taxa_mapping.end(); it++) {
                                 it->second->x = alignments.find(it->first)->second[i];
@@ -201,7 +202,7 @@ public:
                 return iterator(tree, 0, length, alignments, taxa_mapping);
         }
         iterator end() {
-                return iterator(tree, length-1, length, alignments, taxa_mapping);
+                return iterator(tree, length, length, alignments, taxa_mapping);
         }
 
         pt_root_t* tree;
