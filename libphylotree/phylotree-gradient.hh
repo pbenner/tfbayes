@@ -54,12 +54,10 @@ public:
                 }
         }
         double sample(const gsl_rng* rng) const {
-//                std::cout << gsl_ran_gamma(rng, r, lambda) << std::endl;
                 return gsl_ran_gamma(rng, r, lambda);
         }
         double log_gradient(double d) const {
-//                return (r-1.0)/d - 1.0/lambda;
-                return (1.0/lambda + (r-1.0)/log(1.0-d))/(d-1.0);
+                return (r-1.0)/d - 1.0/lambda;
         }
 
         double r;
@@ -302,15 +300,10 @@ private:
                 double  pn_left  = 1.0-pm_left;
                 double  pn_right = 1.0-pm_right;
 
-                // double dpm_left  =  pn_left;
-                // double dpm_right =  pn_right;
-                // double dpn_left  = -pn_left;
-                // double dpn_right = -pn_right;
-
-                double dpm_left  =  1.0;
-                double dpm_right =  1.0;
-                double dpn_left  = -1.0;
-                double dpn_right = -1.0;
+                double dpm_left  =  pn_left;
+                double dpm_right =  pn_right;
+                double dpn_left  = -pn_left;
+                double dpn_right = -pn_right;
 
                 partial_t partial;
                 const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_left  = poly_sum(partial_left);
@@ -411,17 +404,23 @@ private:
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> _normalization;
 };
 
+/* This is a gradient ascent method to compute the maximum posterior
+ * value with an adaptive step-size similar to resilient
+ * backpropagation (Rprop).
+ */
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_gradient_ascent_t
 {
 public:
         pt_gradient_ascent_t(alignment_t<CODE_TYPE>& alignment,
                              const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
-                             double r, double lambda, double epsilon = 0.001)
-                : alignment(alignment), alpha(alpha), gamma_distribution(r, lambda), epsilon(epsilon) { }
+                             double r, double lambda,
+                             double epsilon = 0.001, double eta = 0.1)
+                : alignment(alignment), alpha(alpha), gamma_distribution(r, lambda),
+                  epsilon(epsilon), eta(eta) { }
 
         /* posterior (not normalized) */
-        double log_posterior(pt_node_t::nodes_t& nodes) {
+        double log_posterior(const pt_node_t::nodes_t& nodes) {
                 double result = 0;
                 // initialize sum with gradients of the gamma distribution
                 for (pt_node_t::nodes_t::iterator it = nodes.begin(); it != nodes.end(); it++) {
@@ -441,15 +440,13 @@ public:
                 return result;
         }
 
-        double run() {
-                pt_node_t::nodes_t nodes = alignment.tree->get_nodes();
+        double run(const pt_node_t::nodes_t& nodes) {
                 boost::unordered_map<pt_node_t*, double> sum;
                 double total = 0.0;
 
                 // initialize sum with gradients of the gamma distribution
                 for (pt_node_t::nodes_t::iterator it = nodes.begin(); it != nodes.end(); it++) {
-//                        sum[*it] = gamma_distribution.log_gradient((*it)->d);
-                       sum[*it] = gamma_distribution.log_gradient(1.0-exp(-(*it)->d));
+                        sum[*it] = gamma_distribution.log_gradient((*it)->d);
                 }
                 // loop through the alignment
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
@@ -475,19 +472,34 @@ public:
                 print_debug("log posterior: %f\n", log_posterior(nodes));
                 // apply result
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
-//                        double tmp = epsilon/(double)alignment.length*sum[*is];
-//                        (*is)->d  += tmp;
-                        double tmp = 1.0 - exp(-(*is)->d);
-                        tmp       += epsilon/(double)alignment.length*sum[*is];
-                        (*is)->d   = -log(1.0-tmp);
-                        total     += fabs(tmp);
+                        double step;
+                        if (sum[*is] > 0) {
+                                step =  node_epsilon[*is];
+                        }
+                        else {
+                                step = -node_epsilon[*is];
+                        }
+                        (*is)->d   = std::max(0.0, (*is)->d+step);
+                        total     += fabs(step);
+                        if (sum_prev[*is]*sum[*is] > 0) {
+                                node_epsilon[*is] *= 1.0+eta;
+                        }
+                        if (sum_prev[*is]*sum[*is] < 0) {
+                                node_epsilon[*is] *= 1.0-eta;
+                        }
                 }
+                sum_prev = sum;
+
                 return total;
         }
         void run(size_t max, double stop = 0.0) {
+                pt_node_t::nodes_t nodes = alignment.tree->get_nodes();
+                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                        node_epsilon[*is] = epsilon;
+                }
                 for (size_t i = 0; i < max; i++) {
                         std::stringstream ss;
-                        double total = run();
+                        double total = run(nodes);
                         alignment.tree->print(ss, true);
                         std::cerr << "total change: " << total << std::endl;
                         std::cerr << ss.str()                  << std::endl;
@@ -502,6 +514,9 @@ private:
         exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha;
         gamma_distribution_t gamma_distribution;
         double epsilon;
+        double eta;
+        boost::unordered_map<pt_node_t*, double> node_epsilon;
+        boost::unordered_map<pt_node_t*, double> sum_prev;
 };
 
 class jumping_distribution_t
@@ -612,20 +627,6 @@ public:
                 }
                 return log_likelihood_new;
         }
-        // double sample(boost::unordered_map<pt_node_t*, double>& means, size_t i, pt_node_t::nodes_t& nodes) {
-        //         double log_likelihood_ref = log_likelihood();
-        //         // loop over nodes
-        //         for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
-        //                 log_likelihood_ref = sample(means, *is, log_likelihood_ref);
-        //         }
-        //         // update means
-        //         std::cout << alignment.tree << std::endl;
-        //         for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
-        //                 means[*is] = ((double)i*means[*is] + (*is)->d)/(double)(i+1);
-        //                 std::cout << "mean: " << means[*is] << std::endl;
-        //         }
-        //         return log_likelihood_ref;
-        // }
         double sample(boost::unordered_map<pt_node_t*, double>& means, size_t i, pt_node_t::nodes_t& nodes) {
                 double log_likelihood_ref = log_likelihood();
                 // loop over nodes

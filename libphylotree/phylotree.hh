@@ -51,7 +51,7 @@ public:
         }
 
         bool leaf() const { return left == NULL && right == NULL; }
-        bool root() const { return d == 0.0; }
+        bool root() const { return d == -HUGE_VAL; }
 
         void init(const nucleotide_t& nucleotide) {
                 this->x = nucleotide;
@@ -208,7 +208,7 @@ public:
                   pt_node_t* left  = NULL,
                   pt_node_t* right = NULL,
                   const std::string name = "")
-                : pt_node_t(x, 0.0, left, right, name) { }
+                : pt_node_t(x, -HUGE_VAL, left, right, name) { }
 };
 
 class pt_leaf_t : public pt_node_t {
