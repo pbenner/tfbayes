@@ -584,7 +584,7 @@ public:
                 }
                 return result;
         }
-        double sample(boost::unordered_map<pt_node_t*, double>& means, size_t i, pt_node_t* node, double log_likelihood_ref) {
+        double sample(pt_node_t* node, double log_likelihood_ref) {
                 double rho;
                 double x;
                 double log_likelihood_new;
@@ -612,12 +612,27 @@ public:
                 }
                 return log_likelihood_new;
         }
+        // double sample(boost::unordered_map<pt_node_t*, double>& means, size_t i, pt_node_t::nodes_t& nodes) {
+        //         double log_likelihood_ref = log_likelihood();
+        //         // loop over nodes
+        //         for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+        //                 log_likelihood_ref = sample(means, *is, log_likelihood_ref);
+        //         }
+        //         // update means
+        //         std::cout << alignment.tree << std::endl;
+        //         for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+        //                 means[*is] = ((double)i*means[*is] + (*is)->d)/(double)(i+1);
+        //                 std::cout << "mean: " << means[*is] << std::endl;
+        //         }
+        //         return log_likelihood_ref;
+        // }
         double sample(boost::unordered_map<pt_node_t*, double>& means, size_t i, pt_node_t::nodes_t& nodes) {
                 double log_likelihood_ref = log_likelihood();
                 // loop over nodes
-                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
-                        log_likelihood_ref = sample(means, i, *is, log_likelihood_ref);
-                }
+                size_t k = gsl_rng_uniform_int(rng, nodes.size());
+                pt_node_t::nodes_t::const_iterator is = nodes.begin();
+                std::advance(is, k);
+                log_likelihood_ref = sample(*is, log_likelihood_ref);
                 // update means
                 std::cout << alignment.tree << std::endl;
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
