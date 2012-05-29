@@ -53,7 +53,7 @@ public:
                         return 0.0;
                 }
         }
-        double rand(const gsl_rng* rng) const {
+        double sample(const gsl_rng* rng) const {
 //                std::cout << gsl_ran_gamma(rng, r, lambda) << std::endl;
                 return gsl_ran_gamma(rng, r, lambda);
         }
@@ -508,67 +508,41 @@ class jumping_distribution_t
 {
 public:
         virtual double p(double d_old, double d_new) const = 0;
-        virtual double sample(double d_old) = 0;
+        virtual double sample(gsl_rng * rng, double d_old) const = 0;
 };
 
 class normal_jump_t : public jumping_distribution_t
 {
 public:
         normal_jump_t(double sigma_square = 0.05)
-                : sigma_square(sigma_square) {
-
-                struct timeval tv;
-                gettimeofday(&tv, NULL);
-                time_t seed = tv.tv_sec*tv.tv_usec;
-
-                srand(seed);
-                _r = gsl_rng_alloc(gsl_rng_default);
-                gsl_rng_set(_r, seed);
-        }
-        ~normal_jump_t() {
-                gsl_rng_free(_r);
-        }
+                : sigma_square(sigma_square) { }
 
         double p(double d_old, double d_new) const {
                 return 1.0;
         }
-        double sample(double d_old) {
-                return old_d+gsl_ran_gaussian(_r, sigma_square);
+        double sample(gsl_rng * rng, double d_old) const {
+                return d_old+gsl_ran_gaussian(rng, sigma_square);
         }
 private:
         double sigma_square;
-        gsl_rng * _r;
 };
 
 class gamma_jump_t : public jumping_distribution_t
 {
 public:
         gamma_jump_t(double r, double lambda)
-                : gamma_distribution(r, lambda) {
-
-                struct timeval tv;
-                gettimeofday(&tv, NULL);
-                time_t seed = tv.tv_sec*tv.tv_usec;
-
-                srand(seed);
-                _r = gsl_rng_alloc(gsl_rng_default);
-                gsl_rng_set(_r, seed);
-        }
-        ~gamma_jump_t() {
-                gsl_rng_free(_r);
-        }
+                : gamma_distribution(r, lambda) { }
 
         // p(d_new -> d_old)/p(d_old -> d_new) = p(d_old)/p(d_new)
         double p(double d_old, double d_new) const {
                 
                 return gamma_distribution.pdf(d_old)/gamma_distribution.pdf(d_new);
         }
-        double sample(double d_old) {
-                return old_d+gsl_ran_gaussian(_r, sigma_square);
+        double sample(gsl_rng * rng, double d_old) const {
+                return gamma_distribution.sample(rng);
         }
 private:
         gamma_distribution_t gamma_distribution;
-        gsl_rng * _r;
 };
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
@@ -577,8 +551,23 @@ class pt_metropolis_hastings_t
 public:
         pt_metropolis_hastings_t(alignment_t<CODE_TYPE>& alignment,
                                  const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
+                                 double r, double lambda,
                                  jumping_distribution_t& jumping_distribution)
-                : alignment(alignment), alpha(alpha), jumping_distribution(jumping_distribution) {
+                : alignment(alignment), alpha(alpha),
+                  gamma_distribution(r, lambda),
+                  jumping_distribution(jumping_distribution) {
+
+                struct timeval tv;
+                gettimeofday(&tv, NULL);
+                time_t seed = tv.tv_sec*tv.tv_usec;
+
+                srand(seed);
+                rng = gsl_rng_alloc(gsl_rng_default);
+                gsl_rng_set(rng, seed);
+        }
+
+        ~pt_metropolis_hastings_t() {
+                gsl_rng_free(rng);
         }
 
         double log_likelihood() {
@@ -600,28 +589,26 @@ public:
                 double x;
                 double log_likelihood_new;
 
-                double old_d = node->d;
-//                double new_d = old_d+gsl_ran_gaussian(_r, sigma_square);
-//                double new_d = gamma_distribution.rand(_r);
-                double new_d = jumping_distribution.sample(old_d);
+                double d_old = node->d;
+                double d_new = jumping_distribution.sample(rng, d_old);
 
                 // compute new log likelihood
-                node->d            = new_d;
+                node->d            = d_new;
                 log_likelihood_new = log_likelihood();
 
                 // compute acceptance probability
-//                rho = std::min(1.0, exp(log_likelihood_new-log_likelihood_ref)*gamma_distribution.pdf(new_d)/gamma_distribution.pdf(old_d));
-//                rho = std::min(1.0, exp(log_likelihood_new-log_likelihood_ref));
-                rho = exp(log_likelihood_new-log_likelihood_ref)*gamma_distribution.pdf(new_d)/gamma_distribution.pdf(old_d)*jumping_distribution.p(d_old, d_new);
-                x   = gsl_ran_flat(_r, 0.0, 1.0);
+                rho = exp(log_likelihood_new-log_likelihood_ref)
+                        *gamma_distribution.pdf(d_new)/gamma_distribution.pdf(d_old)
+                        *jumping_distribution.p(d_old, d_new);
+                x   = gsl_ran_flat(rng, 0.0, 1.0);
                 if (x <= std::min(1.0, rho)) {
                         // sample accepted
-                        std::cout << "Sample accepted: " << new_d << std::endl;
+                        std::cout << "Sample accepted: " << d_new << std::endl;
                 }
                 else {
                         // sample rejected
-                        std::cout << "Sample rejected: " << new_d << std::endl;
-                        node->d = old_d;
+                        std::cout << "Sample rejected: " << d_new << std::endl;
+                        node->d = d_old;
                 }
                 return log_likelihood_new;
         }
@@ -662,7 +649,10 @@ private:
         alignment_t<CODE_TYPE>& alignment;
         exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha;
 
+        gamma_distribution_t gamma_distribution;
         jumping_distribution_t& jumping_distribution;
+
+        gsl_rng * rng;
 };
 
 #endif /* PHYLOTREE_GRADIENT_HH */
