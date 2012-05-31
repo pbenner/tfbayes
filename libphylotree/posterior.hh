@@ -63,5 +63,67 @@ boost::array<double, ALPHABET_SIZE> pt_posterior_expectation(
         return result;
 }
 
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+double mbeta_log(
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& exponent,
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
+        const size_t from, const size_t to)
+{
+        double sum1 = 0;
+        double sum2 = 0;
+
+        for (size_t i = from; i < to; i++) {
+                sum1 += exponent[i] + alpha[i];
+                sum2 += gsl_sf_lngamma(exponent[i] + alpha[i]);
+        }
+
+        return sum2 - gsl_sf_lngamma(sum1);
+}
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+boost::array<double, ALPHABET_SIZE> pt_posterior_expectation_prime(
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& polynomial,
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+{
+        double norm = -HUGE_VAL;
+        boost::array<double, ALPHABET_SIZE> result;
+
+        /* compute normalization constant */
+        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = polynomial.begin();
+             it != polynomial.end(); it++) {
+                norm = logadd(norm, log(it->coefficient()) +
+                              mbeta_log(it->exponent(), alpha,               0, ALPHABET_SIZE/2) +
+                              mbeta_log(it->exponent(), alpha, ALPHABET_SIZE/2, ALPHABET_SIZE  ));
+        }
+        /* initialize result */
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                result[i] = 0;
+        }
+        /* posterior expectation */
+        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = polynomial.begin();
+             it != polynomial.end(); it++) {
+                double sum1 = 0;
+                double sum2 = 0;
+                double tmp;
+                for (size_t i = 0; i < ALPHABET_SIZE/2; i++) {
+                        sum1 += it->exponent()[i] + alpha[i];
+                }
+                for (size_t i = ALPHABET_SIZE/2; i < ALPHABET_SIZE; i++) {
+                        sum2 += it->exponent()[i] + alpha[i];
+                }
+                for (size_t i = 0; i < ALPHABET_SIZE/2; i++) {
+                        tmp  = log(it->coefficient());
+                        tmp += mbeta_log(it->exponent(), alpha,               0,  ALPHABET_SIZE/2);
+                        tmp += mbeta_log(it->exponent(), alpha, ALPHABET_SIZE/2, ALPHABET_SIZE);
+                        tmp -= norm;
+                        tmp  = exp(tmp);
+                        tmp *= (it->exponent()[              i] + alpha[              i])/sum1;
+                        tmp *= (it->exponent()[ALPHABET_SIZE-1] + alpha[ALPHABET_SIZE-1])/sum2;
+                        result[i] += tmp;
+                }
+        }
+
+        return result;
+}
 
 #endif /* POSTERIOR_HH */

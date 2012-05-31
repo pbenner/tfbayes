@@ -17,6 +17,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import numpy as np
+import math
 
 from corebio.seq import Alphabet
 from weblogolib import *
@@ -28,6 +29,32 @@ from ..uipac.alphabet import DNA
 
 # motif plotting
 # ------------------------------------------------------------------------------
+
+def plot_probability(motif, file_name, title, fout=None):
+    print 'Generating %s...' % file_name
+    counts = [ [ int(round(motif[j][i]*1000)) for j in range(len(motif)) ] for i in range(len(motif[0])) ]
+    alphabet = Alphabet(DNA.letters, zip(DNA.letters.lower(), DNA.letters))
+    data = LogoData.from_counts(alphabet, np.array(counts))
+    # use entropy to scale the logo
+    for i in range(len(data.entropy)):
+        data.entropy[i] = sum([ motif[j][i] for j in range(len(motif)) ])
+    options = LogoOptions()
+    options.color_scheme = nucleotide
+    options.logo_title = title
+    options.creator_text = ''
+    options.fineprint = ''
+    options.stacks_per_line = 60
+    options.yaxis_scale = 1.0
+    options.scale_width = False
+    options.unit_name = "nats"
+    options.yaxis_label = "p"
+    format = LogoFormat(data, options)
+    if not fout:
+        fout = open(file_name, 'w')
+        pdf_formatter(data, format, fout)
+        fout.close()
+    else:
+        pdf_formatter(data, format, fout)
 
 def plot_motif(motif, file_name, title, fout=None):
     print 'Generating %s...' % file_name

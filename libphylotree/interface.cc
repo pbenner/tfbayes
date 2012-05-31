@@ -188,7 +188,7 @@ void pt_expectation(pt_root_t* pt_root, vector_t* observations, vector_t* prior,
         }
 
         boost::array<double, alphabet_size> expectation =
-                pt_posterior_expectation<code_t, alphabet_size>(poly, alpha);
+                pt_posterior_expectation_prime<code_t, alphabet_size>(poly, alpha);
 
         for (size_t i = 0; i < alphabet_size; i++) {
                 result->vec[i] = expectation[i];

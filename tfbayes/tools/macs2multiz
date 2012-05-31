@@ -42,35 +42,38 @@ def usage():
     print "macs2multiz [option]... MACS_FILE"
     print
     print "Options:"
-    print "   -d DIR                         - directory containing multiz alignments"
-    print "   -f FORMAT                      - output format [default: maf]"
-    print "   -p FILE                        - instead of printing the raw multiz alignments"
-    print "                                    the phylogenetic tree in FILE is used to compute"
-    print "                                    the expected sequence logos"
-    print "       --prior=Px:Px:Px:Px:Px     - counts for the prior"
-    print "   -r REFSEQ                      - reference sequence [default: hg18]"
-    print "   -s SEQ                         - strip '-' characters from SEQ instead of the"
-    print "                                    reference sequence"
-    print "   -t, threads=N                  - run N jobs in parallel"
+    print "   -d DIR                             - directory containing multiz alignments"
+    print "   -f FORMAT                          - output format [default: maf]"
+    print "   -p FILE                            - instead of printing the raw multiz alignments"
+    print "                                        the phylogenetic tree in FILE is used to compute"
+    print "                                        the expected sequence logos"
+    print "       --prior=Px:Px:Px:Px:Px         - counts for the prior"
+    print "       --outgroup='TAXON1 TAXON2...'  - list of taxa that should be treated as outgroup" 
+    print "   -r REFSEQ                          - reference sequence [default: hg18]"
+    print "   -s SEQ                             - strip '-' characters from SEQ instead of the"
+    print "                                        reference sequence"
+    print "   -t, threads=N                      - run N jobs in parallel"
     print
-    print "   -h, --help                     - print help"
-    print "   -v, --verbose                  - be verbose"
+    print "   -h, --help                         - print help"
+    print "   -v, --verbose                      - be verbose"
     print
 
 # options
 # ------------------------------------------------------------------------------
 
 options = {
-    'database_dir'  : None,
-    'macs_file'     : None,
-    'phylotree'     : None,
-    'leafmap'       : None,
-    'threads'       : 1,
-    'prior'         : [1.0, 1.0, 1.0, 1.0, 1.0],
-    'refseq'        : 'hg18',
-    'output_format' : 'maf',
-    'strip'         : None,
-    'verbose'       : False,
+    'database_dir'   : None,
+    'macs_file'      : None,
+    'phylotree'      : None,
+    'leafmap'        : None,
+    'threads'        : 1,
+    'prior'          : [0.1, 0.1, 0.1, 0.1, 0.1],
+    'outgroup-prior' : [0.1, 0.1, 0.1, 0.1, 0.1],
+    'refseq'         : 'hg19',
+    'output_format'  : 'maf',
+    'outgroup'       : [],
+    'strip'          : None,
+    'verbose'        : False,
     }
 
 # multiz2logo
@@ -92,11 +95,20 @@ def code_nucleotide(char):
     else:
         return float(DNA.code(char))
 
+def code_nucleotide_extended(nucleotide, name):
+    if name in options['outgroup']:
+        return code_nucleotide(nucleotide) + 5
+    else:
+        return code_nucleotide(nucleotide)
+
 def alignment_to_logo(multiple_alignment):
     phylotree = options['phylotree']
     leafmap   = options['leafmap']
     num_leafs = pt_num_leafs(phylotree)
+
     observations = [ 4.0 ]*num_leafs
+    for taxon in options['outgroup']:
+        observations[leafmap[taxon]] = 9.0
 
     # get reference index
     refindex = None
@@ -125,9 +137,9 @@ def alignment_to_logo(multiple_alignment):
         for alignment in multiple_alignment:
             name = alignment.name.split(".")[0]
             if leafmap.has_key(name):
-                observations[leafmap[name]] = code_nucleotide(alignment.seq[i])
+                observations[leafmap[name]] = code_nucleotide_extended(alignment.seq[i], name)
         # call phylotree library
-        expectation = pt_expectation(phylotree, observations, options['prior'])
+        expectation = pt_expectation(phylotree, observations, options['prior']+options['outgroup-prior'])
         result.append(reweight(expectation))
     return result
 
@@ -217,10 +229,15 @@ def parse_macs():
 
     # print prior if verbose
     if options['verbose']:
-        print >> sys.stderr, "Prior:",
+        print >> sys.stderr, "      Outgroup: " + str(options['outgroup'])
+        print >> sys.stderr, "         Prior:",
         for i in range(len(options['prior'])-1):
             print >> sys.stderr, '%s:%f,' % (DNA.decode(i), options['prior'][i]),
         print >> sys.stderr, '%s:%f' % ('Nil', options['prior'][4])
+        print >> sys.stderr, "Outgroup Prior:",
+        for i in range(len(options['prior'])-1):
+            print >> sys.stderr, '%s:%f,' % (DNA.decode(i), options['outgroup-prior'][i]),
+        print >> sys.stderr, '%s:%f' % ('Nil', options['outgroup-prior'][4])
 
     # parse macs file
     entries = []
@@ -245,7 +262,7 @@ def parse_macs():
 def main():
     global options
     try:
-        longopts   = ["prior=", "threads=", "help", "verbose"]
+        longopts   = ["outgroup=", "outgroup-prior=", "prior=", "threads=", "help", "verbose"]
         opts, tail = getopt.getopt(sys.argv[1:], "d:f:p:r:s:t:hv", longopts)
     except getopt.GetoptError:
         usage()
@@ -262,6 +279,8 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
+        if o == "--outgroup":
+            options['outgroup'] = filter(lambda x: x != '', a.strip().split(' '))
         if o == "-d":
             options['database_dir'] = a
         if o == "-f":
@@ -276,6 +295,11 @@ def main():
         if o == "--prior":
             options['prior'] = map(float, a.split(':'))
             if not len(options['prior']) == 5:
+                usage()
+                return 1
+        if o == "--outgroup-prior":
+            options['outgroup-prior'] = map(float, a.split(':'))
+            if not len(options['outgroup-prior']) == 5:
                 usage()
                 return 1
         if o in ("-t", "--threads"):
