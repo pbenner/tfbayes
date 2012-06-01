@@ -79,10 +79,10 @@ def parse_motif(fin, name, output_file):
 def join_plots(basename, files):
     cmd = 'pdftk %s cat output %s.pdf' % (' '.join(files), basename)
     print cmd
-    os.system(cmd)
+    subprocess.call(cmd, shell=True)
     cmd = 'rm -f %s' % ' '.join(files)
     print cmd
-    os.system(cmd)
+    subprocess.call(cmd, shell=True)
 
 def parse_motifformat(file_name):
     fin = open(file_name,   'r')
