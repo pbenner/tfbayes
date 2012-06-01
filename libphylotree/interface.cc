@@ -82,6 +82,16 @@ pt_root_t* pt_parse_file(const char* file_name)
         return pt_root;
 }
 
+pt_node_t* pt_clone(pt_node_t* pt_node)
+{
+        return pt_node->clone();
+}
+
+void pt_destroy(pt_node_t* pt_node)
+{
+        pt_node->destroy();
+}
+
 char* pt_print(pt_root_t* pt_root)
 {
         std::ostringstream stream;

@@ -28,9 +28,11 @@
 #include <string>
 #include <ostream>
 
+#include <clonable.hh>
+
 typedef short nucleotide_t;
 
-class pt_node_t {
+class pt_node_t : public clonable {
 public:
         pt_node_t(nucleotide_t x = -1, double d = 0.0,
                   pt_node_t* left  = NULL,
@@ -39,12 +41,21 @@ public:
                 : x(x), d(d), left(left), right(right), name(name)
                 { }
 
+        pt_node_t* clone() const {
+                pt_node_t* pt_node = new pt_node_t(*this);
+                if (!leaf()) {
+                        pt_node->left  = left ->clone();
+                        pt_node->right = right->clone();
+                }
+                return pt_node;
+        }
+
         /* typedef for a set of nodes */
         typedef std::set<pt_node_t*> nodes_t;
 
         void destroy() {
                 if (!leaf()) {
-                        left->destroy();
+                        left ->destroy();
                         right->destroy();
                 }
                 delete(this);

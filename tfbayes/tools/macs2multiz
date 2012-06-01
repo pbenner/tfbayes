@@ -101,8 +101,7 @@ def code_nucleotide_extended(nucleotide, name):
     else:
         return code_nucleotide(nucleotide)
 
-def alignment_to_logo(multiple_alignment):
-    phylotree = options['phylotree']
+def alignment_to_logo(multiple_alignment, phylotree):
     leafmap   = options['leafmap']
     num_leafs = pt_num_leafs(phylotree)
 
@@ -172,6 +171,9 @@ class ComputationThread(threading.Thread):
         self.queue_in  = queue_in
         self.queue_out = queue_out
         self.mutex     = mutex
+        self.phylotree = pt_clone(options['phylotree'])
+    def __del__(self):
+        pt_destroy(self.phylotree)
     def run(self):
         while True:
             job = self.queue_in.get()
@@ -180,7 +182,7 @@ class ComputationThread(threading.Thread):
                 print >> sys.stderr, 'Processing %s.' % job['name']
             self.mutex.release()
             alignment = get_alignment(job['chromosome'], job['seq_start'], job['seq_end'])
-            logo      = alignment_to_logo(alignment)
+            logo      = alignment_to_logo(alignment, self.phylotree)
             if logo:
                 result = {
                     'expectations' : logo,
