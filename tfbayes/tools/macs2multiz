@@ -66,7 +66,7 @@ options = {
     'phylotree'     : None,
     'leafmap'       : None,
     'threads'       : 1,
-    'prior'         : [1.0, 1.0, 1.0, 1.0, 1.0],
+    'prior'         : [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 10.0],
     'refseq'        : 'hg18',
     'output_format' : 'maf',
     'strip'         : None,
@@ -75,6 +75,13 @@ options = {
 
 # multiz2logo
 # ------------------------------------------------------------------------------
+
+def code_nucleotide_extended(nucleotide, name):
+    if (name == 'hg19'    or name == 'panTro2' or
+        name == 'gorGor1' or name == 'ponAbe2'):
+        return code_nucleotide(nucleotide) + 5
+    else:
+        return code_nucleotide(nucleotide)
 
 def print_result(result):
     print '>%s' % result['name']
@@ -125,7 +132,7 @@ def alignment_to_logo(multiple_alignment):
         for alignment in multiple_alignment:
             name = alignment.name.split(".")[0]
             if leafmap.has_key(name):
-                observations[leafmap[name]] = code_nucleotide(alignment.seq[i])
+                observations[leafmap[name]] = code_nucleotide_extended(alignment.seq[i], name)
         # call phylotree library
         expectation = pt_expectation(phylotree, observations, options['prior'])
         result.append(reweight(expectation))
@@ -275,7 +282,7 @@ def main():
             options['leafmap']   = pt_create_map(options['phylotree'])
         if o == "--prior":
             options['prior'] = map(float, a.split(':'))
-            if not len(options['prior']) == 5:
+            if not len(options['prior']) == 10:
                 usage()
                 return 1
         if o in ("-t", "--threads"):

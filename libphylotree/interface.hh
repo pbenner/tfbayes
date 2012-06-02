@@ -30,7 +30,7 @@
 #include <tfbayes/exception.h>
 #include <tfbayes/linalg.h>
 
-#define alphabet_size 5
+#define alphabet_size 10
 //typedef unsigned short code_t;
 typedef float code_t;
 
