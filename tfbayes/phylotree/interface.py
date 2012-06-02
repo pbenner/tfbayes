@@ -83,6 +83,12 @@ _lib._free.argtypes = [POINTER(None)]
 _lib.pt_parse_file.restype  = POINTER(PT_ROOT)
 _lib.pt_parse_file.argtypes = [c_char_p]
 
+_lib.pt_clone.restype  = POINTER(PT_ROOT)
+_lib.pt_clone.argtypes = [POINTER(PT_ROOT)]
+
+_lib.pt_destroy.restype  = None
+_lib.pt_destroy.argtypes = [POINTER(PT_ROOT)]
+
 _lib.pt_print.restype  = c_char_p
 _lib.pt_print.argtypes = [POINTER(PT_ROOT)]
 
@@ -128,6 +134,12 @@ def pt_parse_file(filename):
     c_filename = c_char_p(filename)
     pt_root = _lib.pt_parse_file(c_filename)
     return pt_root
+
+def pt_clone(pt_node):
+    return _lib.pt_clone(pt_node)
+
+def pt_destroy(pt_node):
+    _lib.pt_destroy(pt_node)
 
 def pt_print(pt_root):
     print pt_root.contents
