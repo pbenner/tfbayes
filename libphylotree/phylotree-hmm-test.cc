@@ -20,14 +20,10 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <iostream>
+#include <iomanip>
+#include <string>
 
-#include <alignment.hh>
-#include <phylotree.hh>
-#include <phylotree-parser.hh>
-#include <phylotree-polynomial.hh>
-#include <phylotree-gradient.hh>
-#include <marginal-likelihood.hh>
-
+#include <phylotree-hmm.hh>
 #include <tfbayes/exception.h>
 
 #include <getopt.h>
@@ -36,6 +32,9 @@
 typedef float code_t;
 
 using namespace std;
+
+// Input/Output
+////////////////////////////////////////////////////////////////////////////////
 
 ostream& operator<< (ostream& o, const exponent_t<code_t, alphabet_size>& exponent) {
         if(exponent[0]) o << " Pa^" << exponent[0];
@@ -76,28 +75,65 @@ size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent) {
         return seed;
 }
 
+// Tools
+////////////////////////////////////////////////////////////////////////////////
+
+static
+const std::string strip(const std::string& str) {
+        const std::string& whitespace = " \t\n";
+        const size_t begin = str.find_first_not_of(whitespace);
+        if (begin == std::string::npos) {
+                        return "";
+        }
+        const size_t end   = str.find_last_not_of(whitespace);
+        const size_t range = end - begin + 1;
+        
+        return str.substr(begin, range);
+}
+
+static
+std::vector<std::string> token(const std::string& str, char t) {
+        std::string token;
+        std::vector<std::string> tokens;
+        std::istringstream iss(str);
+        while (getline(iss, token, t)) {
+                tokens.push_back(strip(token));
+        }
+        return tokens;
+}
+
 // Options
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct _options_t {
-        double alpha;
-        size_t burnin;
-        double lambda;
-        double r;
-        size_t max_steps;
-        double min_change;
-        double epsilon;
-        double sigma;
+        size_t dimension;
+        phylotree_hmm_t<code_t, alphabet_size>::priors_t priors;
+        phylotree_hmm_t<code_t, alphabet_size>::matrix_t transition;
+        bool verbose;
         _options_t()
-                : alpha(0.2),
-                  burnin(1000),
-                  lambda(0.1),
-                  r(2.0),
-                  max_steps(1000),
-                  min_change(0.0005),
-                  epsilon(0.001),
-                  sigma(0.01)
-                { }
+                : dimension(2),
+                  priors(),
+                  transition(),
+                  verbose(false) {
+
+                exponent_t<code_t, alphabet_size> alpha_0;
+                exponent_t<code_t, alphabet_size> alpha_1;
+                for (size_t i = 0; i < alphabet_size; i++) {
+                        alpha_0[i] = 0.1;
+                        alpha_1[i] = 1.0;
+                }
+                priors.push_back(alpha_0);
+                priors.push_back(alpha_1);
+
+                transition.push_back(phylotree_hmm_t<code_t, alphabet_size>::vector_t(2, 0.0));
+                transition.push_back(phylotree_hmm_t<code_t, alphabet_size>::vector_t(2, 0.0));
+
+                transition[0][0] = 0.95; // 0 -> 0
+                transition[0][1] = 0.05; // 0 -> 1
+
+                transition[1][0] = 0.05; // 1 -> 0
+                transition[1][1] = 0.95; // 1 -> 1
+        }
 } options_t;
 
 static options_t options;
@@ -108,24 +144,20 @@ static options_t options;
 static
 void print_usage(char *pname, FILE *fp)
 {
-        (void)fprintf(fp, "\nUsage: %s [OPTION] METHOD TREE ALIGNMENT\n\n", pname);
+        (void)fprintf(fp, "\nUsage: %s [OPTION] TREE ALIGNMENT\n\n", pname);
         (void)fprintf(fp,
-                      "Methods: gradient-ascent, metropolis-hastings\n"
                       "\n"
                       "Options:\n"
-                      "             -a DOUBLE       - pseudo count\n"
-                      "             -b INTEGER      - number of burn-in samples for metropolis-hastings\n"
-                      "             -m INTEGER      - maximum number of steps\n"
-                      "             -n DOUBLE       - stop gradient ascent if change is smaller than this value\n"
-                      "             -e DOUBLE       - gradient ascent step size\n"
-                      "             -r DOUBLE       - r parameter for the gamma distribution\n"
-                      "             -l DOUBLE       - lambda parameter for the gamma distribution\n"
-                      "             -s DOUBLE       - sigma^2 parameter for proposal distribution\n"
+                      "             -a VECTOR       - pseudo count\n"
+                      "             -d DIMENSION    - dimension\n"
+                      "             -t MATRIX       - transition matrix\n"
                       "\n"
+                      "             -v              - be verbose\n"
                       "   --help                    - print help and exit\n"
                       "   --version                 - print version information and exit\n\n");
 }
 
+static
 void wrong_usage(const char *msg)
 {
 
@@ -133,7 +165,7 @@ void wrong_usage(const char *msg)
                 (void)fprintf(stderr, "%s\n", msg);
         }
         (void)fprintf(stderr,
-                      "Try `optimization-test --help' for more information.\n");
+                      "Try `phylotree-hmm-test --help' for more information.\n");
 
         exit(EXIT_FAILURE);
 
@@ -151,6 +183,7 @@ void print_version(FILE *fp)
 
 extern FILE *yyin;
 
+static
 pt_root_t* parse_tree_file(const char* file_tree)
 {
         yyin = fopen(file_tree, "r");
@@ -163,92 +196,101 @@ pt_root_t* parse_tree_file(const char* file_tree)
         return (pt_root_t*)pt_parsetree->convert();
 }
 
+static
 void run_hmm(const char* file_tree, const char* file_alignment)
 {
+        size_t dimension = options.dimension;
+
         /* phylogenetic tree */
         pt_root_t* pt_root = parse_tree_file(file_tree);
         pt_root->init(alphabet_size);
 
-        /* pseudo counts */
-        exponent_t<code_t, alphabet_size> alpha_0;
-        exponent_t<code_t, alphabet_size> alpha_1;
-        for (size_t i = 0; i < alphabet_size; i++) {
-                alpha_0[i] = 0.1;
-                alpha_1[i] = 1.0;
-        }
-
         /* alignment */
         alignment_t<code_t> alignment(file_alignment, pt_root);
 
-        cerr << pt_root
-             << endl;
+        /* uniform distribution on the initial state */
+        phylotree_hmm_t<code_t, alphabet_size>::vector_t px_0(dimension, 1.0/(double)dimension);
 
-        // uniform distribution on the initial state
-        std::vector<double> px_0(2, 0.5);
+        phylotree_hmm_t<code_t, alphabet_size> hmm(px_0, options.transition, options.priors);
+        hmm.run(alignment);
 
-        // transition probabilities x_i -> x_i+1
-        std::vector<std::vector<double> > transition;
-        transition.push_back(std::vector<double>(2, 1.0));
-        transition.push_back(std::vector<double>(2, 1.0));
-
-        transition[0][0] = 0.95; // 0 -> 0
-        transition[0][1] = 0.05; // 0 -> 1
-
-        transition[1][0] = 0.05; // 1 -> 0
-        transition[1][1] = 0.95; // 1 -> 1
-
-        std::vector<std::vector<double> > likelihood;
-        std::vector<std::vector<double> > prediction;
-
-        likelihood.push_back(std::vector<double>(2, 1.0));
-        prediction.push_back(std::vector<double>(2, 1.0));
-        prediction[0][0] = transition[0][0]*px_0[0] + transition[1][0]*px_0[1];
-        prediction[0][1] = transition[0][1]*px_0[0] + transition[1][1]*px_0[1];
-
-        for (alignment_t<code_t>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                std::vector<double> likelihood_i(2, 1.0); // p(z_k | x_k)
-                std::vector<double> prediction_i(2, 1.0); // p(x_k | z_1:k-1)
-                std::vector<double> p_hidden(2, 1.0);
-                double normalization;
-
-                // compute likelihood
-                likelihood_i[0] = exp(pt_marginal_likelihood(alignment.tree, alpha_0));
-                likelihood_i[1] = exp(pt_marginal_likelihood(alignment.tree, alpha_1));
-//                cout << "likelihood 0: " << likelihood_i[0] << endl;
-//                cout << "likelihood 1: " << likelihood_i[1] << endl;
-
-                // compute prediction
-                prediction_i[0] =
-                        transition[0][0]*likelihood.back()[0]*prediction.back()[0] +
-                        transition[1][0]*likelihood.back()[1]*prediction.back()[1];
-                prediction_i[1] =
-                        transition[0][1]*likelihood.back()[0]*prediction.back()[0] +
-                        transition[1][1]*likelihood.back()[1]*prediction.back()[1];
-
-                // normalize
-                normalization = prediction_i[0] + prediction_i[1];
-                prediction_i[0] = prediction_i[0]/normalization;
-                prediction_i[1] = prediction_i[1]/normalization;
-
-                // save result
-                likelihood.push_back(likelihood_i);
-                prediction.push_back(prediction_i);
-
-                // compute p(x_k | z_1:k)
-                p_hidden[0] = likelihood_i[0] * prediction_i[0];
-                p_hidden[1] = likelihood_i[1] * prediction_i[1];
-                normalization = p_hidden[0] + p_hidden[1];
-                p_hidden[0] = p_hidden[0]/normalization;
-                p_hidden[1] = p_hidden[1]/normalization;
-                cout << "p_hidden: " << p_hidden[0]
-                     << ", "         << p_hidden[1]
+        for (size_t i = 0; i < hmm.size(); i++) {
+                cout << setprecision(8)
+                     << fixed
+                     << hmm[i][0] << " "
+                     << hmm[i][1]
                      << endl;
         }
+}
 
-        stringstream ss;
-        pt_root->print(ss, true);
-        cout << ss.str()
-             << endl;
+void init_options(const string& alpha, const string& transition)
+{
+        vector<string> tmp;
+        vector<string> tmp_;
+
+        if (alpha != "") {
+                options.priors = phylotree_hmm_t<code_t, alphabet_size>::priors_t();
+                tmp = token(strip(alpha), ' ');
+                for (size_t i = 0; i < tmp.size(); i++) {
+                        if (tmp[i] == "") {
+                                continue;
+                        }
+                        string str = tmp[i];
+                        exponent_t<code_t, alphabet_size> alpha;
+                        for (size_t i = 0; i < alphabet_size; i++) {
+                                alpha[i] = atof(str.c_str());
+                        }
+                        options.priors.push_back(alpha);
+                }
+                if (options.priors.size() != options.dimension) {
+                        cerr << "Dimensions do not match."
+                             << endl;
+                        exit(EXIT_FAILURE);
+                }
+        }
+        if (options.verbose) {
+                for (size_t i = 0; i < options.dimension; i++) {
+                        cerr << "alpha[" << i << "]: ";
+                        for (size_t j = 0; j < alphabet_size; j++) {
+                                cerr << options.priors[i][j]
+                                     << " ";
+                        }
+                        cerr << endl;
+                }
+        }
+        if (transition != "") {
+                options.transition = phylotree_hmm_t<code_t, alphabet_size>::matrix_t();
+                for (size_t i = 0; i < options.dimension; i++) {
+                        options.transition.push_back(
+                                phylotree_hmm_t<code_t, alphabet_size>::vector_t(options.dimension, 0.0));
+                }
+                tmp = token(strip(transition), ';');
+                for (size_t i = 0; i < tmp.size(); i++) {
+                        tmp_ = token(tmp[i], ' ');
+                        for (size_t j = 0; j < tmp_.size(); j++) {
+                                string str = tmp_[j];
+                                if (i >= options.dimension || j >= options.dimension) {
+                                        cerr << "Dimensions do not match."
+                                             << endl;
+                                        exit(EXIT_FAILURE);
+                                }
+                                options.transition[i][j] = atof(str.c_str());
+                        }
+                }
+        }
+        if (options.verbose) {
+                cerr << "transition matrix:"
+                     << endl;
+                for (size_t i = 0; i < options.transition.size(); i++) {
+                        for (size_t j = 0; j < options.transition[0].size(); j++) {
+                                cerr << setprecision(3)
+                                     << fixed
+                                     << options.transition[i][j]
+                                     << " ";
+                        }
+                        cerr << endl;
+                }
+        }
 }
 
 int main(int argc, char *argv[])
@@ -256,14 +298,17 @@ int main(int argc, char *argv[])
         const char* file_tree;
         const char* file_alignment;
 
+        string alpha;
+        string transition;
+
         for(;;) {
                 int c, option_index = 0;
                 static struct option long_options[] = {
                         { "help",            0, 0, 'h' },
-                        { "version",         0, 0, 'v' }
+                        { "version",         0, 0, 's' }
                 };
 
-                c = getopt_long(argc, argv, "a:b:e:m:n:r:l:s:hv",
+                c = getopt_long(argc, argv, "a:d:t:vh",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -272,33 +317,21 @@ int main(int argc, char *argv[])
 
                 switch(c) {
                 case 'a':
-                        options.alpha = atof(optarg);
+                        alpha = string(optarg);
                         break;
-                case 'b':
-                        options.burnin = atoi(optarg);
+                case 'd':
+                        options.dimension = atoi(optarg);
                         break;
-                case 'e':
-                        options.epsilon = atof(optarg);
+                case 't':
+                        transition = string(optarg);
                         break;
-                case 'm':
-                        options.max_steps = atoi(optarg);
-                        break;
-                case 'n':
-                        options.min_change = atof(optarg);
-                        break;
-                case 'r':
-                        options.r = atof(optarg);
-                        break;
-                case 'l':
-                        options.lambda = atof(optarg);
-                        break;
-                case 's':
-                        options.sigma = atof(optarg);
+                case 'v':
+                        options.verbose = true;
                         break;
                 case 'h':
                         print_usage(argv[0], stdout);
                         exit(EXIT_SUCCESS);
-                case 'v':
+                case 's':
                         print_version(stdout);
                         exit(EXIT_SUCCESS);
                 default:
@@ -310,6 +343,7 @@ int main(int argc, char *argv[])
                 wrong_usage("Wrong number of arguments.");
                 exit(EXIT_FAILURE);
         }
+        init_options(alpha, transition);
 
         file_tree      = argv[optind+0];
         file_alignment = argv[optind+1];
