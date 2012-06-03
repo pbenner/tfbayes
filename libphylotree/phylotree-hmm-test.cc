@@ -25,6 +25,7 @@
 
 #include <phylotree-hmm.hh>
 #include <tfbayes/exception.h>
+#include <tfbayes/strtools.hh>
 
 #include <getopt.h>
 
@@ -73,33 +74,6 @@ size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent) {
         seed += (size_t)exponent[4] << 8;
 
         return seed;
-}
-
-// Tools
-////////////////////////////////////////////////////////////////////////////////
-
-static
-const std::string strip(const std::string& str) {
-        const std::string& whitespace = " \t\n";
-        const size_t begin = str.find_first_not_of(whitespace);
-        if (begin == std::string::npos) {
-                        return "";
-        }
-        const size_t end   = str.find_last_not_of(whitespace);
-        const size_t range = end - begin + 1;
-        
-        return str.substr(begin, range);
-}
-
-static
-std::vector<std::string> token(const std::string& str, char t) {
-        std::string token;
-        std::vector<std::string> tokens;
-        std::istringstream iss(str);
-        while (getline(iss, token, t)) {
-                tokens.push_back(strip(token));
-        }
-        return tokens;
 }
 
 // Options

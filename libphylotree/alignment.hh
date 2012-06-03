@@ -28,6 +28,7 @@
 
 #include <phylotree.hh>
 #include <tfbayes/fasta.hh>
+#include <tfbayes/strtools.hh>
 
 template <typename CODE_TYPE>
 CODE_TYPE code_nucleotide(char a)
@@ -119,30 +120,6 @@ public:
                         }
                         return find_node(name, node->right);
                 }
-        }
-
-        static
-        const std::string strip(const std::string& str) {
-                const std::string& whitespace = " \t\n";
-                const size_t begin = str.find_first_not_of(whitespace);
-                if (begin == std::string::npos) {
-                        return "";
-                }
-                const size_t end   = str.find_last_not_of(whitespace);
-                const size_t range = end - begin + 1;
-
-                return str.substr(begin, range);
-        }
-
-        static
-        std::vector<std::string> token(const std::string& str, char t) {
-                std::string token;
-                std::vector<std::string> tokens;
-                std::istringstream iss(str);
-                while (getline(iss, token, t)) {
-                        tokens.push_back(strip(token));
-                }
-                return tokens;
         }
 
         // typedefs
