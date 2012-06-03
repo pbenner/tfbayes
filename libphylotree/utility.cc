@@ -25,7 +25,7 @@
 
 using namespace std;
 
-ostream& operator<< (ostream& o, const exponent_t<code_t, alphabet_size>& exponent) {
+ostream& operator<< (ostream& o, const exponent_t<short, 4>& exponent) {
         if(exponent[0]) o << " Pa^" << exponent[0];
         if(exponent[1]) o << " Pc^" << exponent[1];
         if(exponent[2]) o << " Pg^" << exponent[2];
@@ -33,14 +33,14 @@ ostream& operator<< (ostream& o, const exponent_t<code_t, alphabet_size>& expone
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_term_t<code_t, alphabet_size>& term) {
+ostream& operator<< (ostream& o, const polynomial_term_t<short, 4>& term) {
         o << term.coefficient()
           << term.exponent();
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size>& polynomial) {
-        for (polynomial_t<code_t, alphabet_size>::const_iterator it = polynomial.begin();
+ostream& operator<< (ostream& o, const polynomial_t<short, 4>& polynomial) {
+        for (polynomial_t<short, 4>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 if (it != polynomial.begin()) {
                         o << " + " << *it;
@@ -53,14 +53,14 @@ ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size>& poly
         return o;
 }
 
-ostream& operator<< (ostream& o, const polynomial_term_t<code_t, alphabet_size, mutation_tree_t>& term) {
+ostream& operator<< (ostream& o, const polynomial_term_t<short, 4, mutation_tree_t>& term) {
         o << term.coefficient()
           << term.exponent();
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size, mutation_tree_t>& polynomial) {
-        for (polynomial_t<code_t, alphabet_size, mutation_tree_t>::const_iterator it = polynomial.begin();
+ostream& operator<< (ostream& o, const polynomial_t<short, 4, mutation_tree_t>& polynomial) {
+        for (polynomial_t<short, 4, mutation_tree_t>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 if (it != polynomial.begin()) {
                         o << " + " << *it;
@@ -73,11 +73,77 @@ ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size, mutat
         return o;
 }
 
-size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent) {
+size_t hash_value(const exponent_t<short, 4>& exponent) {
         size_t seed = 0;
-        boost::hash_combine(seed, exponent[0]);
-        boost::hash_combine(seed, exponent[1]);
-        boost::hash_combine(seed, exponent[2]);
-        boost::hash_combine(seed, exponent[3]);
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+        seed += (size_t)exponent[2] <<  4;
+        seed += (size_t)exponent[3] <<  6;
+
+        return seed;
+}
+
+
+size_t hash_value(const exponent_t<short, 5>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+        seed += (size_t)exponent[2] <<  4;
+        seed += (size_t)exponent[3] <<  6;
+        seed += (size_t)exponent[4] <<  8;
+
+        return seed;
+}
+
+size_t hash_value(const exponent_t<short, 10>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+        seed += (size_t)exponent[2] <<  4;
+        seed += (size_t)exponent[3] <<  6;
+        seed += (size_t)exponent[4] <<  8;
+        seed += (size_t)exponent[5] << 10;
+        seed += (size_t)exponent[6] << 12;
+        seed += (size_t)exponent[7] << 14;
+        seed += (size_t)exponent[8] << 16;
+        seed += (size_t)exponent[9] << 18;
+
+        return seed;
+}
+
+size_t hash_value(const exponent_t<float, 4>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+        seed += (size_t)exponent[2] <<  4;
+        seed += (size_t)exponent[3] <<  6;
+
+        return seed;
+}
+
+size_t hash_value(const exponent_t<float, 5>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+        seed += (size_t)exponent[2] <<  4;
+        seed += (size_t)exponent[3] <<  6;
+        seed += (size_t)exponent[4] <<  8;
+
+        return seed;
+}
+
+size_t hash_value(const exponent_t<float, 10>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+        seed += (size_t)exponent[2] <<  4;
+        seed += (size_t)exponent[3] <<  6;
+        seed += (size_t)exponent[4] <<  8;
+        seed += (size_t)exponent[5] << 10;
+        seed += (size_t)exponent[6] << 12;
+        seed += (size_t)exponent[7] << 14;
+        seed += (size_t)exponent[8] << 16;
+        seed += (size_t)exponent[9] << 18;
+
         return seed;
 }

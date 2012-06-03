@@ -26,6 +26,9 @@
 
 using namespace std;
 
+#define alphabet_size 4
+typedef short code_t;
+
 void test_tree1() {
         cout << "Test 1:" << endl;
         pt_leaf_t n2( 1, 1.0, "n2");

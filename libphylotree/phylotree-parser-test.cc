@@ -41,6 +41,9 @@
 
 using namespace std;
 
+#define alphabet_size 4
+typedef short code_t;
+
 void pt_init_leaf(const map<string, code_t>& observations, pt_node_t* node) {
         if (observations.find(node->name) == observations.end()) {
                 node->x = rand()%alphabet_size;

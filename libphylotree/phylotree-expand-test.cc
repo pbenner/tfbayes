@@ -27,6 +27,9 @@
 
 using namespace std;
 
+#define alphabet_size 4
+typedef short code_t;
+
 int main(void) {
         pt_leaf_t n10( 3, 10.0, "n10");
         pt_leaf_t n9( 3, 9.0, "n9");

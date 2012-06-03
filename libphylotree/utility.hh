@@ -27,16 +27,19 @@
 #include <incomplete-expression.hh>
 #include <phylotree-gradient-coefficient.hh>
 
-#define alphabet_size 4
-typedef short code_t;
+std::ostream& operator<< (std::ostream& o, const exponent_t<short, 4>& exponent);
+std::ostream& operator<< (std::ostream& o, const polynomial_term_t<short, 4>& term);
+std::ostream& operator<< (std::ostream& o, const polynomial_t<short, 4>& polynomial);
 
-std::ostream& operator<< (std::ostream& o, const exponent_t<code_t, alphabet_size>& exponent);
-std::ostream& operator<< (std::ostream& o, const polynomial_term_t<code_t, alphabet_size>& term);
-std::ostream& operator<< (std::ostream& o, const polynomial_t<code_t, alphabet_size>& polynomial);
+std::ostream& operator<< (std::ostream& o, const polynomial_term_t<short, 4, mutation_tree_t>& term);
+std::ostream& operator<< (std::ostream& o, const polynomial_t<short, 4, mutation_tree_t>& polynomial);
 
-std::ostream& operator<< (std::ostream& o, const polynomial_term_t<code_t, alphabet_size, mutation_tree_t>& term);
-std::ostream& operator<< (std::ostream& o, const polynomial_t<code_t, alphabet_size, mutation_tree_t>& polynomial);
+size_t hash_value(const exponent_t<short, 4>& exponent);
+size_t hash_value(const exponent_t<short, 5>& exponent);
+size_t hash_value(const exponent_t<short, 10>& exponent);
 
-size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent);
+size_t hash_value(const exponent_t<float, 4>& exponent);
+size_t hash_value(const exponent_t<float, 5>& exponent);
+size_t hash_value(const exponent_t<float, 10>& exponent);
 
 #endif /* UTILITY_HH */
