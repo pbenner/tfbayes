@@ -182,6 +182,62 @@ public:
                 return iterator(tree, length, length, alignments, taxa_mapping);
         }
 
+        // Reverse Iterator
+        ////////////////////////////////////////////////////////////////////////
+        class reverse_iterator
+        {
+        public:
+                reverse_iterator(pt_root_t* tree, size_t i, size_t length,
+                         const alignment_type& alignments,
+                         const taxa_mapping_type& taxa_mapping)
+                        : tree(tree), i(i), length(length), alignments(alignments),
+                          taxa_mapping(taxa_mapping) { 
+                        //
+                        insert_observables();
+                }
+
+                void insert_observables() {
+                        if (i >= length) {
+                                return;
+                        }
+                        for (taxa_mapping_type::const_iterator it = taxa_mapping.begin();
+                             it != taxa_mapping.end(); it++) {
+                                it->second->x = alignments.find(it->first)->second[length-i-1];
+                        }
+                }
+
+                bool operator==(const reverse_iterator& it) {
+                        return i == it.i;
+                }
+                bool operator!=(const reverse_iterator& it) {
+                        return i != it.i;
+                }
+                reverse_iterator& operator++(int _) {
+                        i++;
+                        insert_observables();
+                        return *this;
+                }
+                pt_root_t* operator->() {
+                        return tree;
+                }
+                pt_root_t& operator*() {
+                        return *operator->();
+                }
+        private:
+                pt_root_t* tree;
+                size_t i;
+                size_t length;
+                const alignment_type& alignments;
+                const taxa_mapping_type& taxa_mapping;
+        };
+        reverse_iterator rbegin() {
+                return reverse_iterator(tree, 0, length, alignments, taxa_mapping);
+        }
+        reverse_iterator rend() {
+                return reverse_iterator(tree, length, length, alignments, taxa_mapping);
+        }
+
+
         pt_root_t* tree;
         size_t length;
 private:
