@@ -64,7 +64,7 @@ public:
                 return 1.0;
         }
         double sample(gsl_rng * rng, double d_old) const {
-                return d_old+gsl_ran_gaussian(rng, sigma_square);
+                return std::max(d_old+gsl_ran_gaussian(rng, sigma_square), 0.0);
         }
         void increase_jump(double eta) {
                 sigma_square = sigma_square+eta;
@@ -106,14 +106,16 @@ template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_metropolis_hastings_t
 {
 public:
-        pt_metropolis_hastings_t(alignment_t<CODE_TYPE>& alignment,
+        pt_metropolis_hastings_t(pt_root_t* tree,
+                                 alignment_t<CODE_TYPE>& alignment,
                                  const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
                                  double r, double lambda,
                                  jumping_distribution_t& jumping_distribution,
                                  double acceptance_rate = 0.7)
-                : alignment(alignment), alpha(alpha),
+                : tree(tree), alignment(alignment), alpha(alpha),
                   gamma_distribution(r, lambda),
-                  acceptance_rate(acceptance_rate) {
+                  acceptance_rate(acceptance_rate),
+                  step(0) {
 
                 // initialize random generator
                 struct timeval tv;
@@ -125,7 +127,8 @@ public:
                 gsl_rng_set(rng, seed);
 
                 // initialize nodes and jumping distributions
-                nodes = alignment.tree->get_nodes();
+                this->tree  = tree->clone();
+                this->nodes = this->tree->get_nodes();
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
                         jumping_distributions[*is] = jumping_distribution.clone();
                 }
@@ -138,12 +141,14 @@ public:
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
                         delete(jumping_distributions[*is]);
                 }
+                tree->destroy();
         }
 
         double log_likelihood() {
                 double result = 0;
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        const pt_polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial(alignment.tree);
+                        it.apply(tree);
+                        const pt_polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial(tree);
                         // loop over monomials
                         double tmp = -HUGE_VAL;
                         for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = polynomial.begin();
@@ -153,6 +158,26 @@ public:
                         result += tmp;
                 }
                 return result;
+        }
+        void update_means() {
+                // update means
+                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                        means[*is] = ((double)step*means[*is] + (*is)->d)/(double)(step+1);
+                        std::cerr << std::setprecision(8)
+                                  << std::fixed
+                                  << means[*is] << " ";
+                }
+                std::cerr << std::endl;
+        }
+        void update_steps() {
+                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                        if (acceptance[*is] > acceptance_rate) {
+                                jumping_distributions[*is]->increase_jump(fabs(acceptance[*is]-acceptance_rate));
+                        }
+                        else {
+                                jumping_distributions[*is]->decrease_jump(fabs(acceptance[*is]-acceptance_rate));
+                        }
+                }
         }
         std::pair<double,bool> sample(pt_node_t* node, double log_likelihood_ref) {
                 double rho;
@@ -183,9 +208,7 @@ public:
                         return std::pair<double, bool>(log_likelihood_ref, false);
                 }
         }
-        double sample(boost::unordered_map<pt_node_t*, double>& means,
-                      boost::unordered_map<pt_node_t*, double>& acceptance,
-                      size_t i, bool burnin) {
+        void sample() {
                 double log_likelihood_ref = log_likelihood();
                 // loop over nodes
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
@@ -193,52 +216,41 @@ public:
                         log_likelihood_ref = result.first;
                         // estimate acceptance rate
                         if (result.second) {
-                                acceptance[*is] = (acceptance[*is]*i + 1.0)/(i+1.0);
+                                acceptance[*is] = (acceptance[*is]*step + 1.0)/(step+1.0);
                         }
                         else {
-                                acceptance[*is] = (acceptance[*is]*i)/(i+1.0);
+                                acceptance[*is] = (acceptance[*is]*step)/(step+1.0);
                         }
                 }
-                // update means
-                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
-                        means[*is] = ((double)i*means[*is] + (*is)->d)/(double)(i+1);
-                        print_debug("rate: %f\n", acceptance[*is]);
-                        if (burnin) {
-                                if (acceptance[*is] > acceptance_rate) {
-                                        jumping_distributions[*is]->increase_jump(fabs(acceptance[*is]-acceptance_rate));
-                                }
-                                else {
-                                        jumping_distributions[*is]->decrease_jump(fabs(acceptance[*is]-acceptance_rate));
-                                }
-                        }
-                        std::cerr << std::setprecision(8)
-                                  << std::fixed
-                                  << means[*is] << " ";
-                }
-                std::cerr << std::endl;
-
-                return log_likelihood_ref;
+                update_means();
+                step++;
         }
-        double sample(size_t burnin, size_t n) {
-                boost::unordered_map<pt_node_t*, double> means;
-                boost::unordered_map<pt_node_t*, double> acceptance;
-                double result;
+        void burnin(size_t n) {
                 // burn in
-                for (size_t i = 0; i < burnin; i++) {
-                        sample(means, acceptance, i, true);
+                for (size_t i = 0; i < n; i++) {
+                        sample();
+                        update_steps();
                 }
+                step = 0;
+        }
+        void sample(size_t n) {
                 // sample n times
                 for (size_t i = 0; i < n; i++) {
-                        result = sample(means, acceptance, i, false);
+                        sample();
                 }
+        }
+        void apply() {
                 // insert means into the tree
                 for (boost::unordered_map<pt_node_t*, double>::iterator it = means.begin(); it != means.end(); it++) {
                         it->first->d = it->second;
                 }
-                return result;
         }
 
+        boost::unordered_map<pt_node_t*, double> means;
+        boost::unordered_map<pt_node_t*, double> acceptance;
+
 private:
+        pt_root_t* tree;
         alignment_t<CODE_TYPE>& alignment;
         exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha;
 
@@ -249,6 +261,21 @@ private:
         double acceptance_rate;
 
         gsl_rng * rng;
+        size_t step;
+};
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+class pt_pmcmc_hastings_t
+{
+        pt_pmcmc_hastings_t(size_t n,
+                            pt_root_t* tree,
+                            alignment_t<CODE_TYPE>& alignment,
+                            const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
+                            double r, double lambda,
+                            jumping_distribution_t& jumping_distribution,
+                            double acceptance_rate = 0.7) {
+
+        }
 };
 
 #endif /* PHYLOTREE_SAMPLER_HH */

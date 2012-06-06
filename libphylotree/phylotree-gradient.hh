@@ -382,11 +382,12 @@ template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_gradient_ascent_t
 {
 public:
-        pt_gradient_ascent_t(alignment_t<CODE_TYPE>& alignment,
+        pt_gradient_ascent_t(pt_root_t* tree,
+                             alignment_t<CODE_TYPE>& alignment,
                              const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
                              double r, double lambda,
                              double epsilon = 0.001, double eta = 0.1)
-                : alignment(alignment), alpha(alpha), gamma_distribution(r, lambda),
+                : tree(tree), alignment(alignment), alpha(alpha), gamma_distribution(r, lambda),
                   epsilon(epsilon), eta(eta) { }
 
         /* posterior (not normalized) */
@@ -398,7 +399,8 @@ public:
                 }
 
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        const pt_polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial(alignment.tree);
+                        it.apply(tree);
+                        const pt_polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial(tree);
                         // loop over monomials
                         double tmp = -HUGE_VAL;
                         for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = polynomial.begin();
@@ -420,7 +422,8 @@ public:
                 }
                 // loop through the alignment
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        pt_gradient_t<CODE_TYPE, ALPHABET_SIZE> gradient(alignment.tree);
+                        it.apply(tree);
+                        pt_gradient_t<CODE_TYPE, ALPHABET_SIZE> gradient(tree);
 
                         double norm = 0.0;
                         // loop over monomials
@@ -463,14 +466,14 @@ public:
                 return total;
         }
         void run(size_t max, double stop = 0.0) {
-                pt_node_t::nodes_t nodes = alignment.tree->get_nodes();
+                pt_node_t::nodes_t nodes = tree->get_nodes();
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
                         node_epsilon[*is] = epsilon;
                 }
                 for (size_t i = 0; i < max; i++) {
                         std::stringstream ss;
                         double total = run(nodes);
-                        alignment.tree->print(ss, true);
+                        tree->print(ss, true);
                         std::cerr << "total change: " << total << std::endl;
                         std::cerr << ss.str()                  << std::endl;
                         if (total < stop) {
@@ -480,6 +483,7 @@ public:
         }
 
 private:
+        pt_root_t* tree;
         alignment_t<CODE_TYPE>& alignment;
         exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha;
         gamma_distribution_t gamma_distribution;

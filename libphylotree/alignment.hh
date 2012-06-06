@@ -77,19 +77,16 @@ public:
 template <typename CODE_TYPE>
 class alignment_t {
 public:
-        alignment_t(const char* filename, pt_root_t* tree)
-                : tree(tree) {
+        alignment_t(const char* filename, pt_root_t* tree) {
 
                 FastaParser parser(filename);
                 std::string sequence;
 
-                tree->init(4);
-
                 while ((sequence = parser.read_sequence()) != "") {
                         std::string taxon = token(parser.description()[0], '.')[0];
-                        pt_node_t* node   = find_node(taxon, tree);
+                        pt_node_t* node   = tree->map[taxon];
                         if (node) {
-                                taxa_mapping.insert(std::pair<std::string, pt_node_t*>(taxon, node));
+                                taxa.insert(taxon);
                                 alignments[taxon] = nucleotide_sequence_t<CODE_TYPE>(sequence);
                         }
                         else {
@@ -100,54 +97,36 @@ public:
                         }
                 }
                 if (alignments.size() > 0) {
-                        length = alignments[taxa_mapping.begin()->first].size();
+                        length = alignments[*taxa.begin()].size();
                 }
                 else {
                         length = 0;
-                }
-        }
-        pt_node_t* find_node(const std::string& name, pt_node_t* node) {
-                if (node->name == name) {
-                        return node;
-                }
-                else {
-                        if (node->leaf()) {
-                                return NULL;
-                        }
-                        pt_node_t* tmp = find_node(name, node->left);
-                        if (tmp) {
-                                return tmp;
-                        }
-                        return find_node(name, node->right);
                 }
         }
 
         // typedefs
         ////////////////////////////////////////////////////////////////////////
         typedef boost::unordered_map<std::string, nucleotide_sequence_t<CODE_TYPE> > alignment_type;
-        typedef std::set<std::pair<std::string, pt_node_t*> > taxa_mapping_type;
+        typedef std::set<std::string> taxa_type;
 
         // Iterator
         ////////////////////////////////////////////////////////////////////////
         class iterator
         {
         public:
-                iterator(pt_root_t* tree, size_t i, size_t length,
+                iterator(size_t i, size_t length,
                          const alignment_type& alignments,
-                         const taxa_mapping_type& taxa_mapping)
-                        : tree(tree), i(i), length(length), alignments(alignments),
-                          taxa_mapping(taxa_mapping) { 
-                        //
-                        insert_observables();
-                }
+                         const taxa_type& taxa)
+                        : i(i), length(length), alignments(alignments),
+                          taxa(taxa) { }
 
-                void insert_observables() {
+                void apply(pt_root_t* tree) {
                         if (i >= length) {
                                 return;
                         }
-                        for (taxa_mapping_type::const_iterator it = taxa_mapping.begin();
-                             it != taxa_mapping.end(); it++) {
-                                it->second->x = alignments.find(it->first)->second[i];
+                        for (taxa_type::const_iterator it = taxa.begin();
+                             it != taxa.end(); it++) {
+                                tree->map[*it]->x = alignments.find(*it)->second[i];
                         }
                 }
 
@@ -159,27 +138,25 @@ public:
                 }
                 iterator& operator++(int _) {
                         i++;
-                        insert_observables();
                         return *this;
                 }
-                pt_root_t* operator->() {
-                        return tree;
-                }
-                pt_root_t& operator*() {
-                        return *operator->();
-                }
+                // pt_root_t* operator->() {
+                //         return tree;
+                // }
+                // pt_root_t& operator*() {
+                //         return *operator->();
+                // }
         private:
-                pt_root_t* tree;
                 size_t i;
                 size_t length;
                 const alignment_type& alignments;
-                const taxa_mapping_type& taxa_mapping;
+                const taxa_type& taxa;
         };
         iterator begin() {
-                return iterator(tree, 0, length, alignments, taxa_mapping);
+                return iterator(0, length, alignments, taxa);
         }
         iterator end() {
-                return iterator(tree, length, length, alignments, taxa_mapping);
+                return iterator(length, length, alignments, taxa);
         }
 
         // Reverse Iterator
@@ -187,22 +164,19 @@ public:
         class reverse_iterator
         {
         public:
-                reverse_iterator(pt_root_t* tree, size_t i, size_t length,
+                reverse_iterator(size_t i, size_t length,
                          const alignment_type& alignments,
-                         const taxa_mapping_type& taxa_mapping)
-                        : tree(tree), i(i), length(length), alignments(alignments),
-                          taxa_mapping(taxa_mapping) { 
-                        //
-                        insert_observables();
-                }
+                         const taxa_type& taxa)
+                        : i(i), length(length), alignments(alignments),
+                          taxa(taxa) { }
 
-                void insert_observables() {
+                void apply(pt_root_t* tree) {
                         if (i >= length) {
                                 return;
                         }
-                        for (taxa_mapping_type::const_iterator it = taxa_mapping.begin();
-                             it != taxa_mapping.end(); it++) {
-                                it->second->x = alignments.find(it->first)->second[length-i-1];
+                        for (taxa_type::const_iterator it = taxa.begin();
+                             it != taxa.end(); it++) {
+                                tree->map[*it]->x = alignments.find(*it)->second[i];
                         }
                 }
 
@@ -214,35 +188,31 @@ public:
                 }
                 reverse_iterator& operator++(int _) {
                         i++;
-                        insert_observables();
                         return *this;
                 }
-                pt_root_t* operator->() {
-                        return tree;
-                }
-                pt_root_t& operator*() {
-                        return *operator->();
-                }
+                // pt_root_t* operator->() {
+                //         return tree;
+                // }
+                // pt_root_t& operator*() {
+                //         return *operator->();
+                // }
         private:
-                pt_root_t* tree;
                 size_t i;
                 size_t length;
                 const alignment_type& alignments;
-                const taxa_mapping_type& taxa_mapping;
+                const taxa_type& taxa;
         };
         reverse_iterator rbegin() {
-                return reverse_iterator(tree, 0, length, alignments, taxa_mapping);
+                return reverse_iterator(0, length, alignments, taxa);
         }
         reverse_iterator rend() {
-                return reverse_iterator(tree, length, length, alignments, taxa_mapping);
+                return reverse_iterator(length, length, alignments, taxa);
         }
 
-
-        pt_root_t* tree;
         size_t length;
 private:
         alignment_type alignments;
-        taxa_mapping_type taxa_mapping;
+        taxa_type taxa;
 };
 
 #endif /* ALIGNMENT_HH */

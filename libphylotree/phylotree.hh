@@ -30,6 +30,8 @@
 
 #include <clonable.hh>
 
+#include <boost/unordered_map.hpp>
+
 typedef short nucleotide_t;
 
 class pt_node_t : public clonable {
@@ -219,13 +221,46 @@ public:
                   pt_node_t* left  = NULL,
                   pt_node_t* right = NULL,
                   const std::string name = "")
-                : pt_node_t(x, -HUGE_VAL, left, right, name) { }
+                : pt_node_t(x, -HUGE_VAL, left, right, name) {
+
+                create_map();
+        }
+        pt_root_t* clone() const {
+                pt_root_t* pt_root = new pt_root_t(*this);
+                if (!leaf()) {
+                        pt_root->left  = left ->clone();
+                        pt_root->right = right->clone();
+                }
+                pt_root->create_map();
+
+                return pt_root;
+        }
+
+        /* typedefs */
+        typedef boost::unordered_map<const std::string, pt_node_t*> map_t;
+
+        /* methods */
+        void create_map() {
+                create_map(this);
+        }
+        void create_map(pt_node_t* node) {
+                if (node->leaf() && node->name != "") {
+                        map[node->name] = node;
+                }
+                else {
+                        create_map(node->left );
+                        create_map(node->right);
+                }
+        }
+
+        map_t map;
 };
 
 class pt_leaf_t : public pt_node_t {
 public:
         pt_leaf_t(short x, double d, const std::string name = "")
-                : pt_node_t(x, d, NULL, NULL, name) { }
+                : pt_node_t(x, d, NULL, NULL, name) {
+        }
 };
 
 std::ostream& operator<< (std::ostream& o, pt_node_t* const node);

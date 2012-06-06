@@ -180,14 +180,15 @@ void run_optimization(const string& method, const char* file_tree, const char* f
         alignment_t<code_t> alignment(file_alignment, pt_root);
 
         if (method == "gradient-ascent") {
-                pt_gradient_ascent_t<code_t, alphabet_size> pt_gradient_ascent(alignment, alpha, options.r, options.lambda, options.epsilon);
+                pt_gradient_ascent_t<code_t, alphabet_size> pt_gradient_ascent(pt_root, alignment, alpha, options.r, options.lambda, options.epsilon);
                 pt_gradient_ascent.run(options.max_steps, options.min_change);
         }
         else if (method == "metropolis-hastings") {
                 normal_jump_t jump(options.sigma);
 //                gamma_jump_t jump(1.6, 0.4);
-                 pt_metropolis_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(alignment, alpha, options.r, options.lambda, jump);
-                pt_metropolis_hastings.sample(options.burnin, options.max_steps);
+                pt_metropolis_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump);
+                pt_metropolis_hastings.burnin(options.burnin);
+                pt_metropolis_hastings.sample(options.max_steps);
         }
         else {
                 cerr << "Unknown optimization method: " << method

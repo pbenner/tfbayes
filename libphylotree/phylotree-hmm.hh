@@ -43,10 +43,12 @@ public:
         using std::vector<std::vector<double> >::operator=;
 
         phylotree_hmm_t(
+                pt_root_t* tree,
                 const vector_t& px_0,
                 const matrix_t& transition,
                 const priors_t& priors)
                 : std::vector<std::vector<double> >(),
+                  tree(tree),
                   px_0(px_0),
                   transition(transition),
                   priors(priors) {
@@ -87,13 +89,16 @@ private:
                 forward.push_back(px_0);
 
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
+                        std::cout << "1" << std::endl;
+                        it.apply(tree);
+
                         vector_t likelihood_k(dim, 0.0); // p(z_k | x_k)
                         vector_t prediction_k(dim, 0.0); // p(x_k | z_1:k-1)
                         vector_t forward_k(dim, 0.0);
 
                         // compute likelihood
                         for (size_t j = 0; j < dim; j++) {
-                                likelihood_k[j] = exp(pt_marginal_likelihood(alignment.tree, priors[j]));
+                                likelihood_k[j] = exp(pt_marginal_likelihood(tree, priors[j]));
                         }
 
                         // compute prediction
@@ -147,6 +152,8 @@ private:
                         vector[i] /= normalization;
                 }
         }
+
+        pt_root_t* tree;
 
         size_t dim;
 
