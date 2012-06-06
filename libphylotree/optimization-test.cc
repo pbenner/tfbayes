@@ -25,6 +25,7 @@
 #include <phylotree.hh>
 #include <phylotree-parser.hh>
 #include <phylotree-polynomial.hh>
+#include <phylotree-sampler.hh>
 #include <phylotree-gradient.hh>
 #include <marginal-likelihood.hh>
 

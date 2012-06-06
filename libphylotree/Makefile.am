@@ -58,10 +58,12 @@ libphylotree_la_SOURCES = \
 	phylotree.cc \
 	phylotree.hh \
 	phylotree-expand.hh \
+	phylotree-distribution.hh \
 	phylotree-gradient.hh \
 	phylotree-gradient-coefficient.hh \
 	phylotree-gradient-coefficient.cc \
 	phylotree-polynomial.hh \
+	phylotree-sampler.hh \
 	phylotree-lexer.ll \
 	phylotree-parser.hh \
 	phylotree-parser.yy \
