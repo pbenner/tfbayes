@@ -28,6 +28,7 @@
 #include <boost/unordered_map.hpp>
 #include <cmath>
 #include <algorithm> /* std::min */
+#include <iomanip>
 
 #include <tfbayes/exception.h>
 #include <tfbayes/polynomial.hh>
@@ -35,6 +36,7 @@
 #include <alignment.hh>
 #include <phylotree.hh>
 #include <phylotree-gradient-coefficient.hh>
+#include <clonable.hh>
 
 #include <gsl/gsl_sf_gamma.h>
 #include <gsl/gsl_randist.h>
@@ -519,11 +521,15 @@ private:
         boost::unordered_map<pt_node_t*, double> sum_prev;
 };
 
-class jumping_distribution_t
+class jumping_distribution_t : public clonable
 {
 public:
+        jumping_distribution_t* clone() const = 0;
+
         virtual double p(double d_old, double d_new) const = 0;
         virtual double sample(gsl_rng * rng, double d_old) const = 0;
+        virtual void increase_jump(double eta) = 0;
+        virtual void decrease_jump(double eta) = 0;
 };
 
 class normal_jump_t : public jumping_distribution_t
@@ -532,11 +538,21 @@ public:
         normal_jump_t(double sigma_square = 0.05)
                 : sigma_square(sigma_square) { }
 
+        normal_jump_t* clone() const {
+                return new normal_jump_t(*this);
+        }
+
         double p(double d_old, double d_new) const {
                 return 1.0;
         }
         double sample(gsl_rng * rng, double d_old) const {
                 return d_old+gsl_ran_gaussian(rng, sigma_square);
+        }
+        void increase_jump(double eta) {
+                sigma_square = sigma_square+eta;
+        }
+        void decrease_jump(double eta) {
+                sigma_square = std::max(sigma_square-eta, 0.0);
         }
 private:
         double sigma_square;
@@ -548,6 +564,10 @@ public:
         gamma_jump_t(double r, double lambda)
                 : gamma_distribution(r, lambda) { }
 
+        gamma_jump_t* clone() const {
+                return new gamma_jump_t(*this);
+        }
+
         // p(d_new -> d_old)/p(d_old -> d_new) = p(d_old)/p(d_new)
         double p(double d_old, double d_new) const {
                 
@@ -555,6 +575,10 @@ public:
         }
         double sample(gsl_rng * rng, double d_old) const {
                 return gamma_distribution.sample(rng);
+        }
+        void increase_jump(double eta) {
+        }
+        void decrease_jump(double eta) {
         }
 private:
         gamma_distribution_t gamma_distribution;
@@ -567,11 +591,13 @@ public:
         pt_metropolis_hastings_t(alignment_t<CODE_TYPE>& alignment,
                                  const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
                                  double r, double lambda,
-                                 jumping_distribution_t& jumping_distribution)
+                                 jumping_distribution_t& jumping_distribution,
+                                 double acceptance_rate = 0.7)
                 : alignment(alignment), alpha(alpha),
                   gamma_distribution(r, lambda),
-                  jumping_distribution(jumping_distribution) {
+                  acceptance_rate(acceptance_rate) {
 
+                // initialize random generator
                 struct timeval tv;
                 gettimeofday(&tv, NULL);
                 time_t seed = tv.tv_sec*tv.tv_usec;
@@ -579,10 +605,21 @@ public:
                 srand(seed);
                 rng = gsl_rng_alloc(gsl_rng_default);
                 gsl_rng_set(rng, seed);
+
+                // initialize nodes and jumping distributions
+                nodes = alignment.tree->get_nodes();
+                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                        jumping_distributions[*is] = jumping_distribution.clone();
+                }
         }
 
         ~pt_metropolis_hastings_t() {
+                // free random generator
                 gsl_rng_free(rng);
+                // free jumping distributions
+                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                        delete(jumping_distributions[*is]);
+                }
         }
 
         double log_likelihood() {
@@ -599,13 +636,13 @@ public:
                 }
                 return result;
         }
-        double sample(pt_node_t* node, double log_likelihood_ref) {
+        std::pair<double,bool> sample(pt_node_t* node, double log_likelihood_ref) {
                 double rho;
                 double x;
                 double log_likelihood_new;
 
                 double d_old = node->d;
-                double d_new = jumping_distribution.sample(rng, d_old);
+                double d_new = jumping_distributions[node]->sample(rng, d_old);
 
                 // compute new log likelihood
                 node->d            = d_new;
@@ -614,45 +651,67 @@ public:
                 // compute acceptance probability
                 rho = exp(log_likelihood_new-log_likelihood_ref)
                         *gamma_distribution.pdf(d_new)/gamma_distribution.pdf(d_old)
-                        *jumping_distribution.p(d_old, d_new);
+                        *jumping_distributions[node]->p(d_old, d_new);
                 x   = gsl_ran_flat(rng, 0.0, 1.0);
                 if (x <= std::min(1.0, rho)) {
                         // sample accepted
-                        std::cout << "Sample accepted: " << d_new << std::endl;
+                        print_debug("accepted: %f\n", d_new);
+                        return std::pair<double, bool>(log_likelihood_new, true);
                 }
                 else {
                         // sample rejected
-                        std::cout << "Sample rejected: " << d_new << std::endl;
+                        print_debug("rejected: %f\n", d_new);
                         node->d = d_old;
+                        return std::pair<double, bool>(log_likelihood_ref, false);
                 }
-                return log_likelihood_new;
         }
-        double sample(boost::unordered_map<pt_node_t*, double>& means, size_t i, pt_node_t::nodes_t& nodes) {
+        double sample(boost::unordered_map<pt_node_t*, double>& means,
+                      boost::unordered_map<pt_node_t*, double>& acceptance,
+                      size_t i, bool burnin) {
                 double log_likelihood_ref = log_likelihood();
                 // loop over nodes
-                size_t k = gsl_rng_uniform_int(rng, nodes.size());
-                pt_node_t::nodes_t::const_iterator is = nodes.begin();
-                std::advance(is, k);
-                log_likelihood_ref = sample(*is, log_likelihood_ref);
+                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                        std::pair<double, bool> result = sample(*is, log_likelihood_ref);
+                        log_likelihood_ref = result.first;
+                        // estimate acceptance rate
+                        if (result.second) {
+                                acceptance[*is] = (acceptance[*is]*i + 1.0)/(i+1.0);
+                        }
+                        else {
+                                acceptance[*is] = (acceptance[*is]*i)/(i+1.0);
+                        }
+                }
                 // update means
-                std::cout << alignment.tree << std::endl;
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
                         means[*is] = ((double)i*means[*is] + (*is)->d)/(double)(i+1);
-                        std::cout << "mean: " << means[*is] << std::endl;
+                        print_debug("rate: %f\n", acceptance[*is]);
+                        if (burnin) {
+                                if (acceptance[*is] > acceptance_rate) {
+                                        jumping_distributions[*is]->increase_jump(fabs(acceptance[*is]-acceptance_rate));
+                                }
+                                else {
+                                        jumping_distributions[*is]->decrease_jump(fabs(acceptance[*is]-acceptance_rate));
+                                }
+                        }
+                        std::cerr << std::setprecision(8)
+                                  << std::fixed
+                                  << means[*is] << " ";
                 }
+                std::cerr << std::endl;
+
                 return log_likelihood_ref;
         }
         double sample(size_t burnin, size_t n) {
                 boost::unordered_map<pt_node_t*, double> means;
-                pt_node_t::nodes_t nodes = alignment.tree->get_nodes();
+                boost::unordered_map<pt_node_t*, double> acceptance;
                 double result;
                 // burn in
                 for (size_t i = 0; i < burnin; i++) {
-                        sample(means, i, nodes);
+                        sample(means, acceptance, i, true);
                 }
                 // sample n times
                 for (size_t i = 0; i < n; i++) {
-                        result = sample(means, i, nodes);
+                        result = sample(means, acceptance, i, false);
                 }
                 // insert means into the tree
                 for (boost::unordered_map<pt_node_t*, double>::iterator it = means.begin(); it != means.end(); it++) {
@@ -666,7 +725,10 @@ private:
         exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha;
 
         gamma_distribution_t gamma_distribution;
-        jumping_distribution_t& jumping_distribution;
+
+        pt_node_t::nodes_t nodes;
+        boost::unordered_map<pt_node_t*, jumping_distribution_t*> jumping_distributions;
+        double acceptance_rate;
 
         gsl_rng * rng;
 };

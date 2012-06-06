@@ -178,16 +178,13 @@ void run_optimization(const string& method, const char* file_tree, const char* f
         /* alignment */
         alignment_t<code_t> alignment(file_alignment, pt_root);
 
-        cerr << pt_root
-             << endl;
-
         if (method == "gradient-ascent") {
                 pt_gradient_ascent_t<code_t, alphabet_size> pt_gradient_ascent(alignment, alpha, options.r, options.lambda, options.epsilon);
                 pt_gradient_ascent.run(options.max_steps, options.min_change);
         }
         else if (method == "metropolis-hastings") {
-//                normal_jump_t jump(options.sigma);
-                gamma_jump_t jump(1.6, 0.4);
+                normal_jump_t jump(options.sigma);
+//                gamma_jump_t jump(1.6, 0.4);
                  pt_metropolis_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(alignment, alpha, options.r, options.lambda, jump);
                 pt_metropolis_hastings.sample(options.burnin, options.max_steps);
         }
