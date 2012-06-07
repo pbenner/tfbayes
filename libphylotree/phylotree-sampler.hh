@@ -252,6 +252,12 @@ public:
         }
         void sample(bool print) {
                 double log_likelihood_ref = log_likelihood();
+                flockfile(stderr);
+                std::cerr << "step: "
+                          << step
+                          << std::endl;
+                fflush(stderr);
+                funlockfile(stderr);
                 // loop over nodes
                 for (pt_root_t::node_map_t::const_iterator is = ++tree->node_map.begin(); is != tree->node_map.end(); is++) {
                         std::pair<double, bool> result = sample(*is, log_likelihood_ref);
