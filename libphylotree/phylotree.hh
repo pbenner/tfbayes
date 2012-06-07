@@ -267,7 +267,7 @@ public:
                 : pt_node_t(x, -HUGE_VAL, left, right, name) {
 
                 pt_node_t::id_t n = set_id()+1;
-                node_map = node_map_t(n, 0);
+                node_map = node_map_t(n, (pt_node_t*)NULL);
                 create_map();
         }
         pt_root_t* clone() const {
