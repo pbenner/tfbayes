@@ -68,9 +68,11 @@ public:
         }
         void increase_jump(double eta) {
                 sigma_square = sigma_square+eta;
+                print_debug("increasing sigma_square: %f\n", sigma_square);
         }
         void decrease_jump(double eta) {
                 sigma_square = std::max(sigma_square-eta, 0.0);
+                print_debug("decreasing sigma_square: %f\n", sigma_square);
         }
 private:
         double sigma_square;
@@ -128,14 +130,21 @@ public:
 
                 // initialize nodes and jumping distributions
                 this->tree  = tree->clone();
-                this->nodes = this->tree->get_nodes();
-                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
-                        jumping_distributions[*is] = jumping_distribution.clone();
+                for (pt_root_t::node_map_t::const_iterator is = tree->node_map.begin(); is != tree->node_map.end(); is++) {
+                        jumping_distributions.push_back(jumping_distribution.clone());
                 }
+                means      = std::vector<double>(tree->node_map.size(), 0.0);
+                acceptance = std::vector<double>(tree->node_map.size(), 0.0);
+                history    = std::vector<std::vector<double> >(tree->node_map.size(), std::vector<double>());
         }
         pt_metropolis_hastings_t(const pt_metropolis_hastings_t& mh)
-                : alignment(mh.alignment), alpha(mh.alpha),
+                : means(mh.means),
+                  acceptance(mh.acceptance),
+                  history(mh.history),
+                  alignment(mh.alignment),
+                  alpha(mh.alpha),
                   gamma_distribution(mh.gamma_distribution),
+                  jumping_distributions(mh.jumping_distributions),
                   acceptance_rate(mh.acceptance_rate),
                   step(mh.step) {
 
@@ -150,18 +159,16 @@ public:
 
                 // initialize nodes and jumping distributions
                 tree  = mh.tree->clone();
-                nodes =    tree->get_nodes();
-                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
-                        jumping_distributions[*is] =
-                                mh.jumping_distributions.find(*is)->second->clone();
+                for (pt_root_t::node_map_t::const_iterator is = tree->node_map.begin(); is != tree->node_map.end(); is++) {
+                        jumping_distributions[(*is)->id] = mh.jumping_distributions[(*is)->id]->clone();
                 }
         }
         ~pt_metropolis_hastings_t() {
                 // free random generator
                 gsl_rng_free(rng);
                 // free jumping distributions
-                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
-                        delete(jumping_distributions[*is]);
+                for (pt_root_t::node_map_t::const_iterator is = tree->node_map.begin(); is != tree->node_map.end(); is++) {
+                        delete(jumping_distributions[(*is)->id]);
                 }
                 tree->destroy();
         }
@@ -186,14 +193,16 @@ public:
                 return result;
         }
         void update_means(bool print) {
+                // update root
+                history[0].push_back(0.0);
                 // update means
-                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
-                        means[*is] = ((double)step*means[*is] + (*is)->d)/(double)(step+1);
-                        history[*is].push_back(means[*is]);
+                for (pt_root_t::node_map_t::const_iterator is = ++tree->node_map.begin(); is != tree->node_map.end(); is++) {
+                        means[(*is)->id] = ((double)step*means[(*is)->id] + (*is)->d)/(double)(step+1);
+                        history[(*is)->id].push_back(means[(*is)->id]);
                         if (print) {
                                 std::cerr << std::setprecision(8)
                                           << std::fixed
-                                          << means[*is] << " ";
+                                          << means[(*is)->id] << " ";
                         }
                 }
                 if (print) {
@@ -201,12 +210,12 @@ public:
                 }
         }
         void update_steps() {
-                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
-                        if (acceptance[*is] > acceptance_rate) {
-                                jumping_distributions[*is]->increase_jump(fabs(acceptance[*is]-acceptance_rate));
+                for (pt_root_t::node_map_t::const_iterator is = ++tree->node_map.begin(); is != tree->node_map.end(); is++) {
+                        if (acceptance[(*is)->id] > acceptance_rate) {
+                                jumping_distributions[(*is)->id]->increase_jump(fabs(acceptance[(*is)->id]-acceptance_rate));
                         }
                         else {
-                                jumping_distributions[*is]->decrease_jump(fabs(acceptance[*is]-acceptance_rate));
+                                jumping_distributions[(*is)->id]->decrease_jump(fabs(acceptance[(*is)->id]-acceptance_rate));
                         }
                 }
         }
@@ -216,7 +225,9 @@ public:
                 double log_likelihood_new;
 
                 double d_old = node->d;
-                double d_new = jumping_distributions[node]->sample(rng, d_old);
+                double d_new = jumping_distributions[node->id]->sample(rng, d_old);
+
+                print_debug("old sample: %f\n", d_old);
 
                 // compute new log likelihood
                 node->d            = d_new;
@@ -225,7 +236,7 @@ public:
                 // compute acceptance probability
                 rho = exp(log_likelihood_new-log_likelihood_ref)
                         *gamma_distribution.pdf(d_new)/gamma_distribution.pdf(d_old)
-                        *jumping_distributions[node]->p(d_old, d_new);
+                        *jumping_distributions[node->id]->p(d_old, d_new);
                 x   = gsl_ran_flat(rng, 0.0, 1.0);
                 if (x <= std::min(1.0, rho)) {
                         // sample accepted
@@ -242,24 +253,24 @@ public:
         void sample(bool print) {
                 double log_likelihood_ref = log_likelihood();
                 // loop over nodes
-                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                for (pt_root_t::node_map_t::const_iterator is = ++tree->node_map.begin(); is != tree->node_map.end(); is++) {
                         std::pair<double, bool> result = sample(*is, log_likelihood_ref);
                         log_likelihood_ref = result.first;
                         // estimate acceptance rate
                         if (result.second) {
-                                acceptance[*is] = (acceptance[*is]*step + 1.0)/(step+1.0);
+                                acceptance[(*is)->id] = (acceptance[(*is)->id]*step + 1.0)/(step+1.0);
                         }
                         else {
-                                acceptance[*is] = (acceptance[*is]*step)/(step+1.0);
+                                acceptance[(*is)->id] = (acceptance[(*is)->id]*step)/(step+1.0);
                         }
                 }
                 update_means(print);
                 step++;
         }
-        void burnin(size_t n) {
+        void burnin(size_t n, bool print = true) {
                 // burn in
                 for (size_t i = 0; i < n; i++) {
-                        sample();
+                        sample(print);
                         update_steps();
                 }
                 step = 0;
@@ -272,14 +283,14 @@ public:
         }
         void apply() {
                 // insert means into the tree
-                for (boost::unordered_map<pt_node_t*, double>::iterator it = means.begin(); it != means.end(); it++) {
-                        it->first->d = it->second;
+                for (pt_root_t::node_map_t::const_iterator is = tree->node_map.begin(); is != tree->node_map.end(); is++) {
+                        (*is)->d = means[(*is)->id];
                 }
         }
 
-        boost::unordered_map<pt_node_t*, double> means;
-        boost::unordered_map<pt_node_t*, double> acceptance;
-        boost::unordered_map<pt_node_t*, std::vector<double> > history;
+        std::vector<double> means;
+        std::vector<double> acceptance;
+        std::vector<std::vector<double> > history;
 private:
         pt_root_t* tree;
         const alignment_t<CODE_TYPE>& alignment;
@@ -287,20 +298,23 @@ private:
 
         gamma_distribution_t gamma_distribution;
 
-        pt_node_t::nodes_t nodes;
-        boost::unordered_map<pt_node_t*, jumping_distribution_t*> jumping_distributions;
+        std::vector<jumping_distribution_t*> jumping_distributions;
         double acceptance_rate;
 
         gsl_rng * rng;
         size_t step;
 };
 
+#include <assert.h>
 #include <pthread.h>
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_pmcmc_hastings_t
 {
+public:
         pt_pmcmc_hastings_t(size_t n, const pt_metropolis_hastings_t<CODE_TYPE, ALPHABET_SIZE>& mh) {
+
+                assert(n > 0);
 
                 for (size_t i = 0; i < n; i++) {
                         population.push_back(mh.clone());
@@ -324,14 +338,15 @@ class pt_pmcmc_hastings_t
 
         // sampling methods
         ////////////////////////////////////////////////////////////////////////////////
+        static
         void * sample_thread(void* _data) {
                 pthread_data_t* data  = (pthread_data_t*)_data;
                 pt_sampler_t* sampler = data->sampler;
                 const size_t  samples = data->samples;
                 const size_t burnin   = data->burnin;
 
-                sampler->burnin(burnin );
-                sampler->sample(samples);
+                sampler->burnin(burnin,  false);
+                sampler->sample(samples, false);
 
                 return NULL;
         }
@@ -364,8 +379,25 @@ class pt_pmcmc_hastings_t
                                 exit(EXIT_FAILURE);
                         }
                 }
+                update_means();
         }
-
+        void update_means() {
+                size_t n = population[0]->history.size();
+                size_t t = population[0]->history[0].size();
+                for (size_t i = 0; i < t; i++) {
+                        for (size_t j = 1; j < n; j++) {
+                                double mean = 0.0;
+                                for (typename std::vector<pt_sampler_t*>::iterator it = population.begin(); it != population.end(); it++) {
+                                        mean += (*it)->history[j][i];
+                                }
+                                mean /= (double)population.size();
+                                std::cerr << std::setprecision(8)
+                                          << std::fixed
+                                          << mean << " ";
+                        }
+                        std::cerr << std::endl;
+                }
+        }
 
 private:
         std::vector<pt_sampler_t*> population;

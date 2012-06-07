@@ -83,10 +83,10 @@ public:
                 std::string sequence;
 
                 while ((sequence = parser.read_sequence()) != "") {
-                        std::string taxon = token(parser.description()[0], '.')[0];
-                        pt_node_t* node   = tree->map[taxon];
-                        if (node) {
-                                taxa.insert(taxon);
+                        std::string taxon  = token(parser.description()[0], '.')[0];
+                        pt_node_t::id_t id = tree->get_id(taxon);
+                        if (id != -1) {
+                                taxon_map [taxon] = id;
                                 alignments[taxon] = nucleotide_sequence_t<CODE_TYPE>(sequence);
                         }
                         else {
@@ -97,7 +97,7 @@ public:
                         }
                 }
                 if (alignments.size() > 0) {
-                        length = alignments[*taxa.begin()].size();
+                        length = alignments.begin()->second.size();
                 }
                 else {
                         length = 0;
@@ -107,7 +107,7 @@ public:
         // typedefs
         ////////////////////////////////////////////////////////////////////////
         typedef boost::unordered_map<std::string, nucleotide_sequence_t<CODE_TYPE> > alignment_type;
-        typedef std::set<std::string> taxa_type;
+        typedef boost::unordered_map<std::string, pt_node_t::id_t> taxon_map_t;
 
         // Iterator
         ////////////////////////////////////////////////////////////////////////
@@ -116,17 +116,19 @@ public:
         public:
                 iterator(size_t i, size_t length,
                          const alignment_type& alignments,
-                         const taxa_type& taxa)
+                         const taxon_map_t& taxon_map)
                         : i(i), length(length), alignments(alignments),
-                          taxa(taxa) { }
+                          taxon_map(taxon_map) { }
 
                 void apply(pt_root_t* tree) {
                         if (i >= length) {
                                 return;
                         }
-                        for (taxa_type::const_iterator it = taxa.begin();
-                             it != taxa.end(); it++) {
-                                tree->map[*it]->x = alignments.find(*it)->second[i];
+                        for (taxon_map_t::const_iterator it = taxon_map.begin();
+                             it != taxon_map.end(); it++) {
+                                const std::string taxon  = it->first;
+                                const pt_node_t::id_t id = it->second;
+                                tree->node_map[id]->x = alignments.find(taxon)->second[i];
                         }
                 }
 
@@ -150,13 +152,13 @@ public:
                 size_t i;
                 size_t length;
                 const alignment_type& alignments;
-                const taxa_type& taxa;
+                const taxon_map_t& taxon_map;
         };
         iterator begin() const {
-                return iterator(0, length, alignments, taxa);
+                return iterator(0, length, alignments, taxon_map);
         }
         iterator end() const {
-                return iterator(length, length, alignments, taxa);
+                return iterator(length, length, alignments, taxon_map);
         }
 
         // Reverse Iterator
@@ -166,17 +168,19 @@ public:
         public:
                 reverse_iterator(size_t i, size_t length,
                          const alignment_type& alignments,
-                         const taxa_type& taxa)
+                         const taxon_map_t& taxon_map)
                         : i(i), length(length), alignments(alignments),
-                          taxa(taxa) { }
+                          taxon_map(taxon_map) { }
 
                 void apply(pt_root_t* tree) const {
                         if (i >= length) {
                                 return;
                         }
-                        for (taxa_type::const_iterator it = taxa.begin();
-                             it != taxa.end(); it++) {
-                                tree->map[*it]->x = alignments.find(*it)->second[i];
+                        for (taxon_map_t::const_iterator it = taxon_map.begin();
+                             it != taxon_map.end(); it++) {
+                                const std::string taxon  = it->first;
+                                const pt_node_t::id_t id = it->second;
+                                tree->node_map[id]->x = alignments.find(taxon)->second[i];
                         }
                 }
 
@@ -200,19 +204,19 @@ public:
                 size_t i;
                 size_t length;
                 const alignment_type& alignments;
-                const taxa_type& taxa;
+                const taxon_map_t& taxon_map;
         };
         reverse_iterator rbegin() const {
-                return reverse_iterator(0, length, alignments, taxa);
+                return reverse_iterator(0, length, alignments, taxon_map);
         }
         reverse_iterator rend() const {
-                return reverse_iterator(length, length, alignments, taxa);
+                return reverse_iterator(length, length, alignments, taxon_map);
         }
 
         size_t length;
 private:
         alignment_type alignments;
-        taxa_type taxa;
+        taxon_map_t taxon_map;
 };
 
 #endif /* ALIGNMENT_HH */

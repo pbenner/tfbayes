@@ -33,7 +33,7 @@ from itertools import izip
 
 options = {
     'force-alignment' : None,
-    'save-motif'     : None,
+    'save-motif'      : None,
     'save-plot'       : None,
     'method'          : 'kl-divergence',
     'cut-matrix'      : True,

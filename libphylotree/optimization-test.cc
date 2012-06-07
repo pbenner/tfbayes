@@ -186,9 +186,11 @@ void run_optimization(const string& method, const char* file_tree, const char* f
         else if (method == "metropolis-hastings") {
                 normal_jump_t jump(options.sigma);
 //                gamma_jump_t jump(1.6, 0.4);
-                pt_metropolis_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump);
+                pt_metropolis_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
                 pt_metropolis_hastings.burnin(options.burnin);
                 pt_metropolis_hastings.sample(options.max_steps);
+                //pt_pmcmc_hastings_t<code_t, alphabet_size> pmcmc(10, pt_metropolis_hastings);
+                //pmcmc.sample(options.max_steps, options.burnin);
         }
         else {
                 cerr << "Unknown optimization method: " << method
@@ -197,7 +199,7 @@ void run_optimization(const string& method, const char* file_tree, const char* f
         }
 
         stringstream ss;
-        pt_root->print(ss, true);
+        pt_root->print(ss, false);
         cout << ss.str()
              << endl;
 }

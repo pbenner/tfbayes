@@ -33,6 +33,7 @@ gradient_test_LDADD  += libphylotree.la
 
 optimization_test_SOURCES = optimization-test.cc
 optimization_test_LDADD   = -lm
+optimization_test_LDADD   = -lpthread
 optimization_test_LDADD  += libphylotree.la
 optimization_test_LDADD  += ../tfbayes/fasta/libfasta.la
 

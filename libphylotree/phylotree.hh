@@ -39,8 +39,9 @@ public:
         pt_node_t(nucleotide_t x = -1, double d = 0.0,
                   pt_node_t* left  = NULL,
                   pt_node_t* right = NULL,
-                  const std::string& name = "")
-                : x(x), d(d), left(left), right(right), name(name)
+                  const std::string& name = "",
+                  const ssize_t id = -1)
+                : x(x), d(d), left(left), right(right), name(name), id(id)
                 { }
 
         pt_node_t* clone() const {
@@ -54,6 +55,7 @@ public:
 
         /* typedef for a set of nodes */
         typedef std::set<pt_node_t*> nodes_t;
+        typedef ssize_t id_t;
 
         void destroy() {
                 if (!leaf()) {
@@ -114,6 +116,9 @@ public:
         std::ostream& print_phylotree(std::ostream& o, size_t nesting) const {
                 if (root()) {
                         o << "(root";
+                        if (id != -1) {
+                                o << ":" << id;
+                        }
                         left ->print_phylotree(o, nesting+1);
                         right->print_phylotree(o, nesting+1);
                         o << ")"
@@ -122,10 +127,15 @@ public:
                 else if (leaf()) {
                         o << std::endl;
                         indent(o, nesting);
-                        o << "("
-                          << name
-                          << " "
-                          << d;
+                        if (id != -1) {
+                                o << "(" << name
+                                  << ":" << id
+                                  << " " << d;
+                        }
+                        else {
+                                o << "(" << name
+                                  << " " << d;
+                        }
                         if (x != -1) {
                                 o << " "
                                   << x;
@@ -135,8 +145,15 @@ public:
                 else {
                         o << std::endl;
                         indent(o, nesting);
-                        o << "(node "
-                          << d;
+                        if (id != -1) {
+                                o << "(node:"
+                                  << id << " "
+                                  << d;
+                        }
+                        else {
+                                o << "(node "
+                                  << d;
+                        }
                         left ->print_phylotree(o, nesting+1);
                         right->print_phylotree(o, nesting+1);
                         o << ")";
@@ -158,9 +175,9 @@ public:
                 else if (leaf()) {
                         o << std::endl;
                         indent(o, nesting);
-                o << name
-                  << ":"
-                  << d;
+                        o << name
+                          << ":"
+                          << d;
                 }
                 else {
                         o << "(";
@@ -184,6 +201,25 @@ public:
                 }
                 return o;
         }
+        id_t get_id(const std::string& taxon) {
+                id_t tmp;
+                if (leaf()) {
+                        if (name == taxon) {
+                                return id;
+                        }
+                        else {
+                                return -1;
+                        }
+                }
+                else {
+                        if ((tmp = left->get_id(taxon)) != -1) {
+                                return tmp;
+                        }
+                        else {
+                                return right->get_id(taxon);
+                        }
+                }
+        }
 
         /* coded nucleotide */
         nucleotide_t x;
@@ -195,6 +231,8 @@ public:
         pt_node_t* right;
         /* name of the node */
         const std::string name;
+        /* identifier */
+        id_t id;
 
 private:
         void get_nodes(nodes_t& nodes) {
@@ -215,14 +253,21 @@ private:
         }
 };
 
+#include <vector>
+
 class pt_root_t : public pt_node_t {
 public:
+        /* typedefs */
+        typedef std::vector<pt_node_t*> node_map_t;
+
         pt_root_t(short x = -1,
                   pt_node_t* left  = NULL,
                   pt_node_t* right = NULL,
                   const std::string name = "")
                 : pt_node_t(x, -HUGE_VAL, left, right, name) {
 
+                pt_node_t::id_t n = set_id()+1;
+                node_map = node_map_t(n, 0);
                 create_map();
         }
         pt_root_t* clone() const {
@@ -236,24 +281,30 @@ public:
                 return pt_root;
         }
 
-        /* typedefs */
-        typedef boost::unordered_map<const std::string, pt_node_t*> map_t;
-
         /* methods */
         void create_map() {
                 create_map(this);
         }
         void create_map(pt_node_t* node) {
-                if (node->leaf() && node->name != "") {
-                        map[node->name] = node;
-                }
-                else {
+                node_map[node->id] = node;
+                if (!node->leaf()) {
                         create_map(node->left );
                         create_map(node->right);
                 }
         }
+        pt_node_t::id_t set_id() {
+                return set_id(this, 0);
+        }
+        pt_node_t::id_t set_id(pt_node_t* node, pt_node_t::id_t id) {
+                node->id = id;
+                if (!node->leaf()) {
+                        id = set_id(node->left , id+1);
+                        id = set_id(node->right, id+1);
+                }
+                return id;
+        }
 
-        map_t map;
+        node_map_t node_map;
 };
 
 class pt_leaf_t : public pt_node_t {
