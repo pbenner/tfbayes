@@ -38,6 +38,26 @@ typedef float code_t;
 
 using namespace std;
 
+ostream& operator<< (ostream& o, const pt_pmcmc_hastings_t<code_t, alphabet_size>& mh) {
+        size_t n = mh.history.size();
+        size_t m = mh.history[0].size();
+        for (size_t i = 1; i < m; i++) {
+                o << setw(10)
+                  << i;
+                o << " ";
+        }
+        o << endl;
+        for (size_t i = 1; i < n; i++) {
+                for (size_t j = 1; j < m; j++) {
+                        o << setprecision(8)
+                          << fixed
+                          << mh.history[i][j] << " ";
+                }
+                o << endl;
+        }
+        return o;
+}
+
 ostream& operator<< (ostream& o, const exponent_t<code_t, alphabet_size>& exponent) {
         if(exponent[0]) o << " Pa^" << exponent[0];
         if(exponent[1]) o << " Pc^" << exponent[1];
@@ -89,6 +109,7 @@ typedef struct _options_t {
         double min_change;
         double epsilon;
         double sigma;
+        size_t jobs;
         _options_t()
                 : alpha(0.2),
                   burnin(1000),
@@ -97,7 +118,8 @@ typedef struct _options_t {
                   max_steps(1000),
                   min_change(0.0005),
                   epsilon(0.001),
-                  sigma(0.01)
+                  sigma(0.01),
+                  jobs(1)
                 { }
 } options_t;
 
@@ -122,6 +144,7 @@ void print_usage(char *pname, FILE *fp)
                       "             -r DOUBLE       - r parameter for the gamma distribution\n"
                       "             -l DOUBLE       - lambda parameter for the gamma distribution\n"
                       "             -s DOUBLE       - sigma^2 parameter for proposal distribution\n"
+                      "             -j INTEGER      - number of parallel jobs\n"
                       "\n"
                       "   --help                    - print help and exit\n"
                       "   --version                 - print version information and exit\n\n");
@@ -166,6 +189,8 @@ pt_root_t* parse_tree_file(const char* file_tree)
 
 void run_optimization(const string& method, const char* file_tree, const char* file_alignment)
 {
+        stringstream ss;
+
         /* phylogenetic tree */
         pt_root_t* pt_root = parse_tree_file(file_tree);
         pt_root->init(alphabet_size);
@@ -175,6 +200,10 @@ void run_optimization(const string& method, const char* file_tree, const char* f
         for (size_t i = 0; i < alphabet_size; i++) {
                 alpha[i] = options.alpha;
         }
+
+        pt_root->print(ss, false);
+        cout << ss.str()
+             << endl;
 
         /* alignment */
         alignment_t<code_t> alignment(file_alignment, pt_root);
@@ -187,10 +216,17 @@ void run_optimization(const string& method, const char* file_tree, const char* f
                 normal_jump_t jump(options.sigma);
 //                gamma_jump_t jump(1.6, 0.4);
                 pt_metropolis_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
-                pt_metropolis_hastings.burnin(options.burnin);
-                pt_metropolis_hastings.sample(options.max_steps);
-                //pt_pmcmc_hastings_t<code_t, alphabet_size> pmcmc(10, pt_metropolis_hastings);
-                //pmcmc.sample(options.max_steps, options.burnin);
+                if (options.jobs == 1) {
+                        pt_metropolis_hastings.burnin(options.burnin);
+                        pt_metropolis_hastings.sample(options.max_steps);
+                        pt_metropolis_hastings.apply(pt_root);
+                }
+                else {
+                        pt_pmcmc_hastings_t<code_t, alphabet_size> pmcmc(options.jobs, pt_metropolis_hastings);
+                        pmcmc.sample(options.max_steps, options.burnin);
+                        pmcmc.apply(pt_root);
+                        cout << pmcmc;
+                }
         }
         else {
                 cerr << "Unknown optimization method: " << method
@@ -198,8 +234,8 @@ void run_optimization(const string& method, const char* file_tree, const char* f
                 exit(EXIT_FAILURE);
         }
 
-        stringstream ss;
-        pt_root->print(ss, false);
+        ss.str("");
+        pt_root->print(ss, true);
         cout << ss.str()
              << endl;
 }
@@ -216,7 +252,7 @@ int main(int argc, char *argv[])
                         { "version",         0, 0, 'v' }
                 };
 
-                c = getopt_long(argc, argv, "a:b:e:m:n:r:l:s:hv",
+                c = getopt_long(argc, argv, "a:b:e:m:n:r:l:s:j:hv",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -247,6 +283,9 @@ int main(int argc, char *argv[])
                         break;
                 case 's':
                         options.sigma = atof(optarg);
+                        break;
+                case 'j':
+                        options.jobs = atoi(optarg);
                         break;
                 case 'h':
                         print_usage(argv[0], stdout);

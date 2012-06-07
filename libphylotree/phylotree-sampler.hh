@@ -281,9 +281,9 @@ public:
                         sample(print);
                 }
         }
-        void apply() {
+        void apply(pt_root_t* tree) {
                 // insert means into the tree
-                for (pt_root_t::node_map_t::const_iterator is = tree->node_map.begin(); is != tree->node_map.end(); is++) {
+                for (pt_root_t::node_map_t::const_iterator is = ++tree->node_map.begin(); is != tree->node_map.end(); is++) {
                         (*is)->d = means[(*is)->id];
                 }
         }
@@ -312,7 +312,8 @@ template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_pmcmc_hastings_t
 {
 public:
-        pt_pmcmc_hastings_t(size_t n, const pt_metropolis_hastings_t<CODE_TYPE, ALPHABET_SIZE>& mh) {
+        pt_pmcmc_hastings_t(size_t n, const pt_metropolis_hastings_t<CODE_TYPE, ALPHABET_SIZE>& mh)
+                : means(mh.means) {
 
                 assert(n > 0);
 
@@ -390,14 +391,20 @@ public:
                                 for (typename std::vector<pt_sampler_t*>::iterator it = population.begin(); it != population.end(); it++) {
                                         mean += (*it)->history[j][i];
                                 }
-                                mean /= (double)population.size();
-                                std::cerr << std::setprecision(8)
-                                          << std::fixed
-                                          << mean << " ";
+                                means[j] = mean/(double)population.size();
                         }
-                        std::cerr << std::endl;
+                        history.push_back(means);
                 }
         }
+        void apply(pt_root_t* tree) {
+                // insert means into the tree
+                for (pt_root_t::node_map_t::const_iterator is = ++tree->node_map.begin(); is != tree->node_map.end(); is++) {
+                        (*is)->d = means[(*is)->id];
+                }
+        }
+
+        std::vector<double> means;
+        std::vector<std::vector<double> > history;
 
 private:
         std::vector<pt_sampler_t*> population;
