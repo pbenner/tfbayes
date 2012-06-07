@@ -37,7 +37,7 @@ public:
         pt_polynomial_t(const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly)
                 : polynomial_t<CODE_TYPE, ALPHABET_SIZE>(poly) { }
 
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> likelihood_py(const pt_root_t* root) {
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE>& likelihood_py(const pt_root_t* root) {
                 operator=(poly_sum(likelihood_rec(root)));
                 return *this;
         }

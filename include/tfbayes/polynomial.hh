@@ -192,8 +192,9 @@ public:
         }
         polynomial_t<T, S, C>& operator+=(const polynomial_term_t<T, S, C>& term) {
                 if (term.coefficient() != 0.0) {
-                        operator[](term.exponent()) += term.coefficient();
-                        if (operator[](term.exponent()) == 0.0) {
+                        C& coefficient = operator[](term.exponent());
+                        coefficient += term.coefficient();
+                        if (coefficient == 0.0) {
                                 erase(term.exponent());
                         }
                 }
@@ -201,8 +202,9 @@ public:
         }
         polynomial_t<T, S, C>& operator-=(const polynomial_term_t<T, S, C>& term) {
                 if (term.coefficient() != 0.0) {
-                        operator[](term.exponent()) -= term.coefficient();
-                        if (operator[](term.exponent()) == 0.0) {
+                        C& coefficient = operator[](term.exponent());
+                        coefficient -= term.coefficient();
+                        if (coefficient == 0.0) {
                                 erase(term.exponent());
                         }
                 }
@@ -405,10 +407,7 @@ polynomial_t<T, S, C> operator+(const polynomial_t<T, S, C>& poly1, const polyno
 }
 template <typename T, size_t S, typename C>
 polynomial_t<T, S, C> operator*(const polynomial_t<T, S, C>& poly1, const polynomial_t<T, S, C>& poly2) {
-        if (poly1.size() == 0) {
-                return polynomial_t<T, S, C>();
-        }
-        if (poly2.size() == 0) {
+        if (poly1.size() == 0 || poly2.size() == 0) {
                 return polynomial_t<T, S, C>();
         }
         polynomial_t<T, S, C> tmp(poly1);
