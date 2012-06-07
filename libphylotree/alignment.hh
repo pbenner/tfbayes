@@ -130,10 +130,10 @@ public:
                         }
                 }
 
-                bool operator==(const iterator& it) {
+                bool operator==(const iterator& it) const {
                         return i == it.i;
                 }
-                bool operator!=(const iterator& it) {
+                bool operator!=(const iterator& it) const {
                         return i != it.i;
                 }
                 iterator& operator++(int _) {
@@ -152,10 +152,10 @@ public:
                 const alignment_type& alignments;
                 const taxa_type& taxa;
         };
-        iterator begin() {
+        iterator begin() const {
                 return iterator(0, length, alignments, taxa);
         }
-        iterator end() {
+        iterator end() const {
                 return iterator(length, length, alignments, taxa);
         }
 
@@ -170,7 +170,7 @@ public:
                         : i(i), length(length), alignments(alignments),
                           taxa(taxa) { }
 
-                void apply(pt_root_t* tree) {
+                void apply(pt_root_t* tree) const {
                         if (i >= length) {
                                 return;
                         }
@@ -180,10 +180,10 @@ public:
                         }
                 }
 
-                bool operator==(const reverse_iterator& it) {
+                bool operator==(const reverse_iterator& it) const {
                         return i == it.i;
                 }
-                bool operator!=(const reverse_iterator& it) {
+                bool operator!=(const reverse_iterator& it) const {
                         return i != it.i;
                 }
                 reverse_iterator& operator++(int _) {
@@ -202,10 +202,10 @@ public:
                 const alignment_type& alignments;
                 const taxa_type& taxa;
         };
-        reverse_iterator rbegin() {
+        reverse_iterator rbegin() const {
                 return reverse_iterator(0, length, alignments, taxa);
         }
-        reverse_iterator rend() {
+        reverse_iterator rend() const {
                 return reverse_iterator(length, length, alignments, taxa);
         }
 

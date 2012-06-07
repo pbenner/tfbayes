@@ -103,16 +103,16 @@ private:
 };
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-class pt_metropolis_hastings_t
+class pt_metropolis_hastings_t : public clonable
 {
 public:
-        pt_metropolis_hastings_t(pt_root_t* tree,
-                                 alignment_t<CODE_TYPE>& alignment,
+        pt_metropolis_hastings_t(const pt_root_t* tree,
+                                 const alignment_t<CODE_TYPE>& alignment,
                                  const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
                                  double r, double lambda,
-                                 jumping_distribution_t& jumping_distribution,
+                                 const jumping_distribution_t& jumping_distribution,
                                  double acceptance_rate = 0.7)
-                : tree(tree), alignment(alignment), alpha(alpha),
+                : alignment(alignment), alpha(alpha),
                   gamma_distribution(r, lambda),
                   acceptance_rate(acceptance_rate),
                   step(0) {
@@ -133,7 +133,29 @@ public:
                         jumping_distributions[*is] = jumping_distribution.clone();
                 }
         }
+        pt_metropolis_hastings_t(const pt_metropolis_hastings_t& mh)
+                : alignment(mh.alignment), alpha(mh.alpha),
+                  gamma_distribution(mh.gamma_distribution),
+                  acceptance_rate(mh.acceptance_rate),
+                  step(mh.step) {
 
+                // initialize random generator
+                struct timeval tv;
+                gettimeofday(&tv, NULL);
+                time_t seed = tv.tv_sec*tv.tv_usec;
+
+                srand(seed);
+                rng = gsl_rng_alloc(gsl_rng_default);
+                gsl_rng_set(rng, seed);
+
+                // initialize nodes and jumping distributions
+                tree  = mh.tree->clone();
+                nodes =    tree->get_nodes();
+                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                        jumping_distributions[*is] =
+                                mh.jumping_distributions.find(*is)->second->clone();
+                }
+        }
         ~pt_metropolis_hastings_t() {
                 // free random generator
                 gsl_rng_free(rng);
@@ -142,6 +164,10 @@ public:
                         delete(jumping_distributions[*is]);
                 }
                 tree->destroy();
+        }
+
+        pt_metropolis_hastings_t* clone() const {
+                return new pt_metropolis_hastings_t(*this);
         }
 
         double log_likelihood() {
@@ -159,15 +185,20 @@ public:
                 }
                 return result;
         }
-        void update_means() {
+        void update_means(bool print) {
                 // update means
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
                         means[*is] = ((double)step*means[*is] + (*is)->d)/(double)(step+1);
-                        std::cerr << std::setprecision(8)
-                                  << std::fixed
-                                  << means[*is] << " ";
+                        history[*is].push_back(means[*is]);
+                        if (print) {
+                                std::cerr << std::setprecision(8)
+                                          << std::fixed
+                                          << means[*is] << " ";
+                        }
                 }
-                std::cerr << std::endl;
+                if (print) {
+                        std::cerr << std::endl;
+                }
         }
         void update_steps() {
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
@@ -208,7 +239,7 @@ public:
                         return std::pair<double, bool>(log_likelihood_ref, false);
                 }
         }
-        void sample() {
+        void sample(bool print) {
                 double log_likelihood_ref = log_likelihood();
                 // loop over nodes
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
@@ -222,7 +253,7 @@ public:
                                 acceptance[*is] = (acceptance[*is]*step)/(step+1.0);
                         }
                 }
-                update_means();
+                update_means(print);
                 step++;
         }
         void burnin(size_t n) {
@@ -233,10 +264,10 @@ public:
                 }
                 step = 0;
         }
-        void sample(size_t n) {
+        void sample(size_t n, bool print = true) {
                 // sample n times
                 for (size_t i = 0; i < n; i++) {
-                        sample();
+                        sample(print);
                 }
         }
         void apply() {
@@ -248,10 +279,10 @@ public:
 
         boost::unordered_map<pt_node_t*, double> means;
         boost::unordered_map<pt_node_t*, double> acceptance;
-
+        boost::unordered_map<pt_node_t*, std::vector<double> > history;
 private:
         pt_root_t* tree;
-        alignment_t<CODE_TYPE>& alignment;
+        const alignment_t<CODE_TYPE>& alignment;
         exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha;
 
         gamma_distribution_t gamma_distribution;
@@ -264,18 +295,80 @@ private:
         size_t step;
 };
 
+#include <pthread.h>
+
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_pmcmc_hastings_t
 {
-        pt_pmcmc_hastings_t(size_t n,
-                            pt_root_t* tree,
-                            alignment_t<CODE_TYPE>& alignment,
-                            const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
-                            double r, double lambda,
-                            jumping_distribution_t& jumping_distribution,
-                            double acceptance_rate = 0.7) {
+        pt_pmcmc_hastings_t(size_t n, const pt_metropolis_hastings_t<CODE_TYPE, ALPHABET_SIZE>& mh) {
 
+                for (size_t i = 0; i < n; i++) {
+                        population.push_back(mh.clone());
+                }
         }
+        ~pt_pmcmc_hastings_t() {
+                for (size_t i = 0; i < population.size(); i++) {
+                        delete(population[i]);
+                }
+        }
+
+        // typedefs
+        ////////////////////////////////////////////////////////////////////////////////
+        typedef pt_metropolis_hastings_t<CODE_TYPE, ALPHABET_SIZE> pt_sampler_t;
+
+        typedef struct {
+                pt_sampler_t* sampler;
+                size_t samples;
+                size_t burnin;
+        } pthread_data_t;
+
+        // sampling methods
+        ////////////////////////////////////////////////////////////////////////////////
+        void * sample_thread(void* _data) {
+                pthread_data_t* data  = (pthread_data_t*)_data;
+                pt_sampler_t* sampler = data->sampler;
+                const size_t  samples = data->samples;
+                const size_t burnin   = data->burnin;
+
+                sampler->burnin(burnin );
+                sampler->sample(samples);
+
+                return NULL;
+        }
+
+        void sample(size_t samples, size_t burnin) {
+
+                pthread_data_t data[population.size()];
+                pthread_t threads[population.size()];
+                int rc;
+
+                for (size_t i = 0; i < population.size(); i++) {
+                        data[i].sampler = population[i];
+                        data[i].samples = samples;
+                        data[i].burnin  = burnin;
+                }
+
+                // sample
+                for (size_t i = 0; i < population.size(); i++) {
+                        rc = pthread_create(&threads[i], NULL, sample_thread, (void *)&data[i]);
+                        if (rc) {
+                                std::cerr << "Couldn't create thread." << std::endl;
+                                exit(EXIT_FAILURE);
+                        }
+                }
+                // join threads
+                for (size_t i = 0; i < population.size(); i++) {
+                        rc = pthread_join(threads[i], NULL);
+                        if (rc) {
+                                std::cerr << "Couldn't join thread." << std::endl;
+                                exit(EXIT_FAILURE);
+                        }
+                }
+        }
+
+
+private:
+        std::vector<pt_sampler_t*> population;
 };
 
 #endif /* PHYLOTREE_SAMPLER_HH */
