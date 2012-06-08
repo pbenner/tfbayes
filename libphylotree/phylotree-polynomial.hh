@@ -240,20 +240,30 @@ private:
                 }
         }
         bool recompute_likelihood_rec(const pt_node_t::id_t& id, const pt_node_t* node) {
-                if (node->leaf() && id == node->id) {
-                        likelihood_leaf(node);
-                        return true;
+                if (node->leaf()) {
+                        if (id == node->id) {
+                                likelihood_leaf(node);
+                                return true;
+                        }
+                        else {
+                                return false;
+                        }
                 }
                 else {
-                        if (recompute_likelihood_rec(id, node->left)  ||
-                            recompute_likelihood_rec(id, node->right) ||
-                            id == node->id)
+                        if (id == node->id) {
+                                likelihood_node(node);
+                                return true;
+                        }
+                        else if (recompute_likelihood_rec(id, node->left) ||
+                                 recompute_likelihood_rec(id, node->right))
                         {
                                 likelihood_node(node);
                                 return true;
                         }
+                        else {
+                                return false;
+                        }
                 }
-                return false;
         }
 
 

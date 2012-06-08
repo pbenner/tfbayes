@@ -142,12 +142,12 @@ public:
                         i++;
                         return *this;
                 }
-                // pt_root_t* operator->() {
-                //         return tree;
-                // }
-                // pt_root_t& operator*() {
-                //         return *operator->();
-                // }
+                double* operator->() {
+                        return &i;
+                }
+                const double operator*() {
+                        return i;
+                }
         private:
                 size_t i;
                 size_t length;
@@ -194,12 +194,12 @@ public:
                         i++;
                         return *this;
                 }
-                // pt_root_t* operator->() {
-                //         return tree;
-                // }
-                // pt_root_t& operator*() {
-                //         return *operator->();
-                // }
+                double* operator->() {
+                        return &i;
+                }
+                const double operator*() {
+                        return i;
+                }
         private:
                 size_t i;
                 size_t length;

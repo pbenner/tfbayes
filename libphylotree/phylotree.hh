@@ -279,6 +279,9 @@ public:
         pt_root_t* clone() const {
                 return new pt_root_t(*this);
         }
+        pt_node_t::id_t size() const {
+                return node_map.size();
+        }
 
         node_map_t node_map;
 

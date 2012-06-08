@@ -114,10 +114,15 @@ public:
                                  double r, double lambda,
                                  const jumping_distribution_t& jumping_distribution,
                                  double acceptance_rate = 0.7)
-                : alignment(alignment), alpha(alpha),
+                : means(tree->size(),      0.0),
+                  acceptance(tree->size(), 0.0),
+                  history(tree->size(),    std::vector<double>()),
+                  alignment(alignment),
+                  alpha(alpha),
                   gamma_distribution(r, lambda),
                   acceptance_rate(acceptance_rate),
-                  step(0) {
+                  step(0),
+                  nodes(tree->size()) {
 
                 // initialize random generator
                 struct timeval tv;
@@ -128,14 +133,22 @@ public:
                 rng = gsl_rng_alloc(gsl_rng_default);
                 gsl_rng_set(rng, seed);
 
-                // initialize nodes and jumping distributions
-                this->tree  = tree->clone();
-                for (pt_root_t::node_map_t::const_iterator is = tree->node_map.begin(); is != tree->node_map.end(); is++) {
+                // initialize jumping distributions
+                for (pt_node_t::id_t id = 0; id < nodes; id++) {
                         jumping_distributions.push_back(jumping_distribution.clone());
                 }
-                means      = std::vector<double>(tree->node_map.size(), 0.0);
-                acceptance = std::vector<double>(tree->node_map.size(), 0.0);
-                history    = std::vector<std::vector<double> >(tree->node_map.size(), std::vector<double>());
+
+                // initialize trees
+                for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
+                        // add tree
+                        pt_root_t* _tree = tree->clone();
+                        it.apply(_tree);
+                        trees.push_back(_tree);
+                        // add polynomial
+                        pt_cached_polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial(_tree);
+                        polynomials    .push_back(polynomial);
+                        polynomials_tmp.push_back(polynomial);
+                }
         }
         pt_metropolis_hastings_t(const pt_metropolis_hastings_t& mh)
                 : means(mh.means),
@@ -146,7 +159,9 @@ public:
                   gamma_distribution(mh.gamma_distribution),
                   jumping_distributions(mh.jumping_distributions),
                   acceptance_rate(mh.acceptance_rate),
-                  step(mh.step) {
+                  step(mh.step),
+                  nodes(mh.nodes)
+                {
 
                 // initialize random generator
                 struct timeval tv;
@@ -158,19 +173,32 @@ public:
                 gsl_rng_set(rng, seed);
 
                 // initialize nodes and jumping distributions
-                tree  = mh.tree->clone();
-                for (pt_root_t::node_map_t::const_iterator is = tree->node_map.begin(); is != tree->node_map.end(); is++) {
-                        jumping_distributions[(*is)->id] = mh.jumping_distributions[(*is)->id]->clone();
+                for (pt_node_t::id_t id = 0; id < nodes; id++) {
+                        jumping_distributions[id] = mh.jumping_distributions[id]->clone();
+                }
+                // initialize trees
+                for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
+                        // add tree
+                        pt_root_t* _tree = mh.trees[0]->clone();
+                        it.apply(_tree);
+                        trees.push_back(_tree);
+                        // add polynomial
+                        pt_cached_polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial(_tree);
+                        polynomials    .push_back(polynomial);
+                        polynomials_tmp.push_back(polynomial);
                 }
         }
         ~pt_metropolis_hastings_t() {
                 // free random generator
                 gsl_rng_free(rng);
                 // free jumping distributions
-                for (pt_root_t::node_map_t::const_iterator is = tree->node_map.begin(); is != tree->node_map.end(); is++) {
-                        delete(jumping_distributions[(*is)->id]);
+                for (pt_node_t::id_t id = 0; id < nodes; id++) {
+                        delete(jumping_distributions[id]);
                 }
-                tree->destroy();
+                // free trees
+                for (trees_t::iterator it = trees.begin(); it != trees.end(); it++) {
+                        (*it)->destroy();
+                }
         }
 
         pt_metropolis_hastings_t* clone() const {
@@ -179,13 +207,11 @@ public:
 
         double log_likelihood() {
                 double result = 0;
-                for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        it.apply(tree);
-                        const pt_polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial(tree);
+                for (typename polynomials_t::iterator it = polynomials.begin(); it != polynomials.end(); it++) {
                         // loop over monomials
                         double tmp = -HUGE_VAL;
-                        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = polynomial.begin();
-                             ut != polynomial.end(); ut++) {
+                        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = it->begin();
+                             ut != it->end(); ut++) {
                                 tmp = logadd(tmp, log(ut->coefficient()) + mbeta_log(ut->exponent(), alpha) - mbeta_log(alpha));
                         }
                         result += tmp;
@@ -196,57 +222,80 @@ public:
                 // update root
                 history[0].push_back(0.0);
                 // update means
-                for (pt_root_t::node_map_t::const_iterator is = ++tree->node_map.begin(); is != tree->node_map.end(); is++) {
-                        means[(*is)->id] = ((double)step*means[(*is)->id] + (*is)->d)/(double)(step+1);
-                        history[(*is)->id].push_back(means[(*is)->id]);
+                for (pt_node_t::id_t id = 1; id < nodes; id++) {
+                        pt_node_t* node = trees[0]->node_map[id];
+                        means[id] = ((double)step*means[id] + node->d)/(double)(step+1);
+                        history[id].push_back(means[id]);
                         if (print) {
-                                std::cerr << std::setprecision(8)
+                                std::cout << std::setprecision(8)
                                           << std::fixed
-                                          << means[(*is)->id] << " ";
+                                          << means[id] << " ";
                         }
                 }
                 if (print) {
-                        std::cerr << std::endl;
+                        std::cout << std::endl;
                 }
         }
         void update_steps() {
-                for (pt_root_t::node_map_t::const_iterator is = ++tree->node_map.begin(); is != tree->node_map.end(); is++) {
-                        if (acceptance[(*is)->id] > acceptance_rate) {
-                                jumping_distributions[(*is)->id]->increase_jump(fabs(acceptance[(*is)->id]-acceptance_rate));
+                for (pt_node_t::id_t id = 1; id < nodes; id++) {
+                        if (acceptance[id] > acceptance_rate) {
+                                jumping_distributions[id]->increase_jump(fabs(acceptance[id]-acceptance_rate));
                         }
                         else {
-                                jumping_distributions[(*is)->id]->decrease_jump(fabs(acceptance[(*is)->id]-acceptance_rate));
+                                jumping_distributions[id]->decrease_jump(fabs(acceptance[id]-acceptance_rate));
                         }
                 }
         }
-        std::pair<double,bool> sample(pt_node_t* node, double log_likelihood_ref) {
-                double rho;
-                double x;
-                double log_likelihood_new;
-
-                double d_old = node->d;
-                double d_new = jumping_distributions[node->id]->sample(rng, d_old);
+        void propose(pt_node_t::id_t id, double d_old, double d_new) {
 
                 print_debug("old sample: %f\n", d_old);
 
                 // compute new log likelihood
-                node->d            = d_new;
+                for (trees_t::iterator it = trees.begin(); it != trees.end(); it++) {
+                        (*it)->node_map[id]->d = d_new;
+                }
+                for (typename polynomials_t::iterator it = polynomials.begin(); it != polynomials.end(); it++) {
+                        it->update_length(id);
+                }
+        }
+        void accept() {
+                for (size_t i = 0; i < polynomials.size(); i++) {
+                        polynomials_tmp[i] = polynomials[i];
+                }
+        }
+        void reject(pt_node_t::id_t id, double d_old) {
+                for (size_t i = 0; i < polynomials.size(); i++) {
+                        polynomials[i] = polynomials_tmp[i];
+                        trees[i]->node_map[id]->d = d_old;
+                }
+        }
+        std::pair<double,bool> sample(pt_node_t::id_t id, double log_likelihood_ref) {
+                double rho;
+                double x;
+                double log_likelihood_new;
+
+                // generate a proposal
+                double d_old = trees[0]->node_map[id]->d;
+                double d_new = jumping_distributions[id]->sample(rng, d_old);
+                propose(id, d_old, d_new);
+
                 log_likelihood_new = log_likelihood();
 
                 // compute acceptance probability
                 rho = exp(log_likelihood_new-log_likelihood_ref)
                         *gamma_distribution.pdf(d_new)/gamma_distribution.pdf(d_old)
-                        *jumping_distributions[node->id]->p(d_old, d_new);
+                        *jumping_distributions[id]->p(d_old, d_new);
                 x   = gsl_ran_flat(rng, 0.0, 1.0);
                 if (x <= std::min(1.0, rho)) {
                         // sample accepted
+                        accept();
                         print_debug("accepted: %f\n", d_new);
                         return std::pair<double, bool>(log_likelihood_new, true);
                 }
                 else {
                         // sample rejected
+                        reject(id, d_old);
                         print_debug("rejected: %f\n", d_new);
-                        node->d = d_old;
                         return std::pair<double, bool>(log_likelihood_ref, false);
                 }
         }
@@ -259,15 +308,15 @@ public:
                 fflush(stderr);
                 funlockfile(stderr);
                 // loop over nodes
-                for (pt_root_t::node_map_t::const_iterator is = ++tree->node_map.begin(); is != tree->node_map.end(); is++) {
-                        std::pair<double, bool> result = sample(*is, log_likelihood_ref);
+                for (pt_node_t::id_t id = 1; id < nodes; id++) {
+                        std::pair<double, bool> result = sample(id, log_likelihood_ref);
                         log_likelihood_ref = result.first;
                         // estimate acceptance rate
                         if (result.second) {
-                                acceptance[(*is)->id] = (acceptance[(*is)->id]*step + 1.0)/(step+1.0);
+                                acceptance[id] = (acceptance[id]*step + 1.0)/(step+1.0);
                         }
                         else {
-                                acceptance[(*is)->id] = (acceptance[(*is)->id]*step)/(step+1.0);
+                                acceptance[id] = (acceptance[id]*step)/(step+1.0);
                         }
                 }
                 update_means(print);
@@ -298,7 +347,6 @@ public:
         std::vector<double> acceptance;
         std::vector<std::vector<double> > history;
 private:
-        pt_root_t* tree;
         const alignment_t<CODE_TYPE>& alignment;
         exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha;
 
@@ -309,6 +357,17 @@ private:
 
         gsl_rng * rng;
         size_t step;
+
+        // for each position of the alignment keep a tree that
+        // represents this position and two vectors of polynomials for
+        // the likelihood
+        typedef std::vector<pt_root_t*> trees_t;
+        typedef std::vector<pt_cached_polynomial_t<CODE_TYPE, ALPHABET_SIZE> > polynomials_t;
+
+        pt_node_t::id_t nodes;
+        trees_t trees;
+        polynomials_t polynomials;
+        polynomials_t polynomials_tmp;
 };
 
 #include <assert.h>
