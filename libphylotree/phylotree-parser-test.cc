@@ -23,7 +23,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
-#include <map>
+#include <boost/unordered_map.hpp>
 
 #include <sys/time.h>
 
@@ -44,7 +44,7 @@ using namespace std;
 #define alphabet_size 4
 typedef short code_t;
 
-void pt_init_leaf(const map<string, code_t>& observations, pt_node_t* node) {
+void pt_init_leaf(const boost::unordered_map<string, code_t>& observations, pt_node_t* node) {
         if (observations.find(node->name) == observations.end()) {
                 node->x = rand()%alphabet_size;
         }
@@ -53,7 +53,7 @@ void pt_init_leaf(const map<string, code_t>& observations, pt_node_t* node) {
         }
 }
 
-void pt_init(const map<string, code_t>& observations, pt_node_t* node) {
+void pt_init(const boost::unordered_map<string, code_t>& observations, pt_node_t* node) {
 
         if (node->leaf()) {
                 pt_init_leaf(observations, node);
@@ -78,7 +78,7 @@ int main(void) {
         init();
         yyparse();
 
-        map<string, code_t> observations;
+        boost::unordered_map<string, code_t> observations;
         // observations["hg19"]    = 1;
         // observations["panTro2"] = 2;
         // observations["gorGor1"] = 0;

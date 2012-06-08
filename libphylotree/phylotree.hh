@@ -43,14 +43,16 @@ public:
                   const ssize_t id = -1)
                 : x(x), d(d), left(left), right(right), name(name), id(id)
                 { }
+        pt_node_t(const pt_node_t& node)
+                : x(node.x), d(node.d), left(NULL), right(NULL), name(node.name), id(node.id) {
 
-        pt_node_t* clone() const {
-                pt_node_t* pt_node = new pt_node_t(*this);
-                if (!leaf()) {
-                        pt_node->left  = left ->clone();
-                        pt_node->right = right->clone();
+                if (!node.leaf()) {
+                        left  = node.left ->clone();
+                        right = node.right->clone();
                 }
-                return pt_node;
+        }
+        pt_node_t* clone() const {
+                return new pt_node_t(*this);
         }
 
         /* typedef for a set of nodes */
@@ -266,34 +268,27 @@ public:
                   const std::string name = "")
                 : pt_node_t(x, -HUGE_VAL, left, right, name) {
 
-                pt_node_t::id_t n = set_id()+1;
+                pt_node_t::id_t n = set_id(this, 0)+1;
                 node_map = node_map_t(n, (pt_node_t*)NULL);
-                create_map();
-        }
-        pt_root_t* clone() const {
-                pt_root_t* pt_root = new pt_root_t(*this);
-                if (!leaf()) {
-                        pt_root->left  = left ->clone();
-                        pt_root->right = right->clone();
-                }
-                pt_root->create_map();
-
-                return pt_root;
-        }
-
-        /* methods */
-        void create_map() {
                 create_map(this);
         }
+        pt_root_t(const pt_root_t& root)
+                : pt_node_t(root), node_map(root.node_map) {
+                create_map(this);
+        }
+        pt_root_t* clone() const {
+                return new pt_root_t(*this);
+        }
+
+        node_map_t node_map;
+
+private:
         void create_map(pt_node_t* node) {
                 node_map[node->id] = node;
                 if (!node->leaf()) {
                         create_map(node->left );
                         create_map(node->right);
                 }
-        }
-        pt_node_t::id_t set_id() {
-                return set_id(this, 0);
         }
         pt_node_t::id_t set_id(pt_node_t* node, pt_node_t::id_t id) {
                 node->id = id;
@@ -303,8 +298,6 @@ public:
                 }
                 return id;
         }
-
-        node_map_t node_map;
 };
 
 class pt_leaf_t : public pt_node_t {

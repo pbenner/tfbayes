@@ -163,4 +163,125 @@ private:
         }
 };
 
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+class pt_cached_polynomial_t : public polynomial_t<CODE_TYPE, ALPHABET_SIZE> {
+public:
+        pt_cached_polynomial_t(const pt_root_t* root)
+                : polynomial_t<CODE_TYPE, ALPHABET_SIZE>(),
+                  tree(root->clone()),
+                  carry_cache(tree->node_map.size(), carry_t()) {
+                likelihood();
+        }
+        pt_cached_polynomial_t(const pt_cached_polynomial_t& poly)
+                : polynomial_t<CODE_TYPE, ALPHABET_SIZE>(*this),
+                  tree(poly.tree->clone()),
+                  carry_cache(poly.carry_cache) { }
+        ~pt_cached_polynomial_t() {
+                tree->destroy();
+        }
+
+        pt_cached_polynomial_t(const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly)
+                : polynomial_t<CODE_TYPE, ALPHABET_SIZE>(poly) { }
+
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE>& likelihood() {
+                likelihood_rec(tree);
+                polynomial_t<CODE_TYPE, ALPHABET_SIZE>::operator=(poly_sum(carry_cache[0]));
+                return *this;
+        }
+        void update_length(const pt_node_t::id_t& id, double d) {
+
+                tree->node_map[id]->d = d;
+                recompute_likelihood_rec(id, tree);
+                polynomial_t<CODE_TYPE, ALPHABET_SIZE>::operator=(poly_sum(carry_cache[0]));
+        }
+
+private:
+        typedef boost::array<polynomial_t<CODE_TYPE, ALPHABET_SIZE>, ALPHABET_SIZE+1> carry_t;
+        typedef std::vector<carry_t> carry_cache_t;
+
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum(const carry_t& carry) {
+                polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum;
+
+                for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> term(1.0);
+                        term.exponent()[i] = 1;
+                        poly_sum += term*carry[i];
+                }
+                poly_sum += carry[ALPHABET_SIZE];
+
+                return poly_sum;
+        }
+
+        /******************************************************************************
+         * Algorithm by PB
+         ******************************************************************************/
+
+        void likelihood_leaf(const pt_node_t* node) {
+                carry_t& carry  = carry_cache[node->id];
+                carry           = carry_t();
+                carry[node->x] += 1.0;
+        }
+        void likelihood_node(
+                const pt_node_t* node) {
+                // compute mutation probabilites
+                double pm_left  = 1.0-exp(-node->left->d);
+                double pm_right = 1.0-exp(-node->right->d);
+                // obtain carries from the cache
+                      carry_t& carry       = carry_cache[node->id];
+                const carry_t& carry_left  = carry_cache[node->left ->id];
+                const carry_t& carry_right = carry_cache[node->right->id];
+                // clear cache
+                carry = carry_t();
+                // compute poly sums
+                const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_left  = poly_sum(carry_left);
+                const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_right = poly_sum(carry_right);
+
+                carry[ALPHABET_SIZE] +=
+                        ((1.0-pm_left )*carry_left [ALPHABET_SIZE] + pm_left *poly_sum_left)*
+                        ((1.0-pm_right)*carry_right[ALPHABET_SIZE] + pm_right*poly_sum_right);
+
+                for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                        carry[i] += (1.0-pm_left )*(1.0-pm_right)*carry_left [i]*carry_right[ALPHABET_SIZE];
+                        carry[i] += (1.0-pm_left )*     pm_right *carry_left [i]*poly_sum_right;
+                        carry[i] += (1.0-pm_right)*(1.0-pm_left )*carry_right[i]*carry_left [ALPHABET_SIZE];
+                        carry[i] += (1.0-pm_right)*     pm_left  *carry_right[i]*poly_sum_left;
+                        carry[i] += (1.0-pm_left )*(1.0-pm_right)*carry_left [i]*carry_right[i];
+                }
+        }
+        bool recompute_likelihood_rec(const pt_node_t::id_t& id, const pt_node_t* node) {
+                if (node->leaf() && id == node->id) {
+                        likelihood_leaf(node);
+                        return true;
+                }
+                else {
+                        if (recompute_likelihood_rec(id, node->left)  ||
+                            recompute_likelihood_rec(id, node->right) ||
+                            id == node->id)
+                        {
+                                likelihood_node(node);
+                                return true;
+                        }
+                }
+                return false;
+        }
+
+
+        void likelihood_rec(const pt_node_t* node) {
+                if (node->leaf()) {
+                        likelihood_leaf(node);
+                }
+                else {
+                        likelihood_rec(node->left);
+                        likelihood_rec(node->right);
+
+                        likelihood_node(node);
+                }
+        }
+
+private:
+        pt_root_t *tree;
+        carry_cache_t carry_cache;
+
+};
+
 #endif /* PHYLOTREE_POLYNOMIAL_HH */
