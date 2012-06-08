@@ -166,18 +166,11 @@ private:
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_cached_polynomial_t : public polynomial_t<CODE_TYPE, ALPHABET_SIZE> {
 public:
-        pt_cached_polynomial_t(const pt_root_t* root)
+        pt_cached_polynomial_t(pt_root_t* root)
                 : polynomial_t<CODE_TYPE, ALPHABET_SIZE>(),
-                  tree(root->clone()),
+                  tree(root),
                   carry_cache(tree->node_map.size(), carry_t()) {
                 likelihood();
-        }
-        pt_cached_polynomial_t(const pt_cached_polynomial_t& poly)
-                : polynomial_t<CODE_TYPE, ALPHABET_SIZE>(*this),
-                  tree(poly.tree->clone()),
-                  carry_cache(poly.carry_cache) { }
-        ~pt_cached_polynomial_t() {
-                tree->destroy();
         }
 
         pt_cached_polynomial_t(const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly)
@@ -188,9 +181,7 @@ public:
                 polynomial_t<CODE_TYPE, ALPHABET_SIZE>::operator=(poly_sum(carry_cache[0]));
                 return *this;
         }
-        void update_length(const pt_node_t::id_t& id, double d) {
-
-                tree->node_map[id]->d = d;
+        void update_length(const pt_node_t::id_t& id) {
                 recompute_likelihood_rec(id, tree);
                 polynomial_t<CODE_TYPE, ALPHABET_SIZE>::operator=(poly_sum(carry_cache[0]));
         }
