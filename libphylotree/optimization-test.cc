@@ -215,13 +215,14 @@ void run_optimization(const string& method, const char* file_tree, const char* f
         else if (method == "metropolis-hastings") {
                 normal_jump_t jump(options.sigma);
 //                gamma_jump_t jump(1.6, 0.4);
-                pt_metropolis_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
                 if (options.jobs == 1) {
+                        pt_geometric_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
                         pt_metropolis_hastings.burnin(options.burnin);
                         pt_metropolis_hastings.sample(options.max_steps);
                         pt_metropolis_hastings.apply(pt_root);
                 }
                 else {
+                        pt_metropolis_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
                         pt_pmcmc_hastings_t<code_t, alphabet_size> pmcmc(options.jobs, pt_metropolis_hastings);
                         pmcmc.sample(options.max_steps, options.burnin);
                         pmcmc.apply(pt_root);

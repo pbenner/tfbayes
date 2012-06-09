@@ -185,6 +185,10 @@ public:
                 recompute_likelihood_rec(id, tree);
                 polynomial_t<CODE_TYPE, ALPHABET_SIZE>::operator=(poly_sum(carry_cache[0]));
         }
+        void update_length(const pt_node_t::id_t& id1, const pt_node_t::id_t& id2) {
+                recompute_likelihood_rec(id1, id2, tree);
+                polynomial_t<CODE_TYPE, ALPHABET_SIZE>::operator=(poly_sum(carry_cache[0]));
+        }
 
 private:
         typedef boost::array<polynomial_t<CODE_TYPE, ALPHABET_SIZE>, ALPHABET_SIZE+1> carry_t;
@@ -256,6 +260,32 @@ private:
                         }
                         else if (recompute_likelihood_rec(id, node->left) ||
                                  recompute_likelihood_rec(id, node->right))
+                        {
+                                likelihood_node(node);
+                                return true;
+                        }
+                        else {
+                                return false;
+                        }
+                }
+        }
+        bool recompute_likelihood_rec(const pt_node_t::id_t& id1, const pt_node_t::id_t& id2, const pt_node_t* node) {
+                if (node->leaf()) {
+                        if (id1 == node->id || id2 == node->id) {
+                                likelihood_leaf(node);
+                                return true;
+                        }
+                        else {
+                                return false;
+                        }
+                }
+                else {
+                        if (id1 == node->id || id2 == node->id) {
+                                likelihood_node(node);
+                                return true;
+                        }
+                        else if (recompute_likelihood_rec(id1, id2, node->left) ||
+                                 recompute_likelihood_rec(id1, id2, node->right))
                         {
                                 likelihood_node(node);
                                 return true;
