@@ -213,7 +213,8 @@ void run_optimization(const string& method, const char* file_tree, const char* f
                 pt_gradient_ascent.run(options.max_steps, options.min_change);
         }
         else if (method == "metropolis-hastings") {
-                normal_jump_t jump(options.sigma);
+                geometric_jump_t jump(options.sigma);
+//                normal_jump_t jump(options.sigma);
 //                gamma_jump_t jump(1.6, 0.4);
                 if (options.jobs == 1) {
                         pt_geometric_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
