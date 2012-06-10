@@ -465,7 +465,7 @@ public:
 
                 return total;
         }
-        void run(size_t max, double stop = 0.0) {
+        void run(size_t max, double stop = 0.0, bool print = true) {
                 pt_node_t::nodes_t nodes = tree->get_nodes();
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
                         node_epsilon[*is] = epsilon;
@@ -473,11 +473,13 @@ public:
                 for (size_t i = 0; i < max; i++) {
                         std::stringstream ss;
                         double total = run(nodes);
-                        tree->print(ss, true);
-                        std::cerr << "total change: " << total << std::endl;
-                        std::cerr << ss.str()                  << std::endl;
-                        if (total < stop) {
-                                break;
+                        if (print) {
+                                tree->print(ss, true);
+                                std::cout << "total change: " << total << std::endl;
+                                std::cout << ss.str()                  << std::endl;
+                                if (total < stop) {
+                                        break;
+                                }
                         }
                 }
         }
