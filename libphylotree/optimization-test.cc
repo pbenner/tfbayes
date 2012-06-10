@@ -39,8 +39,8 @@ typedef float code_t;
 using namespace std;
 
 ostream& operator<< (ostream& o, const pt_pmcmc_hastings_t<code_t, alphabet_size>& mh) {
-        size_t n = mh.history.size();
-        size_t m = mh.history[0].size();
+        size_t n = mh.samples.size();
+        size_t m = mh.samples[0].size();
         for (size_t i = 1; i < m; i++) {
                 o << setw(10)
                   << i;
@@ -51,7 +51,7 @@ ostream& operator<< (ostream& o, const pt_pmcmc_hastings_t<code_t, alphabet_size
                 for (size_t j = 1; j < m; j++) {
                         o << setprecision(8)
                           << fixed
-                          << mh.history[i][j] << " ";
+                          << mh.samples[i][j] << " ";
                 }
                 o << endl;
         }
@@ -217,16 +217,15 @@ void run_optimization(const string& method, const char* file_tree, const char* f
 //                normal_jump_t jump(options.sigma);
 //                gamma_jump_t jump(1.6, 0.4);
                 if (options.jobs == 1) {
-                        pt_geometric_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
+                        pt_geometric_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump);
                         pt_metropolis_hastings.burnin(options.burnin);
                         pt_metropolis_hastings.sample(options.max_steps);
-                        pt_metropolis_hastings.apply(pt_root);
                 }
                 else {
-                        pt_metropolis_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
+                        //pt_metropolis_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
+                        pt_geometric_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump);
                         pt_pmcmc_hastings_t<code_t, alphabet_size> pmcmc(options.jobs, pt_metropolis_hastings);
                         pmcmc.sample(options.max_steps, options.burnin);
-                        pmcmc.apply(pt_root);
                         cout << pmcmc;
                 }
         }
@@ -235,11 +234,6 @@ void run_optimization(const string& method, const char* file_tree, const char* f
                      << endl;
                 exit(EXIT_FAILURE);
         }
-
-        ss.str("");
-        pt_root->print(ss, true);
-        cout << ss.str()
-             << endl;
 }
 
 int main(int argc, char *argv[])
