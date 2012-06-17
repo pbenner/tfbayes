@@ -145,6 +145,11 @@ void test_tree6() {
              << result << endl
              << "0.999997 Pa^2 Pc^1 Pg^1 Pt^1 + 3.05622e-07 Pa^1 Pc^1 Pg^1 Pt^1 (correct polynomial)"
              << endl << endl;
+
+        for (incomplete_expression_t::const_iterator it = incomplete_expression.begin(); it != incomplete_expression.end(); it++) {
+                cout << *it << ": "
+                     << pt_expand<code_t, alphabet_size>(*it) << endl;
+        }
 }
 
 int main(void) {
