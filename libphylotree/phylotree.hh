@@ -121,8 +121,10 @@ public:
                         if (id != -1) {
                                 o << ":" << id;
                         }
-                        left ->print_phylotree(o, nesting+1);
-                        right->print_phylotree(o, nesting+1);
+                        if (!leaf()) {
+                                left ->print_phylotree(o, nesting+1);
+                                right->print_phylotree(o, nesting+1);
+                        }
                         o << ")"
                           << std::endl;
                 }
@@ -285,7 +287,7 @@ public:
 
         node_map_t node_map;
 
-private:
+protected:
         void create_map(pt_node_t* node) {
                 node_map[node->id] = node;
                 if (!node->leaf()) {
