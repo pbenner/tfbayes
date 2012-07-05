@@ -99,10 +99,14 @@ AC_SUBST(LIB_PTHREAD)
 AX_BOOST_BASE([1.37.0],,
 	AC_MSG_ERROR([this library is required]))
 
-AC_CHECK_LIB([boost_system], [main], LIB_BOOST_SYSTEM="-lboost_system",
-  AC_MSG_ERROR([this library is required]))
-AC_CHECK_LIB([boost_thread], [main], LIB_BOOST_THREAD="-lboost_thread",
-  AC_MSG_ERROR([this library is required]))
+AC_CHECK_LIB(boost_system-gcc-mt, main, LIB_BOOST_SYSTEM="-lboost_system-gcc-mt",
+	[AC_CHECK_LIB(boost_system-mt, main, LIB_BOOST_SYSTEM="-lboost_system-mt",
+		[AC_CHECK_LIB(boost_system, main, LIB_BOOST_SYSTEM="-lboost_system",
+			[AC_MSG_ERROR([this library is required])])])])
+AC_CHECK_LIB(boost_thread-gcc-mt, main, LIB_BOOST_THREAD="-lboost_thread-gcc-mt",
+	[AC_CHECK_LIB(boost_thread-mt, main, LIB_BOOST_THREAD="-lboost_thread-mt",
+		[AC_CHECK_LIB(boost_thread, main, LIB_BOOST_THREAD="-lboost_thread",
+			[AC_MSG_ERROR([this library is required])])])])
 
 AC_SUBST(LIB_BOOST_SYSTEM)
 AC_SUBST(LIB_BOOST_THREAD)
