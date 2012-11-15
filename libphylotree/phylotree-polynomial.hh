@@ -29,6 +29,9 @@
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_polynomial_t : public polynomial_t<CODE_TYPE, ALPHABET_SIZE> {
 public:
+        pt_polynomial_t()
+                : polynomial_t<CODE_TYPE, ALPHABET_SIZE>() {
+        }
         pt_polynomial_t(const pt_root_t* root)
                 : polynomial_t<CODE_TYPE, ALPHABET_SIZE>() {
                 likelihood_py(root);
@@ -40,6 +43,23 @@ public:
         polynomial_t<CODE_TYPE, ALPHABET_SIZE>& likelihood_py(const pt_root_t* root) {
                 operator=(poly_sum(likelihood_rec(root)));
                 return *this;
+        }
+
+        /* normalize coefficients so they add up to one */
+        pt_polynomial_t<CODE_TYPE, ALPHABET_SIZE> normalize(void) const {
+                pt_polynomial_t<CODE_TYPE, ALPHABET_SIZE> result;
+                double norm = 0;
+
+                /* compute normalization constant */
+                for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = this->begin(); it != this->end(); it++)
+                {
+                        norm += it->coefficient();
+                }
+                for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = this->begin(); it != this->end(); it++)
+                {
+                        result += (*it) / norm;
+                }
+                return result;
         }
 
 private:

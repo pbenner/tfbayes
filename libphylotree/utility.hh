@@ -31,6 +31,14 @@ std::ostream& operator<< (std::ostream& o, const exponent_t<short, 4>& exponent)
 std::ostream& operator<< (std::ostream& o, const polynomial_term_t<short, 4>& term);
 std::ostream& operator<< (std::ostream& o, const polynomial_t<short, 4>& polynomial);
 
+std::ostream& operator<< (std::ostream& o, const exponent_t<float, 4>& exponent);
+std::ostream& operator<< (std::ostream& o, const polynomial_term_t<float, 4>& term);
+std::ostream& operator<< (std::ostream& o, const polynomial_t<float, 4>& polynomial);
+
+std::ostream& operator<< (std::ostream& o, const exponent_t<double, 4>& exponent);
+std::ostream& operator<< (std::ostream& o, const polynomial_term_t<double, 4>& term);
+std::ostream& operator<< (std::ostream& o, const polynomial_t<double, 4>& polynomial);
+
 std::ostream& operator<< (std::ostream& o, const polynomial_term_t<short, 4, mutation_tree_t>& term);
 std::ostream& operator<< (std::ostream& o, const polynomial_t<short, 4, mutation_tree_t>& polynomial);
 
@@ -41,5 +49,9 @@ size_t hash_value(const exponent_t<short, 10>& exponent);
 size_t hash_value(const exponent_t<float, 4>& exponent);
 size_t hash_value(const exponent_t<float, 5>& exponent);
 size_t hash_value(const exponent_t<float, 10>& exponent);
+
+size_t hash_value(const exponent_t<double, 4>& exponent);
+size_t hash_value(const exponent_t<double, 5>& exponent);
+size_t hash_value(const exponent_t<double, 10>& exponent);
 
 #endif /* UTILITY_HH */
