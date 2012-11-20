@@ -28,41 +28,9 @@
 #include <phylotree.hh>
 #include <phylotree-polynomial.hh>
 
-#include <math.h>
-#include <gsl/gsl_sf_gamma.h>
+#include <statistics.hh>
 
 using namespace std;
-
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-double mbeta_log(
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
-{
-        double sum1 = 0;
-        double sum2 = 0;
-
-        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                sum1 += alpha[i];
-                sum2 += gsl_sf_lngamma(alpha[i]);
-        }
-
-        return sum2 - gsl_sf_lngamma(sum1);
-}
-
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-double mbeta_log(
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& exponent,
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
-{
-        double sum1 = 0;
-        double sum2 = 0;
-
-        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                sum1 += exponent[i] + alpha[i];
-                sum2 += gsl_sf_lngamma(exponent[i] + alpha[i]);
-        }
-
-        return sum2 - gsl_sf_lngamma(sum1);
-}
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 double pt_marginal_likelihood(

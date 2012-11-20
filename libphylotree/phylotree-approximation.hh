@@ -24,9 +24,126 @@
 
 #include <phylotree.hh>
 #include <phylotree-polynomial.hh>
+#include <posterior.hh>
+
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_monte.h>
+#include <gsl/gsl_monte_plain.h>
+#include <gsl/gsl_monte_miser.h>
+#include <gsl/gsl_monte_vegas.h>
+#include <gsl/gsl_sf_psi.h>
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_approximate(const pt_polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly)
+struct kl_divergence_data {
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational;
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& likelihood;
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha;
+        boost::array<double, ALPHABET_SIZE>& theta;
+};
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+double kl_divergence_f(double * x, size_t dim, void * params)
+{
+        struct kl_divergence_data<CODE_TYPE, ALPHABET_SIZE>* data =
+                (kl_divergence_data<CODE_TYPE, ALPHABET_SIZE> *)(params);
+
+        data->theta[ALPHABET_SIZE-1] = 1.0;
+        for (size_t i = 0; i < ALPHABET_SIZE-1; i++) {
+                data->theta[i]                = x[i];
+                data->theta[ALPHABET_SIZE-1] -= x[i];
+        }
+
+        /* check if we are inside the simplex */
+        if (data->theta[ALPHABET_SIZE-1] < 0.0) {
+                return 0.0;
+        }
+        else {
+                double p = pt_posterior_density<CODE_TYPE, ALPHABET_SIZE>(
+                        data->likelihood, data->alpha, data->theta);
+                double q = pt_posterior_density<CODE_TYPE, ALPHABET_SIZE>(
+                        data->variational, data->alpha, data->theta);
+
+                return q*log(p);
+        }
+}
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+double variational_entropy(
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+{
+        /* fetch the exponent of the variational distribution */
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& exponent = variational.begin()->exponent();
+
+        double sum    = 0.0;
+        double result = mbeta_log(exponent, alpha);
+
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                double tmp = exponent[i];
+                result -= (tmp + alpha[i] - 1.0)*gsl_sf_psi(tmp + alpha[i]);
+                sum    +=  tmp + alpha[i];
+        }
+        result += (sum - ALPHABET_SIZE)*gsl_sf_psi(sum);
+
+        return result;
+}
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+double kl_divergence(
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& likelihood,
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+{
+        boost::array<double, ALPHABET_SIZE> theta;
+        double xl[ALPHABET_SIZE-1];
+        double xu[ALPHABET_SIZE-1];
+        const gsl_rng_type *T;
+        gsl_rng *r;
+
+        /* compute Int Q Log P dw                                              *
+         ***********************************************************************/
+        size_t calls = 500000;
+        double result, err;
+
+        gsl_monte_function F;
+
+        /* generate the function that we want to integrate */
+        double (*f)(double *, size_t, void *) =
+                kl_divergence_f<CODE_TYPE, ALPHABET_SIZE>;
+
+        struct kl_divergence_data<CODE_TYPE, ALPHABET_SIZE> data = {
+                variational, likelihood, alpha, theta
+        };
+
+        for (size_t i = 0; i < ALPHABET_SIZE-1; i++) {
+                xl[i] = 0.0;
+                xu[i] = 1.0;
+        }
+
+        F.f      = f;
+        F.dim    = ALPHABET_SIZE-1;
+        F.params = &data;
+     
+        gsl_rng_env_setup ();
+     
+        T = gsl_rng_default;
+        r = gsl_rng_alloc (T);
+
+        gsl_monte_miser_state *s = gsl_monte_miser_alloc (ALPHABET_SIZE-1);
+        gsl_monte_miser_integrate (&F, xl, xu, ALPHABET_SIZE-1, calls, r, s, 
+                                    &result, &err);
+        gsl_monte_miser_free (s);
+
+        /* add - Int Q Log Q dw                                                *
+         ***********************************************************************/
+        result += variational_entropy<CODE_TYPE, ALPHABET_SIZE>(variational, alpha);
+
+        return -result;
+}
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_approximate(
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly)
 {
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> result;
         polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> result_term(1.0);

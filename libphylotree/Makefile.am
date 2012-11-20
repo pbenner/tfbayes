@@ -85,6 +85,7 @@ libphylotree_la_SOURCES = \
 	incomplete-expression.cc \
 	incomplete-expression.hh \
 	marginal-likelihood.hh \
+	statistics.hh \
 	utility.cc \
 	utility.hh
 libphylotree_la_LIBADD  = -lm

@@ -42,14 +42,20 @@ std::ostream& operator<< (std::ostream& o, const polynomial_t<double, 4>& polyno
 std::ostream& operator<< (std::ostream& o, const polynomial_term_t<short, 4, mutation_tree_t>& term);
 std::ostream& operator<< (std::ostream& o, const polynomial_t<short, 4, mutation_tree_t>& polynomial);
 
+size_t hash_value(const exponent_t<short, 2>& exponent);
+size_t hash_value(const exponent_t<short, 3>& exponent);
 size_t hash_value(const exponent_t<short, 4>& exponent);
 size_t hash_value(const exponent_t<short, 5>& exponent);
 size_t hash_value(const exponent_t<short, 10>& exponent);
 
+size_t hash_value(const exponent_t<float, 2>& exponent);
+size_t hash_value(const exponent_t<float, 3>& exponent);
 size_t hash_value(const exponent_t<float, 4>& exponent);
 size_t hash_value(const exponent_t<float, 5>& exponent);
 size_t hash_value(const exponent_t<float, 10>& exponent);
 
+size_t hash_value(const exponent_t<double, 2>& exponent);
+size_t hash_value(const exponent_t<double, 3>& exponent);
 size_t hash_value(const exponent_t<double, 4>& exponent);
 size_t hash_value(const exponent_t<double, 5>& exponent);
 size_t hash_value(const exponent_t<double, 10>& exponent);

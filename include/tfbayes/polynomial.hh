@@ -22,6 +22,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <tfbayes/logarithmetic.h>
 #include <utility>
 
 #include <boost/array.hpp>
@@ -52,6 +53,13 @@ public:
                 double result = 1.0;
                 for (size_t i = 0; i < S; i++) {
                         result *= pow(val[i], operator[](i));
+                }
+                return result;
+        }
+        double log_eval(const boost::array<double, S>& val) const {
+                double result = 0.0;
+                for (size_t i = 0; i < S; i++) {
+                        result += operator[](i)*log(val[i]);
                 }
                 return result;
         }
@@ -115,6 +123,11 @@ public:
         C eval(const boost::array<double, S>& val) const {
                 C c(coefficient());
                 c *= exponent().eval(val);
+                return c;
+        }
+        C log_eval(const boost::array<double, S>& val) const {
+                C c(log(coefficient()));
+                c += exponent().log_eval(val);
                 return c;
         }
 };
@@ -274,6 +287,13 @@ public:
                 C result(0.0);
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         result += it->eval(val);
+                }
+                return result;
+        }
+        C log_eval(const boost::array<double, S>& val) const {
+                C result(-HUGE_VAL);
+                for (const_iterator it = this->begin(); it != this->end(); it++) {
+                        result = logadd(result, it->log_eval(val));
                 }
                 return result;
         }

@@ -135,6 +135,23 @@ ostream& operator<< (ostream& o, const polynomial_t<short, 4, mutation_tree_t>& 
         return o;
 }
 
+size_t hash_value(const exponent_t<short, 2>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+
+        return seed;
+}
+
+size_t hash_value(const exponent_t<short, 3>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+        seed += (size_t)exponent[2] <<  4;
+
+        return seed;
+}
+
 size_t hash_value(const exponent_t<short, 4>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
@@ -173,6 +190,23 @@ size_t hash_value(const exponent_t<short, 10>& exponent) {
         return seed;
 }
 
+size_t hash_value(const exponent_t<float, 2>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+
+        return seed;
+}
+
+size_t hash_value(const exponent_t<float, 3>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+        seed += (size_t)exponent[2] <<  4;
+
+        return seed;
+}
+
 size_t hash_value(const exponent_t<float, 4>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
@@ -206,6 +240,23 @@ size_t hash_value(const exponent_t<float, 10>& exponent) {
         seed += (size_t)exponent[7] << 14;
         seed += (size_t)exponent[8] << 16;
         seed += (size_t)exponent[9] << 18;
+
+        return seed;
+}
+
+size_t hash_value(const exponent_t<double, 2>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+
+        return seed;
+}
+
+size_t hash_value(const exponent_t<double, 3>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+        seed += (size_t)exponent[2] <<  4;
 
         return seed;
 }

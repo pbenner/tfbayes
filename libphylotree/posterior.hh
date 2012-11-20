@@ -25,6 +25,7 @@
 #include <boost/array.hpp>
 
 #include <marginal-likelihood.hh>
+#include <statistics.hh>
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 boost::array<double, ALPHABET_SIZE> pt_posterior_expectation(
@@ -61,23 +62,6 @@ boost::array<double, ALPHABET_SIZE> pt_posterior_expectation(
         }
 
         return result;
-}
-
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-double mbeta_log(
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& exponent,
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
-        const size_t from, const size_t to)
-{
-        double sum1 = 0;
-        double sum2 = 0;
-
-        for (size_t i = from; i < to; i++) {
-                sum1 += exponent[i] + alpha[i];
-                sum2 += gsl_sf_lngamma(exponent[i] + alpha[i]);
-        }
-
-        return sum2 - gsl_sf_lngamma(sum1);
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
@@ -124,6 +108,24 @@ boost::array<double, ALPHABET_SIZE> pt_posterior_expectation_prime(
         }
 
         return result;
+}
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+double pt_posterior_density(
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& likelihood,
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
+        const boost::array<double, ALPHABET_SIZE>& theta)
+{
+        exponent_t<CODE_TYPE, ALPHABET_SIZE> prior;
+
+        /* for the density we need to substract one from alpha */
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                prior[i] = alpha[i] - 1;
+        }
+
+        double result = likelihood.log_eval(theta) + prior.log_eval(theta) - mbeta_log(alpha);
+
+        return exp(result - pt_marginal_likelihood(likelihood, alpha));
 }
 
 #endif /* POSTERIOR_HH */
