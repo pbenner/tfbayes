@@ -190,6 +190,19 @@ void pt_expectation(pt_root_t* pt_root, vector_t* observations, vector_t* prior,
         }
 }
 
+void pt_approximate(pt_root_t* pt_root, vector_t* observations, vector_t* result)
+{
+        pt_init(observations, pt_root, 0);
+        pt_polynomial_t<code_t, alphabet_size> poly(pt_root);
+
+        pt_polynomial_t<code_t, alphabet_size> variational
+                = pt_approximate<code_t, alphabet_size>(poly);
+
+        for (size_t i = 0; i < alphabet_size; i++) {
+                result->vec[i] = variational.begin()->exponent()[i];
+        }
+}
+
 void pt_free(pt_root_t* pt_root)
 {
         pt_root->destroy();

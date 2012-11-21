@@ -47,6 +47,8 @@ def usage():
     print "   -p FILE                            - instead of printing the raw multiz alignments"
     print "                                        the phylogenetic tree in FILE is used to compute"
     print "                                        the expected sequence logos"
+    print "       --approximate                  - compute an approximate likelihood for each column"
+    print "                                        in thethe alignment"
     print "       --prior=Px:Px:Px:Px:Px         - counts for the prior"
     print "       --outgroup='TAXON1 TAXON2...'  - list of taxa that should be treated as outgroup" 
     print "   -r REFSEQ                          - reference sequence [default: hg18]"
@@ -62,6 +64,7 @@ def usage():
 # ------------------------------------------------------------------------------
 
 options = {
+    'approximate'    : False,
     'database_dir'   : None,
     'macs_file'      : None,
     'phylotree'      : None,
@@ -76,21 +79,14 @@ options = {
     'verbose'        : False,
     }
 
-# multiz2logo
+# some tools
 # ------------------------------------------------------------------------------
 
-def code_nucleotide_extended(nucleotide, name):
-    if (name == 'hg19'    or name == 'panTro2' or
-        name == 'gorGor1' or name == 'ponAbe2'):
-        return code_nucleotide(nucleotide) + 5
-    else:
-        return code_nucleotide(nucleotide)
-
-def print_result(result):
-    print '>%s' % result['name']
-    for expectation in result['expectations']:
+def print_result(container):
+    print '>%s' % container['name']
+    for result in container['result']:
         for i in range(4):
-            print '%.10f' % expectation[i],
+            print '%11.8f' % result[i],
         print
 
 def reweight(expectation):
@@ -108,7 +104,13 @@ def code_nucleotide_extended(nucleotide, name):
     else:
         return code_nucleotide(nucleotide)
 
+# main logic comes here
+# ------------------------------------------------------------------------------
+
 def alignment_to_logo(multiple_alignment, phylotree):
+    """Convert the alignment to a logo by computing the expectation of
+    every nucleotide. An extended coding for nucleotides is used that
+    allows to model outgroups."""
     leafmap   = options['leafmap']
     num_leafs = pt_num_leafs(phylotree)
 
@@ -147,6 +149,49 @@ def alignment_to_logo(multiple_alignment, phylotree):
         # call phylotree library
         expectation = pt_expectation(phylotree, observations, options['prior']+options['outgroup-prior'])
         result.append(reweight(expectation))
+    return result
+
+def alignment_approximate(multiple_alignment, phylotree):
+    """For every column in the alignment, approximate the likelihood
+    given by the phylogenetic tree by a simple multinomial
+    distribution with averaged count statistics."""
+    leafmap   = options['leafmap']
+    num_leafs = pt_num_leafs(phylotree)
+
+    observations = [ 4.0 ]*num_leafs
+    for taxon in options['outgroup']:
+        observations[leafmap[taxon]] = 9.0
+
+    # get reference index
+    refindex = None
+    # if strip is set, then use this sequence as reference to
+    # strip all '-' from it
+    if options['strip']:
+        refseq = options['strip']
+    else:
+        refseq = options['refseq']
+
+    for i in range(len(multiple_alignment)):
+        name = multiple_alignment[i].name.split(".")[0]
+        if refseq == name:
+            refindex = i
+
+    if refindex == None:
+        print >> sys.stderr, 'Reference sequence not found in multiple alignment.'
+        return None
+
+    result = []
+    for i in range(len(multiple_alignment[0])):
+        # filter all positions where the reference sequence has a gap
+        if multiple_alignment[refindex][i] == '-':
+            continue
+        # fill observations array
+        for alignment in multiple_alignment:
+            name = alignment.name.split(".")[0]
+            if leafmap.has_key(name):
+                observations[leafmap[name]] = code_nucleotide_extended(alignment.seq[i], name)
+        # call phylotree library
+        expectation = pt_approximate(phylotree, observations)
     return result
 
 # database operations
@@ -189,13 +234,16 @@ class ComputationThread(threading.Thread):
                 print >> sys.stderr, 'Processing %s.' % job['name']
             self.mutex.release()
             alignment = get_alignment(job['chromosome'], job['seq_start'], job['seq_end'])
-            logo      = alignment_to_logo(alignment, self.phylotree)
-            if logo:
-                result = {
-                    'expectations' : logo,
+            if options['approximate']:
+                result = alignment_to_logo(alignment, self.phylotree)
+            else:
+                result = alignment_approximate(alignment, self.phylotree)
+            if result:
+                container = {
+                    'result'       : result,
                     'name'         : job['name'],
                     'id'           : job['id'] }
-                self.queue_out.put((job['id'], result))
+                self.queue_out.put((job['id'], container))
             self.queue_in.task_done()
 
 def threaded_logo_computation(alignments):
@@ -216,8 +264,8 @@ def threaded_logo_computation(alignments):
     queue_in.join()
     # process output
     while not queue_out.empty():
-        result = queue_out.get()[1]
-        print_result(result)
+        container = queue_out.get()[1]
+        print_result(container)
 
 # parse macs file
 # ------------------------------------------------------------------------------
@@ -271,7 +319,8 @@ def parse_macs():
 def main():
     global options
     try:
-        longopts   = ["outgroup=", "outgroup-prior=", "prior=", "threads=", "help", "verbose"]
+        longopts   = ["approximate", "outgroup=", "outgroup-prior=", "prior=",
+                      "threads=", "help", "verbose"]
         opts, tail = getopt.getopt(sys.argv[1:], "d:f:p:r:s:t:hv", longopts)
     except getopt.GetoptError:
         usage()
@@ -288,6 +337,8 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
+        if o == "approximate":
+            options['approximate'] = True
         if o == "--outgroup":
             options['outgroup'] = filter(lambda x: x != '', a.strip().split(' '))
         if o == "-d":

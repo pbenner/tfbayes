@@ -176,3 +176,12 @@ def pt_expectation(pt_root, observations, prior):
      result = get_vector(c_result)
      _lib._free_vector(c_result)
      return result
+
+def pt_approximate(pt_root, observations):
+     c_observations = _lib._alloc_vector(len(observations))
+     c_result       = _lib._alloc_vector(len(prior))
+     copy_vector_to_c(observations, c_observations)
+     _lib.pt_approximate(pt_root, c_observations, c_result)
+     result = get_vector(c_result)
+     _lib._free_vector(c_result)
+     return result
