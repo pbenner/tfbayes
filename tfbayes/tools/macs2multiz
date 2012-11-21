@@ -191,7 +191,7 @@ def alignment_approximate(multiple_alignment, phylotree):
             if leafmap.has_key(name):
                 observations[leafmap[name]] = code_nucleotide_extended(alignment.seq[i], name)
         # call phylotree library
-        expectation = pt_approximate(phylotree, observations)
+        result.append(pt_approximate(phylotree, observations))
     return result
 
 # database operations
