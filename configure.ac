@@ -292,6 +292,7 @@ AX_CXXFLAGS_GCC_OPTION([-fPIC])
 AX_CXXFLAGS_GCC_OPTION([-fno-nested-functions])
 dnl no runtime type information
 AX_CXXFLAGS_GCC_OPTION([-fno-rtti])
+AX_CXXFLAGS_GCC_OPTION([-DBOOST_NO_TYPEID])
 
 dnl ,---------------------------- 
 dnl | SUBDIR CONFIGURATION
