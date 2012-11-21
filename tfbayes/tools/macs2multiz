@@ -235,9 +235,9 @@ class ComputationThread(threading.Thread):
             self.mutex.release()
             alignment = get_alignment(job['chromosome'], job['seq_start'], job['seq_end'])
             if options['approximate']:
-                result = alignment_to_logo(alignment, self.phylotree)
-            else:
                 result = alignment_approximate(alignment, self.phylotree)
+            else:
+                result = alignment_to_logo(alignment, self.phylotree)
             if result:
                 container = {
                     'result'       : result,
