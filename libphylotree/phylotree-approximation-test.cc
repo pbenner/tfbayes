@@ -110,43 +110,6 @@ string print_expectation(const boost::array<double, alphabet_size>& expectation)
         return ss.str();
 }
 
-void test(void)
-{
-        exponent_t<code_t, 2> alpha;
-        alpha[0] = 1;
-        alpha[1] = 1;
-        exponent_t<double, 2> theta;
-        theta[0] = 0.5;
-        theta[1] = 0.5;
-
-        polynomial_term_t<code_t, 2> term1(0.2);
-        term1.exponent()[0] = 14;
-        term1.exponent()[1] =  3;
-
-        polynomial_term_t<code_t, 2> term2(0.8);
-        term2.exponent()[0] = 10;
-        term2.exponent()[1] =  4;
-
-        polynomial_t<code_t, 2> poly;
-        polynomial_t<code_t, 2> variational;
-
-        poly += term1;
-        poly += term2;
-
-        cout << "RESULT: "
-             << exp(poly.log_eval(theta))
-             << endl
-             << "ML: "
-             << pt_marginal_likelihood(poly, alpha)
-             << endl;
-
-        variational = pt_approximate<code_t, 2>(poly);
-
-        cout << kl_divergence<code_t, 2>(variational, poly, alpha)
-             << endl;
-
-}
-
 int main(void) {
 
         init();
@@ -165,15 +128,21 @@ int main(void) {
 
         pt_polynomial_t<code_t, alphabet_size> result(pt_root);
         pt_polynomial_t<code_t, alphabet_size> variational;
+        pt_polynomial_t<code_t, alphabet_size> variational_line;
 
         cout << "f[Pa_,Pc_,Pg_,Pt_]:= " << result.normalize() << endl;
 
-        variational = pt_approximate<code_t, alphabet_size>(result);
+        variational      = pt_approximate<code_t, alphabet_size>(result);
+        variational_line = pt_line_search<code_t, alphabet_size>(variational, result.normalize(), alpha, 100);
 
         cout << "g[Pa_,Pc_,Pg_,Pt_]:= " << variational << endl;
 
         cout << "fxpt = " 
              << print_expectation(pt_expectation(result, alpha))
+             << endl;
+
+        cout << "h[Pa_,Pc_,Pg_,Pt_]:= "
+             << variational_line
              << endl;
 
         cout << "gxpt = " 
@@ -182,6 +151,11 @@ int main(void) {
 
         cout << "kldiv = "
              << kl_divergence<code_t, alphabet_size>(variational, result.normalize(), alpha)
+             << ";"
+             << endl;
+
+        cout << "kldivl = "
+             << kl_divergence<code_t, alphabet_size>(variational_line, result.normalize(), alpha)
              << ";"
              << endl;
 

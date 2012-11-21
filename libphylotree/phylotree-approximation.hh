@@ -142,6 +142,60 @@ double kl_divergence(
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_line(
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
+        const double lambda)
+{
+        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> term(*variational.begin());
+
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                term.exponent()[i] += alpha[i];
+                term.exponent()[i] *= lambda;
+                term.exponent()[i] -= alpha[i];
+        }
+        return term;
+}
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_line_search(
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& likelihood,
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
+        const size_t n)
+{
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE> result = pt_line<CODE_TYPE, ALPHABET_SIZE>(variational, alpha, 1.0);
+        /* step size */
+        double epsilon = 0.01;
+        /* how much to scale the step size */
+        double eta1    = 1.05;
+        double eta2    = 0.50;
+        /* position on the line */
+        double lambda  = 1.0;
+        double kl = kl_divergence<CODE_TYPE, ALPHABET_SIZE>(result, likelihood, alpha);
+        double kl_new;
+
+        for (size_t i = 0; i < n; i++) {
+                result = pt_line<CODE_TYPE, ALPHABET_SIZE>(variational, alpha, lambda);
+                kl_new = kl_divergence<CODE_TYPE, ALPHABET_SIZE>(result, likelihood, alpha);
+                if (kl_new < kl) {
+                        /* go faster */
+                        epsilon *= eta1;
+                }
+                else {
+                        /* go slower */
+                        epsilon *= eta2;
+                        /* turn around */
+                        epsilon *= -1;
+                }
+                lambda = (1.0-epsilon)*lambda;
+                kl     = kl_new;
+        }
+
+        return result;
+}
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_approximate(
         const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly)
 {
