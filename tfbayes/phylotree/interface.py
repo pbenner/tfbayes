@@ -101,6 +101,12 @@ _lib.pt_num_leafs.argtypes = [POINTER(PT_ROOT)]
 _lib.pt_leaf_name.restype  = c_char_p
 _lib.pt_leaf_name.argtypes = [POINTER(PT_ROOT), c_ulong]
 
+_lib.pt_expectation.restype  = POINTER(VECTOR)
+_lib.pt_expectation.argtypes = [POINTER(PT_ROOT), POINTER(VECTOR), POINTER(VECTOR)]
+
+_lib.pt_approximate.restype  = POINTER(VECTOR)
+_lib.pt_approximate.argtypes = [POINTER(PT_ROOT), POINTER(VECTOR)]
+
 # convert datatypes
 # ------------------------------------------------------------------------------
 
@@ -169,7 +175,6 @@ def pt_create_map(pt_root):
 def pt_expectation(pt_root, observations, prior):
      c_observations = _lib._alloc_vector(len(observations))
      c_prior        = _lib._alloc_vector(len(prior))
-     c_result       = _lib._alloc_vector(len(prior))
      copy_vector_to_c(observations, c_observations)
      copy_vector_to_c(prior, c_prior)
      _lib.pt_expectation(pt_root, c_observations, c_prior, c_result)
@@ -179,7 +184,6 @@ def pt_expectation(pt_root, observations, prior):
 
 def pt_approximate(pt_root, observations):
      c_observations = _lib._alloc_vector(len(observations))
-     c_result       = _lib._alloc_vector(len(prior))
      copy_vector_to_c(observations, c_observations)
      _lib.pt_approximate(pt_root, c_observations, c_result)
      result = get_vector(c_result)

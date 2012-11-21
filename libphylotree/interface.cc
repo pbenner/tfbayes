@@ -172,9 +172,11 @@ ssize_t pt_index(pt_root_t* pt_root, const char* name)
         return pt_index_rec(pt_root, str, &count);
 }
 
-void pt_expectation(pt_root_t* pt_root, vector_t* observations, vector_t* prior, vector_t* result)
+vector_t* pt_expectation(pt_root_t* pt_root, vector_t* observations, vector_t* prior)
 {
         pt_init(observations, pt_root, 0);
+
+        vector_t* result = alloc_vector(alphabet_size);
         pt_polynomial_t<code_t, alphabet_size> poly(pt_root);
 
         exponent_t<code_t, alphabet_size> alpha;
@@ -188,11 +190,15 @@ void pt_expectation(pt_root_t* pt_root, vector_t* observations, vector_t* prior,
         for (size_t i = 0; i < alphabet_size; i++) {
                 result->vec[i] = expectation[i];
         }
+
+        return result;
 }
 
-void pt_approximate(pt_root_t* pt_root, vector_t* observations, vector_t* result)
+vector_t* pt_approximate(pt_root_t* pt_root, vector_t* observations)
 {
         pt_init(observations, pt_root, 0);
+
+        vector_t* result = alloc_vector(alphabet_size);
         pt_polynomial_t<code_t, alphabet_size> poly(pt_root);
 
         pt_polynomial_t<code_t, alphabet_size> variational
@@ -201,6 +207,8 @@ void pt_approximate(pt_root_t* pt_root, vector_t* observations, vector_t* result
         for (size_t i = 0; i < alphabet_size; i++) {
                 result->vec[i] = variational.begin()->exponent()[i];
         }
+
+        return result;
 }
 
 void pt_free(pt_root_t* pt_root)
