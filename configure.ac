@@ -107,9 +107,14 @@ AC_CHECK_LIB(boost_thread-gcc-mt, main, LIB_BOOST_THREAD="-lboost_thread-gcc-mt"
 	[AC_CHECK_LIB(boost_thread-mt, main, LIB_BOOST_THREAD="-lboost_thread-mt",
 		[AC_CHECK_LIB(boost_thread, main, LIB_BOOST_THREAD="-lboost_thread",
 			[AC_MSG_ERROR([this library is required])])])])
+AC_CHECK_LIB(boost_regex-gcc-mt, main, LIB_BOOST_REGEX="-lboost_regex-gcc-mt",
+	[AC_CHECK_LIB(boost_regex-mt, main, LIB_BOOST_REGEX="-lboost_regex-mt",
+		[AC_CHECK_LIB(boost_regex, main, LIB_BOOST_REGEX="-lboost_regex",
+			[AC_MSG_ERROR([this library is required])])])])
 
 AC_SUBST(LIB_BOOST_SYSTEM)
 AC_SUBST(LIB_BOOST_THREAD)
+AC_SUBST(LIB_BOOST_REGEX)
 
 dnl ,---------------------------- 
 dnl | GETOPT_LONG

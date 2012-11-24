@@ -87,7 +87,7 @@ def print_result(container):
     for result in container['result']:
         for i in range(4):
             print '%11.8f' % result[i],
-        print
+        print ";"
 
 def reweight(expectation):
     return [ expectation[i]/(1.0-expectation[4]) for i in range(4) ]

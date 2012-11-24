@@ -38,8 +38,10 @@ using namespace std;
 // Multinomial/Dirichlet Model
 ////////////////////////////////////////////////////////////////////////////////
 
-product_dirichlet_t::product_dirichlet_t(const matrix<double>& _alpha, const sequence_data_t<short>& data)
-        : _data(data), _size1(_alpha.size()), _size2(_alpha[0].size())
+product_dirichlet_t::product_dirichlet_t(const matrix<double>& _alpha, const sequence_data_t<data_tfbs_t::code_t>& data)
+        : _data(data),
+          _size1(_alpha.size()),
+          _size2(_alpha[0].size())
 {
         for (size_t i = 0; i < _alpha.size(); i++) {
                 double sum = 0;
@@ -54,8 +56,11 @@ product_dirichlet_t::product_dirichlet_t(const matrix<double>& _alpha, const seq
 }
 
 product_dirichlet_t::product_dirichlet_t(const product_dirichlet_t& distribution)
-        : alpha(distribution.alpha), counts(distribution.counts), _data(distribution._data),
-          _size1(distribution._size1), _size2(distribution._size2)
+        : alpha(distribution.alpha),
+          counts(distribution.counts),
+          _data(distribution._data),
+          _size1(distribution._size1),
+          _size2(distribution._size2)
 {
 }
 
@@ -72,11 +77,14 @@ product_dirichlet_t::add(const range_t& range) {
         const size_t sequence = range.index[0];
         const size_t position = range.index[1];
         const size_t length   = range.length;
-        size_t i;
+        size_t i, k;
 
         for (i = 0; i < length; i++) {
-                counts[i%_size1][_data[seq_index_t(sequence, position+i)]]++;
-                counts[i%_size1][_size2]++;
+                seq_index_t index(sequence, position+i);
+                for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
+                        counts[i%_size1][k     ] += _data[index][k];
+                        counts[i%_size1][_size2] += _data[index][k];
+                }
         }
         return i/_size1;
 }
@@ -86,11 +94,14 @@ product_dirichlet_t::remove(const range_t& range) {
         const size_t sequence = range.index[0];
         const size_t position = range.index[1];
         const size_t length   = range.length;
-        size_t i;
+        size_t i, k;
 
         for (i = 0; i < length; i++) {
-                counts[i%_size1][_data[seq_index_t(sequence, position+i)]]--;
-                counts[i%_size1][_size2]--;
+                seq_index_t index(sequence, position+i);
+                for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
+                        counts[i%_size1][k     ] -= _data[index][k];
+                        counts[i%_size1][_size2] -= _data[index][k];
+                }
         }
         return i/_size1;
 }
@@ -115,11 +126,18 @@ double product_dirichlet_t::predictive(const range_t& range) {
 }
 
 double product_dirichlet_t::log_predictive(const range_t& range) {
-        const double result = predictive(range);
+        const size_t sequence = range.index[0];
+        const size_t position = range.index[1];
+        const size_t length   = range.length;
+        double result = 1;
 
-        assert(result != 0.0);
+        for (size_t i = 0; i < length; i++) {
+                const char code = _data[seq_index_t(sequence, position+i)];
+                result *= (counts[i%_size1][ code ]+alpha[i%_size1][ code ])
+                         /(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
+        }
 
-        return log(result);
+        return result;
 }
 
 //
@@ -156,7 +174,7 @@ product_dirichlet_t::print_counts() const {
 markov_chain_mixture_t::markov_chain_mixture_t(
         size_t alphabet_size,
         const tfbs_options_t& options,
-        const sequence_data_t<short>& data,
+        const sequence_data_t<data_tfbs_t::code_t>& data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
         cluster_tag_t cluster_tag)
         : _data(data), _cluster_assignments(cluster_assignments),
@@ -434,7 +452,7 @@ double markov_chain_mixture_t::log_likelihood() const {
 
 parsimonious_tree_t::parsimonious_tree_t(
         size_t alphabet_size, size_t tree_depth,
-        const sequence_data_t<short>& data,
+        const sequence_data_t<data_tfbs_t::code_t>& data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
         cluster_tag_t cluster_tag)
         : _data(data), _cluster_assignments(cluster_assignments),

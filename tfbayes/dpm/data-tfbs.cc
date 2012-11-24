@@ -36,35 +36,51 @@
 
 using namespace std;
 
-static inline
-bool valid_sampling_index(const vector<string>& sequences, const index_i& index, size_t tfbs_length)
+bool
+data_tfbs_t::valid_sampling_index(const index_i& index, size_t tfbs_length) const
 {
-        if (sequences[index[0]].size() - index[1] < tfbs_length) {
+        // return false if the sequence ends before a tfbs could fit here
+        if (operator[](index[0]).size() - index[1] < tfbs_length) {
                 return false;
         }
+        // check that all the elements in the range are not blank
         for (size_t i = 0; i < tfbs_length; i++) {
-                if (sequences[index[0]][index[1]+i] == 'N') {
+                seq_index_t index(index[0], index[1]+i);
+                if (is_blank(index)) {
                         return false;
                 }
         }
+        // otherwise use this as a valid sampling index
         return true;
 }
 
-data_tfbs_t::data_tfbs_t(const vector<string>& sequences, size_t tfbs_length)
-        : sequences(sequences), _n_sequences(sequences.size()), _elements(0)
+data_tfbs_t::data_tfbs_t(const sequence_data_t<code_t>& sequences, size_t tfbs_length)
+        : sequence_data_t<code_t>(sequences),
+          _n_sequences(sequences.size()),
+          _elements(0)
 {
+        // loop over sequences
         for(size_t i = 0; i < sequences.size(); i++) {
-                push_back(nucleotide_sequence_t(sequences[i]));
                 // store length of sequences
                 this->sequences_length.push_back(sequences[i].size());
-                // and a list of indices
+                // loop over elements in a sequence
                 for(size_t j = 0; j < sequences[i].size(); j++) {
-                        if (sequences[i][j] != 'N') {
-                                index_i* index = new seq_index_t(i,j);
-                                indices.push_back(index);
-                                if (valid_sampling_index(sequences, *index, tfbs_length)) {
-                                        sampling_indices.push_back(index);
+                        // generate an index of this position
+                        seq_index_t index(i,j);
+                        // if there is a nucleotide at this position
+                        if (!is_blank(index)) {
+                                // generate a pointer to the index
+                                index_i* index_ptr = new seq_index_t(index);
+                                // and push it to the list of indices
+                                indices.push_back(index_ptr);
+                                // if this index is also valid for
+                                // sampling, i.e. a tfbs could fit here
+                                if (valid_sampling_index(index, tfbs_length)) {
+                                        // push it also to the list of
+                                        // sampling indices
+                                        sampling_indices.push_back(index_ptr);
                                 }
+                                // increment the number of nucleotides
                                 _elements++;
                         }
                 }
@@ -73,8 +89,10 @@ data_tfbs_t::data_tfbs_t(const vector<string>& sequences, size_t tfbs_length)
 }
 
 data_tfbs_t::data_tfbs_t(const data_tfbs_t& data)
-        : sequences(data.sequences), sequences_length(data.sequences_length),
-          _n_sequences(data._n_sequences), _elements(data._elements)
+        : sequence_data_t<code_t>(*this),
+          sequences_length(data.sequences_length),
+          _n_sequences(data._n_sequences),
+          _elements(data._elements)
 {
         for (data_tfbs_t::const_iterator it = data.begin(); it != data.end(); it++) {
                 index_i* index = (**it).clone();
@@ -102,10 +120,44 @@ data_tfbs_t::sizes() const
         return sequences_length;
 }
 
+bool
+data_tfbs_t::is_blank(const index_i& index) const
+{
+        // the position at index is blank if all counts of the
+        // multinomial distribution are zero
+        for (size_t i = 0; i < alphabet_size; i++) {
+                if (operator[](index)[i] != 0.0) {
+                        return false;
+                }
+        }
+        return true;
+}
+
+ostream& operator<< (ostream& o, const data_tfbs_t::code_t& entry)
+{
+        for (size_t k = 0; k < data_tfbs_t::alphabet_size; k++)
+        {
+                o.precision(8);
+                o.width(10);
+                o << entry[k]
+                  << " ";
+        }
+        o << ";" << endl;
+
+        return o;
+}
+
+/* Print this object in a fasta file format */
 ostream& operator<< (ostream& o, const data_tfbs_t& data)
 {
-        for (size_t i = 0; i < data.sequences.size(); i++) {
-                o << data.sequences[i] << endl;
+        for (size_t i = 0; i < data.size(); i++)
+        {
+                o << ">sequence "<< i << endl;
+
+                for (size_t j = 0; j < data[i].size(); j++)
+                {
+                        o << data[i][j];
+                }
         }
 
         return o;

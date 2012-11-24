@@ -36,7 +36,7 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
         bool optimize,
         save_queue_t<command_t*>& command_queue,
         save_queue_t<string>& output_queue,
-        const std::vector<std::string> sequences)
+        const sequence_data_t<data_tfbs_t::code_t>& sequences)
         : hybrid_sampler_t(dpm, state, indexer, name, optimize),
           sequences(sequences),
           _command_queue(command_queue),
@@ -69,7 +69,7 @@ dpm_tfbs_sampler_t::_sample() {
 
 dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
         const tfbs_options_t& options,
-        const std::vector<std::string>& sequences,
+        const sequence_data_t<data_tfbs_t::code_t>& sequences,
         size_t n)
         : population_mcmc_t(n),
           _data(sequences, options.tfbs_length),

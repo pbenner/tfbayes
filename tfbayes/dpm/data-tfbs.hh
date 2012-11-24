@@ -26,15 +26,32 @@
 #include <vector>
 #include <string>
 
-#include <gsl/gsl_matrix.h>
+#include <boost/array.hpp>
 
 #include <code.hh>
-#include <component-model.hh>
+#include <data.hh>
 #include <indexer.hh>
 
-class data_tfbs_t : public indexer_t, public sequence_data_t<short> {
+#define __ALPHABET_SIZE__ 4
+#define __CODE_TYPE__ boost::array<float, __ALPHABET_SIZE__>
+
+/* data_tfbs_t is the container for the data that provides some basic
+ * operations like indexing and iteration */
+class data_tfbs_t : public indexer_t, public sequence_data_t<__CODE_TYPE__> {
 public:
-         data_tfbs_t(const std::vector<std::string>& sequences, size_t tfbs_length);
+        // typedefs
+        ////////////////////////////////////////////////////////////////////////
+
+        /* This type defines a singe entry in a sequence. Since the basic
+         * type is an approximate multinomial distribution, we need to store
+         * the count statistics for each nucleotide. */
+        static const size_t alphabet_size = __ALPHABET_SIZE__;
+        typedef __CODE_TYPE__ code_t;
+
+        // constructors
+        ////////////////////////////////////////////////////////////////////////
+
+         data_tfbs_t(const sequence_data_t<code_t>& sequences, size_t tfbs_length);
          data_tfbs_t(const data_tfbs_t& data);
         ~data_tfbs_t();
 
@@ -58,22 +75,26 @@ public:
 
         // methods
         ////////////////////////////////////////////////////////////////////////
+        // true if there is no nucleotide at position given by index
+        bool is_blank(const index_i& index) const;
         size_t elements() const { return _elements; };
         const std::vector<size_t>& sizes() const;
         void shuffle();
+        bool valid_sampling_index(const index_i& index, size_t tfbs_length) const;
 
 private:
         // all nucleotide positions in a vector (used for the gibbs sampler)
         std::vector<index_i*> indices;
         std::vector<index_i*> sampling_indices;
 
-        // the raw nucleotide sequences
-        const std::vector<std::string> sequences;
-              std::vector<size_t     > sequences_length;
+        // the length of each nucleotide sequence
+        std::vector<size_t> sequences_length;
 
         // number of sequences and nucleotides
         size_t _n_sequences;
         size_t _elements;
 };
+
+std::ostream& operator<< (std::ostream& o, const data_tfbs_t::code_t& entry);
 
 #endif /* DATA_TFBS_HH */

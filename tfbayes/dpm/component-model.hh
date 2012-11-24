@@ -35,7 +35,7 @@
 #include <gsl/gsl_matrix.h>
 
 #include <clonable.hh>
-#include <data.hh>
+#include <data-tfbs.hh>
 #include <datatypes.hh>
 #include <mixture-weights.hh>
 #include <nucleotide-sequence.hh>
@@ -72,7 +72,7 @@ public:
 
 class product_dirichlet_t : public component_model_t {
 public:
-         product_dirichlet_t(const std::matrix<double>& alpha, const sequence_data_t<short>& data);
+         product_dirichlet_t(const std::matrix<double>& alpha, const sequence_data_t<data_tfbs_t::code_t>& data);
          product_dirichlet_t(const product_dirichlet_t& distribution);
         ~product_dirichlet_t();
 
@@ -95,7 +95,7 @@ private:
         std::vector<counts_t> alpha;
         std::vector<counts_t> counts;
 
-        const sequence_data_t<short>& _data;
+        const sequence_data_t<data_tfbs_t::code_t>& _data;
 
         const size_t _size1;
         const size_t _size2;
@@ -108,7 +108,7 @@ class markov_chain_mixture_t : public component_model_t {
 public:
          markov_chain_mixture_t(size_t alphabet_size,
                                 const tfbs_options_t& options,
-                                const sequence_data_t<short>& data,
+                                const sequence_data_t<data_tfbs_t::code_t>& data,
                                 const sequence_data_t<cluster_tag_t>& cluster_assignments,
                                 cluster_tag_t cluster_tag);
          markov_chain_mixture_t(const markov_chain_mixture_t& distribution);
@@ -139,7 +139,7 @@ private:
 
         mixture_weights_t* _weights;
 
-        const sequence_data_t<short>&         _data;
+        const sequence_data_t<data_tfbs_t::code_t>& _data;
               sequence_data_t<context_t>      _context;
         const sequence_data_t<cluster_tag_t>& _cluster_assignments;
 
@@ -160,7 +160,7 @@ private:
 class parsimonious_tree_t : public component_model_t {
 public:
          parsimonious_tree_t(size_t alphabet_size, size_t tree_depth,
-                             const sequence_data_t<short>& data,
+                             const sequence_data_t<data_tfbs_t::code_t>& data,
                              const sequence_data_t<cluster_tag_t>& cluster_assignments,
                              cluster_tag_t cluster_tag);
          parsimonious_tree_t(const parsimonious_tree_t& distribution);

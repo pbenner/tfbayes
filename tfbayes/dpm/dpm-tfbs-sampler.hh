@@ -38,9 +38,9 @@ public:
                 bool optimize,
                 save_queue_t<command_t*>& command_queue,
                 save_queue_t<std::string>& output_queue,
-                const std::vector<std::string> sequences);
+                const sequence_data_t<data_tfbs_t::code_t>& sequences);
 
-        const std::vector<std::string> sequences;
+        const sequence_data_t<data_tfbs_t::code_t> sequences;
 
 protected:
         bool _sample();
@@ -58,7 +58,7 @@ private:
 
 class dpm_tfbs_pmcmc_t : public population_mcmc_t {
 public:
-        dpm_tfbs_pmcmc_t(const tfbs_options_t& options, const std::vector<std::string>& sequences, size_t n);
+        dpm_tfbs_pmcmc_t(const tfbs_options_t& options, const sequence_data_t<data_tfbs_t::code_t>& sequences, size_t n);
         virtual ~dpm_tfbs_pmcmc_t();
 
         data_tfbs_t _data;
@@ -75,7 +75,7 @@ private:
 
         std::vector<save_queue_t<command_t*>* > _command_queue;
         save_queue_t<std::string> _output_queue;
-        const std::vector<std::string> _sequences;
+        const sequence_data_t<data_tfbs_t::code_t> _sequences;
 };
 
 #endif /* DPM_TFBS_SAMPLER_HH */

@@ -7,25 +7,25 @@ bin_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug parsmm-test mcm-test
 parsmm_test_SOURCES = parsmm-test.cc
 parsmm_test_LDADD   = $(top_builddir)/parsmm/libparsmm.la
 parsmm_test_LDADD  += libdpm.la
-parsmm_test_LDADD  += -lm $(LIB_PTHREAD) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
+parsmm_test_LDADD  += -lm $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 
 mcm_test_SOURCES = mcm-test.cc
 mcm_test_LDADD   = libdpm.la
-mcm_test_LDADD  += -lm $(LIB_PTHREAD) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
+mcm_test_LDADD  += -lm $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 
 dpm_gaussian_debug_SOURCES = dpm-gaussian-main.cc
 dpm_gaussian_debug_LDADD   = $(top_builddir)/libexception/libexception.la
 dpm_gaussian_debug_LDADD  += $(top_builddir)/parsmm/libparsmm.la
 dpm_gaussian_debug_LDADD  += $(top_builddir)/tfbayes/fasta/libfasta.la
 dpm_gaussian_debug_LDADD  += libdpm.la
-dpm_gaussian_debug_LDADD  += $(LIB_PTHREAD) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
+dpm_gaussian_debug_LDADD  += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 
 dpm_tfbs_debug_SOURCES = dpm-tfbs-main.cc
 dpm_tfbs_debug_LDADD   = $(top_builddir)/libexception/libexception.la
 dpm_tfbs_debug_LDADD  += $(top_builddir)/parsmm/libparsmm.la
 dpm_tfbs_debug_LDADD  += $(top_builddir)/tfbayes/fasta/libfasta.la
 dpm_tfbs_debug_LDADD  += libdpm.la
-dpm_tfbs_debug_LDADD  += $(LIB_PTHREAD) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
+dpm_tfbs_debug_LDADD  += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/dpm
@@ -60,7 +60,7 @@ libdpm_la_SOURCES =                                                           \
 libdpm_la_LIBADD  = $(top_builddir)/libexception/libexception.la
 libdpm_la_LIBADD += $(top_builddir)/parsmm/libparsmm.la
 libdpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libfasta.la
-libdpm_la_LIBADD += $(LIB_PTHREAD) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
+libdpm_la_LIBADD += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 libdpm_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
 ## clean python files

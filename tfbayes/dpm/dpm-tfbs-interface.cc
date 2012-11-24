@@ -19,12 +19,15 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <gsl/gsl_matrix.h>
+#include <assert.h>
 
 #include <init.hh>
 #include <dpm-tfbs-interface.hh>
 #include <dpm-tfbs.hh>
 #include <dpm-tfbs-sampler.hh>
+#include <utility.hh>
+
+#include <boost/regex.hpp>
 
 #include <tfbayes/exception.h>
 #include <tfbayes/fasta.hh>
@@ -55,7 +58,7 @@ typedef struct {
 
 static options_t _options;
 static dpm_tfbs_pmcmc_t* _sampler;
-static vector<string> _sequences;
+static sequence_data_t<data_tfbs_t::code_t> _sequences;
 
 ostream&
 operator<<(std::ostream& o, const options_t& options) {
@@ -91,25 +94,56 @@ ostream& operator<< (ostream& o, const product_dirichlet_t& pd) {
 }
 
 static
-void read_file(const char* file_name, vector<string>& sequences)
+void read_file(const char* file_name, sequence_data_t<data_tfbs_t::code_t>& sequences)
 {
+        /* use a regular expression to match the multinomial counts of
+         * a single column in the alignment, i.e. a line separated by
+         * a semi-colon */
+        boost::regex e("^[[:space:]]*([[:digit:].]+)[[:space:]]+([[:digit:].]+)"
+                       "[[:space:]]+([[:digit:].]+)[[:space:]]+([[:digit:].]+)[[:space:]]*$");
+        boost::smatch what;
+
+        /* this automatically parses the fasta file */
         FastaParser parser(file_name);
 
-        ifstream file(file_name);
+        /* storage for a single line */
         string line;
 
-        size_t i = 0;
+        /* the fasta parser returns a single line for each
+         * sequence */
         while ((line = parser.read_sequence()) != "") {
-                size_t read = line.size();
-                sequences.push_back("");
-                size_t pos = 0;
-                for (size_t j = 0; j < (size_t)read && line[j] != '\n'; j++) {
-                        if (is_nucleotide_or_masked(line[j])) {
-                                sequences[i].append(1,line[j]);
-                                pos++;
+                /* store a single entry of the fasta file here */
+                std::vector<data_tfbs_t::code_t> sequence;
+
+                /* the count statistics for the multinomial
+                 * distribution are separated by a semi-colon
+                 */
+                std::vector<std::string> result = token(line, ';');
+
+                /* loop over all positions in a sequence */
+                for (size_t i = 0; i < result.size(); i++) {
+                        if(boost::regex_match(result[i], what, e, boost::match_extra))
+                        {
+                                assert(what.size() == data_tfbs_t::alphabet_size+1);
+
+                                data_tfbs_t::code_t entry;
+
+                                for(size_t j = 1; j < what.size(); ++j)
+                                {
+                                        string submatch(what[j].first, what[j].second);
+                                        entry[j-1] = atof(submatch.c_str());
+                                }
+                                sequence.push_back(entry);
+                        }
+                        else {
+                                std::cerr << "WARNING: token `"
+                                          << result[i]
+                                          << "' did not match the regular expression."
+                                          << std::endl;
                         }
                 }
-                i++;
+                /* save the result */
+                sequences.push_back(sequence);
         }
 }
 
