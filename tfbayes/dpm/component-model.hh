@@ -79,7 +79,7 @@ public:
         product_dirichlet_t* clone() const;
 
         // datatypes
-        typedef std::vector<double> counts_t;
+        typedef data_tfbs_t::code_t counts_t;
 
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
@@ -92,8 +92,8 @@ public:
         friend std::ostream& operator<< (std::ostream& o, const product_dirichlet_t& pd);
 
 private:
-        std::vector<counts_t> alpha;
         std::vector<counts_t> counts;
+        std::vector<counts_t> alpha;
 
         const sequence_data_t<data_tfbs_t::code_t>& _data;
 
@@ -157,43 +157,43 @@ private:
 // Variable Order Markov Chain
 ////////////////////////////////////////////////////////////////////////////////
 
-class parsimonious_tree_t : public component_model_t {
-public:
-         parsimonious_tree_t(size_t alphabet_size, size_t tree_depth,
-                             const sequence_data_t<data_tfbs_t::code_t>& data,
-                             const sequence_data_t<cluster_tag_t>& cluster_assignments,
-                             cluster_tag_t cluster_tag);
-         parsimonious_tree_t(const parsimonious_tree_t& distribution);
-        ~parsimonious_tree_t();
+// class parsimonious_tree_t : public component_model_t {
+// public:
+//          parsimonious_tree_t(size_t alphabet_size, size_t tree_depth,
+//                              const sequence_data_t<data_tfbs_t::code_t>& data,
+//                              const sequence_data_t<cluster_tag_t>& cluster_assignments,
+//                              cluster_tag_t cluster_tag);
+//          parsimonious_tree_t(const parsimonious_tree_t& distribution);
+//         ~parsimonious_tree_t();
 
-        parsimonious_tree_t* clone() const;
+//         parsimonious_tree_t* clone() const;
 
-        size_t add(const range_t& range);
-        size_t remove(const range_t& range);
-        size_t count(const range_t& range);
-        double predictive(const range_t& range);
-        double log_predictive(const range_t& range);
-        double log_likelihood() const;
+//         size_t add(const range_t& range);
+//         size_t remove(const range_t& range);
+//         size_t count(const range_t& range);
+//         double predictive(const range_t& range);
+//         double log_predictive(const range_t& range);
+//         double log_likelihood() const;
 
-        friend std::ostream& operator<< (std::ostream& o, const parsimonious_tree_t& pd);
+//         friend std::ostream& operator<< (std::ostream& o, const parsimonious_tree_t& pd);
 
-private:
-        abstract_set_t* _as;
-        static_pars_tree_t* _pt;
-        size_t _counts_length;
-        count_t* _counts;
+// private:
+//         abstract_set_t* _as;
+//         static_pars_tree_t* _pt;
+//         size_t _counts_length;
+//         count_t* _counts;
 
-        const sequence_data_t<short>&         _data;
-              sequence_data_t<context_t>      _context;
-        const sequence_data_t<cluster_tag_t>& _cluster_assignments;
+//         const sequence_data_t<short>&         _data;
+//               sequence_data_t<context_t>      _context;
+//         const sequence_data_t<cluster_tag_t>& _cluster_assignments;
 
-        const cluster_tag_t _cluster_tag;
-        const size_t        _tree_depth;
+//         const cluster_tag_t _cluster_tag;
+//         const size_t        _tree_depth;
 
-        // internal methods
-        size_t max_from_context(const range_t& range) const;
-        size_t max_to_context(const range_t& range) const;
-};
+//         // internal methods
+//         size_t max_from_context(const range_t& range) const;
+//         size_t max_to_context(const range_t& range) const;
+// };
 
 // Bivariate Gaussian
 ////////////////////////////////////////////////////////////////////////////////

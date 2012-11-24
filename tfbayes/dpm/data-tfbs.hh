@@ -82,6 +82,8 @@ public:
         void shuffle();
         bool valid_sampling_index(const index_i& index, size_t tfbs_length) const;
 
+        static sequence_data_t<data_tfbs_t::code_t> read_fasta(const char* file_name);
+
 private:
         // all nucleotide positions in a vector (used for the gibbs sampler)
         std::vector<index_i*> indices;

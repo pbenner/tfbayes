@@ -34,6 +34,8 @@
 #include <data-tfbs.hh>
 #include <nucleotide-sequence.hh>
 
+#include <tfbayes/fasta.hh>
+
 using namespace std;
 
 bool
@@ -131,6 +133,66 @@ data_tfbs_t::is_blank(const index_i& index) const
                 }
         }
         return true;
+}
+
+#include <boost/regex.hpp>
+#include <utility.hh>
+
+sequence_data_t<data_tfbs_t::code_t>
+data_tfbs_t::read_fasta(const char* file_name)
+{
+        sequence_data_t<data_tfbs_t::code_t> sequences;
+
+        /* use a regular expression to match the multinomial counts of
+         * a single column in the alignment, i.e. a line separated by
+         * a semi-colon */
+        boost::regex e("^[[:space:]]*([[:digit:].]+)[[:space:]]+([[:digit:].]+)"
+                       "[[:space:]]+([[:digit:].]+)[[:space:]]+([[:digit:].]+)[[:space:]]*$");
+        boost::smatch what;
+
+        /* this automatically parses the fasta file format */
+        FastaParser parser(file_name);
+
+        /* storage for a single line */
+        string line;
+
+        /* the fasta parser returns a single line for each
+         * sequence */
+        while ((line = parser.read_sequence()) != "") {
+                /* store a single entry of the fasta file here */
+                std::vector<data_tfbs_t::code_t> sequence;
+
+                /* the count statistics for the multinomial
+                 * distribution are separated by a semi-colon
+                 */
+                std::vector<std::string> result = token(line, ';');
+
+                /* loop over all positions in a sequence */
+                for (size_t i = 0; i < result.size(); i++) {
+                        if(boost::regex_match(result[i], what, e, boost::match_extra))
+                        {
+                                assert(what.size() == data_tfbs_t::alphabet_size+1);
+
+                                data_tfbs_t::code_t entry;
+
+                                for(size_t j = 1; j < what.size(); ++j)
+                                {
+                                        string submatch(what[j].first, what[j].second);
+                                        entry[j-1] = atof(submatch.c_str());
+                                }
+                                sequence.push_back(entry);
+                        }
+                        else {
+                                std::cerr << "WARNING: token `"
+                                          << result[i]
+                                          << "' did not match the regular expression."
+                                          << std::endl;
+                        }
+                }
+                /* save the result */
+                sequences.push_back(sequence);
+        }
+        return sequences;
 }
 
 ostream& operator<< (ostream& o, const data_tfbs_t::code_t& entry)

@@ -35,6 +35,38 @@
 
 using namespace std;
 
+// Multinomial beta functions
+////////////////////////////////////////////////////////////////////////////////
+
+double mbeta_log(
+        const data_tfbs_t::code_t& alpha)
+{
+        double sum1 = 0;
+        double sum2 = 0;
+
+        for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
+                sum1 += alpha[i];
+                sum2 += gsl_sf_lngamma(alpha[i]);
+        }
+
+        return sum2 - gsl_sf_lngamma(sum1);
+}
+
+double mbeta_log(
+        const data_tfbs_t::code_t& extra,
+        const data_tfbs_t::code_t& alpha)
+{
+        double sum1 = 0;
+        double sum2 = 0;
+
+        for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
+                sum1 += extra[i] + alpha[i];
+                sum2 += gsl_sf_lngamma(extra[i] + alpha[i]);
+        }
+
+        return sum2 - gsl_sf_lngamma(sum1);
+}
+
 // Multinomial/Dirichlet Model
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -44,20 +76,17 @@ product_dirichlet_t::product_dirichlet_t(const matrix<double>& _alpha, const seq
           _size2(_alpha[0].size())
 {
         for (size_t i = 0; i < _alpha.size(); i++) {
-                double sum = 0;
-                alpha.push_back (counts_t(_size2+1, 0.0));
-                counts.push_back(counts_t(_size2+1, 0.0));
-                for (size_t j = 0; j < _alpha[i].size(); j++) {
+                alpha .push_back(counts_t());
+                counts.push_back(counts_t());
+                for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
                         alpha[i][j] = _alpha[i][j];
-                        sum        +=  alpha[i][j];
+                        counts[i][j] = _alpha[i][j];
                 }
-                alpha[i][_alpha[i].size()] = sum;
         }
 }
 
 product_dirichlet_t::product_dirichlet_t(const product_dirichlet_t& distribution)
-        : alpha(distribution.alpha),
-          counts(distribution.counts),
+        : counts(distribution.counts),
           _data(distribution._data),
           _size1(distribution._size1),
           _size2(distribution._size2)
@@ -82,8 +111,7 @@ product_dirichlet_t::add(const range_t& range) {
         for (i = 0; i < length; i++) {
                 seq_index_t index(sequence, position+i);
                 for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
-                        counts[i%_size1][k     ] += _data[index][k];
-                        counts[i%_size1][_size2] += _data[index][k];
+                        counts[i%_size1][k] += _data[index][k];
                 }
         }
         return i/_size1;
@@ -99,8 +127,7 @@ product_dirichlet_t::remove(const range_t& range) {
         for (i = 0; i < length; i++) {
                 seq_index_t index(sequence, position+i);
                 for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
-                        counts[i%_size1][k     ] -= _data[index][k];
-                        counts[i%_size1][_size2] -= _data[index][k];
+                        counts[i%_size1][k] -= _data[index][k];
                 }
         }
         return i/_size1;
@@ -111,47 +138,42 @@ product_dirichlet_t::count(const range_t& range) {
         return range.length/_size1;
 }
 
+/*
+ *  p(y|x) = Beta(n(x) + n(y) + alpha) / Beta(n(x) + alpha)
+ */
 double product_dirichlet_t::predictive(const range_t& range) {
-        const size_t sequence = range.index[0];
-        const size_t position = range.index[1];
-        const size_t length   = range.length;
-        double result = 1;
-
-        for (size_t i = 0; i < length; i++) {
-                const char code = _data[seq_index_t(sequence, position+i)];
-                result *= (counts[i%_size1][ code ]+alpha[i%_size1][ code ])
-                         /(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
-        }
-        return result;
+        return exp(log_predictive(range));
 }
 
 double product_dirichlet_t::log_predictive(const range_t& range) {
         const size_t sequence = range.index[0];
         const size_t position = range.index[1];
         const size_t length   = range.length;
-        double result = 1;
+        double result = 0;
 
         for (size_t i = 0; i < length; i++) {
-                const char code = _data[seq_index_t(sequence, position+i)];
-                result *= (counts[i%_size1][ code ]+alpha[i%_size1][ code ])
-                         /(counts[i%_size1][_size2]+alpha[i%_size1][_size2]);
+                seq_index_t index(sequence, position+i);
+
+                /* counts contains the data count statistic
+                 * and the pseudo counts alpha */
+                result += mbeta_log(counts[i%_size1], _data[index])
+                        - mbeta_log(counts[i%_size1]);
         }
 
         return result;
 }
 
-//
-// \sum_{x \in X} n_x log(\frac{n_x + \alpha_x}{\sum_{x' \in X} n_{x'} + \alpha_{x'}})
-//
+/*
+ *  p(x) = Beta(n(x) + alpha) / Beta(alpha)
+ */
 double product_dirichlet_t::log_likelihood() const {
         double result = 0;
 
-        for (size_t j = 0; j < _size1; j++) {
-                for (size_t k = 0; k < _size2; k++) {
-                        if (alpha[j][k] != 0) {
-                                result += counts[j][k]*(log(counts[j][k]+alpha[j][k]) - log(counts[j][_size2]+alpha[j][_size2]));
-                        }
-                }
+        for (size_t i = 0; i < _size1; i++) {
+                /* counts contains the data count statistic
+                 * and the pseudo counts alpha */
+                result += mbeta_log(counts[i%_size1])
+                        - mbeta_log(alpha [i%_size1]);
         }
         return result;
 }
@@ -450,150 +472,150 @@ double markov_chain_mixture_t::log_likelihood() const {
 // Variable Order Markov Chain
 ////////////////////////////////////////////////////////////////////////////////
 
-parsimonious_tree_t::parsimonious_tree_t(
-        size_t alphabet_size, size_t tree_depth,
-        const sequence_data_t<data_tfbs_t::code_t>& data,
-        const sequence_data_t<cluster_tag_t>& cluster_assignments,
-        cluster_tag_t cluster_tag)
-        : _data(data), _cluster_assignments(cluster_assignments),
-          _cluster_tag(cluster_tag), _tree_depth(tree_depth)
-{
-        _as = as_create(alphabet_size);
-        _pt = pt_create(_as, tree_depth);
-        _counts_length = context_t::counts_size(alphabet_size, tree_depth);
-        _counts = (count_t*)malloc(_counts_length*sizeof(count_t));
+// parsimonious_tree_t::parsimonious_tree_t(
+//         size_t alphabet_size, size_t tree_depth,
+//         const sequence_data_t<data_tfbs_t::code_t>& data,
+//         const sequence_data_t<cluster_tag_t>& cluster_assignments,
+//         cluster_tag_t cluster_tag)
+//         : _data(data), _cluster_assignments(cluster_assignments),
+//           _cluster_tag(cluster_tag), _tree_depth(tree_depth)
+// {
+//         _as = as_create(alphabet_size);
+//         _pt = pt_create(_as, tree_depth);
+//         _counts_length = context_t::counts_size(alphabet_size, tree_depth);
+//         _counts = (count_t*)malloc(_counts_length*sizeof(count_t));
 
-        /* init data structures */
-        pt_init(_pt);
-        memset(_counts, 0, _counts_length*sizeof(count_t));
+//         /* init data structures */
+//         pt_init(_pt);
+//         memset(_counts, 0, _counts_length*sizeof(count_t));
 
-        /* compute context */
-        for (size_t i = 0; i < _data.size(); i++) {
-                const nucleotide_sequence_t& seq = (const nucleotide_sequence_t&)_data[i];
-                _context.push_back(seq_context_t(seq, tree_depth, alphabet_size));
-        }
-}
+//         /* compute context */
+//         for (size_t i = 0; i < _data.size(); i++) {
+//                 const nucleotide_sequence_t& seq = (const nucleotide_sequence_t&)_data[i];
+//                 _context.push_back(seq_context_t(seq, tree_depth, alphabet_size));
+//         }
+// }
 
-parsimonious_tree_t::parsimonious_tree_t(const parsimonious_tree_t& distribution)
-        : _counts_length(distribution._counts_length),
-          _data(distribution._data),
-          _context(distribution._context),
-          _cluster_assignments(distribution._cluster_assignments),
-          _cluster_tag(distribution._cluster_tag),
-          _tree_depth(distribution._tree_depth)
-{
-        _as = as_create(distribution._as->size);
-        _pt = pt_create(_as, distribution._pt->depth);
-        _counts = (count_t*)malloc(_counts_length*sizeof(count_t));
+// parsimonious_tree_t::parsimonious_tree_t(const parsimonious_tree_t& distribution)
+//         : _counts_length(distribution._counts_length),
+//           _data(distribution._data),
+//           _context(distribution._context),
+//           _cluster_assignments(distribution._cluster_assignments),
+//           _cluster_tag(distribution._cluster_tag),
+//           _tree_depth(distribution._tree_depth)
+// {
+//         _as = as_create(distribution._as->size);
+//         _pt = pt_create(_as, distribution._pt->depth);
+//         _counts = (count_t*)malloc(_counts_length*sizeof(count_t));
 
-        /* init data structures */
-        pt_init(_pt);
-        memcpy(_counts, distribution._counts, _counts_length*sizeof(count_t));
-}
+//         /* init data structures */
+//         pt_init(_pt);
+//         memcpy(_counts, distribution._counts, _counts_length*sizeof(count_t));
+// }
 
-parsimonious_tree_t::~parsimonious_tree_t() {
-        free(_counts);
-        pt_free(_pt);
-        as_free(_as);
-}
+// parsimonious_tree_t::~parsimonious_tree_t() {
+//         free(_counts);
+//         pt_free(_pt);
+//         as_free(_as);
+// }
 
-parsimonious_tree_t*
-parsimonious_tree_t::clone() const {
-        return new parsimonious_tree_t(*this);
-}
+// parsimonious_tree_t*
+// parsimonious_tree_t::clone() const {
+//         return new parsimonious_tree_t(*this);
+// }
 
-size_t
-parsimonious_tree_t::max_from_context(const range_t& range) const
-{
-        const size_t sequence = range.index[0];
-        const size_t position = range.index[1];
-        ssize_t from = position;
+// size_t
+// parsimonious_tree_t::max_from_context(const range_t& range) const
+// {
+//         const size_t sequence = range.index[0];
+//         const size_t position = range.index[1];
+//         ssize_t from = position;
 
-        for (size_t i = 0; i < _tree_depth && from > 0 && _cluster_assignments[seq_index_t(sequence, from-1)] == _cluster_tag; i++) {
-                from--;
-        }
+//         for (size_t i = 0; i < _tree_depth && from > 0 && _cluster_assignments[seq_index_t(sequence, from-1)] == _cluster_tag; i++) {
+//                 from--;
+//         }
 
-        return position-from;
-}
+//         return position-from;
+// }
 
-size_t
-parsimonious_tree_t::max_to_context(const range_t& range) const
-{
-        const size_t sequence = range.index[0];
-        const size_t position = range.index[1];
-        const size_t length   = range.length;
-        const ssize_t sequence_length = _data.size(sequence);
-        ssize_t to = position+length-1;
+// size_t
+// parsimonious_tree_t::max_to_context(const range_t& range) const
+// {
+//         const size_t sequence = range.index[0];
+//         const size_t position = range.index[1];
+//         const size_t length   = range.length;
+//         const ssize_t sequence_length = _data.size(sequence);
+//         ssize_t to = position+length-1;
 
-        for (size_t i = 0; i < _tree_depth && to < sequence_length-1 && _cluster_assignments[seq_index_t(sequence, to + 1)] == _cluster_tag; i++) {
-                to++;
-        }
+//         for (size_t i = 0; i < _tree_depth && to < sequence_length-1 && _cluster_assignments[seq_index_t(sequence, to + 1)] == _cluster_tag; i++) {
+//                 to++;
+//         }
 
-        return to-position-length+1;
-}
+//         return to-position-length+1;
+// }
 
-size_t
-parsimonious_tree_t::add(const range_t& range) {
-        const size_t sequence     = range.index[0];
-        const size_t length       = range.length;
-        const size_t from_context = max_from_context(range);
-        const size_t   to_context = max_to_context(range);
+// size_t
+// parsimonious_tree_t::add(const range_t& range) {
+//         const size_t sequence     = range.index[0];
+//         const size_t length       = range.length;
+//         const size_t from_context = max_from_context(range);
+//         const size_t   to_context = max_to_context(range);
 
-        for (size_t i = 0; i < length+to_context; i++) {
-                const size_t pos   = range.index[1]+i;
-                const size_t c_max = min(from_context+i, _tree_depth);
-                const size_t c_min = i < length ? 0 : i-(length-1);
-                for (size_t c = c_min; c <= c_max; c++) {
-                        if (_context[sequence][pos][c] != -1) {
-                                _counts[_context[sequence][pos][c]]++;
-                        }
-                }
-        }
+//         for (size_t i = 0; i < length+to_context; i++) {
+//                 const size_t pos   = range.index[1]+i;
+//                 const size_t c_max = min(from_context+i, _tree_depth);
+//                 const size_t c_min = i < length ? 0 : i-(length-1);
+//                 for (size_t c = c_min; c <= c_max; c++) {
+//                         if (_context[sequence][pos][c] != -1) {
+//                                 _counts[_context[sequence][pos][c]]++;
+//                         }
+//                 }
+//         }
 
-        return range.length;
-}
+//         return range.length;
+// }
 
-size_t
-parsimonious_tree_t::remove(const range_t& range) {
-        const size_t sequence     = range.index[0];
-        const size_t length       = range.length;
-        const size_t from_context = max_from_context(range);
-        const size_t   to_context = max_to_context(range);
+// size_t
+// parsimonious_tree_t::remove(const range_t& range) {
+//         const size_t sequence     = range.index[0];
+//         const size_t length       = range.length;
+//         const size_t from_context = max_from_context(range);
+//         const size_t   to_context = max_to_context(range);
 
-        for (size_t i = 0; i < length+to_context; i++) {
-                const size_t pos   = range.index[1]+i;
-                const size_t c_max = min(from_context+i, _tree_depth);
-                const size_t c_min = i < length ? 0 : i-(length-1);
-                for (size_t c = c_min; c <= c_max; c++) {
-                        if (_context[sequence][pos][c] != -1) {
-                                _counts[_context[sequence][pos][c]]--;
-                        }
-                }
-        }
+//         for (size_t i = 0; i < length+to_context; i++) {
+//                 const size_t pos   = range.index[1]+i;
+//                 const size_t c_max = min(from_context+i, _tree_depth);
+//                 const size_t c_min = i < length ? 0 : i-(length-1);
+//                 for (size_t c = c_min; c <= c_max; c++) {
+//                         if (_context[sequence][pos][c] != -1) {
+//                                 _counts[_context[sequence][pos][c]]--;
+//                         }
+//                 }
+//         }
 
-        return range.length;
-}
+//         return range.length;
+// }
 
-size_t
-parsimonious_tree_t::count(const range_t& range) {
-        return range.length;
-}
+// size_t
+// parsimonious_tree_t::count(const range_t& range) {
+//         return range.length;
+// }
 
-double parsimonious_tree_t::predictive(const range_t& range) {
-        const double ml1 = pt_ln_marginal_likelihood(_pt, _counts); add(range);
-        const double ml2 = pt_ln_marginal_likelihood(_pt, _counts); remove(range);
-        return exp(ml2-ml1);
-}
+// double parsimonious_tree_t::predictive(const range_t& range) {
+//         const double ml1 = pt_ln_marginal_likelihood(_pt, _counts); add(range);
+//         const double ml2 = pt_ln_marginal_likelihood(_pt, _counts); remove(range);
+//         return exp(ml2-ml1);
+// }
 
-double parsimonious_tree_t::log_predictive(const range_t& range) {
-        const double ml1 = pt_ln_marginal_likelihood(_pt, _counts); add(range);
-        const double ml2 = pt_ln_marginal_likelihood(_pt, _counts); remove(range);
-        return ml2-ml1;
-}
+// double parsimonious_tree_t::log_predictive(const range_t& range) {
+//         const double ml1 = pt_ln_marginal_likelihood(_pt, _counts); add(range);
+//         const double ml2 = pt_ln_marginal_likelihood(_pt, _counts); remove(range);
+//         return ml2-ml1;
+// }
 
-double parsimonious_tree_t::log_likelihood() const {
-        return 0;
-}
+// double parsimonious_tree_t::log_likelihood() const {
+//         return 0;
+// }
 
 // Bivariate Gaussian
 ////////////////////////////////////////////////////////////////////////////////

@@ -135,31 +135,6 @@ void wrong_usage(const char *msg)
 
 }
 
-static
-char * readfile(const char* file_name, vector<string>& sequences)
-{
-        FastaParser parser(file_name);
-
-        ifstream file(file_name);
-        string line;
-
-        size_t i = 0;
-        while ((line = parser.read_sequence()) != "") {
-                size_t read = line.size();
-                sequences.push_back("");
-                size_t pos = 0;
-                for (size_t j = 0; j < (size_t)read && line[j] != '\n'; j++) {
-                        if (is_nucleotide_or_masked(line[j])) {
-                                sequences[i].append(1,line[j]);
-                                pos++;
-                        }
-                }
-                i++;
-        }
-
-        return NULL;
-}
-
 ostream& operator<< (ostream& o, const product_dirichlet_t& pd) {
         for (size_t j = 0; j < pd.alpha[0].size() - 1; j++) {
                 o << "\t";
@@ -225,10 +200,7 @@ void save_result(ostream& file, sampler_t& sampler)
 static
 void run_dpm(const char* file_name)
 {
-        vector<string> sequences;
-
-        // read sequences
-        readfile(file_name, sequences);
+        sequence_data_t<data_tfbs_t::code_t> sequences(data_tfbs_t::read_fasta(file_name));
 
         // baseline
         vector<double> baseline_weights(1,1);

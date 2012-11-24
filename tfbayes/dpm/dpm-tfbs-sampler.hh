@@ -58,7 +58,10 @@ private:
 
 class dpm_tfbs_pmcmc_t : public population_mcmc_t {
 public:
-        dpm_tfbs_pmcmc_t(const tfbs_options_t& options, const sequence_data_t<data_tfbs_t::code_t>& sequences, size_t n);
+        dpm_tfbs_pmcmc_t(
+                const tfbs_options_t& options,
+                const sequence_data_t<data_tfbs_t::code_t>& sequences,
+                size_t n);
         virtual ~dpm_tfbs_pmcmc_t();
 
         data_tfbs_t _data;

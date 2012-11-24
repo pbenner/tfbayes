@@ -2,16 +2,16 @@
 
 INCLUDES = -I$(top_srcdir)/include
 
-bin_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug parsmm-test mcm-test
+bin_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug parsmm-test
 
 parsmm_test_SOURCES = parsmm-test.cc
 parsmm_test_LDADD   = $(top_builddir)/parsmm/libparsmm.la
 parsmm_test_LDADD  += libdpm.la
 parsmm_test_LDADD  += -lm $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 
-mcm_test_SOURCES = mcm-test.cc
-mcm_test_LDADD   = libdpm.la
-mcm_test_LDADD  += -lm $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
+# mcm_test_SOURCES = mcm-test.cc
+# mcm_test_LDADD   = libdpm.la
+# mcm_test_LDADD  += -lm $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 
 dpm_gaussian_debug_SOURCES = dpm-gaussian-main.cc
 dpm_gaussian_debug_LDADD   = $(top_builddir)/libexception/libexception.la
