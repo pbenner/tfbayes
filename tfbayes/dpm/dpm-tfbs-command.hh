@@ -29,6 +29,8 @@ class dpm_tfbs_state_t;
 
 class command_t {
 public:
+        virtual ~command_t();
+
         virtual std::string operator()(const dpm_tfbs_state_t& state, dpm_tfbs_sampler_t& sampler) const = 0;
 };
 

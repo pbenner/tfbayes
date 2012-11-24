@@ -69,7 +69,7 @@ public:
         nucleotide_sequence_t(const std::string& sequence)
                 : std::vector<CODE_TYPE>() {
                 for (size_t i = 0; i < sequence.length(); i++) {
-                        push_back(code_nucleotide<CODE_TYPE>(sequence[i]));
+                        this->push_back(code_nucleotide<CODE_TYPE>(sequence[i]));
                 }
         }
 };

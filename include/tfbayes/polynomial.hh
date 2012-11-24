@@ -188,19 +188,19 @@ public:
                 : boost::unordered_map<exponent_t<T, S>, C>() {}
         polynomial_t(const C& constant)
                 : boost::unordered_map<exponent_t<T, S>, C>() {
-                operator+=(polynomial_term_t<T, S, C>(constant));
+                this->operator+=(polynomial_term_t<T, S, C>(constant));
         }
         polynomial_t(const polynomial_term_t<T, S, C>& term)
                 : boost::unordered_map<exponent_t<T, S>, C>() {
-                operator+=(term);
+                this->operator+=(term);
         }
 
         polynomial_t<T, S, C>& operator+=(const C& constant) {
-                operator+=(polynomial_term_t<T, S, C>(constant));
+                this->operator+=(polynomial_term_t<T, S, C>(constant));
                 return *this;
         }
         polynomial_t<T, S, C>& operator-=(const C& constant) {
-                operator-=(polynomial_term_t<T, S, C>(constant));
+                this->operator-=(polynomial_term_t<T, S, C>(constant));
                 return *this;
         }
         polynomial_t<T, S, C>& operator+=(const polynomial_term_t<T, S, C>& term) {
@@ -240,7 +240,7 @@ public:
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         tmp += (*it) * constant;
                 }
-                operator=(tmp);
+                this->operator=(tmp);
 
                 return *this;
         }
@@ -249,7 +249,7 @@ public:
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         tmp += (*it) / constant;
                 }
-                operator=(tmp);
+                this->operator=(tmp);
 
                 return *this;
         }
@@ -258,7 +258,7 @@ public:
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         tmp += (*it) * term;
                 }
-                operator=(tmp);
+                this->operator=(tmp);
 
                 return *this;
         }
@@ -267,7 +267,7 @@ public:
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         tmp += (*it) / term;
                 }
-                operator=(tmp);
+                this->operator=(tmp);
 
                 return *this;
         }
@@ -279,7 +279,7 @@ public:
                                 tmp += (*it)*(*is);
                         }
                 }
-                operator=(tmp);
+                this->operator=(tmp);
 
                 return *this;
         }
