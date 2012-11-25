@@ -215,3 +215,24 @@ dpm_tfbs_state_t::proposal(cluster_t& cluster, stringstream& ss)
         }
         return false;
 }
+
+#include <graph.hh>
+
+mixture_partition_t
+dpm_tfbs_state_t::mixture_partition() const
+{
+        mixture_partition_t mixture_partition;
+
+        // loop through all clusters
+        for (const_iterator it = this->begin(); it != this->end(); it++) {
+                const cluster_t& cluster = **it;
+                if (cluster.cluster_tag() != bg_cluster_tag) {
+                        mixture_partition.add_component();
+                        // loop through cluster elements
+                        for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
+                                mixture_partition.back().insert(is->index);
+                        }
+                }
+        }
+        return mixture_partition;
+}

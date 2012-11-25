@@ -64,6 +64,9 @@ public:
                 }
         }
 
+        // return the current state as a mixture partition
+        mixture_partition_t mixture_partition() const;
+
         // data
         ////////////////////////////////////////////////////////////////////////
 

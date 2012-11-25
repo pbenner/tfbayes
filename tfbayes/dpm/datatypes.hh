@@ -59,6 +59,11 @@ typedef struct {
 typedef struct {
         std::vector<std::vector<double> > probabilities;
         graph_t graph;
+        // maximum posterior sample and value, i.e.
+        // the maximal value that was ever reached during
+        // sampling
+        mixture_partition_t map_partition;
+        double              map_value;
 } samples_t;
 
 #endif /* DATATYPES_HH */

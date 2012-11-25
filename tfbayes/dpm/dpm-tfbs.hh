@@ -92,12 +92,6 @@ private:
         const data_tfbs_t& _data;
         dpm_tfbs_state_t _state;
 
-        // maximum posterior sample and value, i.e.
-        // the maximal value that was ever reached during
-        // sampling
-        dpm_tfbs_state_t* _map_state;
-        double            _map_value;
-
         // tags of special clusters
         cluster_tag_t bg_cluster_tag;
 

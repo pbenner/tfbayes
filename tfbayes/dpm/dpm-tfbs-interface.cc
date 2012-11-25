@@ -149,6 +149,26 @@ void save_result(ostream& file)
                      << static_cast<double>((*it).second)/static_cast<double>(_sampler->sampling_steps()) << " ";
         }
         file << endl;
+        file << "map_partition = ";
+        for (mixture_partition_t::const_iterator it = samples.map_partition.begin();
+             it != samples.map_partition.end(); it++) {
+                if (it == samples.map_partition.begin()) {
+                        file << "{";
+                }
+                else {
+                        file << ", {";
+                }
+                for (index_set_t::const_iterator is = it->begin(); is != it->end(); is++)
+                {
+                        if (is != it->begin()) {
+                                file << ", ";
+                        }
+
+                        file << *static_cast<const seq_index_t*>(*is);
+                }
+                file << "}";
+        }
+        file << endl;
 }
 
 #undef __BEGIN_DECLS

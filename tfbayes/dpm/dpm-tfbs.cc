@@ -44,9 +44,6 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
           _data(data),
           // cluster manager
           _state(data.sizes(), options.tfbs_length, 0, _data),
-          // maximum posterior value
-          _map_state(NULL),
-          _map_value(-HUGE_VAL),
           // mixture weight for the dirichlet process
           _lambda(options.lambda),
           _lambda_log(log(options.lambda)),
@@ -59,6 +56,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
         for (size_t i = 0; i < data.size(); i++) {
                 _samples.probabilities.push_back(vector<double>(data.size(i), 0.0));
         }
+        _samples.map_value = -HUGE_VAL;
 
         ////////////////////////////////////////////////////////////////////////////////
         // add background model to the state
@@ -128,9 +126,6 @@ dpm_tfbs_t::dpm_tfbs_t(const dpm_tfbs_t& dpm)
           _data(dpm._data),
           // cluster manager
           _state(dpm._state),
-          // maximum posterior value
-          _map_state(dpm._map_state->clone()),
-          _map_value(dpm._map_value),
           // mixture weight for the dirichlet process
           _lambda(dpm._lambda),
           _lambda_log(dpm._lambda_log),
@@ -290,12 +285,9 @@ dpm_tfbs_t::update_map()
 {
         double posterior_value = posterior();
 
-        if (_map_value < posterior_value) {
-                if (_map_state) {
-                        delete(_map_state);
-                }
-                _map_state = _state.clone();
-                _map_value = posterior_value;
+        if (_samples.map_value < posterior_value) {
+                _samples.map_partition = _state.mixture_partition();
+                _samples.map_value     = posterior_value;
         }
 }
 
