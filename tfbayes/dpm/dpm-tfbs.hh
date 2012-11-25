@@ -59,6 +59,7 @@ public:
         size_t mixture_components() const;
         size_t baseline_components() const;
         void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[]);
+        void   update_map();
         void   update_graph(sequence_data_t<short> tfbs_start_positions);
         void   update_samples(size_t sampling_steps);
         double likelihood() const;
@@ -90,6 +91,12 @@ private:
         // data and clusters
         const data_tfbs_t& _data;
         dpm_tfbs_state_t _state;
+
+        // maximum posterior sample and value, i.e.
+        // the maximal value that was ever reached during
+        // sampling
+        dpm_tfbs_state_t* _map_state;
+        double            _map_value;
 
         // tags of special clusters
         cluster_tag_t bg_cluster_tag;

@@ -52,6 +52,7 @@ typedef enum {
 typedef struct {
         std::vector<std::vector<double> > switches;
         std::vector<std::vector<double> > likelihood;
+        std::vector<std::vector<double> > posterior;
         std::vector<std::vector<size_t> > components;
 } sampling_history_t;
 

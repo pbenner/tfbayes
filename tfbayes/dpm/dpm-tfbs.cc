@@ -44,6 +44,9 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
           _data(data),
           // cluster manager
           _state(data.sizes(), options.tfbs_length, 0, _data),
+          // maximum posterior value
+          _map_state(NULL),
+          _map_value(-HUGE_VAL),
           // mixture weight for the dirichlet process
           _lambda(options.lambda),
           _lambda_log(log(options.lambda)),
@@ -124,7 +127,10 @@ dpm_tfbs_t::dpm_tfbs_t(const dpm_tfbs_t& dpm)
           // raw sequences
           _data(dpm._data),
           // cluster manager
-          _state(_state),
+          _state(dpm._state),
+          // maximum posterior value
+          _map_state(dpm._map_state->clone()),
+          _map_value(dpm._map_value),
           // mixture weight for the dirichlet process
           _lambda(dpm._lambda),
           _lambda_log(dpm._lambda_log),
@@ -243,6 +249,9 @@ dpm_tfbs_t::likelihood() const {
         return result;
 }
 
+/*
+ * compute P(X | Z) P(Z) \propto P(Z | X)
+ */
 double
 dpm_tfbs_t::posterior() const {
         double result = likelihood();
@@ -277,10 +286,25 @@ dpm_tfbs_t::update_graph(sequence_data_t<short> tfbs_start_positions)
 }
 
 void
-dpm_tfbs_t::update_samples(size_t sampling_steps) {
-        if (sampling_steps % 100 == 0) {
-                _samples.graph.cleanup(1);
+dpm_tfbs_t::update_map()
+{
+        double posterior_value = posterior();
+
+        if (_map_value < posterior_value) {
+                if (_map_state) {
+                        delete(_map_state);
+                }
+                _map_state = _state.clone();
+                _map_value = posterior_value;
         }
+}
+
+void
+dpm_tfbs_t::update_samples(size_t sampling_steps)
+{
+        // if (sampling_steps % 100 == 0) {
+        //         _samples.graph.cleanup(1);
+        // }
         for (da_iterator it = _data.begin();
              it != _data.end(); it++) {
                 const index_i& index  = **it;
@@ -297,7 +321,8 @@ dpm_tfbs_t::update_samples(size_t sampling_steps) {
                         _samples.probabilities[sequence][position] = value;
                 }
         }
-        update_graph(_state.tfbs_start_positions);
+        // update_graph(_state.tfbs_start_positions);
+        update_map();
 }
 
 samples_t&

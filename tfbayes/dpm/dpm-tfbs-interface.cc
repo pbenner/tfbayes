@@ -133,6 +133,14 @@ void save_result(ostream& file)
                 }
                 file << endl;
         }
+        file << "posterior =" << endl;
+        for (size_t i = 0; i < history.posterior.size(); i++) {
+                file << "\t";
+                for (size_t j = 0; j < history.posterior[i].size(); j++) {
+                        file << history.posterior[i][j] << " ";
+                }
+                file << endl;
+        }
         file << "graph = ";
         for (graph_t::const_iterator it = samples.graph.begin();
              it != samples.graph.end(); it++) {

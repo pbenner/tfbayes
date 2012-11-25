@@ -138,4 +138,54 @@ protected:
         map_t _edges;
 };
 
+// partition_t
+////////////////////////////////////////////////////////////////////////////////
+
+#include <boost/unordered_set.hpp> 
+
+class index_set_t : public boost::unordered_set<index_i*> {
+public:
+        // typedefs
+        ////////////////////////////////////////////////////////////////////////////////
+        typedef boost::unordered_set<index_i*> set_t;
+
+        // constructors
+        ////////////////////////////////////////////////////////////////////////////////
+        index_set_t()
+                : boost::unordered_set<index_i*>()
+                {}
+        index_set_t(const index_set_t& index_set) {
+                for (set_t::const_iterator it = index_set.begin();
+                     it != index_set.end(); it++) {
+                        this->insert(**it);
+                }
+        }
+        ~index_set_t() {
+                for (set_t::const_iterator it = this->begin();
+                     it != this->end();) {
+                        delete(*it);
+                        erase(it);
+                }
+        }
+
+        // methods
+        ////////////////////////////////////////////////////////////////////////////////
+        void insert(const index_i& index) {
+
+                set_t::insert(index.clone());
+        }
+};
+
+class mixture_partition_t : public std::vector<index_set_t> {
+public:
+        mixture_partition_t()
+                : std::vector<index_set_t>()
+                {}
+
+        void add_component() {
+                this->push_back(index_set_t());
+        }
+        
+};
+
 #endif /* GRAPH_HH */
