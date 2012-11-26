@@ -89,19 +89,6 @@ def usage():
 # parse results config
 # ------------------------------------------------------------------------------
 
-def read_vector(config, section, option, converter):
-    vector_str = config.get(section, option)
-    vector     = map(converter, vector_str.split(' '))
-    return vector
-
-def read_matrix(config, section, option, converter):
-    matrix_str = config.get(section, option)
-    matrix     = []
-    for line in matrix_str.split('\n'):
-        if line != '':
-            matrix.append([converter(a) for a in line.split(' ')])
-    return matrix
-
 def parse_config(config_file):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
