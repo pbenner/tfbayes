@@ -49,7 +49,8 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
           _lambda_log(log(options.lambda)),
           _lambda_inv_log(log(1-options.lambda)),
           // length of tfbs
-          _tfbs_length(options.tfbs_length)
+          _tfbs_length(options.tfbs_length),
+          _construct_graph(options.construct_graph)
 {
         ////////////////////////////////////////////////////////////////////////////////
         // initialize samples
@@ -135,7 +136,8 @@ dpm_tfbs_t::dpm_tfbs_t(const dpm_tfbs_t& dpm)
           // samples
           _samples(dpm._samples),
           // process prios
-          _process_prior(dpm._process_prior->clone())
+          _process_prior(dpm._process_prior->clone()),
+          _construct_graph(dpm._construct_graph)
 {
 }
 
@@ -285,11 +287,7 @@ dpm_tfbs_t::update_map()
 {
         double posterior_value = posterior();
 
-        cout << "New map: " << posterior_value << endl;
-        cout << "Old map: " << _samples.map_value << endl;
-
         if (_samples.map_value < posterior_value) {
-                cout << "Updating map." << endl;
                 _samples.map_partition = _state.dpm_partition();
                 _samples.map_value     = posterior_value;
         }
@@ -298,9 +296,8 @@ dpm_tfbs_t::update_map()
 void
 dpm_tfbs_t::update_samples(size_t sampling_steps)
 {
-        // if (sampling_steps % 100 == 0) {
-        //         _samples.graph.cleanup(1);
-        // }
+        // record for every position the average number of times it
+        // belonged to the background model
         for (da_iterator it = _data.begin();
              it != _data.end(); it++) {
                 const index_i& index  = **it;
@@ -317,7 +314,15 @@ dpm_tfbs_t::update_samples(size_t sampling_steps)
                         _samples.probabilities[sequence][position] = value;
                 }
         }
-        // update_graph(_state.tfbs_start_positions);
+        // construct a graph of all positions that were
+        // clustered together
+        if (_construct_graph) {
+                if (sampling_steps % 100 == 0) {
+                        _samples.graph.cleanup(1);
+                }
+                update_graph(_state.tfbs_start_positions);
+        }
+        // update map partition and value
         update_map();
 }
 

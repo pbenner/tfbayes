@@ -43,6 +43,7 @@ typedef struct {
         double alpha;
         double discount;
         double lambda;
+        bool construct_graph;
         bool metropolis_optimize;
         const char* process_prior;
         const char* background_model;
@@ -72,6 +73,7 @@ operator<<(std::ostream& o, const options_t& options) {
           << "-> background_alpha    = " << options.background_alpha    << endl
           << "-> background_context  = " << options.background_context  << endl
           << "-> background_weights  = " << options.background_weights  << endl
+          << "-> construct_graph     = " << options.construct_graph     << endl
           << "-> metropolis_optimize = " << options.metropolis_optimize << endl
           << "-> population_size     = " << options.population_size     << endl
           << "-> socket_file         = " << options.socket_file         << endl;
@@ -140,6 +142,7 @@ void _dpm_tfbs_init(const char* file_name)
         tfbs_options.alpha               = _options.alpha;
         tfbs_options.lambda              = _options.lambda;
         tfbs_options.discount            = _options.discount;
+        tfbs_options.construct_graph     = _options.construct_graph;
         tfbs_options.metropolis_optimize = _options.metropolis_optimize;
         tfbs_options.tfbs_length         = _options.tfbs_length;
         tfbs_options.process_prior       = _options.process_prior;

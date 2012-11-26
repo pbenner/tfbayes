@@ -30,6 +30,7 @@ typedef struct {
         double alpha;
         double discount;
         double lambda;
+        bool construct_graph;
         bool metropolis_optimize;
         std::string process_prior;
         std::string background_model;

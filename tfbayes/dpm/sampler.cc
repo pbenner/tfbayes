@@ -50,6 +50,7 @@ gibbs_sampler_t::gibbs_sampler_t(mixture_model_t& dpm,
         _sampling_history.components.push_back(vector<size_t>());
         _sampling_history.switches[0].push_back(0);
         _sampling_history.likelihood[0].push_back(_dpm.likelihood());
+        _sampling_history.posterior[0].push_back(_dpm.posterior());
         _sampling_history.components[0].push_back(1);
 }
 

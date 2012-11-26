@@ -104,6 +104,9 @@ private:
 
         // standard priors
         static std::matrix<double> init_alpha(size_t length);
+
+        // whether or not to construct a graph from the samples
+        bool _construct_graph;
 };
 
 #endif /* DPM_TFBS_HH */
