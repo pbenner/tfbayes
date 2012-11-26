@@ -162,7 +162,7 @@ def generate_motif(sequences, subset, motif_length):
     motif = [ [ 0.0 for j in range(0, motif_length) ] for i in range(0, 4) ]
     for position in subset:
         s = position[0]
-        p = position[1]-1
+        p = position[1]
         # loop over the motif
         for j in range(motif_length):
             # loop over all nucleotides
