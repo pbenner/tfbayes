@@ -53,6 +53,17 @@ def save_motifs(config_parser, bg, motifs, components):
     write_vector(config_parser, 'Cluster', 'cluster', cluster_names)
     write_matrix(config_parser, 'Cluster', 'cluster_bg', bg)
 
+def save_motifs(config_parser, motifs, components):
+    if not config_parser.has_section('Cluster'):
+        config_parser.add_section('Cluster')
+    cluster_names = []
+    for n, motif, comp in zip(range(0, len(motifs)), motifs, components):
+        cluster_name = 'cluster_%d' % n
+        cluster_names.append(cluster_name)
+        write_matrix(config_parser, 'Cluster', cluster_name, motif)
+        config_parser.set('Cluster', '%s_components' % cluster_name, str(comp))
+    write_vector(config_parser, 'Cluster', 'cluster', cluster_names)
+
 def load_motifs(config_parser):
     bg = read_matrix(config_parser, 'Cluster', 'cluster_bg', float)
     motifs = []
