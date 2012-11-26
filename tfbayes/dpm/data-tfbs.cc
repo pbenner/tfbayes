@@ -71,16 +71,14 @@ data_tfbs_t::data_tfbs_t(const sequence_data_t<code_t>& sequences, size_t tfbs_l
                         seq_index_t index(i,j);
                         // if there is a nucleotide at this position
                         if (!is_blank(index)) {
-                                // generate a pointer to the index
-                                index_i* index_ptr = new seq_index_t(index);
-                                // and push it to the list of indices
-                                indices.push_back(index_ptr);
+                                // push a new index to the list of indices
+                                indices.push_back(new seq_index_t(index));
                                 // if this index is also valid for
                                 // sampling, i.e. a tfbs could fit here
                                 if (valid_sampling_index(index, tfbs_length)) {
                                         // push it also to the list of
                                         // sampling indices
-                                        sampling_indices.push_back(index_ptr);
+                                        sampling_indices.push_back(new seq_index_t(index));
                                 }
                                 // increment the number of nucleotides
                                 _elements++;
@@ -99,6 +97,11 @@ data_tfbs_t::data_tfbs_t(const data_tfbs_t& data)
         for (data_tfbs_t::const_iterator it = data.begin(); it != data.end(); it++) {
                 index_i* index = (**it).clone();
                 indices.push_back(index);
+        }
+        for (data_tfbs_t::sampling_iterator it = data.sampling_begin();
+             it != data.sampling_end(); it++)
+        {
+                index_i* index = (**it).clone();
                 sampling_indices.push_back(index);
         }
         shuffle();
@@ -107,6 +110,10 @@ data_tfbs_t::data_tfbs_t(const data_tfbs_t& data)
 data_tfbs_t::~data_tfbs_t()
 {
         for (data_tfbs_t::iterator it = begin(); it != end(); it++) {
+                delete(*it);
+        }
+        for (data_tfbs_t::sampling_iterator it = sampling_begin();
+             it != sampling_end(); it++) {
                 delete(*it);
         }
 }

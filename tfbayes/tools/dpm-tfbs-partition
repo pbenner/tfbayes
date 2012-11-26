@@ -1,0 +1,269 @@
+#! /usr/bin/env python
+
+# Copyright (C) 2012 Philipp Benner
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# imports
+# ------------------------------------------------------------------------------
+
+import re
+import math
+import time
+import ConfigParser
+import sys
+import getopt
+import os
+
+import numpy               as     np
+import numpy.random.mtrand as     mt
+import numpy.random        as     rd
+
+from tfbayes.fasta import fasta
+from tfbayes.motif import fileio
+from tfbayes.motif import information
+from tfbayes.motif import tools
+from tfbayes.motif import plot
+
+from tfbayes.uipac.alphabet import DNA
+
+def importMatplotlib(backend=None):
+    global pyplot
+    global NonUniformImage
+    global PdfPages
+    global patches
+    global path
+    from matplotlib import use
+    if backend:
+        use(backend)
+    import matplotlib.pyplot   as     pyplot
+    from   matplotlib.image    import NonUniformImage
+    from   matplotlib.backends.backend_pdf import PdfPages
+    import matplotlib.patches  as     patches
+    import matplotlib.path     as     path
+
+# global options
+# ------------------------------------------------------------------------------
+
+options = {
+    'plot'         : False,
+    'tfbs_length'  : None,
+    'result_file'  : None,
+    'seq_file'     : None,
+    'load'         : None,
+    'save'         : None,
+    'verbose'      : False,
+    }
+
+# usage
+# ------------------------------------------------------------------------------
+
+def usage():
+    """Print usage."""
+    print
+    print "dpm-tfbs-partition [option]... SAMPLER_CONFIG"
+    print
+    print "Options:"
+    print "       --result=FILE              - sampler result file"
+    print "       --sequences=FILE           - fasta sequences file"
+    print
+    print "   -l, --load=FILE                - load motifs from FILE"
+    print "   -s, --save=FILE                - save motifs to FILE"
+    print
+    print "   -h, --help                     - print help"
+    print "   -v, --verbose                  - be verbose"
+    print
+
+# parse results config
+# ------------------------------------------------------------------------------
+
+def read_vector(config, section, option, converter):
+    vector_str = config.get(section, option)
+    vector     = map(converter, vector_str.split(' '))
+    return vector
+
+def read_matrix(config, section, option, converter):
+    matrix_str = config.get(section, option)
+    matrix     = []
+    for line in matrix_str.split('\n'):
+        if line != '':
+            matrix.append([converter(a) for a in line.split(' ')])
+    return matrix
+
+def parse_config(config_file):
+    config_parser = ConfigParser.RawConfigParser()
+    config_parser.read(config_file)
+    if not config_parser.has_section('TFBS-Sampler'):
+        raise IOError("Invalid configuration file.")
+    options['seq_file'] = config_parser.get('TFBS-Sampler', 'sequences')
+    options['tfbs_length'] = int(config_parser.get('TFBS-Sampler', 'tfbs-length'))
+    if config_parser.has_option('TFBS-Sampler', 'save'):
+        options['result_file'] = config_parser.get('TFBS-Sampler', 'save')
+
+def parse_partition_subsets(partition_str):
+    """Split the partition string into a list of its subsets."""
+    stack = []
+    for i, c in enumerate(partition_str):
+        if c == '{':
+            stack.append(i)
+        elif c == '}' and stack:
+            start = stack.pop()
+            yield partition_str[start + 1: i]
+
+def parse_partition_elements(subset_str):
+    """Split the string of a subset into its elements and parse them."""
+    stack = []
+    for i, c in enumerate(subset_str):
+        if c == '(':
+            stack.append(i)
+        elif c == ')' and stack:
+            start = stack.pop()
+            element = subset_str[start + 1: i].split(':')
+            yield (int(element[0]), int(element[1]))
+
+def parse_partition(config_parser):
+    partition_str = config_parser.get('Result', 'map_partition').strip()
+    partition     = []
+    for subset in parse_partition_subsets(partition_str):
+        partition.append(list(parse_partition_elements(subset)))
+    return partition
+
+# parse sequences file
+# ------------------------------------------------------------------------------
+
+def filter_line(line):
+    line = re.sub(r'\s+', ' ', line).strip()
+    line = line.split(';')
+    line.remove('')
+    line = map(lambda s: s.strip(), line)
+    return line
+
+def parse_line(lines):
+    return map(lambda s:
+                  map(lambda e: float(e), s.split(' ')),
+              lines)
+
+def parse_sequences(seq_file):
+    parser = fasta.parser(seq_file)
+    descriptions = []
+    sequences    = []
+    while 1:
+        description, line = parser.read_sequence()
+        if not line:
+            break
+        lines = filter_line(line)
+        descriptions.append(description[0])
+        sequences.append(parse_line(lines))
+    return descriptions, sequences
+
+# generate motifs
+# ------------------------------------------------------------------------------
+
+def generate_motif(sequences, subset, motif_length):
+    motif = [ [ 0.0 for j in range(0, motif_length) ] for i in range(0, 4) ]
+    for position in subset:
+        s = position[0]
+        p = position[1]-1
+        # loop over the motif
+        for j in range(motif_length):
+            # loop over all nucleotides
+            for i in range(4):
+                motif[i][j] += sequences[s][p+j][i]
+    return motif
+
+def generate_motifs(sequences, partition, motif_length):
+    """Loop through the partition and for each subset generate a motif."""
+    motifs = []
+    motif_counts = []
+    components = []
+    for subset in partition:
+        motif = generate_motif(sequences, subset, motif_length)
+        motifs.append(motif)
+        components.append(len(subset))
+    return motifs, components
+
+# main
+# ------------------------------------------------------------------------------
+
+def __main__():
+    # get a parser for the config file
+    config_parser_results = ConfigParser.ConfigParser()
+    config_parser_results.read(options['result_file'])
+    # parse the fasta file
+    descriptions, sequences = parse_sequences(options['seq_file'])
+    # parse the map partition
+    partition               = parse_partition(config_parser_results)
+    if options['save']:
+        config_parser_save = ConfigParser.ConfigParser()
+        config_parser_save.read(options['save'])
+    if options['load']:
+        config_parser_load = ConfigParser.ConfigParser()
+        config_parser_load.read(options['load'])
+        bg, motifs, components = fileio.load_motifs(config_parser_load)
+    else:
+        motifs, components = generate_motifs(sequences, partition, options['tfbs_length'])
+    if options['save']:
+        fileio.save_motifs(config_parser_save, bg, motifs, components)
+        configfile = open(options['save'], 'wb')
+        config_parser_save.write(configfile)
+    else:
+        plot.plot_motifs(motifs, components, os.path.splitext(os.path.split(options['result_file'])[1])[0])
+
+def main():
+    global options
+    try:
+        longopts   = ["help", "verbose", "plot",
+                      "result=", "sequences=", "load=", "save="]
+        opts, tail = getopt.getopt(sys.argv[1:], "pls:v", longopts)
+    except getopt.GetoptError:
+        usage()
+        return 2
+    output = None
+    if len(tail) != 1:
+        usage()
+        return 1
+    # option default options from config file
+    parse_config(*tail)
+    # override those options with command line arguments
+    for o, a in opts:
+        if o in ("-v", "--verbose"):
+            sys.stderr.write("Verbose mode turned on.\n")
+            options["verbose"] = True
+        if o in ("-h", "--help"):
+            usage()
+            return 0
+        if o in ("-p", "--plot"):
+            options['plot'] = True
+        if o == "--result":
+            options['result_file'] = a
+        if o == "--sequences":
+            options['seq_file'] = a
+        if o in ("-l", "--load"):
+            options['load'] = a
+        if o in ("-s", "--save"):
+            options['save'] = a
+    # check if all required options are specified
+    if not options['tfbs_length']:
+        raise IOError('tfbs length is unknown')
+    if not options['result_file']:
+        raise IOError('no result file specified')
+    if not options['seq_file']:
+        raise IOError('no sequences file specified')
+    # call __main__ and exit
+    __main__()
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
