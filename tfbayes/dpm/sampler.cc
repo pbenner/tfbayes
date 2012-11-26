@@ -134,6 +134,7 @@ gibbs_sampler_t::sampling_steps() const {
 void
 gibbs_sampler_t::sample(size_t n, size_t burnin) {
         double sum;
+        double switches;
         // burn in sampling
         for (size_t i = 0; i < burnin; i++) {
                 flockfile(stdout);
@@ -143,11 +144,12 @@ gibbs_sampler_t::sample(size_t n, size_t burnin) {
                      << endl;
                 fflush(stdout);
                 funlockfile(stdout);
-                sum = _sample();
+                sum      = _sample();
+                switches = _indexer.elements() > 0 ? sum/(double)_indexer.elements() : 0;
                 _sampling_history.likelihood[0].push_back(_dpm.likelihood());
                 _sampling_history.posterior[0].push_back(_dpm.posterior());
                 _sampling_history.components[0].push_back(_dpm.mixture_components());
-                _sampling_history.switches[0].push_back(sum/(double)_indexer.elements());
+                _sampling_history.switches[0].push_back(switches);
         }
         // sample `n' times
         for (size_t i = 0; i < n; i++) {
@@ -159,11 +161,12 @@ gibbs_sampler_t::sample(size_t n, size_t burnin) {
                      << endl;
                 fflush(stdout);
                 funlockfile(stdout);
-                sum = _sample();
+                sum      = _sample();
+                switches = _indexer.elements() > 0 ? sum/(double)_indexer.elements() : 0;
                 _sampling_history.likelihood[0].push_back(_dpm.likelihood());
                 _sampling_history.posterior[0].push_back(_dpm.posterior());
                 _sampling_history.components[0].push_back(_dpm.mixture_components());
-                _sampling_history.switches[0].push_back(sum/(double)_indexer.elements());
+                _sampling_history.switches[0].push_back(switches);
                 _dpm.update_samples(_sampling_steps);
                 _sampling_steps++;
         }

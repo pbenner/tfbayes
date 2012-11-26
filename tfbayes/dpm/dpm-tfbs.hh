@@ -22,14 +22,9 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <gsl/gsl_linalg.h>
-#include <gsl/gsl_matrix.h>
-
-#include <graph.hh>
-#include <component-model.hh>
-#include <data-tfbs.hh>
 #include <mixture-model.hh>
 
+#include <data-tfbs.hh>
 #include <dpm-tfbs-options.hh>
 #include <dpm-tfbs-prior.hh>
 #include <dpm-tfbs-state.hh>

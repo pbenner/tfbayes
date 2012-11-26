@@ -47,8 +47,8 @@ data_tfbs_t::valid_sampling_index(const index_i& index, size_t tfbs_length) cons
         }
         // check that all the elements in the range are not blank
         for (size_t i = 0; i < tfbs_length; i++) {
-                seq_index_t index(index[0], index[1]+i);
-                if (is_blank(index)) {
+                seq_index_t tmp(index[0], index[1]+i);
+                if (is_blank(tmp)) {
                         return false;
                 }
         }

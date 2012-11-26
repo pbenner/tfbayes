@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef GRAPH_HH
-#define GRAPH_HH
+#ifndef DPM_GRAPH_HH
+#define DPM_GRAPH_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -78,12 +78,12 @@ size_t hash_value(const edge_t& edge)
         return hasher(edge.index1[0]*edge.index1[1]) + hasher(edge.index2[1]);
 }
 
-// graph_t
+// dpm_graph_t
 ////////////////////////////////////////////////////////////////////////////////
 
-class graph_t {
+class dpm_graph_t {
 public:
-        graph_t() {}
+        dpm_graph_t() {}
 
         // typedefs
         ////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +111,7 @@ public:
         void insert(const edge_t& edge) {
                 _edges[edge]++;
         }
-        void insert(const graph_t& graph) {
+        void insert(const dpm_graph_t& graph) {
                 for (const_iterator it = graph.begin(); it != graph.end(); it++) {
                         _edges[(*it).first] += (*it).second;
                 }
@@ -138,54 +138,4 @@ protected:
         map_t _edges;
 };
 
-// partition_t
-////////////////////////////////////////////////////////////////////////////////
-
-#include <boost/unordered_set.hpp> 
-
-class index_set_t : public boost::unordered_set<index_i*> {
-public:
-        // typedefs
-        ////////////////////////////////////////////////////////////////////////////////
-        typedef boost::unordered_set<index_i*> set_t;
-
-        // constructors
-        ////////////////////////////////////////////////////////////////////////////////
-        index_set_t()
-                : boost::unordered_set<index_i*>()
-                {}
-        index_set_t(const index_set_t& index_set) {
-                for (set_t::const_iterator it = index_set.begin();
-                     it != index_set.end(); it++) {
-                        this->insert(**it);
-                }
-        }
-        ~index_set_t() {
-                for (set_t::const_iterator it = this->begin();
-                     it != this->end();) {
-                        delete(*it);
-                        erase(it);
-                }
-        }
-
-        // methods
-        ////////////////////////////////////////////////////////////////////////////////
-        void insert(const index_i& index) {
-
-                set_t::insert(index.clone());
-        }
-};
-
-class mixture_partition_t : public std::vector<index_set_t> {
-public:
-        mixture_partition_t()
-                : std::vector<index_set_t>()
-                {}
-
-        void add_component() {
-                this->push_back(index_set_t());
-        }
-        
-};
-
-#endif /* GRAPH_HH */
+#endif /* DPM_GRAPH_HH */

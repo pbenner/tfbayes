@@ -31,6 +31,14 @@ FastaParser::FastaParser(const char* file_name)
 {
         string _line;
 
+        if (!file.good())
+        {
+                cerr << "Could not open `"
+                     << file_name
+                     << "'."
+                     << endl;
+        }
+
         while (file) {
                 getline(file, _line);
                 string line = strip(_line);

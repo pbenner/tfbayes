@@ -107,6 +107,14 @@ population_mcmc_t::update_samples()
                 _samples->graph.insert(_population[i]->samples().graph);
                 _population[i]->samples().graph.cleanup();
         }
+        // find the map partition
+        _samples->map_value = -HUGE_VAL;
+        for (size_t i = 0; i < _size; i++) {
+                if (_samples->map_value < _population[i]->samples().map_value) {
+                        _samples->map_value     = _population[i]->samples().map_value;
+                        _samples->map_partition = _population[i]->samples().map_partition;
+                }
+        }
 }
 
 typedef struct {

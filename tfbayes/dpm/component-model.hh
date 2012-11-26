@@ -92,8 +92,8 @@ public:
         friend std::ostream& operator<< (std::ostream& o, const product_dirichlet_t& pd);
 
 private:
-        std::vector<counts_t> counts;
         std::vector<counts_t> alpha;
+        std::vector<counts_t> counts;
 
         const sequence_data_t<data_tfbs_t::code_t>& _data;
 

@@ -24,8 +24,9 @@
 #include <fstream>
 
 #include <init.hh>
-#include <dpm-tfbs-interface.hh>
 #include <dpm-tfbs.hh>
+#include <dpm-tfbs-interface.hh>
+#include <dpm-tfbs-io.hh>
 #include <dpm-tfbs-sampler.hh>
 #include <utility.hh>
 
@@ -90,85 +91,6 @@ ostream& operator<< (ostream& o, const product_dirichlet_t& pd) {
         }
 
         return o;
-}
-
-static
-void save_result(ostream& file)
-{
-        const samples_t& samples          = _sampler->samples();
-        const sampling_history_t& history = _sampler->sampling_history();
-
-        file.setf(ios::showpoint);
-
-        file << "[Result]" << endl;
-        file << "posterior =" << endl;
-        for (size_t i = 0; i < samples.probabilities.size(); i++) {
-                file << "\t";
-                for (size_t j = 0; j < samples.probabilities[i].size(); j++) {
-                        file << (float)samples.probabilities[i][j] << " ";
-                }
-                file << endl;
-        }
-        file << "components =" << endl;
-        for (size_t i = 0; i < history.components.size(); i++) {
-                file << "\t";
-                for (size_t j = 0; j < history.components[i].size(); j++) {
-                        file << history.components[i][j] << " ";
-                }
-                file << endl;
-        }
-        file << "switches =" << endl;
-        for (size_t i = 0; i < history.switches.size(); i++) {
-                file << "\t";
-                for (size_t j = 0; j < history.switches[i].size(); j++) {
-                        file << history.switches[i][j] << " ";
-                }
-                file << endl;
-        }
-        file << "likelihood =" << endl;
-        for (size_t i = 0; i < history.likelihood.size(); i++) {
-                file << "\t";
-                for (size_t j = 0; j < history.likelihood[i].size(); j++) {
-                        file << history.likelihood[i][j] << " ";
-                }
-                file << endl;
-        }
-        file << "posterior =" << endl;
-        for (size_t i = 0; i < history.posterior.size(); i++) {
-                file << "\t";
-                for (size_t j = 0; j < history.posterior[i].size(); j++) {
-                        file << history.posterior[i][j] << " ";
-                }
-                file << endl;
-        }
-        file << "graph = ";
-        for (graph_t::const_iterator it = samples.graph.begin();
-             it != samples.graph.end(); it++) {
-                file << *static_cast<const seq_index_t*>(&(*it).first.index1) << "-"
-                     << *static_cast<const seq_index_t*>(&(*it).first.index2) << "="
-                     << static_cast<double>((*it).second)/static_cast<double>(_sampler->sampling_steps()) << " ";
-        }
-        file << endl;
-        file << "map_partition = ";
-        for (mixture_partition_t::const_iterator it = samples.map_partition.begin();
-             it != samples.map_partition.end(); it++) {
-                if (it == samples.map_partition.begin()) {
-                        file << "{";
-                }
-                else {
-                        file << ", {";
-                }
-                for (index_set_t::const_iterator is = it->begin(); is != it->end(); is++)
-                {
-                        if (is != it->begin()) {
-                                file << ", ";
-                        }
-
-                        file << *static_cast<const seq_index_t*>(*is);
-                }
-                file << "}";
-        }
-        file << endl;
 }
 
 #undef __BEGIN_DECLS
@@ -237,12 +159,12 @@ void _dpm_tfbs_init(const char* file_name)
 void _dpm_tfbs_save(const char* filename)
 {
         if (filename == NULL) {
-                save_result(cout);
+                dpm_tfbs_save_result(cout, *_sampler);
         }
         else {
                 ofstream file;
                 file.open(filename);
-                save_result(file);
+                dpm_tfbs_save_result(file, *_sampler);
                 file.close();
         }
 }

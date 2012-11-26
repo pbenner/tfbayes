@@ -86,7 +86,8 @@ product_dirichlet_t::product_dirichlet_t(const matrix<double>& _alpha, const seq
 }
 
 product_dirichlet_t::product_dirichlet_t(const product_dirichlet_t& distribution)
-        : counts(distribution.counts),
+        : alpha (distribution.alpha),
+          counts(distribution.counts),
           _data(distribution._data),
           _size1(distribution._size1),
           _size2(distribution._size2)

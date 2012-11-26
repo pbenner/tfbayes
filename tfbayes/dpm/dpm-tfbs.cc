@@ -285,8 +285,12 @@ dpm_tfbs_t::update_map()
 {
         double posterior_value = posterior();
 
+        cout << "New map: " << posterior_value << endl;
+        cout << "Old map: " << _samples.map_value << endl;
+
         if (_samples.map_value < posterior_value) {
-                _samples.map_partition = _state.mixture_partition();
+                cout << "Updating map." << endl;
+                _samples.map_partition = _state.dpm_partition();
                 _samples.map_value     = posterior_value;
         }
 }

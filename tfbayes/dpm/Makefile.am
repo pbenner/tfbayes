@@ -35,28 +35,65 @@ pkgpython_PYTHON = __init__.py dpm_gaussian_interface.py dpm_tfbs_interface.py
 
 ## dpm library
 lib_LTLIBRARIES  = libdpm.la
-libdpm_la_SOURCES =                                                           \
-	abysmal-stack.hh code.cc code.hh                                      \
-	index.cc index.hh indexer.hh clonable.hh observer.hh statistics.hh    \
-	datatypes.hh graph.hh                                                 \
-	data.hh data-tfbs.cc data-tfbs.hh data-gaussian.cc data-gaussian.hh   \
-	dpm-tfbs.cc dpm-tfbs.hh dpm-tfbs-prior.cc dpm-tfbs-prior.hh           \
-	dpm-tfbs-command.cc dpm-tfbs-command.hh                               \
-	dpm-tfbs-options.hh mixture-weights.hh                                \
-	dpm-tfbs-repl.cc dpm-tfbs-repl.hh                                     \
-	dpm-tfbs-state.cc dpm-tfbs-state.hh dpm-tfbs-test.cc                  \
-	dpm-tfbs-sampler.cc dpm-tfbs-sampler.hh                               \
-	dpm-gaussian.cc dpm-gaussian.hh                                       \
-	state.cc state.hh mixture-state.cc mixture-state.hh                   \
-	cluster.cc cluster.hh                                                 \
-	component-model.cc component-model.hh                                 \
-	mixture-model.hh                                                      \
-	pmcmc.cc pmcmc.hh                                                     \
-	sampler.cc sampler.hh                                                 \
-	init.cc init.hh utility.hh                                            \
-	interface.cc interface.hh                                             \
-	dpm-gaussian-interface.cc dpm-gaussian-interface.hh                   \
-	dpm-tfbs-interface.cc dpm-tfbs-interface.hh
+libdpm_la_SOURCES =			\
+	abysmal-stack.hh		\
+	code.cc				\
+	code.hh				\
+	clonable.hh			\
+	cluster.cc			\
+	cluster.hh			\
+	component-model.cc		\
+	component-model.hh		\
+	datatypes.hh			\
+	data.hh				\
+	data-tfbs.cc			\
+	data-tfbs.hh			\
+	data-gaussian.cc		\
+	data-gaussian.hh		\
+	dpm-gaussian-interface.cc	\
+	dpm-gaussian-interface.hh	\
+	dpm-gaussian.cc			\
+	dpm-gaussian.hh			\
+	dpm-graph.hh			\
+	dpm-tfbs.cc			\
+	dpm-tfbs.hh			\
+	dpm-tfbs-command.cc		\
+	dpm-tfbs-command.hh		\
+	dpm-tfbs-interface.cc		\
+	dpm-tfbs-interface.hh		\
+	dpm-tfbs-io.cc			\
+	dpm-tfbs-io.hh			\
+	dpm-tfbs-repl.cc		\
+	dpm-tfbs-repl.hh		\
+	dpm-tfbs-options.hh		\
+	dpm-tfbs-prior.cc		\
+	dpm-tfbs-prior.hh		\
+	dpm-tfbs-sampler.cc		\
+	dpm-tfbs-sampler.hh		\
+	dpm-tfbs-state.cc		\
+	dpm-tfbs-state.hh		\
+	dpm-tfbs-test.cc		\
+	dpm-partition.hh		\
+	index.cc			\
+	index.hh			\
+	indexer.hh			\
+	init.cc				\
+	init.hh				\
+	interface.cc			\
+	interface.hh			\
+	mixture-model.hh		\
+	mixture-state.cc		\
+	mixture-state.hh		\
+	mixture-weights.hh		\
+	observer.hh			\
+	pmcmc.cc			\
+	pmcmc.hh			\
+	sampler.cc			\
+	sampler.hh			\
+	state.cc			\
+	state.hh			\
+	statistics.hh			\
+	utility.hh
 libdpm_la_LIBADD  = $(top_builddir)/libexception/libexception.la
 libdpm_la_LIBADD += $(top_builddir)/parsmm/libparsmm.la
 libdpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libfasta.la
