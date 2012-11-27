@@ -110,6 +110,27 @@ string print_expectation(const boost::array<double, alphabet_size>& expectation)
         return ss.str();
 }
 
+void test_line_search(
+        const pt_polynomial_t<code_t, alphabet_size>& result,
+        const exponent_t<code_t, alphabet_size>& alpha)
+{
+        pt_polynomial_t<code_t, alphabet_size> variational;
+        pt_polynomial_t<code_t, alphabet_size> variational_line;
+
+        variational      = pt_approximate<code_t, alphabet_size>(result);
+        variational_line = pt_line_search<code_t, alphabet_size>(variational, result.normalize(), alpha, 100);
+
+        cout << "h[Pa_,Pc_,Pg_,Pt_]:= "
+             << variational_line
+             << endl;
+
+        cout << "kldivl = "
+             << kl_divergence<code_t, alphabet_size>(variational_line, result.normalize(), alpha)
+             << ";"
+             << endl;
+
+}
+
 int main(void) {
 
         init();
@@ -128,21 +149,15 @@ int main(void) {
 
         pt_polynomial_t<code_t, alphabet_size> result(pt_root);
         pt_polynomial_t<code_t, alphabet_size> variational;
-        pt_polynomial_t<code_t, alphabet_size> variational_line;
 
         cout << "f[Pa_,Pc_,Pg_,Pt_]:= " << result.normalize() << endl;
 
         variational      = pt_approximate<code_t, alphabet_size>(result);
-        variational_line = pt_line_search<code_t, alphabet_size>(variational, result.normalize(), alpha, 100);
 
         cout << "g[Pa_,Pc_,Pg_,Pt_]:= " << variational << endl;
 
         cout << "fxpt = " 
              << print_expectation(pt_expectation(result, alpha))
-             << endl;
-
-        cout << "h[Pa_,Pc_,Pg_,Pt_]:= "
-             << variational_line
              << endl;
 
         cout << "gxpt = " 
@@ -154,10 +169,7 @@ int main(void) {
              << ";"
              << endl;
 
-        cout << "kldivl = "
-             << kl_divergence<code_t, alphabet_size>(variational_line, result.normalize(), alpha)
-             << ";"
-             << endl;
+        //test_line_search(result, alpha);
 
         pt_parsetree->destroy();
         pt_root->destroy();

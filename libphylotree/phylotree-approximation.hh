@@ -73,6 +73,7 @@ double variational_entropy(
         const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
 {
         /* fetch the exponent of the variational distribution */
+        assert(variational.size() == 1);
         const exponent_t<CODE_TYPE, ALPHABET_SIZE>& exponent = variational.begin()->exponent();
 
         double sum    = 0.0;
