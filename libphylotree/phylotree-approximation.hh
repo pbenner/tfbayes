@@ -67,13 +67,15 @@ double kl_divergence_f(double * x, size_t dim, void * params)
         }
 }
 
+/* Compute the entropy of the variational distribution. */
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 double variational_entropy(
         const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
         const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
 {
-        /* fetch the exponent of the variational distribution */
         assert(variational.size() == 1);
+
+        /* fetch the exponent of the variational distribution */
         const exponent_t<CODE_TYPE, ALPHABET_SIZE>& exponent = variational.begin()->exponent();
 
         double sum    = 0.0;
@@ -89,6 +91,11 @@ double variational_entropy(
         return result;
 }
 
+/* Compute the Kullback-Leibler divergence * D(q||p), where q is the
+ * variational distribution and p the actual distribution. This
+ * function uses numerical integration to solve the integral. The
+ * entropy of q can be solved analytically.
+ */
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 double kl_divergence(
         const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
@@ -142,6 +149,11 @@ double kl_divergence(
         return -result;
 }
 
+/* Define a line that goes through the origin and the approximated
+ * minimum (lower bound) of the Kullback-Leibler divergence. The
+ * actual minimum is assumed to be somewhere on this line close to
+ * the approximated point.
+ */
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_line(
         const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
@@ -158,6 +170,9 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_line(
         return term;
 }
 
+/* Perform a simple line search to find the actual minimum of the
+ * Kullback-Leibler divergence.
+ */
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_line_search(
         const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
@@ -218,6 +233,171 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_approximate(
                 }
         }
         result += result_term;
+
+        return result;
+}
+
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_multiroots.h>
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+boost::array<double, ALPHABET_SIZE>
+pt_optimize_dkl_params(
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly)
+{
+        boost::array<double, ALPHABET_SIZE> result;
+        double norm = -HUGE_VAL;
+
+        /* initialize result */
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                result[i] = -HUGE_VAL;
+        }
+
+        /* compute normalization constant */
+        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = poly.begin(); it != poly.end(); it++)
+        {
+                norm = logadd(norm, it->coefficient() + mbeta_log(it->exponent()));
+        }
+        /* for each member of the alphabet */
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                /* compute approximation */
+                for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = poly.begin(); it != poly.end(); it++)
+                {
+                        /* pi Beta(alpha_i) */
+                        double tmp1 = it->coefficient() + mbeta_log(it->exponent());
+                        double sum  = 0;
+                        /* sum the exponents */
+                        for (size_t j = 0; j < ALPHABET_SIZE; j++) {
+                                sum += it->exponent()[j];
+                        }
+                        /* digamma(alpha_i,k) - digamma(alpha_i,0),
+                         * but since this is negative we need to move
+                         * the negation outside the sum */
+                        double tmp2 = log(gsl_sf_psi(sum) - gsl_sf_psi(it->exponent()[i]));
+                        /* multiply the two partial results */
+                        result[i] = logadd(result[i], tmp1 + tmp2);
+                }
+        }
+        /* normalize the result and leave log scale */
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                /* negate here */
+                result[i] = -exp(result[i] - norm);
+        }
+        return result;
+}
+
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+int
+pt_optimize_dkl_f(
+        const gsl_vector * xi,
+        void *params,
+        gsl_vector * f)
+{
+        boost::array<double, ALPHABET_SIZE>& p =
+                *(boost::array<double, ALPHABET_SIZE>*)params;
+
+        double sum = 0;
+
+        /* check position */
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                if (gsl_vector_get(xi, i) < 0.0) {
+                        return GSL_FAILURE;
+                }
+        }
+
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                sum += gsl_vector_get(xi, i);
+        }
+
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                /* psi(xi_i) - psi(xi_0) - p_i */
+                const double xi_i = gsl_vector_get(xi, i);
+                const double  f_i =
+                        gsl_sf_psi(xi_i) - gsl_sf_psi(sum) - p[i];
+                gsl_vector_set(f, i, f_i);
+        }
+     
+        return GSL_SUCCESS;
+}
+
+/* Optimize the variational distribution q such that the
+ * Kullback-Leibler divergence D(p||q) is minimized. This function
+ * uses a simple root-finding algorithm to find the optimum.
+ */
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+polynomial_t<CODE_TYPE, ALPHABET_SIZE>
+optimize_dkl(
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& _poly,
+        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+{
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly = _poly.normalize();
+
+        /* integrate alpha into the polynomial */
+        poly *= alpha;
+
+        /* use the approximation as an initial value for optimizing
+         * the Kullback-Leibler divergence */
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE> variational =
+                pt_approximate<CODE_TYPE, ALPHABET_SIZE>(poly);
+
+        /* assert that this really is a variational distribution with
+         * only one component */
+        assert(variational.size() == 1);
+
+        /* copy the initial value to a GSL vector */
+        gsl_vector *x = gsl_vector_alloc(ALPHABET_SIZE);
+
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                gsl_vector_set(x, i, variational.begin()->exponent()[i]);
+        }
+
+        /* the parameters of the objective function */
+        boost::array<double, ALPHABET_SIZE> params =
+                pt_optimize_dkl_params(poly);
+
+        /* the root finding algorithm from GSL */
+        const gsl_multiroot_fsolver_type *T;
+        gsl_multiroot_fsolver *s;
+
+        /* some auxiliary variables */
+        int status;
+        size_t iter = 0;
+     
+        gsl_multiroot_function f = {
+                /* the objective function */
+                pt_optimize_dkl_f<CODE_TYPE, ALPHABET_SIZE>,
+                /* dimensionality of the problem */
+                ALPHABET_SIZE,
+                /* parameters for the objective function */
+                &params
+        };
+          
+        T = gsl_multiroot_fsolver_hybrids;
+        s = gsl_multiroot_fsolver_alloc (T, ALPHABET_SIZE);
+        gsl_multiroot_fsolver_set (s, &f, x);
+
+        do {
+                iter++;
+                status = gsl_multiroot_fsolver_iterate (s);
+
+                if (status)   /* check if solver is stuck */
+                        break;
+
+                status = gsl_multiroot_test_residual(s->f, 1e-7);
+        }
+        while (status == GSL_CONTINUE && iter < 1000);
+
+        /* copy the result to a polynomial */
+        exponent_t<CODE_TYPE, ALPHABET_SIZE> result;
+
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                result[i] = gsl_vector_get(x, i);
+        }
+
+        /* free GSL data structures */
+        gsl_multiroot_fsolver_free(s);
+        gsl_vector_free(x);
 
         return result;
 }

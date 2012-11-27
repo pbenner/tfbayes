@@ -190,6 +190,10 @@ public:
                 : boost::unordered_map<exponent_t<T, S>, C>() {
                 this->operator+=(polynomial_term_t<T, S, C>(constant));
         }
+        polynomial_t(const exponent_t<T, S>& exponent)
+                : boost::unordered_map<exponent_t<T, S>, C>() {
+                this->operator+=(polynomial_term_t<T, S, C>(std::pair<exponent_t<T, S>, C>(exponent, 1.0)));
+        }
         polynomial_t(const polynomial_term_t<T, S, C>& term)
                 : boost::unordered_map<exponent_t<T, S>, C>() {
                 this->operator+=(term);
@@ -297,6 +301,23 @@ public:
                 }
                 return result;
         }
+        /* normalize coefficients so they add up to one */
+        polynomial_t<T, S, C> normalize(void) const {
+                polynomial_t<T, S, C> result;
+                double norm = 0;
+
+                /* compute normalization constant */
+                for (typename polynomial_t<T, S, C>::const_iterator it = this->begin(); it != this->end(); it++)
+                {
+                        norm += it->coefficient();
+                }
+                for (typename polynomial_t<T, S, C>::const_iterator it = this->begin(); it != this->end(); it++)
+                {
+                        result += (*it) / norm;
+                }
+                return result;
+        }
+
         using boost::unordered_map<exponent_t<T, S>, C>::operator[];
         using boost::unordered_map<exponent_t<T, S>, C>::erase;
 

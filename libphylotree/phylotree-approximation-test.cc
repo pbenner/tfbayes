@@ -152,15 +152,15 @@ int main(void) {
 
         cout << "f[Pa_,Pc_,Pg_,Pt_]:= " << result.normalize() << endl;
 
-        variational      = pt_approximate<code_t, alphabet_size>(result);
+        variational = pt_approximate<code_t, alphabet_size>(result);
 
         cout << "g[Pa_,Pc_,Pg_,Pt_]:= " << variational << endl;
 
-        cout << "fxpt = " 
+        cout << "fxpt = "
              << print_expectation(pt_expectation(result, alpha))
              << endl;
 
-        cout << "gxpt = " 
+        cout << "gxpt = "
              << print_expectation(pt_expectation(variational, alpha))
              << endl;
 
@@ -170,6 +170,8 @@ int main(void) {
              << endl;
 
         //test_line_search(result, alpha);
+
+        optimize_dkl(result, alpha);
 
         pt_parsetree->destroy();
         pt_root->destroy();
