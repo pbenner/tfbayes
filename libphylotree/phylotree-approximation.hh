@@ -42,7 +42,8 @@ struct kl_divergence_data {
 };
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-double kl_divergence_f(double * x, size_t dim, void * params)
+double
+dkl_f(double * x, size_t dim, void * params)
 {
         struct kl_divergence_data<CODE_TYPE, ALPHABET_SIZE>* data =
                 (kl_divergence_data<CODE_TYPE, ALPHABET_SIZE> *)(params);
@@ -69,7 +70,8 @@ double kl_divergence_f(double * x, size_t dim, void * params)
 
 /* Compute the entropy of the variational distribution. */
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-double variational_entropy(
+double
+dkl_variational_entropy(
         const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
         const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
 {
@@ -97,7 +99,8 @@ double variational_entropy(
  * entropy of q can be solved analytically.
  */
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-double kl_divergence(
+double
+dkl(
         const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
         const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& likelihood,
         const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
@@ -117,7 +120,7 @@ double kl_divergence(
 
         /* generate the function that we want to integrate */
         double (*f)(double *, size_t, void *) =
-                kl_divergence_f<CODE_TYPE, ALPHABET_SIZE>;
+                dkl_f<CODE_TYPE, ALPHABET_SIZE>;
 
         struct kl_divergence_data<CODE_TYPE, ALPHABET_SIZE> data = {
                 variational, likelihood, alpha, theta
@@ -144,7 +147,7 @@ double kl_divergence(
 
         /* add - Int Q Log Q dw                                                *
          ***********************************************************************/
-        result += variational_entropy<CODE_TYPE, ALPHABET_SIZE>(variational, alpha);
+        result += dkl_variational_entropy<CODE_TYPE, ALPHABET_SIZE>(variational, alpha);
 
         return -result;
 }
@@ -155,7 +158,8 @@ double kl_divergence(
  * the approximated point.
  */
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_line(
+polynomial_t<CODE_TYPE, ALPHABET_SIZE>
+dkl_line(
         const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
         const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
         const double lambda)
@@ -174,13 +178,14 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_line(
  * Kullback-Leibler divergence.
  */
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_line_search(
+polynomial_t<CODE_TYPE, ALPHABET_SIZE>
+dkl_line_search(
         const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
         const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& likelihood,
         const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
         const size_t n)
 {
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> result = pt_line<CODE_TYPE, ALPHABET_SIZE>(variational, alpha, 1.0);
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE> result = dkl_line<CODE_TYPE, ALPHABET_SIZE>(variational, alpha, 1.0);
         /* step size */
         double epsilon = 0.01;
         /* how much to scale the step size */
@@ -188,12 +193,12 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_line_search(
         double eta2    = 0.50;
         /* position on the line */
         double lambda  = 1.0;
-        double kl = kl_divergence<CODE_TYPE, ALPHABET_SIZE>(result, likelihood, alpha);
+        double kl = dkl<CODE_TYPE, ALPHABET_SIZE>(result, likelihood, alpha);
         double kl_new;
 
         for (size_t i = 0; i < n; i++) {
-                result = pt_line<CODE_TYPE, ALPHABET_SIZE>(variational, alpha, lambda);
-                kl_new = kl_divergence<CODE_TYPE, ALPHABET_SIZE>(result, likelihood, alpha);
+                result = dkl_line<CODE_TYPE, ALPHABET_SIZE>(variational, alpha, lambda);
+                kl_new = dkl<CODE_TYPE, ALPHABET_SIZE>(result, likelihood, alpha);
                 if (kl_new < kl) {
                         /* go faster */
                         epsilon *= eta1;
@@ -212,7 +217,8 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_line_search(
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_approximate(
+polynomial_t<CODE_TYPE, ALPHABET_SIZE>
+dkl_approximate(
         const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly)
 {
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> result;
@@ -242,7 +248,7 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_approximate(
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 boost::array<double, ALPHABET_SIZE>
-pt_optimize_dkl_params(
+dkl_optimize_params(
         const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly)
 {
         boost::array<double, ALPHABET_SIZE> result;
@@ -289,7 +295,7 @@ pt_optimize_dkl_params(
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 int
-pt_optimize_dkl_f(
+dkl_optimize_f(
         const gsl_vector * xi,
         void *params,
         gsl_vector * f)
@@ -327,7 +333,7 @@ pt_optimize_dkl_f(
  */
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 polynomial_t<CODE_TYPE, ALPHABET_SIZE>
-optimize_dkl(
+dkl_optimize(
         const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& _poly,
         const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
 {
@@ -339,7 +345,7 @@ optimize_dkl(
         /* use the approximation as an initial value for optimizing
          * the Kullback-Leibler divergence */
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> variational =
-                pt_approximate<CODE_TYPE, ALPHABET_SIZE>(poly);
+                dkl_approximate<CODE_TYPE, ALPHABET_SIZE>(poly);
 
         /* assert that this really is a variational distribution with
          * only one component */
@@ -354,7 +360,7 @@ optimize_dkl(
 
         /* the parameters of the objective function */
         boost::array<double, ALPHABET_SIZE> params =
-                pt_optimize_dkl_params(poly);
+                dkl_optimize_params(poly);
 
         /* the root finding algorithm from GSL */
         const gsl_multiroot_fsolver_type *T;
@@ -366,7 +372,7 @@ optimize_dkl(
      
         gsl_multiroot_function f = {
                 /* the objective function */
-                pt_optimize_dkl_f<CODE_TYPE, ALPHABET_SIZE>,
+                dkl_optimize_f<CODE_TYPE, ALPHABET_SIZE>,
                 /* dimensionality of the problem */
                 ALPHABET_SIZE,
                 /* parameters for the objective function */
@@ -374,8 +380,8 @@ optimize_dkl(
         };
           
         T = gsl_multiroot_fsolver_hybrids;
-        s = gsl_multiroot_fsolver_alloc (T, ALPHABET_SIZE);
-        gsl_multiroot_fsolver_set (s, &f, x);
+        s = gsl_multiroot_fsolver_alloc(T, ALPHABET_SIZE);
+        gsl_multiroot_fsolver_set(s, &f, x);
 
         do {
                 iter++;

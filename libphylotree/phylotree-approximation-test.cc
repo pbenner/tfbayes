@@ -117,15 +117,15 @@ void test_line_search(
         pt_polynomial_t<code_t, alphabet_size> variational;
         pt_polynomial_t<code_t, alphabet_size> variational_line;
 
-        variational      = pt_approximate<code_t, alphabet_size>(result);
-        variational_line = pt_line_search<code_t, alphabet_size>(variational, result.normalize(), alpha, 100);
+        variational      = dkl_approximate<code_t, alphabet_size>(result);
+        variational_line = dkl_line_search<code_t, alphabet_size>(variational, result.normalize(), alpha, 100);
 
         cout << "h[Pa_,Pc_,Pg_,Pt_]:= "
              << variational_line
              << endl;
 
         cout << "kldivl = "
-             << kl_divergence<code_t, alphabet_size>(variational_line, result.normalize(), alpha)
+             << dkl<code_t, alphabet_size>(variational_line, result.normalize(), alpha)
              << ";"
              << endl;
 
@@ -152,7 +152,7 @@ int main(void) {
 
         cout << "f[Pa_,Pc_,Pg_,Pt_]:= " << result.normalize() << endl;
 
-        variational = pt_approximate<code_t, alphabet_size>(result);
+        variational = dkl_approximate<code_t, alphabet_size>(result);
 
         cout << "g[Pa_,Pc_,Pg_,Pt_]:= " << variational << endl;
 
@@ -165,13 +165,13 @@ int main(void) {
              << endl;
 
         cout << "kldiv = "
-             << kl_divergence<code_t, alphabet_size>(variational, result.normalize(), alpha)
+             << dkl<code_t, alphabet_size>(variational, result.normalize(), alpha)
              << ";"
              << endl;
 
         //test_line_search(result, alpha);
 
-        optimize_dkl(result, alpha);
+        dkl_optimize(result, alpha);
 
         pt_parsetree->destroy();
         pt_root->destroy();

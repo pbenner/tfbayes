@@ -202,7 +202,7 @@ vector_t* pt_approximate(pt_root_t* pt_root, vector_t* observations)
         pt_polynomial_t<code_t, alphabet_size> poly(pt_root);
 
         pt_polynomial_t<code_t, alphabet_size> variational
-                = pt_approximate<code_t, alphabet_size>(poly);
+                = dkl_approximate<code_t, alphabet_size>(poly);
 
         for (size_t i = 0; i < alphabet_size; i++) {
                 result->vec[i] = variational.begin()->exponent()[i];
