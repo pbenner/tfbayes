@@ -114,18 +114,18 @@ void test_line_search(
         const pt_polynomial_t<code_t, alphabet_size>& result,
         const exponent_t<code_t, alphabet_size>& alpha)
 {
-        pt_polynomial_t<code_t, alphabet_size> variational;
-        pt_polynomial_t<code_t, alphabet_size> variational_line;
+        pt_polynomial_t<code_t, alphabet_size> approximation;
+        pt_polynomial_t<code_t, alphabet_size> approximation_line;
 
-        variational      = dkl_approximate<code_t, alphabet_size>(result);
-        variational_line = dkl_line_search<code_t, alphabet_size>(variational, result.normalize(), alpha, 100);
+        approximation      = dkl_approximate<code_t, alphabet_size>(result);
+        approximation_line = dkl_line_search<code_t, alphabet_size>(approximation, result.normalize(), alpha, 100);
 
         cout << "h[Pa_,Pc_,Pg_,Pt_]:= "
-             << variational_line
+             << approximation_line
              << endl;
 
         cout << "kldivl = "
-             << dkl<code_t, alphabet_size>(variational_line, result.normalize(), alpha)
+             << dkl<code_t, alphabet_size>(approximation_line, result.normalize(), alpha)
              << ";"
              << endl;
 
@@ -148,30 +148,36 @@ int main(void) {
         pt_init(observations, pt_root);
 
         pt_polynomial_t<code_t, alphabet_size> result(pt_root);
+        pt_polynomial_t<code_t, alphabet_size> approximation;
         pt_polynomial_t<code_t, alphabet_size> variational;
 
         cout << "f[Pa_,Pc_,Pg_,Pt_]:= " << result.normalize() << endl;
 
-        variational = dkl_approximate<code_t, alphabet_size>(result);
+        approximation = dkl_approximate<code_t, alphabet_size>(result);
 
-        cout << "g[Pa_,Pc_,Pg_,Pt_]:= " << variational << endl;
+        cout << "g[Pa_,Pc_,Pg_,Pt_]:= " << approximation << endl;
 
         cout << "fxpt = "
              << print_expectation(pt_expectation(result, alpha))
              << endl;
 
         cout << "gxpt = "
-             << print_expectation(pt_expectation(variational, alpha))
+             << print_expectation(pt_expectation(approximation, alpha))
              << endl;
 
         cout << "kldiv = "
-             << dkl<code_t, alphabet_size>(variational, result.normalize(), alpha)
+             << dkl<code_t, alphabet_size>(approximation, result.normalize(), alpha)
              << ";"
              << endl;
 
         //test_line_search(result, alpha);
 
-        dkl_optimize(result, alpha);
+        variational = dkl_optimize(result, alpha);
+
+        cout << "kldiv = "
+             << dkl<code_t, alphabet_size>(variational, result.normalize(), alpha)
+             << ";"
+             << endl;
 
         pt_parsetree->destroy();
         pt_root->destroy();
