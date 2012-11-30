@@ -19,7 +19,7 @@ extern char *yytext;
 extern size_t line_count;
 
 int yyerror(const char *msg) {
-        fprintf(stderr, "%s at line %ld near `%s'\n", msg, line_count, yytext);
+        fprintf(stderr, "%s at line %d near `%s'\n", msg, (int)line_count, yytext);
         exit(EXIT_FAILURE);
 }
 
