@@ -7,6 +7,8 @@ pkgpythondir = $(pyexecdir)/tfbayes/dpm
 dist_bin_SCRIPTS = \
 	dpm-gaussian-demo \
 	dpm-tfbs-align \
+	dpm-tfbs-approximate \
+	dpm-tfbs-expectation \
 	dpm-tfbs-demo \
 	dpm-tfbs-graph \
 	dpm-tfbs-generate \
