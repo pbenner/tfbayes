@@ -162,7 +162,7 @@ void run_dpm(const char* file_name)
         vector<matrix<double> > baseline_priors;
         baseline_priors.push_back(matrix<double>());
         for (size_t i = 0; i < options.tfbs_length; i++) {
-                baseline_priors[0].push_back(vector<double>(4, 1.0));
+                baseline_priors[0].push_back(vector<double>(data_tfbs_t::alphabet_size, 1.0));
         }
 
         // tfbs options
