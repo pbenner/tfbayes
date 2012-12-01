@@ -2,7 +2,11 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = libexception libphylotree parsmm include tfbayes
+SUBDIRS  = libexception
+SUBDIRS += parsmm
+SUBDIRS += tfbayes
+SUBDIRS += libphylotree
+SUBDIRS += include
 
 EXTRA_DIST  = hdb-load-upstream.in hdb-load-chrom.in hdb-read-upstream.in hdb-read-chrom.in hdb-search-upstream.in hdb-search-chrom.in hdb-statistics-chrom.in hdb-statistics-upstream.in
 EXTRA_DIST += data/Katja_BowtieMACSpeaks/C_653_geno_1_seq.txt \
