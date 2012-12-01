@@ -68,7 +68,7 @@ options = {
 def print_result(container):
     print '>%s' % container['file_name']
     for result in container['result']:
-        for i in range(4):
+        for i in range(5):
             print '%11.8f' % result[i],
         print ";"
 

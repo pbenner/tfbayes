@@ -153,8 +153,14 @@ data_tfbs_t::read_fasta(const char* file_name)
         /* use a regular expression to match the multinomial counts of
          * a single column in the alignment, i.e. a line separated by
          * a semi-colon */
-        boost::regex e("^[[:space:]]*([[:digit:].]+)[[:space:]]+([[:digit:].]+)"
-                       "[[:space:]]+([[:digit:].]+)[[:space:]]+([[:digit:].]+)[[:space:]]*$");
+        boost::regex e("^"
+                       "[[:space:]]*([[:digit:].]+)"
+                       "[[:space:]]+([[:digit:].]+)"
+                       "[[:space:]]+([[:digit:].]+)"
+                       "[[:space:]]+([[:digit:].]+)"
+                       "[[:space:]]+([[:digit:].]+)"
+                       "[[:space:]]*"
+                       "$");
         boost::smatch what;
 
         /* this automatically parses the fasta file format */
