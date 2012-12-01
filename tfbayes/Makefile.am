@@ -1,6 +1,12 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = fasta humandb dpm motif phylotree uipac tools
+SUBDIRS  = fasta
+#SUBDISS += humandb
+SUBDIRS += dpm
+SUBDIRS += motif
+SUBDIRS += phylotree
+SUBDIRS += uipac
+SUBDIRS += tools
 
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes
