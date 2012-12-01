@@ -278,6 +278,11 @@ int main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 	}
+        if(optind+1 != argc) {
+                wrong_usage("Wrong number of arguments.");
+                exit(EXIT_FAILURE);
+        }
+
         cout << options << endl;
 
 	file_name = argv[optind];

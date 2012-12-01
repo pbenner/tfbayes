@@ -38,7 +38,7 @@ using namespace std;
 // Constants
 ////////////////////////////////////////////////////////////////////////////////
 
-static const size_t ALPHABET_SIZE = dpm_tfbs_t::ALPHABET_SIZE; 
+static const size_t ALPHABET_SIZE = data_tfbs_t::alphabet_size; 
 static const size_t PARSMM_DEPTH  = 2; 
 
 // Standard output

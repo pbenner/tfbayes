@@ -75,8 +75,7 @@ public:
 
         // constants
         ////////////////////////////////////////////////////////////////////////
-        static const size_t ALPHABET_SIZE = 4;
-        static const size_t BG_LENGTH     = 1;
+        static const size_t BG_LENGTH = 1;
 
 private:
         // baseline models

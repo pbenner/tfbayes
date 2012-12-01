@@ -68,12 +68,12 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
         }
         else if (options.background_model == "markov chain mixture") {
                 assert(options.background_context >= 0);
-                markov_chain_mixture_t* bg = new markov_chain_mixture_t(ALPHABET_SIZE, options, _data, _state.cluster_assignments, 0);
+                markov_chain_mixture_t* bg = new markov_chain_mixture_t(data_tfbs_t::alphabet_size, options, _data, _state.cluster_assignments, 0);
                 bg_cluster_tag = _state.add_cluster(bg);
         }
         // else if (options.background_model == "parsimonious tree") {
         //         assert(options.background_context >= 0);
-        //         parsimonious_tree_t* bg = new parsimonious_tree_t(ALPHABET_SIZE, options.background_context, _data, _state.cluster_assignments, 0);
+        //         parsimonious_tree_t* bg = new parsimonious_tree_t(data_tfbs_t::alphabet_size, options.background_context, _data, _state.cluster_assignments, 0);
         //         bg_cluster_tag = _state.add_cluster(bg);
         // }
         else {
@@ -348,7 +348,7 @@ dpm_tfbs_t::init_alpha(size_t length)
 
         // initialize prior for the background model
         for (size_t i = 0; i < length; i++) {
-                alpha.push_back(std::vector<double>(ALPHABET_SIZE, 1));
+                alpha.push_back(std::vector<double>(data_tfbs_t::alphabet_size, 1));
         }
         return alpha;
 }

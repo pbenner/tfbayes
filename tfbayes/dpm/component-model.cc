@@ -79,7 +79,7 @@ product_dirichlet_t::product_dirichlet_t(const matrix<double>& _alpha, const seq
                 alpha .push_back(counts_t());
                 counts.push_back(counts_t());
                 for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
-                        alpha[i][j] = _alpha[i][j];
+                        alpha [i][j] = _alpha[i][j];
                         counts[i][j] = _alpha[i][j];
                 }
         }
