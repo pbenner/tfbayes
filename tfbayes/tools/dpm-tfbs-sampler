@@ -162,7 +162,7 @@ def parse_config(config_file):
 def sample():
     # generate baseline
     if not options['baseline_priors']:
-        options['baseline_priors'].append([ [ 1 for j in range(options['tfbs_length']) ] for i in range(4) ])
+        options['baseline_priors'].append([ [ 1 for j in range(options['tfbs_length']) ] for i in range(5) ])
     if not len(options['baseline_priors']) == len(options['baseline_weights']):
         if options['verbose']:
             print "Setting uniform weights for baseline priors"

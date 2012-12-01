@@ -82,7 +82,10 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
         }
         // add model components for the baseline measure
         for (size_t i = 0; i < options.baseline_priors.size(); i++) {
-                assert(options.tfbs_length == options.baseline_priors[i].size());
+                assert(options.baseline_priors[i].size() == options.tfbs_length);
+                for (size_t j = 0; j < options.tfbs_length; j++) {
+                        assert(options.baseline_priors[i][j].size() == data_tfbs_t::alphabet_size);
+                }
                 product_dirichlet_t* dirichlet = new product_dirichlet_t(options.baseline_priors[i], _data);
                 const model_tag_t model_tag = _state.add_baseline_model(dirichlet);
                 _model_tags.push_back(model_tag);
@@ -200,6 +203,9 @@ dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_
         ssize_t mixture_n  = mixture_components();
         ssize_t baseline_n = baseline_components();
         double sum         = -HUGE_VAL;
+
+        cout << "sampling: " << (const seq_index_t&)index << endl;
+        cout << "clusters: " << _state.size() << endl;
 
         cluster_tag_t i = 0;
         ////////////////////////////////////////////////////////////////////////

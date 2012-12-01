@@ -152,6 +152,21 @@ dpm_tfbs_t::test_background() {
         exit(EXIT_SUCCESS);
 }
 
+#include <tfbayes/logarithmetic.h>
+
+void normalize(size_t components, double *log_weights)
+{
+        double sum = -HUGE_VAL;
+
+        for (size_t i = 0; i < components; i++) {
+                sum = logadd(sum, log_weights[i]);
+        }
+
+        for (size_t i = 0; i < components; i++) {
+                log_weights[i] -= sum;
+        }
+}
+
 void
 dpm_tfbs_t::test() {
         seq_index_t index1(0,0);
@@ -176,6 +191,10 @@ dpm_tfbs_t::test() {
 
         cout << "Sampling index3:" << index3 << endl;
         mixture_weights(index3, log_weights, cluster_tags);
+        normalize(components, log_weights);
+        for (size_t i = 0; i < components; i++) {
+                cout << "weight " << i << ": " << exp(log_weights[i]) << endl;
+        }
         for (size_t i = 0; i < 100; i++) {
                 new_cluster_tag = cluster_tags[select_component(components, log_weights)];
                 cout << "selected cluster " << new_cluster_tag << endl;
@@ -183,6 +202,9 @@ dpm_tfbs_t::test() {
 
         cout << "Sampling index4:" << index4 << endl;
         mixture_weights(index4, log_weights, cluster_tags);
+        for (size_t i = 0; i < components; i++) {
+                cout << "weight " << i << ": " << log_weights[i] << endl;
+        }
         for (size_t i = 0; i < 100; i++) {
                 new_cluster_tag = cluster_tags[select_component(components, log_weights)];
                 cout << "selected cluster " << new_cluster_tag << endl;
