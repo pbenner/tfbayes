@@ -51,6 +51,7 @@ public:
         }
         // make sure that every element is cloned
         index_set_t& operator=(const index_set_t& index_set) {
+                this->clear();
                 for (set_t::const_iterator it = index_set.begin();
                      it != index_set.end(); it++) {
                         insert(**it);

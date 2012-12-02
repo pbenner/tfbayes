@@ -67,6 +67,116 @@ double mbeta_log(
         return sum2 - gsl_sf_lngamma(sum1);
 }
 
+// Independence Background Model
+////////////////////////////////////////////////////////////////////////////////
+
+independence_background_t::independence_background_t(
+        const matrix<double>& _alpha,
+        const sequence_data_t<data_tfbs_t::code_t>& data,
+        const sequence_data_t<cluster_tag_t>& cluster_assignments)
+        : _data(data),
+          _cluster_assignments(cluster_assignments),
+          _size(data_tfbs_t::alphabet_size),
+          _bg_cluster_tag(0)
+{
+
+        assert(_alpha.size() == 1);
+        assert(_alpha[0].size() == data_tfbs_t::alphabet_size);
+
+        for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
+                alpha[j] = _alpha[0][j];
+        }
+}
+
+independence_background_t::independence_background_t(const independence_background_t& distribution)
+        : alpha (distribution.alpha),
+          _data(distribution._data),
+          _cluster_assignments(distribution._cluster_assignments),
+          _size(distribution._size),
+          _bg_cluster_tag(distribution._bg_cluster_tag)
+{
+}
+
+independence_background_t::~independence_background_t() {
+}
+
+independence_background_t*
+independence_background_t::clone() const {
+        return new independence_background_t(*this);
+}
+
+size_t
+independence_background_t::add(const range_t& range) {
+        return range.length;
+}
+
+size_t
+independence_background_t::remove(const range_t& range) {
+        return range.length;
+}
+
+size_t
+independence_background_t::count(const range_t& range) {
+        return range.length;
+}
+
+/*
+ *  p(y|x) = Beta(n(x) + n(y) + alpha) / Beta(n(x) + alpha)
+ */
+double independence_background_t::predictive(const range_t& range) {
+        return exp(log_predictive(range));
+}
+
+double independence_background_t::log_predictive(const range_t& range) {
+        const size_t sequence = range.index[0];
+        const size_t position = range.index[1];
+        const size_t length   = range.length;
+        double result = 0;
+
+        for (size_t i = 0; i < length; i++) {
+                seq_index_t index(sequence, position+i);
+
+                /* counts contains the data count statistic
+                 * and the pseudo counts alpha */
+                result += mbeta_log(alpha, _data[index])
+                        - mbeta_log(alpha);
+        }
+
+        return result;
+}
+
+/*
+ *  p(x) = Beta(n(x) + alpha) / Beta(alpha)
+ */
+double independence_background_t::log_likelihood() const {
+        double result = 0;
+
+        /* counts contains the data count statistic
+         * and the pseudo counts alpha */
+        // TODO
+        for(size_t i = 0; i < _cluster_assignments.size(); i++) {
+                for(size_t j = 0; j < _cluster_assignments[i].size(); j++) {
+                        if (_cluster_assignments[i][j] == _bg_cluster_tag) {
+                                const seq_index_t index(i, j);
+                                result += mbeta_log(alpha, _data[index])
+                                        - mbeta_log(alpha);
+                        }
+                }
+        }
+
+        return result;
+}
+
+string
+independence_background_t::print_counts() const {
+        return string();
+}
+
+void
+independence_background_t::set_bg_cluster_tag(cluster_tag_t bg_cluster_tag) {
+        _bg_cluster_tag = bg_cluster_tag;
+}
+
 // Multinomial/Dirichlet Model
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -229,7 +339,7 @@ markov_chain_mixture_t::markov_chain_mixture_t(
         }
         /* init counts */
         for (size_t i = 0; i < _length; i++) {
-                _alpha[i]  = options.background_alpha;
+                _alpha[i]  = options.background_alpha[0][0];
                 _counts[i] = 0.0;
                 _counts_sum[i/_alphabet_size] += _alpha[i] + _counts[i];
         }

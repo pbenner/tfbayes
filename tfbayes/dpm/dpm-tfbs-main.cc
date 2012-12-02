@@ -65,7 +65,7 @@ typedef struct _options_t {
                   metropolis_optimize(true),
                   process_prior("pitman-yor process"),
                   background_model("independence"),
-                  background_alpha(0.5),
+                  background_alpha(1),
                   background_context(2),
                   background_weights("entropy"),
                   population_size(1),
@@ -155,7 +155,11 @@ ostream& operator<< (ostream& o, const product_dirichlet_t& pd) {
 static
 void run_dpm(const char* file_name)
 {
+        tfbs_options_t tfbs_options;
         sequence_data_t<data_tfbs_t::code_t> sequences(data_tfbs_t::read_fasta(file_name));
+
+        // background alpha
+        tfbs_options.background_alpha.push_back(vector<double>(data_tfbs_t::alphabet_size, options.background_alpha));
 
         // baseline
         vector<double> baseline_weights(1,1);
@@ -166,7 +170,6 @@ void run_dpm(const char* file_name)
         }
 
         // tfbs options
-        tfbs_options_t tfbs_options;
         tfbs_options.alpha               = options.alpha;
         tfbs_options.lambda              = options.lambda;
         tfbs_options.discount            = options.discount;
@@ -175,7 +178,6 @@ void run_dpm(const char* file_name)
         tfbs_options.metropolis_optimize = options.metropolis_optimize;
         tfbs_options.process_prior       = options.process_prior;
         tfbs_options.background_model    = options.background_model;
-        tfbs_options.background_alpha    = options.background_alpha;
         tfbs_options.background_context  = options.background_context;
         tfbs_options.background_weights  = options.background_weights;
         tfbs_options.baseline_weights    = baseline_weights;

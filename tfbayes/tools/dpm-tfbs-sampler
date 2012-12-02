@@ -46,7 +46,7 @@ options = {
     'metropolis_optimize' : True,
     'process_prior'       : "pitman-yor process",
     'background_model'    : "independence",
-    'background_alpha'    : 0.5,
+    'background_alpha'    : [[1],[1],[1],[1],[5]],
     'background_context'  : 2,
     'background_weights'  : 'decay',
     'samples'             : (1000,100),
@@ -72,7 +72,6 @@ def usage():
     print "processed with `dpm-tfbs-approximate'."
     print
     print "Options:"
-    print "       --alpha=ALPHA              - alpha parameter for the dirichlet process"
     print "       --discount=DISCOUNT        - Pitman-Yor discount (0 <= d < 1)"
     print "       --lambda=LAMBDA            - lambda mixture weight"
     print "       --context=CONTEXT          - context of the background model"
@@ -130,7 +129,7 @@ def parse_config(config_file):
     if config_parser.has_option('TFBS-Sampler', 'background-model'):
         options['background_model'] = config_parser.get('TFBS-Sampler', 'background-model').strip()
     if config_parser.has_option('TFBS-Sampler', 'background-alpha'):
-        options['background_alpha'] = float(config_parser.get('TFBS-Sampler', 'background-alpha'))
+        options['background_alpha'] = read_matrix(config_parser, 'TFBS-Sampler', 'background-alpha', float)
     if config_parser.has_option('TFBS-Sampler', 'background-context'):
         options['background_context'] = int(config_parser.get('TFBS-Sampler', 'background-context'))
     if config_parser.has_option('TFBS-Sampler', 'background-weights'):
@@ -180,7 +179,7 @@ def sample():
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "alpha=", "lambda=", "discount=",
+        longopts   = ["help", "verbose", "lambda=", "discount=",
                       "context", "process-prior=", "backround-model=",
                       "population-size=", "tfbs-length=", "save=", "samples="]
         opts, tail = getopt.getopt(sys.argv[1:], "s:vh", longopts)
@@ -201,8 +200,6 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
-        if o == "--alpha":
-            options['alpha'] = float(a)
         if o == "--discount":
             if 0 <= float(a) and float(a) < 1:
                 options['discount'] = float(a)

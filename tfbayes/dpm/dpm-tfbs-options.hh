@@ -34,7 +34,7 @@ typedef struct {
         bool metropolis_optimize;
         std::string process_prior;
         std::string background_model;
-        double background_alpha;
+        std::matrix<double> background_alpha;
         size_t background_context;
         std::string background_weights;
         std::vector<double> baseline_weights;

@@ -66,6 +66,9 @@ def usage():
     print
     print "dpm-tfbs-plot [option]... RESULT [SEQUENCES]"
     print
+    print "This program plots the log posterior and number of clusters of"
+    print "a sampling run."
+    print
     print "Options:"
     print "   -s, --save=FILE                - save plot to FILE"
     print
@@ -125,22 +128,22 @@ def parseConfig(config_file):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
 
-    posterior  = readMatrix(config_parser, 'Result', 'posterior', float)
-    likelihood = readMatrix(config_parser, 'Result', 'likelihood', float)
+    posterior  = readMatrix(config_parser, 'Result', 'posterior',  float)
+    posterior  = readMatrix(config_parser, 'Result', 'posterior',  float)
     components = readMatrix(config_parser, 'Result', 'components', int)
 
-    return normalize(posterior), likelihood, components
+    return normalize(posterior), posterior, components
 
 # plot
 # ------------------------------------------------------------------------------
 
-def plot_likehood(likelihood, show):
+def plot_posterior(posterior, show):
     fig = pyplot.figure()
     fig.subplots_adjust(left=0.15)
     ax  = fig.add_subplot(111)
     ax.set_xlabel("sample")
-    ax.set_ylabel("log likelihood")
-    for l in likelihood:
+    ax.set_ylabel("log posterior")
+    for l in posterior:
         ax.plot(l)
     show()
 
@@ -153,19 +156,19 @@ def plot_components(components, show):
         ax.plot(c)
     show()
 
-def plot_likelihood_and_components(likelihood, components, show):
+def plot_posterior_and_components(posterior, components, show):
     fig = pyplot.figure()
     fig.subplots_adjust(left=0.15)
     ax1 = fig.add_subplot(111)
     ax2 = ax1.twinx()
     ax1.set_xlabel("sample")
-    ax1.set_ylabel("log likelihood")
+    ax1.set_ylabel("log posterior")
     ax2.set_ylabel("components")
-    for l in likelihood:
+    for l in posterior:
         p1 = ax1.plot(l, 'b')
     for c in components:
         p2 = ax2.plot(c, 'r')
-    ax1.legend([p1, p2], ['log likelihood', 'components'], ncol=2, mode='expand', loc=3, frameon=False, borderaxespad=0.)
+    ax1.legend([p1, p2], ['log posterior', 'components'], ncol=2, mode='expand', loc=3, frameon=False, borderaxespad=0.)
     show()
 
 def split_len(seq, length):
@@ -204,10 +207,10 @@ def plot_result(results_file):
         importMatplotlib()
         show  = pyplot.show
         close = None
-    posterior, likelihood, components = parseConfig(results_file)
-    plot_likehood(likelihood, show)
+    posterior, posterior, components = parseConfig(results_file)
+    plot_posterior(posterior, show)
     plot_components(components, show)
-#    plot_likelihood_and_components(likelihood, components, show)
+#    plot_posterior_and_components(posterior, components, show)
     if options['sequences']:
         descriptions, sequences = readSequences(options['sequences'])
         plot_sequences(descriptions, sequences, posterior, show)

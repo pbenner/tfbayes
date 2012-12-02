@@ -101,9 +101,6 @@ private:
         // process priors
         dpm_tfbs_prior_t* _process_prior;
 
-        // standard priors
-        static std::matrix<double> init_alpha(size_t length);
-
         // whether or not to construct a graph from the samples
         bool _construct_graph;
 };

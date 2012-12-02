@@ -64,7 +64,7 @@ class OPTIONS(Structure):
                  ("metropolis_optimize", c_bool),
                  ("process_prior",       c_char_p),
                  ("background_model",    c_char_p),
-                 ("background_alpha",    c_double),
+                 ("background_alpha",    POINTER(MATRIX)),
                  ("background_context",  c_ulong),
                  ("background_weights",  c_char_p),
                  ("baseline_weights",    POINTER(VECTOR)),
@@ -162,7 +162,8 @@ def dpm_init(options, input_file):
      c_options.contents.metropolis_optimize = options['metropolis_optimize']
      c_options.contents.process_prior = options['process_prior']
      c_options.contents.background_model = options['background_model']
-     c_options.contents.background_alpha = options['background_alpha']
+     c_options.contents.background_alpha = _lib._alloc_matrix(len(options['background_alpha'][0]), len(options['background_alpha']))
+     copy_matrix_to_c(map(list, zip(*options['background_alpha'])), c_options.contents.background_alpha)
      c_options.contents.background_context = options['background_context']
      c_options.contents.background_weights = options['background_weights']
      c_options.contents.tfbs_length = options['tfbs_length']

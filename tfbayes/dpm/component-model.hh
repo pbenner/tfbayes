@@ -67,6 +67,45 @@ public:
         virtual std::string print_counts() const { return std::string(); }
 };
 
+// Independence Background Model
+////////////////////////////////////////////////////////////////////////////////
+
+class independence_background_t : public component_model_t {
+public:
+         independence_background_t(
+                 const std::matrix<double>& alpha,
+                 const sequence_data_t<data_tfbs_t::code_t>& data,
+                 const sequence_data_t<cluster_tag_t>& cluster_assignments);
+         independence_background_t(const independence_background_t& distribution);
+        ~independence_background_t();
+
+        independence_background_t* clone() const;
+
+        // datatypes
+        typedef data_tfbs_t::code_t counts_t;
+
+        size_t add(const range_t& range);
+        size_t remove(const range_t& range);
+        size_t count(const range_t& range);
+        double predictive(const range_t& range);
+        double log_predictive(const range_t& range);
+        double log_likelihood() const;
+        virtual std::string print_counts() const;
+        void set_bg_cluster_tag(cluster_tag_t cluster_tag);
+
+        friend std::ostream& operator<< (std::ostream& o, const independence_background_t& pd);
+
+private:
+        counts_t alpha;
+
+        const sequence_data_t<data_tfbs_t::code_t>& _data;
+        const sequence_data_t<cluster_tag_t>& _cluster_assignments;
+
+        const size_t _size;
+
+        cluster_tag_t _bg_cluster_tag;
+};
+
 // Multinomial/Dirichlet Model
 ////////////////////////////////////////////////////////////////////////////////
 

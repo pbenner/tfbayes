@@ -23,8 +23,10 @@
 #endif /* HAVE_CONFIG_H */
 
 static inline
-size_t select_component_log(size_t k, double log_weights[])
+size_t select_component(size_t k, double log_weights[])
 {
+        /* log_weights are cumulative */
+
         const double r = (double)rand()/RAND_MAX;
 
         if (r == 0.0) {
@@ -34,37 +36,6 @@ size_t select_component_log(size_t k, double log_weights[])
         const double log_r = log(r) + log_weights[k-1];
         for (size_t i = 0; i < k-1; i++) {
                 if (log_r <= log_weights[i]) {
-                        return i;
-                }
-        }
-        return k-1;
-}
-
-#include <tfbayes/logarithmetic.h>
-
-static inline
-size_t select_component(size_t k, double log_weights[])
-{
-        const double r = (double)rand()/RAND_MAX;
-
-        if (r == 0.0) {
-                return 0;
-        }
-
-        /* normalize weights */
-        double sum = -HUGE_VAL;
-        for (size_t i = 0; i < k; i++) {
-                sum = logadd(sum, log_weights[i]);
-        }
-        for (size_t i = 0; i < k; i++) {
-                log_weights[i] -= sum;
-        }
-
-        /* select component */
-        sum = 0.0;
-        for (size_t i = 0; i < k; i++) {
-                sum += exp(log_weights[i]);
-                if (r <= sum) {
                         return i;
                 }
         }

@@ -62,9 +62,10 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
         ////////////////////////////////////////////////////////////////////////////////
         // add background model to the state
         if (options.background_model == "independence" || options.background_model == "") {
-                const matrix<double>& bg_alpha = init_alpha(BG_LENGTH);
-                product_dirichlet_t* bg = new product_dirichlet_t(bg_alpha, _data);
+                // product_dirichlet_t* bg = new product_dirichlet_t(options.background_alpha, _data);
+                independence_background_t* bg = new independence_background_t(options.background_alpha, _data, _state.cluster_assignments);
                 bg_cluster_tag = _state.add_cluster(bg);
+                bg->set_bg_cluster_tag(bg_cluster_tag);
         }
         else if (options.background_model == "markov chain mixture") {
                 assert(options.background_context >= 0);
@@ -204,9 +205,6 @@ dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_
         ssize_t baseline_n = baseline_components();
         double sum         = -HUGE_VAL;
 
-        cout << "sampling: " << (const seq_index_t&)index << endl;
-        cout << "clusters: " << _state.size() << endl;
-
         cluster_tag_t i = 0;
         ////////////////////////////////////////////////////////////////////////
         // loop through existing clusters
@@ -345,18 +343,6 @@ dpm_tfbs_t::state() {
 const dpm_tfbs_state_t&
 dpm_tfbs_t::state() const {
         return _state;
-}
-
-std::matrix<double>
-dpm_tfbs_t::init_alpha(size_t length)
-{
-        std::matrix<double> alpha;
-
-        // initialize prior for the background model
-        for (size_t i = 0; i < length; i++) {
-                alpha.push_back(std::vector<double>(data_tfbs_t::alphabet_size, 1));
-        }
-        return alpha;
 }
 
 // misc methods

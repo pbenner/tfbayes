@@ -47,7 +47,7 @@ typedef struct {
         bool metropolis_optimize;
         const char* process_prior;
         const char* background_model;
-        double background_alpha;
+        matrix_t* background_alpha;
         size_t background_context;
         const char* background_weights;
         vector_t*  baseline_weights;
@@ -117,9 +117,21 @@ options_t* _dpm_tfbs_options()
 
 void _dpm_tfbs_init(const char* file_name)
 {
+        tfbs_options_t tfbs_options;
+
         __dpm_init__();
 
         _sequences = data_tfbs_t::read_fasta(file_name);
+
+        // background alpha
+        for (size_t i = 0; i < _options.background_alpha->rows; i++) {
+                tfbs_options.background_alpha.push_back(
+                        vector<double>(_options.background_alpha->columns, 0));
+                for (size_t j = 0; j < _options.background_alpha->columns; j++) {
+                        tfbs_options.background_alpha[i][j] = 
+                                _options.background_alpha->mat[i][j];
+                }
+        }
 
         // baseline priors
         vector<double> baseline_weights;
@@ -138,7 +150,6 @@ void _dpm_tfbs_init(const char* file_name)
         }
 
         // tfbs options
-        tfbs_options_t tfbs_options;
         tfbs_options.alpha               = _options.alpha;
         tfbs_options.lambda              = _options.lambda;
         tfbs_options.discount            = _options.discount;
@@ -147,7 +158,6 @@ void _dpm_tfbs_init(const char* file_name)
         tfbs_options.tfbs_length         = _options.tfbs_length;
         tfbs_options.process_prior       = _options.process_prior;
         tfbs_options.background_model    = _options.background_model;
-        tfbs_options.background_alpha    = _options.background_alpha;
         tfbs_options.background_context  = _options.background_context;
         tfbs_options.background_weights  = _options.background_weights;
         tfbs_options.baseline_weights    = baseline_weights;
