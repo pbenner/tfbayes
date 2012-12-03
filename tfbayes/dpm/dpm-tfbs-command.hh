@@ -60,4 +60,10 @@ public:
 
 };
 
+class print_posterior_t : public command_t {
+public:
+        std::string operator()(const dpm_tfbs_state_t& state, dpm_tfbs_sampler_t& sampler) const;
+
+};
+
 #endif /* DPM_TFBS_COMMAND_HH */

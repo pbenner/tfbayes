@@ -80,7 +80,8 @@ print_cluster_elements_t::operator()(const dpm_tfbs_state_t& state, dpm_tfbs_sam
                                    << setw(5)
                                    << sequence << ":"
                                    << setw(5)
-                                   << position << ": ";
+                                   << position << ": "
+                                   << endl;
                                 for (size_t i = 0; i < length; i++) {
                                         ss << sampler.sequences[sequence][position+i];
                                 }
@@ -102,6 +103,22 @@ print_likelihood_t::operator()(const dpm_tfbs_state_t& state, dpm_tfbs_sampler_t
         ss << sampler.name() << ": (likelihood)" << endl;
         for (size_t i = 0; i < history.likelihood[0].size(); i++) {
                 ss << history.likelihood[0][i] << " ";
+        }
+
+        return ss.str();
+}
+
+// print_posterior_t
+////////////////////////////////////////////////////////////////////////////////
+
+string
+print_posterior_t::operator()(const dpm_tfbs_state_t& state, dpm_tfbs_sampler_t& sampler) const {
+        const sampling_history_t& history = sampler.sampling_history();
+        stringstream ss;
+
+        ss << sampler.name() << ": (posterior)" << endl;
+        for (size_t i = 0; i < history.posterior[0].size(); i++) {
+                ss << history.posterior[0][i] << " ";
         }
 
         return ss.str();

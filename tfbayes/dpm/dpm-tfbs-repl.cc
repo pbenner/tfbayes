@@ -97,6 +97,7 @@ repl_t::command_help(const vector<string>& t, stringstream& ss) const {
            << "   print cluster_elements SAMPLER CLUSTER"          << endl
            << "   print cluster_counts   SAMPLER CLUSTER"          << endl
            << "   print likelihood       SAMPLER"                  << endl
+           << "   print posterior        SAMPLER"                  << endl
            << "   save SAMPLER FILENAME"                           << endl
            << endl;
 }
@@ -144,6 +145,18 @@ repl_t::command_print(const vector<string>& t, stringstream& ss) const {
                 const size_t sampler = atoi(t[2].c_str())-1;
                 if (sampler < _command_queue.size()) {
                         _command_queue[sampler]->push(new print_likelihood_t());
+                        ss << "Command queued."
+                           << endl;
+                }
+                else {
+                        ss << "Sampler does not exist."
+                           << endl;
+                }
+        }
+        else if (t.size() == 3 && t[1] == "posterior") {
+                const size_t sampler = atoi(t[2].c_str())-1;
+                if (sampler < _command_queue.size()) {
+                        _command_queue[sampler]->push(new print_posterior_t());
                         ss << "Command queued."
                            << endl;
                 }
