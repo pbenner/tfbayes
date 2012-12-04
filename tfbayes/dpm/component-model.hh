@@ -104,6 +104,8 @@ private:
         const size_t _size;
 
         cluster_tag_t _bg_cluster_tag;
+
+        sequence_data_t<double> _precomputed_mbeta;
 };
 
 // Multinomial/Dirichlet Model

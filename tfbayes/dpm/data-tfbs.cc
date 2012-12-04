@@ -63,8 +63,6 @@ data_tfbs_t::data_tfbs_t(const sequence_data_t<code_t>& sequences, size_t tfbs_l
 {
         // loop over sequences
         for(size_t i = 0; i < sequences.size(); i++) {
-                // store length of sequences
-                this->sequences_length.push_back(sequences[i].size());
                 // loop over elements in a sequence
                 for(size_t j = 0; j < sequences[i].size(); j++) {
                         // generate an index of this position
@@ -90,7 +88,6 @@ data_tfbs_t::data_tfbs_t(const sequence_data_t<code_t>& sequences, size_t tfbs_l
 
 data_tfbs_t::data_tfbs_t(const data_tfbs_t& data)
         : sequence_data_t<code_t>(*this),
-          sequences_length(data.sequences_length),
           _n_sequences(data._n_sequences),
           _elements(data._elements)
 {
@@ -121,12 +118,6 @@ data_tfbs_t::~data_tfbs_t()
 void
 data_tfbs_t::shuffle() {
         random_shuffle(sampling_indices.begin(), sampling_indices.end());
-}
-
-const std::vector<size_t>&
-data_tfbs_t::sizes() const
-{
-        return sequences_length;
 }
 
 bool

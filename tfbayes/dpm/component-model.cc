@@ -77,7 +77,8 @@ independence_background_t::independence_background_t(
         : _data(data),
           _cluster_assignments(cluster_assignments),
           _size(data_tfbs_t::alphabet_size),
-          _bg_cluster_tag(0)
+          _bg_cluster_tag(0),
+          _precomputed_mbeta(data.sizes(), 0)
 {
 
         assert(_alpha.size() == 1);
@@ -86,6 +87,16 @@ independence_background_t::independence_background_t(
         for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
                 alpha[j] = _alpha[0][j];
         }
+
+        /* go through the data and precompute mbeta(n + alpha) -
+         * mbeta(alpha) */
+        for(size_t i = 0; i < _data.size(); i++) {
+                for(size_t j = 0; j < _data[i].size(); j++) {
+                        _precomputed_mbeta[i][j] =
+                                  mbeta_log(alpha, _data[i][j])
+                                - mbeta_log(alpha);
+                }
+        }        
 }
 
 independence_background_t::independence_background_t(const independence_background_t& distribution)
@@ -93,7 +104,8 @@ independence_background_t::independence_background_t(const independence_backgrou
           _data(distribution._data),
           _cluster_assignments(distribution._cluster_assignments),
           _size(distribution._size),
-          _bg_cluster_tag(distribution._bg_cluster_tag)
+          _bg_cluster_tag(distribution._bg_cluster_tag),
+          _precomputed_mbeta(distribution._precomputed_mbeta)
 {
 }
 
@@ -138,8 +150,9 @@ double independence_background_t::log_predictive(const range_t& range) {
 
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result += mbeta_log(alpha, _data[index])
-                        - mbeta_log(alpha);
+                // result += mbeta_log(alpha, _data[index])
+                //         - mbeta_log(alpha);
+                result += _precomputed_mbeta[index];
         }
 
         return result;
@@ -153,13 +166,13 @@ double independence_background_t::log_likelihood() const {
 
         /* counts contains the data count statistic
          * and the pseudo counts alpha */
-        // TODO
         for(size_t i = 0; i < _cluster_assignments.size(); i++) {
                 for(size_t j = 0; j < _cluster_assignments[i].size(); j++) {
                         if (_cluster_assignments[i][j] == _bg_cluster_tag) {
                                 const seq_index_t index(i, j);
-                                result += mbeta_log(alpha, _data[index])
-                                        - mbeta_log(alpha);
+                                // result += mbeta_log(alpha, _data[index])
+                                //         - mbeta_log(alpha);
+                                result += _precomputed_mbeta[index];
                         }
                 }
         }

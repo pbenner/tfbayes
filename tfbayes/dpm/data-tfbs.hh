@@ -78,7 +78,6 @@ public:
         // true if there is no nucleotide at position given by index
         bool is_blank(const index_i& index) const;
         size_t elements() const { return _elements; };
-        const std::vector<size_t>& sizes() const;
         void shuffle();
         bool valid_sampling_index(const index_i& index, size_t tfbs_length) const;
 
@@ -88,9 +87,6 @@ private:
         // all nucleotide positions in a vector (used for the gibbs sampler)
         std::vector<index_i*> indices;
         std::vector<index_i*> sampling_indices;
-
-        // the length of each nucleotide sequence
-        std::vector<size_t> sequences_length;
 
         // number of sequences and nucleotides
         size_t _n_sequences;

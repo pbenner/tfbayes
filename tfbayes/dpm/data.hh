@@ -215,6 +215,13 @@ public:
         virtual size_t size(size_t i) const {
                 return _data[i].size();
         }
+        virtual std::vector<size_t> sizes() const {
+                std::vector<size_t> lengths;
+                for (size_t i = 0; i < size(); i++) {
+                        lengths.push_back(_data[i].size());
+                }
+                return lengths;
+        }
 
 protected:
         std::vector<std::vector<T> > _data;

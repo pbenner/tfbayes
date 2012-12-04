@@ -72,6 +72,7 @@ def usage():
     print "processed with `dpm-tfbs-approximate'."
     print
     print "Options:"
+    print "       --alpha=FLOAT              - alpha parameter for the DP"
     print "       --discount=DISCOUNT        - Pitman-Yor discount (0 <= d < 1)"
     print "       --lambda=LAMBDA            - lambda mixture weight"
     print "       --context=CONTEXT          - context of the background model"
@@ -179,7 +180,7 @@ def sample():
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "lambda=", "discount=",
+        longopts   = ["help", "verbose", "lambda=", "discount=", "alpha=",
                       "context", "process-prior=", "backround-model=",
                       "population-size=", "tfbs-length=", "save=", "samples="]
         opts, tail = getopt.getopt(sys.argv[1:], "s:vh", longopts)
@@ -206,6 +207,8 @@ def main():
             else:
                 usage()
                 return 1
+        if o == "--alpha":
+            options['alpha'] = float(a)
         if o == "--lambda":
             options['lambda'] = float(a)
         if o == "--context":
