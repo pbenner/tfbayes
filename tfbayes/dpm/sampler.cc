@@ -219,7 +219,8 @@ hybrid_sampler_t::_metropolis_sample(cluster_t& cluster) {
                 }
                 if (!_optimize) {
                         const double r = (double)rand()/RAND_MAX;
-                        if (r <= min(posterior_tmp/posterior_ref, 1.0)) {
+                        /* posterior value is on log scale! */
+                        if (r <= min(exp(posterior_tmp - posterior_ref), 1.0)) {
                                 goto accepted;
                         }
                 }
