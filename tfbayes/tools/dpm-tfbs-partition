@@ -26,6 +26,7 @@ import ConfigParser
 import sys
 import getopt
 import os
+import subprocess
 
 import numpy               as     np
 import numpy.random.mtrand as     mt
@@ -168,7 +169,7 @@ def plot_motifs(motifs, components):
     basename = os.path.splitext(os.path.split(options['result_file'])[1])[0]
     files    = plot.plot_motifs(motifs, components, basename)
     if options['join']:
-        cmd = 'pdftk %s cat output %s.pdf' % (' '.join(files), basename)
+        cmd = 'pdftk %s cat output %s_cluster.pdf' % (' '.join(files), basename)
         print cmd
         subprocess.call(cmd, shell=True)
         cmd = 'rm -f %s' % ' '.join(files)
@@ -232,9 +233,9 @@ def __main__():
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "plot",
+        longopts   = ["help", "verbose", "plot", "join"
                       "result=", "sequences=", "load=", "save="]
-        opts, tail = getopt.getopt(sys.argv[1:], "pls:v", longopts)
+        opts, tail = getopt.getopt(sys.argv[1:], "jpls:v", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -252,6 +253,8 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
+        if o in ("-j", "--join"):
+            options['join'] = True
         if o in ("-p", "--plot"):
             options['plot'] = True
         if o == "--result":
