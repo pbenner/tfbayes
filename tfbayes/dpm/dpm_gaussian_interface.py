@@ -20,6 +20,10 @@ import math
 
 from ctypes import *
 
+# allow to send ctrl-c to the library
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
+
 # load interface
 # ------------------------------------------------------------------------------
 
