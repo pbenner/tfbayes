@@ -34,6 +34,7 @@ from tfbayes.motif import plot
 # ------------------------------------------------------------------------------
 
 options = {
+    'join'        : False,
     'revcomp'     : False,
     'verbose'     : False,
     }

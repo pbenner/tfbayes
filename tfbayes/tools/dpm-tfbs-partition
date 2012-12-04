@@ -62,6 +62,7 @@ options = {
     'tfbs_length'  : None,
     'result_file'  : None,
     'seq_file'     : None,
+    'join'         : False,
     'load'         : None,
     'save'         : None,
     'verbose'      : False,
@@ -81,6 +82,8 @@ def usage():
     print "Options:"
     print "       --result=FILE              - sampler result file"
     print "       --sequences=FILE           - fasta sequences file"
+    print
+    print "   -j, --join                     - join plots with pdftk"
     print
     print "   -l, --load=FILE                - load motifs from FILE"
     print "   -s, --save=FILE                - save motifs to FILE"
@@ -158,6 +161,21 @@ def parse_sequences(seq_file):
         sequences.append(parse_line(lines))
     return descriptions, sequences
 
+# plot motifs
+# ------------------------------------------------------------------------------
+
+def plot_motifs(motifs, components):
+    basename = os.path.splitext(os.path.split(options['result_file'])[1])[0]
+    files    = plot.plot_motifs(motifs, components, basename)
+    if options['join']:
+        cmd = 'pdftk %s cat output %s.pdf' % (' '.join(files), basename)
+        print cmd
+        subprocess.call(cmd, shell=True)
+        cmd = 'rm -f %s' % ' '.join(files)
+        print cmd
+        subprocess.call(cmd, shell=True)
+
+
 # generate motifs
 # ------------------------------------------------------------------------------
 
@@ -209,7 +227,7 @@ def __main__():
         configfile = open(options['save'], 'wb')
         config_parser_save.write(configfile)
     else:
-        plot.plot_motifs(motifs, components, os.path.splitext(os.path.split(options['result_file'])[1])[0])
+        plot_motifs(motifs, components)
 
 def main():
     global options
