@@ -58,7 +58,7 @@ def plot_probability(motif, file_name, title, fout=None):
 
 def plot_motif(motif, file_name, title, fout=None):
     print 'Generating %s...' % file_name
-    counts = [ [ int(round(motif[j][i]*1000)) for j in range(len(motif)) ] for i in range(len(motif[0])) ]
+    counts = [ [ motif[j][i] for j in range(4) ] for i in range(len(motif[0])) ]
     alphabet = Alphabet(DNA.letters, zip(DNA.letters.lower(), DNA.letters))
     data = LogoData.from_counts(alphabet, np.array(counts))
     options = LogoOptions()
