@@ -60,6 +60,7 @@ def importMatplotlib(backend=None):
 
 options = {
     'plot'         : False,
+    'revcomp'      : False,
     'tfbs_length'  : None,
     'result_file'  : None,
     'seq_file'     : None,
@@ -85,6 +86,7 @@ def usage():
     print "       --sequences=FILE           - fasta sequences file"
     print
     print "   -j, --join                     - join plots with pdftk"
+    print "   -r                             - also plot reverse complements"
     print
     print "   -l, --load=FILE                - load motifs from FILE"
     print "   -s, --save=FILE                - save motifs to FILE"
@@ -167,7 +169,7 @@ def parse_sequences(seq_file):
 
 def plot_motifs(motifs, components):
     basename = os.path.splitext(os.path.split(options['result_file'])[1])[0]
-    files    = plot.plot_motifs(motifs, components, basename)
+    files    = plot.plot_motifs(motifs, components, basename, revcomp=options['revcomp'])
     if options['join']:
         cmd = 'pdftk %s cat output %s_cluster.pdf' % (' '.join(files), basename)
         print cmd
@@ -235,7 +237,7 @@ def main():
     try:
         longopts   = ["help", "verbose", "plot", "join"
                       "result=", "sequences=", "load=", "save="]
-        opts, tail = getopt.getopt(sys.argv[1:], "jpls:v", longopts)
+        opts, tail = getopt.getopt(sys.argv[1:], "rjpls:v", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -257,6 +259,8 @@ def main():
             options['join'] = True
         if o in ("-p", "--plot"):
             options['plot'] = True
+        if o == "-r":
+            options['revcomp'] = True
         if o == "--result":
             options['result_file'] = a
         if o == "--sequences":

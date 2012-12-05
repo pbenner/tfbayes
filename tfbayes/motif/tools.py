@@ -41,15 +41,24 @@ def read_matrix(config, section, option, converter):
 
 def compute_frequencies(counts):
     sums = [ sum(map(lambda m: m[j], counts))     for j in range(0, len(counts[0])) ]
-    return [ [ float(counts[i][j])/float(sums[j]) for j in range(0, len(counts[0])) ] for i in range(0, len(counts)) ]
+    return [ [ float(counts[i][j])/float(sums[j]) for j in range(0, len(counts[0])) ] for i in range(len(counts)) ]
 
 # frequencies -> pwm
 # ------------------------------------------------------------------------------
 
 def compute_pwm(config_parser, cluster_name):
-    bg_freq   = read_matrix(config_parser, 'Cluster', 'cluster_bg',  float)
-    tfbs_freq = read_matrix(config_parser, 'Cluster', cluster_name, float)
-    return [ [ math.log(tfbs_freq[i][j]/bg_freq[i][0], 2) for j in range(0, len(tfbs_freq[0])) ] for i in range(0, len(tfbs_freq)) ]
+    if config_parser.has_option('Cluster', 'cluster_bg'):
+        bg_freq   = read_matrix(config_parser, 'Cluster', 'cluster_bg',  float)
+    else:
+        bg_freq = [[0.0], [0.0], [0.0], [0.0]]
+        bg_freq[DNA.code('A')][0] = 0.3
+        bg_freq[DNA.code('C')][0] = 0.2
+        bg_freq[DNA.code('G')][0] = 0.2
+        bg_freq[DNA.code('T')][0] = 0.3
+    tfbs_counts = read_matrix(config_parser, 'Cluster', cluster_name, float)
+    tfbs_counts = [ [ tfbs_counts[i][j]+1 for j in range(len(tfbs_counts[0])) ] for i in range(4) ]
+    tfbs_freq   = compute_frequencies(tfbs_counts)
+    return [ [ math.log(tfbs_freq[i][j]/bg_freq[i][0], 2) for j in range(len(tfbs_freq[0])) ] for i in range(4) ]
 
 # score of a sequence given a pwm
 # ------------------------------------------------------------------------------

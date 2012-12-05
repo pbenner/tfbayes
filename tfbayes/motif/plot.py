@@ -78,15 +78,14 @@ def plot_motif(motif, file_name, title, fout=None):
 def plot_motifs(motifs, components, basename, revcomp=False):
     files = []
     for n, motif, comp in zip(range(0, len(motifs)), motifs, components):
-#        r_seq = r_sequence(motif)
         file_name = '%s_cluster_%d.pdf' % (basename, n)
-#        title = 'cluster_%d:%d, R_seq = %f' % (n, comp, r_seq)
         title = 'cluster_%d, components: %d' % (n, comp)
         plot_motif(motif, file_name, title)
         files.append(file_name)
         if revcomp:
             motif_revcomp = reverse_complement(motif)
             file_name = '%s_cluster_%d_revcomp.pdf' % (basename, n)
-            title = 'cluster_%d_revcomp:%d, R_seq = %f' % (n, comp, r_seq)
+            title = 'cluster_%d_revcomp:%d' % (n, comp)
             plot_motif(motif_revcomp, file_name, title)
+            files.append(file_name)
     return files
