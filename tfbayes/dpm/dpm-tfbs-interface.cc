@@ -83,18 +83,6 @@ operator<<(std::ostream& o, const options_t& options) {
 // file i/o
 // -----------------------------------------------------------------------------
 
-ostream& operator<< (ostream& o, const product_dirichlet_t& pd) {
-        for (size_t j = 0; j < pd.alpha[0].size() - 1; j++) {
-                o << "\t";
-                for (size_t i = 0; i < pd.alpha.size(); i++) {
-                        o << pd.alpha[i][j] + pd.counts[i][j] << " ";
-                }
-                o << endl;
-        }
-
-        return o;
-}
-
 #undef __BEGIN_DECLS
 #undef __END_DECLS
 #ifdef __cplusplus

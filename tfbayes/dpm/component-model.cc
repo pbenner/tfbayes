@@ -306,7 +306,10 @@ string
 product_dirichlet_t::print_counts() const {
         stringstream ss;
         for (size_t k = 0; k < _size2; k++) {
+                ss << decode_nucleotide(k) << " ";
                 for (size_t j = 0; j < _size1; j++) {
+                        ss.precision(8);
+                        ss.width(10);
                         ss << counts[j][k] << " ";
                 }
                 ss << endl;
