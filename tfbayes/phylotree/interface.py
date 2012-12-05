@@ -111,6 +111,9 @@ _lib.pt_expectation.argtypes = [POINTER(PT_ROOT), POINTER(VECTOR), POINTER(VECTO
 _lib.pt_approximate.restype  = POINTER(VECTOR)
 _lib.pt_approximate.argtypes = [POINTER(PT_ROOT), POINTER(VECTOR)]
 
+_lib.pt_dkl_optimize.restype  = POINTER(VECTOR)
+_lib.pt_dkl_optimize.argtypes = [POINTER(PT_ROOT), POINTER(VECTOR)]
+
 # convert datatypes
 # ------------------------------------------------------------------------------
 

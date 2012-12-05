@@ -212,6 +212,30 @@ vector_t* pt_approximate(pt_root_t* pt_root, vector_t* observations)
         return result;
 }
 
+vector_t* pt_dkl_optimize(pt_root_t* pt_root, vector_t* observations)
+{
+        pt_init(observations, pt_root, 0);
+
+        exponent_t<code_t, alphabet_size> alpha;
+        alpha[0] = 1;
+        alpha[1] = 1;
+        alpha[2] = 1;
+        alpha[3] = 1;
+        alpha[4] = 1;
+
+        vector_t* result = alloc_vector(alphabet_size);
+        pt_polynomial_t<code_t, alphabet_size> poly(pt_root);
+
+        pt_polynomial_t<code_t, alphabet_size> variational
+                = dkl_optimize(poly, alpha);
+
+        for (size_t i = 0; i < alphabet_size; i++) {
+                result->vec[i] = variational.begin()->exponent()[i];
+        }
+
+        return result;
+}
+
 void pt_free(pt_root_t* pt_root)
 {
         pt_root->destroy();
