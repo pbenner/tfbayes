@@ -338,6 +338,7 @@ AC_CONFIG_FILES([
 	Makefile
 	version.h
 	libexception/Makefile
+	libfastarithmetics/Makefile
 	libphylotree/Makefile
 	parsmm/Makefile
 	include/Makefile

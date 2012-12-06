@@ -32,40 +32,41 @@
 #include <gsl/gsl_sf_gamma.h>
 
 #include <component-model.hh>
+#include <fast-lnbeta.hh>
 
 using namespace std;
 
 // Multinomial beta functions
 ////////////////////////////////////////////////////////////////////////////////
 
-double mbeta_log(
-        const data_tfbs_t::code_t& alpha)
-{
-        double sum1 = 0;
-        double sum2 = 0;
+// double mbeta_log(
+//         const data_tfbs_t::code_t& alpha)
+// {
+//         double sum1 = 0;
+//         double sum2 = 0;
 
-        for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
-                sum1 += alpha[i];
-                sum2 += gsl_sf_lngamma(alpha[i]);
-        }
+//         for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
+//                 sum1 += alpha[i];
+//                 sum2 += gsl_sf_lngamma(alpha[i]);
+//         }
 
-        return sum2 - gsl_sf_lngamma(sum1);
-}
+//         return sum2 - gsl_sf_lngamma(sum1);
+// }
 
-double mbeta_log(
-        const data_tfbs_t::code_t& extra,
-        const data_tfbs_t::code_t& alpha)
-{
-        double sum1 = 0;
-        double sum2 = 0;
+// double mbeta_log(
+//         const data_tfbs_t::code_t& extra,
+//         const data_tfbs_t::code_t& alpha)
+// {
+//         double sum1 = 0;
+//         double sum2 = 0;
 
-        for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
-                sum1 += extra[i] + alpha[i];
-                sum2 += gsl_sf_lngamma(extra[i] + alpha[i]);
-        }
+//         for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
+//                 sum1 += extra[i] + alpha[i];
+//                 sum2 += gsl_sf_lngamma(extra[i] + alpha[i]);
+//         }
 
-        return sum2 - gsl_sf_lngamma(sum1);
-}
+//         return sum2 - gsl_sf_lngamma(sum1);
+// }
 
 // Independence Background Model
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,7 +79,7 @@ independence_background_t::independence_background_t(
           _cluster_assignments(cluster_assignments),
           _size(data_tfbs_t::alphabet_size),
           _bg_cluster_tag(0),
-          _precomputed_mbeta(data.sizes(), 0)
+          _precomputed_lnbeta(data.sizes(), 0)
 {
 
         assert(_alpha.size() == 1);
@@ -88,13 +89,13 @@ independence_background_t::independence_background_t(
                 alpha[j] = _alpha[0][j];
         }
 
-        /* go through the data and precompute mbeta(n + alpha) -
-         * mbeta(alpha) */
+        /* go through the data and precompute lnbeta(n + alpha) -
+         * lnbeta(alpha) */
         for(size_t i = 0; i < _data.size(); i++) {
                 for(size_t j = 0; j < _data[i].size(); j++) {
-                        _precomputed_mbeta[i][j] =
-                                  mbeta_log(alpha, _data[i][j])
-                                - mbeta_log(alpha);
+                        _precomputed_lnbeta[i][j] =
+                                  fast_lnbeta<data_tfbs_t::alphabet_size>(alpha, _data[i][j])
+                                - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha);
                 }
         }        
 }
@@ -105,7 +106,7 @@ independence_background_t::independence_background_t(const independence_backgrou
           _cluster_assignments(distribution._cluster_assignments),
           _size(distribution._size),
           _bg_cluster_tag(distribution._bg_cluster_tag),
-          _precomputed_mbeta(distribution._precomputed_mbeta)
+          _precomputed_lnbeta(distribution._precomputed_lnbeta)
 {
 }
 
@@ -150,9 +151,9 @@ double independence_background_t::log_predictive(const range_t& range) {
 
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                // result += mbeta_log(alpha, _data[index])
-                //         - mbeta_log(alpha);
-                result += _precomputed_mbeta[index];
+                // result += lnbeta_log(alpha, _data[index])
+                //         - lnbeta_log(alpha);
+                result += _precomputed_lnbeta[index];
         }
 
         return result;
@@ -170,9 +171,9 @@ double independence_background_t::log_likelihood() const {
                 for(size_t j = 0; j < _cluster_assignments[i].size(); j++) {
                         if (_cluster_assignments[i][j] == _bg_cluster_tag) {
                                 const seq_index_t index(i, j);
-                                // result += mbeta_log(alpha, _data[index])
-                                //         - mbeta_log(alpha);
-                                result += _precomputed_mbeta[index];
+                                // result += lnbeta_log(alpha, _data[index])
+                                //         - lnbeta_log(alpha);
+                                result += _precomputed_lnbeta[index];
                         }
                 }
         }
@@ -280,8 +281,8 @@ double product_dirichlet_t::log_predictive(const range_t& range) {
 
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result += mbeta_log(counts[i%_size1], _data[index])
-                        - mbeta_log(counts[i%_size1]);
+                result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1], _data[index])
+                        - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1]);
         }
 
         return result;
@@ -296,8 +297,8 @@ double product_dirichlet_t::log_likelihood() const {
         for (size_t i = 0; i < _size1; i++) {
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result += mbeta_log(counts[i%_size1])
-                        - mbeta_log(alpha [i%_size1]);
+                result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1])
+                        - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha [i%_size1]);
         }
         return result;
 }

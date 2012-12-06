@@ -33,7 +33,7 @@
 #include <indexer.hh>
 
 #define __ALPHABET_SIZE__ 5
-#define __CODE_TYPE__ boost::array<float, __ALPHABET_SIZE__>
+#define __CODE_TYPE__ boost::array<double, __ALPHABET_SIZE__>
 
 /* data_tfbs_t is the container for the data that provides some basic
  * operations like indexing and iteration */

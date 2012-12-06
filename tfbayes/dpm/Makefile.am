@@ -95,6 +95,7 @@ libdpm_la_SOURCES =			\
 	statistics.hh			\
 	utility.hh
 libdpm_la_LIBADD  = $(top_builddir)/libexception/libexception.la
+libdpm_la_LIBADD += $(top_builddir)/libfastarithmetics/libfastarithmetics.la
 libdpm_la_LIBADD += $(top_builddir)/parsmm/libparsmm.la
 libdpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libfasta.la
 libdpm_la_LIBADD += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
