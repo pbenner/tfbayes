@@ -36,38 +36,6 @@
 
 using namespace std;
 
-// Multinomial beta functions
-////////////////////////////////////////////////////////////////////////////////
-
-// double mbeta_log(
-//         const data_tfbs_t::code_t& alpha)
-// {
-//         double sum1 = 0;
-//         double sum2 = 0;
-
-//         for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
-//                 sum1 += alpha[i];
-//                 sum2 += gsl_sf_lngamma(alpha[i]);
-//         }
-
-//         return sum2 - gsl_sf_lngamma(sum1);
-// }
-
-// double mbeta_log(
-//         const data_tfbs_t::code_t& extra,
-//         const data_tfbs_t::code_t& alpha)
-// {
-//         double sum1 = 0;
-//         double sum2 = 0;
-
-//         for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
-//                 sum1 += extra[i] + alpha[i];
-//                 sum2 += gsl_sf_lngamma(extra[i] + alpha[i]);
-//         }
-
-//         return sum2 - gsl_sf_lngamma(sum1);
-// }
-
 // Independence Background Model
 ////////////////////////////////////////////////////////////////////////////////
 
