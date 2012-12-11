@@ -90,12 +90,9 @@ AC_CHECK_LIB([gslcblas],[cblas_dgemm],,
   AC_MSG_ERROR([this library is required]))
 AC_CHECK_LIB([gsl], [gsl_blas_dgemm],,
   AC_MSG_ERROR([this library is required]))
-AC_CHECK_LIB([db], [db_env_set_func_exists], LIB_DB="-ldb",
-  AC_MSG_ERROR([this library is required]))
 AC_CHECK_LIB([pthread], [pthread_create], LIB_PTHREAD="-lpthread",
   AC_MSG_ERROR([this library is required]))
 
-AC_SUBST(LIB_DB)
 AC_SUBST(LIB_PTHREAD)
 
 AX_BOOST_BASE([1.37.0],,
@@ -344,7 +341,6 @@ AC_CONFIG_FILES([
 	include/Makefile
 	tfbayes/Makefile
 	tfbayes/fasta/Makefile
-	tfbayes/humandb/Makefile
 	tfbayes/phylotree/Makefile
 	tfbayes/dpm/Makefile
 	tfbayes/motif/Makefile

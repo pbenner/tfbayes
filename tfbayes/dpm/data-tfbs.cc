@@ -175,14 +175,20 @@ data_tfbs_t::read_fasta(const char* file_name)
                 for (size_t i = 0; i < result.size(); i++) {
                         if(boost::regex_match(result[i], what, e, boost::match_extra))
                         {
-                                assert(what.size() == data_tfbs_t::alphabet_size+1);
+                                /* the alphabet of the input can be
+                                 * larger that what is used for the
+                                 * sampler, for instance, gaps in the
+                                 * alignment are used in the input as
+                                 * fifth character, but are optional
+                                 * for the sampler */
+                                assert(what.size() > data_tfbs_t::alphabet_size);
 
                                 data_tfbs_t::code_t entry;
 
-                                for(size_t j = 1; j < what.size(); ++j)
+                                for(size_t j = 0; j < data_tfbs_t::alphabet_size; j++)
                                 {
-                                        string submatch(what[j].first, what[j].second);
-                                        entry[j-1] = atof(submatch.c_str());
+                                        string submatch(what[j+1].first, what[j+1].second);
+                                        entry[j] = atof(submatch.c_str());
                                 }
                                 sequence.push_back(entry);
                         }

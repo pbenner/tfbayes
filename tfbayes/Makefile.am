@@ -1,7 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
 SUBDIRS  = fasta
-#SUBDISS += humandb
 SUBDIRS += dpm
 SUBDIRS += motif
 SUBDIRS += phylotree
