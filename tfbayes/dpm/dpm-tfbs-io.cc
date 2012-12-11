@@ -32,14 +32,6 @@ void dpm_tfbs_save_result(ostream& file, dpm_tfbs_pmcmc_t& sampler)
         file.setf(ios::showpoint);
 
         file << "[Result]" << endl;
-        file << "posterior =" << endl;
-        for (size_t i = 0; i < samples.probabilities.size(); i++) {
-                file << "\t";
-                for (size_t j = 0; j < samples.probabilities[i].size(); j++) {
-                        file << (float)samples.probabilities[i][j] << " ";
-                }
-                file << endl;
-        }
         file << "components =" << endl;
         for (size_t i = 0; i < history.components.size(); i++) {
                 file << "\t";

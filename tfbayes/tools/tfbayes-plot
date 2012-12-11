@@ -64,7 +64,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "tfbayes-plot [option]... RESULT [SEQUENCES]"
+    print "tfbayes-plot [option]... SAMPLER_CONFIG"
     print
     print "This program plots the log posterior and number of clusters of"
     print "a sampling run."
@@ -76,43 +76,15 @@ def usage():
     print "   -v, --verbose                  - be verbose"
     print
 
-# parse sequences file
-# ------------------------------------------------------------------------------
-
-def makefilter(keep):
-    """ Return a functor that takes a string and returns a copy of that
-        string consisting of only the characters in 'keep'.
-    """
-    import string
-
-    # make a string of all chars, and one of all those NOT in 'keep'
-    allchars = string.maketrans('', '')
-    delchars = ''.join([c for c in allchars if c not in keep])
-
-    # return the functor
-    return lambda s,a=allchars,d=delchars: s.translate(a, d)
-
-def readSequences(seq_file):
-    parser = fasta.parser(seq_file)
-    descriptions = []
-    sequences    = []
-    while 1:
-        description, sequence = parser.read_sequence()
-        if not sequence:
-            break
-        descriptions.append(description[0])
-        sequences.append(sequence)
-    return descriptions, sequences
-
 # parse results config
 # ------------------------------------------------------------------------------
 
-def readVector(config, section, option, converter):
+def read_vector(config, section, option, converter):
     vector_str = config.get(section, option)
     vector     = map(converter, vector_str.split(' '))
     return vector
 
-def readMatrix(config, section, option, converter):
+def read_matrix(config, section, option, converter):
     matrix_str = config.get(section, option)
     matrix     = []
     for line in matrix_str.split('\n'):
@@ -120,19 +92,20 @@ def readMatrix(config, section, option, converter):
             matrix.append([converter(a) for a in line.split(' ')])
     return matrix
 
-def normalize(matrix):
-    m = max(map(max, matrix))
-    return map(lambda l: map(lambda x: x/m, l), matrix)
-
-def parseConfig(config_file):
+def parseResultsConfig(config_file):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
 
-    posterior  = readMatrix(config_parser, 'Result', 'posterior',  float)
-    posterior  = readMatrix(config_parser, 'Result', 'posterior',  float)
-    components = readMatrix(config_parser, 'Result', 'components', int)
+    posterior  = read_matrix(config_parser, 'Result', 'posterior',  float)
+    components = read_matrix(config_parser, 'Result', 'components', int)
 
-    return normalize(posterior), posterior, components
+    return posterior, components
+
+def parseSamplerConfig(config_file):
+    config_parser = ConfigParser.RawConfigParser()
+    config_parser.read(config_file)
+
+    return config_parser.get('TFBS-Sampler', 'save')
 
 # plot
 # ------------------------------------------------------------------------------
@@ -151,32 +124,6 @@ def plot_posterior_and_components(posterior, components, show):
         p2 = ax2.plot(c)
     show()
 
-def split_len(seq, length):
-    return [seq[i:i+length] for i in range(0, len(seq), length)]
-
-def plot_sequence(description, sequence, _posterior, n, show):
-    sequences = split_len(sequence, 50)
-    posterior = split_len(_posterior, 50)
-    fig = pyplot.figure()
-    ax  = fig.add_subplot(111, title=description)
-    ax.set_frame_on(False)
-    ax.set_axis_off()
-    xn    = max(map(len, sequences))
-    yn    = len(sequences)
-    yfrom = 0.90
-    yto   = yfrom-yn*0.04
-    x, y = np.meshgrid(np.arange(0.01, 1.00,  0.99/xn),
-                       np.arange(yfrom, yto, -(yfrom-yto)/len(sequences)))
-    for sl, po, p1l, p2l in zip(sequences, posterior, x, y):
-        for s, p, p1, p2 in zip(sl, po, p1l, p2l):
-            ax.text(p1, p2, str(s), size=10, rotation=0,
-                    ha="center", va="bottom", color=pyplot.cm.jet(p), weight='bold')
-    show()
-
-def plot_sequences(descriptions, sequences, posterior, show):
-    for i in range(0, len(sequences)):
-        plot_sequence(descriptions[i], sequences[i], posterior[i], i+1, show)
-
 def plot_result(results_file):
     if options['save']:
         importMatplotlib('Agg')
@@ -187,22 +134,26 @@ def plot_result(results_file):
         importMatplotlib()
         show  = pyplot.show
         close = None
-    posterior, posterior, components = parseConfig(results_file)
+    posterior, components = parseResultsConfig(results_file)
     plot_posterior_and_components(posterior, components, show)
-    if options['sequences']:
-        descriptions, sequences = readSequences(options['sequences'])
-        plot_sequences(descriptions, sequences, posterior, show)
     if close:
         close()
 
 # main
 # ------------------------------------------------------------------------------
 
-def main():
+def main(sampler_config):
+    results_file = parseSamplerConfig(sampler_config)
+    plot_result(results_file)
+
+# __main__
+# ------------------------------------------------------------------------------
+
+def __main__():
     global options
     try:
         longopts   = ["help", "verbose", "save="]
-        opts, tail = getopt.getopt(sys.argv[1:], "s:", longopts)
+        opts, tail = getopt.getopt(sys.argv[1:], "", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -216,15 +167,11 @@ def main():
             return 0
         if o in ("-s", "--save"):
             options['save'] = a
-    if len(tail) == 1:
-        plot_result(tail[0])
-    elif len(tail) == 2:
-        options['sequences'] = tail[1]
-        plot_result(tail[0])
-    else:
+    if not len(tail) == 1:
         usage()
         return 1
+    main(*tail)
     return 0
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(__main__())
