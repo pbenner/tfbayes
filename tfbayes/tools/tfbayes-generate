@@ -39,7 +39,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-generate [option]..."
+    print "tfbayes-generate [option]..."
     print
     print "Options:"
     print "       --threshold=VALUE          - replace all sequences above THRESHOLD"

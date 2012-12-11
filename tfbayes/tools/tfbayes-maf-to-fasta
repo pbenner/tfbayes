@@ -38,7 +38,7 @@ from tfbayes.uipac.alphabet import DNA
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-maf-to-fasta [option]... MAF FASTA"
+    print "tfbayes-maf-to-fasta [option]... MAF FASTA"
     print
     print "Options:"
     print "   -h, --help                         - print help"

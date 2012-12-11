@@ -43,8 +43,8 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-weblogo [option]... CLUSTER_CONFIG"
-    print "dpm-tfbs-weblogo [option]..."
+    print "tfbayes-weblogo [option]... CLUSTER_CONFIG"
+    print "tfbayes-weblogo [option]..."
     print
     print "If no CLUSTER_CONFIG is specified, then the count matrix is"
     print "read from stdin and xpdf is called on the generated logo."

@@ -66,10 +66,10 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-sampler [option]... SAMPLER_CONFIG"
+    print "tfbayes-sampler [option]... SAMPLER_CONFIG"
     print
     print "This program launches the sampler on ChIP data, which must be first"
-    print "processed with `dpm-tfbs-approximate'."
+    print "processed with `tfbayes-approximate'."
     print
     print "Options:"
     print "       --alpha=FLOAT              - alpha parameter for the DP"

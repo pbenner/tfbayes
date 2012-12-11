@@ -45,7 +45,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-motifformat [option]... FILE"
+    print "tfbayes-motifformat [option]... FILE"
     print
     print "Options:"
     print "   -j, --join                     - join plots with pdftk"

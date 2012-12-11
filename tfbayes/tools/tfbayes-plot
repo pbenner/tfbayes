@@ -64,7 +64,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-plot [option]... RESULT [SEQUENCES]"
+    print "tfbayes-plot [option]... RESULT [SEQUENCES]"
     print
     print "This program plots the log posterior and number of clusters of"
     print "a sampling run."

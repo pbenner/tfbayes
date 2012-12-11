@@ -46,7 +46,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-align [option]... CLUSTER_CONFIG CLUSTER_1 CLUSTER_2"
+    print "tfbayes-align [option]... CLUSTER_CONFIG CLUSTER_1 CLUSTER_2"
     print
     print "After sampling and processing the MAP partition, this program allows"
     print "to align two clusters according to several alternative objectives."

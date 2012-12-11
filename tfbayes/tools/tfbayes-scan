@@ -42,7 +42,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-scan [option]... CLUSTER_CONFIG CLUSTER_NAME SEQUENCES_FASTA..."
+    print "tfbayes-scan [option]... CLUSTER_CONFIG CLUSTER_NAME SEQUENCES_FASTA..."
     print
     print "Options:"
     print "   -r                             - scan for the reverse complement"

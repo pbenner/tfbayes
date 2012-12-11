@@ -61,7 +61,7 @@ revcomp_options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-tools [option]... COMMAND CLUSTER_CONFIG"
+    print "tfbayes-tools [option]... COMMAND CLUSTER_CONFIG"
     print
     print "Commands:"
     print "   getcounts [command option] CLUSTER_NAME"

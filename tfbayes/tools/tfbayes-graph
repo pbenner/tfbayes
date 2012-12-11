@@ -82,7 +82,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-graph [option]... SAMPLER_CONFIG"
+    print "tfbayes-graph [option]... SAMPLER_CONFIG"
     print
     print "Options:"
     print "   -p, --plot                     - plot motifs"

@@ -5,26 +5,21 @@ pkgpythondir = $(pyexecdir)/tfbayes/dpm
 
 ## scripts
 dist_bin_SCRIPTS = \
-	dpm-gaussian-demo \
-	dpm-tfbs-align \
-	dpm-tfbs-approximate \
-	dpm-tfbs-expectation \
-	dpm-tfbs-demo \
-	dpm-tfbs-graph \
-	dpm-tfbs-generate \
-	dpm-tfbs-motifformat \
-	dpm-tfbs-fasta-to-maf \
-	dpm-tfbs-maf-to-fasta \
-	dpm-tfbs-plot \
-	dpm-tfbs-partition \
-	dpm-tfbs-sampler \
-	dpm-tfbs-scan \
-	dpm-tfbs-tools \
-	dpm-tfbs-weblogo \
+	tfbayes-align \
+	tfbayes-approximate \
+	tfbayes-expectation \
+	tfbayes-graph \
+	tfbayes-generate \
+	tfbayes-motifformat \
+	tfbayes-fasta-to-maf \
+	tfbayes-maf-to-fasta \
+	tfbayes-plot \
+	tfbayes-partition \
+	tfbayes-sampler \
+	tfbayes-scan \
+	tfbayes-tools \
+	tfbayes-weblogo \
 	macs2multiz
-
-## extra dist
-EXTRA_DIST = dpm-tfbs-demo-1.cfg dpm-tfbs-demo-1.fa dpm-tfbs-demo-2.cfg dpm-tfbs-demo-2.fa
 
 ## clean python files
 clean-local:

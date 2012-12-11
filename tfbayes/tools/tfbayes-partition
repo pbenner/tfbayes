@@ -76,7 +76,7 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-partition [option]... SAMPLER_CONFIG"
+    print "tfbayes-partition [option]... SAMPLER_CONFIG"
     print
     print "This program is used to generate motifs from the MAP partition"
     print "of ChIP data. Motifs can be either plotted or saved as counts."

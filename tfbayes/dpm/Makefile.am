@@ -33,6 +33,11 @@ pkgpythondir = $(pyexecdir)/tfbayes/dpm
 ## compile python files
 pkgpython_PYTHON = __init__.py dpm_gaussian_interface.py dpm_tfbs_interface.py
 
+## scripts
+dist_bin_SCRIPTS = \
+	dpm-gaussian-demo \
+	dpm-tfbs-demo
+
 ## dpm library
 lib_LTLIBRARIES  = libdpm.la
 libdpm_la_SOURCES =			\
@@ -100,6 +105,9 @@ libdpm_la_LIBADD += $(top_builddir)/parsmm/libparsmm.la
 libdpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libfasta.la
 libdpm_la_LIBADD += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 libdpm_la_LDFLAGS = -no-undefined -version-info 0:0:0
+
+## extra dist
+EXTRA_DIST = dpm-tfbs-demo-1.cfg dpm-tfbs-demo-1.fa dpm-tfbs-demo-2.cfg dpm-tfbs-demo-2.fa
 
 ## clean python files
 clean-local:

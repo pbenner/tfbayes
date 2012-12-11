@@ -38,17 +38,17 @@ from tfbayes.uipac.alphabet import DNA
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-approximate [option]... PHYLOGENETIC_TREE FASTA_FILE..."
+    print "tfbayes-expectation [option]... PHYLOGENETIC_TREE FASTA_FILE..."
     print
-    print "Given a set of fasta files from the ChIP experiment, this"
-    print "program computes an approximation of the phylogenetic tree"
-    print "for each column of the multiple alignment. The result is"
-    print "used as input for the sampler."
+    print "Given a set of fasta files from the ChIP experiment and a"
+    print "phylogenetic tree, this program computes a motif of the"
+    print "alignment. The motif is given as the expectation of the"
+    print "nucleotides at each position of the alignment. The result"
+    print "can be plotted with `tfbayes-motifformat'."
     print
     print "Options:"
+    print "       --prior=Px:Px:Px:Px:Px         - counts for the prior"
     print "   -t, --threads=N                    - run N jobs in parallel"
-    print "   -s SPECIES                         - remove all columns have no nucleotide"
-    print "                                        in this SPECIES"
     print
     print "   -h, --help                         - print help"
     print "   -v, --verbose                      - be verbose"
@@ -60,7 +60,7 @@ def usage():
 options = {
     'phylotree'      : None,
     'leafmap'        : None,
-    'strip'          : None,
+    'prior'          : [0.1, 0.1, 0.1, 0.1, 0.1],
     'threads'        : 1,
     'verbose'        : False,
     }
@@ -75,9 +75,6 @@ def print_result(container):
             print '%11.8f' % result[i],
         print ";"
 
-def reweight(expectation):
-    return [ expectation[i]/(1.0-expectation[4]) for i in range(4) ]
-
 def code_nucleotide(char):
     if char == 'N' or char == 'n' or char == "-":
         return 4.0
@@ -87,7 +84,7 @@ def code_nucleotide(char):
 # main logic comes here
 # ------------------------------------------------------------------------------
 
-def alignment_approximate(multiple_alignment, phylotree):
+def alignment_expectation(multiple_alignment, phylotree):
     """For every column in the alignment, approximate the likelihood
     given by the phylogenetic tree by a simple multinomial
     distribution with averaged count statistics."""
@@ -96,29 +93,16 @@ def alignment_approximate(multiple_alignment, phylotree):
 
     observations = [ 4.0 ]*num_leafs
 
-    # index of the sequence from which to strip all dashes
-    stripindex = None
-    # search the multiple alignment for this index
-    if options['strip']:
-        for i in range(len(multiple_alignment)):
-            name = multiple_alignment[i].name.split(".")[0]
-            if options['strip'] == name:
-                stripindex = i
-        if stripindex == None:
-            sys.stderr.write("Species `%s' not found in the alignment.\n" % options['strip'])
-
     result = []
     for i in range(len(multiple_alignment[0])):
-        # filter all positions where the reference sequence has a gap
-        if stripindex and multiple_alignment[stripindex][i] == '-':
-            continue
         # fill observations array
         for alignment in multiple_alignment:
             name = alignment.name.split(".")[0]
             if leafmap.has_key(name):
                 observations[leafmap[name]] = code_nucleotide(alignment.seq[i])
         # call phylotree library
-        result.append(pt_approximate(phylotree, observations))
+        expectation = pt_expectation(phylotree, observations, options['prior'])
+        result.append(expectation)
     return result
 
 # parse fasta file
@@ -152,7 +136,7 @@ class ComputationThread(threading.Thread):
             # obtain the alignment by parsing the fasta file
             alignment = get_alignment(job['file_name'])
             # turn the alignment into an approximation
-            result    = alignment_approximate(alignment, self.phylotree)
+            result    = alignment_expectation(alignment, self.phylotree)
             if result:
                 container = {
                     'result'       : result,
@@ -203,8 +187,8 @@ def __main__(fasta_files):
 def main():
     global options
     try:
-        longopts   = ["threads=", "help", "verbose"]
-        opts, tail = getopt.getopt(sys.argv[1:], "s:t:hv", longopts)
+        longopts   = ["prior=", "threads=", "help", "verbose"]
+        opts, tail = getopt.getopt(sys.argv[1:], "t:hv", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -220,9 +204,11 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
-        if o == "-s":
-            options['strip'] = a
-            sys.stderr.write("Stripping all dashes from %s.\n" % a)
+        if o == "--prior":
+            options['prior'] = map(float, a.split(':'))
+            if not len(options['prior']) == 5:
+                usage()
+                return 1
         if o in ("-t", "--threads"):
             options['threads'] = int(a)
             if not options['threads'] >= 1:
