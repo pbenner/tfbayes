@@ -38,10 +38,9 @@ from tfbayes.uipac.alphabet import DNA
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-fasta-to-maf [option]... FASTA MAF"
+    print "dpm-tfbs-maf-to-fasta [option]... MAF FASTA"
     print
     print "Options:"
-    print
     print "   -h, --help                         - print help"
     print "   -v, --verbose                      - be verbose"
     print
@@ -50,6 +49,7 @@ def usage():
 # ------------------------------------------------------------------------------
 
 options = {
+    'concatenate'    : False,
     'verbose'        : False,
     }
 
@@ -60,19 +60,21 @@ def read_alignment(file_name):
     if options['verbose']:
         sys.stderr.write('Reading maf file %s.\n' % file_name)
     # use biopython to parse the fasta file
-    return AlignIO.read(file_name, "maf")
+    alignments = AlignIO.parse(file_name, "maf")
+    return alignments
 
-def write_alignment(file_name, alignment):
+def write_alignment(file_name, alignments):
     if options['verbose']:
         sys.stderr.write('Writing fasta file %s.\n' % file_name)
-    AlignIO.write(alignment, file_name, "fasta")
+    AlignIO.write(alignments, file_name, "fasta")
+
 
 # __main__
 # ------------------------------------------------------------------------------
 
-def __main__(fasta_file, maf_file):
-    alignment = read_alignment(fasta_file)
-    write_alignment(maf_file, alignment)
+def __main__(maf_file, fasta_file):
+    alignments = read_alignment(maf_file)
+    write_alignment(fasta_file, alignments)
 
 # main
 # ------------------------------------------------------------------------------
