@@ -1,0 +1,104 @@
+#! /usr/bin/env python
+
+# Copyright (C) 2012 Philipp Benner
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# imports
+# ------------------------------------------------------------------------------
+
+import getopt
+import re
+import sys
+
+import Queue
+import threading
+import thread
+
+from Bio                    import AlignIO
+
+from tfbayes.phylotree      import *
+from tfbayes.uipac.alphabet import DNA
+
+# usage
+# ------------------------------------------------------------------------------
+
+def usage():
+    """Print usage."""
+    print
+    print "dpm-tfbs-fasta-to-maf [option]... FASTA MAF"
+    print
+    print "Options:"
+    print
+    print "   -h, --help                         - print help"
+    print "   -v, --verbose                      - be verbose"
+    print
+
+# options
+# ------------------------------------------------------------------------------
+
+options = {
+    'verbose'        : False,
+    }
+
+# read and write alignments
+# ------------------------------------------------------------------------------
+
+def read_alignment(file_name):
+    if options['verbose']:
+        sys.stderr.write('Reading fasta file %s.\n' % file_name)
+    # use biopython to parse the fasta file
+    return AlignIO.read(file_name, "fasta")
+
+def write_alignment(file_name, alignment):
+    if options['verbose']:
+        sys.stderr.write('Writing maf file %s.\n' % file_name)
+    AlignIO.write(alignment, file_name, "maf")
+
+# __main__
+# ------------------------------------------------------------------------------
+
+def __main__(fasta_file, maf_file):
+    alignment = read_alignment(fasta_file)
+    write_alignment(maf_file, alignment)
+
+# main
+# ------------------------------------------------------------------------------
+
+def main():
+    global options
+    try:
+        longopts   = ["help", "verbose"]
+        opts, tail = getopt.getopt(sys.argv[1:], "hv", longopts)
+    except getopt.GetoptError:
+        usage()
+        return 2
+    output = None
+    if not len(tail) == 2:
+        usage()
+        return 1
+    # override those options with command line arguments
+    for o, a in opts:
+        if o in ("-v", "--verbose"):
+            sys.stderr.write("Verbose mode turned on.\n")
+            options["verbose"] = True
+        if o in ("-h", "--help"):
+            usage()
+            return 0
+    __main__(*tail)
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -13,6 +13,8 @@ dist_bin_SCRIPTS = \
 	dpm-tfbs-graph \
 	dpm-tfbs-generate \
 	dpm-tfbs-motifformat \
+	dpm-tfbs-fasta-to-maf \
+	dpm-tfbs-maf-to-fasta \
 	dpm-tfbs-plot \
 	dpm-tfbs-partition \
 	dpm-tfbs-sampler \
