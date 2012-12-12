@@ -73,3 +73,19 @@ def load_motifs(config_parser):
         motifs.append(read_matrix(config_parser, 'Cluster', cluster_name, float))
         components.append(int(config_parser.get('Cluster', '%s_components' % cluster_name)))
     return bg, motifs, components
+
+# load cluster
+# ------------------------------------------------------------------------------
+
+def load_cluster(config_parser):
+    cluster_list  = []
+    cluster_names = read_vector(config_parser, 'Cluster', 'cluster', str)
+    for cluster_name in cluster_names:
+        cluster                = cluster_t
+        cluster.counts         = read_matrix(config_parser, 'Cluster', cluster_name, float)
+        cluster.components     = int(config_parser.get('Cluster', '%s_components' % cluster_name))
+        cluster.identifier     = cluster_name
+        cluster.average_counts = 
+        motifs.append(read_matrix(config_parser, 'Cluster', cluster_name, float))
+        components.append(int(config_parser.get('Cluster', '%s_components' % cluster_name)))
+    return bg, motifs, components
