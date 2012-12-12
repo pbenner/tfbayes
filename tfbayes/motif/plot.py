@@ -57,16 +57,17 @@ def plot_probability(motif, file_name, title, fout=None):
         pdf_formatter(data, format, fout)
 
 def plot_motif(motif, file_name, title, fout=None):
-    print 'Generating %s...' % file_name
+    print 'Generating %s ...' % file_name
     counts = [ [ motif[j][i] for j in range(4) ] for i in range(len(motif[0])) ]
     alphabet = Alphabet(DNA.letters, zip(DNA.letters.lower(), DNA.letters))
     data = LogoData.from_counts(alphabet, np.array(counts))
     options = LogoOptions()
-    options.color_scheme = nucleotide
-    options.logo_title = title
-    options.creator_text = ''
-    options.fineprint = ''
+    options.color_scheme    = nucleotide
+    options.logo_title      = title
+    options.creator_text    = ''
+    options.fineprint       = ''
     options.stacks_per_line = 60
+    options.title_fontsize  = 8
     format = LogoFormat(data, options)
     if not fout:
         fout = open(file_name, 'w')
@@ -75,17 +76,22 @@ def plot_motif(motif, file_name, title, fout=None):
     else:
         pdf_formatter(data, format, fout)
 
+def average_components(motif):
+    counts  = [ sum([ motif[j][i] for j in range(4) ]) for i in range(len(motif[0])) ]
+    average = sum(counts)/float(len(motif[0]))
+    return average
+
 def plot_motifs(motifs, components, basename, revcomp=False):
     files = []
     for n, motif, comp in zip(range(0, len(motifs)), motifs, components):
         file_name = '%s_cluster_%d.pdf' % (basename, n)
-        title = 'cluster_%d, components: %d' % (n, comp)
+        title = 'Cluster %d. A = %.1f. C = %d' % (n, average_components(motif), comp)
         plot_motif(motif, file_name, title)
         files.append(file_name)
         if revcomp:
             motif_revcomp = reverse_complement(motif)
             file_name = '%s_cluster_%d_revcomp.pdf' % (basename, n)
-            title = 'cluster_%d_revcomp:%d' % (n, comp)
+            title = 'Cluster %d. A = %.1f. C = %d' % (n, average_components(motif), comp)
             plot_motif(motif_revcomp, file_name, title)
             files.append(file_name)
     return files

@@ -98,6 +98,18 @@ def usage():
 # parse results config
 # ------------------------------------------------------------------------------
 
+class cluster_t():
+    counts         = None
+    average_counts = None
+    components     = None
+    identifier     = None
+    def __init__(self, n, m):
+        # initialize counts with a simple matrix of zeros
+        self.counts = [ [ 0.0 for j in range(n) ] for i in range(m) ]
+
+# parse results config
+# ------------------------------------------------------------------------------
+
 def parse_config(config_file):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
@@ -164,6 +176,29 @@ def parse_sequences(seq_file):
         sequences.append(parse_line(lines))
     return descriptions, sequences
 
+# tools
+# ------------------------------------------------------------------------------
+
+def average_components(motif):
+    counts  = [ sum([ motif[j][i] for j in range(4) ]) for i in range(len(motif[0])) ]
+    average = sum(counts)/float(len(motif[0]))
+    return average
+
+# sort motifs
+# ------------------------------------------------------------------------------
+
+def permutation_indices(data):
+     return sorted(range(len(data)), key = data.__getitem__, reverse=True)
+
+def sort_motifs(motifs):
+    # the score is the criterion to which the list of motifs
+    # is sorted
+    score = [ average_components(motif) for motif in motifs ]
+    # sort this list and obtain the permutation pi
+    pi    = permutation_indices(score)
+    # return a sorted list of motifs
+    return [ motifs[i] for i in pi ]
+
 # plot motifs
 # ------------------------------------------------------------------------------
 
@@ -177,7 +212,6 @@ def plot_motifs(motifs, components):
         cmd = 'rm -f %s' % ' '.join(files)
         print cmd
         subprocess.call(cmd, shell=True)
-
 
 # generate motifs
 # ------------------------------------------------------------------------------
@@ -203,7 +237,7 @@ def generate_motifs(sequences, partition, motif_length):
         motif = generate_motif(sequences, subset, motif_length)
         motifs.append(motif)
         components.append(len(subset))
-    return motifs, components
+    return sort_motifs(motifs), components
 
 # main
 # ------------------------------------------------------------------------------
