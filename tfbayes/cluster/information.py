@@ -19,15 +19,22 @@
 import math
 import tools
 
+# entropy
+# ------------------------------------------------------------------------------
+
+def entropy(motif, n, m):
+    """For each column in the motif compute the discrete entropy."""
+    result = [ 0.0 ] * m
+    for j in range(m):
+        result[j] = sum([ -motif[i][j]*math.log(motif[i][j]) for i in range(n) ])
+    return result
+
 # R_sequence
 # ------------------------------------------------------------------------------
 
-def r_sequence(cluster_counts):
-    z = 1.0/float(len(cluster_counts[0]))
-    cluster_freq = tools.compute_frequencies(cluster_counts)
-    return z*sum([ 2 + sum([ cluster_freq[i][j]*math.log(cluster_freq[i][j], 2)
-                             for i in range(0, len(cluster_freq)) ])
-                   for j in range(0, len(cluster_freq[0])) ])
+def r_sequence(motif, n, m):
+    tmp = [ 2 + sum([ motif[i][j]*math.log(motif[i][j], 2) for i in range(n) ]) for j in range(m) ]
+    return 1.0/float(m)*sum(tmp)
 
 # information content
 # ------------------------------------------------------------------------------

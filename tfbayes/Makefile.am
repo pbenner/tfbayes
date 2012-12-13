@@ -3,7 +3,7 @@
 SUBDIRS  = fasta
 SUBDIRS += dpm
 SUBDIRS += config
-SUBDIRS += motif
+SUBDIRS += cluster
 SUBDIRS += phylotree
 SUBDIRS += uipac
 SUBDIRS += tools

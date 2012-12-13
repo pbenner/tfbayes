@@ -17,15 +17,16 @@
 # config parser utilities
 # ------------------------------------------------------------------------------
 
-def read_vector(config, section, option, converter):
-    vector_str = config.get(section, option)
+def read_vector(config_parser, section, option, converter):
+    vector_str = config_parser.get(section, option).replace('  ',' ').strip()
     vector     = map(converter, vector_str.split(' '))
     return vector
 
-def read_matrix(config, section, option, converter):
-    matrix_str = config.get(section, option)
+def read_matrix(config_parser, section, option, converter):
+    matrix_str = config_parser.get(section, option)
     matrix     = []
     for line in matrix_str.split('\n'):
+        line = line.replace('  ',' ').strip()
         if line != '':
             matrix.append([converter(a) for a in line.split(' ')])
     return matrix

@@ -75,13 +75,12 @@ void dpm_tfbs_save_result(ostream& file, dpm_tfbs_pmcmc_t& sampler)
         file << "map_partition = ";
         for (dpm_partition_t::const_iterator it = samples.map_partition.begin();
              it != samples.map_partition.end(); it++) {
-                if (it == samples.map_partition.begin()) {
-                        file << "{";
+                if (it != samples.map_partition.begin()) {
+                        file << ", ";
                 }
-                else {
-                        file << ", {";
-                }
-                for (index_set_t::const_iterator is = it->begin(); is != it->end(); is++)
+                file << it->dpm_subset_tag() << ":{";
+
+                for (dpm_subset_t::const_iterator is = it->begin(); is != it->end(); is++)
                 {
                         if (is != it->begin()) {
                                 file << ", ";

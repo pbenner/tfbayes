@@ -22,11 +22,14 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <boost/unordered_set.hpp> 
+#include <boost/unordered_set.hpp>
 
 #include <index.hh>
+#include <datatypes.hh>
 
-class index_set_t : public boost::unordered_set<index_i*> {
+typedef ssize_t dpm_subset_tag_t;
+
+class dpm_subset_t : public boost::unordered_set<index_i*> {
 public:
         // typedefs
         ////////////////////////////////////////////////////////////////////////
@@ -34,15 +37,16 @@ public:
 
         // constructors
         ////////////////////////////////////////////////////////////////////////
-        index_set_t()
-                : boost::unordered_set<index_i*>()
+        dpm_subset_t(const dpm_subset_tag_t& dpm_subset_tag)
+        : boost::unordered_set<index_i*>(),
+          _dpm_subset_tag(dpm_subset_tag)
                 {}
-        index_set_t(const index_set_t& index_set)
+        dpm_subset_t(const dpm_subset_t& dpm_subset)
                 : boost::unordered_set<index_i*>() {
-                operator=(index_set);
+                operator=(dpm_subset);
         }
         // free every index in the set before the set gets destructed
-        virtual ~index_set_t() {
+        virtual ~dpm_subset_t() {
                 for (set_t::const_iterator it = this->begin();
                      it != this->end(); it++) {
                         index_i* index = *it;
@@ -50,13 +54,13 @@ public:
                 }
         }
         // make sure that every element is cloned
-        index_set_t& operator=(const index_set_t& index_set) {
+        dpm_subset_t& operator=(const dpm_subset_t& dpm_subset) {
                 this->clear();
-                for (set_t::const_iterator it = index_set.begin();
-                     it != index_set.end(); it++) {
+                for (set_t::const_iterator it = dpm_subset.begin();
+                     it != dpm_subset.end(); it++) {
                         insert(**it);
                 }
-
+                _dpm_subset_tag = dpm_subset.dpm_subset_tag();
                 return *this;
         }
 
@@ -66,16 +70,24 @@ public:
 
                 set_t::insert(index.clone());
         }
+
+        // each subset represents a cluster with a specific model
+        const dpm_subset_tag_t dpm_subset_tag() const {
+                return _dpm_subset_tag;
+        }
+
+private:
+        dpm_subset_tag_t _dpm_subset_tag;
 };
 
-class dpm_partition_t : public std::vector<index_set_t> {
+class dpm_partition_t : public std::vector<dpm_subset_t> {
 public:
         dpm_partition_t()
-                : std::vector<index_set_t>()
+                : std::vector<dpm_subset_t>()
                 {}
 
-        void add_component() {
-                this->push_back(index_set_t());
+        void add_component(const dpm_subset_tag_t& dpm_subset_tag) {
+                this->push_back(dpm_subset_t(dpm_subset_tag));
         }
         
 };

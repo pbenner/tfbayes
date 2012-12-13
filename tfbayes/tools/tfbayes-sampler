@@ -34,6 +34,7 @@ import numpy.random        as rd
 # ------------------------------------------------------------------------------
 
 from tfbayes.dpm.dpm_tfbs_interface import *
+from tfbayes.config                 import *
 
 # global options
 # ------------------------------------------------------------------------------
@@ -98,20 +99,6 @@ def usage():
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
-
-def read_vector(config_parser, section, option, converter):
-    vector_str = config_parser.get(section, option).replace('  ',' ').strip()
-    vector     = map(converter, vector_str.split(' '))
-    return vector
-
-def read_matrix(config_parser, section, option, converter):
-    matrix_str = config_parser.get(section, option)
-    matrix     = []
-    for line in matrix_str.split('\n'):
-        line = line.replace('  ',' ').strip()
-        if line != '':
-            matrix.append([converter(a) for a in line.split(' ')])
-    return matrix
 
 def parse_config(config_file):
     config_parser = ConfigParser.RawConfigParser()

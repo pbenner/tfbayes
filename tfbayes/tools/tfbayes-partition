@@ -32,9 +32,10 @@ import numpy               as     np
 import numpy.random.mtrand as     mt
 import numpy.random        as     rd
 
-from tfbayes.fasta import fasta
-from tfbayes.motif import *
-from tfbayes.uipac import *
+from tfbayes.fasta   import fasta
+from tfbayes.cluster import *
+from tfbayes.uipac   import *
+from tfbayes.config  import *
 
 def importMatplotlib(backend=None):
     global pyplot
@@ -55,15 +56,16 @@ def importMatplotlib(backend=None):
 # ------------------------------------------------------------------------------
 
 options = {
-    'plot'         : False,
-    'revcomp'      : False,
-    'tfbs_length'  : None,
-    'result_file'  : None,
-    'seq_file'     : None,
-    'join'         : False,
-    'load'         : None,
-    'save'         : None,
-    'verbose'      : False,
+    'plot'             : False,
+    'revcomp'          : False,
+    'tfbs_length'      : None,
+    'result_file'      : None,
+    'seq_file'         : None,
+    'join'             : False,
+    'load'             : None,
+    'save'             : None,
+    'baseline_priors'  : [],
+    'verbose'          : False,
     }
 
 # usage
@@ -94,7 +96,13 @@ def usage():
 # parse results config
 # ------------------------------------------------------------------------------
 
-def parse_config(config_file):
+class dpm_subset_t():
+    # the identifier gives the cluster type, i.e. which component model
+    # or prior the subset represents
+    identifier = None
+    subset     = None
+
+def parse_sampler_config(config_file):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
     if not config_parser.has_section('TFBS-Sampler'):
@@ -103,6 +111,22 @@ def parse_config(config_file):
     options['tfbs_length'] = int(config_parser.get('TFBS-Sampler', 'tfbs-length'))
     if config_parser.has_option('TFBS-Sampler', 'save'):
         options['result_file'] = config_parser.get('TFBS-Sampler', 'save')
+    if config_parser.has_option('TFBS-Sampler', 'baseline-priors'):
+        for prior_name in read_vector(config_parser, 'TFBS-Sampler', 'baseline-priors', str):
+            prior = read_matrix(config_parser, 'TFBS-Sampler', prior_name, float)
+            options['baseline_priors'].append(prior)
+
+def parse_partition_identifier(partition_str, end):
+    # start is the position of '{', we want the identifier
+    # before this bracket
+    start = 0
+    if not partition_str[end-1] == ':':
+        raise ValueError('Invalid MAP partition.')
+    for i in range(end-1,-1,-1):
+        if (partition_str[i] == ' ' or partition_str[i] == ','):
+            start = i+1
+            break
+    return int(partition_str[start:end-1])
 
 def parse_partition_subsets(partition_str):
     """Split the partition string into a list of its subsets."""
@@ -111,8 +135,9 @@ def parse_partition_subsets(partition_str):
         if c == '{':
             stack.append(i)
         elif c == '}' and stack:
-            start = stack.pop()
-            yield partition_str[start + 1: i]
+            start      = stack.pop()
+            identifier = parse_partition_identifier(partition_str, start)
+            yield identifier, partition_str[start + 1: i]
 
 def parse_partition_elements(subset_str):
     """Split the string of a subset into its elements and parse them."""
@@ -128,8 +153,11 @@ def parse_partition_elements(subset_str):
 def parse_partition(config_parser):
     partition_str = config_parser.get('Result', 'map_partition').strip()
     partition     = []
-    for subset in parse_partition_subsets(partition_str):
-        partition.append(list(parse_partition_elements(subset)))
+    for identifier, subset in parse_partition_subsets(partition_str):
+        dpm_subset = dpm_subset_t()
+        dpm_subset.identifier = identifier
+        dpm_subset.subset     = list(parse_partition_elements(subset))
+        partition.append(dpm_subset)
     return partition
 
 # parse sequences file
@@ -163,17 +191,22 @@ def parse_sequences(seq_file):
 # sort motifs
 # ------------------------------------------------------------------------------
 
+def update_identifier(cluster_list):
+    for idx, cluster in enumerate(cluster_list):
+        cluster.identifier = idx
+    return cluster_list
+
 def permutation_indices(scores):
      return sorted(range(len(scores)), key = scores.__getitem__, reverse=True)
 
 def sort_cluster_list(cluster_list):
-    # the score is the criterion to which the list of motifs
+    # the score is the criterion according to which the list of motifs
     # is sorted
     scores = [ cluster.average_counts() for cluster in cluster_list ]
     # sort this list and obtain the permutation pi
     pi     = permutation_indices(scores)
     # return a sorted list of motifs
-    return [ cluster_list[i] for i in pi ]
+    return update_identifier([ cluster_list[i] for i in pi ])
 
 # plot motifs
 # ------------------------------------------------------------------------------
@@ -192,11 +225,14 @@ def plot_cluster_list(cluster_list):
 # generate motifs
 # ------------------------------------------------------------------------------
 
-def generate_cluster(sequences, subset, identifier):
-    counts     = [ [ 0.0 for j in range(options['tfbs_length']) ] for i in range(4) ]
-    counts_gap = [ 0.0 ] * options['tfbs_length']
-    components = len(subset)
-    for position in subset:
+def generate_cluster(sequences, dpm_subset, identifier):
+    counts       = [ [ 0.0 for j in range(options['tfbs_length']) ] for i in range(4) ]
+    counts_gap   = [ 0.0 ] * options['tfbs_length']
+    alpha        = options['baseline_priors'][dpm_subset.identifier][0:4]
+    alpha_gap    = options['baseline_priors'][dpm_subset.identifier][4]
+    components   = len(dpm_subset.subset)
+    cluster_type = dpm_subset.identifier
+    for position in dpm_subset.subset:
         s = position[0]
         p = position[1]
         # loop over the motif
@@ -205,13 +241,13 @@ def generate_cluster(sequences, subset, identifier):
             for i in range(4):
                 counts[i][j] += sequences[s][p+j][i]
             counts_gap[j] += sequences[s][p+j][4]
-    return cluster_t(counts, counts_gap, components, identifier)
+    return cluster_t(counts, counts_gap, alpha, alpha_gap, components, identifier)
 
 def generate_cluster_list(sequences, partition):
     """Loop through the partition and for each subset generate a motif."""
     cluster_list = []
-    for idx, subset in enumerate(partition):
-        cluster_list.append(generate_cluster(sequences, subset, idx))
+    for idx, dpm_subset in enumerate(partition):
+        cluster_list.append(generate_cluster(sequences, dpm_subset, idx))
     return sort_cluster_list(cluster_list)
 
 # main
@@ -255,7 +291,7 @@ def main():
         usage()
         return 1
     # option default options from config file
-    parse_config(*tail)
+    parse_sampler_config(*tail)
     # override those options with command line arguments
     for o, a in opts:
         if o in ("-v", "--verbose"):

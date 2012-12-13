@@ -110,7 +110,7 @@ def alignment_approximate(multiple_alignment, phylotree):
     result = []
     for i in range(len(multiple_alignment[0])):
         # filter all positions where the reference sequence has a gap
-        if stripindex and multiple_alignment[stripindex][i] == '-':
+        if not stripindex == None and multiple_alignment[stripindex][i] == '-':
             continue
         # fill observations array
         for alignment in multiple_alignment:

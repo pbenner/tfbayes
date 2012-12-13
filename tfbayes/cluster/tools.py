@@ -20,22 +20,6 @@ import math
 
 from ..uipac.alphabet import DNA
 
-# config tools
-# ------------------------------------------------------------------------------
-
-def read_vector(config, section, option, converter):
-    vector_str = config.get(section, option)
-    vector     = map(converter, vector_str.split(' '))
-    return vector
-
-def read_matrix(config, section, option, converter):
-    matrix_str = config.get(section, option)
-    matrix     = []
-    for line in matrix_str.split('\n'):
-        if line != '':
-            matrix.append([converter(a) for a in line.split(' ')])
-    return matrix
-
 # counts -> frequencies
 # ------------------------------------------------------------------------------
 
@@ -80,13 +64,13 @@ def revcomp(counts, n, m):
 # ------------------------------------------------------------------------------
 
 def average_counts(counts, n, m):
-    return sum([ sum([ counts[i][j] for i in range(n) ]) for j in range(m) ])/float(n)
+    return sum([ sum([ counts[i][j] for i in range(n) ]) for j in range(m) ])/float(m)
 
-# compute the posterior probabilities expectations of a cluster given
+# compute the posterior expectations of a cluster given
 # prior pseudo counts
 # ------------------------------------------------------------------------------
 
-def posterior_expectation(counts, alpha, n, m):
+def motif(counts, alpha, n, m):
     counts_sum  = [ sum(map(lambda c: float(c[j]), counts)) for j in range(m) ]
     alpha_sum   = [ sum(map(lambda a: float(a[j]), alpha )) for j in range(m) ]
     expectation = [ [ float(counts[i][j] + alpha[i][j])/(counts_sum[j]+alpha_sum[j])
@@ -94,10 +78,10 @@ def posterior_expectation(counts, alpha, n, m):
                     for i in range(n) ]
     return expectation
 
-# probabilities -> pwm
+# motif -> pwm
 # ------------------------------------------------------------------------------
 
-def pwm(expectation, n, m):
+def pwm(motif, n, m):
     bg = [ 0.0 ] * n
     bg[DNA.code('A')] = 0.3
     bg[DNA.code('C')] = 0.2

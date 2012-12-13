@@ -28,8 +28,6 @@
 
 #include <clonable.hh>
 #include <index.hh>
-#include <dpm-graph.hh>
-#include <dpm-partition.hh>
 
 #include <tfbayes/linalg.h>
 
@@ -56,6 +54,9 @@ typedef struct {
         std::vector<std::vector<double> > posterior;
         std::vector<std::vector<size_t> > components;
 } sampling_history_t;
+
+#include <dpm-graph.hh>
+#include <dpm-partition.hh>
 
 typedef struct {
         std::vector<std::vector<double> > probabilities;

@@ -344,7 +344,7 @@ AC_CONFIG_FILES([
 	tfbayes/config/Makefile
 	tfbayes/phylotree/Makefile
 	tfbayes/dpm/Makefile
-	tfbayes/motif/Makefile
+	tfbayes/cluster/Makefile
 	tfbayes/uipac/Makefile
 	tfbayes/tools/Makefile
  	])
