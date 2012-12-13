@@ -24,14 +24,15 @@ from corebio.seq import Alphabet
 from weblogolib import *
 from weblogolib.colorscheme import nucleotide
 
-from information import r_sequence
 from ..uipac.alphabet import DNA
+
+import information
 
 # cluster plotting
 # ------------------------------------------------------------------------------
 
 def plot_motif(motif, file_name, title, fout=None):
-    print 'Generating %s...' % file_name
+    print 'Generating %s ...' % file_name
     # convert probabilities to counts by simply scaling the pobabilities,
     # this is ok, since the logo is scaled by the discrete entropy and not
     # the differential entropy of the Dirichlet-compound posterior distribution
@@ -49,7 +50,7 @@ def plot_motif(motif, file_name, title, fout=None):
     options.unit_name       = "nats"
     options.yaxis_label     = "p"
     # use discrete entropy to scale the logo
-    data.entropy[i] = tools.entropy(motif, len(motif), len(motif[0]))
+    data.entropy = information.entropy(motif, len(motif), len(motif[0]))
     format = LogoFormat(data, options)
     if not fout:
         fout = open(file_name, 'w')

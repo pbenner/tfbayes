@@ -25,10 +25,7 @@ import subprocess
 import sys
 import Bio.Motif as Motif
 
-from tfbayes.motif import fileio
-from tfbayes.motif import information
-from tfbayes.motif import tools
-from tfbayes.motif import plot
+from tfbayes.cluster import *
 
 # global options
 # ------------------------------------------------------------------------------
@@ -75,7 +72,7 @@ def parse_motif(fin, name, output_file):
         else:
             fin.seek(position)
             break
-    plot.plot_probability(motif, output_file, name)
+    plot.plot_motif(motif, output_file, name)
 
 def join_plots(basename, files):
     cmd = 'pdftk %s cat output %s.pdf' % (' '.join(files), basename)
