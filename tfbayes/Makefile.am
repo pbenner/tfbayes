@@ -2,6 +2,7 @@
 
 SUBDIRS  = fasta
 SUBDIRS += dpm
+SUBDIRS += config
 SUBDIRS += motif
 SUBDIRS += phylotree
 SUBDIRS += uipac

@@ -16,76 +16,42 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# config parser utilities
+import re
+
+from ..config import *
+
+# load and save cluster
 # ------------------------------------------------------------------------------
 
-def read_vector(config, section, option, converter):
-    vector_str = config.get(section, option)
-    vector     = map(converter, vector_str.split(' '))
-    return vector
+def load_cluster(config_parser, cluster_name):
+    result      = re.match('cluster_([0-9]+)', cluster_name)
+    counts      = read_matrix(config_parser, 'Cluster', cluster_name, float)[:4]
+    counts_gap  = read_matrix(config_parser, 'Cluster', cluster_name, float)[4]
+    components  = int(config_parser.get('Cluster', '%s_components' % cluster_name))
+    identifier  = int(result.group(1))
+    return cluster_t(counts, counts_gap, components, identifier)
 
-def read_matrix(config, section, option, converter):
-    matrix_str = config.get(section, option)
-    matrix     = []
-    for line in matrix_str.split('\n'):
-        if line != '':
-            matrix.append([converter(a) for a in line.split(' ')])
-    return matrix
-
-def write_vector(config, section, option, vector):
-    config.set(section, option, " ".join(map(str, vector)))
-
-def write_matrix(config, section, option, matrix):
-    config.set(section, option, "\n"+"\n".join(map(lambda arg: " ".join(map(str, arg)), matrix)))
-
-# load and save motifs
-# ------------------------------------------------------------------------------
-
-def save_motifs(config_parser, bg, motifs, components):
-    if not config_parser.has_section('Cluster'):
-        config_parser.add_section('Cluster')
-    cluster_names = []
-    for n, motif, comp in zip(range(0, len(motifs)), motifs, components):
-        cluster_name = 'cluster_%d' % n
-        cluster_names.append(cluster_name)
-        write_matrix(config_parser, 'Cluster', cluster_name, motif)
-        config_parser.set('Cluster', '%s_components' % cluster_name, str(comp))
-    write_vector(config_parser, 'Cluster', 'cluster', cluster_names)
-    write_matrix(config_parser, 'Cluster', 'cluster_bg', bg)
-
-def save_motifs(config_parser, motifs, components):
-    if not config_parser.has_section('Cluster'):
-        config_parser.add_section('Cluster')
-    cluster_names = []
-    for n, motif, comp in zip(range(0, len(motifs)), motifs, components):
-        cluster_name = 'cluster_%d' % n
-        cluster_names.append(cluster_name)
-        write_matrix(config_parser, 'Cluster', cluster_name, motif)
-        config_parser.set('Cluster', '%s_components' % cluster_name, str(comp))
-    write_vector(config_parser, 'Cluster', 'cluster', cluster_names)
-
-def load_motifs(config_parser):
-    bg = read_matrix(config_parser, 'Cluster', 'cluster_bg', float)
-    motifs = []
-    components = []
-    cluster_names = read_vector(config_parser, 'Cluster', 'cluster', str)
-    for cluster_name in cluster_names:
-        motifs.append(read_matrix(config_parser, 'Cluster', cluster_name, float))
-        components.append(int(config_parser.get('Cluster', '%s_components' % cluster_name)))
-    return bg, motifs, components
-
-# load cluster
-# ------------------------------------------------------------------------------
-
-def load_cluster(config_parser):
+def load_cluster_list(config_parser):
     cluster_list  = []
     cluster_names = read_vector(config_parser, 'Cluster', 'cluster', str)
     for cluster_name in cluster_names:
-        cluster                = cluster_t
-        cluster.counts         = read_matrix(config_parser, 'Cluster', cluster_name, float)
-        cluster.components     = int(config_parser.get('Cluster', '%s_components' % cluster_name))
-        cluster.identifier     = cluster_name
-        cluster.average_counts = 
-        motifs.append(read_matrix(config_parser, 'Cluster', cluster_name, float))
-        components.append(int(config_parser.get('Cluster', '%s_components' % cluster_name)))
-    return bg, motifs, components
+        cluster_list.append(load_cluster(config_parser, cluster_name))
+    return cluster_list
+
+def save_cluster(config_parser, cluster):
+    if not config_parser.has_section('Cluster'):
+        config_parser.add_section('Cluster')
+    # name of the cluster in the config file
+    cluster_name = 'cluster_%d' % cluster.identifier
+    # write cluster counts
+    write_matrix(config_parser, 'Cluster', cluster_name, cluster.counts)
+    # write number of cluster components
+    config_parser.set('Cluster', '%s_components' % cluster_name, cluster.components)
+    return cluster_name
+
+def save_cluster_list(config_parser, cluster_list):
+    cluster_names = []
+    for cluster in cluster_list:
+        cluster_name = save_cluster(config_parser, cluster)
+        cluster_names.append(cluster_name)
+    write_vector(config_parser, 'Cluster', 'cluster', cluster_names)

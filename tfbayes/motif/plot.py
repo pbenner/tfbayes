@@ -23,7 +23,7 @@ from corebio.seq import Alphabet
 from weblogolib import *
 from weblogolib.colorscheme import nucleotide
 
-from ..motif.tools import reverse_complement
+from ..motif.tools import revcomp
 from ..motif.information import r_sequence
 from ..uipac.alphabet import DNA
 
@@ -56,12 +56,11 @@ def plot_probability(motif, file_name, title, fout=None):
     else:
         pdf_formatter(data, format, fout)
 
-def plot_motif(motif, file_name, title, fout=None):
+def plot_counts(counts, file_name, title, fout=None):
     print 'Generating %s ...' % file_name
-    counts = [ [ motif[j][i] for j in range(4) ] for i in range(len(motif[0])) ]
     alphabet = Alphabet(DNA.letters, zip(DNA.letters.lower(), DNA.letters))
-    data = LogoData.from_counts(alphabet, np.array(counts))
-    options = LogoOptions()
+    data     = LogoData.from_counts(alphabet, np.array(counts))
+    options  = LogoOptions()
     options.color_scheme    = nucleotide
     options.logo_title      = title
     options.creator_text    = ''
@@ -76,22 +75,23 @@ def plot_motif(motif, file_name, title, fout=None):
     else:
         pdf_formatter(data, format, fout)
 
-def average_components(motif):
-    counts  = [ sum([ motif[j][i] for j in range(4) ]) for i in range(len(motif[0])) ]
-    average = sum(counts)/float(len(motif[0]))
-    return average
+def plot_cluster(cluster, basename, is_revcomp=False):
+    title = 'Cluster %d. A = %.1f. C = %d' % (cluster.identifier, cluster.average_counts(), cluster.components)
+    # use a different file name if cluster is a reverse complement of some
+    # other cluster
+    if is_revcomp:
+        file_name = '%s_cluster_%d_revcomp.pdf' % (basename, cluster.identifier)
+    else:
+        file_name = '%s_cluster_%d.pdf' % (basename, cluster.identifier)
+    # do the actual plotting here
+    plot_counts(cluster.counts, file_name, title)
+    # and return the file name of the pdf
+    return file_name
 
-def plot_motifs(motifs, components, basename, revcomp=False):
+def plot_cluster_list(cluster_list, basename, revcomp=False):
     files = []
-    for n, motif, comp in zip(range(0, len(motifs)), motifs, components):
-        file_name = '%s_cluster_%d.pdf' % (basename, n)
-        title = 'Cluster %d. A = %.1f. C = %d' % (n, average_components(motif), comp)
-        plot_motif(motif, file_name, title)
-        files.append(file_name)
+    for cluster in cluster_list:
+        files.append(plot_cluster(cluster, basename, False))
         if revcomp:
-            motif_revcomp = reverse_complement(motif)
-            file_name = '%s_cluster_%d_revcomp.pdf' % (basename, n)
-            title = 'Cluster %d. A = %.1f. C = %d' % (n, average_components(motif), comp)
-            plot_motif(motif_revcomp, file_name, title)
-            files.append(file_name)
+            files.append(plot_cluster(cluster.revcomp(), basename, True))
     return files

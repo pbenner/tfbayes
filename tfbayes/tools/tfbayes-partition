@@ -33,12 +33,8 @@ import numpy.random.mtrand as     mt
 import numpy.random        as     rd
 
 from tfbayes.fasta import fasta
-from tfbayes.motif import fileio
-from tfbayes.motif import information
-from tfbayes.motif import tools
-from tfbayes.motif import plot
-
-from tfbayes.uipac.alphabet import DNA
+from tfbayes.motif import *
+from tfbayes.uipac import *
 
 def importMatplotlib(backend=None):
     global pyplot
@@ -167,24 +163,24 @@ def parse_sequences(seq_file):
 # sort motifs
 # ------------------------------------------------------------------------------
 
-def permutation_indices(data):
-     return sorted(range(len(data)), key = data.__getitem__, reverse=True)
+def permutation_indices(scores):
+     return sorted(range(len(scores)), key = scores.__getitem__, reverse=True)
 
-def sort_motifs(motifs):
+def sort_cluster_list(cluster_list):
     # the score is the criterion to which the list of motifs
     # is sorted
-    score = [ average_components(motif) for motif in motifs ]
+    scores = [ cluster.average_counts() for cluster in cluster_list ]
     # sort this list and obtain the permutation pi
-    pi    = permutation_indices(score)
+    pi     = permutation_indices(scores)
     # return a sorted list of motifs
-    return [ motifs[i] for i in pi ]
+    return [ cluster_list[i] for i in pi ]
 
 # plot motifs
 # ------------------------------------------------------------------------------
 
-def plot_motifs(motifs, components):
+def plot_cluster_list(cluster_list):
     basename = os.path.splitext(os.path.split(options['result_file'])[1])[0]
-    files    = plot.plot_motifs(motifs, components, basename, revcomp=options['revcomp'])
+    files    = plot.plot_cluster_list(cluster_list, basename, revcomp=options['revcomp'])
     if options['join']:
         cmd = 'pdftk %s cat output %s_cluster.pdf' % (' '.join(files), basename)
         print cmd
@@ -196,28 +192,27 @@ def plot_motifs(motifs, components):
 # generate motifs
 # ------------------------------------------------------------------------------
 
-def generate_motif(sequences, subset, motif_length):
-    motif = [ [ 0.0 for j in range(0, motif_length) ] for i in range(0, 5) ]
+def generate_cluster(sequences, subset, identifier):
+    counts     = [ [ 0.0 for j in range(options['tfbs_length']) ] for i in range(4) ]
+    counts_gap = [ 0.0 ] * options['tfbs_length']
+    components = len(subset)
     for position in subset:
         s = position[0]
         p = position[1]
         # loop over the motif
-        for j in range(motif_length):
-            # loop over all nucleotides
-            for i in range(5):
-                motif[i][j] += sequences[s][p+j][i]
-    return motif
+        for j in range(options['tfbs_length']):
+            # loop over all nucleotides plus counts for gaps
+            for i in range(4):
+                counts[i][j] += sequences[s][p+j][i]
+            counts_gap[j] += sequences[s][p+j][4]
+    return cluster_t(counts, counts_gap, components, identifier)
 
-def generate_motifs(sequences, partition, motif_length):
+def generate_cluster_list(sequences, partition):
     """Loop through the partition and for each subset generate a motif."""
-    motifs = []
-    motif_counts = []
-    components = []
-    for subset in partition:
-        motif = generate_motif(sequences, subset, motif_length)
-        motifs.append(motif)
-        components.append(len(subset))
-    return sort_motifs(motifs), components
+    cluster_list = []
+    for idx, subset in enumerate(partition):
+        cluster_list.append(generate_cluster(sequences, subset, idx))
+    return sort_cluster_list(cluster_list)
 
 # main
 # ------------------------------------------------------------------------------
@@ -236,20 +231,20 @@ def __main__():
     if options['load']:
         config_parser_load = ConfigParser.ConfigParser()
         config_parser_load.read(options['load'])
-        bg, motifs, components = fileio.load_motifs(config_parser_load)
+        cluster_list = fileio.load_cluster_list(config_parser_load)
     else:
-        motifs, components = generate_motifs(sequences, partition, options['tfbs_length'])
+        cluster_list = generate_cluster_list(sequences, partition)
     if options['save']:
-        fileio.save_motifs(config_parser_save, motifs, components)
+        fileio.save_cluster_list(config_parser_save, cluster_list)
         configfile = open(options['save'], 'wb')
         config_parser_save.write(configfile)
     else:
-        plot_motifs(motifs, components)
+        plot_cluster_list(cluster_list)
 
 def main():
     global options
     try:
-        longopts   = ["help", "verbose", "plot", "join"
+        longopts   = ["help", "verbose", "plot", "join",
                       "result=", "sequences=", "load=", "save="]
         opts, tail = getopt.getopt(sys.argv[1:], "rjpls:v", longopts)
     except getopt.GetoptError:
