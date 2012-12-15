@@ -62,7 +62,6 @@ def write_alignment(file_name, alignments):
         sys.stderr.write('Writing fasta file %s.\n' % file_name)
     AlignIO.write(alignments, file_name, "fasta")
 
-
 # main
 # ------------------------------------------------------------------------------
 
