@@ -19,18 +19,10 @@
 # imports
 # ------------------------------------------------------------------------------
 
-import re
-import math
-import time
-import ConfigParser
 import sys
 import getopt
 import os
 import subprocess
-
-import numpy               as     np
-import numpy.random.mtrand as     mt
-import numpy.random        as     rd
 
 from tfbayes.fasta   import *
 from tfbayes.cluster import *
