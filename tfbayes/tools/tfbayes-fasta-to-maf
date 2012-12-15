@@ -20,12 +20,7 @@
 # ------------------------------------------------------------------------------
 
 import getopt
-import re
 import sys
-
-import Queue
-import threading
-import thread
 
 from Bio                    import AlignIO
 
