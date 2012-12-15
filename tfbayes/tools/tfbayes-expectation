@@ -169,7 +169,7 @@ def launch_threads(jobs):
 # go through the list of fasta files and package them nicely as jobs
 # ------------------------------------------------------------------------------
 
-def __main__(fasta_files):
+def main(fasta_files):
     jobs = []
     n    = 0
     for fasta_file in fasta_files:
@@ -181,10 +181,10 @@ def __main__(fasta_files):
 
     launch_threads(jobs)
 
-# main
+# __main__
 # ------------------------------------------------------------------------------
 
-def main():
+def __main__():
     global options
     try:
         longopts   = ["prior=", "threads=", "help", "verbose"]
@@ -218,8 +218,8 @@ def main():
     options['phylotree'] = pt_parse_file(tail[0])
     options['leafmap']   = pt_create_map(options['phylotree'])
     # call main with fasta files as argument
-    __main__(tail[1:])
+    main(tail[1:])
     return 0
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(__main__())
