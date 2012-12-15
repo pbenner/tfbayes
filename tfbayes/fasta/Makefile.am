@@ -12,7 +12,7 @@ libfasta_la_LDFLAGS = -no-undefined -version-info 0:0:0
 pkgpythondir = $(pyexecdir)/tfbayes/fasta
 
 ## compile python files
-pkgpython_PYTHON = __init__.py fasta.py
+pkgpython_PYTHON = __init__.py fasta.py sequences.py
 
 ## clean python files
 clean-local:

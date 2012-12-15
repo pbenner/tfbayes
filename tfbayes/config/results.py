@@ -20,23 +20,23 @@ import ConfigParser
 
 from tools import *
 
-# parse config
+# parse results config
 # ------------------------------------------------------------------------------
 
-def parse_results_config(config_file, options):
+def parse_results_config(config_file, results_config):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
     if not config_parser.has_section('Result'):
         raise IOError("Invalid configuration file.")
     if config_parser.has_option('Result', 'components'):
-        options['components'] = read_matrix(config_parser, 'Result', 'components', int)
+        results_config['components'] = read_matrix(config_parser, 'Result', 'components', int)
     if config_parser.has_option('Result', 'likelihood'):
-        options['likelihood'] = read_matrix(config_parser, 'Result', 'likelihood', float)
+        results_config['likelihood'] = read_matrix(config_parser, 'Result', 'likelihood', float)
     if config_parser.has_option('Result', 'posterior'):
-        options['posterior'] = read_matrix(config_parser, 'Result', 'posterior', float)
+        results_config['posterior'] = read_matrix(config_parser, 'Result', 'posterior', float)
     if config_parser.has_option('Result', 'switches'):
-        options['switches'] = read_matrix(config_parser, 'Result', 'switches', float)
+        results_config['switches'] = read_matrix(config_parser, 'Result', 'switches', float)
     if config_parser.has_option('Result', 'graph'):
-        options['graph'] = config_parser.get('Result', 'graph')
+        results_config['graph'] = config_parser.get('Result', 'graph')
     if config_parser.has_option('Result', 'map_partition'):
-        options['map_partition'] = config_parser.get('Result', 'map_partition')
+        results_config['map_partition'] = config_parser.get('Result', 'map_partition')

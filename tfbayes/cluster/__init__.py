@@ -19,3 +19,4 @@ from fileio      import *
 from plot        import *
 from information import *
 from tools       import *
+from parser      import generate_cluster_list

@@ -4,7 +4,7 @@
 pkgpythondir = $(pyexecdir)/tfbayes/cluster
 
 ## compile python files
-pkgpython_PYTHON = __init__.py cluster.py fileio.py information.py plot.py tools.py
+pkgpython_PYTHON = __init__.py cluster.py fileio.py information.py plot.py tools.py parser.py
 
 ## clean python files
 clean-local:
