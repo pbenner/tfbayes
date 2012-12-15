@@ -47,10 +47,16 @@ def plot_motif(motif, file_name, title, fout=None):
     options.stacks_per_line = 60
     options.yaxis_scale     = 1.0
     options.scale_width     = False
+    # use the natural logarithm as unit
     options.unit_name       = "nats"
     options.yaxis_label     = "p"
     # use discrete entropy to scale the logo
-    data.entropy = information.entropy(motif, len(motif), len(motif[0]))
+    # note: somehow the weblogo library requires that the entropy is inverted:
+    # Log(|A|) - H(X)
+    # that is, the stack height is simply defined by what is given by data.entropy,
+    # since we use nats, the entropy should also be in the interval [0, 1]!
+    data.entropy = map(lambda x: 1.0 - x/math.log(4), information.entropy(motif, len(motif), len(motif[0])))
+    data.entropy_interval = None
     format = LogoFormat(data, options)
     if not fout:
         fout = open(file_name, 'w')
@@ -59,11 +65,13 @@ def plot_motif(motif, file_name, title, fout=None):
     else:
         pdf_formatter(data, format, fout)
 
-def plot_counts(counts, file_name, title, fout=None):
+def plot_counts(counts, alpha, file_name, title, fout=None):
     print 'Generating %s ...' % file_name
-    # transpose the counts matrix
-    counts   = [ [ counts[j][i] for j in range(len(counts)) ] for i in range(len(counts[0])) ]
+    # transpose the counts matrix and add the prior
+    counts   = [ [ counts[j][i] + alpha[j][i] for j in range(len(counts)) ] for i in range(len(counts[0])) ]
     alphabet = Alphabet(DNA.letters, zip(DNA.letters.lower(), DNA.letters))
+    # do not use the prior option from LogoData, it computes a strange mean relative entropy,
+    # but by adding the pseudo counts to the counts we get what we want
     data     = LogoData.from_counts(alphabet, np.array(counts))
     options  = LogoOptions()
     options.color_scheme    = nucleotide
@@ -90,7 +98,7 @@ def plot_cluster(cluster, basename, is_revcomp=False):
         title = 'Cluster %d. A = %.1f. C = %d. RS = %.2f' % (cluster.identifier, cluster.average_counts(), cluster.components, cluster.r_sequence())
         file_name = '%s_cluster_%d.pdf' % (basename, cluster.identifier)
     # do the actual plotting here
-    plot_counts(cluster.counts, file_name, title)
+    plot_counts(cluster.counts, cluster.alpha, file_name, title)
     # and return the file name of the pdf
     return file_name
 

@@ -24,6 +24,8 @@ import tools
 
 def entropy(motif, n, m):
     """For each column in the motif compute the discrete entropy."""
+    # use the natural logarithm since this is also what the weblogo library
+    # expects
     result = [ 0.0 ] * m
     for j in range(m):
         result[j] = sum([ -motif[i][j]*math.log(motif[i][j]) for i in range(n) ])

@@ -64,10 +64,14 @@ def parse_motif(fin, name, output_file):
             break
         result = pattern.match(line)
         if result:
-            motif[0].append(float(result.group(1)))
-            motif[1].append(float(result.group(2)))
-            motif[2].append(float(result.group(3)))
-            motif[3].append(float(result.group(4)))
+            # rescale the expectations since we only use the first four
+            tmp = [float(result.group(1)), float(result.group(2)),
+                   float(result.group(3)), float(result.group(4))]
+            tmp = map(lambda x: x/sum(tmp), tmp)
+            motif[0].append(tmp[0])
+            motif[1].append(tmp[1])
+            motif[2].append(tmp[2])
+            motif[3].append(tmp[3])
             position = fin.tell()
         else:
             fin.seek(position)
