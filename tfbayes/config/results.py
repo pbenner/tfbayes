@@ -1,0 +1,42 @@
+#! /usr/bin/env python
+
+# Copyright (C) 2011, 2012 Philipp Benner
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+import ConfigParser
+
+from tools import *
+
+# parse config
+# ------------------------------------------------------------------------------
+
+def parse_results_config(config_file, options):
+    config_parser = ConfigParser.RawConfigParser()
+    config_parser.read(config_file)
+    if not config_parser.has_section('Result'):
+        raise IOError("Invalid configuration file.")
+    if config_parser.has_option('Result', 'components'):
+        options['components'] = read_matrix(config_parser, 'Result', 'components', int)
+    if config_parser.has_option('Result', 'likelihood'):
+        options['likelihood'] = read_matrix(config_parser, 'Result', 'likelihood', float)
+    if config_parser.has_option('Result', 'posterior'):
+        options['posterior'] = read_matrix(config_parser, 'Result', 'posterior', float)
+    if config_parser.has_option('Result', 'switches'):
+        options['switches'] = read_matrix(config_parser, 'Result', 'switches', float)
+    if config_parser.has_option('Result', 'graph'):
+        options['graph'] = config_parser.get('Result', 'graph')
+    if config_parser.has_option('Result', 'map_partition'):
+        options['map_partition'] = config_parser.get('Result', 'map_partition')

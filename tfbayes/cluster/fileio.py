@@ -18,40 +18,46 @@
 
 import re
 
-from ..config import *
+from ..config  import *
+from cluster   import *
 
 # load and save cluster
 # ------------------------------------------------------------------------------
 
-def load_cluster(config_parser, cluster_name):
-    result      = re.match('cluster_([0-9]+)', cluster_name)
-    counts      = read_matrix(config_parser, 'Cluster', cluster_name, float)[:4]
-    counts_gap  = read_matrix(config_parser, 'Cluster', cluster_name, float)[4]
-    components  = int(config_parser.get('Cluster', '%s_components' % cluster_name))
-    identifier  = int(result.group(1))
-    return cluster_t(counts, counts_gap, components, identifier)
+def load_cluster(cluster_parser, sampler_config, cluster_name):
+    result       = re.match('cluster_([0-9]+)', cluster_name)
+    counts       = read_matrix(cluster_parser, 'Cluster', cluster_name, float)[:4]
+    counts_gap   = read_matrix(cluster_parser, 'Cluster', cluster_name, float)[4]
+    components   = int(cluster_parser.get('Cluster', '%s_components' % cluster_name))
+    identifier   = int(result.group(1))
+    cluster_type = int(cluster_parser.get('Cluster', '%s_type' % cluster_name))
+    alpha        = sampler_config['baseline_priors'][cluster_type][0:4]
+    alpha_gap    = sampler_config['baseline_priors'][cluster_type][4]
+    return cluster_t(counts, counts_gap, alpha, alpha_gap, components, identifier, cluster_type)
 
-def load_cluster_list(config_parser):
+def load_cluster_list(cluster_parser, sampler_config):
     cluster_list  = []
-    cluster_names = read_vector(config_parser, 'Cluster', 'cluster', str)
+    cluster_names = read_vector(cluster_parser, 'Cluster', 'cluster', str)
     for cluster_name in cluster_names:
-        cluster_list.append(load_cluster(config_parser, cluster_name))
+        cluster_list.append(load_cluster(cluster_parser, sampler_config, cluster_name))
     return cluster_list
 
-def save_cluster(config_parser, cluster):
-    if not config_parser.has_section('Cluster'):
-        config_parser.add_section('Cluster')
+def save_cluster(cluster_parser, cluster):
+    if not cluster_parser.has_section('Cluster'):
+        cluster_parser.add_section('Cluster')
     # name of the cluster in the config file
     cluster_name = 'cluster_%d' % cluster.identifier
     # write cluster counts
-    write_matrix(config_parser, 'Cluster', cluster_name, cluster.counts)
+    write_matrix(cluster_parser, 'Cluster', cluster_name, cluster.counts+[cluster.counts_gap])
     # write number of cluster components
-    config_parser.set('Cluster', '%s_components' % cluster_name, cluster.components)
+    cluster_parser.set('Cluster', '%s_components' % cluster_name, cluster.components)
+    # write cluster type (i.e. which prior was used)
+    cluster_parser.set('Cluster', '%s_type' % cluster_name, cluster.cluster_type)
     return cluster_name
 
-def save_cluster_list(config_parser, cluster_list):
+def save_cluster_list(cluster_parser, cluster_list):
     cluster_names = []
     for cluster in cluster_list:
-        cluster_name = save_cluster(config_parser, cluster)
+        cluster_name = save_cluster(cluster_parser, cluster)
         cluster_names.append(cluster_name)
-    write_vector(config_parser, 'Cluster', 'cluster', cluster_names)
+    write_vector(cluster_parser, 'Cluster', 'cluster', cluster_names)

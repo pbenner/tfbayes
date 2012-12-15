@@ -31,7 +31,8 @@ import numpy               as     np
 import numpy.random.mtrand as     mt
 import numpy.random        as     rd
 
-from tfbayes.fasta import fasta
+from tfbayes.fasta  import *
+from tfbayes.config import *
 
 def importMatplotlib(backend=None):
     global pyplot
@@ -76,41 +77,10 @@ def usage():
     print "   -v, --verbose                  - be verbose"
     print
 
-# parse results config
-# ------------------------------------------------------------------------------
-
-def read_vector(config, section, option, converter):
-    vector_str = config.get(section, option)
-    vector     = map(converter, vector_str.split(' '))
-    return vector
-
-def read_matrix(config, section, option, converter):
-    matrix_str = config.get(section, option)
-    matrix     = []
-    for line in matrix_str.split('\n'):
-        if line != '':
-            matrix.append([converter(a) for a in line.split(' ')])
-    return matrix
-
-def parseResultsConfig(config_file):
-    config_parser = ConfigParser.RawConfigParser()
-    config_parser.read(config_file)
-
-    posterior  = read_matrix(config_parser, 'Result', 'posterior',  float)
-    components = read_matrix(config_parser, 'Result', 'components', int)
-
-    return posterior, components
-
-def parseSamplerConfig(config_file):
-    config_parser = ConfigParser.RawConfigParser()
-    config_parser.read(config_file)
-
-    return config_parser.get('TFBS-Sampler', 'save')
-
 # plot
 # ------------------------------------------------------------------------------
 
-def plot_posterior_and_components(posterior, components, show):
+def plot_posterior_and_components(results_config, show):
     fig = pyplot.figure()
     fig.subplots_adjust(left=0.15)
     ax1 = fig.add_subplot(2,1,1)
@@ -118,13 +88,13 @@ def plot_posterior_and_components(posterior, components, show):
     ax1.set_xlabel("sample")
     ax1.set_ylabel("log posterior")
     ax2.set_ylabel("components")
-    for l in posterior:
+    for l in results_config['posterior']:
         p1 = ax1.plot(l)
-    for c in components:
+    for c in results_config['components']:
         p2 = ax2.plot(c)
     show()
 
-def plot_result(results_file):
+def plot_result(results_config):
     if options['save']:
         importMatplotlib('Agg')
         pp    = PdfPages(options['save'])
@@ -134,17 +104,20 @@ def plot_result(results_file):
         importMatplotlib()
         show  = pyplot.show
         close = None
-    posterior, components = parseResultsConfig(results_file)
-    plot_posterior_and_components(posterior, components, show)
+    plot_posterior_and_components(results_config, show)
     if close:
         close()
 
 # main
 # ------------------------------------------------------------------------------
 
-def main(sampler_config):
-    results_file = parseSamplerConfig(sampler_config)
-    plot_result(results_file)
+def main(sampler_config_file):
+    sampler_config = {}
+    results_config = {}
+    parse_sampler_config(sampler_config_file, sampler_config)
+    results_config_file = sampler_config['save']
+    parse_results_config(results_config_file, results_config)
+    plot_result(results_config)
 
 # __main__
 # ------------------------------------------------------------------------------

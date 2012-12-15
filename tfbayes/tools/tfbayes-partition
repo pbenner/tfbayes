@@ -32,7 +32,7 @@ import numpy               as     np
 import numpy.random.mtrand as     mt
 import numpy.random        as     rd
 
-from tfbayes.fasta   import fasta
+from tfbayes.fasta   import *
 from tfbayes.cluster import *
 from tfbayes.uipac   import *
 from tfbayes.config  import *
@@ -55,16 +55,19 @@ def importMatplotlib(backend=None):
 # global options
 # ------------------------------------------------------------------------------
 
+sampler_config = {
+    'baseline_priors'  : [],
+    'seq_file'         : None,
+    'tfbs_length'      : None,
+    'save'             : None,
+    }
+
 options = {
     'plot'             : False,
     'revcomp'          : False,
-    'tfbs_length'      : None,
-    'result_file'      : None,
-    'seq_file'         : None,
     'join'             : False,
     'load'             : None,
     'save'             : None,
-    'baseline_priors'  : [],
     'verbose'          : False,
     }
 
@@ -80,9 +83,6 @@ def usage():
     print "of ChIP data. Motifs can be either plotted or saved as counts."
     print
     print "Options:"
-    print "       --result=FILE              - sampler result file"
-    print "       --sequences=FILE           - fasta sequences file"
-    print
     print "   -j, --join                     - join plots with pdftk"
     print "   -r                             - also plot reverse complements"
     print
@@ -101,20 +101,6 @@ class dpm_subset_t():
     # or prior the subset represents
     identifier = None
     subset     = None
-
-def parse_sampler_config(config_file):
-    config_parser = ConfigParser.RawConfigParser()
-    config_parser.read(config_file)
-    if not config_parser.has_section('TFBS-Sampler'):
-        raise IOError("Invalid configuration file.")
-    options['seq_file'] = config_parser.get('TFBS-Sampler', 'sequences')
-    options['tfbs_length'] = int(config_parser.get('TFBS-Sampler', 'tfbs-length'))
-    if config_parser.has_option('TFBS-Sampler', 'save'):
-        options['result_file'] = config_parser.get('TFBS-Sampler', 'save')
-    if config_parser.has_option('TFBS-Sampler', 'baseline-priors'):
-        for prior_name in read_vector(config_parser, 'TFBS-Sampler', 'baseline-priors', str):
-            prior = read_matrix(config_parser, 'TFBS-Sampler', prior_name, float)
-            options['baseline_priors'].append(prior)
 
 def parse_partition_identifier(partition_str, end):
     # start is the position of '{', we want the identifier
@@ -150,10 +136,9 @@ def parse_partition_elements(subset_str):
             element = subset_str[start + 1: i].split(':')
             yield (int(element[0]), int(element[1]))
 
-def parse_partition(config_parser):
-    partition_str = config_parser.get('Result', 'map_partition').strip()
-    partition     = []
-    for identifier, subset in parse_partition_subsets(partition_str):
+def parse_partition(results_config):
+    partition = []
+    for identifier, subset in parse_partition_subsets(results_config['map_partition']):
         dpm_subset = dpm_subset_t()
         dpm_subset.identifier = identifier
         dpm_subset.subset     = list(parse_partition_elements(subset))
@@ -188,7 +173,7 @@ def parse_sequences(seq_file):
         sequences.append(parse_line(lines))
     return descriptions, sequences
 
-# sort motifs
+# sort cluster
 # ------------------------------------------------------------------------------
 
 def update_identifier(cluster_list):
@@ -208,11 +193,39 @@ def sort_cluster_list(cluster_list):
     # return a sorted list of motifs
     return update_identifier([ cluster_list[i] for i in pi ])
 
+# generate motifs
+# ------------------------------------------------------------------------------
+
+def generate_cluster(sequences, dpm_subset, identifier):
+    counts       = [ [ 0.0 for j in range(sampler_config['tfbs_length']) ] for i in range(4) ]
+    counts_gap   = [ 0.0 ] * sampler_config['tfbs_length']
+    alpha        = sampler_config['baseline_priors'][dpm_subset.identifier][0:4]
+    alpha_gap    = sampler_config['baseline_priors'][dpm_subset.identifier][4]
+    components   = len(dpm_subset.subset)
+    cluster_type = dpm_subset.identifier
+    for position in dpm_subset.subset:
+        s = position[0]
+        p = position[1]
+        # loop over the motif
+        for j in range(sampler_config['tfbs_length']):
+            # loop over all nucleotides plus counts for gaps
+            for i in range(4):
+                counts[i][j] += sequences[s][p+j][i]
+            counts_gap[j] += sequences[s][p+j][4]
+    return cluster_t(counts, counts_gap, alpha, alpha_gap, components, identifier, cluster_type)
+
+def generate_cluster_list(sequences, partition):
+    """Loop through the partition and for each subset generate a motif."""
+    cluster_list = []
+    for idx, dpm_subset in enumerate(partition):
+        cluster_list.append(generate_cluster(sequences, dpm_subset, idx))
+    return sort_cluster_list(cluster_list)
+
 # plot motifs
 # ------------------------------------------------------------------------------
 
 def plot_cluster_list(cluster_list):
-    basename = os.path.splitext(os.path.split(options['result_file'])[1])[0]
+    basename = os.path.splitext(os.path.split(sampler_config['save'])[1])[0]
     files    = plot.plot_cluster_list(cluster_list, basename, revcomp=options['revcomp'])
     if options['join']:
         cmd = 'pdftk %s cat output %s_cluster.pdf' % (' '.join(files), basename)
@@ -222,52 +235,33 @@ def plot_cluster_list(cluster_list):
         print cmd
         subprocess.call(cmd, shell=True)
 
-# generate motifs
-# ------------------------------------------------------------------------------
-
-def generate_cluster(sequences, dpm_subset, identifier):
-    counts       = [ [ 0.0 for j in range(options['tfbs_length']) ] for i in range(4) ]
-    counts_gap   = [ 0.0 ] * options['tfbs_length']
-    alpha        = options['baseline_priors'][dpm_subset.identifier][0:4]
-    alpha_gap    = options['baseline_priors'][dpm_subset.identifier][4]
-    components   = len(dpm_subset.subset)
-    cluster_type = dpm_subset.identifier
-    for position in dpm_subset.subset:
-        s = position[0]
-        p = position[1]
-        # loop over the motif
-        for j in range(options['tfbs_length']):
-            # loop over all nucleotides plus counts for gaps
-            for i in range(4):
-                counts[i][j] += sequences[s][p+j][i]
-            counts_gap[j] += sequences[s][p+j][4]
-    return cluster_t(counts, counts_gap, alpha, alpha_gap, components, identifier)
-
-def generate_cluster_list(sequences, partition):
-    """Loop through the partition and for each subset generate a motif."""
-    cluster_list = []
-    for idx, dpm_subset in enumerate(partition):
-        cluster_list.append(generate_cluster(sequences, dpm_subset, idx))
-    return sort_cluster_list(cluster_list)
-
 # main
 # ------------------------------------------------------------------------------
 
-def __main__():
-    # get a parser for the config file
-    config_parser_results = ConfigParser.ConfigParser()
-    config_parser_results.read(options['result_file'])
+def main(sampler_config_file):
+    results_config = {}
+    parse_sampler_config(sampler_config_file, sampler_config)
+    # check if all required options are specified
+    if not sampler_config['tfbs_length']:
+        raise IOError('tfbs length is unknown')
+    if not sampler_config['save']:
+        raise IOError('no result file specified')
+    if not sampler_config['seq_file']:
+        raise IOError('no sequences file specified')
+    # parse results file
+    results_config_file = sampler_config['save']
+    parse_results_config(results_config_file, results_config)
     # parse the fasta file
-    descriptions, sequences = parse_sequences(options['seq_file'])
+    descriptions, sequences = parse_sequences(sampler_config['seq_file'])
     # parse the map partition
-    partition               = parse_partition(config_parser_results)
+    partition               = parse_partition(results_config)
     if options['save']:
         config_parser_save = ConfigParser.ConfigParser()
         config_parser_save.read(options['save'])
     if options['load']:
         config_parser_load = ConfigParser.ConfigParser()
         config_parser_load.read(options['load'])
-        cluster_list = fileio.load_cluster_list(config_parser_load)
+        cluster_list = fileio.load_cluster_list(config_parser_load, sampler_config)
     else:
         cluster_list = generate_cluster_list(sequences, partition)
     if options['save']:
@@ -277,11 +271,11 @@ def __main__():
     else:
         plot_cluster_list(cluster_list)
 
-def main():
+def __main__():
     global options
+    global sampler_config
     try:
-        longopts   = ["help", "verbose", "plot", "join",
-                      "result=", "sequences=", "load=", "save="]
+        longopts   = ["help", "verbose", "plot", "join", "load=", "save="]
         opts, tail = getopt.getopt(sys.argv[1:], "rjpls:v", longopts)
     except getopt.GetoptError:
         usage()
@@ -290,8 +284,6 @@ def main():
     if len(tail) != 1:
         usage()
         return 1
-    # option default options from config file
-    parse_sampler_config(*tail)
     # override those options with command line arguments
     for o, a in opts:
         if o in ("-v", "--verbose"):
@@ -306,24 +298,13 @@ def main():
             options['plot'] = True
         if o == "-r":
             options['revcomp'] = True
-        if o == "--result":
-            options['result_file'] = a
-        if o == "--sequences":
-            options['seq_file'] = a
         if o in ("-l", "--load"):
             options['load'] = a
         if o in ("-s", "--save"):
             options['save'] = a
-    # check if all required options are specified
-    if not options['tfbs_length']:
-        raise IOError('tfbs length is unknown')
-    if not options['result_file']:
-        raise IOError('no result file specified')
-    if not options['seq_file']:
-        raise IOError('no sequences file specified')
-    # call __main__ and exit
-    __main__()
+    # call main and exit
+    main(tail[0])
     return 0
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(__main__())

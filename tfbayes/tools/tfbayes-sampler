@@ -39,7 +39,7 @@ from tfbayes.config                 import *
 # global options
 # ------------------------------------------------------------------------------
 
-options = {
+sampler_config = {
     'alpha'               : 0.05,
     'discount'            : 0.0,
     'lambda'              : 0.01,
@@ -50,15 +50,18 @@ options = {
     'background_alpha'    : [[1],[1],[1],[1],[5]],
     'background_context'  : 2,
     'background_weights'  : 'decay',
-    'samples'             : (1000,100),
     'population_size'     : 1,
     'tfbs_length'         : 10,
-    'save'                : None,
-    'input_file'          : None,
-    'verbose'             : False,
+    'seq_file'            : None,
     'baseline_weights'    : [1.0],
     'baseline_priors'     : [],
-    'socket_file'         : ''
+    'socket_file'         : '',
+    'samples'             : (1000,100),
+    'save'                : None
+    }
+
+options = {
+    'verbose'             : False
     }
 
 # usage
@@ -73,99 +76,51 @@ def usage():
     print "processed with `tfbayes-approximate'."
     print
     print "Options:"
-    print "       --alpha=FLOAT              - alpha parameter for the DP"
-    print "       --discount=DISCOUNT        - Pitman-Yor discount (0 <= d < 1)"
-    print "       --lambda=LAMBDA            - lambda mixture weight"
-    print "       --context=CONTEXT          - context of the background model"
-    print "       --process-prior=NAME       - possible process priors:"
-    print "                                    pitman-yor process (default),"
-    print "                                    uniform process, poppe process"
-    print "       --background-model=NAME    - possible background models:"
-    print "                                    independence (default),"
-    print "                                    markov chain mixture,"
-    print "                                    parsimonious tree"
-    print "       --tfbs-length=LENGTH       - length of the tfbs"
+    print "       --alpha=FLOAT               - alpha parameter for the DP"
+    print "       --discount=DISCOUNT         - Pitman-Yor discount (0 <= d < 1)"
+    print "       --lambda=LAMBDA             - lambda mixture weight"
+    print "       --context=CONTEXT           - context of the background model"
+    print "       --process-prior=NAME        - possible process priors:"
+    print "                                     pitman-yor process (default),"
+    print "                                     uniform process, poppe process"
+    print "       --background-model=NAME     - possible background models:"
+    print "                                     independence (default),"
+    print "                                     markov chain mixture,"
+    print "                                     parsimonious tree"
+    print "       --tfbs-length=LENGTH        - length of the tfbs"
     print
-    print "   -s, --save=FILE                - save posterior to FILE"
-    print "       --samples=SAMPLES:BURN_IN  - number of samples [default: 1000:100]"
-    print "       --population-size=INT      - number of parallel samplers [default: 1]"
+    print "   -s, --save=FILE                 - save posterior to FILE"
+    print "       --samples=SAMPLES[:BURN_IN] - number of samples [default: 1000:100]"
+    print "       --population-size=INT       - number of parallel samplers [default: 1]"
     print
-    print "   -h, --help                     - print help"
-    print "   -v, --verbose                  - be verbose"
+    print "   -h, --help                      - print help"
+    print "   -v, --verbose                   - be verbose"
     print
-
-# parse config
-# ------------------------------------------------------------------------------
-
-def str2bool(v):
-    return v.lower() in ("yes", "true", "t", "1")
-
-def parse_config(config_file):
-    config_parser = ConfigParser.RawConfigParser()
-    config_parser.read(config_file)
-    if not config_parser.has_section('TFBS-Sampler'):
-        raise IOError("Invalid configuration file.")
-    options['input_file'] = config_parser.get('TFBS-Sampler', 'sequences')
-    if config_parser.has_option('TFBS-Sampler', 'alpha'):
-        options['alpha'] = float(config_parser.get('TFBS-Sampler', 'alpha'))
-    if config_parser.has_option('TFBS-Sampler', 'discount'):
-        options['discount'] = float(config_parser.get('TFBS-Sampler', 'discount'))
-    if config_parser.has_option('TFBS-Sampler', 'lambda'):
-        options['lambda'] = float(config_parser.get('TFBS-Sampler', 'lambda'))
-    if config_parser.has_option('TFBS-Sampler', 'process-prior'):
-        options['process_prior'] = config_parser.get('TFBS-Sampler', 'process-prior').strip()
-    if config_parser.has_option('TFBS-Sampler', 'background-model'):
-        options['background_model'] = config_parser.get('TFBS-Sampler', 'background-model').strip()
-    if config_parser.has_option('TFBS-Sampler', 'background-alpha'):
-        options['background_alpha'] = read_matrix(config_parser, 'TFBS-Sampler', 'background-alpha', float)
-    if config_parser.has_option('TFBS-Sampler', 'background-context'):
-        options['background_context'] = int(config_parser.get('TFBS-Sampler', 'background-context'))
-    if config_parser.has_option('TFBS-Sampler', 'background-weights'):
-        options['background_weights'] = config_parser.get('TFBS-Sampler', 'background-weights')
-    if config_parser.has_option('TFBS-Sampler', 'tfbs-length'):
-        options['tfbs_length'] = int(config_parser.get('TFBS-Sampler', 'tfbs-length'))
-    if config_parser.has_option('TFBS-Sampler', 'construct-graph'):
-        options['construct_graph'] = str2bool(config_parser.get('TFBS-Sampler', 'construct_graph'))
-    if config_parser.has_option('TFBS-Sampler', 'metropolis-optimize'):
-        options['metropolis_optimize'] = str2bool(config_parser.get('TFBS-Sampler', 'metropolis-optimize'))
-    if config_parser.has_option('TFBS-Sampler', 'population-size'):
-        options['population_size'] = int(config_parser.get('TFBS-Sampler', 'population-size'))
-    if config_parser.has_option('TFBS-Sampler', 'save'):
-        options['save'] = config_parser.get('TFBS-Sampler', 'save')
-    if config_parser.has_option('TFBS-Sampler', 'samples'):
-        options['samples'] = tuple(map(int, config_parser.get('TFBS-Sampler', 'samples').split(":")))
-    if config_parser.has_option('TFBS-Sampler', 'baseline-weights'):
-        options['baseline_weights'] = read_vector(config_parser, 'TFBS-Sampler', 'baseline-weights', int)
-    if config_parser.has_option('TFBS-Sampler', 'baseline-priors'):
-        for prior_name in read_vector(config_parser, 'TFBS-Sampler', 'baseline-priors', str):
-            prior = read_matrix(config_parser, 'TFBS-Sampler', prior_name, float)
-            options['baseline_priors'].append(prior)
-    if config_parser.has_option('TFBS-Sampler', 'socket-file'):
-        options['socket_file'] = config_parser.get('TFBS-Sampler', 'socket-file').strip()
 
 # sample
 # ------------------------------------------------------------------------------
 
 def sample():
     # generate baseline
-    if not options['baseline_priors']:
-        options['baseline_priors'].append([ [ 1 for j in range(options['tfbs_length']) ] for i in range(5) ])
-    if not len(options['baseline_priors']) == len(options['baseline_weights']):
+    if not sampler_config['baseline_priors']:
+        sampler_config['baseline_priors'].append([ [ 1 for j in range(sampler_config['tfbs_length']) ] for i in range(5) ])
+    if not len(sampler_config['baseline_priors']) == len(sampler_config['baseline_weights']):
         if options['verbose']:
             print "Setting uniform weights for baseline priors"
-        options['baseline_weights'] = [ 1 ] * len(options['baseline_priors'])
+        sampler_config['baseline_weights'] = [ 1 ] * len(sampler_config['baseline_priors'])
     # sample
-    samples = options['samples'][0]
-    burnin  = options['samples'][1]
-    dpm_init(options, options['input_file'])
+    samples = sampler_config['samples'][0]
+    burnin  = sampler_config['samples'][1]
+    dpm_init(sampler_config, sampler_config['seq_file'])
     dpm_sample(samples, burnin)
-    dpm_save(options['save'])
+    dpm_save(sampler_config['save'])
 
 # main
 # ------------------------------------------------------------------------------
 
 def main():
     global options
+    global sampler_config
     try:
         longopts   = ["help", "verbose", "lambda=", "discount=", "alpha=",
                       "context", "process-prior=", "backround-model=",
@@ -179,7 +134,7 @@ def main():
         usage()
         return 1
     # option default options from config file
-    parse_config(*tail)
+    parse_sampler_config(tail[0], sampler_config)
     # override those options with command line arguments
     for o, a in opts:
         if o in ("-v", "--verbose"):
@@ -190,28 +145,35 @@ def main():
             return 0
         if o == "--discount":
             if 0 <= float(a) and float(a) < 1:
-                options['discount'] = float(a)
+                sampler_config['discount'] = float(a)
             else:
                 usage()
                 return 1
         if o == "--alpha":
-            options['alpha'] = float(a)
+            sampler_config['alpha'] = float(a)
         if o == "--lambda":
-            options['lambda'] = float(a)
+            sampler_config['lambda'] = float(a)
         if o == "--context":
-            options['context'] = int(a)
+            sampler_config['context'] = int(a)
         if o == "--process-prior":
-            options['process_prior'] = a
+            sampler_config['process_prior'] = a
         if o == "--background-model":
-            options['background_model'] = a
+            sampler_config['background_model'] = a
         if o == "--tfbs-length":
-            options['tfbs_length'] = int(a)
+            sampler_config['tfbs_length'] = int(a)
         if o == "--population-size":
-            options['population_size'] = int(a)
+            sampler_config['population_size'] = int(a)
         if o in ("-s", "--save"):
-            options['save'] = a
+            sampler_config['save'] = a
         if o == "--samples":
-            options["samples"] = tuple(map(int, a.split(":")))
+            tmp = map(int, a.split(":"))
+            if len(tmp) == 2:
+                sampler_config["samples"] = tuple(tmp)
+            elif len(tmp) == 1:
+                sampler_config["samples"] = (tmp[0], 0)
+            else:
+                usage()
+                return 1
     sample()
     return 0
 
