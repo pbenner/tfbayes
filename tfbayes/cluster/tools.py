@@ -87,4 +87,4 @@ def pwm(motif, n, m):
     bg[DNA.code('C')] = 0.2
     bg[DNA.code('G')] = 0.2
     bg[DNA.code('T')] = 0.3
-    return [ [ math.log(expectation[i][j]/bg[i], 2) for j in range(m) ] for i in range(n) ]
+    return [ [ math.log(motif[i][j]/bg[i], 2) for j in range(m) ] for i in range(n) ]

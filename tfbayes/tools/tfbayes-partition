@@ -115,8 +115,6 @@ def main(sampler_config_file):
     # parse results file
     results_config_file = sampler_config['save']
     parse_results_config(results_config_file, results_config)
-    # parse the fasta file
-    descriptions, sequences = parse_sequences(sampler_config['seq_file'])
     if options['save']:
         config_parser_save = ConfigParser.ConfigParser()
         config_parser_save.read(options['save'])
@@ -125,6 +123,8 @@ def main(sampler_config_file):
         config_parser_load.read(options['load'])
         cluster_list = fileio.load_cluster_list(config_parser_load, sampler_config)
     else:
+        # parse sequences fasta file
+        descriptions, sequences = parse_sequences(sampler_config['seq_file'])
         cluster_list = generate_cluster_list(sequences, sampler_config, results_config)
     if options['save']:
         fileio.save_cluster_list(config_parser_save, cluster_list)

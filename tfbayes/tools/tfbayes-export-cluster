@@ -35,11 +35,8 @@ sampler_config = {
     }
 
 options = {
-    'format'         : 'maf',
-    'species'        : None,
-    'revcomp'        : False,
-    'threshold'      : 20.0,
     'load'           : None,
+    'revcomp'        : False,
     'verbose'        : False,
     }
 
@@ -49,72 +46,40 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "tfbayes-scan [option]... SAMPLER_CONFIG CLUSTER_NUMBER SEQUENCES..."
+    print "tfbayes-export-cluster [option]... SAMPLER_CONFIG CLUSTER_NUMBER"
     print
-    print "Scan a set of fasta sequences or multiple alignments in maf format for"
-    print "sequences that match a cluster. If fasta files are used, then all sequences"
-    print "in the fasta files are scanned. For maf files, only the sequences of a"
-    print "reference species is scanned."
+    print "Given a sampling result, export one of the clusters as a pwm. The"
+    print "output of this program can be used with `tfbayes-scal' to search"
+    print "alignments of sequences for matches."
     print
     print "Options:"
-    print "       --format=STR               - format of the input file(s) (fasta or maf)"
-    print "                                    [default: maf]"
-    print "       --species=NAME             - use species as reference (required for alignments)"
-    print "   -r                             - scan for the reverse complement"
-    print "       --load=FILE_NAME           - load motifs from file"
-    print "       --threshold=VALUE"
+    print "   -r                             - export reverse complement"
     print
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
     print
 
-# scan sequences file
+# print cluster
 # ------------------------------------------------------------------------------
 
-# use yield here!!
+def print_vector(vector):
+    for scalar in vector:
+        print '%5.2f ' % scalar,
+    print
 
-def scan_fasta(pwm, fasta_file):
+def print_matrix(matrix):
+    for idx, vector in enumerate(matrix):
+        print '%s: ' % DNA.decode(idx),
+        print_vector(vector)
+
+# export cluster
+# ------------------------------------------------------------------------------
+
+def export_cluster(cluster):
     if options['revcomp']:
-        pwm = tools.reverse_complement(pwm)
-    parser = fasta.parser(fasta_file)
-    length = len(pwm[0])
-    hits = 0
-    while 1:
-        description, sequence = parser.read_sequence()
-        if not sequence:
-            break
-        for j in range(0, len(sequence)-length):
-            sub_sequence = sequence[j:j+length]
-            score = tools.compute_score(pwm, sub_sequence)
-            if score > options['threshold']:
-                hits += 1
-                if len(description) >= 3:
-                    print "(%15s,%12s,%05i,%3.5f): %s" % (description[0], description[2], j, score, sub_sequence)
-                else:
-                    print "(%30s,%05i,%3.5f): %s" % (description[0], j, score, sub_sequence)
-    print "Found %d sequences." % hits
-    return tools.compute_frequencies(counts), hits+1
-
-# scan alignments (maf) or simple fasta sequences
-# ------------------------------------------------------------------------------
-
-def scan_maf_files(cluster, maf_files):
-    for maf_file in maf_files:
-        alignment_list = AlignIO.parse(maf_file, 'maf')
-        for alignment in alignment_list:
-            scan_alignment(cluster, alignment)
-
-def scan_fasta_files(cluster, fasta_files):
-    for fasta_file in fasta_files:
-        scan_fasta(cluster, fasta_file)
-
-def scan_sequences_files(cluster, sequences_files):
-    if options['format'] == 'maf':
-        scan_maf_files(cluster, sequences_files)
-    elif options['format'] == 'fasta':
-        scan_fasta_files(cluster, sequences_files)
+        print_matrix(cluster.revcomp().pwm())
     else:
-        raise ValueError("Unknown sequences format.")
+        print_matrix(cluster.pwm())
 
 # search the cluster list
 # ------------------------------------------------------------------------------
@@ -128,7 +93,7 @@ def find_cluster(cluster_list, cluster_number):
 # main
 # ------------------------------------------------------------------------------
 
-def main(sampler_config_file, cluster_number, sequences_files):
+def main(sampler_config_file, cluster_number):
     results_config = {}
     parse_sampler_config(sampler_config_file, sampler_config)
     # parse results file
@@ -143,7 +108,7 @@ def main(sampler_config_file, cluster_number, sequences_files):
         descriptions, sequences = parse_sequences(sampler_config['seq_file'])
         cluster_list = generate_cluster_list(sequences, sampler_config, results_config)
     cluster = find_cluster(cluster_list, cluster_number)
-    scan_sequences_files(cluster, sequences_files)
+    export_cluster(cluster)
 
 # __main__
 # ------------------------------------------------------------------------------
@@ -151,7 +116,7 @@ def main(sampler_config_file, cluster_number, sequences_files):
 def __main__():
     global options
     try:
-        longopts   = ["format=", "load=", "species=", "threshold=", "help", "verbose"]
+        longopts   = ["help", "verbose"]
         opts, tail = getopt.getopt(sys.argv[1:], "r", longopts)
     except getopt.GetoptError:
         usage()
@@ -164,27 +129,15 @@ def __main__():
         if o in ("-h", "--help"):
             usage()
             return 0
-        if o == "--format":
-            options['format'] = a
-        if o == "--species":
-            options['species'] = a
-        if o == "--threshold":
-            options['threshold'] = float(a)
         if o == "-r":
             options['revcomp'] = True
-    if len(tail) < 3:
-        usage()
-        return 1
-    # if format is maf then we need to know the reference
-    # species
-    if options['format'] is 'maf' and options['species'] is None:
+    if not len(tail) is 2:
         usage()
         return 1
     # call main
     sampler_config_file = tail[0]
     cluster_number      = tail[1]
-    sequences_files     = tail[2:]
-    main(sampler_config_file, int(cluster_number), sequences_files)
+    main(sampler_config_file, int(cluster_number))
 
 if __name__ == "__main__":
     sys.exit(__main__())

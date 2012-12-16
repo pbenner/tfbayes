@@ -122,7 +122,7 @@ def alignment_approximate(multiple_alignment, phylotree):
         result.append(pt_approximate(phylotree, observations))
     return result
 
-# parse fasta file
+# parse alignment
 # ------------------------------------------------------------------------------
 
 def get_alignment(file_name):
