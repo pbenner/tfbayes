@@ -90,6 +90,7 @@ def parse_motifformat(file_name):
     fin = open(file_name,   'r')
     pattern = re.compile('^>(.*)$')
     output_base = os.path.splitext(file_name)[0]
+    idx = 0
     files = []
     while True:
         line = fin.readline()
@@ -97,9 +98,10 @@ def parse_motifformat(file_name):
             break
         result = pattern.match(line)
         if result:
-            output_file = '%s_%s.pdf' % (output_base, result.group(1))
+            output_file = '%s_%s-%d.pdf' % (output_base, result.group(1), idx)
             parse_motif(fin, result.group(1), output_file)
             files.append(output_file)
+            idx += 1
         else:
             print "Invalid file format."
             exit(1)

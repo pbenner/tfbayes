@@ -154,7 +154,7 @@ class ComputationThread(threading.Thread):
                 print >> sys.stderr, 'Processing %s sequence %d.' % (job['file_name'], job['id'])
                 self.mutex.release()
             # turn the alignment into an approximation
-            result    = alignment_approximate(job['alignment'], self.phylotree)
+            result = alignment_approximate(job['alignment'], self.phylotree)
             if result:
                 container = {
                     'result'       : result,
