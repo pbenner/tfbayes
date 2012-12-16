@@ -37,6 +37,7 @@ options = {
     'format'         : 'maf',
     'species'        : None,
     'revcomp'        : False,
+    'skip-gaps'      : False,
     'threshold'      : 20.0,
     'load'           : None,
     'verbose'        : False,
@@ -59,6 +60,7 @@ def usage():
     print "Options:"
     print "       --format=STR               - format of the input file(s) (fasta or maf)"
     print "                                    [default: maf]"
+    print "       --skip-gaps                - skip gaps on the reference sequence"
     print "       --species=NAME             - use species as reference (required for alignments)"
     print "   -r                             - scan for the reverse complement"
     print "       --load=FILE_NAME           - load motifs from file"
@@ -71,13 +73,35 @@ def usage():
 # scan sequences file
 # ------------------------------------------------------------------------------
 
+def select_subsequence(sequence, i, length):
+    if options['skip-gaps']:
+        # skip all subsequences that start with a gap
+        if sequence[i] == '-':
+            return None
+        result = ""
+        for j in range(i, len(sequence)):
+            if not sequence[j] == '-':
+                result += sequence[j]
+            if len(result) == length:
+                break
+        # the resulting subsequence might be shorter
+        # than what we need!
+        if not len(result) is length:
+            return None
+        else:
+            return result, j
+    else:
+        return sequence[i:i+length], i+length
+
 def scan(pwm, sequence):
     length = len(pwm[0])
-    for j in range(len(sequence)-length):
-        sub_sequence = sequence[j:j+length]
-        score = cluster.score(pwm, sub_sequence)
-        if score > options['threshold']:
-            yield (j,j+length,score)
+    for i in range(len(sequence)-length):
+        result = select_subsequence(sequence, i, length)
+        if result:
+            subsequence, j = result
+            score = cluster.score(pwm, subsequence)
+            if score > options['threshold']:
+                yield (i,j,score)
 
 def scan_fasta(pwm, fasta_file):
     print "Scanning `%s':" % fasta_file
@@ -94,7 +118,7 @@ def scan_fasta(pwm, fasta_file):
                 print "(%15s,%12s,%05i,%8.5f): %s" % (description[0], description[2], i, score, sequence[i:j])
             else:
                 print "(%30s,%05i,%8.5f): %s" % (description[0], i, score, sequence[i:j])
-    print "Found %d sequences." % hits
+    return hits
 
 def find_track(species, alignment):
     for idx, track in enumerate(alignment):
@@ -113,20 +137,24 @@ def scan_alignment(pwm, alignment):
         hits += 1
         print "%s - Score: %f, Position: (%d, %d)" % (alignment[:,i:j], score, i, j)
         print
-    print "Found %d sequences." % hits
+    return hits
 
 # scan alignments (maf) or simple fasta sequences
 # ------------------------------------------------------------------------------
 
 def scan_maf_files(pwm, maf_files):
+    hits = 0
     for maf_file in maf_files:
         alignment_list = AlignIO.parse(maf_file, 'maf')
         for alignment in alignment_list:
-            scan_alignment(pwm, alignment)
+            hits += scan_alignment(pwm, alignment)
+    print "Found %d sequences." % hits
 
 def scan_fasta_files(pwm, fasta_files):
+    hits = 0
     for fasta_file in fasta_files:
-        scan_fasta(pwm, fasta_file)
+        hits += scan_fasta(pwm, fasta_file)
+    print "Found %d sequences." % hits
 
 def scan_sequences_files(pwm, sequences_files):
     if options['format'] == 'maf':
@@ -151,7 +179,7 @@ def main(pwm_file, sequences_files):
 def __main__():
     global options
     try:
-        longopts   = ["format=", "load=", "species=", "threshold=", "help", "verbose"]
+        longopts   = ["format=", "load=", "skip-gaps", "species=", "threshold=", "help", "verbose"]
         opts, tail = getopt.getopt(sys.argv[1:], "r", longopts)
     except getopt.GetoptError:
         usage()
@@ -166,6 +194,8 @@ def __main__():
             return 0
         if o == "--format":
             options['format'] = a
+        if o == "--skip-gaps":
+            options['skip-gaps'] = True
         if o == "--species":
             options['species'] = a
         if o == "--threshold":
