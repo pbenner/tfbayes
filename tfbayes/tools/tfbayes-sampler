@@ -107,6 +107,7 @@ def sample():
     dpm_init(sampler_config, sampler_config['seq_file'])
     dpm_sample(samples, burnin)
     dpm_save(sampler_config['save'])
+    dpm_free()
 
 # main
 # ------------------------------------------------------------------------------
