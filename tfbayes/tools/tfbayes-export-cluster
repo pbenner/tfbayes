@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# Copyright (C) 2011 Philipp Benner
+# Copyright (C) 2011, 2012 Philipp Benner
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,14 +19,13 @@
 import ConfigParser
 import getopt
 import os
-import math
 import sys
 
-from Bio                    import AlignIO
+from Bio               import AlignIO
 
-from tfbayes.fasta          import *
-from tfbayes.cluster        import *
-from tfbayes.uipac.alphabet import DNA
+from tfbayes.fasta     import *
+from tfbayes.config    import *
+from tfbayes.cluster   import *
 
 # global options
 # ------------------------------------------------------------------------------
@@ -59,27 +58,14 @@ def usage():
     print "   -v, --verbose                  - be verbose"
     print
 
-# print cluster
-# ------------------------------------------------------------------------------
-
-def print_vector(vector):
-    for scalar in vector:
-        print '%5.2f ' % scalar,
-    print
-
-def print_matrix(matrix):
-    for idx, vector in enumerate(matrix):
-        print '%s: ' % DNA.decode(idx),
-        print_vector(vector)
-
 # export cluster
 # ------------------------------------------------------------------------------
 
 def export_cluster(cluster):
     if options['revcomp']:
-        print_matrix(cluster.revcomp().pwm())
+        print_pwm(cluster.revcomp().pwm())
     else:
-        print_matrix(cluster.pwm())
+        print_pwm(cluster.pwm())
 
 # search the cluster list
 # ------------------------------------------------------------------------------

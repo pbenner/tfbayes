@@ -26,7 +26,6 @@ from Bio                    import AlignIO
 
 from tfbayes.fasta          import *
 from tfbayes.cluster        import *
-from tfbayes.uipac.alphabet import DNA
 
 # global options
 # ------------------------------------------------------------------------------
@@ -49,12 +48,13 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "tfbayes-scan [option]... SAMPLER_CONFIG CLUSTER_NUMBER SEQUENCES..."
+    print "tfbayes-scan [option]... PWM SEQUENCES..."
     print
     print "Scan a set of fasta sequences or multiple alignments in maf format for"
-    print "sequences that match a cluster. If fasta files are used, then all sequences"
+    print "sequences that match the pwm. If fasta files are used, then all sequences"
     print "in the fasta files are scanned. For maf files, only the sequences of a"
-    print "reference species is scanned."
+    print "reference species is scanned. Use `tfbayes-export-cluster' to obtain the"
+    print "PWM from a cluster."
     print
     print "Options:"
     print "       --format=STR               - format of the input file(s) (fasta or maf)"
@@ -98,52 +98,30 @@ def scan_fasta(pwm, fasta_file):
 # scan alignments (maf) or simple fasta sequences
 # ------------------------------------------------------------------------------
 
-def scan_maf_files(cluster, maf_files):
+def scan_maf_files(pwm, maf_files):
     for maf_file in maf_files:
         alignment_list = AlignIO.parse(maf_file, 'maf')
         for alignment in alignment_list:
-            scan_alignment(cluster, alignment)
+            scan_alignment(pwm, alignment)
 
-def scan_fasta_files(cluster, fasta_files):
+def scan_fasta_files(pwm, fasta_files):
     for fasta_file in fasta_files:
-        scan_fasta(cluster, fasta_file)
+        scan_fasta(pwm, fasta_file)
 
-def scan_sequences_files(cluster, sequences_files):
+def scan_sequences_files(pwm, sequences_files):
     if options['format'] == 'maf':
-        scan_maf_files(cluster, sequences_files)
+        scan_maf_files(pwm, sequences_files)
     elif options['format'] == 'fasta':
-        scan_fasta_files(cluster, sequences_files)
+        scan_fasta_files(pwm, sequences_files)
     else:
         raise ValueError("Unknown sequences format.")
-
-# search the cluster list
-# ------------------------------------------------------------------------------
-
-def find_cluster(cluster_list, cluster_number):
-    for cluster in cluster_list:
-        if cluster.identifier == cluster_number:
-            return cluster
-    raise ValueError("Cluster not found.")
 
 # main
 # ------------------------------------------------------------------------------
 
-def main(sampler_config_file, cluster_number, sequences_files):
-    results_config = {}
-    parse_sampler_config(sampler_config_file, sampler_config)
-    # parse results file
-    results_config_file = sampler_config['save']
-    parse_results_config(results_config_file, results_config)
-    if options['load']:
-        config_parser_load = ConfigParser.ConfigParser()
-        config_parser_load.read(options['load'])
-        cluster_list = fileio.load_cluster_list(config_parser_load, sampler_config)
-    else:
-        # parse sequences fasta file
-        descriptions, sequences = parse_sequences(sampler_config['seq_file'])
-        cluster_list = generate_cluster_list(sequences, sampler_config, results_config)
-    cluster = find_cluster(cluster_list, cluster_number)
-    scan_sequences_files(cluster, sequences_files)
+def main(pwm_file, sequences_files):
+    pwm = parse_pwm(pwm_file)
+    scan_sequences_files(pwm, sequences_files)
 
 # __main__
 # ------------------------------------------------------------------------------
@@ -172,7 +150,7 @@ def __main__():
             options['threshold'] = float(a)
         if o == "-r":
             options['revcomp'] = True
-    if len(tail) < 3:
+    if len(tail) < 2:
         usage()
         return 1
     # if format is maf then we need to know the reference
@@ -181,10 +159,9 @@ def __main__():
         usage()
         return 1
     # call main
-    sampler_config_file = tail[0]
-    cluster_number      = tail[1]
-    sequences_files     = tail[2:]
-    main(sampler_config_file, int(cluster_number), sequences_files)
+    pwm_file        = tail[0]
+    sequences_files = tail[1:]
+    main(pwm_file, sequences_files)
 
 if __name__ == "__main__":
     sys.exit(__main__())

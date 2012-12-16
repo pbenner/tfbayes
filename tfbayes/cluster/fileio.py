@@ -18,8 +18,9 @@
 
 import re
 
-from ..config  import *
-from cluster   import *
+from ..uipac  import *
+from ..config import *
+from cluster  import *
 
 # load and save cluster
 # ------------------------------------------------------------------------------
@@ -61,3 +62,38 @@ def save_cluster_list(cluster_parser, cluster_list):
         cluster_name = save_cluster(cluster_parser, cluster)
         cluster_names.append(cluster_name)
     write_vector(cluster_parser, 'Cluster', 'cluster', cluster_names)
+
+# print pwm
+# ------------------------------------------------------------------------------
+
+def print_vector(vector):
+    for scalar in vector:
+        print '%5.2f ' % scalar,
+    print
+
+def print_pwm(matrix):
+    for idx, vector in enumerate(matrix):
+        print '%s: ' % DNA.decode(idx),
+        print_vector(vector)
+
+# parse pwm
+# ------------------------------------------------------------------------------
+
+def parse_pwm_line(line):
+    m = re.match('([ACGTacgt]):', line[0])
+    if not m:
+        raise ValueError("Parsing of PWM failed!")
+    nucleotide = m.group(1)
+    entry      = map(float, line[1:])
+    return nucleotide, entry
+
+def parse_pwm(pwm_file):
+    pwm_fp = open(pwm_file, 'r')
+    pwm    = [[]] * 4
+    for line in pwm_fp:
+        line = filter(lambda x: not x is '', line.strip().split(' '))
+        if not len(line) is 0:
+            nucleotide, entry = parse_pwm_line(line)
+            pwm[DNA.code(nucleotide)] = entry
+    pwm_fp.close()
+    return pwm
