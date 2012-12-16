@@ -22,10 +22,10 @@ import os
 import math
 import sys
 
-from Bio                    import AlignIO
+from Bio     import AlignIO
 
-from tfbayes.fasta          import *
-from tfbayes.cluster        import *
+from tfbayes import fasta
+from tfbayes import cluster
 
 # global options
 # ------------------------------------------------------------------------------
@@ -71,29 +71,49 @@ def usage():
 # scan sequences file
 # ------------------------------------------------------------------------------
 
-# use yield here!!
+def scan(pwm, sequence):
+    length = len(pwm[0])
+    for j in range(len(sequence)-length):
+        sub_sequence = sequence[j:j+length]
+        score = cluster.score(pwm, sub_sequence)
+        if score > options['threshold']:
+            yield (j,j+length,score)
 
 def scan_fasta(pwm, fasta_file):
-    if options['revcomp']:
-        pwm = tools.reverse_complement(pwm)
+    print "Scanning `%s':" % fasta_file
     parser = fasta.parser(fasta_file)
     length = len(pwm[0])
-    hits = 0
+    hits   = 0
     while 1:
         description, sequence = parser.read_sequence()
         if not sequence:
             break
-        for j in range(0, len(sequence)-length):
-            sub_sequence = sequence[j:j+length]
-            score = tools.compute_score(pwm, sub_sequence)
-            if score > options['threshold']:
-                hits += 1
-                if len(description) >= 3:
-                    print "(%15s,%12s,%05i,%3.5f): %s" % (description[0], description[2], j, score, sub_sequence)
-                else:
-                    print "(%30s,%05i,%3.5f): %s" % (description[0], j, score, sub_sequence)
+        for i, j, score in scan(pwm, sequence):
+            hits += 1
+            if len(description) >= 3:
+                print "(%15s,%12s,%05i,%8.5f): %s" % (description[0], description[2], i, score, sequence[i:j])
+            else:
+                print "(%30s,%05i,%8.5f): %s" % (description[0], i, score, sequence[i:j])
     print "Found %d sequences." % hits
-    return tools.compute_frequencies(counts), hits+1
+
+def find_track(species, alignment):
+    for idx, track in enumerate(alignment):
+        if track.name == species:
+            return idx
+    sys.stderr.write('Warning, reference species not found.\n')
+    return -1
+
+def scan_alignment(pwm, alignment):
+    length = len(pwm[0])
+    hits   = 0
+    idx    = find_track(options['species'], alignment)
+    if idx is -1:
+        return
+    for i, j, score in scan(pwm, alignment[idx]):
+        hits += 1
+        print "%s - Score: %f, Position: (%d, %d)" % (alignment[:,i:j], score, i, j)
+        print
+    print "Found %d sequences." % hits
 
 # scan alignments (maf) or simple fasta sequences
 # ------------------------------------------------------------------------------
@@ -120,7 +140,9 @@ def scan_sequences_files(pwm, sequences_files):
 # ------------------------------------------------------------------------------
 
 def main(pwm_file, sequences_files):
-    pwm = parse_pwm(pwm_file)
+    pwm = cluster.parse_pwm(pwm_file)
+    if options['revcomp']:
+        pwm = cluster.revcomp(pwm, len(pwm), len(pwm[0]))
     scan_sequences_files(pwm, sequences_files)
 
 # __main__
