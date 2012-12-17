@@ -39,7 +39,7 @@ sampler_config = {
     'construct_graph'     : False,
     'metropolis_optimize' : True,
     'process_prior'       : "pitman-yor process",
-    'background_model'    : "independence",
+    'background_model'    : "independence-dirichlet",
     'background_alpha'    : [[1],[1],[1],[1],[5]],
     'background_context'  : 2,
     'background_weights'  : 'decay',

@@ -61,11 +61,19 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
 
         ////////////////////////////////////////////////////////////////////////////////
         // add background model to the state
-        if (options.background_model == "independence" || options.background_model == "") {
-                // product_dirichlet_t* bg = new product_dirichlet_t(options.background_alpha, _data);
+        if (options.background_model == "independence-dirichlet" || options.background_model == "") {
+                /* every position in the background is fully
+                 * independet, this give more flexibility to the
+                 * prior pseudocounts */
                 independence_background_t* bg = new independence_background_t(options.background_alpha, _data, _state.cluster_assignments);
                 bg_cluster_tag = _state.add_cluster(bg);
                 bg->set_bg_cluster_tag(bg_cluster_tag);
+        }
+        else if (options.background_model == "dirichlet") {
+                /* single dirichlet-compound distribution for all
+                 * nucleotides in the background */
+                product_dirichlet_t* bg = new product_dirichlet_t(options.background_alpha, _data);
+                bg_cluster_tag = _state.add_cluster(bg);
         }
         else if (options.background_model == "markov chain mixture") {
                 assert(options.background_context >= 0);
