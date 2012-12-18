@@ -44,9 +44,32 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
           _state(state) {
 }
 
+void
+dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
+{
+        
+}
+
+void
+dpm_tfbs_sampler_t::_block_sample()
+{
+        // generate a Gibbs block sample, this is very specific to the
+        // dpm_tfbs_sampler_t
+        for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
+                cluster_t& cluster = **it;
+                _block_sample(cluster);
+        }
+}
+
 bool
 dpm_tfbs_sampler_t::_sample() {
+        // call the standard hybrid sampler that first produces a
+        // Gibbs sample and afterwards make a Metropolis-Hastings step
         size_t s = hybrid_sampler_t::_sample();
+        // do a Gibbs block sampling step, i.e. go through all
+        // clusters and try to merge them
+        _block_sample();
+        // we are done with sampling here, now process commands
         flockfile(stdout);
         cout << _name << ": "
              << "Processing commands."

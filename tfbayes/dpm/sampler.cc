@@ -178,7 +178,7 @@ gibbs_sampler_t::name() const {
         return _name;
 }
 
-// Hybrid Sampler
+// Hybrid Sampler (combines a Gibbs sampler with a Metropolis-Hastings sampler)
 ////////////////////////////////////////////////////////////////////////////////
 
 hybrid_sampler_t::hybrid_sampler_t(

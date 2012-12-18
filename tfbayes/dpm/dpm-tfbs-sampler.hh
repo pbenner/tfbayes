@@ -40,10 +40,16 @@ public:
                 save_queue_t<std::string>& output_queue,
                 const sequence_data_t<data_tfbs_t::code_t>& sequences);
 
+        // auxiliary types
+        ////////////////////////////////////////////////////////////////////////
+        typedef mixture_state_t::const_iterator cm_iterator;
+
         const sequence_data_t<data_tfbs_t::code_t> sequences;
 
 protected:
         bool _sample();
+        void _block_sample();
+        void _block_sample(cluster_t& cluster);
 
 private:
         save_queue_t<command_t*>& _command_queue;
