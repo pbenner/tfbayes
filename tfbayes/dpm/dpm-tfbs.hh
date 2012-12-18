@@ -54,6 +54,7 @@ public:
         size_t mixture_components() const;
         size_t baseline_components() const;
         void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[]);
+        void   mixture_weights(const std::vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[]);
         void   update_map();
         void   update_graph(sequence_data_t<short> tfbs_start_positions);
         void   update_samples(size_t sampling_steps);

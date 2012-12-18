@@ -108,6 +108,10 @@ double independence_background_t::predictive(const range_t& range) {
         return exp(log_predictive(range));
 }
 
+double independence_background_t::predictive(const vector<range_t>& range_set) {
+        return exp(log_predictive(range_set));
+}
+
 double independence_background_t::log_predictive(const range_t& range) {
         const size_t sequence = range.index()[0];
         const size_t position = range.index()[1];
@@ -125,6 +129,10 @@ double independence_background_t::log_predictive(const range_t& range) {
         }
 
         return result;
+}
+
+double independence_background_t::log_predictive(const vector<range_t>& range_set) {
+        assert(false);
 }
 
 /*
@@ -238,6 +246,10 @@ double product_dirichlet_t::predictive(const range_t& range) {
         return exp(log_predictive(range));
 }
 
+double product_dirichlet_t::predictive(const vector<range_t>& range_set) {
+        return exp(log_predictive(range_set));
+}
+
 double product_dirichlet_t::log_predictive(const range_t& range) {
         const size_t sequence = range.index()[0];
         const size_t position = range.index()[1];
@@ -254,6 +266,10 @@ double product_dirichlet_t::log_predictive(const range_t& range) {
         }
 
         return result;
+}
+
+double product_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
+        assert(false);
 }
 
 /*
@@ -501,8 +517,16 @@ double markov_chain_mixture_t::predictive(const range_t& range) {
         return result;
 }
 
+double markov_chain_mixture_t::predictive(const vector<range_t>& range) {
+        assert(false);
+}
+
 double markov_chain_mixture_t::log_predictive(const range_t& range) {
         return log(predictive(range));
+}
+
+double markov_chain_mixture_t::log_predictive(const vector<range_t>& range_set) {
+        return log(predictive(range_set));
 }
 
 double markov_chain_mixture_t::log_likelihood(size_t pos) const
@@ -918,8 +942,16 @@ double bivariate_normal_t::predictive(const range_t& range) {
         return result;
 }
 
+double bivariate_normal_t::predictive(const vector<range_t>& range_set) {
+        assert(false);
+}
+
 double bivariate_normal_t::log_predictive(const range_t& range) {
         return log(predictive(range));
+}
+
+double bivariate_normal_t::log_predictive(const vector<range_t>& range_set) {
+        return log(predictive(range_set));
 }
 
 double

@@ -62,7 +62,9 @@ public:
         virtual size_t remove(const range_t& range) = 0;
         virtual size_t count(const range_t& range) = 0;
         virtual double predictive(const range_t& range) = 0;
+        virtual double predictive(const std::vector<range_t>& range_set) = 0;
         virtual double log_predictive(const range_t& range) = 0;
+        virtual double log_predictive(const std::vector<range_t>& range_set) = 0;
         virtual double log_likelihood() const = 0;
         virtual std::string print_counts() const { return std::string(); }
 };
@@ -88,7 +90,9 @@ public:
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
         double predictive(const range_t& range);
+        double predictive(const std::vector<range_t>& range_set);
         double log_predictive(const range_t& range);
+        double log_predictive(const std::vector<range_t>& range_set);
         double log_likelihood() const;
         virtual std::string print_counts() const;
         void set_bg_cluster_tag(cluster_tag_t cluster_tag);
@@ -126,7 +130,9 @@ public:
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
         double predictive(const range_t& range);
+        double predictive(const std::vector<range_t>& range);
         double log_predictive(const range_t& range);
+        double log_predictive(const std::vector<range_t>& range);
         double log_likelihood() const;
         virtual std::string print_counts() const;
 
@@ -161,7 +167,9 @@ public:
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
         double predictive(const range_t& range);
+        double predictive(const std::vector<range_t>& range_set);
         double log_predictive(const range_t& range);
+        double log_predictive(const std::vector<range_t>& range_set);
         double log_likelihood() const;
 
         friend std::ostream& operator<< (std::ostream& o, const markov_chain_mixture_t& pd);
@@ -255,7 +263,9 @@ public:
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
         double predictive(const range_t& range);
+        double predictive(const std::vector<range_t>& range_set);
         double log_predictive(const range_t& range);
+        double log_predictive(const std::vector<range_t>& range_set);
         double log_likelihood() const;
         const gsl_vector* mean() const;
 

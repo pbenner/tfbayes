@@ -243,6 +243,43 @@ dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_
         }
 }
 
+void
+dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[])
+{
+        ssize_t mixture_n  = mixture_components();
+        ssize_t baseline_n = baseline_components();
+        double sum         = -HUGE_VAL;
+
+        cluster_tag_t i = 0;
+        ////////////////////////////////////////////////////////////////////////
+        // loop through existing clusters
+        for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
+                cluster_t& cluster = **it;
+                cluster_tags[i] = cluster.cluster_tag();
+                if (cluster.cluster_tag() == bg_cluster_tag) {
+                        ////////////////////////////////////////////////////////
+                        // mixture component 1: background model
+                        sum = logadd(sum, _lambda_inv_log + cluster.model().log_predictive(range_set));
+                }
+                else {
+                        ////////////////////////////////////////////////////////
+                        // mixture component 2: dirichlet process
+                        sum = logadd(sum, _lambda_log + _process_prior->predictive(cluster) + cluster.model().log_predictive(range_set));
+                }
+                log_weights[i] = sum;
+                i++;
+        }
+        ////////////////////////////////////////////////////////////////////////
+        // add the tag of a new class and compute their weight
+        for (i = 0; i < baseline_n; i++) {
+                cluster_t& cluster = _state.get_free_cluster(_model_tags[i]);
+                cluster_tags[mixture_n+i] = cluster.cluster_tag();
+                sum = logadd(sum, _lambda_log + _process_prior->predictive(cluster) + log(_baseline_weights[i]) +
+                             cluster.model().log_predictive(range_set));
+                log_weights[mixture_n+i] = sum;
+        }
+}
+
 double
 dpm_tfbs_t::likelihood() const {
         double result = 0;
