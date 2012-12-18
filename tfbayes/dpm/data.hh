@@ -151,10 +151,10 @@ public:
         friend std::ostream& operator<< <> (std::ostream& o, const data_t<T>& sd);
 
         virtual const_iterator_t<T> operator[](const range_t& range) const {
-                return const_iterator_t<T>(*this, range.index, range.length);
+                return const_iterator_t<T>(*this, range.index(), range.length());
         }
         virtual iterator_t<T> operator[](const range_t& range) {
-                return iterator_t<T>(*this, range.index, range.length);
+                return iterator_t<T>(*this, range.index(), range.length());
         }
         virtual const T& operator[](const index_i& index) const {
                 return _data[index[0]];
@@ -192,10 +192,10 @@ public:
                 _data.push_back(sequence);
         }
         virtual const_iterator_t<T> operator[](const range_t& range) const {
-                return const_iterator_t<T>(*this, range.index, range.length);
+                return const_iterator_t<T>(*this, range.index(), range.length());
         }
         virtual iterator_t<T> operator[](const range_t& range) {
-                return iterator_t<T>(*this, range.index, range.length);
+                return iterator_t<T>(*this, range.index(), range.length());
         }
         virtual const T& operator[](const index_i& index) const {
                 return _data[index[0]][index[1]];

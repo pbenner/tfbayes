@@ -158,11 +158,11 @@ dpm_tfbs_state_t::move_left(cluster_t& cluster)
                         return false;
                 }
                 const range_t& range  = *is;
-                const size_t sequence = range.index[0];
-                const size_t position = range.index[1];
+                const size_t sequence = range.index()[0];
+                const size_t position = range.index()[1];
                 const seq_index_t index(sequence, position-1);
-                remove(range.index, cluster.cluster_tag());
-                add(range.index, bg_cluster_tag);
+                remove(range.index(), cluster.cluster_tag());
+                add(range.index(), bg_cluster_tag);
                 if (position > 0 && valid_tfbs_position(index)) {
                         remove(index, bg_cluster_tag);
                         add(index, cluster.cluster_tag());
@@ -183,12 +183,12 @@ dpm_tfbs_state_t::move_right(cluster_t& cluster)
                         return false;
                 }
                 const range_t range(*is);
-                const size_t sequence = range.index[0];
-                const size_t position = range.index[1];
+                const size_t sequence = range.index()[0];
+                const size_t position = range.index()[1];
                 const size_t sequence_length = _data.size(sequence);
                 const seq_index_t index(sequence, position+1);
-                remove(range.index, cluster.cluster_tag());
-                add(range.index, bg_cluster_tag);
+                remove(range.index(), cluster.cluster_tag());
+                add(range.index(), bg_cluster_tag);
                 if (position+tfbs_length < sequence_length && valid_tfbs_position(index)) {
                         remove(index, bg_cluster_tag);
                         add(index, cluster.cluster_tag());
@@ -228,7 +228,7 @@ dpm_tfbs_state_t::dpm_partition() const
                         dpm_partition.add_component(cluster.model_tag());
                         // loop through cluster elements
                         for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
-                                dpm_partition.back().insert(is->index);
+                                dpm_partition.back().insert(is->index());
                         }
                 }
         }

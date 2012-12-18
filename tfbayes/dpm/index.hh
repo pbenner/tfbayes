@@ -130,28 +130,45 @@ protected:
 
 class range_t {
 public:
-         range_t(const index_i& index, size_t length) 
-                : index(*index.clone()), length(length) {
-         }
-         range_t(const range_t& range)
-                : index(*range.index.clone()), length(range.length) {
-         }
+        range_t(const index_i& index, size_t length) 
+                : _index(index.clone()), _length(length) {
+        }
+        range_t(const range_t& range) {
+                operator=(range);
+        }
         ~range_t() {
-                delete(&index);
+                delete(_index);
         }
-
+        range_t& operator=(const range_t& range) {
+                _index  = range.index().clone();
+                _length = range.length();
+                return *this;
+        }
         bool operator==(const range_t& range) const {
-                return range.index == index && range.length == length;
+                return range.index() == *_index && range.length() == _length;
+        }
+        // index_i& index() {
+        //         return *_index;
+        // }
+        const index_i& index() const {
+                return *_index;
+        }
+        // size_t& length() {
+        //         return _length;
+        // }
+        const size_t& length() const {
+                return _length;
         }
 
-        const index_i& index;
-        const size_t length;
+protected:
+        index_i* _index;
+        size_t _length;
 };
 
 static inline
 size_t hash_value(const range_t& range)
 {
-        return range.index.hash();
+        return range.index().hash();
 }
 
 #endif /* INDEX_HH */

@@ -73,9 +73,9 @@ print_cluster_elements_t::operator()(const dpm_tfbs_state_t& state, dpm_tfbs_sam
                         cluster_t::elements_t elements = cluster.elements();
                         for (cluster_t::elements_t::const_iterator it = elements.begin(); it != elements.end(); it++) {
                                 const range_t& range(*it);
-                                const size_t sequence = range.index[0];
-                                const size_t position = range.index[1];
-                                const size_t length = range.length;
+                                const size_t sequence = range.index()[0];
+                                const size_t position = range.index()[1];
+                                const size_t length = range.length();
                                 ss << setfill('0')
                                    << setw(5)
                                    << sequence << ":"

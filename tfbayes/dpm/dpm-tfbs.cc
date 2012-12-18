@@ -286,7 +286,7 @@ dpm_tfbs_t::update_graph(sequence_data_t<short> tfbs_start_positions)
                                 cl_iterator iu = is; iu++;
                                 while (iu != cluster.end()) {
                                         // record edge
-                                        _samples.graph[edge_t(is->index, iu->index)]++;
+                                        _samples.graph[edge_t(is->index(), iu->index())]++;
                                         iu++;
                                 }
                         }

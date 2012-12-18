@@ -47,7 +47,16 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
 void
 dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
 {
-        
+        vector<range_t> range_set;
+
+        // move all ranges from the cluster into the range_set
+        for (cluster_t::iterator it = cluster.begin(); it != cluster.end(); it++)
+        {
+                const range_t& range = *it;
+
+                range_set.push_back(range);
+                cluster.remove_observations(range);
+        }
 }
 
 void

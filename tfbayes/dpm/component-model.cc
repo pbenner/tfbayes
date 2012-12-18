@@ -88,17 +88,17 @@ independence_background_t::clone() const {
 
 size_t
 independence_background_t::add(const range_t& range) {
-        return range.length;
+        return range.length();
 }
 
 size_t
 independence_background_t::remove(const range_t& range) {
-        return range.length;
+        return range.length();
 }
 
 size_t
 independence_background_t::count(const range_t& range) {
-        return range.length;
+        return range.length();
 }
 
 /*
@@ -109,9 +109,9 @@ double independence_background_t::predictive(const range_t& range) {
 }
 
 double independence_background_t::log_predictive(const range_t& range) {
-        const size_t sequence = range.index[0];
-        const size_t position = range.index[1];
-        const size_t length   = range.length;
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
         double result = 0;
 
         for (size_t i = 0; i < length; i++) {
@@ -196,9 +196,9 @@ product_dirichlet_t::clone() const {
 
 size_t
 product_dirichlet_t::add(const range_t& range) {
-        const size_t sequence = range.index[0];
-        const size_t position = range.index[1];
-        const size_t length   = range.length;
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
         size_t i, k;
 
         for (i = 0; i < length; i++) {
@@ -212,9 +212,9 @@ product_dirichlet_t::add(const range_t& range) {
 
 size_t
 product_dirichlet_t::remove(const range_t& range) {
-        const size_t sequence = range.index[0];
-        const size_t position = range.index[1];
-        const size_t length   = range.length;
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
         size_t i, k;
 
         for (i = 0; i < length; i++) {
@@ -228,7 +228,7 @@ product_dirichlet_t::remove(const range_t& range) {
 
 size_t
 product_dirichlet_t::count(const range_t& range) {
-        return range.length/_size1;
+        return range.length()/_size1;
 }
 
 /*
@@ -239,9 +239,9 @@ double product_dirichlet_t::predictive(const range_t& range) {
 }
 
 double product_dirichlet_t::log_predictive(const range_t& range) {
-        const size_t sequence = range.index[0];
-        const size_t position = range.index[1];
-        const size_t length   = range.length;
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
         double result = 0;
 
         for (size_t i = 0; i < length; i++) {
@@ -389,8 +389,8 @@ markov_chain_mixture_t::clone() const {
 size_t
 markov_chain_mixture_t::max_from_context(const range_t& range) const
 {
-        const size_t sequence = range.index[0];
-        const size_t position = range.index[1];
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
         ssize_t from = position;
 
         for (size_t i = 0; i < _max_context && from > 0 && _cluster_assignments[seq_index_t(sequence, from-1)] == _cluster_tag; i++) {
@@ -403,9 +403,9 @@ markov_chain_mixture_t::max_from_context(const range_t& range) const
 size_t
 markov_chain_mixture_t::max_to_context(const range_t& range) const
 {
-        const size_t sequence = range.index[0];
-        const size_t position = range.index[1];
-        const size_t length   = range.length;
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
         const ssize_t sequence_length = _data.size(sequence);
         ssize_t to = position+length-1;
 
@@ -418,13 +418,13 @@ markov_chain_mixture_t::max_to_context(const range_t& range) const
 
 size_t
 markov_chain_mixture_t::add(const range_t& range) {
-        const size_t sequence     = range.index[0];
-        const size_t length       = range.length;
+        const size_t sequence     = range.index()[0];
+        const size_t length       = range.length();
         const size_t from_context = max_from_context(range);
         const size_t   to_context = max_to_context(range);
 
         for (size_t i = 0; i < length+to_context; i++) {
-                const size_t pos   = range.index[1]+i;
+                const size_t pos   = range.index()[1]+i;
                 const size_t c_max = min(from_context+i, _max_context);
                 const size_t c_min = i < length ? 0 : i-(length-1);
                 for (size_t c = c_min; c <= c_max; c++) {
@@ -437,18 +437,18 @@ markov_chain_mixture_t::add(const range_t& range) {
                 }
         }
 
-        return range.length;
+        return range.length();
 }
 
 size_t
 markov_chain_mixture_t::remove(const range_t& range) {
-        const size_t sequence     = range.index[0];
-        const size_t length       = range.length;
+        const size_t sequence     = range.index()[0];
+        const size_t length       = range.length();
         const size_t from_context = max_from_context(range);
         const size_t   to_context = max_to_context(range);
 
         for (size_t i = 0; i < length+to_context; i++) {
-                const size_t pos   = range.index[1]+i;
+                const size_t pos   = range.index()[1]+i;
                 const size_t c_max = min(from_context+i, _max_context);
                 const size_t c_min = i < length ? 0 : i-(length-1);
                 for (size_t c = c_min; c <= c_max; c++) {
@@ -461,23 +461,23 @@ markov_chain_mixture_t::remove(const range_t& range) {
                 }
         }
 
-        return range.length;
+        return range.length();
 }
 
 size_t
 markov_chain_mixture_t::count(const range_t& range) {
-        return range.length;
+        return range.length();
 }
 
 double markov_chain_mixture_t::predictive(const range_t& range) {
-        const size_t sequence     = range.index[0];
-        const size_t length       = range.length;
+        const size_t sequence     = range.index()[0];
+        const size_t length       = range.length();
         const size_t from_context = max_from_context(range);
         const size_t   to_context = max_to_context(range);
         double result = 1;
 
         for (size_t i = 0; i < length+to_context; i++) {
-                const size_t pos   = range.index[1]+i;
+                const size_t pos   = range.index()[1]+i;
                 const size_t c_max = min(from_context+i, _max_context);
                 const size_t c_min = i < length ? 0 : i-(length-1);
                 vector<int> codes(c_max-c_min+1, 0);
@@ -623,8 +623,8 @@ double markov_chain_mixture_t::log_likelihood() const {
 // size_t
 // parsimonious_tree_t::max_from_context(const range_t& range) const
 // {
-//         const size_t sequence = range.index[0];
-//         const size_t position = range.index[1];
+//         const size_t sequence = range.index()[0];
+//         const size_t position = range.index()[1];
 //         ssize_t from = position;
 
 //         for (size_t i = 0; i < _tree_depth && from > 0 && _cluster_assignments[seq_index_t(sequence, from-1)] == _cluster_tag; i++) {
@@ -637,9 +637,9 @@ double markov_chain_mixture_t::log_likelihood() const {
 // size_t
 // parsimonious_tree_t::max_to_context(const range_t& range) const
 // {
-//         const size_t sequence = range.index[0];
-//         const size_t position = range.index[1];
-//         const size_t length   = range.length;
+//         const size_t sequence = range.index()[0];
+//         const size_t position = range.index()[1];
+//         const size_t length   = range.length();
 //         const ssize_t sequence_length = _data.size(sequence);
 //         ssize_t to = position+length-1;
 
@@ -652,13 +652,13 @@ double markov_chain_mixture_t::log_likelihood() const {
 
 // size_t
 // parsimonious_tree_t::add(const range_t& range) {
-//         const size_t sequence     = range.index[0];
-//         const size_t length       = range.length;
+//         const size_t sequence     = range.index()[0];
+//         const size_t length       = range.length();
 //         const size_t from_context = max_from_context(range);
 //         const size_t   to_context = max_to_context(range);
 
 //         for (size_t i = 0; i < length+to_context; i++) {
-//                 const size_t pos   = range.index[1]+i;
+//                 const size_t pos   = range.index()[1]+i;
 //                 const size_t c_max = min(from_context+i, _tree_depth);
 //                 const size_t c_min = i < length ? 0 : i-(length-1);
 //                 for (size_t c = c_min; c <= c_max; c++) {
@@ -668,18 +668,18 @@ double markov_chain_mixture_t::log_likelihood() const {
 //                 }
 //         }
 
-//         return range.length;
+//         return range.length();
 // }
 
 // size_t
 // parsimonious_tree_t::remove(const range_t& range) {
-//         const size_t sequence     = range.index[0];
-//         const size_t length       = range.length;
+//         const size_t sequence     = range.index()[0];
+//         const size_t length       = range.length();
 //         const size_t from_context = max_from_context(range);
 //         const size_t   to_context = max_to_context(range);
 
 //         for (size_t i = 0; i < length+to_context; i++) {
-//                 const size_t pos   = range.index[1]+i;
+//                 const size_t pos   = range.index()[1]+i;
 //                 const size_t c_max = min(from_context+i, _tree_depth);
 //                 const size_t c_min = i < length ? 0 : i-(length-1);
 //                 for (size_t c = c_min; c <= c_max; c++) {
@@ -689,12 +689,12 @@ double markov_chain_mixture_t::log_likelihood() const {
 //                 }
 //         }
 
-//         return range.length;
+//         return range.length();
 // }
 
 // size_t
 // parsimonious_tree_t::count(const range_t& range) {
-//         return range.length;
+//         return range.length();
 // }
 
 // double parsimonious_tree_t::predictive(const range_t& range) {
@@ -871,7 +871,7 @@ bivariate_normal_t::add(const range_t& range)
 
         update();
 
-        return range.length;
+        return range.length();
 }
 
 size_t
@@ -893,12 +893,12 @@ bivariate_normal_t::remove(const range_t& range)
 
         update();
 
-        return range.length;
+        return range.length();
 }
 
 size_t
 bivariate_normal_t::count(const range_t& range) {
-        return range.length;
+        return range.length();
 }
 
 double bivariate_normal_t::predictive(const range_t& range) {
