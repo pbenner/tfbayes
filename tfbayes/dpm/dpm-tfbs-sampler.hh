@@ -28,7 +28,7 @@
 
 class command_t;
 
-class dpm_tfbs_sampler_t : public hybrid_sampler_t {
+class dpm_tfbs_sampler_t : public gibbs_sampler_t {
 public:
         dpm_tfbs_sampler_t(
                 mixture_model_t& dpm,
@@ -40,9 +40,12 @@ public:
                 save_queue_t<std::string>& output_queue,
                 const sequence_data_t<data_tfbs_t::code_t>& sequences);
 
+        dpm_tfbs_sampler_t* clone() const;
+
         // auxiliary types
         ////////////////////////////////////////////////////////////////////////
         typedef mixture_state_t::const_iterator cm_iterator;
+        typedef mixture_state_t::iterator cl_iterator;
 
         const sequence_data_t<data_tfbs_t::code_t> sequences;
 
@@ -50,11 +53,14 @@ protected:
         bool _sample();
         void _block_sample();
         void _block_sample(cluster_t& cluster);
+        bool _metropolis_sample();
+        bool _metropolis_sample(cluster_t& cluster);
 
 private:
         save_queue_t<command_t*>& _command_queue;
         save_queue_t<std::string>& _output_queue;
         dpm_tfbs_state_t& _state;
+        const bool _optimize;
 };
 
 #include <pmcmc.hh>

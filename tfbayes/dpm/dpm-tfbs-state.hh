@@ -29,7 +29,7 @@
 #include <mixture-state.hh>
 #include <state.hh>
 
-class dpm_tfbs_state_t : public hybrid_state_t {
+class dpm_tfbs_state_t : public gibbs_state_t {
 public:
          dpm_tfbs_state_t(const std::vector<size_t>& sizes,
                           size_t tfbs_length,
@@ -90,7 +90,9 @@ public:
 
         // constants
         const size_t tfbs_length;
-        const cluster_tag_t bg_cluster_tag;
+        // the bg_cluster_tag is determined after the state is
+        // initialize, so this can't be a constant
+        cluster_tag_t bg_cluster_tag;
 };
 
 #endif /* DPM_TFBS_STATE_HH */

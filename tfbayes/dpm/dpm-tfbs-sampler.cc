@@ -37,11 +37,18 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
         save_queue_t<command_t*>& command_queue,
         save_queue_t<string>& output_queue,
         const sequence_data_t<data_tfbs_t::code_t>& sequences)
-        : hybrid_sampler_t(dpm, state, indexer, name, optimize),
+        : gibbs_sampler_t(dpm, state, indexer, name),
           sequences(sequences),
           _command_queue(command_queue),
           _output_queue(output_queue),
-          _state(state) {
+          _state(state),
+          _optimize(optimize)
+{
+}
+
+dpm_tfbs_sampler_t*
+dpm_tfbs_sampler_t::clone() const {
+        return new dpm_tfbs_sampler_t(*this);
 }
 
 void
@@ -62,19 +69,75 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
 void
 dpm_tfbs_sampler_t::_block_sample()
 {
+        return;
+
         // generate a Gibbs block sample, this is very specific to the
         // dpm_tfbs_sampler_t
         for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
                 cluster_t& cluster = **it;
-                _block_sample(cluster);
+                if (cluster.cluster_tag() != _state.bg_cluster_tag) {
+                        _block_sample(cluster);
+                }
         }
+}
+
+bool
+dpm_tfbs_sampler_t::_metropolis_sample(cluster_t& cluster) {
+        double posterior_ref = _dpm.posterior();
+        double posterior_tmp;
+        stringstream ss;
+        size_t size = cluster.size();
+
+        if (_state.proposal(cluster, ss)) {
+                posterior_tmp = _dpm.posterior();
+
+                if (_optimize && posterior_tmp > posterior_ref) {
+                        goto accepted;
+                }
+                if (!_optimize) {
+                        const double r = (double)rand()/RAND_MAX;
+                        /* posterior value is on log scale! */
+                        if (r <= min(exp(posterior_tmp - posterior_ref), 1.0)) {
+                                goto accepted;
+                        }
+                }
+                _state.restore();
+        }
+        return false;
+
+accepted:
+        flockfile(stdout);
+        cout << _name << ": "
+             << "cluster "
+             << cluster.cluster_tag()
+             << ": "
+             << ss.str()
+             << " accepted "
+             << "("  << size
+             << "->" << cluster.size()
+             << ")"
+             << endl;
+        fflush(stdout);
+        funlockfile(stdout);
+
+        return true;
+}
+
+bool
+dpm_tfbs_sampler_t::_metropolis_sample() {
+        for (cl_iterator it = _state.begin(); it != _state.end(); it++) {
+                _metropolis_sample(**it);
+        }
+
+        return true;
 }
 
 bool
 dpm_tfbs_sampler_t::_sample() {
         // call the standard hybrid sampler that first produces a
         // Gibbs sample and afterwards make a Metropolis-Hastings step
-        size_t s = hybrid_sampler_t::_sample();
+        size_t s = _gibbs_sample();
+                   _metropolis_sample();
         // do a Gibbs block sampling step, i.e. go through all
         // clusters and try to merge them
         _block_sample();

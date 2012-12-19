@@ -66,24 +66,24 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
                  * independet, this give more flexibility to the
                  * prior pseudocounts */
                 independence_background_t* bg = new independence_background_t(options.background_alpha, _data, _state.cluster_assignments);
-                bg_cluster_tag = _state.add_cluster(bg);
-                bg->set_bg_cluster_tag(bg_cluster_tag);
+                _state.bg_cluster_tag = _state.add_cluster(bg);
+                bg->set_bg_cluster_tag(_state.bg_cluster_tag);
         }
         else if (options.background_model == "dirichlet") {
                 /* single dirichlet-compound distribution for all
                  * nucleotides in the background */
                 product_dirichlet_t* bg = new product_dirichlet_t(options.background_alpha, _data);
-                bg_cluster_tag = _state.add_cluster(bg);
+                _state.bg_cluster_tag = _state.add_cluster(bg);
         }
         else if (options.background_model == "markov chain mixture") {
                 assert(options.background_context >= 0);
                 markov_chain_mixture_t* bg = new markov_chain_mixture_t(data_tfbs_t::alphabet_size, options, _data, _state.cluster_assignments, 0);
-                bg_cluster_tag = _state.add_cluster(bg);
+                _state.bg_cluster_tag = _state.add_cluster(bg);
         }
         // else if (options.background_model == "parsimonious tree") {
         //         assert(options.background_context >= 0);
         //         parsimonious_tree_t* bg = new parsimonious_tree_t(data_tfbs_t::alphabet_size, options.background_context, _data, _state.cluster_assignments, 0);
-        //         bg_cluster_tag = _state.add_cluster(bg);
+        //         _state.bg_cluster_tag = _state.add_cluster(bg);
         // }
         else {
                 cerr << "Unknown background model." << endl;
@@ -105,13 +105,13 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
         for (da_iterator it = _data.begin();
              it != _data.end(); it++) {
                 range_t range(**it, 1);
-                _state[bg_cluster_tag].add_observations(range);
+                _state[_state.bg_cluster_tag].add_observations(range);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
         // set the process prior
         if (options.process_prior == "pitman-yor process" || options.process_prior == "") {
-                _process_prior = new pitman_yor_prior(_state, options.alpha, options.discount, bg_cluster_tag);
+                _process_prior = new pitman_yor_prior(_state, options.alpha, options.discount, _state.bg_cluster_tag);
         }
         else if (options.process_prior == "uniform process") {
                 _process_prior = new uniform_prior(_state, options.alpha);
@@ -173,7 +173,7 @@ dpm_tfbs_t::valid_for_sampling(const index_i& index) const
         if (_state.tfbs_start_positions[index] == 0) {
                 // check if this element belongs to a tfbs that starts
                 // earlier in the sequence
-                if (_state[index] != bg_cluster_tag) {
+                if (_state[index] != _state.bg_cluster_tag) {
                         return false;
                 }
                 if (_state.cluster_assignments[seq_index_t(sequence, position)] == -1) {
@@ -219,7 +219,7 @@ dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_
         for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
                 cluster_t& cluster = **it;
                 cluster_tags[i] = cluster.cluster_tag();
-                if (cluster.cluster_tag() == bg_cluster_tag) {
+                if (cluster.cluster_tag() == _state.bg_cluster_tag) {
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
                         sum = logadd(sum, _lambda_inv_log + cluster.model().log_predictive(range));
@@ -256,7 +256,7 @@ dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights
         for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
                 cluster_t& cluster = **it;
                 cluster_tags[i] = cluster.cluster_tag();
-                if (cluster.cluster_tag() == bg_cluster_tag) {
+                if (cluster.cluster_tag() == _state.bg_cluster_tag) {
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
                         sum = logadd(sum, _lambda_inv_log + cluster.model().log_predictive(range_set));
@@ -303,7 +303,7 @@ dpm_tfbs_t::posterior() const {
         double result = likelihood();
 
         result += _state.num_tfbs*_lambda_log;
-        result += _state[bg_cluster_tag].size()*_lambda_inv_log;
+        result += _state[_state.bg_cluster_tag].size()*_lambda_inv_log;
         result += _process_prior->joint();
 
         assert(!isnan(result));
@@ -317,7 +317,7 @@ dpm_tfbs_t::update_graph(sequence_data_t<short> tfbs_start_positions)
         // loop through all clusters
         for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
                 const cluster_t& cluster = **it;
-                if (cluster.cluster_tag() != bg_cluster_tag) {
+                if (cluster.cluster_tag() != _state.bg_cluster_tag) {
                         // loop through cluster elements
                         for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
                                 cl_iterator iu = is; iu++;
@@ -352,7 +352,7 @@ dpm_tfbs_t::update_samples(size_t sampling_steps)
                 const index_i& index  = **it;
                 const size_t sequence = index[0];
                 const size_t position = index[1];
-                if (_state[index] == bg_cluster_tag) {
+                if (_state[index] == _state.bg_cluster_tag) {
                         const double tmp   = _samples.probabilities[sequence][position];
                         const double value = ((double)sampling_steps*tmp)/((double)sampling_steps+1.0);
                         _samples.probabilities[sequence][position] = value;

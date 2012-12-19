@@ -31,7 +31,7 @@ dpm_tfbs_state_t::dpm_tfbs_state_t(
         cluster_tag_t bg_cluster_tag,
         const data_tfbs_t& data)
         : state_t(cluster_assignments),
-          hybrid_state_t(cluster_assignments),
+          gibbs_state_t(cluster_assignments),
           cluster_assignments(sizes, -1),
           // starting positions of tfbs
           tfbs_start_positions(sizes, 0),

@@ -78,7 +78,7 @@ public:
         ////////////////////////////////////////////////////////////////////////
         static const size_t BG_LENGTH = 1;
 
-private:
+protected:
         // baseline models
         std::vector<double> _baseline_weights;
         std::vector<model_tag_t> _model_tags;
@@ -86,9 +86,6 @@ private:
         // data and clusters
         const data_tfbs_t& _data;
         dpm_tfbs_state_t _state;
-
-        // tags of special clusters
-        cluster_tag_t bg_cluster_tag;
 
         // parameters
         const double _lambda;

@@ -73,25 +73,4 @@ private:
         sampling_history_t& _sampling_history;
 };
 
-class hybrid_sampler_t : public gibbs_sampler_t {
-public:
-        hybrid_sampler_t(mixture_model_t& dpm,
-                         hybrid_state_t& state,
-                         const indexer_t& indexer,
-                         const std::string name = "",
-                         bool optimize = false);
-
-        hybrid_sampler_t* clone() const;
-
-protected:
-        virtual bool _sample();
-                bool _metropolis_sample();
-                bool _metropolis_sample(cluster_t& cluster);
-private:
-        typedef mixture_state_t::iterator cl_iterator;
-
-        hybrid_state_t& _state;
-        const bool _optimize;
-};
-
 #endif /* SAMPLER_HH */

@@ -45,24 +45,6 @@ public:
         virtual void remove(const index_i& index, cluster_tag_t tag) = 0;
 };
 
-class metropolis_state_t : virtual public state_t {
-public:
-        metropolis_state_t(data_t<cluster_tag_t>& cluster_assignments)
-                : state_t(cluster_assignments) {}
-
-        virtual bool proposal(cluster_t& cluster, std::stringstream& ss) = 0;
-        virtual void restore() = 0;
-};
-
-class hybrid_state_t : public gibbs_state_t, public metropolis_state_t {
-public:
-        hybrid_state_t(data_t<cluster_tag_t>& cluster_assignments)
-                : state_t(cluster_assignments),
-                  gibbs_state_t(cluster_assignments),
-                  metropolis_state_t(cluster_assignments)
-                {}
-};
-
 std::ostream& operator<< (std::ostream& o, const gibbs_state_t& state);
 
 #endif /* STATE_HH */
