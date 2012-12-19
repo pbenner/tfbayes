@@ -64,7 +64,6 @@ protected:
         mixture_model_t& _dpm;
         std::string _name;
 
-private:
         gibbs_state_t& _state;
         const indexer_t& _indexer;
 

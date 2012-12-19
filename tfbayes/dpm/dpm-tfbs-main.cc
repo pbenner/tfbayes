@@ -64,7 +64,7 @@ typedef struct _options_t {
                   construct_graph(false),
                   metropolis_optimize(true),
                   process_prior("pitman-yor process"),
-                  background_model("independence"),
+                  background_model("independence-dirichlet"),
                   background_alpha(1),
                   background_context(2),
                   background_weights("entropy"),

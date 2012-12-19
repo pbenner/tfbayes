@@ -22,6 +22,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <dpm-tfbs.hh>
 #include <dpm-tfbs-state.hh>
 #include <sampler.hh>
 #include <utility.hh>
@@ -31,7 +32,7 @@ class command_t;
 class dpm_tfbs_sampler_t : public gibbs_sampler_t {
 public:
         dpm_tfbs_sampler_t(
-                mixture_model_t& dpm,
+                dpm_tfbs_t& dpm,
                 dpm_tfbs_state_t& state,
                 const indexer_t& indexer,
                 const std::string name,
@@ -56,10 +57,10 @@ protected:
         bool _metropolis_sample();
         bool _metropolis_sample(cluster_t& cluster);
 
-private:
         save_queue_t<command_t*>& _command_queue;
         save_queue_t<std::string>& _output_queue;
         dpm_tfbs_state_t& _state;
+        dpm_tfbs_t& _dpm;
         const bool _optimize;
 };
 

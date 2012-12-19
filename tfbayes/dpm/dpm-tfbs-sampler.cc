@@ -20,6 +20,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <dpm-tfbs-sampler.hh>
+#include <statistics.hh>
 
 using namespace std;
 using namespace boost::asio;
@@ -29,7 +30,7 @@ using namespace boost::asio::local;
 ////////////////////////////////////////////////////////////////////////////////
 
 dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
-        mixture_model_t& dpm,
+        dpm_tfbs_t& dpm,
         dpm_tfbs_state_t& state,
         const indexer_t& indexer,
         const string name,
@@ -42,9 +43,9 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
           _command_queue(command_queue),
           _output_queue(output_queue),
           _state(state),
+          _dpm(dpm),
           _optimize(optimize)
-{
-}
+{ }
 
 dpm_tfbs_sampler_t*
 dpm_tfbs_sampler_t::clone() const {
@@ -56,21 +57,49 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
 {
         vector<range_t> range_set;
 
-        // move all ranges from the cluster into the range_set
+        ////////////////////////////////////////////////////////////////////////
+        // fill range_set
         for (cluster_t::iterator it = cluster.begin(); it != cluster.end(); it++)
         {
                 const range_t& range = *it;
 
                 range_set.push_back(range);
-                cluster.remove_observations(range);
         }
+
+        ////////////////////////////////////////////////////////////////////////
+        // release all elemente from the cluster
+        for (vector<range_t>::iterator it = range_set.begin(); it != range_set.end(); it++)
+        {
+                const range_t& range = *it;
+
+                _state.remove(range.index(), cluster.cluster_tag());
+        }
+        ////////////////////////////////////////////////////////////////////////
+        // obtian the mixture probabilities
+        size_t components = _dpm.mixture_components() + _dpm.baseline_components();
+        double log_weights[components];
+        cluster_tag_t cluster_tags[components];
+        _dpm.mixture_weights(range_set, log_weights, cluster_tags);
+
+        ////////////////////////////////////////////////////////////////////////
+        // draw a new cluster for the element and assign the element
+        // to that cluster
+        cluster_tag_t new_cluster_tag = cluster_tags[select_component(components, log_weights)];
+
+        ////////////////////////////////////////////////////////////////////////
+        // move all elements to the new cluster
+        for (vector<range_t>::iterator it = range_set.begin(); it != range_set.end(); it++)
+        {
+                const range_t& range = *it;
+
+                _state.add(range.index(), new_cluster_tag);
+        }
+
 }
 
 void
 dpm_tfbs_sampler_t::_block_sample()
 {
-        return;
-
         // generate a Gibbs block sample, this is very specific to the
         // dpm_tfbs_sampler_t
         for (cm_iterator it = _state.begin(); it != _state.end(); it++) {

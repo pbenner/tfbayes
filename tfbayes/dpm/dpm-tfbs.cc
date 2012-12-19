@@ -271,6 +271,7 @@ dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
+        cout << "hello 1" << endl;
         for (i = 0; i < baseline_n; i++) {
                 cluster_t& cluster = _state.get_free_cluster(_model_tags[i]);
                 cluster_tags[mixture_n+i] = cluster.cluster_tag();

@@ -147,15 +147,9 @@ public:
         bool operator==(const range_t& range) const {
                 return range.index() == *_index && range.length() == _length;
         }
-        // index_i& index() {
-        //         return *_index;
-        // }
         const index_i& index() const {
                 return *_index;
         }
-        // size_t& length() {
-        //         return _length;
-        // }
         const size_t& length() const {
                 return _length;
         }
