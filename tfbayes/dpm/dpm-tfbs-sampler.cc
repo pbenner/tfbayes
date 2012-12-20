@@ -87,10 +87,9 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
         // to that cluster
         cluster_tag_t new_cluster_tag = cluster_tags[select_component(components, log_weights)];
 
-        if (old_cluster_tag == new_cluster_tag) {
-                cout << "Cluster " << old_cluster_tag << " stays as it is." << endl;
-        }
-        else {
+        ////////////////////////////////////////////////////////////////////////
+        // print some information to stdout
+        if (_state[new_cluster_tag].size() != 0) {
                 cout << "Cluster " << old_cluster_tag << " is merged into cluster " << new_cluster_tag << "." << endl;
         }
 
