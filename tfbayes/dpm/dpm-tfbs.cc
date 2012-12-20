@@ -227,7 +227,7 @@ dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_
                 else {
                         ////////////////////////////////////////////////////////
                         // mixture component 2: dirichlet process
-                        sum = logadd(sum, _lambda_log + _process_prior->predictive(cluster) + cluster.model().log_predictive(range));
+                        sum = logadd(sum, _lambda_log + _process_prior->log_predictive(cluster) + cluster.model().log_predictive(range));
                 }
                 log_weights[i] = sum;
                 i++;
@@ -237,18 +237,19 @@ dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_
         for (i = 0; i < baseline_n; i++) {
                 cluster_t& cluster = _state.get_free_cluster(_model_tags[i]);
                 cluster_tags[mixture_n+i] = cluster.cluster_tag();
-                sum = logadd(sum, _lambda_log + _process_prior->predictive(cluster) + log(_baseline_weights[i]) +
+                sum = logadd(sum, _lambda_log + _process_prior->log_predictive(cluster) + log(_baseline_weights[i]) +
                              cluster.model().log_predictive(range));
                 log_weights[mixture_n+i] = sum;
         }
 }
 
 void
-dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[])
+dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[], bool include_background)
 {
         ssize_t mixture_n  = mixture_components();
         ssize_t baseline_n = baseline_components();
         double sum         = -HUGE_VAL;
+        double n           = range_set.size();
 
         cluster_tag_t i = 0;
         ////////////////////////////////////////////////////////////////////////
@@ -259,12 +260,14 @@ dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights
                 if (cluster.cluster_tag() == _state.bg_cluster_tag) {
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
-                        sum = logadd(sum, _lambda_inv_log + cluster.model().log_predictive(range_set));
+                        if (include_background) {
+                                sum = logadd(sum, n*_lambda_inv_log + cluster.model().log_predictive(range_set));
+                        }
                 }
                 else {
                         ////////////////////////////////////////////////////////
                         // mixture component 2: dirichlet process
-                        sum = logadd(sum, _lambda_log + _process_prior->predictive(cluster) + cluster.model().log_predictive(range_set));
+                        sum = logadd(sum, n*_lambda_log + n*_process_prior->log_predictive(cluster) + cluster.model().log_predictive(range_set));
                 }
                 log_weights[i] = sum;
                 i++;
@@ -274,7 +277,7 @@ dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights
         for (i = 0; i < baseline_n; i++) {
                 cluster_t& cluster = _state.get_free_cluster(_model_tags[i]);
                 cluster_tags[mixture_n+i] = cluster.cluster_tag();
-                sum = logadd(sum, _lambda_log + _process_prior->predictive(cluster) + log(_baseline_weights[i]) +
+                sum = logadd(sum, n*_lambda_log + n*_process_prior->log_predictive(cluster) + log(_baseline_weights[i]) +
                              cluster.model().log_predictive(range_set));
                 log_weights[mixture_n+i] = sum;
         }

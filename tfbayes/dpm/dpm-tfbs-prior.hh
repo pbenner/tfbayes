@@ -32,7 +32,7 @@ public:
 
         dpm_tfbs_prior_t* clone() const = 0;
 
-        virtual double predictive(const cluster_t& cluster) const = 0;
+        virtual double log_predictive(const cluster_t& cluster) const = 0;
         virtual double joint() const = 0;
 };
 
@@ -44,7 +44,7 @@ public:
 
         pitman_yor_prior* clone() const;
 
-        double predictive(const cluster_t& cluster) const;
+        double log_predictive(const cluster_t& cluster) const;
         double joint() const;
 
 private:
@@ -63,7 +63,7 @@ public:
 
         uniform_prior* clone() const;
 
-        double predictive(const cluster_t& cluster) const;
+        double log_predictive(const cluster_t& cluster) const;
         double joint() const;
 
 private:
@@ -77,7 +77,7 @@ public:
 
         poppe_prior* clone() const;
 
-        double predictive(const cluster_t& cluster) const;
+        double log_predictive(const cluster_t& cluster) const;
         double joint() const;
 
 private:

@@ -80,7 +80,7 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
         size_t components = _dpm.mixture_components() + _dpm.baseline_components();
         double log_weights[components];
         cluster_tag_t cluster_tags[components];
-        _dpm.mixture_weights(range_set, log_weights, cluster_tags);
+        _dpm.mixture_weights(range_set, log_weights, cluster_tags, false);
 
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
@@ -92,7 +92,8 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
         if (_state[new_cluster_tag].size() != 0) {
                 cout << "Cluster " << old_cluster_tag
                      << " is merged into cluster " << new_cluster_tag
-                     << " (+" << range_set.size() << ")." << endl;
+                     << " (" << _state[new_cluster_tag].size()
+                     << "+" << range_set.size() << ")." << endl;
         }
 
         ////////////////////////////////////////////////////////////////////////

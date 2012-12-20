@@ -40,7 +40,7 @@ pitman_yor_prior::clone() const {
 }
 
 double
-pitman_yor_prior::predictive(const cluster_t& cluster) const
+pitman_yor_prior::log_predictive(const cluster_t& cluster) const
 {
         const double K = state.size()-1;
 
@@ -83,7 +83,7 @@ uniform_prior::clone() const {
 }
 
 double
-uniform_prior::predictive(const cluster_t& cluster) const
+uniform_prior::log_predictive(const cluster_t& cluster) const
 {
         const double K = state.size()-1;
 
@@ -115,7 +115,7 @@ poppe_prior::clone() const {
 }
 
 double
-poppe_prior::predictive(const cluster_t& cluster) const
+poppe_prior::log_predictive(const cluster_t& cluster) const
 {
         const double K = state.size()-1;
         const double N = state.num_tfbs;
