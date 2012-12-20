@@ -119,7 +119,7 @@ double independence_background_t::log_predictive(const range_t& range) {
         double result = 0;
 
         for (size_t i = 0; i < length; i++) {
-                seq_index_t index(sequence, position+i);
+                const seq_index_t index(sequence, position+i);
 
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
@@ -132,7 +132,35 @@ double independence_background_t::log_predictive(const range_t& range) {
 }
 
 double independence_background_t::log_predictive(const vector<range_t>& range_set) {
-        assert(false);
+        assert(range_set.size() > 0);
+
+        const size_t length = range_set[0].length();
+        double result = 0;
+
+        for (size_t i = 0; i < length; i++) {
+
+                /* set all tmp_counts to zero */
+                for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
+                        tmp_counts[j] = 0;
+                }
+
+                /* loop through all ranges */
+                for (size_t k = 0; k < range_set.size(); k++) {
+
+                        const size_t sequence = range_set[k].index()[0];
+                        const size_t position = range_set[k].index()[1];
+                        const seq_index_t index(sequence, position+i);
+
+                        /* add counts of this subsequence to tmp_counts */
+                        for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
+                                tmp_counts[j] = _data[index][j];
+                        }
+                }
+                result += fast_lnbeta<data_tfbs_t::alphabet_size>(alpha, tmp_counts)
+                        - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha);
+        }
+
+        return result;
 }
 
 /*
@@ -210,7 +238,7 @@ product_dirichlet_t::add(const range_t& range) {
         size_t i, k;
 
         for (i = 0; i < length; i++) {
-                seq_index_t index(sequence, position+i);
+                const seq_index_t index(sequence, position+i);
                 for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
                         counts[i%_size1][k] += _data[index][k];
                 }
@@ -226,7 +254,7 @@ product_dirichlet_t::remove(const range_t& range) {
         size_t i, k;
 
         for (i = 0; i < length; i++) {
-                seq_index_t index(sequence, position+i);
+                const seq_index_t index(sequence, position+i);
                 for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
                         counts[i%_size1][k] -= _data[index][k];
                 }
@@ -257,7 +285,7 @@ double product_dirichlet_t::log_predictive(const range_t& range) {
         double result = 0;
 
         for (size_t i = 0; i < length; i++) {
-                seq_index_t index(sequence, position+i);
+                const seq_index_t index(sequence, position+i);
 
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
@@ -269,7 +297,35 @@ double product_dirichlet_t::log_predictive(const range_t& range) {
 }
 
 double product_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
-        assert(false);
+        assert(range_set.size() > 0);
+
+        const size_t length = range_set[0].length();
+        double result = 0;
+
+        for (size_t i = 0; i < length; i++) {
+
+                /* set all tmp_counts to zero */
+                for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
+                        tmp_counts[j] = 0;
+                }
+
+                /* loop through all ranges */
+                for (size_t k = 0; k < range_set.size(); k++) {
+
+                        const size_t sequence = range_set[k].index()[0];
+                        const size_t position = range_set[k].index()[1];
+                        const seq_index_t index(sequence, position+i);
+
+                        /* add counts of this subsequence to tmp_counts */
+                        for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
+                                tmp_counts[j] = _data[index][j];
+                        }
+                }
+                result += fast_lnbeta<data_tfbs_t::alphabet_size>(alpha[i%_size1], tmp_counts)
+                        - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha[i%_size1]);
+        }
+
+        return result;
 }
 
 /*

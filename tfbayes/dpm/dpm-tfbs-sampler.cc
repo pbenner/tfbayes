@@ -56,6 +56,7 @@ void
 dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
 {
         vector<range_t> range_set;
+        cluster_tag_t old_cluster_tag = cluster.cluster_tag();
 
         ////////////////////////////////////////////////////////////////////////
         // fill range_set
@@ -72,7 +73,7 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
         {
                 const range_t& range = *it;
 
-                _state.remove(range.index(), cluster.cluster_tag());
+                _state.remove(range.index(), old_cluster_tag);
         }
         ////////////////////////////////////////////////////////////////////////
         // obtian the mixture probabilities
@@ -85,6 +86,13 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
         // draw a new cluster for the element and assign the element
         // to that cluster
         cluster_tag_t new_cluster_tag = cluster_tags[select_component(components, log_weights)];
+
+        if (old_cluster_tag == new_cluster_tag) {
+                cout << "Cluster " << old_cluster_tag << " stays as it is." << endl;
+        }
+        else {
+                cout << "Cluster " << old_cluster_tag << " is merged into cluster " << new_cluster_tag << "." << endl;
+        }
 
         ////////////////////////////////////////////////////////////////////////
         // move all elements to the new cluster
@@ -100,11 +108,22 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
 void
 dpm_tfbs_sampler_t::_block_sample()
 {
-        // generate a Gibbs block sample, this is very specific to the
-        // dpm_tfbs_sampler_t
+        // since clusters are modified it is not possible to simply
+        // loop through the list of clusters, we need to be a bit more
+        // careful here!
+        vector<cluster_tag_t> used_clusters;
         for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
                 cluster_t& cluster = **it;
                 if (cluster.cluster_tag() != _state.bg_cluster_tag) {
+                        used_clusters.push_back(cluster.cluster_tag());
+                }
+        }
+
+        // go through the list of used clusters and if they are still
+        // used then generate a block sample
+        for (vector<cluster_tag_t>::const_iterator it = used_clusters.begin(); it != used_clusters.end(); it++) {
+                cluster_t& cluster = _state[*it];
+                if (cluster.size() != 0) {
                         _block_sample(cluster);
                 }
         }

@@ -101,6 +101,7 @@ public:
 
 private:
         counts_t alpha;
+        counts_t tmp_counts;
 
         const sequence_data_t<data_tfbs_t::code_t>& _data;
         const sequence_data_t<cluster_tag_t>& _cluster_assignments;
@@ -141,6 +142,8 @@ public:
 private:
         std::vector<counts_t> alpha;
         std::vector<counts_t> counts;
+
+        counts_t tmp_counts;
 
         const sequence_data_t<data_tfbs_t::code_t>& _data;
 
