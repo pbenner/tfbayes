@@ -90,7 +90,9 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
         ////////////////////////////////////////////////////////////////////////
         // print some information to stdout
         if (_state[new_cluster_tag].size() != 0) {
-                cout << "Cluster " << old_cluster_tag << " is merged into cluster " << new_cluster_tag << "." << endl;
+                cout << "Cluster " << old_cluster_tag
+                     << " is merged into cluster " << new_cluster_tag
+                     << " (+" << range_set.size() << ")." << endl;
         }
 
         ////////////////////////////////////////////////////////////////////////
