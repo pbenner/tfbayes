@@ -138,12 +138,6 @@ double independence_background_t::log_predictive(const vector<range_t>& range_se
         double result = 0;
 
         for (size_t i = 0; i < length; i++) {
-
-                /* set all tmp_counts to zero */
-                for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
-                        tmp_counts[j] = 0;
-                }
-
                 /* loop through all ranges */
                 for (size_t k = 0; k < range_set.size(); k++) {
 
@@ -151,13 +145,12 @@ double independence_background_t::log_predictive(const vector<range_t>& range_se
                         const size_t position = range_set[k].index()[1];
                         const seq_index_t index(sequence, position+i);
 
-                        /* add counts of this subsequence to tmp_counts */
-                        for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
-                                tmp_counts[j] = _data[index][j];
-                        }
+                        /* all positions in the alignment are fully
+                         * independent, hence we do not need to sum
+                         * any counts */
+                        result += fast_lnbeta<data_tfbs_t::alphabet_size>(alpha, _data[index])
+                                - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha);
                 }
-                result += fast_lnbeta<data_tfbs_t::alphabet_size>(alpha, tmp_counts)
-                        - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha);
         }
 
         return result;
@@ -321,8 +314,8 @@ double product_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
                                 tmp_counts[j] = _data[index][j];
                         }
                 }
-                result += fast_lnbeta<data_tfbs_t::alphabet_size>(alpha[i%_size1], tmp_counts)
-                        - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha[i%_size1]);
+                result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1], tmp_counts)
+                        - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1]);
         }
 
         return result;
