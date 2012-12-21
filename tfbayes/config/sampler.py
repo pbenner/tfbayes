@@ -26,6 +26,14 @@ from tools import *
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
 
+def generate_baseline(sampler_config):
+    if not sampler_config['baseline_priors']:
+        sampler_config['baseline_priors'].append([ [ 1 for j in range(sampler_config['tfbs_length']) ] for i in range(5) ])
+    if not len(sampler_config['baseline_priors']) == len(sampler_config['baseline_weights']):
+        if options['verbose']:
+            print "Setting uniform weights for baseline priors"
+        sampler_config['baseline_weights'] = [ 1 ] * len(sampler_config['baseline_priors'])
+
 def parse_sampler_config(config_file, sampler_config):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
@@ -69,3 +77,4 @@ def parse_sampler_config(config_file, sampler_config):
             sampler_config['baseline_priors'].append(prior)
     if config_parser.has_option('TFBS-Sampler', 'socket-file'):
         sampler_config['socket_file'] = config_parser.get('TFBS-Sampler', 'socket-file').strip()
+    generate_baseline(sampler_config)

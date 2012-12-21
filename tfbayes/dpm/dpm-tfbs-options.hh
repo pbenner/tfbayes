@@ -25,6 +25,8 @@
 #include <string>
 #include <vector>
 
+#include <dpm-partition.hh>
+
 typedef struct {
         size_t tfbs_length;
         double alpha;
@@ -39,6 +41,7 @@ typedef struct {
         std::string background_weights;
         std::vector<double> baseline_weights;
         std::vector<std::matrix<double> > baseline_priors;
+        dpm_partition_t partition;
         std::string socket_file;
 } tfbs_options_t;
 

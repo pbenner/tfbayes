@@ -125,6 +125,20 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
         }
 
         ////////////////////////////////////////////////////////////////////////////////
+        // use a map partition from a previous sampling run to
+        // initialize the state
+        for (dpm_partition_t::const_iterator it = options.partition.begin(); it != options.partition.end(); it++) {
+                const dpm_subset_t& subset(*it);
+                cluster_t& cluster = _state.get_free_cluster(subset.dpm_subset_tag());
+
+                for (dpm_subset_t::const_iterator is = subset.begin(); is != subset.end(); is++) {
+                        range_t range(**is, options.tfbs_length);
+                        _state[_state.bg_cluster_tag].remove_observations(range);
+                        _state[cluster.cluster_tag()].add_observations(range);
+                }
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////
         //test();
         //test_background();
         //test_moves();

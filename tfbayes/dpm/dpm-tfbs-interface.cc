@@ -28,6 +28,7 @@
 #include <dpm-tfbs-interface.hh>
 #include <dpm-tfbs-io.hh>
 #include <dpm-tfbs-sampler.hh>
+#include <dpm-partition.hh>
 #include <utility.hh>
 
 #include <tfbayes/exception.h>
@@ -53,6 +54,7 @@ typedef struct {
         vector_t*  baseline_weights;
         matrix_t** baseline_priors;
         size_t baseline_n;
+        dpm_partition_t* partition;
         size_t population_size;
         const char* socket_file;
 } options_t;
@@ -151,6 +153,10 @@ void _dpm_tfbs_init(const char* file_name)
         tfbs_options.baseline_weights    = baseline_weights;
         tfbs_options.baseline_priors     = baseline_priors;
         tfbs_options.socket_file         = _options.socket_file;
+
+        if (_options.partition) {
+                tfbs_options.partition   = *_options.partition;
+        }
 
         _sampler = new dpm_tfbs_pmcmc_t(tfbs_options, _sequences, _options.population_size);
 
@@ -268,5 +274,31 @@ void _dpm_tfbs_sample(unsigned int n, unsigned int burnin) {
 void _dpm_tfbs_free() {
         delete(_sampler);
 }
+
+// handling partitions to resume a previous sampling state
+// -----------------------------------------------------------------------------
+
+dpm_partition_t* _dpm_partition_new()
+{
+        return new dpm_partition_t();
+}
+
+void _dpm_partition_add_component(dpm_partition_t* partition, int subset_tag)
+{
+        partition->add_component(subset_tag);
+}
+
+void _dpm_partition_add_index(dpm_partition_t* partition, int sequence, int position)
+{
+        seq_index_t index(sequence, position);
+
+        partition->back().insert(index);
+}
+
+void _dpm_partition_free(dpm_partition_t* partition)
+{
+        delete(partition);
+}
+
 
 __END_DECLS

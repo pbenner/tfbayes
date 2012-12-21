@@ -59,6 +59,9 @@ class MATRIX(Structure):
                  ("columns", c_ulong),
                  ("mat",     POINTER(POINTER(c_double)))]
 
+class PARTITION(Structure):
+     _fields_ = []
+
 class OPTIONS(Structure):
      _fields_ = [("tfbs_length",         c_ulong),
                  ("alpha",               c_double),
@@ -74,6 +77,7 @@ class OPTIONS(Structure):
                  ("baseline_weights",    POINTER(VECTOR)),
                  ("baseline_priors",     POINTER(POINTER(MATRIX))),
                  ("baseline_n",          c_ulong),
+                 ("partition",           POINTER(PARTITION)),
                  ("population_size",     c_ulong),
                  ("socket_file",         c_char_p)]
 
@@ -128,6 +132,18 @@ _lib._dpm_tfbs_free.argtypes    = []
 _lib._dpm_tfbs_get_posterior.restype  = POINTER(MATRIX)
 _lib._dpm_tfbs_get_posterior.argtypes = []
 
+_lib._dpm_partition_new.restype  = POINTER(PARTITION)
+_lib._dpm_partition_new.argtypes = []
+
+_lib._dpm_partition_add_component.restype  = None
+_lib._dpm_partition_add_component.argtypes = [POINTER(PARTITION), c_int]
+
+_lib._dpm_partition_add_index.restype  = None
+_lib._dpm_partition_add_index.argtypes = [POINTER(PARTITION), c_int, c_int]
+
+_lib._dpm_partition_free.restype  = None
+_lib._dpm_partition_free.argtypes = [POINTER(PARTITION)]
+
 # convert datatypes
 # ------------------------------------------------------------------------------
 
@@ -154,10 +170,18 @@ def get_matrix(c_m):
                m[i].append(c_m.contents.mat[i][j])
      return m
 
-#
+def generate_c_partition(partition):
+     c_partition = _lib._dpm_partition_new()
+     for dpm_subset in partition:
+          _lib._dpm_partition_add_component(c_partition, dpm_subset.identifier)
+          for index in dpm_subset.subset:
+               _lib._dpm_partition_add_index(c_partition, index[0], index[1])
+     return c_partition
+
+# functions that interface with the library
 # ------------------------------------------------------------------------------
 
-def dpm_init(options, input_file):
+def dpm_init(options, input_file, partition=None):
      c_options = _lib._dpm_tfbs_options()
      c_options.contents.alpha = options['alpha']
      c_options.contents.discount = options['discount']
@@ -173,6 +197,10 @@ def dpm_init(options, input_file):
      c_options.contents.tfbs_length = options['tfbs_length']
      c_options.contents.population_size = options['population_size']
      c_options.contents.socket_file = options['socket_file']
+     if partition:
+          c_options.contents.partition = generate_c_partition(partition)
+     else:
+          c_options.contents.partition = None
      c_input_file = c_char_p(input_file)
      if not len(options['baseline_priors']) == len(options['baseline_weights']):
           raise IOError('Length mismatch between baseline priors and weights')
@@ -192,6 +220,8 @@ def dpm_init(options, input_file):
      _lib._free_vector(c_baseline_weights)
      for i in range(prior_length):
           _lib._free_matrix(c_baseline_priors[i])
+     if c_options.contents.partition:
+          _lib._dpm_partition_free(c_options.contents.partition)
 
 def dpm_print():
      _lib._dpm_tfbs_print()

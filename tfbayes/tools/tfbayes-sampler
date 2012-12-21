@@ -28,6 +28,7 @@ import os
 
 from tfbayes.dpm.dpm_tfbs_interface import *
 from tfbayes.config                 import *
+from tfbayes.cluster                import parse_partition
 
 # global options
 # ------------------------------------------------------------------------------
@@ -54,6 +55,7 @@ sampler_config = {
     }
 
 options = {
+    'resume'              : None,
     'verbose'             : False
     }
 
@@ -81,10 +83,12 @@ def usage():
     print "                                     markov chain mixture,"
     print "                                     parsimonious tree"
     print "       --tfbs-length=LENGTH        - length of the tfbs"
-    print
-    print "   -s, --save=FILE                 - save posterior to FILE"
     print "       --samples=SAMPLES[:BURN_IN] - number of samples [default: 1000:100]"
     print "       --population-size=INT       - number of parallel samplers [default: 1]"
+    print
+    print "   -s, --save=FILE                 - save posterior to FILE"
+    print "       --resume=FILE               - initialize the sampler with the map partition"
+    print "                                     of a previous sampling run"
     print
     print "   -h, --help                      - print help"
     print "   -v, --verbose                   - be verbose"
@@ -93,18 +97,20 @@ def usage():
 # sample
 # ------------------------------------------------------------------------------
 
+def resume(config_file):
+    results_config = {}
+    parse_results_config(config_file, results_config)
+    partition = parse_partition(results_config)
+    return partition
+
 def sample():
-    # generate baseline
-    if not sampler_config['baseline_priors']:
-        sampler_config['baseline_priors'].append([ [ 1 for j in range(sampler_config['tfbs_length']) ] for i in range(5) ])
-    if not len(sampler_config['baseline_priors']) == len(sampler_config['baseline_weights']):
-        if options['verbose']:
-            print "Setting uniform weights for baseline priors"
-        sampler_config['baseline_weights'] = [ 1 ] * len(sampler_config['baseline_priors'])
-    # sample
     samples = sampler_config['samples'][0]
     burnin  = sampler_config['samples'][1]
-    dpm_init(sampler_config, sampler_config['seq_file'])
+    if options['resume']:
+        partition = resume(options['resume'])
+        dpm_init(sampler_config, sampler_config['seq_file'], partition)
+    else:
+        dpm_init(sampler_config, sampler_config['seq_file'])
     dpm_sample(samples, burnin)
     dpm_save(sampler_config['save'])
     dpm_free()
@@ -118,7 +124,7 @@ def main():
     try:
         longopts   = ["help", "verbose", "lambda=", "discount=", "alpha=",
                       "context", "process-prior=", "backround-model=",
-                      "population-size=", "tfbs-length=", "save=", "samples="]
+                      "population-size=", "tfbs-length=", "resume=", "save=", "samples="]
         opts, tail = getopt.getopt(sys.argv[1:], "s:vh", longopts)
     except getopt.GetoptError:
         usage()
@@ -159,6 +165,8 @@ def main():
             sampler_config['population_size'] = int(a)
         if o in ("-s", "--save"):
             sampler_config['save'] = a
+        if o == "--resume":
+            options['resume'] = a
         if o == "--samples":
             tmp = map(int, a.split(":"))
             if len(tmp) == 2:
