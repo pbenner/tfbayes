@@ -251,8 +251,8 @@ def dpm_hist_switches():
      return switches
 
 def dpm_sample(n, burnin):
-     c_n      = c_int(n)
-     c_burnin = c_int(burnin)
+     c_n      = c_uint(n)
+     c_burnin = c_uint(burnin)
      _lib._dpm_tfbs_sample(c_n, c_burnin)
 
 def dpm_optimize():
