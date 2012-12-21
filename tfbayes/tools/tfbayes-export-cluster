@@ -30,8 +30,7 @@ from tfbayes.cluster   import *
 # global options
 # ------------------------------------------------------------------------------
 
-sampler_config = {
-    }
+sampler_config = default_sampler_config()
 
 options = {
     'load'           : None,
