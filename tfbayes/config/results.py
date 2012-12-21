@@ -40,3 +40,18 @@ def parse_results_config(config_file, results_config):
         results_config['graph'] = config_parser.get('Result', 'graph')
     if config_parser.has_option('Result', 'map_partition'):
         results_config['map_partition'] = config_parser.get('Result', 'map_partition')
+
+# save results config
+# ------------------------------------------------------------------------------
+
+def save_results_config(config_file, results_config):
+    config_parser = ConfigParser.RawConfigParser()
+    config_parser.add_section('Result')
+    write_matrix(config_parser, 'Result', 'components', results_config['components'])
+    write_matrix(config_parser, 'Result', 'likelihood', results_config['likelihood'])
+    write_matrix(config_parser, 'Result', 'posterior',  results_config['posterior'])
+    write_matrix(config_parser, 'Result', 'switches',   results_config['switches'])
+    config_parser.set('Result', 'graph', results_config['graph'])
+    config_parser.set('Result', 'map_partition', results_config['map_partition'])
+    with open(config_file, 'wb') as config_fp:
+        config_parser.write(config_fp)

@@ -47,12 +47,7 @@ def importMatplotlib(backend=None):
 # global options
 # ------------------------------------------------------------------------------
 
-sampler_config = {
-    'baseline_priors'  : [],
-    'seq_file'         : None,
-    'tfbs_length'      : None,
-    'save'             : None,
-    }
+sampler_config = default_sampler_config()
 
 options = {
     'plot'             : False,

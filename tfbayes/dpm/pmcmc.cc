@@ -32,14 +32,18 @@ using namespace std;
 
 population_mcmc_t::population_mcmc_t(size_t n)
         : _population(n, NULL),
-          _size(n), _sampling_history(NULL), _samples(NULL)
+          _size(n),
+          _sampling_history(new sampling_history_t()),
+          _samples(NULL)
 {
         assert(n >= 1);
 }
 
 population_mcmc_t::population_mcmc_t(const population_mcmc_t& pmcmc)
-        : _population(pmcmc._size, NULL), _size(pmcmc._size),
-          _sampling_history(NULL), _samples(NULL)
+        : _population(pmcmc._size, NULL),
+          _size(pmcmc._size),
+          _sampling_history(new sampling_history_t()),
+          _samples(NULL)
 {
         for (size_t i = 0; i < _size; i++) {
                 _population[i] = (sampler_t*)pmcmc._population[i]->clone();

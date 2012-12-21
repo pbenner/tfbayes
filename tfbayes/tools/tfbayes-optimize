@@ -22,6 +22,7 @@
 import sys
 import getopt
 import os
+import tempfile
 
 # local imports
 # ------------------------------------------------------------------------------
@@ -36,7 +37,7 @@ from tfbayes.cluster                import parse_partition
 sampler_config = default_sampler_config()
 
 options = {
-    'resume'              : None,
+    'save'                : None,
     'verbose'             : False
     }
 
@@ -46,43 +47,45 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "tfbayes-sampler [option]... SAMPLER_CONFIG"
+    print "tfbayes-optimize [option]... SAMPLER_CONFIG"
     print
-    print "This program launches the sampler on ChIP data, which must be first"
-    print "processed with `tfbayes-approximate'."
+    print "After running the sampler this program loads the MAP partition and"
+    print "locally optimizes the solution, i.e. adjusts cluster positions."
     print
     print "Options:"
-    print "       --samples=SAMPLES[:BURN_IN] - number of samples [default: 1000:100]"
-    print "       --population-size=INT       - number of parallel samplers [default: 1]"
-    print
     print "   -s, --save=FILE                 - save posterior to FILE"
-    print "       --resume=FILE               - initialize the sampler with the map partition"
-    print "                                     of a previous sampling run"
     print
     print "   -h, --help                      - print help"
     print "   -v, --verbose                   - be verbose"
     print
 
-# sample
+# optimize
 # ------------------------------------------------------------------------------
 
-def resume(config_file):
+def optimize():
+    # we only need one sampler
+    sampler_config['population_size'] = 1
+    # parse results config file
     results_config = {}
-    parse_results_config(config_file, results_config)
+    parse_results_config(sampler_config['save'], results_config)
+    # obtain the partition from the results config
     partition = parse_partition(results_config)
-    return partition
-
-def sample():
-    samples = sampler_config['samples'][0]
-    burnin  = sampler_config['samples'][1]
-    if options['resume']:
-        partition = resume(options['resume'])
-        dpm_init(sampler_config, sampler_config['seq_file'], partition)
-    else:
-        dpm_init(sampler_config, sampler_config['seq_file'])
-    dpm_sample(samples, burnin)
-    dpm_save(sampler_config['save'])
+    dpm_init(sampler_config, sampler_config['seq_file'], partition)
+    dpm_optimize()
+    # save result to a temporary file where it
+    # can be parsed
+    tmp_results_file = tempfile.NamedTemporaryFile()
+    tmp_results_config = {}
+    dpm_save(tmp_results_file.name)
     dpm_free()
+    parse_results_config(tmp_results_file.name, tmp_results_config)
+    # copy the map partition to the old results config
+    results_config['map_partition'] = tmp_results_config['map_partition']
+    # and save it
+    if options['save']:
+        save_results_config(options['save'], results_config)
+    else:
+        save_results_config(sampler_config['save'], results_config)
 
 # main
 # ------------------------------------------------------------------------------
@@ -93,10 +96,7 @@ def main():
     try:
         longopts   = ["help",
                       "verbose",
-                      "population-size=",
-                      "resume=",
-                      "save=",
-                      "samples="]
+                      "save="]
         opts, tail = getopt.getopt(sys.argv[1:], "s:vh", longopts)
     except getopt.GetoptError:
         usage()
@@ -115,22 +115,9 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
-        if o == "--population-size":
-            sampler_config['population_size'] = int(a)
         if o in ("-s", "--save"):
-            sampler_config['save'] = a
-        if o == "--resume":
-            options['resume'] = a
-        if o == "--samples":
-            tmp = map(int, a.split(":"))
-            if len(tmp) == 2:
-                sampler_config["samples"] = tuple(tmp)
-            elif len(tmp) == 1:
-                sampler_config["samples"] = (tmp[0], 0)
-            else:
-                usage()
-                return 1
-    sample()
+            options['save'] = a
+    optimize()
     return 0
 
 if __name__ == "__main__":

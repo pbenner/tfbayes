@@ -271,6 +271,10 @@ void _dpm_tfbs_sample(unsigned int n, unsigned int burnin) {
         _sampler->sample((size_t)n, (size_t)burnin);
 }
 
+void _dpm_tfbs_optimize() {
+        _sampler->optimize();
+}
+
 void _dpm_tfbs_free() {
         delete(_sampler);
 }

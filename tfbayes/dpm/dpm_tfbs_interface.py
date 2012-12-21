@@ -121,7 +121,10 @@ _lib._dpm_tfbs_print.restype    = None
 _lib._dpm_tfbs_print.argtypes   = []
 
 _lib._dpm_tfbs_sample.restype   = None
-_lib._dpm_tfbs_sample.argtypes  = []
+_lib._dpm_tfbs_sample.argtypes  = [c_uint, c_uint]
+
+_lib._dpm_tfbs_optimize.restype   = None
+_lib._dpm_tfbs_optimize.argtypes  = []
 
 _lib._dpm_tfbs_save.restype     = None
 _lib._dpm_tfbs_save.argtypes    = [c_char_p]
@@ -251,6 +254,9 @@ def dpm_sample(n, burnin):
      c_n      = c_int(n)
      c_burnin = c_int(burnin)
      _lib._dpm_tfbs_sample(c_n, c_burnin)
+
+def dpm_optimize():
+     _lib._dpm_tfbs_optimize()
 
 def dpm_save(filename):
      c_filename = c_char_p(filename)

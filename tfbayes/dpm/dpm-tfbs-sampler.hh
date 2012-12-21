@@ -41,6 +41,10 @@ public:
                 save_queue_t<std::string>& output_queue,
                 const sequence_data_t<data_tfbs_t::code_t>& sequences);
 
+        // after sampling this function locally optimizes the current state
+        void optimize(cluster_t& cluster);
+        void optimize();
+
         dpm_tfbs_sampler_t* clone() const;
 
         // auxiliary types
@@ -79,6 +83,8 @@ public:
 
         data_tfbs_t _data;
         std::vector<dpm_tfbs_t*> _gdpm;
+
+        void optimize();
 
 private:
         void _start_server();

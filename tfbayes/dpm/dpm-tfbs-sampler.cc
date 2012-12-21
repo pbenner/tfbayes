@@ -209,6 +209,59 @@ dpm_tfbs_sampler_t::_sample() {
         return s;
 }
 
+void
+dpm_tfbs_sampler_t::optimize(cluster_t& cluster) {
+        double posterior_ref = _dpm.posterior();
+        double posterior_left;
+        double posterior_right;
+        stringstream ss;
+        size_t size = cluster.size();
+
+        _state.save(cluster.cluster_tag());
+        _state.move_left(cluster);
+        posterior_left = _dpm.posterior();
+        _state.restore();
+
+        _state.save(cluster.cluster_tag());
+        _state.move_right(cluster);
+        posterior_right = _dpm.posterior();
+        _state.restore();
+
+        if (posterior_left > posterior_ref && posterior_left > posterior_right) {
+                _state.move_left(cluster);
+                ss << "moved to the left";
+        }
+        else if (posterior_right > posterior_ref && posterior_right > posterior_left) {
+                _state.move_right(cluster);
+                ss << "moved to the right";
+        }
+        else {
+                return;
+        }
+
+        flockfile(stdout);
+        cout << _name << ": "
+             << "cluster "
+             << cluster.cluster_tag()
+             << " "
+             << ss.str()
+             << " "
+             << "("  << size
+             << "->" << cluster.size()
+             << ")"
+             << endl;
+        fflush(stdout);
+        funlockfile(stdout);
+}
+
+void
+dpm_tfbs_sampler_t::optimize() {
+        for (cl_iterator it = _state.begin(); it != _state.end(); it++) {
+                optimize(**it);
+        }
+        _dpm.update_samples(_sampling_steps);
+}
+
 // dpm_tfbs_pmcmc_t
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -242,6 +295,14 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
 
 dpm_tfbs_pmcmc_t::~dpm_tfbs_pmcmc_t() {
         _stop_server();
+}
+
+void
+dpm_tfbs_pmcmc_t::optimize() {
+        for (size_t i = 0; i < _size; i++) {
+                static_cast<dpm_tfbs_sampler_t *>(_population[i])->optimize();
+        }
+        update_samples();
 }
 
 void
