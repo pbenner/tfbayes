@@ -33,26 +33,7 @@ from tfbayes.cluster                import parse_partition
 # global options
 # ------------------------------------------------------------------------------
 
-sampler_config = {
-    'alpha'               : 0.05,
-    'discount'            : 0.0,
-    'lambda'              : 0.01,
-    'construct_graph'     : False,
-    'metropolis_optimize' : True,
-    'process_prior'       : "pitman-yor process",
-    'background_model'    : "independence-dirichlet",
-    'background_alpha'    : [[1],[1],[1],[1],[5]],
-    'background_context'  : 2,
-    'background_weights'  : 'decay',
-    'population_size'     : 1,
-    'tfbs_length'         : 10,
-    'seq_file'            : None,
-    'baseline_weights'    : [1.0],
-    'baseline_priors'     : [],
-    'socket_file'         : '',
-    'samples'             : (1000,100),
-    'save'                : None
-    }
+sampler_config = default_sampler_config()
 
 options = {
     'resume'              : None,
@@ -71,18 +52,6 @@ def usage():
     print "processed with `tfbayes-approximate'."
     print
     print "Options:"
-    print "       --alpha=FLOAT               - alpha parameter for the DP"
-    print "       --discount=DISCOUNT         - Pitman-Yor discount (0 <= d < 1)"
-    print "       --lambda=LAMBDA             - lambda mixture weight"
-    print "       --context=CONTEXT           - context of the background model"
-    print "       --process-prior=NAME        - possible process priors:"
-    print "                                     pitman-yor process (default),"
-    print "                                     uniform process, poppe process"
-    print "       --background-model=NAME     - possible background models:"
-    print "                                     independence (default),"
-    print "                                     markov chain mixture,"
-    print "                                     parsimonious tree"
-    print "       --tfbs-length=LENGTH        - length of the tfbs"
     print "       --samples=SAMPLES[:BURN_IN] - number of samples [default: 1000:100]"
     print "       --population-size=INT       - number of parallel samplers [default: 1]"
     print
@@ -122,9 +91,12 @@ def main():
     global options
     global sampler_config
     try:
-        longopts   = ["help", "verbose", "lambda=", "discount=", "alpha=",
-                      "context", "process-prior=", "backround-model=",
-                      "population-size=", "tfbs-length=", "resume=", "save=", "samples="]
+        longopts   = ["help",
+                      "verbose",
+                      "population-size=",
+                      "resume=",
+                      "save=",
+                      "samples="]
         opts, tail = getopt.getopt(sys.argv[1:], "s:vh", longopts)
     except getopt.GetoptError:
         usage()
@@ -143,24 +115,6 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
-        if o == "--discount":
-            if 0 <= float(a) and float(a) < 1:
-                sampler_config['discount'] = float(a)
-            else:
-                usage()
-                return 1
-        if o == "--alpha":
-            sampler_config['alpha'] = float(a)
-        if o == "--lambda":
-            sampler_config['lambda'] = float(a)
-        if o == "--context":
-            sampler_config['context'] = int(a)
-        if o == "--process-prior":
-            sampler_config['process_prior'] = a
-        if o == "--background-model":
-            sampler_config['background_model'] = a
-        if o == "--tfbs-length":
-            sampler_config['tfbs_length'] = int(a)
         if o == "--population-size":
             sampler_config['population_size'] = int(a)
         if o in ("-s", "--save"):

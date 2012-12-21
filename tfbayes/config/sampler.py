@@ -16,9 +16,37 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+import copy
 import ConfigParser
 
 from tools import *
+
+# default sampler config
+# ------------------------------------------------------------------------------
+
+default_sampler_config_ = {
+    'alpha'               : 0.05,
+    'discount'            : 0.0,
+    'lambda'              : 0.01,
+    'construct_graph'     : False,
+    'metropolis_optimize' : True,
+    'process_prior'       : "pitman-yor process",
+    'background_model'    : "independence-dirichlet",
+    'background_alpha'    : [[1],[1],[1],[1],[5]],
+    'background_context'  : 2,
+    'background_weights'  : 'decay',
+    'population_size'     : 1,
+    'tfbs_length'         : 10,
+    'seq_file'            : None,
+    'baseline_weights'    : [1.0],
+    'baseline_priors'     : [],
+    'socket_file'         : '',
+    'samples'             : (1000,100),
+    'save'                : None
+    }
+
+def default_sampler_config():
+    return copy.deepcopy(default_sampler_config_)
 
 # parse config
 # ------------------------------------------------------------------------------

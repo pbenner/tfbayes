@@ -24,3 +24,4 @@ from tools import *
 
 from results import parse_results_config
 from sampler import parse_sampler_config
+from sampler import default_sampler_config
