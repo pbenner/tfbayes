@@ -31,14 +31,14 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 _lib = None
 
-if   os.path.exists(os.path.dirname(__file__)+'/.libs/libdpm.so'):
-     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/libdpm.so')
-elif os.path.exists(os.path.dirname(__file__)+'/.libs/libdpm.dylib'):
-     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/libdpm.dylib')
+if   os.path.exists(os.path.dirname(__file__)+'/.libs/libtfbayes-dpm.so'):
+     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/libtfbayes-dpm.so')
+elif os.path.exists(os.path.dirname(__file__)+'/.libs/libtfbayes-dpm.dylib'):
+     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/libtfbayes-dpm.dylib')
 elif os.path.exists(os.path.dirname(__file__)+'/.libs/cygdpm-0.dll'):
-     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/cygdpm-0.dll')
+     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/cygtfbates-dpm-0.dll')
 else:
-     for libname in ['libdpm.so.0', 'cygdpm-0.dll', 'libdpm.0.dylib']:
+     for libname in ['libtfbayes-dpm.so.0', 'cygtfbayes-dpm-0.dll', 'libtfbayes-dpm.0.dylib']:
           if not _lib:
                try:
                     _lib = cdll.LoadLibrary(libname)

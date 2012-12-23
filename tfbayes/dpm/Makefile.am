@@ -5,19 +5,19 @@ INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/include
 bin_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug
 
 # mcm_test_SOURCES = mcm-test.cc
-# mcm_test_LDADD   = libdpm.la
+# mcm_test_LDADD   = libtfbayes-dpm.la
 # mcm_test_LDADD  += -lm $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 
 dpm_gaussian_debug_SOURCES = dpm-gaussian-main.cc
 dpm_gaussian_debug_LDADD   = $(top_builddir)/tfbayes/exception/libtfbayes-exception.la
 dpm_gaussian_debug_LDADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
-dpm_gaussian_debug_LDADD  += libdpm.la
+dpm_gaussian_debug_LDADD  += libtfbayes-dpm.la
 dpm_gaussian_debug_LDADD  += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 
 dpm_tfbs_debug_SOURCES = dpm-tfbs-main.cc
 dpm_tfbs_debug_LDADD   = $(top_builddir)/tfbayes/exception/libtfbayes-exception.la
 dpm_tfbs_debug_LDADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
-dpm_tfbs_debug_LDADD  += libdpm.la
+dpm_tfbs_debug_LDADD  += libtfbayes-dpm.la
 dpm_tfbs_debug_LDADD  += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 
 ## set python package name
@@ -32,8 +32,8 @@ dist_bin_SCRIPTS = \
 	dpm-tfbs-demo
 
 ## dpm library
-lib_LTLIBRARIES  = libdpm.la
-libdpm_la_SOURCES =			\
+lib_LTLIBRARIES  = libtfbayes-dpm.la
+libtfbayes_dpm_la_SOURCES =			\
 	code.cc				\
 	code.hh				\
 	clonable.hh			\
@@ -91,11 +91,11 @@ libdpm_la_SOURCES =			\
 	state.hh			\
 	statistics.hh			\
 	utility.hh
-libdpm_la_LIBADD  = $(top_builddir)/tfbayes/exception/libtfbayes-exception.la
-libdpm_la_LIBADD += $(top_builddir)/tfbayes/fastarithmetics/libtfbayes-fastarithmetics.la
-libdpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
-libdpm_la_LIBADD += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
-libdpm_la_LDFLAGS = -no-undefined -version-info 0:0:0
+libtfbayes_dpm_la_LIBADD  = $(top_builddir)/tfbayes/exception/libtfbayes-exception.la
+libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fastarithmetics/libtfbayes-fastarithmetics.la
+libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
+libtfbayes_dpm_la_LIBADD += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
+libtfbayes_dpm_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
 ## extra dist
 EXTRA_DIST = dpm-tfbs-demo-1.cfg dpm-tfbs-demo-1.fa dpm-tfbs-demo-2.cfg dpm-tfbs-demo-2.fa

@@ -31,21 +31,21 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 _lib = None
 
-if   os.path.exists(os.path.dirname(__file__)+'/.libs/libphylotree.so'):
-     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/libphylotree.so')
-elif os.path.exists(os.path.dirname(__file__)+'/.libs/libphylotree.dylib'):
-     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/libphylotree.dylib')
+if   os.path.exists(os.path.dirname(__file__)+'/.libs/libtfbayes-phylotree.so'):
+     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/libtfbayes-phylotree.so')
+elif os.path.exists(os.path.dirname(__file__)+'/.libs/libtfbayes-phylotree.dylib'):
+     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/libtfbayes-phylotree.dylib')
 elif os.path.exists(os.path.dirname(__file__)+'/.libs/cygphylotree-0.dll'):
-     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/cygphylotree-0.dll')
+     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/cygtfbayes-phylotree-0.dll')
 else:
-     for libname in ['libphylotree.so.0', 'cygphylotree-0.dll', 'libphylotree.0.dylib']:
+     for libname in ['libtfbayes-phylotree.so.0', 'cygtfbayes-phylotree-0.dll', 'libtfbayes-phylotree.0.dylib']:
           if not _lib:
                try:
                     _lib = cdll.LoadLibrary(libname)
                except: pass
 
 if not _lib:
-     raise OSError('Couldn\'t find phylotree library.')
+     raise OSError('Couldn\'t find tfbayes-phylotree library.')
 
 # structures
 # ------------------------------------------------------------------------------
