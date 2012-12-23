@@ -124,6 +124,9 @@ _lib.alignment_new.argtypes = [c_ulong, POINTER(PT_ROOT)]
 _lib.alignment_set.restype  = None
 _lib.alignment_set.argtypes = [POINTER(ALIGNMENT), c_char_p, POINTER(VECTOR)]
 
+_lib.alignment_marginal_likelihood.restype  = POINTER(VECTOR)
+_lib.alignment_marginal_likelihood.argtypes = [POINTER(ALIGNMENT), POINTER(PT_ROOT), POINTER(VECTOR)]
+
 _lib.alignment_free.restype  = None
 _lib.alignment_free.argtypes = [POINTER(ALIGNMENT)]
 
@@ -173,6 +176,14 @@ class alignment_t():
           _lib._free_vector(c_record)
      def __del__(self):
           _lib.alignment_free(self.c_alignment)
+     def marginal_likelihood(self, tree, prior):
+          c_prior  = _lib._alloc_vector(len(prior))
+          copy_vector_to_c(prior, c_prior)
+          c_result = _lib.alignment_marginal_likelihood(self.c_alignment, tree, c_prior)
+          result   = get_vector(c_result)
+          _lib._free_vector(c_result)
+          _lib._free_vector(c_prior)
+          return result
 
 #
 # ------------------------------------------------------------------------------
@@ -221,6 +232,8 @@ def pt_expectation(pt_root, observations, prior):
      c_result = _lib.pt_expectation(pt_root, c_observations, c_prior)
      result   = get_vector(c_result)
      _lib._free_vector(c_result)
+     _lib._free_vector(c_prior)
+     _lib._free_vector(c_observations)
      return result
 
 def pt_approximate(pt_root, observations):
@@ -229,4 +242,5 @@ def pt_approximate(pt_root, observations):
      c_result = _lib.pt_approximate(pt_root, c_observations)
      result   = get_vector(c_result)
      _lib._free_vector(c_result)
+     _lib._free_vector(c_observations)
      return result

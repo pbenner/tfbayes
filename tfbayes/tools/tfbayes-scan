@@ -151,6 +151,7 @@ def scan_maf_files(pwm, maf_files):
             # test
             pt_root   = pt_parse_file('../drosophilae.nh')
             alignment = alignment_t(alignment, pt_root)
+            print alignment.marginal_likelihood(pt_root, [10,1,1,1,1])
             # test
             hits += scan_alignment(pwm, alignment)
     print "Found %d sequences." % hits

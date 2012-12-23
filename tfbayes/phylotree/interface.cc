@@ -255,6 +255,25 @@ void alignment_set(alignment_t<code_t>* alignment, const char* taxon, vector_t* 
         }
 }
 
+vector_t* alignment_marginal_likelihood(alignment_t<code_t>* alignment, pt_root_t* pt_root, vector_t* prior)
+{
+        exponent_t<code_t, alphabet_size> alpha;
+        vector_t* result = alloc_vector(alignment->length);
+        size_t k = 0;
+
+        for (size_t i = 0; i < alphabet_size; i++) {
+                alpha[i] = prior->vec[i];
+        }
+
+        /* go through the alignment and compute the marginal
+         * likelihood for each position */
+        for (alignment_t<code_t>::iterator it = alignment->begin(); it != alignment->end(); it++) {
+                it.apply(pt_root);
+                result->vec[k++] = pt_marginal_likelihood<code_t, alphabet_size>(pt_root, alpha);
+        }
+        return result;
+}
+
 void alignment_free(alignment_t<code_t>* alignment)
 {
         delete(alignment);

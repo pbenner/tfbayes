@@ -88,7 +88,6 @@ private:
                 forward.push_back(px_0);
 
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        std::cout << "1" << std::endl;
                         it.apply(tree);
 
                         vector_t likelihood_k(dim, 0.0); // p(z_k | x_k)
