@@ -19,7 +19,7 @@
 #define DATA_GAUSSIAN_HH
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
 #include <gsl/gsl_matrix.h>

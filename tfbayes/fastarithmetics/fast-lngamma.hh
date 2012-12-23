@@ -19,7 +19,7 @@
 #define FAST_LNGAMMA_HH
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
 double fast_lngamma(double x);

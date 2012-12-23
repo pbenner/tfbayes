@@ -19,7 +19,7 @@
 #define DATA_TFBS_HH
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
 #include <iostream>

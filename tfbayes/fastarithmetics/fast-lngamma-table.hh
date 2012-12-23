@@ -19,7 +19,7 @@
 #define FAST_LNGAMMA_TABLE_HH
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
 extern double fast_lngamma_table[][2];
