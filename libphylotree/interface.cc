@@ -241,4 +241,23 @@ void pt_free(pt_root_t* pt_root)
         pt_root->destroy();
 }
 
+alignment_t<code_t>* alignment_new(size_t length, pt_root_t* pt_root)
+{
+        return new alignment_t<code_t>(length, pt_root);
+}
+
+void alignment_set(alignment_t<code_t>* alignment, const char* taxon, vector_t* record)
+{
+        assert(alignment->length == record->size);
+
+        for (size_t i = 0; i < alignment->length; i++) {
+                alignment->operator[](taxon)[i] = (code_t)record->vec[i];
+        }
+}
+
+void alignment_free(alignment_t<code_t>* alignment)
+{
+        delete(alignment);
+}
+
 EXTERN_C_END

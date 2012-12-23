@@ -118,7 +118,7 @@ static options_t options;
 static
 void print_usage(char *pname, FILE *fp)
 {
-        (void)fprintf(fp, "\nUsage: %s [OPTION] TREE ALIGNMENT\n\n", pname);
+        (void)fprintf(fp, "\nUsage: %s [OPTION] TREE FASTA_ALIGNMENT\n\n", pname);
         (void)fprintf(fp,
                       "\n"
                       "Options:\n"

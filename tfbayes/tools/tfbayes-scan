@@ -26,6 +26,7 @@ from Bio     import AlignIO
 
 from tfbayes import fasta
 from tfbayes import cluster
+from tfbayes.phylotree import *
 
 # global options
 # ------------------------------------------------------------------------------
@@ -147,6 +148,10 @@ def scan_maf_files(pwm, maf_files):
     for maf_file in maf_files:
         alignment_list = AlignIO.parse(maf_file, 'maf')
         for alignment in alignment_list:
+            # test
+            pt_root   = pt_parse_file('../drosophilae.nh')
+            alignment = alignment_t(alignment, pt_root)
+            # test
             hits += scan_alignment(pwm, alignment)
     print "Found %d sequences." % hits
 

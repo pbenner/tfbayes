@@ -28,14 +28,15 @@ class DNA:
     @staticmethod
     def code(sequence):
         codebook = { 'G': 0, 'g': 0, 'A': 1, 'a': 1,
-                     'T': 2, 't': 2, 'C': 3, 'c': 3 }
+                     'T': 2, 't': 2, 'C': 3, 'c': 3,
+                     '-': 4, 'N': 4, 'n': 4 }
         if len(sequence) == 1:
             return codebook[sequence]
         else:
             return map(lambda x: codebook[x], sequence)
     @staticmethod
     def decode(numbers):
-        codebook = { 0: 'G', 1: 'A', 2: 'T', 3: 'C' }
+        codebook = { 0: 'G', 1: 'A', 2: 'T', 3: 'C', 4: '-' }
         if type(numbers) == int:
             return codebook[numbers]
         else:

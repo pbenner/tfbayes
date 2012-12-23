@@ -66,6 +66,8 @@ class nucleotide_sequence_t : public std::vector<CODE_TYPE>
 public:
         nucleotide_sequence_t()
                 : std::vector<CODE_TYPE>() { }
+        nucleotide_sequence_t(const size_t n)
+                : std::vector<CODE_TYPE>(n, code_nucleotide<CODE_TYPE>('-')) { }
         nucleotide_sequence_t(const std::string& sequence)
                 : std::vector<CODE_TYPE>() {
                 for (size_t i = 0; i < sequence.length(); i++) {
@@ -77,6 +79,16 @@ public:
 template <typename CODE_TYPE>
 class alignment_t {
 public:
+        alignment_t(const size_t length, pt_root_t* tree) {
+                pt_node_t::nodes_t nodes = tree->get_nodes();
+
+                for (pt_node_t::nodes_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
+                        pt_node_t* node = *it;
+                        taxon_map [node->name] = node->id;
+                        alignments[node->name] = nucleotide_sequence_t<CODE_TYPE>(length);
+                }
+                this->length = length;
+        }
         alignment_t(const char* filename, pt_root_t* tree) {
 
                 FastaParser parser(filename);
@@ -108,6 +120,15 @@ public:
         ////////////////////////////////////////////////////////////////////////
         typedef boost::unordered_map<std::string, nucleotide_sequence_t<CODE_TYPE> > alignment_type;
         typedef boost::unordered_map<std::string, pt_node_t::id_t> taxon_map_t;
+
+        // Operators
+        ////////////////////////////////////////////////////////////////////////
+        nucleotide_sequence_t<CODE_TYPE>& operator[](const std::string& taxon) {
+                return alignments[taxon];
+        }
+        const nucleotide_sequence_t<CODE_TYPE>& operator[](const std::string& taxon) const {
+                return alignments[taxon];
+        }
 
         // Iterator
         ////////////////////////////////////////////////////////////////////////

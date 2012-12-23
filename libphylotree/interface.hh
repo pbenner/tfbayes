@@ -27,6 +27,7 @@
 #include <phylotree-polynomial.hh>
 #include <phylotree-approximation.hh>
 #include <posterior.hh>
+#include <alignment.hh>
 
 #include <tfbayes/exception.h>
 #include <tfbayes/linalg.h>

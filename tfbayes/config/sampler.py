@@ -57,9 +57,7 @@ def str2bool(v):
 def generate_baseline(sampler_config):
     if not sampler_config['baseline_priors']:
         sampler_config['baseline_priors'].append([ [ 1 for j in range(sampler_config['tfbs_length']) ] for i in range(5) ])
-    if not len(sampler_config['baseline_priors']) == len(sampler_config['baseline_weights']):
-        if options['verbose']:
-            print "Setting uniform weights for baseline priors"
+    if sampler_config.has_key('baseline_priors') or not len(sampler_config['baseline_priors']) == len(sampler_config['baseline_weights']):
         sampler_config['baseline_weights'] = [ 1 ] * len(sampler_config['baseline_priors'])
 
 def parse_sampler_config(config_file, sampler_config):

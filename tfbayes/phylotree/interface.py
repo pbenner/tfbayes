@@ -66,6 +66,10 @@ class PT_ROOT(Structure):
         # TODO: this creates a memory leak
         return _lib.pt_print(self)
 
+class ALIGNMENT(Structure):
+     def __repr__(self):
+          return "ALIGNMENT()"
+
 # function prototypes
 # ------------------------------------------------------------------------------
 
@@ -114,6 +118,15 @@ _lib.pt_approximate.argtypes = [POINTER(PT_ROOT), POINTER(VECTOR)]
 _lib.pt_dkl_optimize.restype  = POINTER(VECTOR)
 _lib.pt_dkl_optimize.argtypes = [POINTER(PT_ROOT), POINTER(VECTOR)]
 
+_lib.alignment_new.restype  = POINTER(ALIGNMENT)
+_lib.alignment_new.argtypes = [c_ulong, POINTER(PT_ROOT)]
+
+_lib.alignment_set.restype  = None
+_lib.alignment_set.argtypes = [POINTER(ALIGNMENT), c_char_p, POINTER(VECTOR)]
+
+_lib.alignment_free.restype  = None
+_lib.alignment_free.argtypes = [POINTER(ALIGNMENT)]
+
 # convert datatypes
 # ------------------------------------------------------------------------------
 
@@ -139,6 +152,27 @@ def get_matrix(c_m):
           for j in range(0, c_m.contents.columns):
                m[i].append(c_m.contents.mat[i][j])
      return m
+
+# alignment data type
+# ------------------------------------------------------------------------------
+
+from tfbayes.uipac import *
+
+class alignment_t():
+     def __repr__(self):
+          return "alignment_t()"
+     # this alignment is initialized with an alignment from
+     # Bio.AlignIO
+     def __init__(self, alignment, tree):
+          c_record = _lib._alloc_vector(alignment.get_alignment_length())
+          self.c_alignment = _lib.alignment_new(alignment.get_alignment_length(), tree)
+          for record in alignment:
+               c_taxon = c_char_p(record.id)
+               copy_vector_to_c(DNA.code(record), c_record)
+               _lib.alignment_set(self.c_alignment, c_taxon, c_record)
+          _lib._free_vector(c_record)
+     def __del__(self):
+          _lib.alignment_free(self.c_alignment)
 
 #
 # ------------------------------------------------------------------------------
