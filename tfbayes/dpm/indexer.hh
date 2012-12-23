@@ -24,7 +24,7 @@
 
 #include <vector>
 
-#include <index.hh>
+#include <tfbayes/dpm/index.hh>
 
 //
 // Interface for (randomly) indexing data structures

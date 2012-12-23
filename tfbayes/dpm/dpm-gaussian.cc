@@ -26,9 +26,8 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_blas.h>
 
-#include <dpm-gaussian.hh>
-
-#include <tfbayes/logarithmetic.h>
+#include <tfbayes/dpm/dpm-gaussian.hh>
+#include <tfbayes/utility/logarithmetic.h>
 
 using namespace std;
 

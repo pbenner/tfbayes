@@ -19,7 +19,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <dpm-tfbs-io.hh>
+#include <tfbayes/dpm/dpm-tfbs-io.hh>
 
 using namespace std;
 

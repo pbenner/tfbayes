@@ -1,12 +1,12 @@
 ## Process this file with automake to produce Makefile.in
 
-INCLUDES = -I$(top_srcdir)/include
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/include
 
 ## Berkeley DB for the human genome data
-lib_LTLIBRARIES  = libfasta.la
-libfasta_la_SOURCES = fasta.cc fasta.hh
-libfasta_la_LIBADD  = $(top_builddir)/libexception/libexception.la
-libfasta_la_LDFLAGS = -no-undefined -version-info 0:0:0
+lib_LTLIBRARIES  = libtfbayes-fasta.la
+libtfbayes_fasta_la_SOURCES = fasta.cc fasta.hh
+libtfbayes_fasta_la_LIBADD  = ../exception/libtfbayes-exception.la
+libtfbayes_fasta_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/fasta

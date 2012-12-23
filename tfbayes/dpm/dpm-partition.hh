@@ -24,8 +24,8 @@
 
 #include <boost/unordered_set.hpp>
 
-#include <index.hh>
-#include <datatypes.hh>
+#include <tfbayes/dpm/index.hh>
+#include <tfbayes/dpm/datatypes.hh>
 
 typedef ssize_t dpm_subset_tag_t;
 

@@ -23,9 +23,9 @@
 
 #include <gsl/gsl_randist.h>
 
-#include <sampler.hh>
-#include <state.hh>
-#include <statistics.hh>
+#include <tfbayes/dpm/sampler.hh>
+#include <tfbayes/dpm/state.hh>
+#include <tfbayes/dpm/statistics.hh>
 
 using namespace std;
 

@@ -19,7 +19,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <index.hh>
+#include <tfbayes/dpm/index.hh>
 
 std::ostream&
 operator<< (std::ostream& o, const index_t& index) {

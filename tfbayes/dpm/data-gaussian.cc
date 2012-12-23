@@ -23,8 +23,8 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-#include <data-gaussian.hh>
-#include <init.hh>
+#include <tfbayes/dpm/data-gaussian.hh>
+#include <tfbayes/dpm/init.hh>
 
 using namespace std;
 

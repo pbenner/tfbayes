@@ -24,7 +24,7 @@
 #include <string.h>
 #include <math.h>
 
-#include <component-model.hh>
+#include <tfbayes/dpm/component-model.hh>
 
 using namespace std;
 

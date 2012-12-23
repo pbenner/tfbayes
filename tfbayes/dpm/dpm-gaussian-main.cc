@@ -21,8 +21,8 @@
 
 #include <iostream>
 
-#include <interface.hh>
-#include <dpm-gaussian-interface.hh>
+#include <tfbayes/dpm/interface.hh>
+#include <tfbayes/dpm/dpm-gaussian-interface.hh>
 
 int
 main(void) {

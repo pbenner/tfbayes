@@ -19,8 +19,8 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <dpm-tfbs-sampler.hh>
-#include <statistics.hh>
+#include <tfbayes/dpm/dpm-tfbs-sampler.hh>
+#include <tfbayes/dpm/statistics.hh>
 
 using namespace std;
 using namespace boost::asio;

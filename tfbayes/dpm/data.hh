@@ -26,9 +26,9 @@
 #include <vector>
 #include <string>
 
-#include <clonable.hh>
-#include <index.hh>
-#include <datatypes.hh>
+#include <tfbayes/dpm/index.hh>
+#include <tfbayes/dpm/datatypes.hh>
+#include <tfbayes/utility/clonable.hh>
 
 // data_t and iterator_t
 ////////////////////////////////////////////////////////////////////////////////

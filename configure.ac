@@ -43,10 +43,10 @@ dnl ,----------------------------
 dnl | GENERAL PACKAGE INFO
 dnl `----------------------------
 
-AC_SUBST([PACKAGE_SUMMARY], ["template project"])
-AC_SUBST([PACKAGE_URL], ["http://www.homepage.ch"])
+AC_SUBST([PACKAGE_SUMMARY], [""])
+AC_SUBST([PACKAGE_URL], [""])
 AC_SUBST([PACKAGE_LICENSE], ["GPL"])
-AC_SUBST([PACKAGE_DESCRIPTION], ["This is a template project using autoconf, automake and autoheader."])
+AC_SUBST([PACKAGE_DESCRIPTION], [""])
 
 dnl ,---------------------------- 
 dnl | MACRO DEFINITIONS
@@ -330,16 +330,15 @@ dnl ,----------------------------
 dnl | AC_OUTPUT
 dnl `----------------------------
 
-AC_CONFIG_HEADER([config.h:config.h.in])
+AC_CONFIG_HEADER([tfbayes/config.h:tfbayes/config.h.in])
 AC_CONFIG_FILES([
 	Makefile
-	version.h
-	libexception/Makefile
-	libfastarithmetics/Makefile
-	libphylotree/Makefile
-	parsmm/Makefile
 	include/Makefile
+	tfbayes/version.h
 	tfbayes/Makefile
+	tfbayes/alignment/Makefile
+	tfbayes/exception/Makefile
+	tfbayes/fastarithmetics/Makefile
 	tfbayes/fasta/Makefile
 	tfbayes/config/Makefile
 	tfbayes/phylotree/Makefile
@@ -347,6 +346,7 @@ AC_CONFIG_FILES([
 	tfbayes/cluster/Makefile
 	tfbayes/uipac/Makefile
 	tfbayes/tools/Makefile
+	tfbayes/utility/Makefile
  	])
 
 AC_OUTPUT

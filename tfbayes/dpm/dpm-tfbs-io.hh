@@ -24,7 +24,7 @@
 
 #include <ostream>
 
-#include <dpm-tfbs-sampler.hh>
+#include <tfbayes/dpm/dpm-tfbs-sampler.hh>
 
 void dpm_tfbs_save_result(std::ostream& file, dpm_tfbs_pmcmc_t& sampler);
 

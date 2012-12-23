@@ -22,14 +22,12 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <mixture-model.hh>
-
-#include <data-tfbs.hh>
-#include <dpm-tfbs-options.hh>
-#include <dpm-tfbs-prior.hh>
-#include <dpm-tfbs-state.hh>
-
-#include <tfbayes/linalg.h>
+#include <tfbayes/dpm/mixture-model.hh>
+#include <tfbayes/dpm/data-tfbs.hh>
+#include <tfbayes/dpm/dpm-tfbs-options.hh>
+#include <tfbayes/dpm/dpm-tfbs-prior.hh>
+#include <tfbayes/dpm/dpm-tfbs-state.hh>
+#include <tfbayes/utility/linalg.h>
 
 class dpm_tfbs_t : public mixture_model_t {
 public:

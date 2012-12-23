@@ -35,10 +35,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
-#include <data-tfbs.hh>
-#include <utility.hh>
-
-#include <dpm-tfbs-command.hh>
+#include <tfbayes/dpm/data-tfbs.hh>
+#include <tfbayes/dpm/utility.hh>
+#include <tfbayes/dpm/dpm-tfbs-command.hh>
 
 class repl_t {
 public:

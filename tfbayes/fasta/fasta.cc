@@ -21,8 +21,8 @@
 
 #include <stdlib.h>
 
-#include <tfbayes/fasta.hh>
-#include <tfbayes/strtools.hh>
+#include <tfbayes/fasta/fasta.hh>
+#include <tfbayes/utility/strtools.hh>
 
 using namespace std;
 

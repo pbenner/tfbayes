@@ -24,7 +24,7 @@
 
 #include <boost/unordered_map.hpp> 
 
-#include <index.hh>
+#include <tfbayes/dpm/index.hh>
 
 static inline
 const index_i& imin(const index_i& index1, const index_i& index2) {

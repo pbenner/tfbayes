@@ -21,7 +21,7 @@
 
 #include <iostream>
 
-#include <state.hh>
+#include <tfbayes/dpm/state.hh>
 
 using namespace std;
 

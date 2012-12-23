@@ -22,8 +22,8 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <interface.hh>
-#include <tfbayes/linalg.h>
+#include <tfbayes/dpm/interface.hh>
+#include <tfbayes/utility/linalg.h>
 
 #undef __BEGIN_DECLS
 #undef __END_DECLS

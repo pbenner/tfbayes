@@ -25,7 +25,7 @@
 #include <list>
 #include <assert.h>
 
-#include <mixture-state.hh>
+#include <tfbayes/dpm/mixture-state.hh>
 
 using namespace std;
 

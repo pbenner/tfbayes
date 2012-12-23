@@ -25,9 +25,9 @@
 #include <list>
 #include <vector>
 
-#include <cluster.hh>
-#include <component-model.hh>
-#include <datatypes.hh>
+#include <tfbayes/dpm/cluster.hh>
+#include <tfbayes/dpm/component-model.hh>
+#include <tfbayes/dpm/datatypes.hh>
 
 // mixture_state_t
 ////////////////////////////////////////////////////////////////////////////////

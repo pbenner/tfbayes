@@ -26,10 +26,9 @@
 #include <vector>
 #include <string>
 
-#include <clonable.hh>
-#include <index.hh>
-
-#include <tfbayes/linalg.h>
+#include <tfbayes/utility/clonable.hh>
+#include <tfbayes/utility/linalg.h>
+#include <tfbayes/dpm/index.hh>
 
 namespace std {
         template <typename T>
@@ -55,8 +54,8 @@ typedef struct {
         std::vector<std::vector<size_t> > components;
 } sampling_history_t;
 
-#include <dpm-graph.hh>
-#include <dpm-partition.hh>
+#include <tfbayes/dpm/dpm-graph.hh>
+#include <tfbayes/dpm/dpm-partition.hh>
 
 typedef struct {
         std::vector<std::vector<double> > probabilities;

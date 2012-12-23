@@ -22,8 +22,8 @@
 #include <iostream>
 #include <sstream>
 
-#include <dpm-tfbs.hh>
-#include <statistics.hh>
+#include <tfbayes/dpm/dpm-tfbs.hh>
+#include <tfbayes/dpm/statistics.hh>
 
 using namespace std;
 
@@ -152,7 +152,7 @@ dpm_tfbs_t::test_background() {
         exit(EXIT_SUCCESS);
 }
 
-#include <tfbayes/logarithmetic.h>
+#include <tfbayes/utility/logarithmetic.h>
 
 void normalize(size_t components, double *log_weights)
 {

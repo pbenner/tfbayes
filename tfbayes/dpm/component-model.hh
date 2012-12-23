@@ -34,15 +34,12 @@
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_matrix.h>
 
-#include <clonable.hh>
-#include <data-tfbs.hh>
-#include <datatypes.hh>
-#include <mixture-weights.hh>
-#include <nucleotide-sequence.hh>
-#include <dpm-tfbs-options.hh>
-
-#include <parsmm/abstract_set.h>
-#include <parsmm/static_pars_tree.h>
+#include <tfbayes/utility/clonable.hh>
+#include <tfbayes/dpm/data-tfbs.hh>
+#include <tfbayes/dpm/datatypes.hh>
+#include <tfbayes/dpm/mixture-weights.hh>
+#include <tfbayes/dpm/nucleotide-sequence.hh>
+#include <tfbayes/dpm/dpm-tfbs-options.hh>
 
 // component_model_t interface
 ////////////////////////////////////////////////////////////////////////////////
@@ -205,46 +202,6 @@ private:
         void substract_counts(size_t pos) const;
 };
 
-// Variable Order Markov Chain
-////////////////////////////////////////////////////////////////////////////////
-
-// class parsimonious_tree_t : public component_model_t {
-// public:
-//          parsimonious_tree_t(size_t alphabet_size, size_t tree_depth,
-//                              const sequence_data_t<data_tfbs_t::code_t>& data,
-//                              const sequence_data_t<cluster_tag_t>& cluster_assignments,
-//                              cluster_tag_t cluster_tag);
-//          parsimonious_tree_t(const parsimonious_tree_t& distribution);
-//         ~parsimonious_tree_t();
-
-//         parsimonious_tree_t* clone() const;
-
-//         size_t add(const range_t& range);
-//         size_t remove(const range_t& range);
-//         size_t count(const range_t& range);
-//         double predictive(const range_t& range);
-//         double log_predictive(const range_t& range);
-//         double log_likelihood() const;
-
-//         friend std::ostream& operator<< (std::ostream& o, const parsimonious_tree_t& pd);
-
-// private:
-//         abstract_set_t* _as;
-//         static_pars_tree_t* _pt;
-//         size_t _counts_length;
-//         count_t* _counts;
-
-//         const sequence_data_t<short>&         _data;
-//               sequence_data_t<context_t>      _context;
-//         const sequence_data_t<cluster_tag_t>& _cluster_assignments;
-
-//         const cluster_tag_t _cluster_tag;
-//         const size_t        _tree_depth;
-
-//         // internal methods
-//         size_t max_from_context(const range_t& range) const;
-//         size_t max_to_context(const range_t& range) const;
-// };
 
 // Bivariate Gaussian
 ////////////////////////////////////////////////////////////////////////////////

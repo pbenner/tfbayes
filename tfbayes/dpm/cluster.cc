@@ -24,7 +24,7 @@
 #include <ctime>
 #include <list>
 
-#include <cluster.hh>
+#include <tfbayes/dpm/cluster.hh>
 
 using namespace std;
 

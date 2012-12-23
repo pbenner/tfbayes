@@ -27,14 +27,13 @@
 
 #include <getopt.h>
 
-#include <init.hh>
-#include <dpm-tfbs.hh>
-#include <dpm-tfbs-io.hh>
-#include <dpm-tfbs-sampler.hh>
-#include <utility.hh>
-
-#include <tfbayes/exception.h>
-#include <tfbayes/fasta.hh>
+#include <tfbayes/dpm/init.hh>
+#include <tfbayes/dpm/dpm-tfbs.hh>
+#include <tfbayes/dpm/dpm-tfbs-io.hh>
+#include <tfbayes/dpm/dpm-tfbs-sampler.hh>
+#include <tfbayes/dpm/utility.hh>
+#include <tfbayes/exception/exception.h>
+#include <tfbayes/fasta/fasta.hh>
 
 using namespace std;
 

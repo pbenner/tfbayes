@@ -24,7 +24,7 @@
 
 #include <ostream>
 
-#include <mixture-state.hh>
+#include <tfbayes/dpm/mixture-state.hh>
 
 class state_t : public mixture_state_t, public clonable {
 public:

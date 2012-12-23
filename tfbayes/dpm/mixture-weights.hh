@@ -28,7 +28,7 @@
 
 #include <math.h>
 
-#include <clonable.hh>
+#include <tfbayes/utility/clonable.hh>
 
 class mixture_weights_t : virtual public std::vector<double>, public clonable {
 public:

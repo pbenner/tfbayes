@@ -27,13 +27,9 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_blas.h>
 
-#include <dpm-tfbs.hh>
-#include <statistics.hh>
-
-#include <tfbayes/logarithmetic.h>
-
-#include <parsmm/abstract_set.h>
-#include <parsmm/static_pars_tree.h>
+#include <tfbayes/dpm/dpm-tfbs.hh>
+#include <tfbayes/dpm/statistics.hh>
+#include <tfbayes/utility/logarithmetic.h>
 
 using namespace std;
 
@@ -80,11 +76,6 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
                 markov_chain_mixture_t* bg = new markov_chain_mixture_t(data_tfbs_t::alphabet_size, options, _data, _state.cluster_assignments, 0);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
         }
-        // else if (options.background_model == "parsimonious tree") {
-        //         assert(options.background_context >= 0);
-        //         parsimonious_tree_t* bg = new parsimonious_tree_t(data_tfbs_t::alphabet_size, options.background_context, _data, _state.cluster_assignments, 0);
-        //         _state.bg_cluster_tag = _state.add_cluster(bg);
-        // }
         else {
                 cerr << "Unknown background model." << endl;
                 exit(EXIT_FAILURE);

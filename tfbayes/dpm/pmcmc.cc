@@ -26,7 +26,7 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#include <pmcmc.hh>
+#include <tfbayes/dpm/pmcmc.hh>
 
 using namespace std;
 

@@ -24,10 +24,10 @@
 
 #include <vector>
 
-#include <cluster.hh>
-#include <data-tfbs.hh>
-#include <mixture-state.hh>
-#include <state.hh>
+#include <tfbayes/dpm/cluster.hh>
+#include <tfbayes/dpm/data-tfbs.hh>
+#include <tfbayes/dpm/mixture-state.hh>
+#include <tfbayes/dpm/state.hh>
 
 class dpm_tfbs_state_t : public gibbs_state_t {
 public:

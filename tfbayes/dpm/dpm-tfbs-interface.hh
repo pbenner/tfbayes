@@ -18,6 +18,6 @@
 #ifndef DPM_TFBS_INTERFACE_HH
 #define DPM_TFBS_INTERFACE_HH
 
-#include <interface.hh>
+#include <tfbayes/dpm/interface.hh>
 
 #endif /* DPM_TFBS_INTERFACE_HH */

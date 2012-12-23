@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-#include <dpm-partition.hh>
+#include <tfbayes/dpm/dpm-partition.hh>
 
 typedef struct {
         size_t tfbs_length;

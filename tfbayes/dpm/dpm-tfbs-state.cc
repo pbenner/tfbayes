@@ -21,7 +21,7 @@
 
 #include <sstream>
 
-#include <dpm-tfbs-state.hh>
+#include <tfbayes/dpm/dpm-tfbs-state.hh>
 
 using namespace std;
 

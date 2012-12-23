@@ -31,10 +31,9 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_matrix.h>
 
-#include <data-tfbs.hh>
-#include <nucleotide-sequence.hh>
-
-#include <tfbayes/fasta.hh>
+#include <tfbayes/fasta/fasta.hh>
+#include <tfbayes/dpm/nucleotide-sequence.hh>
+#include <tfbayes/dpm/data-tfbs.hh>
 
 using namespace std;
 

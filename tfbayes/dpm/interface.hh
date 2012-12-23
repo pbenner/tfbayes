@@ -26,6 +26,6 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv.h>
 
-#include <tfbayes/linalg.h>
+#include <tfbayes/utility/linalg.h>
 
 #endif /* INTERFACE_HH */

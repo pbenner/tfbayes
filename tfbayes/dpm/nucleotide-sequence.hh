@@ -27,8 +27,8 @@
 
 #include <math.h>
 
-#include <abysmal-stack.hh>
-#include <code.hh>
+#include <tfbayes/utility/abysmal-stack.hh>
+#include <tfbayes/dpm/code.hh>
 
 class nucleotide_sequence_t : public std::vector<short>
 {

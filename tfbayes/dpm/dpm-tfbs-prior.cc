@@ -21,7 +21,7 @@
 
 #include <gsl/gsl_sf_gamma.h>
 
-#include <dpm-tfbs-prior.hh>
+#include <tfbayes/dpm/dpm-tfbs-prior.hh>
 
 // Pitman-Yor prior
 ////////////////////////////////////////////////////////////////////////////////

@@ -23,16 +23,15 @@
 
 #include <fstream>
 
-#include <init.hh>
-#include <dpm-tfbs.hh>
-#include <dpm-tfbs-interface.hh>
-#include <dpm-tfbs-io.hh>
-#include <dpm-tfbs-sampler.hh>
-#include <dpm-partition.hh>
-#include <utility.hh>
-
-#include <tfbayes/exception.h>
-#include <tfbayes/linalg.h>
+#include <tfbayes/dpm/init.hh>
+#include <tfbayes/dpm/dpm-tfbs.hh>
+#include <tfbayes/dpm/dpm-tfbs-interface.hh>
+#include <tfbayes/dpm/dpm-tfbs-io.hh>
+#include <tfbayes/dpm/dpm-tfbs-sampler.hh>
+#include <tfbayes/dpm/dpm-partition.hh>
+#include <tfbayes/dpm/utility.hh>
+#include <tfbayes/exception/exception.h>
+#include <tfbayes/utility/linalg.h>
 
 using namespace std;
 

@@ -22,14 +22,14 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <data.hh>
-#include <datatypes.hh>
-#include <component-model.hh>
-#include <indexer.hh>
-
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+
+#include <tfbayes/dpm/data.hh>
+#include <tfbayes/dpm/datatypes.hh>
+#include <tfbayes/dpm/component-model.hh>
+#include <tfbayes/dpm/indexer.hh>
 
 class data_gaussian_t : public indexer_t, public data_t<std::vector<double> > {
 public:

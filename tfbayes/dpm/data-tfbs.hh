@@ -28,9 +28,9 @@
 
 #include <boost/array.hpp>
 
-#include <code.hh>
-#include <data.hh>
-#include <indexer.hh>
+#include <tfbayes/dpm/code.hh>
+#include <tfbayes/dpm/data.hh>
+#include <tfbayes/dpm/indexer.hh>
 
 #define __ALPHABET_SIZE__ 5
 #define __CODE_TYPE__ boost::array<double, __ALPHABET_SIZE__>

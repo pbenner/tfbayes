@@ -17,13 +17,12 @@
 
 #include <gsl/gsl_matrix.h>
 
-#include <init.hh>
-#include <data-gaussian.hh>
-#include <dpm-gaussian-interface.hh>
-#include <dpm-gaussian.hh>
-#include <sampler.hh>
-
-#include <tfbayes/linalg.h>
+#include <tfbayes/dpm/init.hh>
+#include <tfbayes/dpm/data-gaussian.hh>
+#include <tfbayes/dpm/dpm-gaussian-interface.hh>
+#include <tfbayes/dpm/dpm-gaussian.hh>
+#include <tfbayes/dpm/sampler.hh>
+#include <tfbayes/utility/linalg.h>
 
 using namespace std;
 

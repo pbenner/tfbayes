@@ -22,11 +22,11 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <clonable.hh>
-#include <datatypes.hh>
-#include <indexer.hh>
-#include <mixture-model.hh>
-#include <state.hh>
+#include <tfbayes/dpm/datatypes.hh>
+#include <tfbayes/dpm/indexer.hh>
+#include <tfbayes/dpm/mixture-model.hh>
+#include <tfbayes/dpm/state.hh>
+#include <tfbayes/utility/clonable.hh>
 
 class sampler_t : public clonable {
 public:

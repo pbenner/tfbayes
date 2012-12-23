@@ -22,10 +22,10 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <dpm-tfbs.hh>
-#include <dpm-tfbs-state.hh>
-#include <sampler.hh>
-#include <utility.hh>
+#include <tfbayes/dpm/dpm-tfbs.hh>
+#include <tfbayes/dpm/dpm-tfbs-state.hh>
+#include <tfbayes/dpm/sampler.hh>
+#include <tfbayes/dpm/utility.hh>
 
 class command_t;
 

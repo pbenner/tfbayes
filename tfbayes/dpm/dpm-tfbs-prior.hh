@@ -22,9 +22,9 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <clonable.hh>
-#include <cluster.hh>
-#include <dpm-tfbs-state.hh>
+#include <tfbayes/dpm/cluster.hh>
+#include <tfbayes/dpm/dpm-tfbs-state.hh>
+#include <tfbayes/utility/clonable.hh>
 
 class dpm_tfbs_prior_t : public clonable {
 public:

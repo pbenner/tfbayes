@@ -2,9 +2,5 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS  = libexception
-SUBDIRS += libfastarithmetics
-SUBDIRS += parsmm
-SUBDIRS += tfbayes
-SUBDIRS += libphylotree
+SUBDIRS  = tfbayes
 SUBDIRS += include

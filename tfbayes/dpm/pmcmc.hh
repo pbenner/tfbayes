@@ -24,7 +24,7 @@
 
 #include <vector>
 
-#include <sampler.hh>
+#include <tfbayes/dpm/sampler.hh>
 
 class population_mcmc_t : public sampler_t {
 public:

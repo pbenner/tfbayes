@@ -24,10 +24,10 @@
 
 #include <gsl/gsl_matrix.h>
 
-#include <component-model.hh>
-#include <data-gaussian.hh>
-#include <mixture-model.hh>
-#include <state.hh>
+#include <tfbayes/dpm/component-model.hh>
+#include <tfbayes/dpm/data-gaussian.hh>
+#include <tfbayes/dpm/mixture-model.hh>
+#include <tfbayes/dpm/state.hh>
 
 class DPM_Gaussian : public mixture_model_t, public gibbs_state_t {
 public:

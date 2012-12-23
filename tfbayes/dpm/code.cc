@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <code.hh>
+#include <tfbayes/dpm/code.hh>
 
 using namespace std;
 

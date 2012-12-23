@@ -26,12 +26,12 @@
 #include <vector>
 #include <iostream>
 
-#include <clonable.hh>
-#include <component-model.hh>
-#include <datatypes.hh>
-#include <observer.hh>
-
 #include <boost/unordered_set.hpp> 
+
+#include <tfbayes/dpm/component-model.hh>
+#include <tfbayes/dpm/datatypes.hh>
+#include <tfbayes/dpm/observer.hh>
+#include <tfbayes/utility/clonable.hh>
 
 ////////////////////////////////////////////////////////////////////////////////
 // This class represents a single cluster for the dirichlet process
