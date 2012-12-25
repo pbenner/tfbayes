@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2012 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,17 +15,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef INTERFACE_HH
-#define INTERFACE_HH
+#include <tfbayes/interface/common.hh>
 
-#ifdef HAVE_CONFIG_H
-#include <tfbayes/config.h>
-#endif /* HAVE_CONFIG_H */
+__BEGIN_DECLS
 
-#include <gsl/gsl_errno.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_odeiv.h>
+vector_t * _alloc_vector(size_t size) {
+        return alloc_vector(size);
+}
+matrix_t * _alloc_matrix(size_t rows, size_t columns) {
+        return alloc_matrix(rows, columns);
+}
+void _free_vector(vector_t *v) { free_vector(v); }
+void _free_matrix(matrix_t *m) { free_matrix(m); }
+void _free(void *ptr)          { free(ptr); }
 
-#include <tfbayes/utility/linalg.h>
-
-#endif /* INTERFACE_HH */
+__END_DECLS

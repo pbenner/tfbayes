@@ -14,69 +14,18 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os
-import numpy as np
-import math
-
-from ctypes import *
-
-# allow to send ctrl-c to the library
-import signal
-signal.signal(signal.SIGINT, signal.SIG_DFL)
+from ..interface import *
 
 # load interface
 # ------------------------------------------------------------------------------
 
-_lib = None
-
-if   os.path.exists(os.path.dirname(__file__)+'/.libs/libtfbayes-dpm.so'):
-     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/libtfbayes-dpm.so')
-elif os.path.exists(os.path.dirname(__file__)+'/.libs/libtfbayes-dpm.dylib'):
-     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/libtfbayes-dpm.dylib')
-elif os.path.exists(os.path.dirname(__file__)+'/.libs/cygdpm-0.dll'):
-     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/cygtfbayes-dpm-0.dll')
-else:
-     for libname in ['libtfbayes-dpm.so.0', 'cygtfbayes-dpm-0.dll', 'libtfbayes-dpm.0.dylib']:
-          if not _lib:
-               try:
-                    _lib = cdll.LoadLibrary(libname)
-               except: pass
-
-if not _lib:
-     raise OSError('Couldn\'t find dpm library.')
-
-# structures
-# ------------------------------------------------------------------------------
-
-class VECTOR(Structure):
-     _fields_ = [("size", c_ulong),
-                 ("vec",  POINTER(c_double))]
-
-class MATRIX(Structure):
-     _fields_ = [("rows",    c_ulong),
-                 ("columns", c_ulong),
-                 ("mat",     POINTER(POINTER(c_double)))]
+_lib = interface.load_library('tfbayes-dpm', 0)
 
 # function prototypes
 # ------------------------------------------------------------------------------
 
-_lib._alloc_vector.restype  = POINTER(VECTOR)
-_lib._alloc_vector.argtypes = [c_ulong]
-
-_lib._alloc_matrix.restype  = POINTER(MATRIX)
-_lib._alloc_matrix.argtypes = [c_ulong, c_ulong]
-
-_lib._free_vector.restype   = None
-_lib._free_vector.argtypes  = [POINTER(VECTOR)]
-
-_lib._free_matrix.restype   = None
-_lib._free_matrix.argtypes  = [POINTER(MATRIX)]
-
-_lib._free.restype         = None
-_lib._free.argtypes        = [POINTER(None)]
-
-#_lib._dpm_gaussian_init.restype     = None
-#_lib._dpm_gaussian_init.argtypes    = [c_int]
+_lib._dpm_gaussian_init.restype     = None
+_lib._dpm_gaussian_init.argtypes    = [c_int, c_double, POINTER(MATRIX), POINTER(MATRIX), POINTER(VECTOR), POINTER(VECTOR)]
 
 _lib._dpm_gaussian_num_clusters.restype  = c_uint
 _lib._dpm_gaussian_num_clusters.argtypes = []
@@ -112,7 +61,7 @@ _lib._dpm_gaussian_print.restype    = None
 _lib._dpm_gaussian_print.argtypes   = []
 
 _lib._dpm_gaussian_sample.restype   = None
-_lib._dpm_gaussian_sample.argtypes  = []
+_lib._dpm_gaussian_sample.argtypes  = [c_uint, c_uint]
 
 _lib._dpm_gaussian_free.restype     = None
 _lib._dpm_gaussian_free.argtypes    = []
@@ -120,38 +69,10 @@ _lib._dpm_gaussian_free.argtypes    = []
 _lib._dpm_gaussian_get_posterior.restype  = POINTER(MATRIX)
 _lib._dpm_gaussian_get_posterior.argtypes = []
 
-# convert datatypes
-# ------------------------------------------------------------------------------
-
-def copy_vector_to_c(v, c_v):
-     for i in range(0, c_v.contents.size):
-          c_v.contents.vec[i] = v[i]
-
-def copy_matrix_to_c(m, c_m):
-     for i in range(0, c_m.contents.rows):
-          for j in range(0, c_m.contents.columns):
-               c_m.contents.mat[i][j] = m[i][j]
-
-def get_vector(c_v):
-     v = []
-     for i in range(0, c_v.contents.size):
-          v.append(c_v.contents.vec[i])
-     return v
-
-def get_matrix(c_m):
-     m = []
-     for i in range(0, c_m.contents.rows):
-          m.append([])
-          for j in range(0, c_m.contents.columns):
-               m[i].append(c_m.contents.mat[i][j])
-     return m
-
 #
 # ------------------------------------------------------------------------------
 
 def dpm_init(n, alpha, cov, cov_0, mu_0, pi):
-     c_n     = c_int(n)
-     c_alpha = c_double(alpha)
      c_cov   = _lib._alloc_matrix(len(cov), len(cov[0]))
      c_cov_0 = _lib._alloc_matrix(len(cov_0), len(cov_0[0]))
      c_mu_0  = _lib._alloc_vector(len(mu_0))
@@ -160,7 +81,7 @@ def dpm_init(n, alpha, cov, cov_0, mu_0, pi):
      copy_matrix_to_c(cov_0, c_cov_0)
      copy_vector_to_c(mu_0, c_mu_0)
      copy_vector_to_c(pi, c_pi)
-     _lib._dpm_gaussian_init(c_n, c_alpha, c_cov, c_cov_0, c_mu_0, c_pi)
+     _lib._dpm_gaussian_init(n, alpha, c_cov, c_cov_0, c_mu_0, c_pi)
      _lib._free_matrix(c_cov)
      _lib._free_matrix(c_cov_0)
      _lib._free_vector(c_mu_0)
@@ -185,8 +106,7 @@ def dpm_cluster_tags():
      return tags
 
 def dpm_cluster_elements(tag):
-     c_tag    = c_int(tag)
-     result   = _lib._dpm_gaussian_cluster_elements(c_tag)
+     result   = _lib._dpm_gaussian_cluster_elements(tag)
      elements = get_matrix(result)
      _lib._free_matrix(result)
      return elements
@@ -228,9 +148,7 @@ def dpm_original_cluster_assignments():
      return tags
 
 def dpm_sample(n, burnin):
-     c_n      = c_int(n)
-     c_burnin = c_int(burnin)
-     _lib._dpm_gaussian_sample(c_n, c_burnin)
+     _lib._dpm_gaussian_sample(n, burnin)
 
 def dpm_free():
      _lib._dpm_gaussian_free()

@@ -21,8 +21,41 @@
 
 #include <iostream>
 
-#include <tfbayes/dpm/interface.hh>
-#include <tfbayes/dpm/dpm-gaussian-interface.hh>
+#include <gsl/gsl_matrix.h>
+
+#include <tfbayes/interface/common.hh>
+#include <tfbayes/dpm/init.hh>
+#include <tfbayes/dpm/data-gaussian.hh>
+#include <tfbayes/dpm/dpm-gaussian.hh>
+#include <tfbayes/dpm/sampler.hh>
+#include <tfbayes/utility/linalg.h>
+
+void sample(
+        int samples,
+        double alpha,
+        matrix_t* _Sigma,
+        matrix_t* _Sigma_0,
+        vector_t* _mu_0,
+        vector_t* _pi)
+{
+        __dpm_init__();
+
+        gsl_matrix *Sigma    = to_gsl_matrix(_Sigma);
+        gsl_matrix *Sigma_0  = to_gsl_matrix(_Sigma_0);
+        gsl_vector *mu_0     = to_gsl_vector(_mu_0);
+        const size_t cluster = _pi->size;
+
+        data_gaussian_t* _data    = new data_gaussian_t(cluster, (size_t)samples, Sigma, _pi->vec);
+        DPM_Gaussian* _gdpm       = new DPM_Gaussian(alpha, Sigma, Sigma_0, mu_0, *_data);
+        gibbs_sampler_t* _sampler = new gibbs_sampler_t(*_gdpm, *_gdpm, *_data);
+
+        gsl_matrix_free(Sigma);
+        gsl_matrix_free(Sigma_0);
+        gsl_vector_free(mu_0);
+
+        _sampler->sample(100, 100);
+
+}
 
 int
 main(void) {
@@ -56,6 +89,5 @@ main(void) {
         pi->vec[9]  = 0.29406385;
         pi->vec[10] = 0.06357562;
 
-        _dpm_gaussian_init(1000, 1, Sigma, Sigma_0, mu, pi);
-        _dpm_gaussian_sample(100,100);
+        sample(1000, 1, Sigma, Sigma_0, mu, pi);
 }

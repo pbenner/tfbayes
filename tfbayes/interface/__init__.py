@@ -1,4 +1,4 @@
-# Copyright (C) 2012 Philipp Benner
+# Copyright (C) 2011 Philipp Benner
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,5 +14,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from interface import *
+# allow to send ctrl-c to the library
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+
+from ctypes    import *
+
+from datatypes import *
 from tools     import *

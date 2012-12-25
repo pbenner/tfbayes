@@ -177,10 +177,5 @@ def main():
     dpm.plotResult(ax2)
     show()
 
-#    fig2 = figure()
-#    ax3  = fig2.add_subplot(1,1,1, title="Statistics")
-#    dpm.plotStatistics(ax3)
-#    show()
-
 if __name__ == "__main__":
     sys.exit(main())

@@ -27,7 +27,7 @@ from Bio     import AlignIO
 from tfbayes import fasta
 from tfbayes import config
 from tfbayes import phylotree
-from tfbayes.alignment import find_record
+from tfbayes.alignment import find_record, alignment_t
 from tfbayes.cluster   import *
 
 # global options
@@ -86,7 +86,7 @@ def usage():
 # ------------------------------------------------------------------------------
 
 def scan_with_phylotree(counts, alignment):
-    scores = phylotree.alignment_t(alignment, options['phylotree']).scan(options['phylotree'], counts)
+    scores = alignment_t(alignment, options['phylotree']).scan(options['phylotree'], counts)
     length = len(counts[0])
     for idx, score in enumerate(scores):
         if score > options['threshold'] and not score == 0.0:

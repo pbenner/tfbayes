@@ -48,7 +48,6 @@ libtfbayes_dpm_la_SOURCES =			\
 	data-gaussian.cc		\
 	data-gaussian.hh		\
 	dpm-gaussian-interface.cc	\
-	dpm-gaussian-interface.hh	\
 	dpm-gaussian.cc			\
 	dpm-gaussian.hh			\
 	dpm-graph.hh			\
@@ -57,7 +56,6 @@ libtfbayes_dpm_la_SOURCES =			\
 	dpm-tfbs-command.cc		\
 	dpm-tfbs-command.hh		\
 	dpm-tfbs-interface.cc		\
-	dpm-tfbs-interface.hh		\
 	dpm-tfbs-io.cc			\
 	dpm-tfbs-io.hh			\
 	dpm-tfbs-repl.cc		\
@@ -76,8 +74,6 @@ libtfbayes_dpm_la_SOURCES =			\
 	indexer.hh			\
 	init.cc				\
 	init.hh				\
-	interface.cc			\
-	interface.hh			\
 	mixture-model.hh		\
 	mixture-state.cc		\
 	mixture-state.hh		\
@@ -92,6 +88,7 @@ libtfbayes_dpm_la_SOURCES =			\
 	statistics.hh			\
 	utility.hh
 libtfbayes_dpm_la_LIBADD  = $(top_builddir)/tfbayes/exception/libtfbayes-exception.la
+libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/interface/libtfbayes-interface.la
 libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fastarithmetics/libtfbayes-fastarithmetics.la
 libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
 libtfbayes_dpm_la_LIBADD += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)

@@ -341,6 +341,7 @@ AC_CONFIG_FILES([
 	tfbayes/fastarithmetics/Makefile
 	tfbayes/fasta/Makefile
 	tfbayes/config/Makefile
+	tfbayes/interface/Makefile
 	tfbayes/phylotree/Makefile
 	tfbayes/dpm/Makefile
 	tfbayes/cluster/Makefile

@@ -23,9 +23,9 @@
 
 #include <fstream>
 
+#include <tfbayes/interface/common.hh>
 #include <tfbayes/dpm/init.hh>
 #include <tfbayes/dpm/dpm-tfbs.hh>
-#include <tfbayes/dpm/dpm-tfbs-interface.hh>
 #include <tfbayes/dpm/dpm-tfbs-io.hh>
 #include <tfbayes/dpm/dpm-tfbs-sampler.hh>
 #include <tfbayes/dpm/dpm-partition.hh>
@@ -78,19 +78,6 @@ operator<<(std::ostream& o, const options_t& options) {
           << "-> socket_file         = " << options.socket_file         << endl;
         return o;
 }
-
-// file i/o
-// -----------------------------------------------------------------------------
-
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 

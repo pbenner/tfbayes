@@ -27,25 +27,13 @@
 #include <string>
 #include <cstring>
 
+#include <tfbayes/interface/common.hh>
 #include <tfbayes/phylotree/interface.hh>
 #include <tfbayes/phylotree/utility.hh>
 
 using namespace std;
 
-EXTERN_C_START
-
-// vector interface
-////////////////////////////////////////////////////////////////////////////////
-
-vector_t * _alloc_vector(size_t size) {
-        return alloc_vector(size);
-}
-matrix_t * _alloc_matrix(size_t rows, size_t columns) {
-        return alloc_matrix(rows, columns);
-}
-void _free_vector(vector_t *v) { free_vector(v); }
-void _free_matrix(matrix_t *m) { free_matrix(m); }
-void _free(void *ptr)          { free(ptr); }
+__BEGIN_DECLS
 
 // library interface
 ////////////////////////////////////////////////////////////////////////////////
@@ -241,69 +229,4 @@ void pt_free(pt_root_t* pt_root)
         pt_root->destroy();
 }
 
-alignment_t<code_t>* alignment_new(size_t length, pt_root_t* pt_root)
-{
-        return new alignment_t<code_t>(length, pt_root);
-}
-
-void alignment_set(alignment_t<code_t>* alignment, const char* taxon, vector_t* record)
-{
-        assert(alignment->length == record->size);
-
-        for (size_t i = 0; i < alignment->length; i++) {
-                alignment->operator[](taxon)[i] = (code_t)record->vec[i];
-        }
-}
-
-vector_t* alignment_marginal_likelihood(alignment_t<code_t>* alignment, pt_root_t* pt_root, vector_t* prior)
-{
-        exponent_t<code_t, alphabet_size> alpha;
-        vector_t* result = alloc_vector(alignment->length);
-
-        for (size_t i = 0; i < alphabet_size; i++) {
-                alpha[i] = prior->vec[i];
-        }
-
-        /* go through the alignment and compute the marginal
-         * likelihood for each position */
-        for (alignment_t<code_t>::iterator it = alignment->begin(); it != alignment->end(); it++) {
-                it.apply(pt_root);
-                result->vec[*it] = pt_marginal_likelihood<code_t, alphabet_size>(pt_root, alpha);
-        }
-        return result;
-}
-
-vector_t* alignment_scan(alignment_t<code_t>* alignment, pt_root_t* pt_root, matrix_t* c_counts)
-{
-        vector_t* result = alloc_vector(alignment->length);
-        vector<exponent_t<code_t, alphabet_size> > counts;
-
-        for (size_t j = 0; j < c_counts->columns; j++) {
-                exponent_t<code_t, alphabet_size> tmp;
-                for (size_t i = 0; i < alphabet_size; i++) {
-                        // check that all counts are positive
-                        assert(c_counts->mat[i][j] >= 0.0);
-                        tmp[i] = c_counts->mat[i][j];
-                }
-                counts.push_back(tmp);
-        }
-
-        for (alignment_t<code_t>::iterator it = alignment->begin(); it != alignment->end(); it++) {
-                result->vec[*it] = 0;
-                if (*it + counts.size() > alignment->length) {
-                        continue;
-                }
-                for (alignment_t<code_t>::iterator is(it); *is < *it + counts.size(); is++) {
-                        is.apply(pt_root);
-                        result->vec[*it] += pt_marginal_likelihood<code_t, alphabet_size>(pt_root, counts[*is-*it]);
-                }
-        }
-        return result;
-}
-
-void alignment_free(alignment_t<code_t>* alignment)
-{
-        delete(alignment);
-}
-
-EXTERN_C_END
+__END_DECLS

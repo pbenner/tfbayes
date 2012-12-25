@@ -14,50 +14,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os
-import numpy as np
-import math
-import ConfigParser
-import getopt
-
-from ctypes import *
-
-# allow to send ctrl-c to the library
-import signal
-signal.signal(signal.SIGINT, signal.SIG_DFL)
+from ..interface import *
 
 # load interface
 # ------------------------------------------------------------------------------
 
-_lib = None
-
-if   os.path.exists(os.path.dirname(__file__)+'/.libs/libtfbayes-phylotree.so'):
-     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/libtfbayes-phylotree.so')
-elif os.path.exists(os.path.dirname(__file__)+'/.libs/libtfbayes-phylotree.dylib'):
-     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/libtfbayes-phylotree.dylib')
-elif os.path.exists(os.path.dirname(__file__)+'/.libs/cygphylotree-0.dll'):
-     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/cygtfbayes-phylotree-0.dll')
-else:
-     for libname in ['libtfbayes-phylotree.so.0', 'cygtfbayes-phylotree-0.dll', 'libtfbayes-phylotree.0.dylib']:
-          if not _lib:
-               try:
-                    _lib = cdll.LoadLibrary(libname)
-               except: pass
-
-if not _lib:
-     raise OSError('Couldn\'t find tfbayes-phylotree library.')
+_lib = load_library('tfbayes-phylotree', 0)
 
 # structures
 # ------------------------------------------------------------------------------
-
-class VECTOR(Structure):
-     _fields_ = [("size", c_ulong),
-                 ("vec",  POINTER(c_double))]
-
-class MATRIX(Structure):
-     _fields_ = [("rows",    c_ulong),
-                 ("columns", c_ulong),
-                 ("mat",     POINTER(POINTER(c_double)))]
 
 class PT_ROOT(Structure):
     def __repr__(self):
@@ -72,21 +37,6 @@ class ALIGNMENT(Structure):
 
 # function prototypes
 # ------------------------------------------------------------------------------
-
-_lib._alloc_vector.restype  = POINTER(VECTOR)
-_lib._alloc_vector.argtypes = [c_ulong]
-
-_lib._alloc_matrix.restype  = POINTER(MATRIX)
-_lib._alloc_matrix.argtypes = [c_ulong, c_ulong]
-
-_lib._free_vector.restype   = None
-_lib._free_vector.argtypes  = [POINTER(VECTOR)]
-
-_lib._free_matrix.restype   = None
-_lib._free_matrix.argtypes  = [POINTER(MATRIX)]
-
-_lib._free.restype  = None
-_lib._free.argtypes = [POINTER(None)]
 
 _lib.pt_parse_file.restype  = POINTER(PT_ROOT)
 _lib.pt_parse_file.argtypes = [c_char_p]
@@ -117,84 +67,6 @@ _lib.pt_approximate.argtypes = [POINTER(PT_ROOT), POINTER(VECTOR)]
 
 _lib.pt_dkl_optimize.restype  = POINTER(VECTOR)
 _lib.pt_dkl_optimize.argtypes = [POINTER(PT_ROOT), POINTER(VECTOR)]
-
-_lib.alignment_new.restype  = POINTER(ALIGNMENT)
-_lib.alignment_new.argtypes = [c_ulong, POINTER(PT_ROOT)]
-
-_lib.alignment_set.restype  = None
-_lib.alignment_set.argtypes = [POINTER(ALIGNMENT), c_char_p, POINTER(VECTOR)]
-
-_lib.alignment_marginal_likelihood.restype  = POINTER(VECTOR)
-_lib.alignment_marginal_likelihood.argtypes = [POINTER(ALIGNMENT), POINTER(PT_ROOT), POINTER(VECTOR)]
-
-_lib.alignment_scan.restype  = POINTER(VECTOR)
-_lib.alignment_scan.argtypes = [POINTER(ALIGNMENT), POINTER(PT_ROOT), POINTER(MATRIX)]
-
-_lib.alignment_free.restype  = None
-_lib.alignment_free.argtypes = [POINTER(ALIGNMENT)]
-
-# convert datatypes
-# ------------------------------------------------------------------------------
-
-def copy_vector_to_c(v, c_v):
-     for i in range(0, c_v.contents.size):
-          c_v.contents.vec[i] = v[i]
-
-def copy_matrix_to_c(m, c_m):
-     for i in range(0, c_m.contents.rows):
-          for j in range(0, c_m.contents.columns):
-               c_m.contents.mat[i][j] = m[i][j]
-
-def get_vector(c_v):
-     v = []
-     for i in range(0, c_v.contents.size):
-          v.append(c_v.contents.vec[i])
-     return v
-
-def get_matrix(c_m):
-     m = []
-     for i in range(0, c_m.contents.rows):
-          m.append([])
-          for j in range(0, c_m.contents.columns):
-               m[i].append(c_m.contents.mat[i][j])
-     return m
-
-# alignment data type
-# ------------------------------------------------------------------------------
-
-from tfbayes.uipac import *
-
-class alignment_t():
-     def __repr__(self):
-          return "alignment_t()"
-     # this alignment is initialized with an alignment from
-     # Bio.AlignIO
-     def __init__(self, alignment, tree):
-          c_record = _lib._alloc_vector(alignment.get_alignment_length())
-          self.c_alignment = _lib.alignment_new(alignment.get_alignment_length(), tree)
-          for record in alignment:
-               c_taxon = c_char_p(record.id)
-               copy_vector_to_c(DNA.code(record), c_record)
-               _lib.alignment_set(self.c_alignment, c_taxon, c_record)
-          _lib._free_vector(c_record)
-     def __del__(self):
-          _lib.alignment_free(self.c_alignment)
-     def marginal_likelihood(self, tree, prior):
-          c_prior  = _lib._alloc_vector(len(prior))
-          copy_vector_to_c(prior, c_prior)
-          c_result = _lib.alignment_marginal_likelihood(self.c_alignment, tree, c_prior)
-          result   = get_vector(c_result)
-          _lib._free_vector(c_result)
-          _lib._free_vector(c_prior)
-          return result
-     def scan(self, tree, counts):
-          c_counts = _lib._alloc_matrix(len(counts), len(counts[0]))
-          copy_matrix_to_c(counts, c_counts)
-          c_result = _lib.alignment_scan(self.c_alignment, tree, c_counts)
-          result   = get_vector(c_result)
-          _lib._free_vector(c_result)
-          _lib._free_matrix(c_counts)
-          return result
 
 #
 # ------------------------------------------------------------------------------

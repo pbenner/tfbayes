@@ -14,50 +14,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os
-import numpy as np
-import math
-import ConfigParser
-import getopt
+from ..interface import *
 
-from ctypes import *
-
-# allow to send ctrl-c to the library
-import signal
-signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-# load interface
+# load library
 # ------------------------------------------------------------------------------
 
-_lib = None
-
-if   os.path.exists(os.path.dirname(__file__)+'/.libs/libtfbayes-dpm.so'):
-     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/libtfbayes-dpm.so')
-elif os.path.exists(os.path.dirname(__file__)+'/.libs/libtfbayes-dpm.dylib'):
-     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/libtfbayes-dpm.dylib')
-elif os.path.exists(os.path.dirname(__file__)+'/.libs/cygdpm-0.dll'):
-     _lib = cdll.LoadLibrary(os.path.dirname(__file__)+'/.libs/cygtfbates-dpm-0.dll')
-else:
-     for libname in ['libtfbayes-dpm.so.0', 'cygtfbayes-dpm-0.dll', 'libtfbayes-dpm.0.dylib']:
-          if not _lib:
-               try:
-                    _lib = cdll.LoadLibrary(libname)
-               except: pass
-
-if not _lib:
-     raise OSError('Couldn\'t find dpm library.')
+_lib = load_library('tfbayes-dpm', 0)
 
 # structures
 # ------------------------------------------------------------------------------
-
-class VECTOR(Structure):
-     _fields_ = [("size", c_ulong),
-                 ("vec",  POINTER(c_double))]
-
-class MATRIX(Structure):
-     _fields_ = [("rows",    c_ulong),
-                 ("columns", c_ulong),
-                 ("mat",     POINTER(POINTER(c_double)))]
 
 class PARTITION(Structure):
      _fields_ = []
@@ -83,21 +48,6 @@ class OPTIONS(Structure):
 
 # function prototypes
 # ------------------------------------------------------------------------------
-
-_lib._alloc_vector.restype  = POINTER(VECTOR)
-_lib._alloc_vector.argtypes = [c_ulong]
-
-_lib._alloc_matrix.restype  = POINTER(MATRIX)
-_lib._alloc_matrix.argtypes = [c_ulong, c_ulong]
-
-_lib._free_vector.restype   = None
-_lib._free_vector.argtypes  = [POINTER(VECTOR)]
-
-_lib._free_matrix.restype   = None
-_lib._free_matrix.argtypes  = [POINTER(MATRIX)]
-
-_lib._free.restype         = None
-_lib._free.argtypes        = [POINTER(None)]
 
 _lib._dpm_tfbs_options.restype       = POINTER(OPTIONS)
 _lib._dpm_tfbs_options.argtypes      = []
@@ -149,29 +99,6 @@ _lib._dpm_partition_free.argtypes = [POINTER(PARTITION)]
 
 # convert datatypes
 # ------------------------------------------------------------------------------
-
-def copy_vector_to_c(v, c_v):
-     for i in range(0, c_v.contents.size):
-          c_v.contents.vec[i] = v[i]
-
-def copy_matrix_to_c(m, c_m):
-     for i in range(0, c_m.contents.rows):
-          for j in range(0, c_m.contents.columns):
-               c_m.contents.mat[i][j] = m[i][j]
-
-def get_vector(c_v):
-     v = []
-     for i in range(0, c_v.contents.size):
-          v.append(c_v.contents.vec[i])
-     return v
-
-def get_matrix(c_m):
-     m = []
-     for i in range(0, c_m.contents.rows):
-          m.append([])
-          for j in range(0, c_m.contents.columns):
-               m[i].append(c_m.contents.mat[i][j])
-     return m
 
 def generate_c_partition(partition):
      c_partition = _lib._dpm_partition_new()

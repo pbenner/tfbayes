@@ -1,4 +1,6 @@
-# Copyright (C) 2012 Philipp Benner
+#! /usr/bin/env python
+
+# Copyright (C) 2011, 2012 Philipp Benner
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,5 +16,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from interface import *
-from tools     import *
+from ctypes import *
+
+class VECTOR(Structure):
+     _fields_ = [("size", c_ulong),
+                 ("vec",  POINTER(c_double))]
+
+class MATRIX(Structure):
+     _fields_ = [("rows",    c_ulong),
+                 ("columns", c_ulong),
+                 ("mat",     POINTER(POINTER(c_double)))]

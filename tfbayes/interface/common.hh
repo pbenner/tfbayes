@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2012 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,9 +15,27 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DPM_TFBS_INTERFACE_HH
-#define DPM_TFBS_INTERFACE_HH
+#undef __BEGIN_DECLS
+#undef __END_DECLS
+#ifdef __cplusplus
+# define __BEGIN_DECLS extern "C" {
+# define __END_DECLS }
+#else
+# define __BEGIN_DECLS /* empty */
+# define __END_DECLS /* empty */
+#endif
 
-#include <tfbayes/dpm/interface.hh>
+// vector interface
+////////////////////////////////////////////////////////////////////////////////
 
-#endif /* DPM_TFBS_INTERFACE_HH */
+#include <tfbayes/utility/linalg.h>
+
+__BEGIN_DECLS
+
+vector_t * _alloc_vector(size_t size);
+matrix_t * _alloc_matrix(size_t rows, size_t columns);
+void _free_vector(vector_t *v);
+void _free_matrix(matrix_t *m);
+void _free(void *ptr);
+
+__END_DECLS

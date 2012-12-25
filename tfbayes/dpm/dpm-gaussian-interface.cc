@@ -17,9 +17,9 @@
 
 #include <gsl/gsl_matrix.h>
 
+#include <tfbayes/interface/common.hh>
 #include <tfbayes/dpm/init.hh>
 #include <tfbayes/dpm/data-gaussian.hh>
-#include <tfbayes/dpm/dpm-gaussian-interface.hh>
 #include <tfbayes/dpm/dpm-gaussian.hh>
 #include <tfbayes/dpm/sampler.hh>
 #include <tfbayes/utility/linalg.h>
@@ -30,17 +30,10 @@ static DPM_Gaussian* _gdpm;
 static data_gaussian_t* _data;
 static gibbs_sampler_t* _sampler;
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
-
 __BEGIN_DECLS
+
+// python interface
+// -----------------------------------------------------------------------------
 
 void _dpm_gaussian_init(
         int samples,

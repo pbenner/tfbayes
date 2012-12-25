@@ -24,8 +24,8 @@
 
 #include <boost/array.hpp>
 
-#include <marginal-likelihood.hh>
-#include <statistics.hh>
+#include <tfbayes/phylotree/marginal-likelihood.hh>
+#include <tfbayes/phylotree/statistics.hh>
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 boost::array<double, ALPHABET_SIZE> pt_posterior_expectation(
