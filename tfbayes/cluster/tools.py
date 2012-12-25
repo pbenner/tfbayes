@@ -88,3 +88,12 @@ def pwm(motif, n, m):
     bg[DNA.code('G')] = 0.2
     bg[DNA.code('T')] = 0.3
     return [ [ math.log(motif[i][j]/bg[i], 2) for j in range(m) ] for i in range(n) ]
+
+# search the cluster list
+# ------------------------------------------------------------------------------
+
+def find_cluster(cluster_list, cluster_number):
+    for cluster in cluster_list:
+        if cluster.identifier == cluster_number:
+            return cluster
+    raise ValueError("Cluster not found.")

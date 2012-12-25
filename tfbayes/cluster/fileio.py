@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# Copyright (C) 2011 Philipp Benner
+# Copyright (C) 2011, 2012 Philipp Benner
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,13 +22,99 @@ from ..uipac  import *
 from ..config import *
 from cluster  import *
 
+# pwm to string
+# ------------------------------------------------------------------------------
+
+def vector_to_string(vector):
+    string = ''
+    for scalar in vector:
+        string += '%6.2f ' % scalar
+    return string
+
+def pwm_to_string(pwm):
+    string = ''
+    for idx, vector in enumerate(pwm):
+        string += '%s: ' % DNA.decode(idx),
+        string += vector_to_string(vector)
+        string += '\n'
+    return string
+
+# counts to string
+# ------------------------------------------------------------------------------
+
+def counts_to_string(counts, counts_gaps):
+    string = ''
+    for idx, vector in enumerate(counts+[counts_gaps]):
+        string += '%s: ' % DNA.decode(idx)
+        string += vector_to_string(vector)
+        string += '\n'
+    return string
+
+# print pwm
+# ------------------------------------------------------------------------------
+
+def print_pwm(pwm):
+    print pwm_to_string(pwm)
+
+# print counts
+# ------------------------------------------------------------------------------
+
+def print_counts(counts, counts_gaps):
+    print counts_to_string(counts, counts_gaps)
+
+# parse pwm
+# ------------------------------------------------------------------------------
+
+def parse_pwm_line(line):
+    m = re.match('([ACGTacgt]):', line[0])
+    if not m:
+        raise ValueError("Parsing of PWM failed!")
+    nucleotide = m.group(1)
+    entry      = map(float, line[1:])
+    return nucleotide, entry
+
+def parse_pwm(pwm_string):
+    pwm    = [[]] * 4
+    for line in pwm_string.strip().split('\n'):
+        line = filter(lambda x: not x is '', line.strip().split(' '))
+        if not len(line) is 0:
+            nucleotide, entry = parse_pwm_line(line)
+            pwm[DNA.code(nucleotide)] = entry
+    return pwm
+
+# parse counts
+# ------------------------------------------------------------------------------
+
+def parse_counts_line(line):
+    m = re.match('([ACGTacgt-]):', line[0])
+    if not m:
+        raise ValueError("Parsing of COUNTS failed!")
+    nucleotide = m.group(1)
+    entry      = map(float, line[1:])
+    return nucleotide, entry
+
+def parse_counts(counts_string):
+    counts    = [[]] * 5
+    for line in counts_string.strip().split('\n'):
+        line = filter(lambda x: not x is '', line.strip().split(' '))
+        if not len(line) is 0:
+            nucleotide, entry = parse_counts_line(line)
+            counts[DNA.code(nucleotide)] = entry
+    return counts[:4], counts[4]
+
+# read counts from config file
+# ------------------------------------------------------------------------------
+
+def read_counts(cluster_parser, cluster_name):
+    counts_string = cluster_parser.get('Cluster', cluster_name)
+    return parse_counts(counts_string)
+
 # load and save cluster
 # ------------------------------------------------------------------------------
 
 def load_cluster(cluster_parser, sampler_config, cluster_name):
     result       = re.match('cluster_([0-9]+)', cluster_name)
-    counts       = read_matrix(cluster_parser, 'Cluster', cluster_name, float)[:4]
-    counts_gap   = read_matrix(cluster_parser, 'Cluster', cluster_name, float)[4]
+    counts, counts_gap = read_counts(cluster_parser, cluster_name)
     components   = int(cluster_parser.get('Cluster', '%s_components' % cluster_name))
     identifier   = int(result.group(1))
     cluster_type = int(cluster_parser.get('Cluster', '%s_type' % cluster_name))
@@ -48,8 +134,8 @@ def save_cluster(cluster_parser, cluster):
         cluster_parser.add_section('Cluster')
     # name of the cluster in the config file
     cluster_name = 'cluster_%d' % cluster.identifier
-    # write cluster counts
-    write_matrix(cluster_parser, 'Cluster', cluster_name, cluster.counts+[cluster.counts_gap])
+    # write cluster counts and alpha
+    cluster_parser.set('Cluster', cluster_name, '\n'+counts_to_string(cluster.counts, cluster.counts_gap).strip())
     # write number of cluster components
     cluster_parser.set('Cluster', '%s_components' % cluster_name, cluster.components)
     # write cluster type (i.e. which prior was used)
@@ -62,38 +148,3 @@ def save_cluster_list(cluster_parser, cluster_list):
         cluster_name = save_cluster(cluster_parser, cluster)
         cluster_names.append(cluster_name)
     write_vector(cluster_parser, 'Cluster', 'cluster', cluster_names)
-
-# print pwm
-# ------------------------------------------------------------------------------
-
-def print_vector(vector):
-    for scalar in vector:
-        print '%5.2f ' % scalar,
-    print
-
-def print_pwm(matrix):
-    for idx, vector in enumerate(matrix):
-        print '%s: ' % DNA.decode(idx),
-        print_vector(vector)
-
-# parse pwm
-# ------------------------------------------------------------------------------
-
-def parse_pwm_line(line):
-    m = re.match('([ACGTacgt]):', line[0])
-    if not m:
-        raise ValueError("Parsing of PWM failed!")
-    nucleotide = m.group(1)
-    entry      = map(float, line[1:])
-    return nucleotide, entry
-
-def parse_pwm(pwm_file):
-    pwm_fp = open(pwm_file, 'r')
-    pwm    = [[]] * 4
-    for line in pwm_fp:
-        line = filter(lambda x: not x is '', line.strip().split(' '))
-        if not len(line) is 0:
-            nucleotide, entry = parse_pwm_line(line)
-            pwm[DNA.code(nucleotide)] = entry
-    pwm_fp.close()
-    return pwm

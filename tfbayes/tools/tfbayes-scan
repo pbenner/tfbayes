@@ -25,8 +25,10 @@ import sys
 from Bio     import AlignIO
 
 from tfbayes import fasta
-from tfbayes import cluster
-from tfbayes.phylotree import *
+from tfbayes import config
+from tfbayes import phylotree
+from tfbayes.alignment import find_record
+from tfbayes.cluster   import *
 
 # global options
 # ------------------------------------------------------------------------------
@@ -37,6 +39,7 @@ sampler_config = {
 options = {
     'format'         : 'maf',
     'species'        : None,
+    'phylotree'      : None,
     'revcomp'        : False,
     'skip-gaps'      : False,
     'threshold'      : 20.0,
@@ -50,21 +53,29 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "tfbayes-scan [option]... PWM SEQUENCES..."
+    print "tfbayes-scan [option]... SAMPLER_CONFIG CLUSTER_NUMBER SEQUENCES..."
     print
     print "Scan a set of fasta sequences or multiple alignments in maf format for"
-    print "sequences that match the pwm. If fasta files are used, then all sequences"
-    print "in the fasta files are scanned. For maf files, only the sequences of a"
-    print "reference species is scanned. Use `tfbayes-export-cluster' to obtain the"
-    print "PWM from a cluster."
+    print "sequences that match a cluster."
+    print " -> If fasta files are given, then all sequences in the fasta files"
+    print "     are scanned with the PWM of the cluster."
+    print " -> MAF files can be scanned in two different ways:"
+    print "    1) If the option `species' is given then only the record of"
+    print "       that species is scanned with the PWM of the cluster."
+    print "    2) If a phylogenetic tree is given then the whole alignment"
+    print "       is scanned by computing marginal likelihoods with cluster"
+    print "       counts as hyperparameters of the Dirichlet distribution."
+    print "    For MAF files either a reference species or a phylogenetic tree"
+    print "    must be given."
     print
     print "Options:"
     print "       --format=STR               - format of the input file(s) (fasta or maf)"
     print "                                    [default: maf]"
+    print "       --phylotree=FILE           - use the phylogenetic tree for scanning"
     print "       --skip-gaps                - skip gaps on the reference sequence"
-    print "       --species=NAME             - use species as reference (required for alignments)"
+    print "       --species=NAME             - use species as reference"
     print "   -r                             - scan for the reverse complement"
-    print "       --load=FILE_NAME           - load motifs from file"
+    print "       --load=FILE_NAME           - load cluster list from file"
     print "       --threshold=VALUE"
     print
     print "   -h, --help                     - print help"
@@ -74,67 +85,48 @@ def usage():
 # scan sequences file
 # ------------------------------------------------------------------------------
 
-def select_subsequence(sequence, i, length):
-    if options['skip-gaps']:
-        # skip all subsequences that start with a gap
-        if sequence[i] == '-':
-            return None
-        result = ""
-        for j in range(i, len(sequence)):
-            if not sequence[j] == '-':
-                result += sequence[j]
-            if len(result) == length:
-                break
-        # the resulting subsequence might be shorter
-        # than what we need!
-        if not len(result) is length:
-            return None
-        else:
-            return result, j
-    else:
-        return sequence[i:i+length], i+length
+def scan_with_phylotree(counts, alignment):
+    scores = phylotree.alignment_t(alignment, options['phylotree']).scan(options['phylotree'], counts)
+    length = len(counts[0])
+    for idx, score in enumerate(scores):
+        if score > options['threshold'] and not score == 0.0:
+            yield (idx,idx+length,score)
 
-def scan(pwm, sequence):
-    length = len(pwm[0])
-    for i in range(len(sequence)-length):
-        result = select_subsequence(sequence, i, length)
-        if result:
-            subsequence, j = result
-            score = cluster.score(pwm, subsequence)
-            if score > options['threshold']:
-                yield (i,j,score)
-
-def scan_fasta(pwm, fasta_file):
+def scan_fasta(cluster, fasta_file):
     print "Scanning `%s':" % fasta_file
     parser = fasta.parser(fasta_file)
-    length = len(pwm[0])
     hits   = 0
     while 1:
         description, sequence = parser.read_sequence()
         if not sequence:
             break
-        for i, j, score in scan(pwm, sequence):
+        for i, j, score in cluster.scan(sequence, options['threshold'], options['skip-gaps']):
             hits += 1
             if len(description) >= 3:
-                print "(%15s,%12s,%05i,%8.5f): %s" % (description[0], description[2], i, score, sequence[i:j])
+                print "(%15s,%12s,%05i,%9.5f): %s" % (description[0], description[2], i, score, sequence[i:j])
             else:
-                print "(%30s,%05i,%8.5f): %s" % (description[0], i, score, sequence[i:j])
+                print "(%30s,%05i,%9.5f): %s" % (description[0], i, score, sequence[i:j])
     return hits
 
-def find_track(species, alignment):
-    for idx, track in enumerate(alignment):
-        if track.name == species:
-            return idx
-    sys.stderr.write('Warning, reference species not found.\n')
-    return -1
-
-def scan_alignment(pwm, alignment):
-    length = len(pwm[0])
+def scan_alignment(cluster, alignment):
+    """Scan the reference sequence in a multiple alignment (MAF) for instances of a pwm."""
     hits   = 0
-    idx    = find_track(options['species'], alignment)
+    idx    = find_record(options['species'], alignment)
     if idx is -1:
         return
-    for i, j, score in scan(pwm, alignment[idx]):
+    for i, j, score in cluster.scan(alignment[idx], options['threshold'], options['skip-gaps']):
+        hits += 1
+        print "%s - Score: %f, Position: (%d, %d)" % (alignment[:,i:j], score, i, j)
+        print
+    return hits
+
+def scan_alignment_with_phylotree(cluster, alignment):
+    """Scan an alignment for regions that match the counts by computing the marginal
+    likelihood for each position given the counts as hyperparameters."""
+    counts = cluster.posterior_counts()
+    length = len(counts[0])
+    hits   = 0
+    for i, j, score in scan_with_phylotree(counts, alignment):
         hits += 1
         print "%s - Score: %f, Position: (%d, %d)" % (alignment[:,i:j], score, i, j)
         print
@@ -143,41 +135,52 @@ def scan_alignment(pwm, alignment):
 # scan alignments (maf) or simple fasta sequences
 # ------------------------------------------------------------------------------
 
-def scan_maf_files(pwm, maf_files):
+def scan_maf_files(cluster, maf_files):
     hits = 0
     for maf_file in maf_files:
         alignment_list = AlignIO.parse(maf_file, 'maf')
         for alignment in alignment_list:
-            # test
-            pt_root   = pt_parse_file('../drosophilae.nh')
-            alignment = alignment_t(alignment, pt_root)
-            print alignment.marginal_likelihood(pt_root, [10,1,1,1,1])
-            # test
-            hits += scan_alignment(pwm, alignment)
+            if options['phylotree']:
+                hits += scan_alignment_with_phylotree(cluster, alignment)
+            else:
+                hits += scan_alignment(cluster, alignment)
     print "Found %d sequences." % hits
 
-def scan_fasta_files(pwm, fasta_files):
+def scan_fasta_files(cluster, fasta_files):
     hits = 0
     for fasta_file in fasta_files:
-        hits += scan_fasta(pwm, fasta_file)
+        hits += scan_fasta(cluster, fasta_file)
     print "Found %d sequences." % hits
 
-def scan_sequences_files(pwm, sequences_files):
+def scan_sequences_files(cluster, sequences_files):
     if options['format'] == 'maf':
-        scan_maf_files(pwm, sequences_files)
+        scan_maf_files(cluster, sequences_files)
     elif options['format'] == 'fasta':
-        scan_fasta_files(pwm, sequences_files)
+        scan_fasta_files(cluster, sequences_files)
     else:
         raise ValueError("Unknown sequences format.")
 
 # main
 # ------------------------------------------------------------------------------
 
-def main(pwm_file, sequences_files):
-    pwm = cluster.parse_pwm(pwm_file)
+def main(sampler_config_file, cluster_number, sequences_files):
+    results_config = {}
+    config.parse_sampler_config(sampler_config_file, sampler_config)
+    # parse results file
+    results_config_file = sampler_config['save']
+    config.parse_results_config(results_config_file, results_config)
+    if options['load']:
+        config_parser_load = ConfigParser.ConfigParser()
+        config_parser_load.read(options['load'])
+        cluster_list = fileio.load_cluster_list(config_parser_load, sampler_config)
+    else:
+        # parse sequences fasta file
+        descriptions, sequences = fasta.parse_sequences(sampler_config['seq_file'])
+        cluster_list = generate_cluster_list(sequences, sampler_config, results_config)
+    cluster = find_cluster(cluster_list, cluster_number)
     if options['revcomp']:
-        pwm = cluster.revcomp(pwm, len(pwm), len(pwm[0]))
-    scan_sequences_files(pwm, sequences_files)
+        cluster = cluster.revcomp()
+    scan_sequences_files(cluster, sequences_files)
 
 # __main__
 # ------------------------------------------------------------------------------
@@ -185,8 +188,15 @@ def main(pwm_file, sequences_files):
 def __main__():
     global options
     try:
-        longopts   = ["format=", "load=", "skip-gaps", "species=", "threshold=", "help", "verbose"]
-        opts, tail = getopt.getopt(sys.argv[1:], "r", longopts)
+        longopts   = ["format=",
+                      "load=",
+                      "phylotree=",
+                      "skip-gaps",
+                      "species=",
+                      "threshold=",
+                      "help",
+                      "verbose"]
+        opts, tail = getopt.getopt(sys.argv[1:], "rvh", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -198,6 +208,8 @@ def __main__():
         if o in ("-h", "--help"):
             usage()
             return 0
+        if o == "--phylotree":
+            options['phylotree'] = phylotree.pt_parse_file(a)
         if o == "--format":
             options['format'] = a
         if o == "--skip-gaps":
@@ -208,18 +220,24 @@ def __main__():
             options['threshold'] = float(a)
         if o == "-r":
             options['revcomp'] = True
+        if o == "--load":
+            options['load'] = a
     if len(tail) < 2:
         usage()
         return 1
     # if format is maf then we need to know the reference
     # species
-    if options['format'] is 'maf' and options['species'] is None:
+    if options['format'] is 'maf' and options['phylotree'] is None and options['species'] is None:
         usage()
         return 1
     # call main
-    pwm_file        = tail[0]
-    sequences_files = tail[1:]
-    main(pwm_file, sequences_files)
+    sampler_config_file = tail[0]
+    cluster_number      = int(tail[1])
+    sequences_files     = tail[2:]
+    main(sampler_config_file, cluster_number, sequences_files)
+    # and free the phylotree
+    if options['phylotree']:
+        phylotree.pt_destroy(options['phylotree'])
 
 if __name__ == "__main__":
     sys.exit(__main__())

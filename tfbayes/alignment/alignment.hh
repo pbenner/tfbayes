@@ -141,6 +141,9 @@ public:
                          const taxon_map_t& taxon_map)
                         : i(i), length(length), alignments(alignments),
                           taxon_map(taxon_map) { }
+                iterator(const iterator& it)
+                        : i(it.i), length(it.length), alignments(it.alignments),
+                          taxon_map(it.taxon_map) { }
 
                 void apply(pt_root_t* tree) {
                         if (i >= length) {
@@ -164,10 +167,10 @@ public:
                         i++;
                         return *this;
                 }
-                double* operator->() {
+                size_t* operator->() {
                         return &i;
                 }
-                const double operator*() {
+                const size_t operator*() {
                         return i;
                 }
         private:
@@ -193,6 +196,9 @@ public:
                          const taxon_map_t& taxon_map)
                         : i(i), length(length), alignments(alignments),
                           taxon_map(taxon_map) { }
+                reverse_iterator(const reverse_iterator& it)
+                        : i(it.i), length(it.length), alignments(it.alignments),
+                          taxon_map(it.taxon_map) { }
 
                 void apply(pt_root_t* tree) const {
                         if (i >= length) {
@@ -216,10 +222,10 @@ public:
                         i++;
                         return *this;
                 }
-                double* operator->() {
+                size_t* operator->() {
                         return &i;
                 }
-                const double operator*() {
+                const size_t operator*() {
                         return i;
                 }
         private:

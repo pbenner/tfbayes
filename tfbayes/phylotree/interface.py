@@ -127,6 +127,9 @@ _lib.alignment_set.argtypes = [POINTER(ALIGNMENT), c_char_p, POINTER(VECTOR)]
 _lib.alignment_marginal_likelihood.restype  = POINTER(VECTOR)
 _lib.alignment_marginal_likelihood.argtypes = [POINTER(ALIGNMENT), POINTER(PT_ROOT), POINTER(VECTOR)]
 
+_lib.alignment_scan.restype  = POINTER(VECTOR)
+_lib.alignment_scan.argtypes = [POINTER(ALIGNMENT), POINTER(PT_ROOT), POINTER(MATRIX)]
+
 _lib.alignment_free.restype  = None
 _lib.alignment_free.argtypes = [POINTER(ALIGNMENT)]
 
@@ -183,6 +186,14 @@ class alignment_t():
           result   = get_vector(c_result)
           _lib._free_vector(c_result)
           _lib._free_vector(c_prior)
+          return result
+     def scan(self, tree, counts):
+          c_counts = _lib._alloc_matrix(len(counts), len(counts[0]))
+          copy_matrix_to_c(counts, c_counts)
+          c_result = _lib.alignment_scan(self.c_alignment, tree, c_counts)
+          result   = get_vector(c_result)
+          _lib._free_vector(c_result)
+          _lib._free_matrix(c_counts)
           return result
 
 #

@@ -20,6 +20,8 @@ from plot        import *
 from information import *
 from tools       import *
 
+from ..alignment import select_subsequence
+
 # basic class to store cluster
 # ------------------------------------------------------------------------------
 
@@ -62,6 +64,10 @@ class cluster_t():
         if not len(counts) == self.n:
             raise ValueError('Counts matrix has invalid dimension.')
         self.m          = len(counts[0])
+    def posterior_counts(self):
+        counts = [ [ self.counts[i][j] + self.alpha[i][j] for j in range(self.m) ] for i in range(self.n) ]
+        gaps   = [ self.counts_gap[i] + self.alpha_gap[i] for j in range(self.m) ]
+        return counts + [gaps]
     def average_counts(self):
         return average_counts(self.counts, self.n, self.m)
     def frequencies(self):
@@ -88,3 +94,13 @@ class cluster_t():
     def r_sequence(self):
         motif = self.motif()
         return information.r_sequence(motif, self.n, self.m)
+    def scan(self, sequence, threshold, skip_gaps=False):
+        pwm    = self.pwm()
+        length = len(pwm[0])
+        for i in range(len(sequence)-length+1):
+            result = select_subsequence(sequence, i, length, skip_gaps)
+            if result:
+                subsequence, j = result
+                value = score(pwm, subsequence)
+                if value > threshold:
+                    yield (i,j,value)

@@ -14,9 +14,4 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from cluster     import *
-from fileio      import load_cluster, load_cluster_list, save_cluster, save_cluster_list, print_pwm, parse_pwm, print_counts, parse_counts
-from plot        import *
-from information import *
-from tools       import *
-from parser      import generate_cluster_list, parse_partition
+from tools import *

@@ -44,11 +44,15 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "tfbayes-export-cluster [option]... SAMPLER_CONFIG CLUSTER_NUMBER"
+    print "tfbayes-cluster [option]... COMMAND SAMPLER_CONFIG CLUSTER_NUMBER"
     print
-    print "Given a sampling result, export one of the clusters as a pwm. The"
-    print "output of this program can be used with `tfbayes-scal' to search"
+    print "Given a sampling result, export one of the clusters. The"
+    print "output of this program can be used with `tfbayes-scan' to search"
     print "alignments of sequences for matches."
+    print
+    print "Commands:"
+    print "   export-counts                  - export bare counts of a cluster"
+    print "   export-pwm                     - export the pwm from a cluster"
     print
     print "Options:"
     print "   -r                             - export reverse complement"
@@ -60,25 +64,22 @@ def usage():
 # export cluster
 # ------------------------------------------------------------------------------
 
-def export_cluster(cluster):
+def export_pwm(cluster):
     if options['revcomp']:
         print_pwm(cluster.revcomp().pwm())
     else:
         print_pwm(cluster.pwm())
 
-# search the cluster list
-# ------------------------------------------------------------------------------
-
-def find_cluster(cluster_list, cluster_number):
-    for cluster in cluster_list:
-        if cluster.identifier == cluster_number:
-            return cluster
-    raise ValueError("Cluster not found.")
+def export_counts(cluster):
+    if options['revcomp']:
+        print_counts(cluster.revcomp().counts, cluster.revcomp().counts_gap)
+    else:
+        print_counts(cluster.counts, cluster.counts_gap)
 
 # main
 # ------------------------------------------------------------------------------
 
-def main(sampler_config_file, cluster_number):
+def main(command, sampler_config_file, cluster_number):
     results_config = {}
     parse_sampler_config(sampler_config_file, sampler_config)
     # parse results file
@@ -93,7 +94,10 @@ def main(sampler_config_file, cluster_number):
         descriptions, sequences = parse_sequences(sampler_config['seq_file'])
         cluster_list = generate_cluster_list(sequences, sampler_config, results_config)
     cluster = find_cluster(cluster_list, cluster_number)
-    export_cluster(cluster)
+    if command == 'export-pwm':
+        export_pwm(cluster)
+    if command == 'export-counts':
+        export_counts(cluster)
 
 # __main__
 # ------------------------------------------------------------------------------
@@ -116,13 +120,14 @@ def __main__():
             return 0
         if o == "-r":
             options['revcomp'] = True
-    if not len(tail) is 2:
+    if not len(tail) is 3:
         usage()
         return 1
     # call main
-    sampler_config_file = tail[0]
-    cluster_number      = tail[1]
-    main(sampler_config_file, int(cluster_number))
+    command             = tail[0]
+    sampler_config_file = tail[1]
+    cluster_number      = tail[2]
+    main(command, sampler_config_file, int(cluster_number))
 
 if __name__ == "__main__":
     sys.exit(__main__())
