@@ -29,7 +29,6 @@ default_sampler_config_ = {
     'discount'            : 0.0,
     'lambda'              : 0.01,
     'construct_graph'     : False,
-    'metropolis_optimize' : True,
     'process_prior'       : "pitman-yor process",
     'background_model'    : "independence-dirichlet",
     'background_alpha'    : [[1],[1],[1],[1],[5]],
@@ -92,8 +91,6 @@ def parse_sampler_config(config_file, sampler_config):
         sampler_config['tfbs_length'] = int(config_parser.get('TFBS-Sampler', 'tfbs-length'))
     if config_parser.has_option('TFBS-Sampler', 'construct-graph'):
         sampler_config['construct_graph'] = str2bool(config_parser.get('TFBS-Sampler', 'construct_graph'))
-    if config_parser.has_option('TFBS-Sampler', 'metropolis-optimize'):
-        sampler_config['metropolis_optimize'] = str2bool(config_parser.get('TFBS-Sampler', 'metropolis-optimize'))
     if config_parser.has_option('TFBS-Sampler', 'population-size'):
         sampler_config['population_size'] = int(config_parser.get('TFBS-Sampler', 'population-size'))
     if config_parser.has_option('TFBS-Sampler', 'save'):

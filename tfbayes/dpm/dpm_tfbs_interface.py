@@ -68,7 +68,6 @@ class OPTIONS(Structure):
                  ("discount",            c_double),
                  ("lambda_",             c_double),
                  ("construct_graph",     c_bool),
-                 ("metropolis_optimize", c_bool),
                  ("process_prior",       c_char_p),
                  ("background_model",    c_char_p),
                  ("background_alpha",    POINTER(MATRIX)),
@@ -200,7 +199,6 @@ def dpm_init(options, input_file, partition=None):
      c_options.contents.discount            = options['discount']
      c_options.contents.lambda_             = options['lambda']
      c_options.contents.construct_graph     = options['construct_graph']
-     c_options.contents.metropolis_optimize = options['metropolis_optimize']
      c_options.contents.process_prior       = options['process_prior']
      c_options.contents.background_model    = options['background_model']
      c_options.contents.background_context  = options['background_context']

@@ -34,7 +34,6 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
         dpm_tfbs_state_t& state,
         const indexer_t& indexer,
         const string name,
-        bool optimize,
         save_queue_t<command_t*>& command_queue,
         save_queue_t<string>& output_queue,
         const sequence_data_t<data_tfbs_t::code_t>& sequences)
@@ -43,8 +42,7 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
           _command_queue(command_queue),
           _output_queue(output_queue),
           _state(state),
-          _dpm(dpm),
-          _optimize(optimize)
+          _dpm(dpm)
 { }
 
 dpm_tfbs_sampler_t*
@@ -141,15 +139,10 @@ dpm_tfbs_sampler_t::_metropolis_sample(cluster_t& cluster) {
         if (_state.proposal(cluster, ss)) {
                 posterior_tmp = _dpm.posterior();
 
-                if (_optimize && posterior_tmp > posterior_ref) {
+                const double r = (double)rand()/RAND_MAX;
+                /* posterior value is on log scale! */
+                if (r <= min(exp(posterior_tmp - posterior_ref), 1.0)) {
                         goto accepted;
-                }
-                if (!_optimize) {
-                        const double r = (double)rand()/RAND_MAX;
-                        /* posterior value is on log scale! */
-                        if (r <= min(exp(posterior_tmp - posterior_ref), 1.0)) {
-                                goto accepted;
-                        }
                 }
                 _state.restore();
         }
@@ -284,7 +277,6 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
                 _population[i] = new dpm_tfbs_sampler_t(*_gdpm[i], _gdpm[i]->state(),
                                                         _data,
                                                         ss.str(),
-                                                        options.metropolis_optimize,
                                                         *command_queue,
                                                         _output_queue,
                                                         _sequences);

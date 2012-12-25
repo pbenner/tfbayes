@@ -36,7 +36,6 @@ public:
                 dpm_tfbs_state_t& state,
                 const indexer_t& indexer,
                 const std::string name,
-                bool optimize,
                 save_queue_t<command_t*>& command_queue,
                 save_queue_t<std::string>& output_queue,
                 const sequence_data_t<data_tfbs_t::code_t>& sequences);
@@ -65,7 +64,6 @@ protected:
         save_queue_t<std::string>& _output_queue;
         dpm_tfbs_state_t& _state;
         dpm_tfbs_t& _dpm;
-        const bool _optimize;
 };
 
 #include <pmcmc.hh>

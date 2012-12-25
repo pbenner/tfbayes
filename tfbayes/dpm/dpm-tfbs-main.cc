@@ -45,7 +45,6 @@ typedef struct _options_t {
         double discount;
         double lambda;
         bool construct_graph;
-        bool metropolis_optimize;
         const char* process_prior;
         const char* background_model;
         double background_alpha;
@@ -61,7 +60,6 @@ typedef struct _options_t {
                   discount(0.0),
                   lambda(0.01),
                   construct_graph(false),
-                  metropolis_optimize(true),
                   process_prior("pitman-yor process"),
                   background_model("independence-dirichlet"),
                   background_alpha(1),
@@ -87,7 +85,6 @@ operator<<(std::ostream& o, const _options_t& options) {
           << "-> background_context  = " << options.background_context  << endl
           << "-> background_weights  = " << options.background_weights  << endl
           << "-> construct_graph     = " << options.construct_graph     << endl
-          << "-> metropolis_optimize = " << options.metropolis_optimize << endl
           << "-> population_size     = " << options.population_size     << endl
           << "-> save                = " << options.save                << endl;
         return o;
@@ -174,7 +171,6 @@ void run_dpm(const char* file_name)
         tfbs_options.discount            = options.discount;
         tfbs_options.tfbs_length         = options.tfbs_length;
         tfbs_options.construct_graph     = options.construct_graph;
-        tfbs_options.metropolis_optimize = options.metropolis_optimize;
         tfbs_options.process_prior       = options.process_prior;
         tfbs_options.background_model    = options.background_model;
         tfbs_options.background_context  = options.background_context;
