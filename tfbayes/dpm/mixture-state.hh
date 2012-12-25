@@ -23,6 +23,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <list>
+#include <map>
 #include <vector>
 
 #include <tfbayes/dpm/cluster.hh>
@@ -65,10 +66,10 @@ public:
         ////////////////////////////////////////////////////////////////////////
         void update(Observed<cluster_event_t>* cluster, cluster_event_t event);
         void update(Observed<cluster_event_t>* cluster, cluster_event_t event, const range_t& range);
-        model_tag_t add_baseline_model(component_model_t* distribution);
-        cluster_tag_t add_cluster(model_tag_t model_tag);
+        void add_baseline_model(component_model_t* distribution, const baseline_tag_t& baseline_tag);
+        cluster_tag_t add_cluster(baseline_tag_t baseline_tag);
         cluster_tag_t add_cluster(component_model_t* distribution);
-        cluster_t& get_free_cluster(model_tag_t model_tag);
+        cluster_t& get_free_cluster(baseline_tag_t baseline_tag);
         __inline__ size_t size() const { return used_clusters_size; };
 
 private:
@@ -82,7 +83,7 @@ private:
         size_t free_clusters_size;
 
         // distributions that make up the baseline measure for the dirichlet process
-        std::vector<component_model_t*> baseline_models;
+        std::map<baseline_tag_t,component_model_t*> baseline_models;
 
         // assignments to clusters
         data_t<cluster_tag_t>& cluster_assignments;

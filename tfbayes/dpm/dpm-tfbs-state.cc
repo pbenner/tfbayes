@@ -225,7 +225,7 @@ dpm_tfbs_state_t::dpm_partition() const
         for (const_iterator it = this->begin(); it != this->end(); it++) {
                 const cluster_t& cluster = **it;
                 if (cluster.cluster_tag() != bg_cluster_tag) {
-                        dpm_partition.add_component(cluster.model_tag());
+                        dpm_partition.add_component(cluster.baseline_tag());
                         // loop through cluster elements
                         for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
                                 dpm_partition.back().insert(is->index());

@@ -76,6 +76,7 @@ class OPTIONS(Structure):
                  ("background_weights",  c_char_p),
                  ("baseline_weights",    POINTER(VECTOR)),
                  ("baseline_priors",     POINTER(POINTER(MATRIX))),
+                 ("baseline_tags",       POINTER(c_char_p)),
                  ("baseline_n",          c_ulong),
                  ("partition",           POINTER(PARTITION)),
                  ("population_size",     c_ulong),
@@ -139,7 +140,7 @@ _lib._dpm_partition_new.restype  = POINTER(PARTITION)
 _lib._dpm_partition_new.argtypes = []
 
 _lib._dpm_partition_add_component.restype  = None
-_lib._dpm_partition_add_component.argtypes = [POINTER(PARTITION), c_int]
+_lib._dpm_partition_add_component.argtypes = [POINTER(PARTITION), c_char_p]
 
 _lib._dpm_partition_add_index.restype  = None
 _lib._dpm_partition_add_index.argtypes = [POINTER(PARTITION), c_int, c_int]
@@ -185,43 +186,58 @@ def generate_c_partition(partition):
 # ------------------------------------------------------------------------------
 
 def dpm_init(options, input_file, partition=None):
-     c_options = _lib._dpm_tfbs_options()
-     c_options.contents.alpha = options['alpha']
-     c_options.contents.discount = options['discount']
-     c_options.contents.lambda_ = options['lambda']
-     c_options.contents.construct_graph = options['construct_graph']
-     c_options.contents.metropolis_optimize = options['metropolis_optimize']
-     c_options.contents.process_prior = options['process_prior']
-     c_options.contents.background_model = options['background_model']
-     c_options.contents.background_alpha = _lib._alloc_matrix(len(options['background_alpha'][0]), len(options['background_alpha']))
-     copy_matrix_to_c(map(list, zip(*options['background_alpha'])), c_options.contents.background_alpha)
-     c_options.contents.background_context = options['background_context']
-     c_options.contents.background_weights = options['background_weights']
-     c_options.contents.tfbs_length = options['tfbs_length']
-     c_options.contents.population_size = options['population_size']
-     c_options.contents.socket_file = options['socket_file']
-     if partition:
-          c_options.contents.partition = generate_c_partition(partition)
-     else:
-          c_options.contents.partition = None
-     c_input_file = c_char_p(input_file)
+     # do some sanity checks
      if not len(options['baseline_priors']) == len(options['baseline_weights']):
-          raise IOError('Length mismatch between baseline priors and weights')
-     prior_length = len(options['baseline_priors'])
-     if prior_length > 0:
-          normalized_weights = map(lambda x: float(x)/sum(options['baseline_weights']), options['baseline_weights'])
-          c_baseline_weights = _lib._alloc_vector(prior_length)
-          copy_vector_to_c(normalized_weights, c_baseline_weights)
-          c_baseline_priors = (prior_length*POINTER(MATRIX))()
-          for i, prior in zip(range(prior_length), options['baseline_priors']):
-               c_baseline_priors[i] = _lib._alloc_matrix(len(prior[0]), len(prior))
-               copy_matrix_to_c(map(list, zip(*prior)), c_baseline_priors[i])
-          c_options.contents.baseline_weights = c_baseline_weights
-          c_options.contents.baseline_priors = pointer(c_baseline_priors[0])
-          c_options.contents.baseline_n = c_ulong(prior_length)
-     _lib._dpm_tfbs_init(c_input_file)
-     _lib._free_vector(c_baseline_weights)
-     for i in range(prior_length):
+          raise IOError('Length mismatch between baseline priors and weights.')
+     if not len(options['baseline_priors']) == len(options['baseline_tags']):
+          raise IOError('Length mismatch between baseline priors and names.')
+     if len(options['baseline_priors']) == 0:
+          raise IOError('Length baseline priors specified.')
+
+     # initialize simple c_options
+     c_options                              = _lib._dpm_tfbs_options()
+     c_options.contents.alpha               = options['alpha']
+     c_options.contents.discount            = options['discount']
+     c_options.contents.lambda_             = options['lambda']
+     c_options.contents.construct_graph     = options['construct_graph']
+     c_options.contents.metropolis_optimize = options['metropolis_optimize']
+     c_options.contents.process_prior       = options['process_prior']
+     c_options.contents.background_model    = options['background_model']
+     c_options.contents.background_context  = options['background_context']
+     c_options.contents.background_weights  = options['background_weights']
+     c_options.contents.tfbs_length         = options['tfbs_length']
+     c_options.contents.population_size     = options['population_size']
+     c_options.contents.socket_file         = options['socket_file']
+     c_options.contents.partition           = generate_c_partition(partition) if partition else None
+
+     # copy background alpha pseudo counts
+     c_options.contents.background_alpha    = _lib._alloc_matrix(len(options['background_alpha'][0]), len(options['background_alpha']))
+     copy_matrix_to_c(map(list, zip(*options['background_alpha'])), c_options.contents.background_alpha)
+
+     baseline_size                          = len(options['baseline_priors'])
+     c_options.contents.baseline_n          = c_ulong(baseline_size)
+     # copy baseline priors and weights
+     c_baseline_priors                      = (baseline_size*POINTER(MATRIX))()
+     c_options.contents.baseline_weights    = _lib._alloc_vector(baseline_size)
+     for idx, (name, prior) in enumerate(options['baseline_priors'].iteritems()):
+          # first the prior
+          c_baseline_priors[idx] = _lib._alloc_matrix(len(prior[0]), len(prior))
+          copy_matrix_to_c(map(list, zip(*prior)), c_baseline_priors[idx])
+          # and now its weight
+          c_options.contents.baseline_weights.contents.vec[idx] = options['baseline_weights'][name]
+     c_options.contents.baseline_priors     = cast(c_baseline_priors, POINTER(POINTER(MATRIX)))
+     # copy baseline tags
+     c_baseline_tags                        = (baseline_size*c_char_p)()
+     for idx, name in enumerate(options['baseline_tags']):
+          c_baseline_tags[idx] = c_char_p(name)
+     c_options.contents.baseline_tags       = cast(c_baseline_tags, POINTER(c_char_p))
+
+     # call the library
+     _lib._dpm_tfbs_init(input_file)
+
+     # free everything
+     _lib._free_vector(c_options.contents.baseline_weights)
+     for i in range(baseline_size):
           _lib._free_matrix(c_baseline_priors[i])
      if c_options.contents.partition:
           _lib._dpm_partition_free(c_options.contents.partition)

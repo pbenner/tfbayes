@@ -41,9 +41,9 @@
 
 class cluster_t : public Observed<cluster_event_t> {
 public:
-         cluster_t(component_model_t* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
+         cluster_t(component_model_t* model, cluster_tag_t cluster_tag, baseline_tag_t baseline_tag,
                    bool destructible = true, bool record = false);
-         cluster_t(component_model_t* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
+         cluster_t(component_model_t* model, cluster_tag_t cluster_tag, baseline_tag_t baseline_tag,
                    Observer<cluster_event_t>* observer, bool destructible = true, bool record = false);
          cluster_t(const cluster_t& cluster);
         ~cluster_t();
@@ -69,7 +69,7 @@ public:
         void remove_observations(const range_t& range);
         size_t size() const;
         cluster_tag_t cluster_tag() const;
-        model_tag_t model_tag() const;
+        baseline_tag_t baseline_tag() const;
         bool destructible() const;
         component_model_t& model();
         elements_t elements() const;
@@ -77,7 +77,7 @@ public:
 private:
         component_model_t* _model;
         const cluster_tag_t _cluster_tag;
-        const model_tag_t _model_tag;
+        const baseline_tag_t _baseline_tag;
         const bool _destructible;
         const bool _record;
         elements_t _elements;

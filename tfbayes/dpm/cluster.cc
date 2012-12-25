@@ -28,15 +28,15 @@
 
 using namespace std;
 
-cluster_t::cluster_t(component_model_t* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
+cluster_t::cluster_t(component_model_t* model, cluster_tag_t cluster_tag, baseline_tag_t baseline_tag,
                  bool destructible, bool record)
-        : _model(model), _cluster_tag(cluster_tag), _model_tag(model_tag),
+        : _model(model), _cluster_tag(cluster_tag), _baseline_tag(baseline_tag),
           _destructible(destructible), _record(record), _size(0)
 { }
 
-cluster_t::cluster_t(component_model_t* model, cluster_tag_t cluster_tag, model_tag_t model_tag,
+cluster_t::cluster_t(component_model_t* model, cluster_tag_t cluster_tag, baseline_tag_t baseline_tag,
                  Observer<cluster_event_t>* observer, bool destructible, bool record)
-        : _model(model), _cluster_tag(cluster_tag), _model_tag(model_tag),
+        : _model(model), _cluster_tag(cluster_tag), _baseline_tag(baseline_tag),
           _destructible(destructible), _record(record), _size(0)
 {
         set_observer(observer);
@@ -45,7 +45,7 @@ cluster_t::cluster_t(component_model_t* model, cluster_tag_t cluster_tag, model_
 cluster_t::cluster_t(const cluster_t& cluster)
         : _model(NULL),
           _cluster_tag(cluster._cluster_tag),
-          _model_tag(cluster._model_tag),
+          _baseline_tag(cluster._baseline_tag),
           _destructible(cluster._destructible),
           _record(cluster._record)
 {
@@ -122,10 +122,10 @@ cluster_t::cluster_tag() const
         return _cluster_tag;
 }
 
-model_tag_t
-cluster_t::model_tag() const
+baseline_tag_t
+cluster_t::baseline_tag() const
 {
-        return _model_tag;
+        return _baseline_tag;
 }
 
 bool
@@ -146,7 +146,7 @@ operator<< (ostream& o, const cluster_t& cluster)
         return o << "("
                  << cluster._cluster_tag
                  << ":"
-                 << cluster._model_tag
+                 << cluster._baseline_tag
                  << "):"
                  << cluster._size;
 }

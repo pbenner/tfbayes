@@ -79,7 +79,7 @@ public:
 protected:
         // baseline models
         std::vector<double> _baseline_weights;
-        std::vector<model_tag_t> _model_tags;
+        std::vector<baseline_tag_t> _baseline_tags;
 
         // data and clusters
         const data_tfbs_t& _data;

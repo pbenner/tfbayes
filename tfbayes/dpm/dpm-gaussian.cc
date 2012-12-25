@@ -45,8 +45,9 @@ DPM_Gaussian::DPM_Gaussian(
           // strength parameter for the dirichlet process
           alpha(alpha)
 {
-        _model_tag = _state.add_baseline_model(new bivariate_normal_t(Sigma, Sigma_0, mu_0, data));
-        cluster_tag_t cluster_tag = _state.get_free_cluster(_model_tag).cluster_tag();
+        _baseline_tag = "baseline";
+        _state.add_baseline_model(new bivariate_normal_t(Sigma, Sigma_0, mu_0, data), _baseline_tag);
+        cluster_tag_t cluster_tag = _state.get_free_cluster(_baseline_tag).cluster_tag();
         for (data_gaussian_t::const_iterator it = _data.begin();
              it != _data.end(); it++) {
                 _state[cluster_tag].add_observations(range_t(**it,1));
@@ -105,7 +106,7 @@ DPM_Gaussian::mixture_weights(const index_i& index, double log_weights[], cluste
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
-        cluster_tags[components] = _state.get_free_cluster(_model_tag).cluster_tag();
+        cluster_tags[components] = _state.get_free_cluster(_baseline_tag).cluster_tag();
         sum = logadd(sum, log(alpha/(alpha + N)) + _state[cluster_tags[components]].model().log_predictive(range));
         log_weights[components] = sum;
 }

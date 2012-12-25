@@ -73,7 +73,7 @@ public:
         }
 
 private:
-        model_tag_t _model_tag;
+        baseline_tag_t _baseline_tag;
 
         // likelihood parameters
         gsl_matrix* cov;

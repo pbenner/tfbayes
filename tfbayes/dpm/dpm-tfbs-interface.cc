@@ -52,6 +52,7 @@ typedef struct {
         const char* background_weights;
         vector_t*  baseline_weights;
         matrix_t** baseline_priors;
+        const char** baseline_tags;
         size_t baseline_n;
         dpm_partition_t* partition;
         size_t population_size;
@@ -122,20 +123,19 @@ void _dpm_tfbs_init(const char* file_name)
                 }
         }
 
-        // baseline priors
-        vector<double> baseline_weights;
-        vector<matrix<double> > baseline_priors;
+        // baseline priors, names, and weights
         for (size_t k = 0; k < _options.baseline_n; k++) {
-                baseline_weights.push_back(_options.baseline_weights->vec[k]);
-                baseline_priors.push_back(matrix<double>());
+                tfbs_options.baseline_weights.push_back(_options.baseline_weights->vec[k]);
+                tfbs_options.baseline_priors.push_back(matrix<double>());
                 for (size_t i = 0; i < _options.baseline_priors[k]->rows; i++) {
-                        baseline_priors[k].push_back(
+                        tfbs_options.baseline_priors[k].push_back(
                                 vector<double>(_options.baseline_priors[k]->columns, 0));
                         for (size_t j = 0; j < _options.baseline_priors[k]->columns; j++) {
-                                baseline_priors[k][i][j] = 
+                                tfbs_options.baseline_priors[k][i][j] = 
                                         _options.baseline_priors[k]->mat[i][j];
                         }
                 }
+                tfbs_options.baseline_tags.push_back(_options.baseline_tags[k]);
         }
 
         // tfbs options
@@ -149,8 +149,6 @@ void _dpm_tfbs_init(const char* file_name)
         tfbs_options.background_model    = _options.background_model;
         tfbs_options.background_context  = _options.background_context;
         tfbs_options.background_weights  = _options.background_weights;
-        tfbs_options.baseline_weights    = baseline_weights;
-        tfbs_options.baseline_priors     = baseline_priors;
         tfbs_options.socket_file         = _options.socket_file;
 
         if (_options.partition) {
@@ -286,7 +284,7 @@ dpm_partition_t* _dpm_partition_new()
         return new dpm_partition_t();
 }
 
-void _dpm_partition_add_component(dpm_partition_t* partition, int subset_tag)
+void _dpm_partition_add_component(dpm_partition_t* partition, const char* subset_tag)
 {
         partition->add_component(subset_tag);
 }

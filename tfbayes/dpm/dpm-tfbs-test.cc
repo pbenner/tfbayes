@@ -33,7 +33,7 @@ dpm_tfbs_t::test_metropolis_hastings() {
         seq_index_t index2(1,26);
         double l1, l2;
 
-        cluster_t& cluster1 = _state.get_free_cluster(_model_tags[0]);
+        cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
 
         cout.precision(10);
@@ -68,7 +68,7 @@ dpm_tfbs_t::test_moves() {
         seq_index_t index5(0,13);
         seq_index_t index6(0,22);
 
-        cluster_t& cluster1 = _state.get_free_cluster(_model_tags[0]);
+        cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
 
         _state.remove(index1, _state.bg_cluster_tag);
@@ -80,7 +80,7 @@ dpm_tfbs_t::test_moves() {
         _state.remove(index3, _state.bg_cluster_tag);
         _state.add(index3, cluster_tag1);
 
-        cluster_t& cluster2 = _state.get_free_cluster(_model_tags[0]);
+        cluster_t& cluster2 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
 
         _state.remove(index4, _state.bg_cluster_tag);
@@ -102,7 +102,7 @@ dpm_tfbs_t::test_background() {
         seq_index_t index5(0,13);
         seq_index_t index6(0,22);
 
-        cluster_t& cluster1 = _state.get_free_cluster(_model_tags[0]);
+        cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
         cout << "Adding index1:" << index1 << " to cluster:" << cluster_tag1 << endl;
         _state.remove(index1, _state.bg_cluster_tag);
@@ -114,7 +114,7 @@ dpm_tfbs_t::test_background() {
 
         cout << _state.cluster_assignments << endl;
 
-        cluster_t& cluster2 = _state.get_free_cluster(_model_tags[0]);
+        cluster_t& cluster2 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
 
         cout << "Adding index2:" << index2 << " to cluster:" << cluster_tag2 << endl;
@@ -174,11 +174,11 @@ dpm_tfbs_t::test() {
         seq_index_t index3(2,0);
         seq_index_t index4(3,0);
 
-        cluster_t& cluster1 = _state.get_free_cluster(_model_tags[0]);
+        cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
         cout << "Adding index1:" << index1 << " to cluster:" << cluster_tag1 << endl;
         _state.add(index1, cluster_tag1);
-        cluster_t& cluster2 = _state.get_free_cluster(_model_tags[0]);
+        cluster_t& cluster2 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
         cout << "Adding index2:" << index2 << " to cluster:" << cluster_tag2 << endl;
         _state.add(index2, cluster_tag2);

@@ -39,7 +39,7 @@ def parse_partition_identifier(partition_str, end):
         if (partition_str[i] == ' ' or partition_str[i] == ','):
             start = i+1
             break
-    return int(partition_str[start:end-1])
+    return partition_str[start:end-1]
 
 def parse_partition_subsets(partition_str):
     """Split the partition string into a list of its subsets."""

@@ -42,9 +42,9 @@ mixture_state_t::~mixture_state_t() {
                 delete(*it);
         }
         // free baseline models
-        for (vector<component_model_t*>::iterator it = baseline_models.begin();
+        for (map<baseline_tag_t, component_model_t*>::iterator it = baseline_models.begin();
              it != baseline_models.end(); it++) {
-                delete(*it);
+                delete(it->second);
         }
 }
 
@@ -64,9 +64,9 @@ mixture_state_t::mixture_state_t(const mixture_state_t& cm)
                         used_clusters.push_back(c);
                 }
         }
-        for (vector<component_model_t*>::const_iterator it = cm.baseline_models.begin();
+        for (map<baseline_tag_t, component_model_t*>::const_iterator it = cm.baseline_models.begin();
              it != cm.baseline_models.end(); it++) {
-                baseline_models.push_back((*it)->clone());
+                baseline_models[it->first] = it->second->clone();
         }
 }
 
@@ -83,7 +83,7 @@ mixture_state_t::add_cluster(component_model_t* model)
         // of free clusters, so we do not need to observe it
         // and we can simply push it to the list of used
         // clusters
-        cluster_t* c = new cluster_t(model, cluster_tag, -1, this, false, false);
+        cluster_t* c = new cluster_t(model, cluster_tag, "background", this, false, false);
         clusters.push_back(c);
         used_clusters.push_back(clusters.back());
         used_clusters_size++;
@@ -93,13 +93,11 @@ mixture_state_t::add_cluster(component_model_t* model)
 
 // add cluster with default model
 cluster_tag_t
-mixture_state_t::add_cluster(model_tag_t model_tag)
+mixture_state_t::add_cluster(baseline_tag_t baseline_tag)
 {
-        assert(model_tag < (model_tag_t)baseline_models.size());
-
         cluster_tag_t cluster_tag = clusters.size();
 
-        cluster_t* c = new cluster_t(baseline_models[model_tag]->clone(), cluster_tag, model_tag, this, true, true);
+        cluster_t* c = new cluster_t(baseline_models[baseline_tag]->clone(), cluster_tag, baseline_tag, this, true, true);
         clusters.push_back(c);
         // this cluster is empty, so place it into the list
         // of free clusters
@@ -109,27 +107,24 @@ mixture_state_t::add_cluster(model_tag_t model_tag)
         return cluster_tag;
 }
 
-model_tag_t
-mixture_state_t::add_baseline_model(component_model_t* distribution)
+void
+mixture_state_t::add_baseline_model(component_model_t* distribution, const baseline_tag_t& baseline_tag)
 {
         // add a baseline model to the list of distributions
-        baseline_models.push_back(distribution);
-
-        // return its indes as model_tag
-        return baseline_models.size()-1;
+        baseline_models[baseline_tag] = distribution;
 }
 
 cluster_t&
-mixture_state_t::get_free_cluster(model_tag_t model_tag) {
+mixture_state_t::get_free_cluster(baseline_tag_t baseline_tag) {
         // check free clusters
         for (std::list<cluster_t*>::iterator it = free_clusters.begin();
              it != free_clusters.end(); it++) {
-                if ((*it)->model_tag() == model_tag) {
+                if ((*it)->baseline_tag() == baseline_tag) {
                         return **it;
                 }
         }
         // create new cluster
-        cluster_tag_t cluster_tag = add_cluster(model_tag);
+        cluster_tag_t cluster_tag = add_cluster(baseline_tag);
 
         return operator[](cluster_tag);
 }

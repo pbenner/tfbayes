@@ -87,8 +87,8 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
                         assert(options.baseline_priors[i][j].size() == data_tfbs_t::alphabet_size);
                 }
                 product_dirichlet_t* dirichlet = new product_dirichlet_t(options.baseline_priors[i], _data);
-                const model_tag_t model_tag = _state.add_baseline_model(dirichlet);
-                _model_tags.push_back(model_tag);
+                _state.add_baseline_model(dirichlet, options.baseline_tags[i]);
+                _baseline_tags.push_back(options.baseline_tags[i]);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -139,7 +139,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
 dpm_tfbs_t::dpm_tfbs_t(const dpm_tfbs_t& dpm)
         : // baseline
           _baseline_weights(dpm._baseline_weights),
-          _model_tags(dpm._model_tags),
+          _baseline_tags(dpm._baseline_tags),
           // raw sequences
           _data(dpm._data),
           // cluster manager
@@ -207,7 +207,7 @@ dpm_tfbs_t::mixture_components() const
 size_t
 dpm_tfbs_t::baseline_components() const
 {
-        return _model_tags.size();
+        return _baseline_tags.size();
 }
 
 void
@@ -240,7 +240,7 @@ dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         for (i = 0; i < baseline_n; i++) {
-                cluster_t& cluster = _state.get_free_cluster(_model_tags[i]);
+                cluster_t& cluster = _state.get_free_cluster(_baseline_tags[i]);
                 cluster_tags[mixture_n+i] = cluster.cluster_tag();
                 sum = logadd(sum, _lambda_log + _process_prior->log_predictive(cluster) + log(_baseline_weights[i]) +
                              cluster.model().log_predictive(range));
@@ -280,7 +280,7 @@ dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         for (i = 0; i < baseline_n; i++) {
-                cluster_t& cluster = _state.get_free_cluster(_model_tags[i]);
+                cluster_t& cluster = _state.get_free_cluster(_baseline_tags[i]);
                 cluster_tags[mixture_n+i] = cluster.cluster_tag();
                 sum = logadd(sum, n*_lambda_log + n*_process_prior->log_predictive(cluster) + log(_baseline_weights[i]) +
                              cluster.model().log_predictive(range_set));

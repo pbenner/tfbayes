@@ -27,7 +27,7 @@
 #include <tfbayes/dpm/index.hh>
 #include <tfbayes/dpm/datatypes.hh>
 
-typedef ssize_t dpm_subset_tag_t;
+typedef std::string dpm_subset_tag_t;
 
 class dpm_subset_t : public boost::unordered_set<index_i*> {
 public:

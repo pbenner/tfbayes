@@ -38,8 +38,9 @@ default_sampler_config_ = {
     'population_size'     : 1,
     'tfbs_length'         : 10,
     'seq_file'            : None,
-    'baseline_weights'    : [1.0],
-    'baseline_priors'     : [],
+    'baseline_names'      : [],
+    'baseline_weights'    : {},
+    'baseline_priors'     : {},
     'socket_file'         : '',
     'samples'             : (1000,100),
     'save'                : None
@@ -54,11 +55,16 @@ def default_sampler_config():
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
 
+def normalize_dict(d):
+    norm = float(sum(d.viewvalues()))
+    for k, v in d.iteritems():
+        d[k] = d[k] / norm
+
 def generate_baseline(sampler_config):
-    if not sampler_config['baseline_priors']:
-        sampler_config['baseline_priors'].append([ [ 1 for j in range(sampler_config['tfbs_length']) ] for i in range(5) ])
-    if sampler_config.has_key('baseline_priors') or not len(sampler_config['baseline_priors']) == len(sampler_config['baseline_weights']):
-        sampler_config['baseline_weights'] = [ 1 ] * len(sampler_config['baseline_priors'])
+    length = sampler_config['tfbs_length']
+    sampler_config['baseline_tags'] = ['baseline-default']
+    sampler_config['baseline_priors'  ]['baseline-default'] = [ [ 1.0 for j in range(length) ] for i in range(5) ]
+    sampler_config['baseline_weights' ]['baseline-default'] = 1.0
 
 def parse_sampler_config(config_file, sampler_config):
     config_parser = ConfigParser.RawConfigParser()
@@ -94,13 +100,18 @@ def parse_sampler_config(config_file, sampler_config):
         sampler_config['save'] = config_parser.get('TFBS-Sampler', 'save')
     if config_parser.has_option('TFBS-Sampler', 'samples'):
         sampler_config['samples'] = tuple(map(int, config_parser.get('TFBS-Sampler', 'samples').split(":")))
-    if config_parser.has_option('TFBS-Sampler', 'baseline-weights'):
-        sampler_config['baseline_weights'] = read_vector(config_parser, 'TFBS-Sampler', 'baseline-weights', int)
     if config_parser.has_option('TFBS-Sampler', 'baseline-priors'):
-        sampler_config['baseline_priors'] = []
-        for prior_name in read_vector(config_parser, 'TFBS-Sampler', 'baseline-priors', str):
-            prior = read_matrix(config_parser, 'TFBS-Sampler', prior_name, float)
-            sampler_config['baseline_priors'].append(prior)
+        sampler_config['baseline_priors']  = {}
+        sampler_config['baseline_weights'] = {}
+        sampler_config['baseline_tags']   = read_vector(config_parser, 'TFBS-Sampler', 'baseline-priors', str)
+        for prior_name in sampler_config['baseline_tags']:
+            sampler_config['baseline_priors'][prior_name] = read_matrix(config_parser, 'TFBS-Sampler', prior_name, float)
+            if config_parser.has_option('TFBS-Sampler', '%s_weight' % prior_name):
+                sampler_config['baseline_weights'][prior_name] = float(config_parser.get('TFBS-Sampler', '%s_weight' % prior_name))
+            else:
+                sampler_config['baseline_weights'][prior_name] = 1.0
+        normalize_dict(sampler_config['baseline_weights'])
+    else:
+        generate_baseline(sampler_config)
     if config_parser.has_option('TFBS-Sampler', 'socket-file'):
         sampler_config['socket_file'] = config_parser.get('TFBS-Sampler', 'socket-file').strip()
-    generate_baseline(sampler_config)

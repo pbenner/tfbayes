@@ -41,6 +41,7 @@ typedef struct {
         std::string background_weights;
         std::vector<double> baseline_weights;
         std::vector<std::matrix<double> > baseline_priors;
+        std::vector<std::string> baseline_tags;
         dpm_partition_t partition;
         std::string socket_file;
 } tfbs_options_t;

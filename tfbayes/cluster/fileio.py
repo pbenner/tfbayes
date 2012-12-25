@@ -117,7 +117,7 @@ def load_cluster(cluster_parser, sampler_config, cluster_name):
     counts, counts_gap = read_counts(cluster_parser, cluster_name)
     components   = int(cluster_parser.get('Cluster', '%s_components' % cluster_name))
     identifier   = int(result.group(1))
-    cluster_type = int(cluster_parser.get('Cluster', '%s_type' % cluster_name))
+    cluster_type = cluster_parser.get('Cluster', '%s_type' % cluster_name)
     alpha        = sampler_config['baseline_priors'][cluster_type][0:4]
     alpha_gap    = sampler_config['baseline_priors'][cluster_type][4]
     return cluster_t(counts, counts_gap, alpha, alpha_gap, components, identifier, cluster_type)
