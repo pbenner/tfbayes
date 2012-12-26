@@ -69,7 +69,7 @@ options = {
     'verbose'        : False,
     }
 
-# some tools
+# output the result in fasta format
 # ------------------------------------------------------------------------------
 
 def print_result(container):
@@ -78,12 +78,6 @@ def print_result(container):
         for i in range(5):
             print '%11.8f' % result[i],
         print ";"
-
-def code_nucleotide(char):
-    if char == 'N' or char == 'n' or char == "-":
-        return 4.0
-    else:
-        return float(DNA.code(char))
 
 # main logic comes here
 # ------------------------------------------------------------------------------
@@ -95,7 +89,12 @@ def alignment_approximate(multiple_alignment, phylotree):
     leafmap   = options['leafmap']
     num_leafs = pt_num_leafs(phylotree)
 
-    observations = [ 4.0 ]*num_leafs
+    # initialize leafs to '-'
+    #observations = [ DNA.code('-') ]*num_leafs
+
+    # initialize leafs to -1 meaning that all species that are not present in
+    # this alignment will be fully ignored by the phylogenetic model
+    observations = [ -1.0 ]*num_leafs
 
     # index of the sequence from which to strip all dashes
     stripindex = None
@@ -117,7 +116,7 @@ def alignment_approximate(multiple_alignment, phylotree):
         for alignment in multiple_alignment:
             name = alignment.name.split(".")[0]
             if leafmap.has_key(name):
-                observations[leafmap[name]] = code_nucleotide(alignment.seq[i])
+                observations[leafmap[name]] = DNA.code(alignment.seq[i])
         # call phylotree library
         result.append(pt_approximate(phylotree, observations))
     return result

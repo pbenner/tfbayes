@@ -40,7 +40,11 @@ __BEGIN_DECLS
 
 alignment_t<code_t>* alignment_new(size_t length, pt_root_t* pt_root)
 {
-        return new alignment_t<code_t>(length, pt_root);
+        // initialize the alignment with -1, meaning that positions
+        // that are not later initialized otherwise will be ignored by
+        // the phylogenetic model; i.e. if a species is not part of
+        // the multiple alignment it will be fully ignored
+        return new alignment_t<code_t>(length, -1, pt_root);
 }
 
 void alignment_set(alignment_t<code_t>* alignment, const char* taxon, vector_t* record)

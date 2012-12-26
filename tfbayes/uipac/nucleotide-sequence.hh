@@ -32,8 +32,10 @@ class nucleotide_sequence_t : public std::vector<CODE_TYPE>
 public:
         nucleotide_sequence_t()
                 : std::vector<CODE_TYPE>() { }
-        nucleotide_sequence_t(const size_t n)
-                : std::vector<CODE_TYPE>(n, code_nucleotide<CODE_TYPE>('-')) { }
+        nucleotide_sequence_t(const size_t length)
+                : std::vector<CODE_TYPE>(length, code_nucleotide<CODE_TYPE>('-')) { }
+        nucleotide_sequence_t(const size_t length, CODE_TYPE init)
+                : std::vector<CODE_TYPE>(length, init) { }
         nucleotide_sequence_t(const std::string& sequence)
                 : std::vector<CODE_TYPE>() {
                 for (size_t i = 0; i < sequence.length(); i++) {

@@ -22,11 +22,11 @@ import os
 import math
 import sys
 
-from Bio     import AlignIO
+from Bio               import AlignIO
 
-from tfbayes import fasta
-from tfbayes import config
-from tfbayes import phylotree
+from tfbayes           import fasta
+from tfbayes           import config
+from tfbayes           import phylotree
 from tfbayes.alignment import find_record, alignment_t
 from tfbayes.cluster   import *
 

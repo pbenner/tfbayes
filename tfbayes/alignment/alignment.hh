@@ -42,17 +42,16 @@ public:
 
         // Constructors
         ////////////////////////////////////////////////////////////////////////
-        alignment_t(const size_t length, pt_root_t* tree)
+        alignment_t(const size_t length, CODE_TYPE init, pt_root_t* tree)
                 : alignment_ancestor_t(),
                   _length(length),
                   _tree(tree->clone()) {
-
                 pt_node_t::nodes_t nodes = _tree->get_nodes();
 
                 for (pt_node_t::nodes_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
                         pt_node_t* node = *it;
                         _taxon_map[node->name] = node->id;
-                        this->operator[](node->name) = nucleotide_sequence_t<CODE_TYPE>(length);
+                        this->operator[](node->name) = nucleotide_sequence_t<CODE_TYPE>(length, init);
                 }
                 _size = nodes.size();
         }
@@ -213,7 +212,10 @@ protected:
         size_t _length;
         // map taxon name to nodes in the phylogenetic tree
         taxon_map_t _taxon_map;
-        // phylogenetic tree
+        // clean phylogenetic tree, this tree should not be
+        // initialized with actual nucleotides at the leafs,
+        // whenever a new iterator is requested this tree is cloned so
+        // each iterator gets a clean tree
         pt_root_t* _tree;
 };
 
