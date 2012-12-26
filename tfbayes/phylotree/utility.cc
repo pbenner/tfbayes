@@ -115,26 +115,6 @@ ostream& operator<< (ostream& o, const polynomial_t<double, 4>& polynomial) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ostream& operator<< (ostream& o, const polynomial_term_t<short, 4, mutation_tree_t>& term) {
-        o << term.coefficient()
-          << term.exponent();
-
-        return o;
-}
-ostream& operator<< (ostream& o, const polynomial_t<short, 4, mutation_tree_t>& polynomial) {
-        for (polynomial_t<short, 4, mutation_tree_t>::const_iterator it = polynomial.begin();
-             it != polynomial.end(); it++) {
-                if (it != polynomial.begin()) {
-                        o << " + " << *it;
-                }
-                else {
-                        o << *it;
-                }
-        }
-
-        return o;
-}
-
 size_t hash_value(const exponent_t<short, 2>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;

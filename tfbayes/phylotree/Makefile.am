@@ -9,7 +9,7 @@ BUILT_SOURCES = phylotree-parser.h
 AM_YFLAGS = -d
 AM_LFLAGS = -o$(LEX_OUTPUT_ROOT).c
 
-bin_PROGRAMS = polynomial-test phylotree-expand-test phylotree-expected-terms phylotree-parser-test phylotree-approximation-test gradient-test optimization-test likelihood-test likelihood-prime-test marginal-likelihood-test
+bin_PROGRAMS = polynomial-test phylotree-expand-test phylotree-expected-terms phylotree-parser-test phylotree-approximation-test optimization-test likelihood-test likelihood-prime-test marginal-likelihood-test
 
 polynomial_test_SOURCES = polynomial-test.cc
 polynomial_test_LDADD   = -lm
@@ -29,10 +29,6 @@ phylotree_parser_test_LDADD  += libtfbayes-phylotree.la
 phylotree_approximation_test_SOURCES = phylotree-approximation-test.cc
 phylotree_approximation_test_LDADD   = -lm
 phylotree_approximation_test_LDADD  += libtfbayes-phylotree.la
-
-gradient_test_SOURCES = gradient-test.cc
-gradient_test_LDADD   = -lm
-gradient_test_LDADD  += libtfbayes-phylotree.la
 
 optimization_test_SOURCES = optimization-test.cc
 optimization_test_LDADD   = -lm
@@ -66,8 +62,6 @@ libtfbayes_phylotree_la_SOURCES = \
 	phylotree-distribution.hh \
 	phylotree-gradient.hh \
 	phylotree-gradient-ascent.hh \
-	phylotree-gradient-coefficient.hh \
-	phylotree-gradient-coefficient.cc \
 	phylotree-polynomial.hh \
 	phylotree-sampler.hh \
 	phylotree-lexer.ll \
@@ -78,7 +72,6 @@ libtfbayes_phylotree_la_SOURCES = \
 	phylotree-simple-polynomial.hh \
 	phylotree-simplify.cc \
 	phylotree-simplify.hh \
-	phylotree-symbolic-gradient.hh \
 	posterior.hh \
 	incomplete-expression.cc \
 	incomplete-expression.hh \

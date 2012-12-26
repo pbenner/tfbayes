@@ -33,7 +33,6 @@
 #include <tfbayes/exception/exception.h>
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/phylotree-distribution.hh>
-#include <tfbayes/phylotree/phylotree-gradient-coefficient.hh>
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/polynomial.hh>
 

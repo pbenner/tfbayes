@@ -31,7 +31,6 @@
 #include <tfbayes/phylotree/phylotree-parser.hh>
 #include <tfbayes/phylotree/phylotree-polynomial.hh>
 #include <tfbayes/phylotree/phylotree-gradient.hh>
-#include <tfbayes/phylotree/phylotree-symbolic-gradient.hh>
 #include <tfbayes/phylotree/phylotree-simplify.hh>
 #include <tfbayes/phylotree/phylotree-expand.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
@@ -127,19 +126,12 @@ int main(void) {
         cout << "Direct polynomial:" << endl
              << result2              << endl;
 
-        MET("Gradient computation",
-            pt_symbolic_gradient_t <code_t, alphabet_size> result3(pt_root););
-
-        // cout << "Gradient normalization:" << endl
-        //      << result3.normalization()   << endl;
-
         cout << "Marginal result1: " << pt_marginal_likelihood<code_t, alphabet_size>(result1, alpha) << endl
              << "Marginal result2: " << pt_marginal_likelihood<code_t, alphabet_size>(result2, alpha) << endl
              << endl;
 
         cout << "Eval result1: " << result1.eval(p) << endl
              << "Eval result2: " << result2.eval(p) << endl
-             << "Eval result3: " << result3.normalization().eval(p).eval() << endl
              << endl;
 
         double sum = 0;
