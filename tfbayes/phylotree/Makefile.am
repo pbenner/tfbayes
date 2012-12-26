@@ -65,6 +65,7 @@ libtfbayes_phylotree_la_SOURCES = \
 	phylotree-expand.hh \
 	phylotree-distribution.hh \
 	phylotree-gradient.hh \
+	phylotree-gradient-ascent.hh \
 	phylotree-gradient-coefficient.hh \
 	phylotree-gradient-coefficient.cc \
 	phylotree-polynomial.hh \
@@ -74,8 +75,10 @@ libtfbayes_phylotree_la_SOURCES = \
 	phylotree-parser.yy \
 	phylotree-parsetree.cc \
 	phylotree-parsetree.hh \
+	phylotree-simple-polynomial.hh \
 	phylotree-simplify.cc \
 	phylotree-simplify.hh \
+	phylotree-symbolic-gradient.hh \
 	posterior.hh \
 	incomplete-expression.cc \
 	incomplete-expression.hh \

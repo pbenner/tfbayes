@@ -74,7 +74,7 @@ void init() {
 }
 
 boost::array<double, alphabet_size>
-pt_expectation(const pt_polynomial_t<code_t, alphabet_size>& poly, const exponent_t<code_t, alphabet_size>& alpha)
+pt_expectation(const polynomial_t<code_t, alphabet_size>& poly, const exponent_t<code_t, alphabet_size>& alpha)
 {
         /* store the expectations in the array result */
         boost::array<double, alphabet_size> result;
@@ -110,11 +110,11 @@ string print_expectation(const boost::array<double, alphabet_size>& expectation)
 }
 
 void test_line_search(
-        const pt_polynomial_t<code_t, alphabet_size>& result,
+        const polynomial_t<code_t, alphabet_size>& result,
         const exponent_t<code_t, alphabet_size>& alpha)
 {
-        pt_polynomial_t<code_t, alphabet_size> approximation;
-        pt_polynomial_t<code_t, alphabet_size> approximation_line;
+        polynomial_t<code_t, alphabet_size> approximation;
+        polynomial_t<code_t, alphabet_size> approximation_line;
 
         approximation      = dkl_approximate<code_t, alphabet_size>(result);
         approximation_line = dkl_line_search<code_t, alphabet_size>(approximation, result.normalize(), alpha, 100);
@@ -146,9 +146,9 @@ int main(void) {
 
         pt_init(observations, pt_root);
 
-        pt_polynomial_t<code_t, alphabet_size> result(pt_root);
-        pt_polynomial_t<code_t, alphabet_size> approximation;
-        pt_polynomial_t<code_t, alphabet_size> variational;
+        polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(pt_root);
+        polynomial_t<code_t, alphabet_size> approximation;
+        polynomial_t<code_t, alphabet_size> variational;
 
         cout << "f[Pa_,Pc_,Pg_,Pt_]:= " << result.normalize() << endl;
 

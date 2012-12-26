@@ -165,7 +165,7 @@ vector_t* pt_expectation(pt_root_t* pt_root, vector_t* observations, vector_t* p
         pt_init(observations, pt_root, 0);
 
         vector_t* result = alloc_vector(alphabet_size);
-        pt_polynomial_t<code_t, alphabet_size> poly(pt_root);
+        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(pt_root);
 
         exponent_t<code_t, alphabet_size> alpha;
         for (size_t i = 0; i < alphabet_size; i++) {
@@ -188,9 +188,9 @@ vector_t* pt_approximate(pt_root_t* pt_root, vector_t* observations)
         pt_init(observations, pt_root, 0);
 
         vector_t* result = alloc_vector(alphabet_size);
-        pt_polynomial_t<code_t, alphabet_size> poly(pt_root);
+        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(pt_root);
 
-        pt_polynomial_t<code_t, alphabet_size> variational
+        polynomial_t<code_t, alphabet_size> variational
                 = dkl_approximate<code_t, alphabet_size>(poly);
 
         for (size_t i = 0; i < alphabet_size; i++) {
@@ -212,9 +212,9 @@ vector_t* pt_dkl_optimize(pt_root_t* pt_root, vector_t* observations)
         alpha[4] = 1;
 
         vector_t* result = alloc_vector(alphabet_size);
-        pt_polynomial_t<code_t, alphabet_size> poly(pt_root);
+        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(pt_root);
 
-        pt_polynomial_t<code_t, alphabet_size> variational
+        polynomial_t<code_t, alphabet_size> variational
                 = dkl_optimize(poly, alpha);
 
         for (size_t i = 0; i < alphabet_size; i++) {

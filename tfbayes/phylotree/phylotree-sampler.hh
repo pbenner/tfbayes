@@ -213,7 +213,7 @@ public:
                 double result = 0;
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
                         it.apply(tree);
-                        const pt_polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial(tree);
+                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial = pt_polynomial<CODE_TYPE, ALPHABET_SIZE>(tree);
                         // loop over monomials
                         double tmp = -HUGE_VAL;
                         for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = polynomial.begin();

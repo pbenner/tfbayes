@@ -26,6 +26,7 @@
 #include <tfbayes/phylotree/phylotree-parser.hh>
 #include <tfbayes/phylotree/phylotree-polynomial.hh>
 #include <tfbayes/phylotree/phylotree-gradient.hh>
+#include <tfbayes/phylotree/phylotree-symbolic-gradient.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/phylotree/utility.hh>
 
@@ -41,7 +42,7 @@ void test_tree1() {
         pt_root_t n1(-1, &n2, &n3);
 
         pt_symbolic_gradient_t  <code_t, alphabet_size> result1(&n1);
-        pt_polynomial_t<code_t, alphabet_size> result2(&n1);
+        polynomial_t<code_t, alphabet_size> result2 = pt_polynomial<code_t, alphabet_size>(&n1);
 
         cout << result1.normalization() << endl;
 
@@ -72,7 +73,7 @@ void test_tree2() {
 
         pt_symbolic_gradient_t  <code_t, alphabet_size> result1(&n1);
         pt_gradient_t  <code_t, alphabet_size> result2(&n1);
-        pt_polynomial_t<code_t, alphabet_size> result3(&n1);
+        polynomial_t<code_t, alphabet_size> result3 = pt_polynomial<code_t, alphabet_size>(&n1);
 
         cout << "symbolic likelihood: "
              << result1.normalization()

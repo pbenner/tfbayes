@@ -29,6 +29,7 @@
 #include <tfbayes/phylotree/phylotree-polynomial.hh>
 #include <tfbayes/phylotree/phylotree-sampler.hh>
 #include <tfbayes/phylotree/phylotree-gradient.hh>
+#include <tfbayes/phylotree/phylotree-gradient-ascent.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/exception/exception.h>
 

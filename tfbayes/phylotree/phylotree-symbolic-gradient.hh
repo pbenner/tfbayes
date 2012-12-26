@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef PHYLOTREE_GRADIENT_HH
-#define PHYLOTREE_GRADIENT_HH
+#ifndef PHYLOTREE_SYMBOLIC_GRADIENT_HH
+#define PHYLOTREE_SYMBOLIC_GRADIENT_HH
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -36,10 +36,10 @@
 #include <tfbayes/utility/polynomial.hh>
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-class pt_gradient_t : public boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> > {
+class pt_symbolic_gradient_t : public boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> > {
 public:
-        pt_gradient_t(pt_root_t* root)
-                : boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> >() { 
+        pt_symbolic_gradient_t(pt_root_t* root)
+                : boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> >() {
 
                 _nodes = root->get_nodes();
                 partial_t partial = gradient_rec(root);
@@ -52,27 +52,27 @@ public:
                 }
         }
 
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& normalization() const {
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> normalization() const {
                 return _normalization;
         }
 
-        using boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> >::operator[];
-        using boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> >::find;
+        using boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> >::operator[];
+        using boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> >::find;
 
 private:
-        typedef boost::unordered_map<pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> > derivatives_t;
-        typedef boost::array<polynomial_t<CODE_TYPE, ALPHABET_SIZE>, ALPHABET_SIZE+1> carry_t;
+        typedef boost::unordered_map<pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> > derivatives_t;
+        typedef boost::array<polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t>, ALPHABET_SIZE+1> carry_t;
 
         class partial_t : public carry_t {
         public:
                 boost::unordered_map<const pt_node_t*, carry_t> derivatives;
         };
 
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum(const carry_t& carry) {
-                polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum;
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> poly_sum(const carry_t& carry) {
+                polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> poly_sum;
 
                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> term(1.0);
+                        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> term(1.0);
                         term.exponent()[i] = 1;
                         poly_sum += term*carry[i];
                 }
@@ -95,19 +95,19 @@ private:
                 partial_t& partial_left,
                 partial_t& partial_right) {
 
-                double  pm_left  = 1.0-exp(-node->left ->d);
-                double  pm_right = 1.0-exp(-node->right->d);
-                double  pn_left  = 1.0-pm_left;
-                double  pn_right = 1.0-pm_right;
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> pm_left (pmut_t(node->left,  true));
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> pm_right(pmut_t(node->right, true));
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> pn_left (pmut_t(node->left,  false));
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> pn_right(pmut_t(node->right, false));
 
-                double dpm_left  =  pn_left;
-                double dpm_right =  pn_right;
-                double dpn_left  = -pn_left;
-                double dpn_right = -pn_right;
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> dpm_left ( pn_left );
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> dpm_right( pn_right);
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> dpn_left (-pn_left );
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> dpn_right(-pn_right);
 
                 partial_t partial;
-                const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_left  = poly_sum(partial_left);
-                const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_right = poly_sum(partial_right);
+                const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> poly_sum_left  = poly_sum(partial_left);
+                const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> poly_sum_right = poly_sum(partial_right);
 
                 partial[ALPHABET_SIZE] +=
                         (pn_left *partial_left [ALPHABET_SIZE] + pm_left *poly_sum_left)*
@@ -124,8 +124,8 @@ private:
                 for (pt_node_t::nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
                         const pt_node_t* which = *it;
 
-                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE> deri_sum_left  = poly_sum(partial_left .derivatives[which]);
-                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE> deri_sum_right = poly_sum(partial_right.derivatives[which]);
+                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> deri_sum_left  = poly_sum(partial_left.derivatives[which]);
+                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> deri_sum_right = poly_sum(partial_right.derivatives[which]);
                         /* Gradient of sigma
                          */
                         if (node->left == which) {
@@ -201,7 +201,7 @@ private:
         }
 
         pt_node_t::nodes_t _nodes;
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> _normalization;
+        polynomial_t<CODE_TYPE, ALPHABET_SIZE, mutation_tree_t> _normalization;
 };
 
-#endif /* PHYLOTREE_GRADIENT_HH */
+#endif /* PHYLOTREE_SYMBOLIC_GRADIENT_HH */

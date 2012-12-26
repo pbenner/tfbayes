@@ -38,7 +38,7 @@ double pt_marginal_likelihood(
         double result = -HUGE_VAL;
         double mbeta_alpha = mbeta_log(alpha);
 
-        const pt_polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial(node);
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial = pt_polynomial<CODE_TYPE, ALPHABET_SIZE>(node);
 
         for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {

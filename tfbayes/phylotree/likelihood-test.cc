@@ -35,7 +35,7 @@ void test_tree1() {
         pt_leaf_t n3( 2, 2.0, "n3");
         pt_root_t n1(-1, &n2, &n3);
 
-        pt_polynomial_t<code_t, alphabet_size> result(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n1);
         cout << result << endl
              << "0.950213 Pc^1 Pg^1 (correct polynomial)"
              << endl << endl;
@@ -47,7 +47,7 @@ void test_tree2() {
         pt_leaf_t n3( 1, 2.0, "n3");
         pt_root_t n1(-1, &n2, &n3);
 
-        pt_polynomial_t<code_t, alphabet_size> result(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n1);
         cout << result << endl
              << "0.950213 Pc^2 + 0.0497871 Pc^1 (correct polynomial)"
              << endl << endl;
@@ -61,7 +61,7 @@ void test_tree3() {
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        pt_polynomial_t<code_t, alphabet_size> result(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n1);
         cout << result << endl
              << "0.0386781 Pc^1 Pg^1 + 0.860149 Pc^2 Pg^1 (correct polynomial)"
              << endl << endl;
@@ -77,7 +77,7 @@ void test_tree4() {
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        pt_polynomial_t<code_t, alphabet_size> result(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n1);
         cout << result << endl
              << "0.0163527 Pc^2 + 0.000911882 Pc^1 + 0.842968 Pc^4 + 0.139768 Pc^3 (correct polynomial)"
              << endl << endl;
@@ -93,7 +93,7 @@ void test_tree5() {
         pt_node_t n2(-1, 0.5, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        pt_polynomial_t<code_t, alphabet_size> result(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n1);
         cout << result << endl
              << "0.0399154 Pc^1 Pg^1 Pt^1 + 0.842968 Pc^2 Pg^1 Pt^1 (correct polynomial)"
              << endl << endl;
@@ -111,35 +111,11 @@ void test_tree6() {
         pt_node_t n2(-1, 2.0, &n4, &n5);
         pt_root_t n1(-1, &n2, &n3);
 
-        pt_polynomial_t<code_t, alphabet_size> result(&n1);
+        polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n1);
         cout << result << endl
              << "0.999997 Pa^2 Pc^1 Pg^1 Pt^1 + 3.05622e-07 Pa^1 Pc^1 Pg^1 Pt^1 (correct polynomial)"
              << endl << endl;
 
-}
-
-void test_tree7() {
-        cout << "Test 7:" << endl;
-        pt_leaf_t n9( 3, 9.0, "n9");
-        pt_leaf_t n8( 2, 8.0, "n8");
-        pt_leaf_t n7( 1, 7.0, "n7");
-        pt_leaf_t n6( 0, 6.0, "n6");
-        pt_node_t n5(-1, 5.0, &n8, &n9);
-        pt_node_t n4(-1, 4.0, &n6, &n7);
-        pt_leaf_t n3( 0, 3.0, "n3");
-        pt_node_t n2(-1, 2.0, &n4, &n5);
-        pt_root_t n1(-1, &n2, &n3);
-
-        pt_cached_polynomial_t<code_t, alphabet_size> result(&n1);
-        cout << result << endl;
-
-        n6.d = 0.4;
-        result.update_length(n6.id);
-        cout << result << endl;
-
-        n6.d = 6.0;
-        result.update_length(n6.id);
-        cout << result << endl;
 }
 
 int main(void) {
@@ -149,7 +125,6 @@ int main(void) {
         test_tree4();
         test_tree5();
         test_tree6();
-        test_tree7();
 
         return 0.0;
 }
