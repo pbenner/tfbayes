@@ -86,7 +86,7 @@ def usage():
 # ------------------------------------------------------------------------------
 
 def scan_with_phylotree(counts, alignment):
-    scores = alignment_t(alignment, options['phylotree']).scan(options['phylotree'], counts)
+    scores = alignment_t(alignment, options['phylotree']).scan(counts)
     length = len(counts[0])
     for idx, score in enumerate(scores):
         if score > options['threshold'] and not score == 0.0:

@@ -41,10 +41,10 @@ _lib.alignment_set.restype  = None
 _lib.alignment_set.argtypes = [POINTER(ALIGNMENT), c_char_p, POINTER(VECTOR)]
 
 _lib.alignment_marginal_likelihood.restype  = POINTER(VECTOR)
-_lib.alignment_marginal_likelihood.argtypes = [POINTER(ALIGNMENT), POINTER(phylotree.PT_ROOT), POINTER(VECTOR)]
+_lib.alignment_marginal_likelihood.argtypes = [POINTER(ALIGNMENT), POINTER(VECTOR)]
 
 _lib.alignment_scan.restype  = POINTER(VECTOR)
-_lib.alignment_scan.argtypes = [POINTER(ALIGNMENT), POINTER(phylotree.PT_ROOT), POINTER(MATRIX)]
+_lib.alignment_scan.argtypes = [POINTER(ALIGNMENT), POINTER(MATRIX)]
 
 _lib.alignment_free.restype  = None
 _lib.alignment_free.argtypes = [POINTER(ALIGNMENT)]
@@ -67,18 +67,18 @@ class alignment_t():
           _lib._free_vector(c_record)
      def __del__(self):
           _lib.alignment_free(self.c_alignment)
-     def marginal_likelihood(self, tree, prior):
+     def marginal_likelihood(self, prior):
           c_prior  = _lib._alloc_vector(len(prior))
           copy_vector_to_c(prior, c_prior)
-          c_result = _lib.alignment_marginal_likelihood(self.c_alignment, tree, c_prior)
+          c_result = _lib.alignment_marginal_likelihood(self.c_alignment, c_prior)
           result   = get_vector(c_result)
           _lib._free_vector(c_result)
           _lib._free_vector(c_prior)
           return result
-     def scan(self, tree, counts):
+     def scan(self, counts):
           c_counts = _lib._alloc_matrix(len(counts), len(counts[0]))
           copy_matrix_to_c(counts, c_counts)
-          c_result = _lib.alignment_scan(self.c_alignment, tree, c_counts)
+          c_result = _lib.alignment_scan(self.c_alignment, c_counts)
           result   = get_vector(c_result)
           _lib._free_vector(c_result)
           _lib._free_matrix(c_counts)

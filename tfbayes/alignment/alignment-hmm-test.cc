@@ -185,7 +185,7 @@ void run_hmm(const char* file_tree, const char* file_alignment)
         /* uniform distribution on the initial state */
         phylotree_hmm_t<code_t, alphabet_size>::vector_t px_0(dimension, 1.0/(double)dimension);
 
-        phylotree_hmm_t<code_t, alphabet_size> hmm(pt_root, px_0, options.transition, options.priors);
+        phylotree_hmm_t<code_t, alphabet_size> hmm(px_0, options.transition, options.priors);
         hmm.run(alignment);
 
         for (size_t i = 0; i < hmm.size(); i++) {

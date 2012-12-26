@@ -42,12 +42,10 @@ public:
         using std::vector<std::vector<double> >::operator=;
 
         phylotree_hmm_t(
-                pt_root_t* tree,
                 const vector_t& px_0,
                 const matrix_t& transition,
                 const priors_t& priors)
                 : std::vector<std::vector<double> >(),
-                  tree(tree),
                   px_0(px_0),
                   transition(transition),
                   priors(priors) {
@@ -74,7 +72,7 @@ public:
                 }
         }
 
-private:
+protected:
         void run_forward(alignment_t<CODE_TYPE>& alignment) {
 
                 likelihood.push_back(vector_t(dim, 1.0));
@@ -88,11 +86,10 @@ private:
                 forward.push_back(px_0);
 
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        it.apply(tree);
-
                         vector_t likelihood_k(dim, 0.0); // p(z_k | x_k)
                         vector_t prediction_k(dim, 0.0); // p(x_k | z_1:k-1)
                         vector_t forward_k(dim, 0.0);
+                        const pt_root_t* tree = &(*it);
 
                         // compute likelihood
                         for (size_t j = 0; j < dim; j++) {
@@ -126,7 +123,7 @@ private:
                 backward = matrix_t(length, vector_t(dim, 0.0));
                 backward[length-1] = likelihood[length-1];
                 normalize(backward[length-1]);
-                // loop through the alignment (backwards)
+                // loop backwards (we don't need the alignment here)
                 for (size_t k = 1; k < length; k++) {
                         vector_t& backward_k   = backward  [length-k-1];
                         vector_t& likelihood_k = likelihood[length-k-1];
@@ -150,8 +147,6 @@ private:
                         vector[i] /= normalization;
                 }
         }
-
-        pt_root_t* tree;
 
         size_t dim;
 
