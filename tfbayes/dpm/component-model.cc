@@ -407,7 +407,7 @@ markov_chain_mixture_t::markov_chain_mixture_t(
         }
         /* compute context */
         for (size_t i = 0; i < _data.size(); i++) {
-                const nucleotide_sequence_t& seq = (const nucleotide_sequence_t&)_data[i];
+                const nucleotide_sequence_t<double>& seq = (const nucleotide_sequence_t<double>&)_data[i];
                 _context.push_back(seq_context_t(seq, _max_context, alphabet_size));
         }
 }

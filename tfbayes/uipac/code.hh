@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011, 2012 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,38 +15,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef CODE_HH
+#define CODE_HH
+
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <stdlib.h>
-#include <string.h>
+bool is_nucleotide(const char S);
+bool is_nucleotide_or_masked(const char S);
 
-#include <tfbayes/dpm/code.hh>
-
-using namespace std;
-
-bool is_nucleotide(char S) {
-        if (S == 'A' || S == 'C' || S == 'G' || S == 'T' ||
-            S == 'a' || S == 'c' || S == 'g' || S == 't') {
-                return true;
-        }
-        else {
-                return false;
-        }
-}
-
-bool is_nucleotide_or_masked(char S) {
-        if (S == 'A' || S == 'C' || S == 'G' || S == 'T' || S == 'N' ||
-            S == 'a' || S == 'c' || S == 'g' || S == 't') {
-                return true;
-        }
-        else {
-                return false;
-        }
-}
-
-char code_nucleotide(char a)
+template <typename CODE_TYPE>
+CODE_TYPE code_nucleotide(char a)
 {
         switch (a) {
         case 'A':
@@ -66,6 +46,8 @@ char code_nucleotide(char a)
                 return 2;
         break;
         case 'N':
+        case 'n':
+        case '-':
                 return 4;
         default:
                 break;
@@ -73,7 +55,8 @@ char code_nucleotide(char a)
         return -1;
 }
 
-char decode_nucleotide(char a)
+template <typename CODE_TYPE>
+char decode_nucleotide(CODE_TYPE a)
 {
         switch (a) {
         case 1:
@@ -89,38 +72,11 @@ char decode_nucleotide(char a)
                 return 'T';
         break;
         case 4:
-                return 'N';
+                return '-';
         default:
                 break;
         }
-        std::cerr << "decode_nucleotide(): internal error.\n"
-                  << std::endl;
-        exit(EXIT_FAILURE);
+        return 'X';
 }
 
-char complement_nucleotide(char a)
-{
-        switch (a) {
-        case 'A':
-                return 'T';
-        case 'a':
-                return 't';
-        case 'C':
-                return 'G';
-        case 'c':
-                return 'g';
-        case 'G':
-                return 'C';
-        case 'g':
-                return 'c';
-        case 'T':
-                return 'A';
-        case 't':
-                return 'a';
-        case 'N':
-                return 'N';
-        default:
-                break;
-        }
-        return -1;
-}
+#endif /* CODE_HH */

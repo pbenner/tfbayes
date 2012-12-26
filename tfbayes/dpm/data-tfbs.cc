@@ -32,7 +32,6 @@
 #include <gsl/gsl_matrix.h>
 
 #include <tfbayes/fasta/fasta.hh>
-#include <tfbayes/dpm/nucleotide-sequence.hh>
 #include <tfbayes/dpm/data-tfbs.hh>
 
 using namespace std;

@@ -15,21 +15,31 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef CODE_HH
-#define CODE_HH
+#ifndef NUCLEOTIDE_SEQUENCE_HH
+#define NUCLEOTIDE_SEQUENCE_HH
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <iostream>
 #include <string>
-#include <vector>
 
-bool is_nucleotide(char a);
-bool is_nucleotide_or_masked(char S);
-char code_nucleotide(char a);
-char decode_nucleotide(char a);
-char complement_nucleotide(char a);
+#include <tfbayes/uipac/code.hh>
 
-#endif /* CODE_HH */
+template <typename CODE_TYPE>
+class nucleotide_sequence_t : public std::vector<CODE_TYPE>
+{
+public:
+        nucleotide_sequence_t()
+                : std::vector<CODE_TYPE>() { }
+        nucleotide_sequence_t(const size_t n)
+                : std::vector<CODE_TYPE>(n, code_nucleotide<CODE_TYPE>('-')) { }
+        nucleotide_sequence_t(const std::string& sequence)
+                : std::vector<CODE_TYPE>() {
+                for (size_t i = 0; i < sequence.length(); i++) {
+                        this->push_back(code_nucleotide<CODE_TYPE>(sequence[i]));
+                }
+        }
+};
+
+#endif /* NUCLEOTIDE_SEQUENCE_HH */

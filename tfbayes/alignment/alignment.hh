@@ -29,53 +29,8 @@
 
 #include <tfbayes/fasta/fasta.hh>
 #include <tfbayes/phylotree/phylotree.hh>
+#include <tfbayes/uipac/nucleotide-sequence.hh>
 #include <tfbayes/utility/strtools.hh>
-
-template <typename CODE_TYPE>
-CODE_TYPE code_nucleotide(char a)
-{
-        switch (a) {
-        case 'A':
-        case 'a':
-                return 1;
-        break;
-        case 'C':
-        case 'c':
-                return 3;
-        break;
-        case 'G':
-        case 'g':
-                return 0;
-        break;
-        case 'T':
-        case 't':
-                return 2;
-        break;
-        case 'N':
-        case 'n':
-        case '-':
-                return 4;
-        default:
-                break;
-        }
-        return -1;
-}
-
-template <typename CODE_TYPE>
-class nucleotide_sequence_t : public std::vector<CODE_TYPE>
-{
-public:
-        nucleotide_sequence_t()
-                : std::vector<CODE_TYPE>() { }
-        nucleotide_sequence_t(const size_t n)
-                : std::vector<CODE_TYPE>(n, code_nucleotide<CODE_TYPE>('-')) { }
-        nucleotide_sequence_t(const std::string& sequence)
-                : std::vector<CODE_TYPE>() {
-                for (size_t i = 0; i < sequence.length(); i++) {
-                        this->push_back(code_nucleotide<CODE_TYPE>(sequence[i]));
-                }
-        }
-};
 
 template <typename CODE_TYPE>
 class alignment_t {

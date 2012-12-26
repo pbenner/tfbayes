@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011, 2012 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,43 +15,23 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef NUCLEOTIDE_SEQUENCE_HH
-#define NUCLEOTIDE_SEQUENCE_HH
+#ifndef NUCLEOTIDE_CONTEXT_HH
+#define NUCLEOTIDE_CONTEXT_HH
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
 #include <vector>
-#include <string>
 
-#include <math.h>
-
+#include <tfbayes/dpm/data-tfbs.hh>
+#include <tfbayes/uipac/nucleotide-sequence.hh>
 #include <tfbayes/utility/abysmal-stack.hh>
-#include <tfbayes/dpm/code.hh>
-
-class nucleotide_sequence_t : public std::vector<short>
-{
-public:
-        nucleotide_sequence_t(const std::string& sequence)
-                : _sequence(sequence) {
-                for (size_t i = 0; i < sequence.length(); i++) {
-                        push_back(code_nucleotide(sequence[i]));
-                }
-        }
-
-        const std::string& toString() {
-                return _sequence;
-        }
-
-private:
-        const std::string _sequence;
-};
 
 class context_t : public std::vector<int>
 {
 public:
-        context_t(size_t alphabet_size, const AbysmalStack<short>& stack) {
+        context_t(size_t alphabet_size, const AbysmalStack<double>& stack) {
                 for (size_t context = 0; context < stack.depth(); context++) {
                         if (!stack.clogged(context)) {
                                 // compute counts position
@@ -81,7 +61,7 @@ public:
         }
 
 protected:
-        static size_t counts_position(size_t alphabet_size, size_t context, const AbysmalStack<short>& stack) {
+        static size_t counts_position(size_t alphabet_size, size_t context, const AbysmalStack<double>& stack) {
                 size_t position = 0;
 
                 for (size_t i = 0; i < context; i++) {
@@ -92,16 +72,15 @@ protected:
         }
 };
 
-
 class seq_context_t : public std::vector<context_t>
 {
 public:
-        seq_context_t(const nucleotide_sequence_t& sequence,
+        seq_context_t(const nucleotide_sequence_t<double>& sequence,
                       size_t context, size_t alphabet_size) {
-                AbysmalStack<short> stack(context+1);
+                AbysmalStack<double> stack(context+1);
 
                 for (size_t i = 0; i < sequence.size(); i++) {
-                        if (sequence[i] == (short)alphabet_size) {
+                        if (sequence[i] == alphabet_size) {
                                 stack.push_invalid(sequence[i]);
                         }
                         else {
@@ -112,4 +91,4 @@ public:
         }
 };
 
-#endif /* NUCLEOTIDE_SEQUENCE_HH */
+#endif /* NUCLEOTIDE_CONTEXT_HH */

@@ -38,7 +38,7 @@
 #include <tfbayes/dpm/data-tfbs.hh>
 #include <tfbayes/dpm/datatypes.hh>
 #include <tfbayes/dpm/mixture-weights.hh>
-#include <tfbayes/dpm/nucleotide-sequence.hh>
+#include <tfbayes/dpm/nucleotide-context.hh>
 #include <tfbayes/dpm/dpm-tfbs-options.hh>
 
 // component_model_t interface
@@ -201,7 +201,6 @@ private:
         double log_likelihood(size_t pos) const;
         void substract_counts(size_t pos) const;
 };
-
 
 // Bivariate Gaussian
 ////////////////////////////////////////////////////////////////////////////////

@@ -33,9 +33,7 @@ dist_bin_SCRIPTS = \
 
 ## dpm library
 lib_LTLIBRARIES  = libtfbayes-dpm.la
-libtfbayes_dpm_la_SOURCES =			\
-	code.cc				\
-	code.hh				\
+libtfbayes_dpm_la_SOURCES =		\
 	clonable.hh			\
 	cluster.cc			\
 	cluster.hh			\
