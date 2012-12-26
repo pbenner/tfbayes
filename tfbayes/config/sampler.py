@@ -55,7 +55,7 @@ def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
 
 def normalize_dict(d):
-    norm = float(sum(list(d.itervalues()))
+    norm = float(sum(list(d.itervalues())))
     for k, v in d.iteritems():
         d[k] = d[k] / norm
 
