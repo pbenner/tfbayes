@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# Copyright (C) 2011 Philipp Benner
+# Copyright (C) 2011, 2012 Philipp Benner
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,14 +27,15 @@ import gtk
 import sys
 import getopt
 import os
-import cProfile
 import ConfigParser
 
 import numpy               as     np
 import numpy.random.mtrand as     mt
 import numpy.random        as     rd
 
-from tfbayes.fasta import fasta
+from tfbayes.config  import *
+from tfbayes.fasta   import *
+from tfbayes.uipac   import *
 
 def importMatplotlib(backend=None):
     global pyplot
@@ -57,84 +58,11 @@ from tfbayes.dpm.dpm_tfbs_interface import *
 # global options
 # ------------------------------------------------------------------------------
 
+sampler_config = default_sampler_config()
+
 options = {
-    'alpha'               : 0.05,
-    'discount'            : 0.0,
-    'lambda'              : 0.01,
-    'process_prior'       : "pitman-yor process",
-    'background_model'    : "independence",
-    'background_alpha'    : 0.5,
-    'background_context'  : 2,
-    'background_weights'  : 'decay',
-    'samples'             : (1000,100),
-    'population_size'     : 1,
-    'tfbs_length'         : 10,
-    'save'                : None,
-    'interactive'         : False,
-    'verbose'             : False,
-    'baseline_weights'    : [1.0],
-    'baseline_priors'     : [],
-    'socket_file'         : ''
+    'verbose'             : False
     }
-
-# parse config
-# ------------------------------------------------------------------------------
-
-def str2bool(v):
-    return v.lower() in ("yes", "true", "t", "1")
-
-def read_vector(config_parser, section, option, converter):
-    vector_str = config_parser.get(section, option).replace('  ',' ').strip()
-    vector     = map(converter, vector_str.split(' '))
-    return vector
-
-def read_matrix(config_parser, section, option, converter):
-    matrix_str = config_parser.get(section, option)
-    matrix     = []
-    for line in matrix_str.split('\n'):
-        line = line.replace('  ',' ').strip()
-        if line != '':
-            matrix.append([converter(a) for a in line.split(' ')])
-    return matrix
-
-def parse_config(config_file):
-    config_parser = ConfigParser.RawConfigParser()
-    config_parser.read(config_file)
-    if not config_parser.has_section('TFBS-Sampler'):
-        raise IOError("Invalid configuration file.")
-    options['input_file'] = config_parser.get('TFBS-Sampler', 'sequences')
-    if config_parser.has_option('TFBS-Sampler', 'alpha'):
-        options['alpha'] = float(config_parser.get('TFBS-Sampler', 'alpha'))
-    if config_parser.has_option('TFBS-Sampler', 'discount'):
-        options['discount'] = float(config_parser.get('TFBS-Sampler', 'discount'))
-    if config_parser.has_option('TFBS-Sampler', 'lambda'):
-        options['lambda'] = float(config_parser.get('TFBS-Sampler', 'lambda'))
-    if config_parser.has_option('TFBS-Sampler', 'process-prior'):
-        options['process_prior'] = config_parser.get('TFBS-Sampler', 'process-prior').strip()
-    if config_parser.has_option('TFBS-Sampler', 'background-model'):
-        options['background_model'] = config_parser.get('TFBS-Sampler', 'background-model').strip()
-    if config_parser.has_option('TFBS-Sampler', 'background-alpha'):
-        options['background_alpha'] = float(config_parser.get('TFBS-Sampler', 'background-alpha'))
-    if config_parser.has_option('TFBS-Sampler', 'background-context'):
-        options['background_context'] = int(config_parser.get('TFBS-Sampler', 'background-context'))
-    if config_parser.has_option('TFBS-Sampler', 'background-weights'):
-        options['background_weights'] = config_parser.get('TFBS-Sampler', 'background-weights')
-    if config_parser.has_option('TFBS-Sampler', 'tfbs-length'):
-        options['tfbs_length'] = int(config_parser.get('TFBS-Sampler', 'tfbs-length'))
-    if config_parser.has_option('TFBS-Sampler', 'population-size'):
-        options['population_size'] = int(config_parser.get('TFBS-Sampler', 'population-size'))
-    if config_parser.has_option('TFBS-Sampler', 'save'):
-        options['save'] = config_parser.get('TFBS-Sampler', 'save')
-    if config_parser.has_option('TFBS-Sampler', 'samples'):
-        options['samples'] = tuple(map(int, config_parser.get('TFBS-Sampler', 'samples').split(":")))
-    if config_parser.has_option('TFBS-Sampler', 'baseline-weights'):
-        options['baseline_weights'] = read_vector(config_parser, 'TFBS-Sampler', 'baseline-weights', int)
-    if config_parser.has_option('TFBS-Sampler', 'baseline-priors'):
-        for prior_name in read_vector(config_parser, 'TFBS-Sampler', 'baseline-priors', str):
-            prior = read_matrix(config_parser, 'TFBS-Sampler', prior_name, float)
-            options['baseline_priors'].append(prior)
-    if config_parser.has_option('TFBS-Sampler', 'socket-file'):
-        options['socket_file'] = config_parser.get('TFBS-Sampler', 'socket-file').strip()
 
 # usage
 # ------------------------------------------------------------------------------
@@ -142,64 +70,25 @@ def parse_config(config_file):
 def usage():
     """Print usage."""
     print
-    print "dpm-tfbs-demo [option]... CONFIG"
+    print "dpm-tfbs-demo [option]... SAMPLER_CONFIG"
     print
     print "Options:"
-    print "       --alpha=ALPHA              - alpha parameter for the dirichlet process"
-    print "       --discount=DISCOUNT        - Pitman-Yor discount (0 <= d < 1)"
-    print "       --lambda=LAMBDA            - lambda mixture weight"
-    print "       --context=CONTEXT          - context of the background model"
-    print "       --process-prior=NAME       - possible process priors:"
-    print "                                    pitman-yor process (default),"
-    print "                                    uniform process, poppe process"
-    print "       --background-model=NAME    - possible background models:"
-    print "                                    independence (default),"
-    print "                                    markov chain mixture,"
-    print "                                    parsimonious tree"
-    print "       --tfbs-length=LENGTH       - length of the tfbs"
-    print "   -i                             - interactive mode"
-    print "   -s, --save=FILE                - save posterior to FILE"
-    print "       --samples=SAMPLES:BURN_IN  - number of samples [default: 1000:100]"
+    print "   -s, --save=FILE                 - save posterior to FILE"
+    print "       --samples=SAMPLES[:BURN_IN] - number of samples [default: 1000:100]"
     print
-    print "   -h, --help                     - print help"
-    print "   -v, --verbose                  - be verbose"
+    print "   -h, --help                      - print help"
+    print "   -v, --verbose                   - be verbose"
     print
 
 # Tfbs DPM
 # ------------------------------------------------------------------------------
 
-def cluster_colors(c):
-    if c < 5:
-        return {
-           -1 : 'white',
-            0 : 'black',
-            1 : 'red',
-            2 : 'green',
-            3 : 'blue',
-            4 : 'yellow'
-            }[c]
-    else:
-        return 'magenta'
-
-def plot_sequences(ax, sequences, clusters):
-    ax.set_frame_on(False)
-    xn    = max(map(len, sequences))
-    yn    = len(sequences)
-    yfrom = 0.90
-    yto   = yfrom-yn*0.07
-    x, y = np.meshgrid(np.arange(0.01, 1.00,  0.99/xn),
-                       np.arange(yfrom, yto, -(yfrom-yto)/len(sequences)))
-    for sl, cl, p1l, p2l in zip(sequences, clusters, x, y):
-        for s, c, p1, p2 in zip(sl, cl, p1l, p2l):
-            ax.text(p1, p2, str(s), size=10, rotation=0,
-                    ha="center", va="bottom", color=cluster_colors(c), weight='bold')
-
-class TfbsDPM():
+class tfbs_dpm_t():
     def __init__(self, sequences, clusters, input_file):
         self.sequences = sequences
         self.clusters  = clusters
         self.steps     = 0
-        dpm_init(options, input_file)
+        dpm_init(sampler_config, input_file)
     def print_clusters(self):
         dpm_print()
     def num_clusters(self):
@@ -230,9 +119,9 @@ class TfbsDPM():
         ax1.set_xlabel("iteration")
         ax1.legend([p1, p2], ["Mean class switches", "Mean likelihood"])
 
-class InteractiveTDPM(TfbsDPM):
+class interactive_tfbs_dpm_t(tfbs_dpm_t):
     def __init__(self, sequences, clusters, input_file, ax2, ax3):
-        TfbsDPM.__init__(self, sequences, clusters[:][:], input_file)
+        tfbs_dpm_t.__init__(self, sequences, clusters[:][:], input_file)
         self.plotResult(ax2)
         self.plotPosterior(ax3)
         manager = pyplot.get_current_fig_manager()
@@ -251,10 +140,10 @@ class InteractiveTDPM(TfbsDPM):
     def sampleInteractively(self, n):
         self.sample(n, 0)
 
-# main
+# read and write sequences
 # ------------------------------------------------------------------------------
 
-def readSequences(seq_file):
+def read_sequences(seq_file):
     parser = fasta.parser(seq_file)
     sequences = []
     clusters  = []
@@ -273,6 +162,45 @@ def readSequences(seq_file):
                 sequences[-1] = sequences[-1] + m.group(0)
     return sequences, clusters
 
+def write_sequences(output_file, sequences):
+    fp = open(output_file, 'w')
+    for idx, sequence in enumerate(sequences):
+        fp.write('>sequence_%d\n' % idx)
+        for nucleotide in sequence:
+            tmp = [0.0, 0.0, 0.0, 0.0, 0.0]
+            tmp[DNA.code(nucleotide)] = 1.0
+            fp.write('%3.1f %3.1f %3.1f %3.1f %3.1f ;\n' % tuple(tmp))
+    fp.close()
+
+# plot
+# ------------------------------------------------------------------------------
+
+def cluster_colors(c):
+    if c < 5:
+        return {
+           -1 : 'white',
+            0 : 'black',
+            1 : 'red',
+            2 : 'green',
+            3 : 'blue',
+            4 : 'yellow'
+            }[c]
+    else:
+        return 'magenta'
+
+def plot_sequences(ax, sequences, clusters):
+    ax.set_frame_on(False)
+    xn    = max(map(len, sequences))
+    yn    = len(sequences)
+    yfrom = 0.90
+    yto   = yfrom-yn*0.07
+    x, y = np.meshgrid(np.arange(0.01, 1.00,  0.99/xn),
+                       np.arange(yfrom, yto, -(yfrom-yto)/len(sequences)))
+    for sl, cl, p1l, p2l in zip(sequences, clusters, x, y):
+        for s, c, p1, p2 in zip(sl, cl, p1l, p2l):
+            ax.text(p1, p2, str(s), size=10, rotation=0,
+                    ha="center", va="bottom", color=cluster_colors(c), weight='bold')
+
 def prepare_plot():
     importMatplotlib('GTKAgg')
     fig1  = pyplot.figure(linewidth=0,facecolor='white',edgecolor='white')
@@ -281,87 +209,67 @@ def prepare_plot():
     ax3   = fig1.add_subplot(3,1,3, title='Posterior')
     return ax1, ax2, ax3
 
-def sample(sequences, clusters):
-    # generate baseline
-    if not options['baseline_priors']:
-        options['baseline_priors'].append([ [ 1 for j in range(options['tfbs_length']) ] for i in range(4) ])
-    if not len(options['baseline_priors']) == len(options['baseline_weights']):
-        if options['verbose']:
-            print "Setting uniform weights for baseline priors"
-        options['baseline_weights'] = [ 1 ] * len(options['baseline_priors'])
-    # sample
-    if options['interactive']:
-        ax1, ax2, ax3 = prepare_plot()
-        dpm = InteractiveTDPM(sequences, clusters[:][:], options['input_file'], ax2, ax3)
-        dpm.plotData(ax1)
-        dpm.sample(0, options['samples'][1])
-        dpm.sampleInteractively(options['samples'][0])
-        pyplot.show()
-    else:
-        samples = options['samples'][0]
-        burnin  = options['samples'][1]
-        dpm = TfbsDPM(sequences, clusters[:][:], options['input_file'])
-        dpm.sample(samples, burnin)
-        if options['save']:
-            dpm_save(options['save'])
-        else:
-            ax1, ax2, ax3 = prepare_plot()
-            dpm.plotData(ax1)
-            dpm.plotResult(ax2)
-            dpm.plotPosterior(ax3)
-            pyplot.show()
+# sample
+# ------------------------------------------------------------------------------
 
-def main():
+def sample(sequences, clusters, input_file):
+    ax1, ax2, ax3 = prepare_plot()
+    dpm = interactive_tfbs_dpm_t(sequences, clusters[:][:], input_file, ax2, ax3)
+    dpm.plotData(ax1)
+    dpm.sample(0, sampler_config['samples'][1])
+    dpm.sampleInteractively(sampler_config['samples'][0])
+    pyplot.show()
+
+# main
+# ------------------------------------------------------------------------------
+
+def main(input_file):
+    # read sequences from .in template
+    sequences, clusters = read_sequences(input_file+'.in')
+    # write sequences in a format that the sampler understands
+    write_sequences(input_file, sequences)
+    # and sample
+    sample(sequences, clusters, input_file)
+
+# __main__
+# ------------------------------------------------------------------------------
+
+def __main__():
     global options
+    global sampler_config
     try:
-        longopts   = ["help", "verbose", "alpha=", "lambda=", "discount=",
-                      "context=", "process-prior=", "backround-model=",
-                      "tfbs-length=", "save=", "samples="]
-        opts, tail = getopt.getopt(sys.argv[1:], "is:vh", longopts)
+        longopts   = ["help", "verbose", "samples=", "save="]
+        opts, tail = getopt.getopt(sys.argv[1:], "i:vh", longopts)
     except getopt.GetoptError:
         usage()
-        return 2
+        return 1
     output = None
+    if len(tail) != 1:
+        usage()
+        return 1
     # option default options from config file
-    parse_config(*tail)
+    parse_sampler_config(tail[0], sampler_config)
     # override those options with command line arguments
     for o, a in opts:
         if o in ("-v", "--verbose"):
             sys.stderr.write("Verbose mode turned on.\n")
             options["verbose"] = True
-        if o == "-i":
-            options["interactive"] = True
         if o in ("-h", "--help"):
             usage()
             return 0
-        if o == "--alpha":
-            options['alpha'] = float(a)
-        if o == "--discount":
-            if 0 <= float(a) and float(a) < 1:
-                options['discount'] = float(a)
+        if o in ("-s", "--save"):
+            sampler_config['save'] = a
+        if o == "--samples":
+            tmp = map(int, a.split(":"))
+            if len(tmp) == 2:
+                sampler_config["samples"] = tuple(tmp)
+            elif len(tmp) == 1:
+                sampler_config["samples"] = (tmp[0], 0)
             else:
                 usage()
                 return 1
-        if o == "--lambda":
-            options['lambda'] = float(a)
-        if o == "--context":
-            options['context'] = int(a)
-        if o == "--process-prior":
-            options['process_prior'] = a
-        if o == "--background-model":
-            options['background_model'] = a
-        if o == "--tfbs-length":
-            options['tfbs_length'] = int(a)
-        if o in ("-s", "--save"):
-            options['save'] = a
-        if o == "--samples":
-            options["samples"] = tuple(map(int, a.split(":")))
-    if len(tail) != 1:
-        usage()
-        return 1
-    sequences, clusters = readSequences(options['input_file'])
-    sample(sequences, clusters)
+    main(sampler_config['seq_file'])
     return 0
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(__main__())
