@@ -19,7 +19,6 @@ dist_bin_SCRIPTS = \
 	tfbayes-partition \
 	tfbayes-sampler \
 	tfbayes-scan \
-	tfbayes-tools \
 	tfbayes-weblogo \
 	macs2multiz
 
