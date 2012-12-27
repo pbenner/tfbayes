@@ -28,14 +28,18 @@
 #include <tfbayes/uipac/nucleotide-sequence.hh>
 #include <tfbayes/utility/abysmal-stack.hh>
 
+/* this class stores the context of a single position in a
+ * nucleotide sequence
+ */
 class context_t : public std::vector<int>
 {
 public:
         context_t(size_t alphabet_size, const AbysmalStack<double>& stack) {
+                /* the depth of the stack gives the context */
                 for (size_t context = 0; context < stack.depth(); context++) {
                         if (!stack.clogged(context)) {
                                 // compute counts position
-                                const size_t offset   = counts_offset(alphabet_size, context);
+                                const size_t offset   = counts_offset  (alphabet_size, context);
                                 const size_t position = counts_position(alphabet_size, context, stack);
                                 push_back(offset+position);
                         }
@@ -45,11 +49,6 @@ public:
                         }
                 }
         }
-
-        static size_t counts_size(size_t alphabet_size, size_t max_context) {
-                return counts_offset(alphabet_size, max_context+1);
-        }
-
         static size_t counts_offset(size_t alphabet_size, size_t context) {
                 size_t offset = 0;
 
@@ -58,6 +57,9 @@ public:
                 }
 
                 return offset - 1;
+        }
+        static size_t counts_size(size_t alphabet_size, size_t max_context) {
+                return counts_offset(alphabet_size, max_context+1);
         }
 
 protected:

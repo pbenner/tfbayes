@@ -360,8 +360,10 @@ markov_chain_mixture_t::markov_chain_mixture_t(
         const sequence_data_t<data_tfbs_t::code_t>& data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
         cluster_tag_t cluster_tag)
-        : _data(data), _cluster_assignments(cluster_assignments),
-          _cluster_tag(cluster_tag), _max_context(options.background_context),
+        : _data(data),
+          _cluster_assignments(cluster_assignments),
+          _cluster_tag(cluster_tag),
+          _max_context(options.background_context),
           _alphabet_size(alphabet_size)
 {
         _length = context_t::counts_size(alphabet_size, _max_context);
