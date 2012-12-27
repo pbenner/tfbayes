@@ -37,7 +37,10 @@ from tfbayes.config  import *
 from tfbayes.fasta   import *
 from tfbayes.uipac   import *
 
-def importMatplotlib(backend=None):
+# matplotlib imports take a while, so do this only if necessary
+# ------------------------------------------------------------------------------
+
+def import_matplotlib(backend=None):
     global pyplot
     global NonUniformImage
     global patches
@@ -96,21 +99,21 @@ class tfbs_dpm_t():
     def sample(self, n, burnin):
         dpm_sample(n, burnin)
         self.steps += n
-    def plotData(self, ax):
+    def plot_data(self, ax):
         ax.set_xticks([]); ax.set_yticks([])
         plot_sequences(ax, self.sequences, self.clusters)
-    def plotResult(self, ax):
+    def plot_result(self, ax):
         ax.set_title('Gibbs Sampling')
         ax.set_xticks([]); ax.set_yticks([])
         sequences = np.array(self.sequences)
         clusters = dpm_cluster_assignments()
         plot_sequences(ax, sequences, clusters)
-    def plotPosterior(self, ax):
+    def plot_posterior(self, ax):
         ax.set_title('Posterior')
         ax.set_xticks([]); ax.set_yticks([])
         X = dpm_get_posterior()
         ax.imshow(X, cmap=pyplot.cm.jet, interpolation='nearest')
-    def plotStatistics(self, ax1):
+    def plot_statistics(self, ax1):
         ax2 = ax1.twinx()
         p1  = ax1.plot(dpm_hist_switches())
         p2  = ax2.plot(dpm_hist_likelihood(), color='green')
@@ -122,16 +125,16 @@ class tfbs_dpm_t():
 class interactive_tfbs_dpm_t(tfbs_dpm_t):
     def __init__(self, sequences, clusters, input_file, ax2, ax3):
         tfbs_dpm_t.__init__(self, sequences, clusters[:][:], input_file)
-        self.plotResult(ax2)
-        self.plotPosterior(ax3)
+        self.plot_result(ax2)
+        self.plot_posterior(ax3)
         manager = pyplot.get_current_fig_manager()
         def updatefig(*args):
             try:
                 ax2.cla()
                 ax3.cla()
                 self.sampleInteractively(1)
-                self.plotResult(ax2)
-                self.plotPosterior(ax3)
+                self.plot_result(ax2)
+                self.plot_posterior(ax3)
                 manager.canvas.draw()
                 return True
             except StopIteration:
@@ -202,7 +205,7 @@ def plot_sequences(ax, sequences, clusters):
                     ha="center", va="bottom", color=cluster_colors(c), weight='bold')
 
 def prepare_plot():
-    importMatplotlib('GTKAgg')
+    import_matplotlib('GTKAgg')
     fig1  = pyplot.figure(linewidth=0,facecolor='white',edgecolor='white')
     ax1   = fig1.add_subplot(3,1,1, title='Sequences')
     ax2   = fig1.add_subplot(3,1,2, title='Gibbs Sampling')
@@ -215,7 +218,7 @@ def prepare_plot():
 def sample(sequences, clusters, input_file):
     ax1, ax2, ax3 = prepare_plot()
     dpm = interactive_tfbs_dpm_t(sequences, clusters[:][:], input_file, ax2, ax3)
-    dpm.plotData(ax1)
+    dpm.plot_data(ax1)
     dpm.sample(0, sampler_config['samples'][1])
     dpm.sampleInteractively(sampler_config['samples'][0])
     pyplot.show()
