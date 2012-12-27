@@ -7,6 +7,7 @@ pkgpythondir = $(pyexecdir)/tfbayes/dpm
 dist_bin_SCRIPTS = \
 	tfbayes-align \
 	tfbayes-approximate \
+	tfbayes-bed \
 	tfbayes-expectation \
 	tfbayes-cluster \
 	tfbayes-graph \
@@ -19,8 +20,7 @@ dist_bin_SCRIPTS = \
 	tfbayes-partition \
 	tfbayes-sampler \
 	tfbayes-scan \
-	tfbayes-weblogo \
-	macs2multiz
+	tfbayes-weblogo
 
 ## clean python files
 clean-local:
