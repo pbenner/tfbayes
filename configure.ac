@@ -1,6 +1,6 @@
 [1]dnl -- configure.ac --
 dnl
-dnl Copyright (C) 2010 Philipp Benner
+dnl Copyright (C) 2010, 2011, 2012 Philipp Benner
 dnl
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
@@ -176,16 +176,10 @@ dnl ,----------------------------
 dnl | HEADERS
 dnl `----------------------------
 
-HEADERS_TO_CHECK="stdarg.h dlfcn.h dirent.h netinet/in.h sys/ioctl.h
-									arpa/inet.h netdb.h syslog.h signal.h pthread.h"
+HEADERS_TO_CHECK="stdarg.h syslog.h signal.h pthread.h"
 
 AC_CHECK_HEADERS($HEADERS_TO_CHECK,,
 	AC_MSG_ERROR([this header is required]))
-
-AC_CHECK_HEADER(net/if.h,,
-	AC_MSG_ERROR([this header is required]),
-	[[#include <sys/types.h>
-		#include <sys/socket.h>]] )
 
 AC_CHECK_HEADER([error.h],
 	AC_DEFINE(HAVE_ERROR_H, [], [Needed on OpenBSD systems.]))
@@ -258,10 +252,10 @@ AS_IF([test "x$enable_debug" = "xyes"],
 	 CFLAGS="$CFLAGS -DDEBUG"
 	 CXXFLAGS="$CXXFLAGS -DDEBUG"
 	 LDFLAGS="$LDFLAGS -static"],
-  [AX_CFLAGS_GCC_OPTION([-O4])
+  [AX_CFLAGS_GCC_OPTION([-O3])
    AX_CFLAGS_GCC_OPTION([-ffast-math])
 	 dnl
-	 AX_CXXFLAGS_GCC_OPTION([-O4])
+	 AX_CXXFLAGS_GCC_OPTION([-O3])
    AX_CXXFLAGS_GCC_OPTION([-ffast-math])])
 AS_IF([test "x$enable_profiling" = "xyes"],
 	[AX_CFLAGS_GCC_OPTION([-pg])
@@ -297,19 +291,6 @@ AX_CXXFLAGS_GCC_OPTION([-fno-nested-functions])
 dnl no runtime type information
 AX_CXXFLAGS_GCC_OPTION([-fno-rtti])
 AX_CXXFLAGS_GCC_OPTION([-DBOOST_NO_TYPEID])
-
-dnl ,---------------------------- 
-dnl | SUBDIR CONFIGURATION
-dnl `----------------------------
-
-#AC_NEW_SUBDIR([doc], [DOC], ["no"])
-
-dnl ,---------------------------- 
-dnl | PERL
-dnl `----------------------------
-
-dnl AC_PATH_PROG(PERL, perl, "no")
-dnl AM_CONDITIONAL([COND_PERL], [test "$PERL" != no])
 
 dnl ,---------------------------- 
 dnl | PYTHON
