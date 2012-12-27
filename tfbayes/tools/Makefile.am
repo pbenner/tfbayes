@@ -19,8 +19,7 @@ dist_bin_SCRIPTS = \
 	tfbayes-plot \
 	tfbayes-partition \
 	tfbayes-sampler \
-	tfbayes-scan \
-	tfbayes-weblogo
+	tfbayes-scan
 
 ## clean python files
 clean-local:
