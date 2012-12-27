@@ -57,9 +57,8 @@ def usage():
     print
     print "Scan a set of fasta sequences or multiple alignments in maf format for"
     print "sequences that match a cluster."
-    print " -> If fasta files are given, then all sequences in the fasta files"
-    print "     are scanned with the PWM of the cluster."
-    print " -> MAF files can be scanned in two different ways:"
+    print
+    print "    FASTA and MAF files can be scanned in different ways:"
     print "    1) If the option `species' is given then only the record of"
     print "       that species is scanned with the PWM of the cluster."
     print "    2) If a phylogenetic tree is given then the whole alignment"
@@ -112,8 +111,8 @@ def scan_alignment(cluster, alignment):
     """Scan the reference sequence in a multiple alignment (MAF) for instances of a pwm."""
     hits   = 0
     idx    = find_record(options['species'], alignment)
-    if idx is -1:
-        return
+    if idx is None:
+        return 0
     for i, j, score in cluster.scan(alignment[idx], options['threshold'], options['skip-gaps']):
         hits += 1
         print "%s - Score: %f, Position: (%d, %d)" % (alignment[:,i:j], score, i, j)
@@ -149,7 +148,12 @@ def scan_maf_files(cluster, maf_files):
 def scan_fasta_files(cluster, fasta_files):
     hits = 0
     for fasta_file in fasta_files:
-        hits += scan_fasta(cluster, fasta_file)
+        if options['phylotree']:
+            alignment_list = AlignIO.parse(fasta_file, 'fasta')
+            for alignment in alignment_list:
+                hits += scan_alignment_with_phylotree(cluster, alignment)
+        else:
+            hits += scan_fasta(cluster, fasta_file)
     print "Found %d sequences." % hits
 
 def scan_sequences_files(cluster, sequences_files):
@@ -229,7 +233,7 @@ def __main__():
         return 1
     # if format is maf then we need to know the reference
     # species
-    if options['format'] is 'maf' and options['phylotree'] is None and options['species'] is None:
+    if options['format'] == 'maf' and options['phylotree'] is None and options['species'] is None:
         usage()
         return 1
     # call main

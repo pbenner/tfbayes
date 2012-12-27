@@ -16,13 +16,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+import sys
+
 def find_record(species, alignment):
     """Return the index of the record that is associated with the given species."""
     for idx, track in enumerate(alignment):
         if track.name == species:
             return idx
     sys.stderr.write('Warning, reference species not found.\n')
-    return -1
+    return None
 
 # to scan a sequence we need to select subsequences...
 # ------------------------------------------------------------------------------
