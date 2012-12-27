@@ -4,7 +4,7 @@
   - [ ] Is it possible to use Markov chain mixture models (context
     trees) with the phylogenetic approximation?
 
-* TODO [0/1] Data Analysis
+* TODO [0/3] Data Analysis
   - [ ] Herve Dataset (Drosophilae)
   - [ ] Furlong Dataset (Drosophilae)
   - [ ] Visel Dataset (Eutherian)
