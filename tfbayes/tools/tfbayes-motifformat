@@ -16,16 +16,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import ConfigParser
 import getopt
-import math
 import os
 import re
 import subprocess
 import sys
-import Bio.Motif as Motif
 
-from tfbayes.cluster import *
+from tfbayes.cluster import plot_motif
 
 # global options
 # ------------------------------------------------------------------------------
@@ -43,6 +40,9 @@ def usage():
     """Print usage."""
     print
     print "tfbayes-motifformat [option]... FILE"
+    print
+    print "The output of `tfbayes-expectation' can be parsed with this"
+    print "program and converted to pdf."
     print
     print "Options:"
     print "   -j, --join                     - join plots with pdftk"
@@ -76,7 +76,7 @@ def parse_motif(fin, name, output_file):
         else:
             fin.seek(position)
             break
-    plot.plot_motif(motif, output_file, name)
+    plot_motif(motif, output_file, name)
 
 def join_plots(basename, files):
     cmd = 'pdftk %s cat output %s.pdf' % (' '.join(files), basename)
