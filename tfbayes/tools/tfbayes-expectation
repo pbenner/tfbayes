@@ -92,7 +92,12 @@ def alignment_expectation(multiple_alignment, phylotree):
     leafmap   = options['leafmap']
     num_leafs = pt_num_leafs(phylotree)
 
-    observations = [ 4.0 ]*num_leafs
+    # initialize leafs to '-'
+    #observations = [ DNA.code('-') ]*num_leafs
+
+    # initialize leafs to -1 meaning that all species that are not present in
+    # this alignment will be fully ignored by the phylogenetic model
+    observations = [ -1.0 ]*num_leafs
 
     result = []
     for i in range(len(multiple_alignment[0])):
