@@ -105,8 +105,14 @@ gibbs_sampler_t::_gibbs_sample(const index_i& index) {
 size_t
 gibbs_sampler_t::_gibbs_sample() {
         size_t sum = 0;
-        for (indexer_t::sampling_iterator it = _indexer.sampling_begin();
-             it != _indexer.sampling_end(); it++) {
+        // the indexer needs to be constant since it is shared between
+        // processes, so to shuffle the indices we first need to
+        // obtain a copy
+        vector<index_i*> indices(_indexer.sampling_begin(), _indexer.sampling_end());
+        random_shuffle(indices.begin(), indices.end());
+        // now sample
+        for (vector<index_i*>::iterator it = indices.begin();
+             it != indices.end(); it++) {
                 if(_gibbs_sample(**it)) sum+=1;
         }
         return sum;

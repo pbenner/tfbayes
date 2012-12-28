@@ -96,7 +96,7 @@ static
 void print_usage(char *pname, FILE *fp)
 {
 	(void)fprintf(fp,
-                      "\nUsage: %s [OPTION]... FILE\n\n", pname);
+                      "\nUsage: %s [OPTION]... FASTA_ALIGNMENT\n\n", pname);
 	(void)fprintf(fp,
                       "Options:\n"
                       "   --alpha=ALPHA             - alpha parameter for the dirichlet process\n"
@@ -130,7 +130,7 @@ void wrong_usage(const char *msg)
 		(void)fprintf(stderr, "%s\n", msg);
 	}
 	(void)fprintf(stderr,
-		      "Try `dpm-tfbs --help' for more information.\n");
+		      "Try `dpm-tfbs-debug --help' for more information.\n");
 
 	exit(EXIT_FAILURE);
 
@@ -177,6 +177,7 @@ void run_dpm(const char* file_name)
         tfbs_options.background_weights  = options.background_weights;
         tfbs_options.baseline_weights    = baseline_weights;
         tfbs_options.baseline_priors     = baseline_priors;
+        tfbs_options.baseline_tags.push_back("baseline_default");
 
         // create data, dpm, and sampler objects
         dpm_tfbs_pmcmc_t pmcmc(tfbs_options, sequences, options.population_size);
