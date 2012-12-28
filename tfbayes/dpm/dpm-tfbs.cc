@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011, 2012 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,6 +81,9 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
                 exit(EXIT_FAILURE);
         }
         // add model components for the baseline measure
+        assert(options.baseline_priors.size() == options.baseline_tags.size());
+        assert(options.baseline_priors.size() == options.baseline_weights.size());
+        // baseline weights are already initialized
         for (size_t i = 0; i < options.baseline_priors.size(); i++) {
                 assert(options.baseline_priors[i].size() == options.tfbs_length);
                 for (size_t j = 0; j < options.tfbs_length; j++) {
