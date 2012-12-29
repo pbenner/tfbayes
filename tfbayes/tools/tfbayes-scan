@@ -92,7 +92,6 @@ def scan_with_phylotree(counts, alignment):
             yield (idx,idx+length,score)
 
 def scan_fasta(cluster, fasta_file):
-    print "Scanning `%s':" % fasta_file
     parser = fasta.parser(fasta_file)
     hits   = 0
     while 1:
@@ -137,6 +136,7 @@ def scan_alignment_with_phylotree(cluster, alignment):
 def scan_maf_files(cluster, maf_files):
     hits = 0
     for maf_file in maf_files:
+        print "Scanning `%s':" % maf_file
         alignment_list = AlignIO.parse(maf_file, 'maf')
         for alignment in alignment_list:
             if options['phylotree']:
@@ -148,10 +148,15 @@ def scan_maf_files(cluster, maf_files):
 def scan_fasta_files(cluster, fasta_files):
     hits = 0
     for fasta_file in fasta_files:
+        print "Scanning `%s':" % fasta_file
         if options['phylotree']:
             alignment_list = AlignIO.parse(fasta_file, 'fasta')
             for alignment in alignment_list:
                 hits += scan_alignment_with_phylotree(cluster, alignment)
+        elif options['species']:
+            alignment_list = AlignIO.parse(fasta_file, 'fasta')
+            for alignment in alignment_list:
+                hits += scan_alignment(cluster, alignment)
         else:
             hits += scan_fasta(cluster, fasta_file)
     print "Found %d sequences." % hits
