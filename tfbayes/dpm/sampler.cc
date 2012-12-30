@@ -119,7 +119,7 @@ gibbs_sampler_t::_gibbs_sample() {
 }
 
 bool
-gibbs_sampler_t::_sample() {
+gibbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         return _gibbs_sample();
 }
 
@@ -151,7 +151,7 @@ gibbs_sampler_t::sample(size_t n, size_t burnin) {
                      << endl;
                 fflush(stdout);
                 funlockfile(stdout);
-                sum      = _sample();
+                sum      = _sample(i, n, true);
                 switches = _indexer.elements() > 0 ? sum/(double)_indexer.elements() : 0;
                 _sampling_history.likelihood[0].push_back(_dpm.likelihood());
                 _sampling_history.posterior[0].push_back(_dpm.posterior());
@@ -168,7 +168,7 @@ gibbs_sampler_t::sample(size_t n, size_t burnin) {
                      << endl;
                 fflush(stdout);
                 funlockfile(stdout);
-                sum      = _sample();
+                sum      = _sample(i, n, false);
                 switches = _indexer.elements() > 0 ? sum/(double)_indexer.elements() : 0;
                 _sampling_history.likelihood[0].push_back(_dpm.likelihood());
                 _sampling_history.posterior[0].push_back(_dpm.posterior());

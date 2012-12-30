@@ -19,6 +19,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <cmath>
+
 #include <tfbayes/dpm/dpm-tfbs-sampler.hh>
 #include <tfbayes/dpm/statistics.hh>
 
@@ -42,7 +44,8 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
           _command_queue(command_queue),
           _output_queue(output_queue),
           _state(state),
-          _dpm(dpm)
+          _dpm(dpm),
+          _t0(100.0)
 { }
 
 dpm_tfbs_sampler_t*
@@ -134,7 +137,7 @@ dpm_tfbs_sampler_t::_block_sample()
 }
 
 bool
-dpm_tfbs_sampler_t::_metropolis_sample(cluster_t& cluster) {
+dpm_tfbs_sampler_t::_metropolis_sample(cluster_t& cluster, const double temp) {
         double posterior_ref = _dpm.posterior();
         double posterior_tmp;
         stringstream ss;
@@ -145,7 +148,7 @@ dpm_tfbs_sampler_t::_metropolis_sample(cluster_t& cluster) {
 
                 const double r = (double)rand()/RAND_MAX;
                 /* posterior value is on log scale! */
-                if (r <= min(exp(posterior_tmp - posterior_ref), 1.0)) {
+                if (r <= min(pow(exp(posterior_tmp - posterior_ref), 1.0/temp), 1.0)) {
                         goto accepted;
                 }
                 _state.restore();
@@ -171,20 +174,28 @@ accepted:
 }
 
 bool
-dpm_tfbs_sampler_t::_metropolis_sample() {
+dpm_tfbs_sampler_t::_metropolis_sample(const double temp) {
         for (cl_iterator it = _state.begin(); it != _state.end(); it++) {
-                _metropolis_sample(**it);
+                _metropolis_sample(**it, temp);
         }
 
         return true;
 }
 
 bool
-dpm_tfbs_sampler_t::_sample() {
+dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
+        // temperature for simulated annealing
+        double temp = 1.0;
+        if (is_burnin) {
+                temp = _t0*pow((1.0/_t0), (double)i/n);
+                cout << _name << ": "
+                     << "temperature is " << temp << endl;
+        }
+
         // call the standard hybrid sampler that first produces a
         // Gibbs sample and afterwards make a Metropolis-Hastings step
         size_t s = _gibbs_sample();
-                   _metropolis_sample();
+                   _metropolis_sample(temp);
         // do a Gibbs block sampling step, i.e. go through all
         // clusters and try to merge them
         _block_sample();

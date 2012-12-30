@@ -54,16 +54,19 @@ public:
         const sequence_data_t<data_tfbs_t::code_t> sequences;
 
 protected:
-        bool _sample();
+        bool _sample(size_t i, size_t n, bool is_burnin);
         void _block_sample();
         void _block_sample(cluster_t& cluster);
-        bool _metropolis_sample();
-        bool _metropolis_sample(cluster_t& cluster);
+        bool _metropolis_sample(const double temp);
+        bool _metropolis_sample(cluster_t& cluster, const double temp);
 
         save_queue_t<command_t*>& _command_queue;
         save_queue_t<std::string>& _output_queue;
         dpm_tfbs_state_t& _state;
         dpm_tfbs_t& _dpm;
+
+        // initial temperature for simulated annealing
+        const double _t0;
 };
 
 #include <pmcmc.hh>
