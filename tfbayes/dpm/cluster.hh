@@ -72,6 +72,7 @@ public:
         baseline_tag_t baseline_tag() const;
         bool destructible() const;
         component_model_t& model();
+        const component_model_t& model() const;
         elements_t elements() const;
 
 private:

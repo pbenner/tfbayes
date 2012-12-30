@@ -140,6 +140,12 @@ cluster_t::model()
         return *_model;
 }
 
+const component_model_t&
+cluster_t::model() const
+{
+        return *_model;
+}
+
 ostream&
 operator<< (ostream& o, const cluster_t& cluster)
 {

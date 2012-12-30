@@ -269,12 +269,16 @@ dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
                         if (include_background) {
-                                sum = logadd(sum, n*_lambda_inv_log + cluster.model().log_predictive(range_set));
+                                // single background site:
+                                // (1-lambda)(1-lambda) ... (1-lambda) [tfbs_length times]
+                                sum = logadd(sum, n*_lambda_inv_log*_tfbs_length + cluster.model().log_predictive(range_set));
                         }
                 }
                 else {
                         ////////////////////////////////////////////////////////
                         // mixture component 2: dirichlet process
+                        // single binding site:
+                        // lambda 1 ... 1 [tfbs_length times]
                         sum = logadd(sum, n*_lambda_log + n*_process_prior->log_predictive(cluster) + cluster.model().log_predictive(range_set));
                 }
                 log_weights[i] = sum;
@@ -297,7 +301,7 @@ dpm_tfbs_t::likelihood() const {
 
         for (cm_iterator it = _state.begin();
              it != _state.end(); it++) {
-                cluster_t& cluster = **it;
+                const cluster_t& cluster = **it;
                 result += cluster.model().log_likelihood();
         }
 
@@ -313,8 +317,11 @@ double
 dpm_tfbs_t::posterior() const {
         double result = likelihood();
 
+        // background prior
+        result += _state[_state.bg_cluster_tag].size()*_lambda_inv_log*_tfbs_length;
+        // tfbs prior
         result += _state.num_tfbs*_lambda_log;
-        result += _state[_state.bg_cluster_tag].size()*_lambda_inv_log;
+        // process prior
         result += _process_prior->joint();
 
         assert(!isnan(result));
