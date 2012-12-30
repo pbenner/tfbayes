@@ -32,6 +32,7 @@ typedef struct {
         double alpha;
         double discount;
         double lambda;
+        double initial_temperature;
         bool construct_graph;
         std::string process_prior;
         std::string background_model;

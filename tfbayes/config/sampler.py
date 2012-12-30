@@ -28,6 +28,7 @@ default_sampler_config_ = {
     'alpha'               : 0.05,
     'discount'            : 0.0,
     'lambda'              : 0.01,
+    'initial_temperature' : 100.0,
     'construct_graph'     : False,
     'process_prior'       : "pitman-yor process",
     'background_model'    : "independence-dirichlet",
@@ -77,6 +78,8 @@ def parse_sampler_config(config_file, sampler_config):
         sampler_config['discount'] = float(config_parser.get('TFBS-Sampler', 'discount'))
     if config_parser.has_option('TFBS-Sampler', 'lambda'):
         sampler_config['lambda'] = float(config_parser.get('TFBS-Sampler', 'lambda'))
+    if config_parser.has_option('TFBS-Sampler', 'initial-temperature'):
+        sampler_config['initial_temperature'] = float(config_parser.get('TFBS-Sampler', 'initial-temperature'))
     if config_parser.has_option('TFBS-Sampler', 'process-prior'):
         sampler_config['process_prior'] = config_parser.get('TFBS-Sampler', 'process-prior').strip()
     if config_parser.has_option('TFBS-Sampler', 'background-model'):

@@ -32,6 +32,7 @@ class command_t;
 class dpm_tfbs_sampler_t : public gibbs_sampler_t {
 public:
         dpm_tfbs_sampler_t(
+                const tfbs_options_t& options,
                 dpm_tfbs_t& dpm,
                 dpm_tfbs_state_t& state,
                 const indexer_t& indexer,

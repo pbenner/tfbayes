@@ -32,6 +32,7 @@ using namespace boost::asio::local;
 ////////////////////////////////////////////////////////////////////////////////
 
 dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
+        const tfbs_options_t& options,
         dpm_tfbs_t& dpm,
         dpm_tfbs_state_t& state,
         const indexer_t& indexer,
@@ -45,7 +46,7 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
           _output_queue(output_queue),
           _state(state),
           _dpm(dpm),
-          _t0(100.0)
+          _t0(options.initial_temperature)
 { }
 
 dpm_tfbs_sampler_t*
@@ -187,6 +188,7 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         // temperature for simulated annealing
         double temp = 1.0;
         if (is_burnin) {
+                // geometric decline of the temperature
                 temp = _t0*pow((1.0/_t0), (double)i/n);
                 cout << _name << ": "
                      << "temperature is " << temp << endl;
@@ -289,7 +291,9 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
                 save_queue_t<command_t*>* command_queue = new save_queue_t<command_t*>();
                 _command_queue.push_back(command_queue);
                 _gdpm[i]       = new dpm_tfbs_t(options, _data);
-                _population[i] = new dpm_tfbs_sampler_t(*_gdpm[i], _gdpm[i]->state(),
+                _population[i] = new dpm_tfbs_sampler_t(options,
+                                                        *_gdpm[i],
+                                                        _gdpm[i]->state(),
                                                         _data,
                                                         ss.str(),
                                                         *command_queue,

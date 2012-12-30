@@ -151,7 +151,7 @@ gibbs_sampler_t::sample(size_t n, size_t burnin) {
                      << endl;
                 fflush(stdout);
                 funlockfile(stdout);
-                sum      = _sample(i, n, true);
+                sum      = _sample(i, burnin, true);
                 switches = _indexer.elements() > 0 ? sum/(double)_indexer.elements() : 0;
                 _sampling_history.likelihood[0].push_back(_dpm.likelihood());
                 _sampling_history.posterior[0].push_back(_dpm.posterior());
