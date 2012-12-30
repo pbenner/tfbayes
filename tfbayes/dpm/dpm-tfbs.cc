@@ -230,11 +230,15 @@ dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_
                 if (cluster.cluster_tag() == _state.bg_cluster_tag) {
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
-                        sum = logadd(sum, _lambda_inv_log + cluster.model().log_predictive(range));
+                        // single background site:
+                        // (1-lambda)(1-lambda) ... (1-lambda) [tfbs_length times]
+                        sum = logadd(sum, _lambda_inv_log*_tfbs_length + cluster.model().log_predictive(range));
                 }
                 else {
                         ////////////////////////////////////////////////////////
                         // mixture component 2: dirichlet process
+                        // single binding site:
+                        // lambda 1 ... 1 [tfbs_length times]
                         sum = logadd(sum, _lambda_log + _process_prior->log_predictive(cluster) + cluster.model().log_predictive(range));
                 }
                 log_weights[i] = sum;
