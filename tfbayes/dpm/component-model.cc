@@ -311,7 +311,7 @@ double product_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
 
                         /* add counts of this subsequence to tmp_counts */
                         for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
-                                tmp_counts[j] = _data[index][j];
+                                tmp_counts[j] += _data[index][j];
                         }
                 }
                 result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1], tmp_counts)
