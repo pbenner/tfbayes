@@ -65,7 +65,7 @@ independence_background_t::independence_background_t(
                                   fast_lnbeta<data_tfbs_t::alphabet_size>(alpha, _data[i][j])
                                 - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha);
                 }
-        }        
+        }
 }
 
 independence_background_t::independence_background_t(const independence_background_t& distribution)
