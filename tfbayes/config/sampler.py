@@ -28,7 +28,7 @@ default_sampler_config_ = {
     'alpha'               : 0.05,
     'discount'            : 0.0,
     'lambda'              : 0.01,
-    'initial_temperature' : 100.0,
+    'initial_temperature' : 10.0,
     'construct_graph'     : False,
     'process_prior'       : "pitman-yor process",
     'background_model'    : "independence-dirichlet",
