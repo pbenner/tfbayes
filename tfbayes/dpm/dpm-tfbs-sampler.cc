@@ -190,8 +190,11 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         if (is_burnin) {
                 // geometric decline of the temperature
                 temp = _t0*pow((1.0/_t0), (double)i/n);
+                flockfile(stdout);
                 cout << _name << ": "
                      << "temperature is " << temp << endl;
+                fflush(stdout);
+                funlockfile(stdout);
         }
 
         // call the standard hybrid sampler that first produces a
