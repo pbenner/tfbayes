@@ -92,6 +92,8 @@ vector_t* alignment_scan(alignment_t<code_t>* alignment, matrix_t* c_counts)
         for (alignment_t<code_t>::iterator it = alignment->begin(); it != alignment->end(); it++) {
                 result->vec[it.position()] = 0;
                 if (it.position() + counts.size() > alignment->length()) {
+                        // do not exit the loop here so that every
+                        // position is initialized
                         continue;
                 }
                 for (alignment_t<code_t>::iterator is(it); is.position() < it.position() + counts.size(); is++) {
