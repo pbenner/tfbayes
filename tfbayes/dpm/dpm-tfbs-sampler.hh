@@ -42,7 +42,7 @@ public:
                 const sequence_data_t<data_tfbs_t::code_t>& sequences);
 
         // after sampling this function locally optimizes the current state
-        void optimize(cluster_t& cluster);
+        bool optimize(cluster_t& cluster);
         void optimize();
 
         dpm_tfbs_sampler_t* clone() const;
@@ -56,8 +56,8 @@ public:
 
 protected:
         bool _sample(size_t i, size_t n, bool is_burnin);
-        void _block_sample();
-        void _block_sample(cluster_t& cluster);
+        void _block_sample(const bool optimize = false);
+        void _block_sample(cluster_t& cluster, const bool optimize);
         bool _metropolis_sample(const double temp);
         bool _metropolis_sample(cluster_t& cluster, const double temp);
 

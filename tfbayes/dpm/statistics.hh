@@ -42,4 +42,32 @@ size_t select_component(size_t k, double log_weights[])
         return k-1;
 }
 
+static inline
+size_t select_max_component(size_t k, double log_weights[])
+{
+        /* log_weights are cumulative */
+
+        /* resulting cluster number */
+        size_t result = 0;
+        /* difference between two successive log weights */
+        double diff   = 0.0;
+        /* we need to store the last value because zero is not
+         * represented in the log weights array */
+        double last   = -HUGE_VAL;
+
+        for (size_t i = 0; i < k; i++) {
+                /* if the increase for this cluster is higher than any
+                 * before */
+                if (diff < exp(log_weights[i] - log(last))) {
+                        /* store the new increase in probability */
+                        diff   = exp(log_weights[i+1] - log_weights[i]);
+                        /* and the cluster number */
+                        result = i;
+                }
+                /* also save the value of the last weight */
+                last = log_weights[i];
+        }
+        return result;
+}
+
 #endif /* STATISTICS_HH */

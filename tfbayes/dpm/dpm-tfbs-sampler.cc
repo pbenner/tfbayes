@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011, 2012 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ dpm_tfbs_sampler_t::clone() const {
 }
 
 void
-dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
+dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const bool optimize)
 {
         vector<range_t> range_set;
         cluster_tag_t old_cluster_tag = cluster.cluster_tag();
@@ -87,7 +87,13 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
         // to that cluster
-        cluster_tag_t new_cluster_tag = cluster_tags[select_component(components, log_weights)];
+        cluster_tag_t new_cluster_tag;
+        if (optimize) {
+                new_cluster_tag = cluster_tags[select_max_component(components, log_weights)];
+        }
+        else {
+                new_cluster_tag = cluster_tags[select_component(components, log_weights)];
+        }
 
         ////////////////////////////////////////////////////////////////////////
         // print some information to stdout
@@ -113,7 +119,7 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
 }
 
 void
-dpm_tfbs_sampler_t::_block_sample()
+dpm_tfbs_sampler_t::_block_sample(const bool optimize)
 {
         // since clusters are modified it is not possible to simply
         // loop through the list of clusters, we need to be a bit more
@@ -131,7 +137,7 @@ dpm_tfbs_sampler_t::_block_sample()
         for (vector<cluster_tag_t>::const_iterator it = used_clusters.begin(); it != used_clusters.end(); it++) {
                 cluster_t& cluster = _state[*it];
                 if (cluster.size() != 0) {
-                        _block_sample(cluster);
+                        _block_sample(cluster, optimize);
                 }
         }
 }
@@ -221,7 +227,7 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         return s;
 }
 
-void
+bool
 dpm_tfbs_sampler_t::optimize(cluster_t& cluster) {
         double posterior_ref = _dpm.posterior();
         double posterior_left;
@@ -248,7 +254,7 @@ dpm_tfbs_sampler_t::optimize(cluster_t& cluster) {
                 ss << "moved to the right";
         }
         else {
-                return;
+                return false;
         }
 
         flockfile(stdout);
@@ -264,13 +270,26 @@ dpm_tfbs_sampler_t::optimize(cluster_t& cluster) {
              << endl;
         fflush(stdout);
         funlockfile(stdout);
+
+        return true;
 }
 
 void
 dpm_tfbs_sampler_t::optimize() {
-        for (cl_iterator it = _state.begin(); it != _state.end(); it++) {
-                optimize(**it);
+        bool tmp;
+        do {
+                tmp = false;
+                // block optimization
+                for (cl_iterator it = _state.begin(); it != _state.end(); it++) {
+                        tmp = optimize(**it) | tmp;
+                }
+                // gibbs optimization
+                if (_gibbs_sample(true) > 0) {
+                        tmp = true;
+                }
         }
+        // stop only if nothing has changed
+        while (tmp);
         _dpm.update_samples(_sampling_steps);
 }
 

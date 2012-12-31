@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011, 2012 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,8 +58,8 @@ public:
 protected:
         // private methods
         virtual bool _sample(size_t i, size_t n, bool is_burnin);
-        size_t _gibbs_sample(const index_i& index);
-        size_t _gibbs_sample();
+        size_t _gibbs_sample(const index_i& index, const bool optimize);
+        size_t _gibbs_sample(const bool optimize = false);
         // the mixture model
         mixture_model_t& _dpm;
         std::string _name;

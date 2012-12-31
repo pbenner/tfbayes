@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011, 2012 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ gibbs_sampler_t::clone() const {
 }
 
 size_t
-gibbs_sampler_t::_gibbs_sample(const index_i& index) {
+gibbs_sampler_t::_gibbs_sample(const index_i& index, const bool optimize) {
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
         if (!_dpm.valid_for_sampling(index)) {
@@ -94,7 +94,23 @@ gibbs_sampler_t::_gibbs_sample(const index_i& index) {
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
         // to that cluster
-        cluster_tag_t new_cluster_tag = cluster_tags[select_component(components, log_weights)];
+        cluster_tag_t new_cluster_tag;
+        if (optimize) {
+                new_cluster_tag = cluster_tags[select_max_component(components, log_weights)];
+                if (new_cluster_tag != old_cluster_tag) {
+                        flockfile(stdout);
+                        cout << _name << ": "
+                             << "moving " << (const seq_index_t&)index
+                             << " from cluster " << old_cluster_tag
+                             << " to cluster "   << new_cluster_tag
+                             << endl;
+                        fflush(stdout);
+                        funlockfile(stdout);
+                }
+        }
+        else {
+                new_cluster_tag = cluster_tags[select_component(components, log_weights)];
+        }
 
         ////////////////////////////////////////////////////////////////////////
         _state.add(index, new_cluster_tag);
@@ -103,7 +119,7 @@ gibbs_sampler_t::_gibbs_sample(const index_i& index) {
 }
 
 size_t
-gibbs_sampler_t::_gibbs_sample() {
+gibbs_sampler_t::_gibbs_sample(const bool optimize) {
         size_t sum = 0;
         // the indexer needs to be constant since it is shared between
         // processes, so to shuffle the indices we first need to
@@ -113,7 +129,7 @@ gibbs_sampler_t::_gibbs_sample() {
         // now sample
         for (vector<index_i*>::iterator it = indices.begin();
              it != indices.end(); it++) {
-                if(_gibbs_sample(**it)) sum+=1;
+                if(_gibbs_sample(**it, optimize)) sum+=1;
         }
         return sum;
 }
