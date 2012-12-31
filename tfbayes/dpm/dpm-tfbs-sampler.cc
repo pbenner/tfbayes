@@ -110,7 +110,6 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster)
 
                 _state.add(range.index(), new_cluster_tag);
         }
-
 }
 
 void
