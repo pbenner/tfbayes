@@ -277,9 +277,7 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         _metropolis_sample(temp);
         // do a Gibbs block sampling step, i.e. go through all
         // clusters and try to merge them
-        if (temp == 1.0) {
-                _block_sample(temp);
-        }
+        _block_sample(temp);
         // we are done with sampling here, now process commands
         flockfile(stdout);
         cout << _name << ": "
