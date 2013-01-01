@@ -51,8 +51,12 @@ public:
         ////////////////////////////////////////////////////////////////////////
         size_t mixture_components() const;
         size_t baseline_components() const;
-        void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[]);
-        void   mixture_weights(const std::vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[], bool include_background = true);
+        void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[]) {
+                // set default temperature
+                mixture_weights(index, log_weights, tags, 1.0);
+        }
+        void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[], const double temp);
+        void   mixture_weights(const std::vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[], const double temp = 1.0, const bool include_background = true);
         void   update_map();
         void   update_graph(sequence_data_t<short> tfbs_start_positions);
         void   update_samples(size_t sampling_steps);

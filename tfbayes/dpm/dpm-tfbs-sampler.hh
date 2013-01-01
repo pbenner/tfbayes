@@ -56,8 +56,10 @@ public:
 
 protected:
         bool _sample(size_t i, size_t n, bool is_burnin);
-        void _block_sample(const bool optimize = false);
-        void _block_sample(cluster_t& cluster, const bool optimize);
+        size_t _gibbs_sample(const index_i& index, const double temp, const bool optimize);
+        size_t _gibbs_sample(const double temp = 1.0, const bool optimize = false);
+        void _block_sample(const double temp, const bool optimize = false);
+        void _block_sample(cluster_t& cluster, const double temp, const bool optimize);
         bool _metropolis_sample(const double temp);
         bool _metropolis_sample(cluster_t& cluster, const double temp);
 

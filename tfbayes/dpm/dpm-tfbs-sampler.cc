@@ -19,8 +19,6 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <cmath>
-
 #include <tfbayes/dpm/dpm-tfbs-sampler.hh>
 #include <tfbayes/dpm/statistics.hh>
 
@@ -54,8 +52,73 @@ dpm_tfbs_sampler_t::clone() const {
         return new dpm_tfbs_sampler_t(*this);
 }
 
+// Gibbs samples
+////////////////////////////////////////////////////////////////////////////////
+
+size_t
+dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp, const bool optimize) {
+        ////////////////////////////////////////////////////////////////////////
+        // check if we can sample this element
+        if (!_dpm.valid_for_sampling(index)) {
+                return false;
+        }
+        ////////////////////////////////////////////////////////////////////////
+        // release the element from its cluster
+        cluster_tag_t old_cluster_tag = _state[index];
+        _state.remove(index, old_cluster_tag);
+        size_t components = _dpm.mixture_components() + _dpm.baseline_components();
+        double log_weights[components];
+        cluster_tag_t cluster_tags[components];
+        _dpm.mixture_weights(index, log_weights, cluster_tags, temp);
+
+        ////////////////////////////////////////////////////////////////////////
+        // draw a new cluster for the element and assign the element
+        // to that cluster
+        cluster_tag_t new_cluster_tag;
+        if (optimize) {
+                new_cluster_tag = cluster_tags[select_max_component(components, log_weights)];
+                if (new_cluster_tag != old_cluster_tag) {
+                        flockfile(stdout);
+                        cout << _name << ": "
+                             << "moving " << (const seq_index_t&)index
+                             << " from cluster " << old_cluster_tag
+                             << " to cluster "   << new_cluster_tag
+                             << endl;
+                        fflush(stdout);
+                        funlockfile(stdout);
+                }
+        }
+        else {
+                new_cluster_tag = cluster_tags[select_component(components, log_weights)];
+        }
+
+        ////////////////////////////////////////////////////////////////////////
+        _state.add(index, new_cluster_tag);
+
+        return old_cluster_tag != new_cluster_tag;
+}
+
+size_t
+dpm_tfbs_sampler_t::_gibbs_sample(const double temp, const bool optimize) {
+        size_t sum = 0;
+        // the indexer needs to be constant since it is shared between
+        // processes, so to shuffle the indices we first need to
+        // obtain a copy
+        vector<index_i*> indices(_indexer.sampling_begin(), _indexer.sampling_end());
+        random_shuffle(indices.begin(), indices.end());
+        // now sample
+        for (vector<index_i*>::iterator it = indices.begin();
+             it != indices.end(); it++) {
+                if(_gibbs_sample(**it, temp, optimize)) sum+=1;
+        }
+        return sum;
+}
+
+// Gibbs block samples
+////////////////////////////////////////////////////////////////////////////////
+
 void
-dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const bool optimize)
+dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp, const bool optimize)
 {
         vector<range_t> range_set;
         cluster_tag_t old_cluster_tag = cluster.cluster_tag();
@@ -82,7 +145,7 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const bool optimize)
         size_t components = _dpm.mixture_components() + _dpm.baseline_components();
         double log_weights[components];
         cluster_tag_t cluster_tags[components];
-        _dpm.mixture_weights(range_set, log_weights, cluster_tags, false);
+        _dpm.mixture_weights(range_set, log_weights, cluster_tags, temp, false);
 
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
@@ -119,7 +182,7 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const bool optimize)
 }
 
 void
-dpm_tfbs_sampler_t::_block_sample(const bool optimize)
+dpm_tfbs_sampler_t::_block_sample(const double temp, const bool optimize)
 {
         // since clusters are modified it is not possible to simply
         // loop through the list of clusters, we need to be a bit more
@@ -137,10 +200,13 @@ dpm_tfbs_sampler_t::_block_sample(const bool optimize)
         for (vector<cluster_tag_t>::const_iterator it = used_clusters.begin(); it != used_clusters.end(); it++) {
                 cluster_t& cluster = _state[*it];
                 if (cluster.size() != 0) {
-                        _block_sample(cluster, optimize);
+                        _block_sample(cluster, temp, optimize);
                 }
         }
 }
+
+// Metropolis-Hastings samples
+////////////////////////////////////////////////////////////////////////////////
 
 bool
 dpm_tfbs_sampler_t::_metropolis_sample(cluster_t& cluster, const double temp) {
@@ -154,7 +220,7 @@ dpm_tfbs_sampler_t::_metropolis_sample(cluster_t& cluster, const double temp) {
 
                 const double r = (double)rand()/RAND_MAX;
                 /* posterior value is on log scale! */
-                if (r <= min(pow(exp(posterior_tmp - posterior_ref), 1.0/temp), 1.0)) {
+                if (r <= min(exp((posterior_tmp - posterior_ref)/temp), 1.0)) {
                         goto accepted;
                 }
                 _state.restore();
@@ -188,6 +254,9 @@ dpm_tfbs_sampler_t::_metropolis_sample(const double temp) {
         return true;
 }
 
+// Main
+////////////////////////////////////////////////////////////////////////////////
+
 bool
 dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         // temperature for simulated annealing
@@ -204,11 +273,13 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
 
         // call the standard hybrid sampler that first produces a
         // Gibbs sample and afterwards make a Metropolis-Hastings step
-        size_t s = _gibbs_sample();
-                   _metropolis_sample(temp);
+        size_t s = _gibbs_sample(temp);
+        _metropolis_sample(temp);
         // do a Gibbs block sampling step, i.e. go through all
         // clusters and try to merge them
-        _block_sample();
+        if (temp == 1.0) {
+                _block_sample(temp);
+        }
         // we are done with sampling here, now process commands
         flockfile(stdout);
         cout << _name << ": "
@@ -226,6 +297,9 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         }
         return s;
 }
+
+// Optimization
+////////////////////////////////////////////////////////////////////////////////
 
 bool
 dpm_tfbs_sampler_t::optimize(cluster_t& cluster) {
