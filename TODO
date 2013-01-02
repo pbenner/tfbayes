@@ -3,6 +3,8 @@
 * TODO [0/1] Dirichlet Process Mixture for TFBS
   - [ ] Is it possible to use Markov chain mixture models (context
     trees) with the phylogenetic approximation?
+  - [ ] Allow patterns of different lengths
+  - [ ] Implement background mixtures
 
 * TODO [0/3] Data Analysis
   - [ ] Herve Dataset (Drosophilae)
