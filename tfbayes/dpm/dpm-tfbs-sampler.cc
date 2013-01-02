@@ -348,8 +348,6 @@ dpm_tfbs_sampler_t::optimize(cluster_t& cluster) {
 
 void
 dpm_tfbs_sampler_t::optimize() {
-        // remove this
-        _dpm.update_samples(_sampling_steps);
         // print old posterior value
         flockfile(stdout);
         cout << _name << ": "

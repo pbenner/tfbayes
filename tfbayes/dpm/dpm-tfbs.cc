@@ -98,6 +98,8 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
         // assign all elements to the background
         for (da_iterator it = _data.begin();
              it != _data.end(); it++) {
+                // cannot use _state.add() here because we need to add
+                // sites of length one to the background
                 range_t range(**it, 1);
                 _state[_state.bg_cluster_tag].add_observations(range);
         }
@@ -126,6 +128,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
                 cluster_t& cluster = _state.get_free_cluster(subset.dpm_subset_tag());
 
                 for (dpm_subset_t::const_iterator is = subset.begin(); is != subset.end(); is++) {
+                        assert(valid_for_sampling(**is));
                         _state.remove(**is, _state.bg_cluster_tag);
                         _state.add(**is, cluster.cluster_tag());
                 }
