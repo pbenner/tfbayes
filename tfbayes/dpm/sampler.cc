@@ -75,7 +75,7 @@ gibbs_sampler_t::clone() const {
         return new gibbs_sampler_t(*this);
 }
 
-size_t
+bool
 gibbs_sampler_t::_gibbs_sample(const index_i& index) {
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element

@@ -126,9 +126,8 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
                 cluster_t& cluster = _state.get_free_cluster(subset.dpm_subset_tag());
 
                 for (dpm_subset_t::const_iterator is = subset.begin(); is != subset.end(); is++) {
-                        range_t range(**is, options.tfbs_length);
-                        _state[_state.bg_cluster_tag].remove_observations(range);
-                        _state[cluster.cluster_tag()].add_observations(range);
+                        _state.remove(**is, _state.bg_cluster_tag);
+                        _state.add(**is, cluster.cluster_tag());
                 }
         }
 
@@ -308,7 +307,6 @@ dpm_tfbs_t::likelihood() const {
                 const cluster_t& cluster = **it;
                 result += cluster.model().log_likelihood();
         }
-
         assert(!isnan(result));
 
         return result;

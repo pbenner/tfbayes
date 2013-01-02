@@ -58,7 +58,7 @@ public:
 protected:
         // private methods
         virtual bool _sample(size_t i, size_t n, bool is_burnin);
-        virtual size_t _gibbs_sample(const index_i& index);
+        virtual bool _gibbs_sample(const index_i& index);
         virtual size_t _gibbs_sample();
         // the mixture model
         mixture_model_t& _dpm;

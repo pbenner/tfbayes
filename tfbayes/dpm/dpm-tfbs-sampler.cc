@@ -55,7 +55,7 @@ dpm_tfbs_sampler_t::clone() const {
 // Gibbs samples
 ////////////////////////////////////////////////////////////////////////////////
 
-size_t
+bool
 dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp, const bool optimize) {
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
@@ -273,11 +273,11 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
 
         // call the standard hybrid sampler that first produces a
         // Gibbs sample and afterwards make a Metropolis-Hastings step
-        size_t s = _gibbs_sample(temp);
+        size_t s = _gibbs_sample(temp, false);
         _metropolis_sample(temp);
         // do a Gibbs block sampling step, i.e. go through all
         // clusters and try to merge them
-        _block_sample(temp);
+        _block_sample(temp, false);
         // we are done with sampling here, now process commands
         flockfile(stdout);
         cout << _name << ": "
@@ -348,21 +348,30 @@ dpm_tfbs_sampler_t::optimize(cluster_t& cluster) {
 
 void
 dpm_tfbs_sampler_t::optimize() {
-        bool tmp;
-        do {
-                tmp = false;
-                // block optimization
-                for (cl_iterator it = _state.begin(); it != _state.end(); it++) {
-                        tmp = optimize(**it) | tmp;
-                }
-                // gibbs optimization
-                if (_gibbs_sample(true) > 0) {
-                        tmp = true;
-                }
-        }
-        // stop only if nothing has changed
-        while (tmp);
+        // remove this
         _dpm.update_samples(_sampling_steps);
+        // print old posterior value
+        flockfile(stdout);
+        cout << _name << ": "
+             << "old posterior value: " << _dpm.posterior()
+             << endl;
+        fflush(stdout);
+        funlockfile(stdout);
+        // block optimization
+        for (cl_iterator it = _state.begin(); it != _state.end(); it++) {
+                optimize(**it);
+        }
+        // gibbs optimization
+        _gibbs_sample(1.0, true);
+        // save partition
+        _dpm.update_samples(_sampling_steps);
+        // output resulting posterior value
+        flockfile(stdout);
+        cout << _name << ": "
+             << "new posterior value: " << _dpm.posterior()
+             << endl;
+        fflush(stdout);
+        funlockfile(stdout);
 }
 
 // dpm_tfbs_pmcmc_t
