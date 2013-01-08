@@ -62,11 +62,6 @@ gamma_marginal_f(double * x, size_t dim, void * params)
         /* casted parameters */
         struct gamma_marginal_data* data = (gamma_marginal_data *)params;
 
-        /* copy pseudocounts */
-        // for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
-        //         alpha[i] = x[i];
-        // }
-
         /* lnbeta(n, a) - lnbeta(a) */
         result = exp(fast_lnbeta<data_tfbs_t::alphabet_size>(data->counts, x) -
                      fast_lnbeta<data_tfbs_t::alphabet_size>(x));
