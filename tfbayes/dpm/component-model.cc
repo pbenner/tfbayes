@@ -119,12 +119,6 @@ gamma_marginal(
                                   &result, &err);
         gsl_monte_miser_free(s);
 
-        // stdout
-        for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
-                cout << "counts[" << i << "]: " << counts[i] << endl;
-        }
-        cout << "result = " << result << endl;
-
         return result;
 }
 
