@@ -75,6 +75,10 @@ public:
                  const std::matrix<double>& alpha,
                  const sequence_data_t<data_tfbs_t::code_t>& data,
                  const sequence_data_t<cluster_tag_t>& cluster_assignments);
+         independence_background_t(
+                 const double k, const double g,
+                 const sequence_data_t<data_tfbs_t::code_t>& data,
+                 const sequence_data_t<cluster_tag_t>& cluster_assignments);
          independence_background_t(const independence_background_t& distribution);
         ~independence_background_t();
 
@@ -97,8 +101,6 @@ public:
         friend std::ostream& operator<< (std::ostream& o, const independence_background_t& pd);
 
 private:
-        counts_t alpha;
-
         const sequence_data_t<data_tfbs_t::code_t>& _data;
         const sequence_data_t<cluster_tag_t>& _cluster_assignments;
 
@@ -106,7 +108,7 @@ private:
 
         cluster_tag_t _bg_cluster_tag;
 
-        sequence_data_t<double> _precomputed_lnbeta;
+        sequence_data_t<double> _precomputed_marginal;
 };
 
 // Multinomial/Dirichlet Model

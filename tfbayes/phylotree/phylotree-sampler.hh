@@ -32,7 +32,7 @@
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/exception/exception.h>
 #include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/phylotree-distribution.hh>
+#include <tfbayes/utility/distribution.hh>
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/polynomial.hh>
 

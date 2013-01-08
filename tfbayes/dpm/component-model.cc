@@ -36,6 +36,98 @@
 
 using namespace std;
 
+// Methods to integrate out the pseudocounts of a Dirichlet
+// distribution, where we use a Gamma hyperprior
+////////////////////////////////////////////////////////////////////////////////
+
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_monte.h>
+#include <gsl/gsl_monte_plain.h>
+#include <gsl/gsl_monte_miser.h>
+#include <gsl/gsl_monte_vegas.h>
+#include <gsl/gsl_sf_psi.h>
+
+#include <tfbayes/utility/distribution.hh>
+
+struct gamma_marginal_data {
+        const data_tfbs_t::code_t counts;
+        const gamma_distribution_t distribution;
+};
+
+double
+gamma_marginal_f(double * x, size_t dim, void * params)
+{
+        /* store the result on normal scale */
+        double result;
+        /* casted parameters */
+        struct gamma_marginal_data* data = (gamma_marginal_data *)params;
+
+        /* copy pseudocounts */
+        // for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
+        //         alpha[i] = x[i];
+        // }
+
+        /* lnbeta(n, a) - lnbeta(a) */
+        result = exp(fast_lnbeta<data_tfbs_t::alphabet_size>(data->counts, x) -
+                     fast_lnbeta<data_tfbs_t::alphabet_size>(x));
+
+        /* multiply with gamma distribution */
+        for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
+                result *= data->distribution.pdf(x[i]);
+        }
+        return result;
+}
+
+/* use a gamma prior distribution for the Dirichlet pseudocounts to
+ * integrate them out (there is no closed form solution so we need to
+ * do this numerically) */
+double
+gamma_marginal(
+        const data_tfbs_t::code_t counts,
+        const double k, const double g)
+{
+        double xl[data_tfbs_t::alphabet_size];
+        double xu[data_tfbs_t::alphabet_size];
+        const gsl_rng_type *T;
+        gsl_rng *r;
+
+        size_t calls = 500000;
+        double result, err;
+
+        gsl_monte_function F;
+
+        struct gamma_marginal_data data = {
+                counts, gamma_distribution_t(k, g)
+        };
+
+        for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
+                xl[i] =   0.0;
+                xu[i] = 100.0;
+        }
+
+        F.f      = gamma_marginal_f;
+        F.dim    = data_tfbs_t::alphabet_size;
+        F.params = &data;
+     
+        gsl_rng_env_setup();
+     
+        T = gsl_rng_default;
+        r = gsl_rng_alloc(T);
+
+        gsl_monte_miser_state *s = gsl_monte_miser_alloc(data_tfbs_t::alphabet_size);
+        gsl_monte_miser_integrate(&F, xl, xu, data_tfbs_t::alphabet_size, calls, r, s,
+                                  &result, &err);
+        gsl_monte_miser_free(s);
+
+        // stdout
+        for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
+                cout << "counts[" << i << "]: " << counts[i] << endl;
+        }
+        cout << "result = " << result << endl;
+
+        return result;
+}
+
 // Independence Background Model
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,8 +139,9 @@ independence_background_t::independence_background_t(
           _cluster_assignments(cluster_assignments),
           _size(data_tfbs_t::alphabet_size),
           _bg_cluster_tag(0),
-          _precomputed_lnbeta(data.sizes(), 0)
+          _precomputed_marginal(data.sizes(), 0)
 {
+        data_tfbs_t::code_t alpha;
 
         assert(_alpha.size() == 1);
         assert(_alpha[0].size() == data_tfbs_t::alphabet_size);
@@ -57,24 +150,56 @@ independence_background_t::independence_background_t(
                 alpha[j] = _alpha[0][j];
         }
 
-        /* go through the data and precompute lnbeta(n + alpha) -
-         * lnbeta(alpha) */
+
+        /* go through the data and precompute
+         * lnbeta(n + alpha) - lnbeta(alpha) */
         for(size_t i = 0; i < _data.size(); i++) {
                 for(size_t j = 0; j < _data[i].size(); j++) {
-                        _precomputed_lnbeta[i][j] =
+                        _precomputed_marginal[i][j] =
                                   fast_lnbeta<data_tfbs_t::alphabet_size>(alpha, _data[i][j])
                                 - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha);
                 }
         }
 }
 
+/* This is an independence background model with Dirichlet
+ * prior and Gamma distributed pseudocounts. The pseudocounts
+ * are numerically integrated out. */
+independence_background_t::independence_background_t(
+        const double k, const double g,
+        const sequence_data_t<data_tfbs_t::code_t>& data,
+        const sequence_data_t<cluster_tag_t>& cluster_assignments)
+        : _data(data),
+          _cluster_assignments(cluster_assignments),
+          _size(data_tfbs_t::alphabet_size),
+          _bg_cluster_tag(0),
+          _precomputed_marginal(data.sizes(), 0)
+{
+        flockfile(stdout);
+        cout << "Precomputing background... ";
+        fflush(stdout);
+        funlockfile(stdout);
+
+        /* go through the data and precompute
+         * lnbeta(n + alpha) - lnbeta(alpha) */
+        for(size_t i = 0; i < _data.size(); i++) {
+                for(size_t j = 0; j < _data[i].size(); j++) {
+                        _precomputed_marginal[i][j] = gamma_marginal(_data[i][j], k, g);
+                }
+        }
+
+        flockfile(stdout);
+        cout << "done." << endl;
+        fflush(stdout);
+        funlockfile(stdout);
+}
+
 independence_background_t::independence_background_t(const independence_background_t& distribution)
-        : alpha (distribution.alpha),
-          _data(distribution._data),
+        : _data(distribution._data),
           _cluster_assignments(distribution._cluster_assignments),
           _size(distribution._size),
           _bg_cluster_tag(distribution._bg_cluster_tag),
-          _precomputed_lnbeta(distribution._precomputed_lnbeta)
+          _precomputed_marginal(distribution._precomputed_marginal)
 {
 }
 
@@ -123,9 +248,7 @@ double independence_background_t::log_predictive(const range_t& range) {
 
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                // result += lnbeta_log(alpha, _data[index])
-                //         - lnbeta_log(alpha);
-                result += _precomputed_lnbeta[index];
+                result += _precomputed_marginal[index];
         }
 
         return result;
@@ -148,8 +271,7 @@ double independence_background_t::log_predictive(const vector<range_t>& range_se
                         /* all positions in the alignment are fully
                          * independent, hence we do not need to sum
                          * any counts */
-                        result += fast_lnbeta<data_tfbs_t::alphabet_size>(alpha, _data[index])
-                                - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha);
+                        result += _precomputed_marginal[index];
                 }
         }
 
@@ -168,9 +290,7 @@ double independence_background_t::log_likelihood() const {
                 for(size_t j = 0; j < _cluster_assignments[i].size(); j++) {
                         if (_cluster_assignments[i][j] == _bg_cluster_tag) {
                                 const seq_index_t index(i, j);
-                                // result += lnbeta_log(alpha, _data[index])
-                                //         - lnbeta_log(alpha);
-                                result += _precomputed_lnbeta[index];
+                                result += _precomputed_marginal[index];
                         }
                 }
         }

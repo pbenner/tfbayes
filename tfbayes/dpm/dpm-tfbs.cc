@@ -65,6 +65,14 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
                 _state.bg_cluster_tag = _state.add_cluster(bg);
                 bg->set_bg_cluster_tag(_state.bg_cluster_tag);
         }
+        else if (options.background_model == "independence-dirichlet-gamma" || options.background_model == "") {
+                /* every position in the background is fully
+                 * independet, where the Dirichlet pseudocounts
+                 * are integrated out */
+                independence_background_t* bg = new independence_background_t(2.0, 2.0, _data, _state.cluster_assignments);
+                _state.bg_cluster_tag = _state.add_cluster(bg);
+                bg->set_bg_cluster_tag(_state.bg_cluster_tag);
+        }
         else if (options.background_model == "dirichlet") {
                 /* single dirichlet-compound distribution for all
                  * nucleotides in the background */

@@ -7,6 +7,7 @@ otherincludedir = $(includedir)/tfbayes/utility
 otherinclude_HEADERS = \
 	abysmal-stack.hh \
 	clonable.hh \
+	distribution.hh \
 	linalg.h \
 	logarithmetic.h \
 	polynomial.hh \

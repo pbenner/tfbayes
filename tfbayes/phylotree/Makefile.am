@@ -59,7 +59,6 @@ libtfbayes_phylotree_la_SOURCES = \
 	phylotree.hh \
 	phylotree-approximate.hh \
 	phylotree-expand.hh \
-	phylotree-distribution.hh \
 	phylotree-gradient.hh \
 	phylotree-gradient-ascent.hh \
 	phylotree-polynomial.hh \

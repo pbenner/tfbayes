@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef PHYLOTREE_DISTRIBUTION_HH
-#define PHYLOTREE_DISTRIBUTION_HH
+#ifndef DISTRIBUTION_HH
+#define DISTRIBUTION_HH
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -25,13 +25,20 @@
 #include <gsl/gsl_sf_gamma.h>
 #include <gsl/gsl_randist.h>
 
-class gamma_distribution_t {
+class distribution_t {
 public:
-        gamma_distribution_t(double r, double lambda)
+        virtual double pdf(const double d) const = 0;
+        virtual double sample(const gsl_rng* rng) const = 0;
+        virtual double log_gradient(const double d) const = 0;
+};
+
+class gamma_distribution_t : public distribution_t {
+public:
+        gamma_distribution_t(const double r, const double lambda)
                 : r(r), r_gamma(gsl_sf_gamma(r)), lambda(lambda),
                   lambda_pow_r(pow(lambda, r)) { }
 
-        double pdf(double d) const {
+        double pdf(const double d) const {
                 if (d > 0.0) {
                         return 1.0/lambda_pow_r * 1.0/r_gamma * pow(d, r-1.0) * exp(-d/lambda);
                 }
@@ -42,7 +49,7 @@ public:
         double sample(const gsl_rng* rng) const {
                 return gsl_ran_gamma(rng, r, lambda);
         }
-        double log_gradient(double d) const {
+        double log_gradient(const double d) const {
                 return (r-1.0)/d - 1.0/lambda;
         }
 
@@ -52,4 +59,4 @@ public:
         double lambda_pow_r;
 };
 
-#endif /* PHYLOTREE_DISTRIBUTION_HH */
+#endif /* DISTRIBUTION_HH */
