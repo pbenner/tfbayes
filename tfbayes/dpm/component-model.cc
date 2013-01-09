@@ -23,6 +23,8 @@
 #include <string.h>
 #include <sstream>
 #include <vector>
+#include <iostream>
+#include <iomanip>
 
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_linalg.h>
@@ -164,22 +166,22 @@ independence_background_t::independence_background_t(
           _bg_cluster_tag(0),
           _precomputed_marginal(data.sizes(), 0)
 {
-        flockfile(stdout);
-        cout << "Precomputing background... ";
-        fflush(stdout);
-        funlockfile(stdout);
-
         /* go through the data and precompute
          * lnbeta(n + alpha) - lnbeta(alpha) */
         for(size_t i = 0; i < _data.size(); i++) {
+                flockfile(stdout);
+                cout.precision(1);
+                cout << "\rPrecomputing background... " << setw(5) << fixed
+                     << (i+1.0)/(double)_data.size()    << "%" << flush;
+                funlockfile(stdout);
+
                 for(size_t j = 0; j < _data[i].size(); j++) {
                         _precomputed_marginal[i][j] = gamma_marginal(_data[i][j], k, g);
                 }
         }
 
         flockfile(stdout);
-        cout << "done." << endl;
-        fflush(stdout);
+        cout << "\rPrecomputing background... done." << endl << flush;
         funlockfile(stdout);
 }
 
