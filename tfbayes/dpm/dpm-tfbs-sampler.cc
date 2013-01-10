@@ -386,11 +386,17 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
           _server(NULL),
           _bt(NULL),
           _sequences(sequences) {
+
+        const dpm_tfbs_t dpm_tfbs(options, _data);
+
         for (size_t i = 0; i < _size; i++) {
                 std::stringstream ss; ss << "Sampler " << i+1;
                 save_queue_t<command_t*>* command_queue = new save_queue_t<command_t*>();
                 _command_queue.push_back(command_queue);
-                _gdpm[i]       = new dpm_tfbs_t(options, _data);
+                // clone dpm_tfbs instead of constructing a new one
+                // for every sampler; this prevents that any
+                // preprocessing is done several times
+                _gdpm[i]       = dpm_tfbs.clone();
                 _population[i] = new dpm_tfbs_sampler_t(options,
                                                         *_gdpm[i],
                                                         _gdpm[i]->state(),

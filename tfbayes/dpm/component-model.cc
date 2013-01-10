@@ -52,7 +52,7 @@ using namespace std;
 #include <tfbayes/utility/distribution.hh>
 
 struct gamma_marginal_data {
-        const data_tfbs_t::code_t counts;
+        const data_tfbs_t::code_t& counts;
         const gamma_distribution_t distribution;
 };
 
@@ -80,7 +80,7 @@ gamma_marginal_f(double * x, size_t dim, void * params)
  * do this numerically) */
 double
 gamma_marginal(
-        const data_tfbs_t::code_t counts,
+        const data_tfbs_t::code_t& counts,
         const double k, const double g)
 {
         double xl[data_tfbs_t::alphabet_size];
@@ -117,6 +117,63 @@ gamma_marginal(
         gsl_monte_miser_free(s);
 
         return result;
+}
+
+#include <boost/unordered_map.hpp> 
+
+namespace boost {
+        static inline
+        size_t hash_value(const data_tfbs_t::code_t& counts)
+        {
+                boost::hash<double> hasher;
+                double result = 0.0;
+
+                for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
+                        result += hasher(counts[i]);
+                }
+
+                return result;
+        }
+}
+
+bool operator==(const data_tfbs_t::code_t& counts1, const data_tfbs_t::code_t& _counts2)
+{
+        data_tfbs_t::code_t counts2(_counts2);
+
+        for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
+                bool permutation = false;
+                for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
+                        if (counts1[i] == counts2[j]) {
+                                // yeah, this value exists
+                                permutation = true;
+                                // make sure this value isn't used twice
+                                counts2[i]  = -1.0;
+                        }
+                }
+                if (!permutation) {
+                        return false;
+                }
+        }
+        return true;
+}
+
+double
+hashed_gamma_marginal(
+        const data_tfbs_t::code_t& counts,
+        const double k, const double g,
+        boost::unordered_map<data_tfbs_t::code_t, double>& map)
+{
+        boost::unordered_map<data_tfbs_t::code_t, double>::iterator it = map.find(counts);
+
+        if (it != map.end()) {
+                return it->second;
+        }
+        else {
+                double result = gamma_marginal(counts, k, g);
+                map[counts]   = result;
+
+                return result;
+        }
 }
 
 // Independence Background Model
@@ -166,22 +223,29 @@ independence_background_t::independence_background_t(
           _bg_cluster_tag(0),
           _precomputed_marginal(data.sizes(), 0)
 {
+        boost::unordered_map<data_tfbs_t::code_t, double> map;
+
         /* go through the data and precompute
          * lnbeta(n + alpha) - lnbeta(alpha) */
         for(size_t i = 0; i < _data.size(); i++) {
-                flockfile(stdout);
-                cout.precision(1);
-                cout << "\rPrecomputing background... " << setw(5) << fixed
-                     << (i+1.0)/(double)_data.size()    << "%" << flush;
-                funlockfile(stdout);
-
                 for(size_t j = 0; j < _data[i].size(); j++) {
-                        _precomputed_marginal[i][j] = gamma_marginal(_data[i][j], k, g);
+                        /* compute percentage by linearly
+                         * interpolating two values */
+                        const double p = j/(double)_data[i].size();
+                        const double q = (p*(i+1.0) + (1.0-p)*i)/(double)_data.size();
+
+                        flockfile(stdout);
+                        cout.precision(2);
+                        cout << "\rPrecomputing background... " << setw(6) << fixed
+                             << q*100.0 << "%"                  << flush;
+                        funlockfile(stdout);
+
+                        _precomputed_marginal[i][j] = hashed_gamma_marginal(_data[i][j], k, g, map);
                 }
         }
 
         flockfile(stdout);
-        cout << "\rPrecomputing background... done." << endl << flush;
+        cout << "\rPrecomputing background...   done." << endl << flush;
         funlockfile(stdout);
 }
 
