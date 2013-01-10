@@ -30,9 +30,7 @@ dpm_tfbs_state_t::dpm_tfbs_state_t(
         size_t tfbs_length,
         cluster_tag_t bg_cluster_tag,
         const data_tfbs_t& data)
-        : state_t(cluster_assignments),
-          gibbs_state_t(cluster_assignments),
-          cluster_assignments(sizes, -1),
+        : gibbs_state_t(sequence_data_t<cluster_tag_t>(sizes, -1)),
           // starting positions of tfbs
           tfbs_start_positions(sizes, 0),
           // number of transcription factor binding sites
@@ -76,7 +74,7 @@ dpm_tfbs_state_t::valid_tfbs_position(const index_i& index) const
                 if (operator[](index) != bg_cluster_tag) {
                         return false;
                 }
-                if (cluster_assignments[seq_index_t(sequence, position)] == -1) {
+                if (cluster_assignments()[seq_index_t(sequence, position)] == -1) {
                         return false;
                 }
                 // check if there is a tfbs starting within the word
@@ -84,7 +82,7 @@ dpm_tfbs_state_t::valid_tfbs_position(const index_i& index) const
                         if (tfbs_start_positions[seq_index_t(sequence, position+i)] == 1) {
                                 return false;
                         }
-                        if (cluster_assignments[seq_index_t(sequence, position+i)] == -1) {
+                        if (cluster_assignments()[seq_index_t(sequence, position+i)] == -1) {
                                 return false;
                         }
                 }
@@ -132,7 +130,7 @@ dpm_tfbs_state_t::save(cluster_tag_t cluster_tag) {
                 delete(cluster_bg_p);
         }
         num_tfbs_p = num_tfbs;
-        cluster_assignments_p  = cluster_assignments;
+        cluster_assignments_p  = cluster_assignments();
         tfbs_start_positions_p = tfbs_start_positions;
         cluster_p    = new cluster_t(operator[](cluster_tag));
         cluster_bg_p = new cluster_t(operator[](bg_cluster_tag));
@@ -141,8 +139,8 @@ dpm_tfbs_state_t::save(cluster_tag_t cluster_tag) {
 void
 dpm_tfbs_state_t::restore() {
         num_tfbs = num_tfbs_p;
-        cluster_assignments  = cluster_assignments_p;
-        tfbs_start_positions = tfbs_start_positions_p;
+        cluster_assignments() = cluster_assignments_p;
+        tfbs_start_positions  = tfbs_start_positions_p;
         operator[](cluster_p->cluster_tag())    = *cluster_p;
         operator[](cluster_bg_p->cluster_tag()) = *cluster_bg_p;
 }

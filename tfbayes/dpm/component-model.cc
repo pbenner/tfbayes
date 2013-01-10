@@ -183,8 +183,8 @@ independence_background_t::independence_background_t(
         const matrix<double>& _alpha,
         const sequence_data_t<data_tfbs_t::code_t>& data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments)
-        : _data(data),
-          _cluster_assignments(cluster_assignments),
+        : component_model_t(cluster_assignments),
+          _data(data),
           _size(data_tfbs_t::alphabet_size),
           _bg_cluster_tag(0),
           _precomputed_marginal(data.sizes(), 0)
@@ -217,8 +217,8 @@ independence_background_t::independence_background_t(
         const double k, const double g,
         const sequence_data_t<data_tfbs_t::code_t>& data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments)
-        : _data(data),
-          _cluster_assignments(cluster_assignments),
+        : component_model_t(cluster_assignments),
+          _data(data),
           _size(data_tfbs_t::alphabet_size),
           _bg_cluster_tag(0),
           _precomputed_marginal(data.sizes(), 0)
@@ -250,8 +250,8 @@ independence_background_t::independence_background_t(
 }
 
 independence_background_t::independence_background_t(const independence_background_t& distribution)
-        : _data(distribution._data),
-          _cluster_assignments(distribution._cluster_assignments),
+        : component_model_t(distribution),
+          _data(distribution._data),
           _size(distribution._size),
           _bg_cluster_tag(distribution._bg_cluster_tag),
           _precomputed_marginal(distribution._precomputed_marginal)
@@ -341,9 +341,9 @@ double independence_background_t::log_likelihood() const {
 
         /* counts contains the data count statistic
          * and the pseudo counts alpha */
-        for(size_t i = 0; i < _cluster_assignments.size(); i++) {
-                for(size_t j = 0; j < _cluster_assignments[i].size(); j++) {
-                        if (_cluster_assignments[i][j] == _bg_cluster_tag) {
+        for(size_t i = 0; i < cluster_assignments().size(); i++) {
+                for(size_t j = 0; j < cluster_assignments()[i].size(); j++) {
+                        if (cluster_assignments()[i][j] == _bg_cluster_tag) {
                                 const seq_index_t index(i, j);
                                 result += _precomputed_marginal[index];
                         }
@@ -366,8 +366,11 @@ independence_background_t::set_bg_cluster_tag(cluster_tag_t bg_cluster_tag) {
 // Multinomial/Dirichlet Model
 ////////////////////////////////////////////////////////////////////////////////
 
-product_dirichlet_t::product_dirichlet_t(const matrix<double>& _alpha, const sequence_data_t<data_tfbs_t::code_t>& data)
-        : _data(data),
+product_dirichlet_t::product_dirichlet_t(
+        const matrix<double>& _alpha,
+        const sequence_data_t<data_tfbs_t::code_t>& data)
+        : component_model_t(),
+          _data(data),
           _size1(_alpha.size()),
           _size2(_alpha[0].size())
 {
@@ -382,7 +385,8 @@ product_dirichlet_t::product_dirichlet_t(const matrix<double>& _alpha, const seq
 }
 
 product_dirichlet_t::product_dirichlet_t(const product_dirichlet_t& distribution)
-        : alpha (distribution.alpha),
+        : component_model_t(distribution),
+          alpha (distribution.alpha),
           counts(distribution.counts),
           _data(distribution._data),
           _size1(distribution._size1),
@@ -535,8 +539,8 @@ markov_chain_mixture_t::markov_chain_mixture_t(
         const sequence_data_t<data_tfbs_t::code_t>& data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
         cluster_tag_t cluster_tag)
-        : _data(data),
-          _cluster_assignments(cluster_assignments),
+        : component_model_t(cluster_assignments),
+          _data(data),
           _cluster_tag(cluster_tag),
           _max_context(options.background_context),
           _alphabet_size(alphabet_size)
@@ -590,11 +594,11 @@ markov_chain_mixture_t::markov_chain_mixture_t(
 }
 
 markov_chain_mixture_t::markov_chain_mixture_t(const markov_chain_mixture_t& distribution)
-        : _length(distribution._length),
+        : component_model_t(distribution),
+          _length(distribution._length),
           _weights(distribution._weights->clone()),
           _data(distribution._data),
           _context(distribution._context),
-          _cluster_assignments(distribution._cluster_assignments),
           _cluster_tag(distribution._cluster_tag),
           _max_context(distribution._max_context),
           _alphabet_size(distribution._alphabet_size)
@@ -635,7 +639,7 @@ markov_chain_mixture_t::max_from_context(const range_t& range) const
         const size_t position = range.index()[1];
         ssize_t from = position;
 
-        for (size_t i = 0; i < _max_context && from > 0 && _cluster_assignments[seq_index_t(sequence, from-1)] == _cluster_tag; i++) {
+        for (size_t i = 0; i < _max_context && from > 0 && cluster_assignments()[seq_index_t(sequence, from-1)] == _cluster_tag; i++) {
                 from--;
         }
 
@@ -651,7 +655,7 @@ markov_chain_mixture_t::max_to_context(const range_t& range) const
         const ssize_t sequence_length = _data.size(sequence);
         ssize_t to = position+length-1;
 
-        for (size_t i = 0; i < _max_context && to < sequence_length-1 && _cluster_assignments[seq_index_t(sequence, to + 1)] == _cluster_tag; i++) {
+        for (size_t i = 0; i < _max_context && to < sequence_length-1 && cluster_assignments()[seq_index_t(sequence, to + 1)] == _cluster_tag; i++) {
                 to++;
         }
 
@@ -823,7 +827,8 @@ bivariate_normal_t::bivariate_normal_t(
         const gsl_matrix* Sigma_0,
         const gsl_vector* mu_0,
         const data_t<vector<double> >& data)
-        : _N(0), _dimension(2), _data(data)
+        : component_model_t(),
+          _N(0), _dimension(2), _data(data)
 {
         // alloc tmp
         _inv_tmp  = gsl_matrix_alloc(_dimension, _dimension);
@@ -860,7 +865,8 @@ bivariate_normal_t::bivariate_normal_t(
 }
 
 bivariate_normal_t::bivariate_normal_t(const bivariate_normal_t& bn)
-        : _N(bn._N), _dimension(bn._dimension), _data(bn._data)
+        : component_model_t(bn),
+          _N(bn._N), _dimension(bn._dimension), _data(bn._data)
 {
         // alloc tmp
         _inv_tmp  = gsl_matrix_alloc(_dimension, _dimension);

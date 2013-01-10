@@ -37,10 +37,8 @@ DPM_Gaussian::DPM_Gaussian(
         gsl_matrix* Sigma_0,
         gsl_vector* mu_0,
         const data_gaussian_t& data)
-        : state_t(_cluster_assignments),
-          gibbs_state_t(_cluster_assignments),
+        : gibbs_state_t(data_t<cluster_tag_t>(_data.elements(), -1)),
           _data(data),
-          _cluster_assignments(_data.elements(), -1),
           _state(*this),
           // strength parameter for the dirichlet process
           alpha(alpha)

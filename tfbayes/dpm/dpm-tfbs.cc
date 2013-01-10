@@ -61,7 +61,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
                 /* every position in the background is fully
                  * independet, this give more flexibility to the
                  * prior pseudocounts */
-                independence_background_t* bg = new independence_background_t(options.background_alpha, _data, _state.cluster_assignments);
+                independence_background_t* bg = new independence_background_t(options.background_alpha, _data, _state.cluster_assignments());
                 _state.bg_cluster_tag = _state.add_cluster(bg);
                 bg->set_bg_cluster_tag(_state.bg_cluster_tag);
         }
@@ -69,7 +69,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
                 /* every position in the background is fully
                  * independet, where the Dirichlet pseudocounts
                  * are integrated out */
-                independence_background_t* bg = new independence_background_t(2.0, 2.0, _data, _state.cluster_assignments);
+                independence_background_t* bg = new independence_background_t(2.0, 2.0, _data, _state.cluster_assignments());
                 _state.bg_cluster_tag = _state.add_cluster(bg);
                 bg->set_bg_cluster_tag(_state.bg_cluster_tag);
         }
@@ -81,7 +81,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
         }
         else if (options.background_model == "markov chain mixture") {
                 assert(options.background_context >= 0);
-                markov_chain_mixture_t* bg = new markov_chain_mixture_t(data_tfbs_t::alphabet_size, options, _data, _state.cluster_assignments, 0);
+                markov_chain_mixture_t* bg = new markov_chain_mixture_t(data_tfbs_t::alphabet_size, options, _data, _state.cluster_assignments(), 0);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
         }
         else {
@@ -115,13 +115,13 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
         ////////////////////////////////////////////////////////////////////////////////
         // set the process prior
         if (options.process_prior == "pitman-yor process" || options.process_prior == "") {
-                _process_prior = new pitman_yor_prior(_state, options.alpha, options.discount, _state.bg_cluster_tag);
+                _process_prior = new pitman_yor_prior(options.alpha, options.discount, _state.bg_cluster_tag);
         }
         else if (options.process_prior == "uniform process") {
-                _process_prior = new uniform_prior(_state, options.alpha);
+                _process_prior = new uniform_prior(options.alpha);
         }
         else if (options.process_prior == "poppe process") {
-                _process_prior = new poppe_prior(_state);
+                _process_prior = new poppe_prior();
         }
         else {
                 cerr << "Unknown prior process." << endl;
@@ -169,8 +169,7 @@ dpm_tfbs_t::dpm_tfbs_t(const dpm_tfbs_t& dpm)
           // process prios
           _process_prior(dpm._process_prior->clone()),
           _construct_graph(dpm._construct_graph)
-{
-}
+{ }
 
 dpm_tfbs_t::~dpm_tfbs_t() {
         delete(_process_prior);
@@ -195,7 +194,7 @@ dpm_tfbs_t::valid_for_sampling(const index_i& index) const
                 if (_state[index] != _state.bg_cluster_tag) {
                         return false;
                 }
-                if (_state.cluster_assignments[seq_index_t(sequence, position)] == -1) {
+                if (_state.cluster_assignments()[seq_index_t(sequence, position)] == -1) {
                         return false;
                 }
                 // check if there is a tfbs starting within the word
@@ -203,7 +202,7 @@ dpm_tfbs_t::valid_for_sampling(const index_i& index) const
                         if (_state.tfbs_start_positions[seq_index_t(sequence, position+i)] == 1) {
                                 return false;
                         }
-                        if (_state.cluster_assignments[seq_index_t(sequence, position+i)] == -1) {
+                        if (_state.cluster_assignments()[seq_index_t(sequence, position+i)] == -1) {
                                 return false;
                         }
                 }
@@ -250,7 +249,7 @@ dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_
                         // mixture component 2: dirichlet process
                         // single binding site:
                         // lambda 1 ... 1 [tfbs_length times]
-                        sum = logadd(sum, (_lambda_log + _process_prior->log_predictive(cluster) + cluster.model().log_predictive(range))/temp);
+                        sum = logadd(sum, (_lambda_log + _process_prior->log_predictive(cluster, _state) + cluster.model().log_predictive(range))/temp);
                 }
                 log_weights[i] = sum;
                 i++;
@@ -260,7 +259,7 @@ dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_
         for (i = 0; i < baseline_n; i++) {
                 cluster_t& cluster = _state.get_free_cluster(_baseline_tags[i]);
                 cluster_tags[mixture_n+i] = cluster.cluster_tag();
-                sum = logadd(sum, (_lambda_log + _process_prior->log_predictive(cluster) + log(_baseline_weights[i]) +
+                sum = logadd(sum, (_lambda_log + _process_prior->log_predictive(cluster, _state) + log(_baseline_weights[i]) +
                                    cluster.model().log_predictive(range))/temp);
                 log_weights[mixture_n+i] = sum;
         }
@@ -294,7 +293,7 @@ dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights
                         // mixture component 2: dirichlet process
                         // single binding site:
                         // lambda 1 ... 1 [tfbs_length times]
-                        sum = logadd(sum, (n*_lambda_log + n*_process_prior->log_predictive(cluster) + cluster.model().log_predictive(range_set))/temp);
+                        sum = logadd(sum, (n*_lambda_log + n*_process_prior->log_predictive(cluster, _state) + cluster.model().log_predictive(range_set))/temp);
                 }
                 log_weights[i] = sum;
                 i++;
@@ -304,7 +303,7 @@ dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights
         for (i = 0; i < baseline_n; i++) {
                 cluster_t& cluster = _state.get_free_cluster(_baseline_tags[i]);
                 cluster_tags[mixture_n+i] = cluster.cluster_tag();
-                sum = logadd(sum, (n*_lambda_log + n*_process_prior->log_predictive(cluster) + log(_baseline_weights[i]) +
+                sum = logadd(sum, (n*_lambda_log + n*_process_prior->log_predictive(cluster, _state) + log(_baseline_weights[i]) +
                                    cluster.model().log_predictive(range_set))/temp);
                 log_weights[mixture_n+i] = sum;
         }
@@ -336,7 +335,7 @@ dpm_tfbs_t::posterior() const {
         // tfbs prior
         result += _state.num_tfbs*_lambda_log;
         // process prior
-        result += _process_prior->joint();
+        result += _process_prior->joint(_state);
 
         assert(!isnan(result));
 
@@ -427,13 +426,13 @@ dpm_tfbs_t::state() const {
 
 ostream& operator<< (ostream& o, const dpm_tfbs_t& dpm)
 {
-        o << "Cluster Assignments:"     << endl;
-        o << dpm._state.cluster_assignments   << endl;
+        o << "Cluster Assignments:"           << endl;
+        o << dpm._state.cluster_assignments() << endl;
 
-        o << "TFBS Start Positions:"    << endl;
+        o << "TFBS Start Positions:"          << endl;
         o << dpm._state.tfbs_start_positions  << endl;
 
-        o << "Clusters:"                << endl;
+        o << "Clusters:"                      << endl;
         o << dpm._state;
 
         return o;

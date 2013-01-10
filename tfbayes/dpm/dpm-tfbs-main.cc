@@ -61,7 +61,7 @@ typedef struct _options_t {
                   lambda(0.01),
                   construct_graph(false),
                   process_prior("pitman-yor process"),
-                  background_model("independence-dirichlet"),
+                  background_model("independence-dirichlet-gamma"),
                   background_alpha(1),
                   background_context(2),
                   background_weights("entropy"),

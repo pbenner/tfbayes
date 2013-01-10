@@ -23,14 +23,17 @@
 
 #include <tfbayes/dpm/dpm-tfbs-prior.hh>
 
+using namespace std;
+
 // Pitman-Yor prior
 ////////////////////////////////////////////////////////////////////////////////
 
 pitman_yor_prior::pitman_yor_prior(
-        const dpm_tfbs_state_t& state,
         double alpha, double discount,
         cluster_tag_t bg_cluster_tag)
-        : state(state), alpha(alpha), discount(discount),
+        : dpm_tfbs_prior_t(),
+          alpha(alpha),
+          discount(discount),
           bg_cluster_tag(bg_cluster_tag)
 {}
 
@@ -40,7 +43,7 @@ pitman_yor_prior::clone() const {
 }
 
 double
-pitman_yor_prior::log_predictive(const cluster_t& cluster) const
+pitman_yor_prior::log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state) const
 {
         const double K = state.size()-1;
 
@@ -53,14 +56,14 @@ pitman_yor_prior::log_predictive(const cluster_t& cluster) const
 }
 
 double
-pitman_yor_prior::joint() const
+pitman_yor_prior::joint(const dpm_tfbs_state_t& state) const
 {
         const double N = state.num_tfbs;
 
         double sum = gsl_sf_lngamma(alpha) - gsl_sf_lngamma(N + alpha);
 
         for (cl_iterator it = state.begin(); it != state.end(); it++) {
-                cluster_t& cluster = **it;
+                const cluster_t& cluster = **it;
                 if (cluster.cluster_tag() != bg_cluster_tag) {
                         sum += gsl_sf_lngamma(cluster.size());
                 }
@@ -72,9 +75,9 @@ pitman_yor_prior::joint() const
 // Uniform prior
 ////////////////////////////////////////////////////////////////////////////////
 
-uniform_prior::uniform_prior(
-        const dpm_tfbs_state_t& state, double alpha)
-        : state(state), alpha(alpha)
+uniform_prior::uniform_prior(double alpha)
+        : dpm_tfbs_prior_t(),
+          alpha(alpha)
 {}
 
 uniform_prior*
@@ -83,7 +86,7 @@ uniform_prior::clone() const {
 }
 
 double
-uniform_prior::log_predictive(const cluster_t& cluster) const
+uniform_prior::log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state) const
 {
         const double K = state.size()-1;
 
@@ -96,7 +99,7 @@ uniform_prior::log_predictive(const cluster_t& cluster) const
 }
 
 double
-uniform_prior::joint() const
+uniform_prior::joint(const dpm_tfbs_state_t& state) const
 {
         return 0;
 }
@@ -104,9 +107,8 @@ uniform_prior::joint() const
 // Poppe prior
 ////////////////////////////////////////////////////////////////////////////////
 
-poppe_prior::poppe_prior(
-        const dpm_tfbs_state_t& state)
-        : state(state)
+poppe_prior::poppe_prior()
+        : dpm_tfbs_prior_t()
 {}
 
 poppe_prior*
@@ -115,7 +117,7 @@ poppe_prior::clone() const {
 }
 
 double
-poppe_prior::log_predictive(const cluster_t& cluster) const
+poppe_prior::log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state) const
 {
         const double K = state.size()-1;
         const double N = state.num_tfbs;
@@ -142,7 +144,7 @@ poppe_prior::log_predictive(const cluster_t& cluster) const
 }
 
 double
-poppe_prior::joint() const
+poppe_prior::joint(const dpm_tfbs_state_t& state) const
 {
         return 0;
 }

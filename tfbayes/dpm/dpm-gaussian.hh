@@ -42,10 +42,6 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-              cluster_t& operator[](cluster_tag_t c)            { return _state[c]; }
-        const cluster_t& operator[](cluster_tag_t c)      const { return _state[c]; }
-         cluster_tag_t   operator[](const index_i& index) const { return _cluster_assignments[index]; }
-
         friend std::ostream& operator<<(std::ostream& o, const DPM_Gaussian& dpm);
 
         // methods
@@ -86,7 +82,6 @@ private:
 
         // data and clusters
         const data_gaussian_t& _data;
-        data_t<cluster_tag_t> _cluster_assignments;
         mixture_state_t& _state;
 
         // parameters

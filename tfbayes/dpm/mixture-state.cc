@@ -29,9 +29,9 @@
 
 using namespace std;
 
-mixture_state_t::mixture_state_t(data_t<cluster_tag_t>& cluster_assignments)
+mixture_state_t::mixture_state_t(const data_t<cluster_tag_t>& cluster_assignments)
         : used_clusters_size(0), free_clusters_size(0),
-          cluster_assignments(cluster_assignments)
+          _cluster_assignments(cluster_assignments.clone())
 {
 }
 
@@ -46,16 +46,20 @@ mixture_state_t::~mixture_state_t() {
              it != baseline_models.end(); it++) {
                 delete(it->second);
         }
+        delete(_cluster_assignments);
 }
 
 mixture_state_t::mixture_state_t(const mixture_state_t& cm)
         : used_clusters_size(cm.used_clusters_size),
           free_clusters_size(cm.free_clusters_size),
-          cluster_assignments(cm.cluster_assignments)
+          _cluster_assignments(cm._cluster_assignments->clone())
 {
+        cout << "MIXTURE STATE COPY CONSTRUCTOR CALLED" << endl;
+
         for (size_t i = 0; i < cm.clusters.size(); i++) {
                 cluster_t* c = new cluster_t(*cm.clusters[i]);
                 c->set_observer(this);
+                c->model().set_cluster_assignments(*_cluster_assignments);
                 clusters.push_back(c);
                 if (c->size() == 0 && c->destructible()) {
                         free_clusters.push_back(c);
@@ -67,6 +71,7 @@ mixture_state_t::mixture_state_t(const mixture_state_t& cm)
         for (map<baseline_tag_t, component_model_t*>::const_iterator it = cm.baseline_models.begin();
              it != cm.baseline_models.end(); it++) {
                 baseline_models[it->first] = it->second->clone();
+                baseline_models[it->first]->set_cluster_assignments(*_cluster_assignments);
         }
 }
 
@@ -160,7 +165,7 @@ void
 mixture_state_t::update(Observed<cluster_event_t>* observed, cluster_event_t event, const range_t& range)
 {
         cluster_t* cluster = (cluster_t*)observed;
-        iterator_t<cluster_tag_t> iterator = cluster_assignments[range];
+        iterator_t<cluster_tag_t> iterator = cluster_assignments()[range];
 
         switch (event) {
         case cluster_event_add_word:

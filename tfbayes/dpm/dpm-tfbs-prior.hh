@@ -32,25 +32,23 @@ public:
 
         dpm_tfbs_prior_t* clone() const = 0;
 
-        virtual double log_predictive(const cluster_t& cluster) const = 0;
-        virtual double joint() const = 0;
+        virtual double log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state) const = 0;
+        virtual double joint(const dpm_tfbs_state_t& state) const = 0;
 };
 
 class pitman_yor_prior : public dpm_tfbs_prior_t {
 public:
-        pitman_yor_prior(const dpm_tfbs_state_t& state,
-                         double alpha, double discount,
+        pitman_yor_prior(double alpha, double discount,
                          cluster_tag_t bg_cluster_tag);
 
         pitman_yor_prior* clone() const;
 
-        double log_predictive(const cluster_t& cluster) const;
-        double joint() const;
+        double log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state) const;
+        double joint(const dpm_tfbs_state_t& state) const;
 
-private:
+protected:
         typedef mixture_state_t::const_iterator cl_iterator;
 
-        const dpm_tfbs_state_t& state;
         const double alpha;
         const double discount;
         const cluster_tag_t bg_cluster_tag;
@@ -58,30 +56,25 @@ private:
 
 class uniform_prior : public dpm_tfbs_prior_t {
 public:
-        uniform_prior(const dpm_tfbs_state_t& state,
-                      double alpha);
+        uniform_prior(double alpha);
 
         uniform_prior* clone() const;
 
-        double log_predictive(const cluster_t& cluster) const;
-        double joint() const;
+        double log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state) const;
+        double joint(const dpm_tfbs_state_t& state) const;
 
-private:
-        const dpm_tfbs_state_t& state;
+protected:
         const double alpha;
 };
 
 class poppe_prior : public dpm_tfbs_prior_t {
 public:
-        poppe_prior(const dpm_tfbs_state_t& state);
+        poppe_prior();
 
         poppe_prior* clone() const;
 
-        double log_predictive(const cluster_t& cluster) const;
-        double joint() const;
-
-private:
-        const dpm_tfbs_state_t& state;
+        double log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state) const;
+        double joint(const dpm_tfbs_state_t& state) const;
 };
 
 #endif /* DPM_TFBS_PRIOR_HH */

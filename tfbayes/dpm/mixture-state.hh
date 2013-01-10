@@ -38,7 +38,7 @@
 
 class mixture_state_t : public Observer<cluster_event_t> {
 public:
-         mixture_state_t(data_t<cluster_tag_t>& cluster_assignments);
+         mixture_state_t(const data_t<cluster_tag_t>& cluster_assignments);
          mixture_state_t(const mixture_state_t& cm);
         ~mixture_state_t();
 
@@ -60,7 +60,7 @@ public:
         ////////////////////////////////////////////////////////////////////////
         __inline__       cluster_t& operator[](cluster_tag_t c)            { return *clusters[c]; }
         __inline__ const cluster_t& operator[](cluster_tag_t c)      const { return *clusters[c]; }
-        __inline__   cluster_tag_t  operator[](const index_i& index) const { return  cluster_assignments[index]; }
+        __inline__   cluster_tag_t  operator[](const index_i& index) const { return  cluster_assignments()[index]; }
 
         // methods
         ////////////////////////////////////////////////////////////////////////
@@ -70,9 +70,13 @@ public:
         cluster_tag_t add_cluster(baseline_tag_t baseline_tag);
         cluster_tag_t add_cluster(component_model_t* distribution);
         cluster_t& get_free_cluster(baseline_tag_t baseline_tag);
-        __inline__ size_t size() const { return used_clusters_size; };
+        __inline__ size_t size() const { return used_clusters_size; }
+        // access to cluster assignments, the data type might be
+        // different in child classes, so make this virtual
+        virtual data_t<cluster_tag_t>& cluster_assignments() { return *_cluster_assignments; }
+        virtual const data_t<cluster_tag_t>& cluster_assignments() const { return *_cluster_assignments; }
 
-private:
+protected:
         std::vector<cluster_t*> clusters;
         std::list<cluster_t*> used_clusters;
         std::list<cluster_t*> free_clusters;
@@ -86,7 +90,7 @@ private:
         std::map<baseline_tag_t,component_model_t*> baseline_models;
 
         // assignments to clusters
-        data_t<cluster_tag_t>& cluster_assignments;
+        data_t<cluster_tag_t>* _cluster_assignments;
 };
 
 #endif /* MIXTURE_STATE_HH */

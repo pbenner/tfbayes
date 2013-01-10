@@ -28,7 +28,7 @@
 
 class state_t : public mixture_state_t, public clonable {
 public:
-        state_t(data_t<cluster_tag_t>& cluster_assignments)
+        state_t(const data_t<cluster_tag_t>& cluster_assignments)
                 : mixture_state_t(cluster_assignments) {}
 
         virtual ~state_t() {}
@@ -36,9 +36,9 @@ public:
         virtual void print(std::ostream& o) const = 0;
 };
 
-class gibbs_state_t : virtual public state_t {
+class gibbs_state_t : public state_t {
 public:
-        gibbs_state_t(data_t<cluster_tag_t>& cluster_assignments)
+        gibbs_state_t(const data_t<cluster_tag_t>& cluster_assignments)
                 : state_t(cluster_assignments) {}
 
         virtual void add(const index_i& index, cluster_tag_t tag) = 0;

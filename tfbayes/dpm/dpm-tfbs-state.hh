@@ -67,11 +67,17 @@ public:
         // return the current state as a mixture partition
         dpm_partition_t dpm_partition() const;
 
+        // access to cluster assignments, the data type might be
+        // different in child classes, so make this virtual
+        virtual sequence_data_t<cluster_tag_t>& cluster_assignments() {
+                return *static_cast<sequence_data_t<cluster_tag_t>*>(&gibbs_state_t::cluster_assignments());
+        }
+        virtual const sequence_data_t<cluster_tag_t>& cluster_assignments() const {
+                return *static_cast<const sequence_data_t<cluster_tag_t>*>(&gibbs_state_t::cluster_assignments());
+        }
+
         // data
         ////////////////////////////////////////////////////////////////////////
-
-        // assignments of nucleotides to clusters
-        sequence_data_t<cluster_tag_t> cluster_assignments;
 
         // record start positions of tfbs
         sequence_data_t<short> tfbs_start_positions;

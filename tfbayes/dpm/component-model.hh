@@ -46,11 +46,12 @@
 
 class component_model_t : public clonable {
 public:
-        component_model_t() {}
-        component_model_t(const component_model_t& model) {
-                std::cout << "Distribution copy constructor called." << std::endl;
-                exit(EXIT_FAILURE);
-        }
+        component_model_t()
+                : _cluster_assignments(NULL)
+                { }
+        component_model_t(const data_t<cluster_tag_t>& cluster_assignments)
+                : _cluster_assignments(&cluster_assignments)
+                { }
 
         virtual component_model_t* clone() const = 0;
 
@@ -64,6 +65,16 @@ public:
         virtual double log_predictive(const std::vector<range_t>& range_set) = 0;
         virtual double log_likelihood() const = 0;
         virtual std::string print_counts() const { return std::string(); }
+
+        virtual const data_t<cluster_tag_t>& cluster_assignments() const {
+                return *_cluster_assignments;
+        }
+        virtual void set_cluster_assignments(const data_t<cluster_tag_t>& cluster_assignments) {
+                _cluster_assignments = &cluster_assignments;
+        }
+
+protected:
+        const data_t<cluster_tag_t>* _cluster_assignments;
 };
 
 // Independence Background Model
@@ -98,11 +109,14 @@ public:
         virtual std::string print_counts() const;
         void set_bg_cluster_tag(cluster_tag_t cluster_tag);
 
+        virtual const sequence_data_t<cluster_tag_t>& cluster_assignments() const {
+                return *static_cast<const sequence_data_t<cluster_tag_t>*>(&component_model_t::cluster_assignments());
+        }
+
         friend std::ostream& operator<< (std::ostream& o, const independence_background_t& pd);
 
-private:
+protected:
         const sequence_data_t<data_tfbs_t::code_t>& _data;
-        const sequence_data_t<cluster_tag_t>& _cluster_assignments;
 
         const size_t _size;
 
@@ -116,7 +130,8 @@ private:
 
 class product_dirichlet_t : public component_model_t {
 public:
-         product_dirichlet_t(const std::matrix<double>& alpha, const sequence_data_t<data_tfbs_t::code_t>& data);
+         product_dirichlet_t(const std::matrix<double>& alpha,
+                             const sequence_data_t<data_tfbs_t::code_t>& data);
          product_dirichlet_t(const product_dirichlet_t& distribution);
         ~product_dirichlet_t();
 
@@ -137,7 +152,7 @@ public:
 
         friend std::ostream& operator<< (std::ostream& o, const product_dirichlet_t& pd);
 
-private:
+protected:
         std::vector<counts_t> alpha;
         std::vector<counts_t> counts;
 
@@ -173,9 +188,13 @@ public:
         double log_predictive(const std::vector<range_t>& range_set);
         double log_likelihood() const;
 
+        virtual const sequence_data_t<cluster_tag_t>& cluster_assignments() const {
+                return *static_cast<const sequence_data_t<cluster_tag_t>*>(&component_model_t::cluster_assignments());
+        }
+
         friend std::ostream& operator<< (std::ostream& o, const markov_chain_mixture_t& pd);
 
-private:
+protected:
         size_t  _length;
         double* _counts;
         double* _alpha;
@@ -190,8 +209,7 @@ private:
         mixture_weights_t* _weights;
 
         const sequence_data_t<data_tfbs_t::code_t>& _data;
-              sequence_data_t<context_t>      _context;
-        const sequence_data_t<cluster_tag_t>& _cluster_assignments;
+              sequence_data_t<context_t>            _context;
 
         const cluster_tag_t _cluster_tag;
         const size_t        _max_context;
@@ -231,7 +249,7 @@ public:
 
         friend std::ostream& operator<< (std::ostream& o, const bivariate_normal_t& pd);
 
-private:
+protected:
         // prior
         gsl_matrix* _Sigma_0_inv;
         gsl_vector* _mu_0;
