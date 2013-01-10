@@ -62,8 +62,9 @@ public:
               samples_t& samples();
 
         void print(std::ostream& o) const {
-                o << "(" << _state.size() << "): ";
-                for (mixture_state_t::const_iterator it = _state.begin(); it != _state.end(); it++) {
+                o << "(" << gibbs_state_t::size() << "): ";
+                for (mixture_state_t::const_iterator it = gibbs_state_t::begin();
+                     it != gibbs_state_t::end(); it++) {
                         o << **it << " ";
                 }
         }
@@ -82,7 +83,6 @@ private:
 
         // data and clusters
         const data_gaussian_t& _data;
-        mixture_state_t& _state;
 
         // parameters
         const double alpha;

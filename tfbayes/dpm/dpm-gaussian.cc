@@ -39,16 +39,15 @@ DPM_Gaussian::DPM_Gaussian(
         const data_gaussian_t& data)
         : gibbs_state_t(data_t<cluster_tag_t>(_data.elements(), -1)),
           _data(data),
-          _state(*this),
           // strength parameter for the dirichlet process
           alpha(alpha)
 {
         _baseline_tag = "baseline";
-        _state.add_baseline_model(new bivariate_normal_t(Sigma, Sigma_0, mu_0, data), _baseline_tag);
-        cluster_tag_t cluster_tag = _state.get_free_cluster(_baseline_tag).cluster_tag();
+        gibbs_state_t::add_baseline_model(new bivariate_normal_t(Sigma, Sigma_0, mu_0, data), _baseline_tag);
+        cluster_tag_t cluster_tag = gibbs_state_t::get_free_cluster(_baseline_tag).cluster_tag();
         for (data_gaussian_t::const_iterator it = _data.begin();
              it != _data.end(); it++) {
-                _state[cluster_tag].add_observations(range_t(**it,1));
+                gibbs_state_t::operator[](cluster_tag).add_observations(range_t(**it,1));
         }
 }
 
@@ -69,19 +68,19 @@ DPM_Gaussian::valid_for_sampling(const index_i& index) const
 void
 DPM_Gaussian::add(const index_i& index, cluster_tag_t cluster_tag)
 {
-        _state[cluster_tag].add_observations(range_t(index,1));
+        gibbs_state_t::operator[](cluster_tag).add_observations(range_t(index,1));
 }
 
 void
 DPM_Gaussian::remove(const index_i& index, cluster_tag_t cluster_tag)
 {
-        _state[cluster_tag].remove_observations(range_t(index,1));
+        gibbs_state_t::operator[](cluster_tag).remove_observations(range_t(index,1));
 }
 
 size_t
 DPM_Gaussian::mixture_components() const
 {
-        return _state.size();
+        return gibbs_state_t::size();
 }
 
 void
@@ -93,7 +92,7 @@ DPM_Gaussian::mixture_weights(const index_i& index, double log_weights[], cluste
         range_t range(index, 1);
 
         cluster_tag_t i = 0;
-        for (mixture_state_t::const_iterator it = _state.begin(); it != _state.end(); it++) {
+        for (mixture_state_t::const_iterator it = gibbs_state_t::begin(); it != gibbs_state_t::end(); it++) {
                 cluster_t& cluster = **it;
                 cluster_tags[i] = cluster.cluster_tag();
                 double num_elements = (double)cluster.size();
@@ -104,8 +103,8 @@ DPM_Gaussian::mixture_weights(const index_i& index, double log_weights[], cluste
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
-        cluster_tags[components] = _state.get_free_cluster(_baseline_tag).cluster_tag();
-        sum = logadd(sum, log(alpha/(alpha + N)) + _state[cluster_tags[components]].model().log_predictive(range));
+        cluster_tags[components] = gibbs_state_t::get_free_cluster(_baseline_tag).cluster_tag();
+        sum = logadd(sum, log(alpha/(alpha + N)) + gibbs_state_t::operator[](cluster_tags[components]).model().log_predictive(range));
         log_weights[components] = sum;
 }
 
@@ -118,8 +117,8 @@ DPM_Gaussian::means() const {
         gsl_matrix* means = gsl_matrix_alloc(mixture_components(), 2);
 
         size_t i = 0;
-        for (mixture_state_t::const_iterator it = _state.begin();
-             it != _state.end(); it++) {
+        for (mixture_state_t::const_iterator it = gibbs_state_t::begin();
+             it != gibbs_state_t::end(); it++) {
                 cluster_t& cluster = **it;
                 bivariate_normal_t& bg = static_cast<bivariate_normal_t&>(cluster.model());
                 gsl_matrix_set(means, i, 0, gsl_vector_get(bg.mean(), 0));
@@ -134,8 +133,8 @@ double
 DPM_Gaussian::likelihood() const {
         double result = 0;
 
-        for (mixture_state_t::const_iterator it = _state.begin();
-             it != _state.end(); it++) {
+        for (mixture_state_t::const_iterator it = gibbs_state_t::begin();
+             it != gibbs_state_t::end(); it++) {
                 cluster_t& cluster = **it;
                 result += cluster.model().log_likelihood();
         }
@@ -158,12 +157,12 @@ DPM_Gaussian::samples() {
 
 const mixture_state_t&
 DPM_Gaussian::state() const {
-        return _state;
+        return *this;
 }
 
 mixture_state_t&
 DPM_Gaussian::state() {
-        return _state;
+        return *this;
 }
 
 // misc methods

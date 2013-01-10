@@ -837,7 +837,7 @@ bivariate_normal_t::bivariate_normal_t(
         _inv_perm = gsl_permutation_alloc(_dimension);
         _tmp1     = gsl_vector_alloc(_dimension);
         _tmp2     = gsl_vector_alloc(_dimension);
-
+ 
         // alloc prior
         _Sigma_0_inv  = gsl_matrix_alloc(_dimension, _dimension);
         _mu_0         = gsl_vector_alloc(_dimension);
@@ -851,7 +851,7 @@ bivariate_normal_t::bivariate_normal_t(
         _Sigma_N      = gsl_matrix_alloc(_dimension, _dimension);
         _Sigma_N_inv  = gsl_matrix_alloc(_dimension, _dimension);
         _mu_N         = gsl_vector_alloc(_dimension);
-
+ 
         // prior
         inverse(_Sigma_0_inv, Sigma_0);
         gsl_vector_memcpy(_mu_0, mu_0);
