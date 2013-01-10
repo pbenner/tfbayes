@@ -122,6 +122,7 @@ gamma_marginal(
 #include <boost/unordered_map.hpp> 
 
 namespace boost {
+        // add hash_value for boost arrays
         static inline
         size_t hash_value(const data_tfbs_t::code_t& counts)
         {
@@ -134,27 +135,28 @@ namespace boost {
 
                 return result;
         }
-}
 
-bool operator==(const data_tfbs_t::code_t& counts1, const data_tfbs_t::code_t& _counts2)
-{
-        data_tfbs_t::code_t counts2(_counts2);
+        // overwrite equality operator
+        bool operator==(const data_tfbs_t::code_t& counts1, const data_tfbs_t::code_t& _counts2)
+        {
+                data_tfbs_t::code_t counts2(_counts2);
 
-        for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
-                bool permutation = false;
-                for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
-                        if (counts1[i] == counts2[j]) {
-                                // yeah, this value exists
-                                permutation = true;
-                                // make sure this value isn't used twice
-                                counts2[i]  = -1.0;
+                for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
+                        bool permutation = false;
+                        for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
+                                if (counts1[i] == counts2[j]) {
+                                        // yeah, this value exists
+                                        permutation = true;
+                                        // make sure this value isn't used twice
+                                        counts2[i]  = -1.0;
+                                }
+                        }
+                        if (!permutation) {
+                                return false;
                         }
                 }
-                if (!permutation) {
-                        return false;
-                }
+                return true;
         }
-        return true;
 }
 
 double
