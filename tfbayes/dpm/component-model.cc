@@ -116,7 +116,7 @@ gamma_marginal(
                                   &result, &err);
         gsl_monte_miser_free(s);
 
-        return result;
+        return log(result);
 }
 
 #include <boost/unordered_map.hpp> 
