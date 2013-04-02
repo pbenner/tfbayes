@@ -9,7 +9,7 @@ BUILT_SOURCES = phylotree-parser.h
 AM_YFLAGS = -d
 AM_LFLAGS = -o$(LEX_OUTPUT_ROOT).c
 
-bin_PROGRAMS = polynomial-test phylotree-expand-test phylotree-expected-terms phylotree-parser-test phylotree-approximation-test optimization-test likelihood-test likelihood-prime-test marginal-likelihood-test
+bin_PROGRAMS = polynomial-test phylotree-expand-test phylotree-expected-terms phylotree-parser-test phylotree-approximation-test optimization-test likelihood-test likelihood-prime-test marginal-likelihood-test treespace-test
 
 polynomial_test_SOURCES = polynomial-test.cc
 polynomial_test_LDADD   = -lm
@@ -48,6 +48,10 @@ marginal_likelihood_test_SOURCES = marginal-likelihood-test.cc
 marginal_likelihood_test_LDADD   = -lm
 marginal_likelihood_test_LDADD  += libtfbayes-phylotree.la
 
+treespace_test_SOURCES = treespace-test.cc
+treespace_test_LDADD   = -lm
+treespace_test_LDADD  += libtfbayes-phylotree.la
+
 lib_LTLIBRARIES = libtfbayes-phylotree.la
 
 libtfbayes_phylotree_la_SOURCES = \
@@ -77,7 +81,9 @@ libtfbayes_phylotree_la_SOURCES = \
 	marginal-likelihood.hh \
 	statistics.hh \
 	utility.cc \
-	utility.hh
+	utility.hh \
+	treespace.cc \
+	treespace.hh
 libtfbayes_phylotree_la_LIBADD  = -lm
 libtfbayes_phylotree_la_LIBADD += $(top_builddir)/tfbayes/exception/libtfbayes-exception.la
 libtfbayes_phylotree_la_LIBADD += $(top_builddir)/tfbayes/interface/libtfbayes-interface.la
