@@ -22,11 +22,35 @@ using namespace std;
 int
 main(void)
 {
-        vector<size_t> split(2, 0);
-        split[0] = 2;
-        split[1] = 3;
-        cout << nsplit_t(6, split)
+        set<size_t> s1;
+        s1.insert(3);
+        s1.insert(4);
+        set<size_t> s2;
+        s2.insert(1);
+        s2.insert(2);
+        set<size_t> s3;
+        s3.insert(0);
+        s3.insert(5);
+        set<size_t> s4;
+        s4.insert(2);
+        s4.insert(3);
+        set<size_t> s5;
+        s5.insert(4);
+        s5.insert(5);
+        set<size_t> s6;
+        s6.insert(0);
+        s6.insert(1);
+        nsplit_t e1(6, s1);
+        nsplit_t e2(6, s2);
+        nsplit_t e3(6, s3);
+        nsplit_t e4(6, s4);
+        nsplit_t e5(6, s5);
+        nsplit_t e6(6, s6);
+        cout << e4 << endl
+             << e5 << endl;
+        cout << "compatible: "
+             << compatible(e4, e5)
              << endl;
 
-        return 1;
+        return 0;
 }

@@ -24,16 +24,18 @@
 
 #include <algorithm>
 #include <iostream>
+#include <set>
 #include <vector>
 
 #include <cassert>
 
 class nsplit_t {
 public:
-        nsplit_t(size_t n, std::vector<size_t> split)
-                : _n(n), _part1(split.size(), 0), _part2(n-split.size(), 0) {
-                // sort split so we can easily fill part1 and part2
-                std::sort(split.begin(), split.end());
+        nsplit_t(size_t n, std::set<size_t> tmp)
+                : _n(n), _part1(tmp.size(), 0), _part2(n-tmp.size(), 0) {
+                // use vectors, which are more comfortable
+                std::vector<size_t> split(tmp.size(), 0);
+                std::copy(tmp.begin(), tmp.end(), split.begin());
                 // check arguments
                 assert(split.size() > 0);
                 assert(split.size() % 2 == 0);
@@ -66,6 +68,43 @@ protected:
         std::vector<size_t> _part1;
         std::vector<size_t> _part2;
 };
+
+bool empty_intersection(const std::vector<size_t>& x, const std::vector<size_t>& y)
+{
+        // both vectors are assumed to be sorted!
+        std::vector<size_t>::const_iterator i = x.begin();
+        std::vector<size_t>::const_iterator j = y.begin();
+        while (i != x.end() && j != y.end())
+        {
+                if (*i == *j) {
+                        return false;
+                }
+                else if (*i < *j) {
+                        i++;
+                }
+                else {
+                        j++;
+                }
+        }
+        return true;
+}
+
+bool compatible(const nsplit_t s1, const nsplit_t s2)
+{
+        assert(s1.n() == s2.n());
+        // s1.part1 and s2.part2 both contain leaf zero, so their
+        // intersection is not empty
+        if (empty_intersection(s1.part1(), s2.part2())) {
+                return true;
+        }
+        if (empty_intersection(s1.part2(), s2.part1())) {
+                return true;
+        }
+        if (empty_intersection(s1.part2(), s2.part2())) {
+                return true;
+        }
+        return false;
+}
 
 std::ostream& operator<< (std::ostream& o, const nsplit_t nsplit);
 

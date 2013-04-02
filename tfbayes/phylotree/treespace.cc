@@ -43,4 +43,5 @@ operator<< (ostream& o, const nsplit_t nsplit)
                           << "}";
                 }
         }
+        return o;
 }
