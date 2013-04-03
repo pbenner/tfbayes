@@ -40,17 +40,31 @@ main(void)
         set<size_t> s6;
         s6.insert(0);
         s6.insert(1);
-        nsplit_t e1(6, s1);
-        nsplit_t e2(6, s2);
-        nsplit_t e3(6, s3);
-        nsplit_t e4(6, s4);
-        nsplit_t e5(6, s5);
-        nsplit_t e6(6, s6);
+        nsplit_t e1(5, s1);
+        nsplit_t e2(5, s2);
+        nsplit_t e3(5, s3);
+        nsplit_t e4(5, s4);
+        nsplit_t e5(5, s5);
+        nsplit_t e6(5, s6);
         cout << e4 << endl
              << e5 << endl;
         cout << "compatible: "
              << compatible(e4, e5)
              << endl;
+        // build tree
+        vector<nsplit_t> splits;
+        vector<double>   int_d;
+        splits.push_back(e1); int_d.push_back(1.5);
+        splits.push_back(e2); int_d.push_back(2.5);
+        splits.push_back(e3); int_d.push_back(5.5);
+        vector<double> leaf_d(6, 1);
+        leaf_d[0] = 3.5;
+        leaf_d[1] = 4.5;
+        ntree_t ntree(splits, int_d, leaf_d);
+
+        pt_root_t* tree = ntree.export_tree();
+        cout << "exporting tree:" << endl;
+        tree->print_phylotree(cout);
 
         return 0;
 }
