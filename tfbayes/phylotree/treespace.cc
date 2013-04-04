@@ -150,11 +150,11 @@ operator<< (ostream& o, const nsplit_t nsplit)
         o << "{";
         for (size_t i = 0; i < nsplit.part1().size(); i++) {
                 if (i < nsplit.part1().size()-1) {
-                        o << nsplit.part1()[i]
+                        o << nsplit.part1(i)
                           << ", ";
                 }
                 else {
-                        o << nsplit.part1()[i]
+                        o << nsplit.part1(i)
                           << "} | {";
                 }
         }
