@@ -19,9 +19,9 @@
 
 using namespace std;
 
-int
-main(void)
+void test1()
 {
+        // prepare splits
         set<size_t> s1;
         s1.insert(3);
         s1.insert(4);
@@ -31,40 +31,43 @@ main(void)
         set<size_t> s3;
         s3.insert(0);
         s3.insert(5);
-        set<size_t> s4;
-        s4.insert(2);
-        s4.insert(3);
-        set<size_t> s5;
-        s5.insert(4);
-        s5.insert(5);
-        set<size_t> s6;
-        s6.insert(0);
-        s6.insert(1);
         nsplit_t e1(5, s1);
         nsplit_t e2(5, s2);
         nsplit_t e3(5, s3);
-        nsplit_t e4(5, s4);
-        nsplit_t e5(5, s5);
-        nsplit_t e6(5, s6);
-        cout << e4 << endl
-             << e5 << endl;
-        cout << "compatible: "
-             << compatible(e4, e5)
-             << endl;
-        // build tree
+        // construct tree
         vector<nsplit_t> splits;
         vector<double>   int_d;
-        splits.push_back(e1); int_d.push_back(1.5);
+        // internal edge lengths
+        splits.push_back(e1); int_d.push_back(5.5);
         splits.push_back(e2); int_d.push_back(2.5);
-        splits.push_back(e3); int_d.push_back(5.5);
+        splits.push_back(e3); int_d.push_back(1.5);
+        // leaf edge lengths
         vector<double> leaf_d(6, 1);
-        leaf_d[0] = 3.5;
-        leaf_d[1] = 4.5;
-        ntree_t ntree(splits, int_d, leaf_d);
-
+        leaf_d[0] = 1.5;
+        leaf_d[1] = 2.5;
+        leaf_d[2] = 3.5;
+        leaf_d[3] = 4.5;
+        leaf_d[4] = 5.5;
+        // leaf names
+        vector<string> leaf_names;
+        leaf_names.push_back("leaf 1");
+        leaf_names.push_back("leaf 2");
+        leaf_names.push_back("leaf 3");
+        leaf_names.push_back("leaf 4");
+        leaf_names.push_back("leaf 5");
+        leaf_names.push_back("leaf 6");
+        ntree_t ntree(splits, int_d, leaf_d, leaf_names);
+        // print tree
         pt_root_t* tree = ntree.export_tree();
         cout << "exporting tree:" << endl;
         tree->print_phylotree(cout);
+        tree->destroy();
+}
+
+int
+main(void)
+{
+        test1();
 
         return 0;
 }

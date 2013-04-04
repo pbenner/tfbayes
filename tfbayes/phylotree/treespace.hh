@@ -30,6 +30,8 @@
 #include <cassert>
 #include <cstdlib>
 
+#include <boost/tuple/tuple.hpp>
+
 #include <phylotree.hh>
 
 class nsplit_t {
@@ -65,8 +67,14 @@ public:
         const std::vector<size_t>& part1() const {
                 return _part1;
         }
+        size_t part1(size_t i) const {
+                return part1()[i];
+        }
         const std::vector<size_t>& part2() const {
                 return _part2;
+        }
+        size_t part2(size_t i) const {
+                return part2()[i];
         }
 protected:
         size_t _n;
@@ -139,7 +147,13 @@ class ntree_t {
 public:
         ntree_t(const std::vector<nsplit_t>& splits,
                 const std::vector<double>& int_d,
-                const std::vector<double>& leaf_d) {
+                const std::vector<double>& leaf_d,
+                const std::vector<std::string> leaf_names = std::vector<std::string>())
+                : _n(splits.size()+2),
+                  _splits(splits),
+                  _int_d(int_d),
+                  _leaf_d(leaf_d),
+                  _leaf_names(leaf_names) {
                 // check that there is at least one split
                 assert(splits.size() > 0);
                 // we need n-2 splits to fully specify a tree
@@ -154,23 +168,21 @@ public:
                                 }
                         }
                 }
-                // initialize fields
-                _n      = splits.begin()->n();
-                _int_d  = int_d;
-                _leaf_d = leaf_d;
-                _splits = splits;
         }
-        std::pair<ssize_t, ssize_t> next_splits(const nsplit_t& split, std::vector<bool>& used) {
+        boost::tuple<ssize_t, ssize_t, ssize_t> next_splits(const nsplit_t& split, std::vector<bool>& used) {
+                // return value:
+                // (int edge, int edge, -1) OR (int edge, -1, leaf edge)
+                //
                 // check first if we need only one internal edge
                 for (size_t i = 0; i < n()-2; i++) {
                         if (used[i]) continue;
-                        if (splits()[i].part1().size() == split.part1().size() + 1) {
-                                std::vector<size_t> tmp = intersection(splits()[i].part1(), split.part1());
+                        if (splits(i).part1().size() == split.part1().size() + 1) {
+                                std::vector<size_t> tmp = intersection(splits(i).part1(), split.part1());
                                 if (tmp.size() == 1) {
                                         // mark edge used
                                         used[i] = true;
                                         // return index of that edge
-                                        return std::pair<ssize_t, ssize_t>(i, -tmp[0]);
+                                        return boost::make_tuple(i, -1, tmp[0]);
                                 }
                         }
                 }
@@ -179,18 +191,18 @@ public:
                         if (used[i]) continue;
                         for (size_t j = 0; j < i; j++) {
                                 if (used[j]) continue;
-                                std::vector<size_t> tmp = intersection(splits()[i].part1(), splits()[j].part1());
+                                std::vector<size_t> tmp = intersection(splits(i).part1(), splits(j).part1());
                                 if (std::equal(tmp.begin(), tmp.end(), split.part1().begin())) {
                                         // mark both edges used
                                         used[i] = true;
                                         used[j] = true;
                                         // return indices of both edges
-                                        return std::pair<ssize_t, ssize_t>(i, j);
+                                        return boost::make_tuple(i, j, -1);
                                 }
                         }
                 }
                 // we should never arrive here
-                return std::pair<ssize_t, ssize_t>(-1, -1);
+                return boost::make_tuple(-1, -1, -1);
         }
         pt_root_t* export_tree() {
                 pt_node_t* left_tree;
@@ -203,66 +215,88 @@ public:
                 for (size_t i = 0; i <= n(); i++) {
                         leafs[i] = i;
                 }
-                // start with the root node to build the tree
+                // start with leaf zero to build the tree
                 std::set<size_t> tmp; tmp.insert(0);
-                std::pair<ssize_t, ssize_t> ns = next_splits(nsplit_t(n(), tmp), used);
-                if (ns.second > 0) {
-                        left_tree  = export_subtree(used, ns.first);
-                        right_tree = export_subtree(used, ns.second);
+                boost::tuple<ssize_t, ssize_t, ssize_t> ns = next_splits(nsplit_t(n(), tmp), used);
+                if (boost::get<1>(ns) != -1) {
+                        left_tree  = export_subtree(used, boost::get<0>(ns));
+                        right_tree = export_subtree(used, boost::get<1>(ns));
                 }
                 else {
-                        left_tree  = export_subtree(used, ns.first);
-                        right_tree = new pt_leaf_t(-1, leaf_d()[-ns.second]);
+                        left_tree  = export_subtree(used, boost::get<0>(ns));
+                        right_tree = new pt_leaf_t(-1, leaf_d(boost::get<2>(ns)), leaf_name(boost::get<2>(ns)));
                 }
                 // return resulting tree
                 return new pt_root_t(-1, left_tree, right_tree);
         }
         pt_node_t* export_subtree(std::vector<bool>& used, size_t i) {
-                std::cout << std::endl << "export_subtree: " << i << std::endl;
                 pt_node_t* left_tree;
                 pt_node_t* right_tree;
                 // check if there are only leafs following
-                if (splits()[i].part2().size() == 2) {
-                        std::cout << "burp: " << i << std::endl;
-                        left_tree  = new pt_leaf_t(-1, leaf_d()[splits()[i].part2()[0]]);
-                        right_tree = new pt_leaf_t(-1, leaf_d()[splits()[i].part2()[1]]);
+                if (splits(i).part2().size() == 2) {
+                        left_tree  = new pt_leaf_t(-1, leaf_d(splits(i).part2(0)), leaf_name(splits(i).part2(0)));
+                        right_tree = new pt_leaf_t(-1, leaf_d(splits(i).part2(1)), leaf_name(splits(i).part2(1)));
                 }
                 // otherwise we need to do a recursive call
                 else {
                         // find the next internal edge(s)
-                        std::pair<ssize_t, ssize_t> ns = next_splits(splits()[i], used);
+                        boost::tuple<ssize_t, ssize_t, ssize_t> ns = next_splits(splits(i), used);
                         // check if there is one or two edges folliwing
-                        if (ns.second >= 0) {
-                                std::cout << "found two edges: " << ns.first << ", " << ns.second << std::endl;
-                                left_tree  = export_subtree(used, ns.first);
-                                right_tree = export_subtree(used, ns.second);
-                                std::cout << "done two edges" << std::endl;
+                        if (boost::get<1>(ns) != -1) {
+                                left_tree  = export_subtree(used, boost::get<0>(ns));
+                                right_tree = export_subtree(used, boost::get<1>(ns));
                         }
                         else {
-                                std::cout << "found one edge: " << ns.first << std::endl;
-                                left_tree  = export_subtree(used, ns.first);
-                                right_tree = new pt_leaf_t(-1, leaf_d()[-ns.second]);
+                                left_tree  = export_subtree(used, boost::get<0>(ns));
+                                right_tree = new pt_leaf_t(-1, leaf_d(boost::get<2>(ns)), leaf_name(boost::get<2>(ns)));
                         }
                 }
-                return new pt_node_t(-1, int_d()[i], left_tree, right_tree);
+                return new pt_node_t(-1, int_d(i), left_tree, right_tree);
         }
         size_t n() const {
                 return _n;
         }
+        const std::vector<nsplit_t>& splits() const {
+                return _splits;
+        }
+        const nsplit_t& splits(size_t i) const {
+                return splits()[i];
+        }
         const std::vector<double>& int_d() const {
                 return _int_d;
+        }
+        double int_d(size_t i) const {
+                return int_d()[i];
         }
         const std::vector<double>& leaf_d() const {
                 return _leaf_d;
         }
-        const std::vector<nsplit_t>& splits() const {
-                return _splits;
+        double leaf_d(size_t i) const {
+                return leaf_d()[i];
+        }
+        const std::vector<std::string>& leaf_names() const {
+                return _leaf_names;
+        }
+        const std::string& leaf_name(size_t i) const {
+                if (leaf_names().size() > 0) {
+                        return leaf_names()[i];
+                }
+                else {
+                        return _empty_string;
+                }
         }
 protected:
         size_t _n;
-        std::vector<double> _int_d;
-        std::vector<double> _leaf_d;
+        // n-2 splits
         std::vector<nsplit_t> _splits;
+        // internal edge lengths, indexed by an integer 0, 1, ..., n-3
+        std::vector<double> _int_d;
+        // leaf edge lengths,     indexed by an integer 0, 1, ..., n
+        std::vector<double> _leaf_d;
+        // leaf names
+        std::vector<std::string> _leaf_names;
+        // empty leaf name
+        const std::string _empty_string;
 };
 
 #endif /* TREESPACE_HH */
