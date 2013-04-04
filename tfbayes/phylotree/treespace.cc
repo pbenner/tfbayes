@@ -22,6 +22,7 @@ using namespace std;
 /* tools
  *****************************************************************************/
 
+static
 bool empty_intersection(const vector<size_t>& x, const vector<size_t>& y)
 {
         // both vectors are assumed to be sorted!
@@ -42,6 +43,7 @@ bool empty_intersection(const vector<size_t>& x, const vector<size_t>& y)
         return true;
 }
 
+static
 vector<size_t> intersection(const vector<size_t>& x, const vector<size_t>& y)
 {
         vector<size_t> result;
@@ -64,6 +66,7 @@ vector<size_t> intersection(const vector<size_t>& x, const vector<size_t>& y)
         return result;
 }
 
+static
 vector<size_t> difference(const vector<size_t>& x, const vector<size_t>& y)
 {
         vector<size_t> result;
