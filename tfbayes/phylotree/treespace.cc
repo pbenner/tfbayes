@@ -22,11 +22,11 @@ using namespace std;
 /* tools
  *****************************************************************************/
 
-bool empty_intersection(const std::vector<size_t>& x, const std::vector<size_t>& y)
+bool empty_intersection(const vector<size_t>& x, const vector<size_t>& y)
 {
         // both vectors are assumed to be sorted!
-        std::vector<size_t>::const_iterator i = x.begin();
-        std::vector<size_t>::const_iterator j = y.begin();
+        vector<size_t>::const_iterator i = x.begin();
+        vector<size_t>::const_iterator j = y.begin();
         while (i != x.end() && j != y.end())
         {
                 if (*i == *j) {
@@ -42,12 +42,12 @@ bool empty_intersection(const std::vector<size_t>& x, const std::vector<size_t>&
         return true;
 }
 
-std::vector<size_t> intersection(const std::vector<size_t>& x, const std::vector<size_t>& y)
+vector<size_t> intersection(const vector<size_t>& x, const vector<size_t>& y)
 {
-        std::vector<size_t> result;
+        vector<size_t> result;
         // both vectors are assumed to be sorted!
-        std::vector<size_t>::const_iterator i = x.begin();
-        std::vector<size_t>::const_iterator j = y.begin();
+        vector<size_t>::const_iterator i = x.begin();
+        vector<size_t>::const_iterator j = y.begin();
         while (i != x.end() && j != y.end())
         {
                 if (*i == *j) {
@@ -64,12 +64,12 @@ std::vector<size_t> intersection(const std::vector<size_t>& x, const std::vector
         return result;
 }
 
-std::vector<size_t> difference(const std::vector<size_t>& x, const std::vector<size_t>& y)
+vector<size_t> difference(const vector<size_t>& x, const vector<size_t>& y)
 {
-        std::vector<size_t> result;
+        vector<size_t> result;
         // both vectors are assumed to be sorted!
-        std::set_difference(x.begin(), x.end(), y.begin(), y.end(),
-                            std::back_inserter(result));
+        set_difference(x.begin(), x.end(), y.begin(), y.end(),
+                            back_inserter(result));
 
         return result;
 }
@@ -79,11 +79,11 @@ std::vector<size_t> difference(const std::vector<size_t>& x, const std::vector<s
 
 nsplit_t::nsplit_t() : _n(0) { }
 
-nsplit_t::nsplit_t(size_t n, std::set<size_t> tmp)
+nsplit_t::nsplit_t(size_t n, set<size_t> tmp)
         : _n(n), _part1(tmp.size(), 0), _part2(n-tmp.size()+1, 0) {
         // use vectors, which are more comfortable
-        std::vector<size_t> split(tmp.size(), 0);
-        std::copy(tmp.begin(), tmp.end(), split.begin());
+        vector<size_t> split(tmp.size(), 0);
+        copy(tmp.begin(), tmp.end(), split.begin());
         // check arguments
         assert(split.size() > 0);
         assert(split[split.size()-1] <= n);
@@ -107,7 +107,7 @@ nsplit_t::n() const {
         return _n;
 }
 
-const std::vector<size_t>&
+const vector<size_t>&
 nsplit_t::part1() const {
         return _part1;
 }
@@ -117,7 +117,7 @@ nsplit_t::part1(size_t i) const {
         return part1()[i];
 }
 
-const std::vector<size_t>&
+const vector<size_t>&
 nsplit_t::part2() const {
         return _part2;
 }
@@ -174,10 +174,10 @@ operator<< (ostream& o, const nsplit_t nsplit)
 /* ntree_t
  *****************************************************************************/
 
-ntree_t::ntree_t(const std::vector<nsplit_t>& splits,
-                 const std::vector<double>& int_d,
-                 const std::vector<double>& leaf_d,
-                 const std::vector<std::string> leaf_names)
+ntree_t::ntree_t(const vector<nsplit_t>& splits,
+                 const vector<double>& int_d,
+                 const vector<double>& leaf_d,
+                 const vector<string> leaf_names)
         : _n(splits.size()+2),
           _splits(splits),
           _int_d(int_d),
@@ -189,11 +189,11 @@ ntree_t::ntree_t(const std::vector<nsplit_t>& splits,
         assert(splits.size() == splits.begin()->n()-2);
         assert(leaf_names.size() == 0 || leaf_names.size() == n()+1);
         // check splits for compatibility
-        for (std::vector<nsplit_t>::const_iterator it = splits.begin(); it != splits.end(); it++) {
-                for (std::vector<nsplit_t>::const_iterator is = splits.begin(); is != it; is++) {
+        for (vector<nsplit_t>::const_iterator it = splits.begin(); it != splits.end(); it++) {
+                for (vector<nsplit_t>::const_iterator is = splits.begin(); is != it; is++) {
                         if (!compatible(*it, *is)) {
-                                std::cerr << "Invalid set of splits."
-                                          << std::endl;
+                                cerr << "Invalid set of splits."
+                                          << endl;
                                 exit(EXIT_FAILURE);
                         }
                 }
@@ -201,7 +201,7 @@ ntree_t::ntree_t(const std::vector<nsplit_t>& splits,
 }
 
 boost::tuple<ssize_t, ssize_t, ssize_t>
-ntree_t::next_splits(const nsplit_t& split, std::vector<bool>& used) {
+ntree_t::next_splits(const nsplit_t& split, vector<bool>& used) {
         // return value:
         // (int edge, int edge, -1) OR (int edge, -1, leaf edge)
         //
@@ -209,7 +209,7 @@ ntree_t::next_splits(const nsplit_t& split, std::vector<bool>& used) {
         for (size_t i = 0; i < n()-2; i++) {
                 if (used[i]) continue;
                 if (splits(i).part1().size() == split.part1().size() + 1) {
-                        std::vector<size_t> tmp = difference(splits(i).part1(), split.part1());
+                        vector<size_t> tmp = difference(splits(i).part1(), split.part1());
                         if (tmp.size() == 1) {
                                 // mark edge used
                                 used[i] = true;
@@ -223,8 +223,8 @@ ntree_t::next_splits(const nsplit_t& split, std::vector<bool>& used) {
                 if (used[i]) continue;
                 for (size_t j = 0; j < i; j++) {
                         if (used[j]) continue;
-                        std::vector<size_t> tmp = intersection(splits(i).part1(), splits(j).part1());
-                        if (std::equal(tmp.begin(), tmp.end(), split.part1().begin())) {
+                        vector<size_t> tmp = intersection(splits(i).part1(), splits(j).part1());
+                        if (equal(tmp.begin(), tmp.end(), split.part1().begin())) {
                                         // mark both edges used
                                 used[i] = true;
                                 used[j] = true;
@@ -243,14 +243,14 @@ ntree_t::export_tree() {
         pt_node_t* right_tree;
         // the vecor used stores which edges were already used
         // (this should optimize performance)
-        std::vector<bool>   used(n()-2, false);
+        vector<bool>   used(n()-2, false);
         // list of leafs for a given subtree
-        std::vector<size_t> leafs(n(), 0);
+        vector<size_t> leafs(n(), 0);
         for (size_t i = 0; i <= n(); i++) {
                 leafs[i] = i;
         }
         // start with leaf zero to build the tree
-        std::set<size_t> tmp; tmp.insert(0);
+        set<size_t> tmp; tmp.insert(0);
         boost::tuple<ssize_t, ssize_t, ssize_t> ns = next_splits(nsplit_t(n(), tmp), used);
         if (boost::get<1>(ns) != -1) {
                 left_tree  = export_subtree(used, boost::get<0>(ns));
@@ -265,7 +265,7 @@ ntree_t::export_tree() {
 }
 
 pt_node_t*
-ntree_t::export_subtree(std::vector<bool>& used, size_t i) {
+ntree_t::export_subtree(vector<bool>& used, size_t i) {
         pt_node_t* left_tree;
         pt_node_t* right_tree;
         // check if there are only leafs following
@@ -295,7 +295,7 @@ ntree_t::n() const {
         return _n;
 }
 
-const std::vector<nsplit_t>&
+const vector<nsplit_t>&
 ntree_t::splits() const {
         return _splits;
 }
@@ -305,7 +305,7 @@ ntree_t::splits(size_t i) const {
         return splits()[i];
 }
 
-const std::vector<double>&
+const vector<double>&
 ntree_t::int_d() const {
         return _int_d;
 }
@@ -315,7 +315,7 @@ ntree_t::int_d(size_t i) const {
         return int_d()[i];
 }
 
-const std::vector<double>&
+const vector<double>&
 ntree_t::leaf_d() const {
         return _leaf_d;
 }
@@ -325,12 +325,12 @@ ntree_t::leaf_d(size_t i) const {
         return leaf_d()[i];
 }
 
-const std::vector<std::string>&
+const vector<string>&
 ntree_t::leaf_names() const {
         return _leaf_names;
 }
 
-const std::string&
+const string&
 ntree_t::leaf_name(size_t i) const {
         if (leaf_names().size() > 0) {
                 return leaf_names()[i];
