@@ -65,10 +65,73 @@ void test1()
         tree->destroy();
 }
 
+void test2()
+{
+        // prepare splits
+        set<size_t> s1;
+        s1.insert(3);
+        s1.insert(4);
+        s1.insert(5);
+        set<size_t> s2;
+        s2.insert(4);
+        s2.insert(5);
+        set<size_t> s3;
+        s3.insert(6);
+        s3.insert(7);
+        set<size_t> s4;
+        s4.insert(0);
+        s4.insert(1);
+        s4.insert(2);
+        set<size_t> s5;
+        s5.insert(0);
+        s5.insert(1);
+        nsplit_t e1(7, s1);
+        nsplit_t e2(7, s2);
+        nsplit_t e3(7, s3);
+        nsplit_t e4(7, s4);
+        nsplit_t e5(7, s5);
+        // construct tree
+        vector<nsplit_t> splits;
+        vector<double>   int_d;
+        // internal edge lengths
+        splits.push_back(e1); int_d.push_back(1);
+        splits.push_back(e2); int_d.push_back(1);
+        splits.push_back(e3); int_d.push_back(1);
+        splits.push_back(e4); int_d.push_back(1);
+        splits.push_back(e5); int_d.push_back(1);
+        // leaf edge lengths
+        vector<double> leaf_d(8, 1);
+        leaf_d[0] = 0.5;
+        leaf_d[1] = 1.5;
+        leaf_d[2] = 2.5;
+        leaf_d[3] = 3.5;
+        leaf_d[4] = 4.5;
+        leaf_d[5] = 5.5;
+        leaf_d[6] = 6.5;
+        leaf_d[7] = 7.5;
+        // leaf names
+        vector<string> leaf_names;
+        leaf_names.push_back("leaf 0");
+        leaf_names.push_back("leaf 1");
+        leaf_names.push_back("leaf 2");
+        leaf_names.push_back("leaf 3");
+        leaf_names.push_back("leaf 4");
+        leaf_names.push_back("leaf 5");
+        leaf_names.push_back("leaf 6");
+        leaf_names.push_back("leaf 7");
+        ntree_t ntree(splits, int_d, leaf_d, leaf_names);
+        // print tree
+        pt_root_t* tree = ntree.export_tree();
+        cout << "exporting tree:" << endl;
+        tree->print_phylotree(cout);
+        tree->destroy();
+}
+
 int
 main(void)
 {
         test1();
+        test2();
 
         return 0;
 }

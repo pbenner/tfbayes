@@ -225,7 +225,7 @@ ntree_t::next_splits(const nsplit_t& split, vector<bool>& used) {
                         if (used[j]) continue;
                         vector<size_t> tmp = intersection(splits(i).part1(), splits(j).part1());
                         if (equal(tmp.begin(), tmp.end(), split.part1().begin())) {
-                                        // mark both edges used
+                                // mark both edges used
                                 used[i] = true;
                                 used[j] = true;
                                 // return indices of both edges
