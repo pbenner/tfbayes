@@ -48,7 +48,7 @@ void test1()
         leaf_d[2] = 2.5;
         leaf_d[3] = 3.5;
         leaf_d[4] = 4.5;
-        leaf_d[4] = 5.5;
+        leaf_d[5] = 5.5;
         // leaf names
         vector<string> leaf_names;
         leaf_names.push_back("leaf 0");
