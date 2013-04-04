@@ -43,19 +43,20 @@ void test1()
         splits.push_back(e3); int_d.push_back(1.5);
         // leaf edge lengths
         vector<double> leaf_d(6, 1);
-        leaf_d[0] = 1.5;
-        leaf_d[1] = 2.5;
-        leaf_d[2] = 3.5;
-        leaf_d[3] = 4.5;
+        leaf_d[0] = 0.5;
+        leaf_d[1] = 1.5;
+        leaf_d[2] = 2.5;
+        leaf_d[3] = 3.5;
+        leaf_d[4] = 4.5;
         leaf_d[4] = 5.5;
         // leaf names
         vector<string> leaf_names;
+        leaf_names.push_back("leaf 0");
         leaf_names.push_back("leaf 1");
         leaf_names.push_back("leaf 2");
         leaf_names.push_back("leaf 3");
         leaf_names.push_back("leaf 4");
         leaf_names.push_back("leaf 5");
-        leaf_names.push_back("leaf 6");
         ntree_t ntree(splits, int_d, leaf_d, leaf_names);
         // print tree
         pt_root_t* tree = ntree.export_tree();

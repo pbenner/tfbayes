@@ -126,6 +126,16 @@ std::vector<size_t> intersection(const std::vector<size_t>& x, const std::vector
         return result;
 }
 
+std::vector<size_t> difference(const std::vector<size_t>& x, const std::vector<size_t>& y)
+{
+        std::vector<size_t> result;
+        // both vectors are assumed to be sorted!
+        std::set_difference(x.begin(), x.end(), y.begin(), y.end(),
+                            std::back_inserter(result));
+
+        return result;
+}
+
 bool compatible(const nsplit_t s1, const nsplit_t s2)
 {
         assert(s1.n() == s2.n());
@@ -177,7 +187,7 @@ public:
                 for (size_t i = 0; i < n()-2; i++) {
                         if (used[i]) continue;
                         if (splits(i).part1().size() == split.part1().size() + 1) {
-                                std::vector<size_t> tmp = intersection(splits(i).part1(), split.part1());
+                                std::vector<size_t> tmp = difference(splits(i).part1(), split.part1());
                                 if (tmp.size() == 1) {
                                         // mark edge used
                                         used[i] = true;
