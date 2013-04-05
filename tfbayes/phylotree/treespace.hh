@@ -53,6 +53,25 @@ protected:
         std::vector<size_t> _part2;
 };
 
+class nedge_t : public nsplit_t {
+public:
+        // constructors
+        nedge_t(size_t n, std::set<size_t> tmp, double d);
+        nedge_t(const nsplit_t& nsplit, double d);
+
+        double d() const;
+
+protected:
+        nsplit_t _nsplit;
+        double _d;
+};
+
+class nedge_set_t : public std::vector<nedge_t>
+{
+public:
+        double length() const;
+};
+
 bool compatible(const nsplit_t& s1, const nsplit_t& s2);
 
 std::ostream& operator<< (std::ostream& o, const nsplit_t nsplit);
@@ -60,18 +79,15 @@ std::ostream& operator<< (std::ostream& o, const nsplit_t nsplit);
 class ntree_t {
 public:
         // constructors
-        ntree_t(const std::vector<nsplit_t>& splits,
-                const std::vector<double>& int_d,
+        ntree_t(const nedge_set_t& nedge_set,
                 const std::vector<double>& leaf_d,
                 const std::vector<std::string> leaf_names = std::vector<std::string>());
 
         // methods
         pt_root_t* export_tree();
         size_t n() const;
-        const std::vector<nsplit_t>& splits() const;
-        const nsplit_t& splits(size_t i) const;
-        const std::vector<double>& int_d() const;
-        double int_d(size_t i) const;
+        const nedge_set_t& nedge_set() const;
+        const nedge_t& nedge_set(size_t i) const;
         const std::vector<double>& leaf_d() const;
         double leaf_d(size_t i) const;
         const std::vector<std::string>& leaf_names() const;
@@ -79,14 +95,12 @@ public:
 
 protected:
         // hidden methods
-        boost::tuple<ssize_t, ssize_t, ssize_t> next_splits(const nsplit_t& split, std::vector<bool>& used);
+        boost::tuple<ssize_t, ssize_t, ssize_t> next_splits(const nsplit_t& nsplit, std::vector<bool>& used);
         pt_node_t* export_subtree(std::vector<bool>& used, size_t i);
 
         size_t _n;
         // n-2 splits
-        std::vector<nsplit_t> _splits;
-        // internal edge lengths, indexed by an integer 0, 1, ..., n-3
-        std::vector<double> _int_d;
+        nedge_set_t _nedge_set;
         // leaf edge lengths,     indexed by an integer 0, 1, ..., n
         std::vector<double> _leaf_d;
         // leaf names

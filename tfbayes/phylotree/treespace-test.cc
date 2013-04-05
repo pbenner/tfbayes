@@ -31,16 +31,15 @@ void test1()
         set<size_t> s3;
         s3.insert(0);
         s3.insert(5);
-        nsplit_t e1(5, s1);
-        nsplit_t e2(5, s2);
-        nsplit_t e3(5, s3);
+        nedge_t e1(5, s1, 5.5);
+        nedge_t e2(5, s2, 2.5);
+        nedge_t e3(5, s3, 1.5);
         // construct tree
-        vector<nsplit_t> splits;
-        vector<double>   int_d;
+        nedge_set_t nedge_set;
         // internal edge lengths
-        splits.push_back(e1); int_d.push_back(5.5);
-        splits.push_back(e2); int_d.push_back(2.5);
-        splits.push_back(e3); int_d.push_back(1.5);
+        nedge_set.push_back(e1);
+        nedge_set.push_back(e2);
+        nedge_set.push_back(e3);
         // leaf edge lengths
         vector<double> leaf_d(6, 1);
         leaf_d[0] = 0.5;
@@ -57,7 +56,7 @@ void test1()
         leaf_names.push_back("leaf 3");
         leaf_names.push_back("leaf 4");
         leaf_names.push_back("leaf 5");
-        ntree_t ntree(splits, int_d, leaf_d, leaf_names);
+        ntree_t ntree(nedge_set, leaf_d, leaf_names);
         // print tree
         pt_root_t* tree = ntree.export_tree();
         cout << "exporting tree:" << endl;
@@ -85,20 +84,19 @@ void test2()
         set<size_t> s5;
         s5.insert(0);
         s5.insert(1);
-        nsplit_t e1(7, s1);
-        nsplit_t e2(7, s2);
-        nsplit_t e3(7, s3);
-        nsplit_t e4(7, s4);
-        nsplit_t e5(7, s5);
+        nedge_t e1(7, s1, 1);
+        nedge_t e2(7, s2, 1);
+        nedge_t e3(7, s3, 1);
+        nedge_t e4(7, s4, 1);
+        nedge_t e5(7, s5, 1);
         // construct tree
-        vector<nsplit_t> splits;
-        vector<double>   int_d;
+        nedge_set_t nedge_set;
         // internal edge lengths
-        splits.push_back(e1); int_d.push_back(1);
-        splits.push_back(e2); int_d.push_back(1);
-        splits.push_back(e3); int_d.push_back(1);
-        splits.push_back(e4); int_d.push_back(1);
-        splits.push_back(e5); int_d.push_back(1);
+        nedge_set.push_back(e1);
+        nedge_set.push_back(e2);
+        nedge_set.push_back(e3);
+        nedge_set.push_back(e4);
+        nedge_set.push_back(e5);
         // leaf edge lengths
         vector<double> leaf_d(8, 1);
         leaf_d[0] = 0.5;
@@ -119,7 +117,7 @@ void test2()
         leaf_names.push_back("leaf 5");
         leaf_names.push_back("leaf 6");
         leaf_names.push_back("leaf 7");
-        ntree_t ntree(splits, int_d, leaf_d, leaf_names);
+        ntree_t ntree(nedge_set, leaf_d, leaf_names);
         // print tree
         pt_root_t* tree = ntree.export_tree();
         cout << "exporting tree:" << endl;

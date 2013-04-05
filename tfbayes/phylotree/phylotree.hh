@@ -97,7 +97,7 @@ public:
         }
 
         std::ostream& print_distances(std::ostream& o) {
-                if (root()) { 
+                if (root()) {
                         o << "{";
                         left ->print_distances(o);
                         o  << ", ";

@@ -17,6 +17,8 @@
 
 #include <treespace.hh>
 
+#include <math.h>
+
 using namespace std;
 
 /* tools
@@ -70,9 +72,9 @@ static
 vector<size_t> difference(const vector<size_t>& x, const vector<size_t>& y)
 {
         vector<size_t> result;
-        // both vectors are assumed to be sorted!
+
         set_difference(x.begin(), x.end(), y.begin(), y.end(),
-                            back_inserter(result));
+                       back_inserter(result));
 
         return result;
 }
@@ -174,28 +176,57 @@ operator<< (ostream& o, const nsplit_t nsplit)
         return o;
 }
 
+/* nedge_t
+ *****************************************************************************/
+
+nedge_t::nedge_t(size_t n, std::set<size_t> tmp, double d)
+        : nsplit_t(n, tmp), _d(d)
+{ }
+
+nedge_t::nedge_t(const nsplit_t& nsplit, double d)
+        : nsplit_t(nsplit), _d(d)
+{ }
+
+double
+nedge_t::d() const
+{
+        return _d;
+}
+
+/* nedge_set_t
+ *****************************************************************************/
+
+double
+nedge_set_t::length() const
+{
+        double result = 0.0;
+
+        for (nedge_set_t::const_iterator it = begin(); it != end(); it++) {
+                result += it->d()*it->d();
+        }
+        return sqrt(result);
+}
+
 /* ntree_t
  *****************************************************************************/
 
-ntree_t::ntree_t(const vector<nsplit_t>& splits,
-                 const vector<double>& int_d,
+ntree_t::ntree_t(const nedge_set_t& nedge_set,
                  const vector<double>& leaf_d,
                  const vector<string> leaf_names)
-        : _n(splits.size()+2),
-          _splits(splits),
-          _int_d(int_d),
+        : _n(nedge_set.size()+2),
+          _nedge_set(nedge_set),
           _leaf_d(leaf_d),
           _leaf_names(leaf_names) {
         // check that there is at least one split
-        assert(splits.size() > 0);
-        // we need n-2 splits to fully specify a tree
-        assert(splits.size() == splits.begin()->n()-2);
+        assert(nedge_set.size() > 0);
+        // we need n-2 internal edges to fully specify a tree
+        assert(nedge_set.size() == nedge_set.begin()->n()-2);
         assert(leaf_names.size() == 0 || leaf_names.size() == n()+1);
         // check splits for compatibility
-        for (vector<nsplit_t>::const_iterator it = splits.begin(); it != splits.end(); it++) {
-                for (vector<nsplit_t>::const_iterator is = splits.begin(); is != it; is++) {
+        for (nedge_set_t::const_iterator it = nedge_set.begin(); it != nedge_set.end(); it++) {
+                for (nedge_set_t::const_iterator is = nedge_set.begin(); is != it; is++) {
                         if (!compatible(*it, *is)) {
-                                cerr << "Invalid set of splits."
+                                cerr << "Invalid set of internal edges."
                                           << endl;
                                 exit(EXIT_FAILURE);
                         }
@@ -204,15 +235,15 @@ ntree_t::ntree_t(const vector<nsplit_t>& splits,
 }
 
 boost::tuple<ssize_t, ssize_t, ssize_t>
-ntree_t::next_splits(const nsplit_t& split, vector<bool>& used) {
+ntree_t::next_splits(const nsplit_t& nsplit, vector<bool>& used) {
         // return value:
         // (int edge, int edge, -1) OR (int edge, -1, leaf edge)
         //
         // check first if we need only one internal edge
         for (size_t i = 0; i < n()-2; i++) {
                 if (used[i]) continue;
-                if (splits(i).part1().size() == split.part1().size() + 1) {
-                        vector<size_t> tmp = difference(splits(i).part1(), split.part1());
+                if (nedge_set(i).part1().size() == nsplit.part1().size() + 1) {
+                        vector<size_t> tmp = difference(nedge_set(i).part1(), nsplit.part1());
                         if (tmp.size() == 1) {
                                 // mark edge used
                                 used[i] = true;
@@ -226,8 +257,8 @@ ntree_t::next_splits(const nsplit_t& split, vector<bool>& used) {
                 if (used[i]) continue;
                 for (size_t j = 0; j < i; j++) {
                         if (used[j]) continue;
-                        vector<size_t> tmp = intersection(splits(i).part1(), splits(j).part1());
-                        if (equal(tmp.begin(), tmp.end(), split.part1().begin())) {
+                        vector<size_t> tmp = intersection(nedge_set(i).part1(), nedge_set(j).part1());
+                        if (equal(tmp.begin(), tmp.end(), nsplit.part1().begin())) {
                                 // mark both edges used
                                 used[i] = true;
                                 used[j] = true;
@@ -272,14 +303,14 @@ ntree_t::export_subtree(vector<bool>& used, size_t i) {
         pt_node_t* left_tree;
         pt_node_t* right_tree;
         // check if there are only leafs following
-        if (splits(i).part2().size() == 2) {
-                left_tree  = new pt_leaf_t(-1, leaf_d(splits(i).part2(0)), leaf_name(splits(i).part2(0)));
-                right_tree = new pt_leaf_t(-1, leaf_d(splits(i).part2(1)), leaf_name(splits(i).part2(1)));
+        if (nedge_set(i).part2().size() == 2) {
+                left_tree  = new pt_leaf_t(-1, leaf_d(nedge_set(i).part2(0)), leaf_name(nedge_set(i).part2(0)));
+                right_tree = new pt_leaf_t(-1, leaf_d(nedge_set(i).part2(1)), leaf_name(nedge_set(i).part2(1)));
         }
         // otherwise we need to do a recursive call
         else {
                 // find the next internal edge(s)
-                boost::tuple<ssize_t, ssize_t, ssize_t> ns = next_splits(splits(i), used);
+                boost::tuple<ssize_t, ssize_t, ssize_t> ns = next_splits(nedge_set(i), used);
                 // check if there is one or two edges folliwing
                 if (boost::get<1>(ns) != -1) {
                         left_tree  = export_subtree(used, boost::get<0>(ns));
@@ -290,7 +321,7 @@ ntree_t::export_subtree(vector<bool>& used, size_t i) {
                         right_tree = new pt_leaf_t(-1, leaf_d(boost::get<2>(ns)), leaf_name(boost::get<2>(ns)));
                 }
         }
-        return new pt_node_t(-1, int_d(i), left_tree, right_tree);
+        return new pt_node_t(-1, nedge_set(i).d(), left_tree, right_tree);
 }
 
 size_t
@@ -298,24 +329,14 @@ ntree_t::n() const {
         return _n;
 }
 
-const vector<nsplit_t>&
-ntree_t::splits() const {
-        return _splits;
+const nedge_set_t&
+ntree_t::nedge_set() const {
+        return _nedge_set;
 }
 
-const nsplit_t&
-ntree_t::splits(size_t i) const {
-        return splits()[i];
-}
-
-const vector<double>&
-ntree_t::int_d() const {
-        return _int_d;
-}
-
-double
-ntree_t::int_d(size_t i) const {
-        return int_d()[i];
+const nedge_t&
+ntree_t::nedge_set(size_t i) const {
+        return nedge_set()[i];
 }
 
 const vector<double>&
