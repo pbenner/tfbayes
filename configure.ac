@@ -92,8 +92,11 @@ AC_CHECK_LIB([gsl], [gsl_blas_dgemm],,
   AC_MSG_ERROR([this library is required]))
 AC_CHECK_LIB([pthread], [pthread_create], LIB_PTHREAD="-lpthread",
   AC_MSG_ERROR([this library is required]))
+AC_CHECK_LIB([glpk], [glp_simplex], LIB_GLPK="-lglpk",
+  AC_MSG_ERROR([this library is required]))
 
 AC_SUBST(LIB_PTHREAD)
+AC_SUBST(LIB_GLPK)
 
 AX_BOOST_BASE([1.37.0],,
 	AC_MSG_ERROR([this library is required]))

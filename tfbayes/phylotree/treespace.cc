@@ -17,7 +17,10 @@
 
 #include <treespace.hh>
 
-#include <math.h>
+#include <cmath>
+#include <cstdlib>
+
+#include <glpk.h>
 
 using namespace std;
 
@@ -173,6 +176,15 @@ operator<< (ostream& o, const nsplit_t nsplit)
                           << "}";
                 }
         }
+        return o;
+}
+
+ostream&
+operator<< (ostream& o, const nedge_t nedge)
+{
+        o << nedge.d() << ": "
+          << static_cast<nsplit_t>(nedge);
+
         return o;
 }
 
@@ -362,4 +374,148 @@ ntree_t::leaf_name(size_t i) const {
         else {
                 return _empty_string;
         }
+}
+
+/* incompatibility_graph_t
+ *****************************************************************************/
+
+incompatibility_graph_t::incompatibility_graph_t(
+        const nedge_set_t& a,
+        const nedge_set_t& b)
+        : _nrow(a.size()*b.size()),
+          _ncol(a.size()+b.size())
+{
+        assert(a.size() > 0);
+        assert(b.size() > 0);
+
+        double anorm = pow(a.length(), 2);
+        double bnorm = pow(b.length(), 2);
+
+        _ia = (int    *)malloc(1+nrow()*     2*sizeof(int));
+        _ja = (int    *)malloc(1+nrow()*     2*sizeof(int));
+        _ar = (double *)malloc(1+nrow()*     2*sizeof(double));
+        _xw = (double *)malloc(1+       ncol()*sizeof(double));
+
+        // do not use elements indexed by zero
+        _ia[0] = 0; _ja[0] = 0;
+        _ar[0] = 0; _xw[0] = 0;
+
+        // construct graph
+        for (size_t i = 0; i < a.size(); i++) {
+                for (size_t j = 0; j < b.size(); j++) {
+                        _ia[2*(i*b.size() + j) + 1] = i*b.size() + j + 1;
+                        _ia[2*(i*b.size() + j) + 2] = i*b.size() + j + 1;
+                        if (compatible(a[i], b[i])) {
+                                _ja[i + 1]            = 0.0;
+                                _ja[j + 1 + a.size()] = 0.0;
+                        }
+                        else {
+                                _ja[i + 1]            = 1.0;
+                                _ja[j + 1 + a.size()] = 1.0;
+                        }
+                }
+        }
+        // weights
+        for (size_t i = 0; i < a.size(); i++) {
+                _xw[i + 1] = pow(a[i].d(), 2)/anorm;
+        }
+        for (size_t j = 0; j < b.size(); j++) {
+                _xw[j + 1 + a.size()] = pow(b[j].d(), 2)/bnorm;
+        }
+}
+
+incompatibility_graph_t::~incompatibility_graph_t()
+{
+        free(_ia);
+        free(_ja);
+        free(_ar);
+        free(_xw);
+}
+
+void
+incompatibility_graph_t::min_weight_cover() const
+{
+        glp_prob *lp;
+        glp_smcp parm;
+        lp = glp_create_prob();
+        glp_init_smcp(&parm);
+        glp_set_obj_dir(lp, GLP_MIN);
+        parm.msg_lev = GLP_MSG_OFF;
+        // set dimensions
+        glp_add_rows(lp, nrow());
+        glp_add_cols(lp, ncol());
+        // set row and column bounds
+        for (size_t i = 0; i < nrow(); i++) {
+                glp_set_row_bnds(lp, i+1, GLP_LO, 1.0, 0.0);
+        }
+        for (size_t j = 0; j < ncol(); j++) {
+                glp_set_col_bnds(lp, j+1, GLP_LO, 0.0, 0.0);
+                glp_set_col_kind(lp, j+1, GLP_IV);
+        }
+        // set weights
+        for (size_t k = 0; k < ncol(); k++) {
+                glp_set_obj_coef(lp, k+1, xw(k+1));
+        }
+        // load the constraint matrix
+        glp_load_matrix(lp, 6, ia(), ja(), ar());
+}
+
+size_t
+incompatibility_graph_t::nrow() const
+{
+        return _nrow;
+}
+
+size_t
+incompatibility_graph_t::ncol() const
+{
+        return _ncol;
+}
+
+const int*
+incompatibility_graph_t::ia() const
+{
+        return _ia;
+}
+
+const int
+incompatibility_graph_t::ia(size_t i) const
+{
+        return _ia[i];
+}
+
+const int*
+incompatibility_graph_t::ja() const
+{
+        return _ja;
+}
+
+const int
+incompatibility_graph_t::ja(size_t i) const
+{
+        return _ja[i];
+}
+
+const double*
+incompatibility_graph_t::ar() const
+{
+        return _ar;
+}
+
+const double
+incompatibility_graph_t::ar(size_t i) const
+{
+        return _ar[i];
+}
+
+const double*
+incompatibility_graph_t::xw() const
+{
+        return _xw;
+}
+
+const double
+incompatibility_graph_t::xw(size_t i) const
+{
+        return _xw[i];
 }

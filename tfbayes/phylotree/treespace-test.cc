@@ -125,11 +125,72 @@ void test2()
         tree->destroy();
 }
 
+#include <glpk.h>
+
+void test3()
+{
+        glp_prob *lp;
+        glp_smcp parm;
+        int ia[1+1000], ja[1+1000];
+        double ar[1+1000], z, x1, x2, x3, x4;
+        lp = glp_create_prob();
+        glp_init_smcp(&parm);
+        glp_set_obj_dir(lp, GLP_MIN);
+        //
+        parm.msg_lev = GLP_MSG_OFF;
+        //
+        glp_add_rows(lp, 3);
+        glp_add_cols(lp, 4);
+        //
+        glp_set_row_bnds(lp, 1, GLP_LO, 1.0, 0.0);
+        glp_set_row_bnds(lp, 2, GLP_LO, 1.0, 0.0);
+        glp_set_row_bnds(lp, 3, GLP_LO, 1.0, 0.0);
+        //
+        glp_set_col_bnds(lp, 1, GLP_LO, 0.0, 0.0);
+        glp_set_col_bnds(lp, 2, GLP_LO, 0.0, 0.0);
+        glp_set_col_bnds(lp, 3, GLP_LO, 0.0, 0.0);
+        glp_set_col_bnds(lp, 4, GLP_LO, 0.0, 0.0);
+        //
+        glp_set_col_kind(lp, 1, GLP_IV);
+        glp_set_col_kind(lp, 2, GLP_IV);
+        glp_set_col_kind(lp, 3, GLP_IV);
+        glp_set_col_kind(lp, 4, GLP_IV);
+        //
+        glp_set_obj_coef(lp, 1, 2.0);
+        glp_set_obj_coef(lp, 2, 1.0);
+        glp_set_obj_coef(lp, 3, 1.0);
+        glp_set_obj_coef(lp, 4, 1.0);
+        //
+        ia[ 1] = 1, ja[ 1] = 1, ar[ 1] = 1.0;
+        ia[ 2] = 1, ja[ 2] = 3, ar[ 2] = 1.0;
+        ia[ 3] = 2, ja[ 3] = 2, ar[ 3] = 1.0;
+        ia[ 4] = 2, ja[ 4] = 3, ar[ 4] = 1.0;
+        ia[ 5] = 3, ja[ 5] = 2, ar[ 5] = 1.0;
+        ia[ 6] = 3, ja[ 6] = 4, ar[ 6] = 1.0;
+        glp_load_matrix(lp, 6, ia, ja, ar);
+        //
+        glp_simplex(lp, &parm);
+        //
+        if (glp_get_status(lp) == GLP_OPT) {
+                printf("Optimal solution found.\n");
+        }
+        //
+        z = glp_get_obj_val(lp);
+        x1 = glp_get_col_prim(lp, 1);
+        x2 = glp_get_col_prim(lp, 2);
+        x3 = glp_get_col_prim(lp, 3);
+        x4 = glp_get_col_prim(lp, 4);
+        printf("\nz = %g; x1 = %g; x2 = %g; x3 = %g; x4 = %g\n",
+               z, x1, x2, x3, x4);
+        glp_delete_prob(lp);
+}
+
 int
 main(void)
 {
-        test1();
+        test1(); cout << endl;
         test2();
+        test3();
 
         return 0;
 }

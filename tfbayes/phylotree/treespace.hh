@@ -75,6 +75,7 @@ public:
 bool compatible(const nsplit_t& s1, const nsplit_t& s2);
 
 std::ostream& operator<< (std::ostream& o, const nsplit_t nsplit);
+std::ostream& operator<< (std::ostream& o, const nedge_t nedge);
 
 class ntree_t {
 public:
@@ -107,6 +108,42 @@ protected:
         std::vector<std::string> _leaf_names;
         // empty leaf name
         const std::string _empty_string;
+};
+
+class npath_t {
+public:
+        std::vector<nedge_set_t> A;
+        std::vector<nedge_set_t> B;
+};
+
+class incompatibility_graph_t {
+public:
+         incompatibility_graph_t(const nedge_set_t& a, const nedge_set_t& b);
+        ~incompatibility_graph_t();
+
+        void min_weight_cover() const;
+
+        // dimensionality of the constaint matrix
+        size_t nrow() const;
+        size_t ncol() const;
+        // row and column indices
+        const int* ia() const;
+        const int* ja() const;
+        const int  ia(size_t i) const;
+        const int  ja(size_t i) const;
+        // values of the constraint matrix
+        const double* ar() const;
+        const double  ar(size_t i) const;
+        // vertex weights
+        const double* xw() const;
+        const double  xw(size_t i) const;
+
+protected:
+        size_t _nrow;
+        size_t _ncol;
+
+        int *_ia, *_ja;
+        double *_ar, *_xw;
 };
 
 #endif /* TREESPACE_HH */

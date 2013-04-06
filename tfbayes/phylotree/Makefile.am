@@ -85,6 +85,7 @@ libtfbayes_phylotree_la_SOURCES = \
 	treespace.cc \
 	treespace.hh
 libtfbayes_phylotree_la_LIBADD  = -lm
+libtfbayes_phylotree_la_LIBADD += $(LIB_GLPK)
 libtfbayes_phylotree_la_LIBADD += $(top_builddir)/tfbayes/exception/libtfbayes-exception.la
 libtfbayes_phylotree_la_LIBADD += $(top_builddir)/tfbayes/interface/libtfbayes-interface.la
 libtfbayes_phylotree_la_LDFLAGS = -no-undefined -version-info 0:0:0
