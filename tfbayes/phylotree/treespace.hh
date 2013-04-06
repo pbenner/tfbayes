@@ -137,6 +137,9 @@ public:
         // vertex weights
         const double* xw() const;
         const double  xw(size_t i) const;
+        // logical values that indicate the presence of an edge
+        const bool* au() const;
+        const bool  au(size_t i) const;
 
 protected:
         size_t _nrow;
@@ -144,6 +147,7 @@ protected:
 
         int *_ia, *_ja;
         double *_ar, *_xw;
+        bool *_au;
 };
 
 #endif /* TREESPACE_HH */

@@ -21,6 +21,9 @@ using namespace std;
 
 void test1()
 {
+        cout << "test 1" << endl
+             <<"------------------------------------------------------------"
+             << endl;
         // prepare splits
         set<size_t> s1;
         s1.insert(3);
@@ -66,6 +69,9 @@ void test1()
 
 void test2()
 {
+        cout << "test 2" << endl
+             <<"------------------------------------------------------------"
+             << endl;
         // prepare splits
         set<size_t> s1;
         s1.insert(3);
@@ -129,6 +135,9 @@ void test2()
 
 void test3()
 {
+        cout << "test 3" << endl
+             <<"------------------------------------------------------------"
+             << endl;
         glp_prob *lp;
         glp_smcp parm;
         int ia[1+1000], ja[1+1000];
@@ -185,12 +194,47 @@ void test3()
         glp_delete_prob(lp);
 }
 
+void test4()
+{
+        cout << "test 4" << endl
+             <<"------------------------------------------------------------"
+             << endl;
+        // prepare splits
+        set<size_t> s1;
+        s1.insert(1);
+        s1.insert(2);
+        set<size_t> s3;
+        s3.insert(0);
+        s3.insert(4);
+        set<size_t> s4;
+        s4.insert(2);
+        s4.insert(3);
+        set<size_t> s5;
+        s5.insert(0);
+        s5.insert(1);
+        nedge_t e1(4, s1, 0.5);
+        nedge_t e3(4, s3, 1.0);
+        nedge_t e4(4, s4, 1.0);
+        nedge_t e5(4, s5, 0.5);
+        // construct edge sets
+        nedge_set_t nedge_set1;
+        nedge_set_t nedge_set2;
+        nedge_set1.push_back(e1);
+        nedge_set1.push_back(e3);
+        nedge_set2.push_back(e4);
+        nedge_set2.push_back(e5);
+
+        incompatibility_graph_t igraph(nedge_set1, nedge_set2);
+        igraph.min_weight_cover();
+}
+
 int
 main(void)
 {
         test1(); cout << endl;
-        test2();
-        test3();
+        test2(); cout << endl;
+        test3(); cout << endl;
+        test4(); cout << endl;
 
         return 0;
 }

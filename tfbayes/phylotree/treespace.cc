@@ -391,10 +391,11 @@ incompatibility_graph_t::incompatibility_graph_t(
         double anorm = pow(a.length(), 2);
         double bnorm = pow(b.length(), 2);
 
-        _ia = (int    *)malloc(1+nrow()*     2*sizeof(int));
-        _ja = (int    *)malloc(1+nrow()*     2*sizeof(int));
-        _ar = (double *)malloc(1+nrow()*     2*sizeof(double));
-        _xw = (double *)malloc(1+       ncol()*sizeof(double));
+        _ia = (int    *)malloc(1+nrow()*2*sizeof(int));
+        _ja = (int    *)malloc(1+nrow()*2*sizeof(int));
+        _ar = (double *)malloc(1+nrow()*2*sizeof(double));
+        _xw = (double *)malloc(1+ncol()*  sizeof(double));
+        _au = (bool   *)malloc(1+nrow()*  sizeof(bool));
 
         // do not use elements indexed by zero
         _ia[0] = 0; _ja[0] = 0;
@@ -403,15 +404,24 @@ incompatibility_graph_t::incompatibility_graph_t(
         // construct graph
         for (size_t i = 0; i < a.size(); i++) {
                 for (size_t j = 0; j < b.size(); j++) {
+                        // row index
                         _ia[2*(i*b.size() + j) + 1] = i*b.size() + j + 1;
                         _ia[2*(i*b.size() + j) + 2] = i*b.size() + j + 1;
-                        if (compatible(a[i], b[i])) {
-                                _ja[i + 1]            = 0.0;
-                                _ja[j + 1 + a.size()] = 0.0;
+                        // column index
+                        _ja[2*(i*b.size() + j) + 1] = i + 1;
+                        _ja[2*(i*b.size() + j) + 2] = j + 1 + a.size();
+                        // value of the constraint matrix
+                        if (compatible(a[i], b[j])) {
+                                _ar[2*(i*b.size() + j) + 1] = 0.0;
+                                _ar[2*(i*b.size() + j) + 2] = 0.0;
+                                // edge is not present
+                                _au[i*b.size() + j] = false;
                         }
                         else {
-                                _ja[i + 1]            = 1.0;
-                                _ja[j + 1 + a.size()] = 1.0;
+                                _ar[2*(i*b.size() + j) + 1] = 1.0;
+                                _ar[2*(i*b.size() + j) + 2] = 1.0;
+                                // edge is present
+                                _au[i*b.size() + j] = true;
                         }
                 }
         }
@@ -430,6 +440,7 @@ incompatibility_graph_t::~incompatibility_graph_t()
         free(_ja);
         free(_ar);
         free(_xw);
+        free(_au);
 }
 
 void
@@ -446,7 +457,12 @@ incompatibility_graph_t::min_weight_cover() const
         glp_add_cols(lp, ncol());
         // set row and column bounds
         for (size_t i = 0; i < nrow(); i++) {
-                glp_set_row_bnds(lp, i+1, GLP_LO, 1.0, 0.0);
+                if (au(i)) {
+                        glp_set_row_bnds(lp, i+1, GLP_LO, 1.0, 0.0);
+                }
+                else {
+                        glp_set_row_bnds(lp, i+1, GLP_FX, 0.0, 0.0);
+                }
         }
         for (size_t j = 0; j < ncol(); j++) {
                 glp_set_col_bnds(lp, j+1, GLP_LO, 0.0, 0.0);
@@ -457,7 +473,18 @@ incompatibility_graph_t::min_weight_cover() const
                 glp_set_obj_coef(lp, k+1, xw(k+1));
         }
         // load the constraint matrix
-        glp_load_matrix(lp, 6, ia(), ja(), ar());
+        glp_load_matrix(lp, nrow()*2, ia(), ja(), ar());
+        glp_simplex(lp, &parm);
+        // output result
+        if (glp_get_status(lp) == GLP_OPT) {
+                printf("Optimal solution found.\n");
+        }
+        printf("z: %g\n", glp_get_obj_val(lp));
+        for (size_t j = 0; j < ncol(); j++) {
+                printf("x%d: %g\n", (int)(j+1), glp_get_col_prim(lp, j+1));
+        }
+        // free space
+        glp_delete_prob(lp);
 }
 
 size_t
@@ -518,4 +545,16 @@ const double
 incompatibility_graph_t::xw(size_t i) const
 {
         return _xw[i];
+}
+
+const bool*
+incompatibility_graph_t::au() const
+{
+        return _au;
+}
+
+const bool
+incompatibility_graph_t::au(size_t i) const
+{
+        return _au[i];
 }
