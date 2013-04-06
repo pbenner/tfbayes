@@ -225,7 +225,29 @@ void test4()
         nedge_set2.push_back(e5);
 
         incompatibility_graph_t igraph(nedge_set1, nedge_set2);
-        igraph.min_weight_cover();
+        vertex_cover_t vertex_cover = igraph.min_weight_cover();
+
+        cout << "weight: " << vertex_cover.weight << endl;
+        cout << "set a:" << endl;
+        for (size_t i = 0; i < vertex_cover.a.size(); i++) {
+                cout << vertex_cover.a[i]
+                     << endl;
+        }
+        cout << "set a_comp:" << endl;
+        for (size_t i = 0; i < vertex_cover.a_comp.size(); i++) {
+                cout << vertex_cover.a_comp[i]
+                     << endl;
+        }
+        cout << "set b:" << endl;
+        for (size_t i = 0; i < vertex_cover.b.size(); i++) {
+                cout << vertex_cover.b[i]
+                     << endl;
+        }
+        cout << "set b_comp:" << endl;
+        for (size_t i = 0; i < vertex_cover.b_comp.size(); i++) {
+                cout << vertex_cover.b_comp[i]
+                     << endl;
+        }
 }
 
 int

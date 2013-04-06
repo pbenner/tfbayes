@@ -116,16 +116,45 @@ public:
         std::vector<nedge_set_t> B;
 };
 
+class vertex_cover_t {
+public:
+        vertex_cover_t(nedge_set_t a, nedge_set_t a_comp,
+                       nedge_set_t b, nedge_set_t b_comp,
+                       double weight)
+                : a(a), a_comp(a_comp), b(b), b_comp(b_comp),
+                  weight(weight)
+                { }
+
+        // cover for vertices in a
+        nedge_set_t a;
+        // complement
+        nedge_set_t a_comp;
+        // cover for vertices in b
+        nedge_set_t b;
+        // complement
+        nedge_set_t b_comp;
+        // weight of the vertex cover
+        double weight;
+};
+
 class incompatibility_graph_t {
 public:
          incompatibility_graph_t(const nedge_set_t& a, const nedge_set_t& b);
         ~incompatibility_graph_t();
 
-        void min_weight_cover() const;
+        vertex_cover_t min_weight_cover() const;
 
         // dimensionality of the constaint matrix
         size_t nrow() const;
         size_t ncol() const;
+        // edge sets
+        const nedge_set_t& a() const;
+        const nedge_set_t& b() const;
+        const nedge_t& a(size_t i) const;
+        const nedge_t& b(size_t i) const;
+        // number of edges in a and b
+        size_t na() const;
+        size_t nb() const;
         // row and column indices
         const int* ia() const;
         const int* ja() const;
@@ -142,6 +171,11 @@ public:
         const bool  au(size_t i) const;
 
 protected:
+        nedge_set_t _a;
+        nedge_set_t _b;
+        size_t _na;
+        size_t _nb;
+
         size_t _nrow;
         size_t _ncol;
 

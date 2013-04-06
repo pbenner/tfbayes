@@ -382,11 +382,15 @@ ntree_t::leaf_name(size_t i) const {
 incompatibility_graph_t::incompatibility_graph_t(
         const nedge_set_t& a,
         const nedge_set_t& b)
-        : _nrow(a.size()*b.size()),
+        : _a(a),
+          _b(b),
+          _na(a.size()),
+          _nb(b.size()),
+          _nrow(a.size()*b.size()),
           _ncol(a.size()+b.size())
 {
-        assert(a.size() > 0);
-        assert(b.size() > 0);
+        assert(na() > 0);
+        assert(nb() > 0);
 
         double anorm = pow(a.length(), 2);
         double bnorm = pow(b.length(), 2);
@@ -402,35 +406,35 @@ incompatibility_graph_t::incompatibility_graph_t(
         _ar[0] = 0; _xw[0] = 0;
 
         // construct graph
-        for (size_t i = 0; i < a.size(); i++) {
-                for (size_t j = 0; j < b.size(); j++) {
+        for (size_t i = 0; i < na(); i++) {
+                for (size_t j = 0; j < nb(); j++) {
                         // row index
-                        _ia[2*(i*b.size() + j) + 1] = i*b.size() + j + 1;
-                        _ia[2*(i*b.size() + j) + 2] = i*b.size() + j + 1;
+                        _ia[2*(i*nb() + j) + 1] = i*nb() + j + 1;
+                        _ia[2*(i*nb() + j) + 2] = i*nb() + j + 1;
                         // column index
-                        _ja[2*(i*b.size() + j) + 1] = i + 1;
-                        _ja[2*(i*b.size() + j) + 2] = j + 1 + a.size();
+                        _ja[2*(i*nb() + j) + 1] = i + 1;
+                        _ja[2*(i*nb() + j) + 2] = j + 1 + na();
                         // value of the constraint matrix
                         if (compatible(a[i], b[j])) {
-                                _ar[2*(i*b.size() + j) + 1] = 0.0;
-                                _ar[2*(i*b.size() + j) + 2] = 0.0;
+                                _ar[2*(i*nb() + j) + 1] = 0.0;
+                                _ar[2*(i*nb() + j) + 2] = 0.0;
                                 // edge is not present
-                                _au[i*b.size() + j] = false;
+                                _au[i*nb() + j] = false;
                         }
                         else {
-                                _ar[2*(i*b.size() + j) + 1] = 1.0;
-                                _ar[2*(i*b.size() + j) + 2] = 1.0;
+                                _ar[2*(i*nb() + j) + 1] = 1.0;
+                                _ar[2*(i*nb() + j) + 2] = 1.0;
                                 // edge is present
-                                _au[i*b.size() + j] = true;
+                                _au[i*nb() + j] = true;
                         }
                 }
         }
         // weights
-        for (size_t i = 0; i < a.size(); i++) {
+        for (size_t i = 0; i < na(); i++) {
                 _xw[i + 1] = pow(a[i].d(), 2)/anorm;
         }
-        for (size_t j = 0; j < b.size(); j++) {
-                _xw[j + 1 + a.size()] = pow(b[j].d(), 2)/bnorm;
+        for (size_t j = 0; j < nb(); j++) {
+                _xw[j + 1 + na()] = pow(b[j].d(), 2)/bnorm;
         }
 }
 
@@ -443,9 +447,16 @@ incompatibility_graph_t::~incompatibility_graph_t()
         free(_au);
 }
 
-void
+vertex_cover_t
 incompatibility_graph_t::min_weight_cover() const
 {
+        // result
+        nedge_set_t ra;
+        nedge_set_t ra_comp;
+        nedge_set_t rb;
+        nedge_set_t rb_comp;
+        double weight;
+        // integer programming problem
         glp_prob *lp;
         glp_smcp parm;
         lp = glp_create_prob();
@@ -475,16 +486,54 @@ incompatibility_graph_t::min_weight_cover() const
         // load the constraint matrix
         glp_load_matrix(lp, nrow()*2, ia(), ja(), ar());
         glp_simplex(lp, &parm);
-        // output result
-        if (glp_get_status(lp) == GLP_OPT) {
-                printf("Optimal solution found.\n");
+        // save result
+        weight = glp_get_obj_val(lp);
+        for (size_t j = 0; j < na(); j++) {
+                glp_get_col_prim(lp, j+1) ? ra.push_back(a(j)) : ra_comp.push_back(a(j));
         }
-        printf("z: %g\n", glp_get_obj_val(lp));
-        for (size_t j = 0; j < ncol(); j++) {
-                printf("x%d: %g\n", (int)(j+1), glp_get_col_prim(lp, j+1));
+        for (size_t j = 0; j < nb(); j++) {
+                glp_get_col_prim(lp, na()+j+1) ? rb.push_back(b(j)) : rb_comp.push_back(b(j));
         }
         // free space
         glp_delete_prob(lp);
+        // return result
+        return vertex_cover_t(ra, ra_comp, rb, rb_comp, weight);
+}
+
+const nedge_set_t&
+incompatibility_graph_t::a() const
+{
+        return _a;
+}
+
+const nedge_set_t&
+incompatibility_graph_t::b() const
+{
+        return _b;
+}
+
+const nedge_t&
+incompatibility_graph_t::a(size_t i) const
+{
+        return _a[i];
+}
+
+const nedge_t&
+incompatibility_graph_t::b(size_t i) const
+{
+        return _b[i];
+}
+
+size_t
+incompatibility_graph_t::na() const
+{
+        return _na;
+}
+
+size_t
+incompatibility_graph_t::nb() const
+{
+        return _nb;
 }
 
 size_t
