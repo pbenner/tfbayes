@@ -142,7 +142,7 @@ public:
          incompatibility_graph_t(const nedge_set_t& a, const nedge_set_t& b);
         ~incompatibility_graph_t();
 
-        vertex_cover_t min_weight_cover() const;
+        vertex_cover_t min_weight_cover(double max_weight = 1.0) const;
 
         // dimensionality of the constaint matrix
         size_t nrow() const;

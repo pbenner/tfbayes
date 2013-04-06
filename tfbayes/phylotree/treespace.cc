@@ -448,7 +448,7 @@ incompatibility_graph_t::~incompatibility_graph_t()
 }
 
 vertex_cover_t
-incompatibility_graph_t::min_weight_cover() const
+incompatibility_graph_t::min_weight_cover(double max_weight) const
 {
         // result
         nedge_set_t ra;
@@ -488,11 +488,17 @@ incompatibility_graph_t::min_weight_cover() const
         glp_simplex(lp, &parm);
         // save result
         weight = glp_get_obj_val(lp);
-        for (size_t j = 0; j < na(); j++) {
-                glp_get_col_prim(lp, j+1) ? ra.push_back(a(j)) : ra_comp.push_back(a(j));
+        if (weight < max_weight) {
+                for (size_t j = 0; j < na(); j++) {
+                        glp_get_col_prim(lp, j+1) ? ra.push_back(a(j)) : ra_comp.push_back(a(j));
+                }
+                for (size_t j = 0; j < nb(); j++) {
+                        glp_get_col_prim(lp, na()+j+1) ? rb.push_back(b(j)) : rb_comp.push_back(b(j));
+                }
         }
-        for (size_t j = 0; j < nb(); j++) {
-                glp_get_col_prim(lp, na()+j+1) ? rb.push_back(b(j)) : rb_comp.push_back(b(j));
+        else {
+                ra = a();
+                rb = b();
         }
         // free space
         glp_delete_prob(lp);
