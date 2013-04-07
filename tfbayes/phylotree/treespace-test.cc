@@ -250,6 +250,76 @@ void test4()
         }
 }
 
+void test5()
+{
+        cout << "test 5" << endl
+             <<"------------------------------------------------------------"
+             << endl;
+        // prepare splits
+        set<size_t> s1;
+        s1.insert(3);
+        s1.insert(4);
+        set<size_t> s2;
+        s2.insert(1);
+        s2.insert(2);
+        set<size_t> s3;
+        s3.insert(0);
+        s3.insert(5);
+        set<size_t> s4;
+        s4.insert(2);
+        s4.insert(3);
+        set<size_t> s5;
+        s5.insert(4);
+        s5.insert(5);
+        set<size_t> s6;
+        s6.insert(0);
+        s6.insert(1);
+        nedge_t e1(5, s1, 5.5);
+        nedge_t e2(5, s2, 2.5);
+        nedge_t e3(5, s3, 1.5);
+        nedge_t e4(5, s4, 1.5);
+        nedge_t e5(5, s5, 1.5);
+        nedge_t e6(5, s6, 1.5);
+        // construct trees
+        nedge_set_t nedge_set1;
+        nedge_set_t nedge_set2;
+        // internal edge lengths
+        nedge_set1.push_back(e1);
+        nedge_set1.push_back(e2);
+        nedge_set1.push_back(e3);
+        nedge_set2.push_back(e4);
+        nedge_set2.push_back(e5);
+        nedge_set2.push_back(e6);
+        // leaf edge lengths
+        vector<double> leaf_d(6, 1);
+        leaf_d[0] = 0.5;
+        leaf_d[1] = 1.5;
+        leaf_d[2] = 2.5;
+        leaf_d[3] = 3.5;
+        leaf_d[4] = 4.5;
+        leaf_d[5] = 5.5;
+        // leaf names
+        vector<string> leaf_names;
+        leaf_names.push_back("leaf 0");
+        leaf_names.push_back("leaf 1");
+        leaf_names.push_back("leaf 2");
+        leaf_names.push_back("leaf 3");
+        leaf_names.push_back("leaf 4");
+        leaf_names.push_back("leaf 5");
+        ntree_t nt1(nedge_set1, leaf_d, leaf_names);
+        ntree_t nt2(nedge_set2, leaf_d, leaf_names);
+        // print tree
+        pt_root_t* t1 = nt1.export_tree();
+        pt_root_t* t2 = nt2.export_tree();
+        cout << "exporting tree:" << endl;
+        t1->print_phylotree(cout);
+        t2->print_phylotree(cout);
+        t1->destroy();
+        t2->destroy();
+
+        geodesic_t geodesic(nt1, nt2);
+}
+
 int
 main(void)
 {
@@ -257,6 +327,7 @@ main(void)
         test2(); cout << endl;
         test3(); cout << endl;
         test4(); cout << endl;
+        test5(); cout << endl;
 
         return 0;
 }

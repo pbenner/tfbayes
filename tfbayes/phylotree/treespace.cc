@@ -153,7 +153,7 @@ bool compatible(const nsplit_t& s1, const nsplit_t& s2)
 }
 
 ostream&
-operator<< (ostream& o, const nsplit_t nsplit)
+operator<< (ostream& o, const nsplit_t& nsplit)
 {
         o << "{";
         for (size_t i = 0; i < nsplit.part1().size(); i++) {
@@ -180,7 +180,7 @@ operator<< (ostream& o, const nsplit_t nsplit)
 }
 
 ostream&
-operator<< (ostream& o, const nedge_t nedge)
+operator<< (ostream& o, const nedge_t& nedge)
 {
         o << nedge.d() << ": "
           << static_cast<nsplit_t>(nedge);
@@ -217,6 +217,16 @@ nedge_set_t::length() const
                 result += it->d()*it->d();
         }
         return sqrt(result);
+}
+
+ostream&
+operator<< (ostream& o, const nedge_set_t& nedge_set)
+{
+        for (nedge_set_t::const_iterator it = nedge_set.begin(); it != nedge_set.end(); it++) {
+                o << *it << endl;
+        }
+
+        return o;
 }
 
 /* ntree_t
@@ -612,4 +622,48 @@ const bool
 incompatibility_graph_t::au(size_t i) const
 {
         return _au[i];
+}
+
+/* npath_t
+ *****************************************************************************/
+
+ostream&
+operator<< (ostream& o, const npath_t& npath)
+{
+        for (npath_t::const_iterator it = npath.begin(); it != npath.end(); it++) {
+                o << "replacing" << endl << it->first
+                  << "with"      << endl << it->second;
+        }
+
+        return o;
+}
+
+/* geodesic_t
+ *****************************************************************************/
+
+geodesic_t::geodesic_t(const ntree_t& t1, const ntree_t& t2)
+        // start with the cone path
+        : _npath(support_pair_t(t1.nedge_set(), t2.nedge_set()))
+{
+        for (npath_t::iterator it = _npath.begin(); it != _npath.end();)
+        {
+                incompatibility_graph_t graph(it->first, it->second);
+                vertex_cover_t vc = graph.min_weight_cover();
+                if (vc.weight < 1) {
+                        _npath.insert(it, support_pair_t(vc.a, vc.b_comp));
+                        _npath.insert(it, support_pair_t(vc.a_comp, vc.b));
+                        _npath.erase(it); --it; --it;
+                }
+                else {
+                        // advance iterator
+                        ++it;
+                }
+        }
+        _npath.sort();
+}
+
+const npath_t&
+geodesic_t::npath() const
+{
+        return _npath;
 }

@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <list>
 #include <set>
 #include <vector>
 
@@ -74,9 +75,6 @@ public:
 
 bool compatible(const nsplit_t& s1, const nsplit_t& s2);
 
-std::ostream& operator<< (std::ostream& o, const nsplit_t nsplit);
-std::ostream& operator<< (std::ostream& o, const nedge_t nedge);
-
 class ntree_t {
 public:
         // constructors
@@ -108,12 +106,6 @@ protected:
         std::vector<std::string> _leaf_names;
         // empty leaf name
         const std::string _empty_string;
-};
-
-class npath_t {
-public:
-        std::vector<nedge_set_t> A;
-        std::vector<nedge_set_t> B;
 };
 
 class vertex_cover_t {
@@ -183,5 +175,37 @@ protected:
         double *_ar, *_xw;
         bool *_au;
 };
+
+class support_pair_t : public std::pair<nedge_set_t, nedge_set_t> {
+public:
+        support_pair_t(const nedge_set_t& s1, const nedge_set_t& s2)
+                : std::pair<nedge_set_t, nedge_set_t>(s1, s2)
+                { }
+        bool operator<(const support_pair_t& s) {
+                return first.length()/second.length() < s.first.length()/s.second.length();
+        }
+};
+
+class npath_t : public std::list<support_pair_t> {
+public:
+        npath_t() : std::list<support_pair_t>() { }
+        npath_t(const support_pair_t& support_pair)
+        : std::list<support_pair_t>() {
+                insert(begin(), support_pair);
+        }
+};
+
+class geodesic_t {
+public:
+        geodesic_t(const ntree_t& t1, const ntree_t& t2);
+
+        const npath_t& npath() const;
+protected:
+        npath_t _npath;
+};
+
+std::ostream& operator<< (std::ostream& o, const nsplit_t& nsplit);
+std::ostream& operator<< (std::ostream& o, const nedge_t& nedge);
+std::ostream& operator<< (std::ostream& o, const nedge_set_t& nedge_set);
 
 #endif /* TREESPACE_HH */
