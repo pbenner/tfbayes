@@ -78,6 +78,7 @@ bool compatible(const nsplit_t& s1, const nsplit_t& s2);
 class ntree_t {
 public:
         // constructors
+        ntree_t() { };
         ntree_t(const nedge_set_t& nedge_set,
                 const std::vector<double>& leaf_d,
                 const std::vector<std::string> leaf_names = std::vector<std::string>());
@@ -199,7 +200,10 @@ class geodesic_t {
 public:
         geodesic_t(const ntree_t& t1, const ntree_t& t2);
 
+        ntree_t operator()(double lambda) const;
+
         const npath_t& npath() const;
+        double length() const;
 protected:
         npath_t _npath;
 };

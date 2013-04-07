@@ -318,6 +318,7 @@ void test5()
         t2->destroy();
 
         geodesic_t geodesic(nt1, nt2);
+        cout << "geodesic length: " << geodesic.length() << endl;
 }
 
 int

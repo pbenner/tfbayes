@@ -659,7 +659,25 @@ geodesic_t::geodesic_t(const ntree_t& t1, const ntree_t& t2)
                         ++it;
                 }
         }
+        // TODO: sorting is probably not required here!
         _npath.sort();
+}
+
+ ntree_t
+geodesic_t::operator()(double lambda) const
+{
+        return ntree_t();
+}
+
+double
+geodesic_t::length() const
+{
+        double result = 0.0;
+
+        for (npath_t::const_iterator it = npath().begin(); it != npath().end(); it++) {
+                result += pow(it->first.length() + it->second.length(), 2);
+        }
+        return sqrt(result);
 }
 
 const npath_t&
