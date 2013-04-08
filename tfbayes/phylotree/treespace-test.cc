@@ -319,6 +319,9 @@ void test5()
 
         geodesic_t geodesic(nt1, nt2);
         cout << "geodesic length: " << geodesic.length() << endl;
+        pt_root_t* t3 = geodesic(0.1).export_tree();
+        t3->print_phylotree(cout);
+        t3->destroy();
 }
 
 int

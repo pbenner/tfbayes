@@ -67,9 +67,14 @@ protected:
         double _d;
 };
 
-class nedge_set_t : public std::vector<nedge_t>
-{
+class nedge_set_t : public std::vector<nedge_t> {
 public:
+        using std::vector<nedge_t>::push_back;
+        void push_back(const nedge_set_t& nedge_set) {
+                for (const_iterator it = nedge_set.begin(); it != nedge_set.end(); it++) {
+                        push_back(*it);
+                }
+        }
         double length() const;
 };
 
@@ -200,12 +205,16 @@ class geodesic_t {
 public:
         geodesic_t(const ntree_t& t1, const ntree_t& t2);
 
-        ntree_t operator()(double lambda) const;
+        ntree_t operator()(const double lambda) const;
 
         const npath_t& npath() const;
         double length() const;
+
+        const ntree_t& t1() const;
+        const ntree_t& t2() const;
 protected:
         npath_t _npath;
+        ntree_t _t1, _t2;
 };
 
 std::ostream& operator<< (std::ostream& o, const nsplit_t& nsplit);

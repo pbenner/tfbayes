@@ -643,7 +643,8 @@ operator<< (ostream& o, const npath_t& npath)
 
 geodesic_t::geodesic_t(const ntree_t& t1, const ntree_t& t2)
         // start with the cone path
-        : _npath(support_pair_t(t1.nedge_set(), t2.nedge_set()))
+        : _npath(support_pair_t(t1.nedge_set(), t2.nedge_set())),
+          _t1(t1), _t2(t2)
 {
         for (npath_t::iterator it = _npath.begin(); it != _npath.end();)
         {
@@ -664,9 +665,44 @@ geodesic_t::geodesic_t(const ntree_t& t1, const ntree_t& t2)
 }
 
  ntree_t
-geodesic_t::operator()(double lambda) const
+geodesic_t::operator()(const double lambda) const
 {
-        return ntree_t();
+        // assertions
+        assert(t1().leaf_d().size() == t2().leaf_d().size());
+        // variables
+        const double r = lambda/(1-lambda);
+        nedge_set_t nedge_set;
+        npath_t::const_iterator it = npath().begin();
+        vector<double> leaf_d(t1().leaf_d().size(), 0);
+        vector<string> leaf_names(t1().leaf_names());
+
+        // fill edge set with edges from B_i
+        for (; it != npath().end() && it->first.length()/it->second.length() <= r; it++) {
+                const double length_a = it->first.length();
+                const double length_b = it->second.length();
+                for (nedge_set_t::const_iterator is = it->second.begin(); is != it->second.end(); is++) {
+                        const nedge_t& nedge = *is;
+                        const double d = nedge.d()*(lambda*length_b - (1-lambda)*length_a)/length_b;
+                        nedge_set.push_back(nedge_t(nedge, d));
+                }
+        }
+        // fill edge set with edges from A_i
+        for (; it != npath().end(); it++) {
+                const double length_a = it->first.length();
+                const double length_b = it->second.length();
+                for (nedge_set_t::const_iterator is = it->first.begin(); is != it->first.end(); is++) {
+                        const nedge_t& nedge = *is;
+                        const double d = nedge.d()*((1-lambda)*length_a - lambda*length_b)/length_a;
+                        nedge_set.push_back(nedge_t(nedge, d));
+                }
+        }
+        // compute leaf edge lengths
+        for (size_t i = 0; i < leaf_d.size(); i++) {
+                leaf_d[i] = (1-lambda)*t1().leaf_d(i) + lambda*t2().leaf_d(i);
+        }
+        cout << nedge_set << endl;
+
+        return ntree_t(nedge_set, leaf_d, leaf_names);
 }
 
 double
@@ -684,4 +720,16 @@ const npath_t&
 geodesic_t::npath() const
 {
         return _npath;
+}
+
+const ntree_t&
+geodesic_t::t1() const
+{
+        return _t1;
+}
+
+const ntree_t&
+geodesic_t::t2() const
+{
+        return _t2;
 }
