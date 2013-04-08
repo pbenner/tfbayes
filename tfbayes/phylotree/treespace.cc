@@ -664,7 +664,7 @@ geodesic_t::geodesic_t(const ntree_t& t1, const ntree_t& t2)
         _npath.sort();
 }
 
- ntree_t
+ntree_t
 geodesic_t::operator()(const double lambda) const
 {
         // assertions
