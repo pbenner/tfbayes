@@ -39,7 +39,7 @@ class nsplit_t {
 public:
         // constructors
         nsplit_t();
-        nsplit_t(size_t n, std::set<size_t> tmp);
+        nsplit_t(size_t n, const std::set<size_t>& tmp);
 
         // methods
         size_t n() const;

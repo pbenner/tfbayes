@@ -87,7 +87,7 @@ vector<size_t> difference(const vector<size_t>& x, const vector<size_t>& y)
 
 nsplit_t::nsplit_t() : _n(0) { }
 
-nsplit_t::nsplit_t(size_t n, set<size_t> tmp)
+nsplit_t::nsplit_t(size_t n, const set<size_t>& tmp)
         : _n(n), _part1(tmp.size(), 0), _part2(n-tmp.size()+1, 0) {
         // use vectors, which are more comfortable
         vector<size_t> split(tmp.size(), 0);
@@ -97,7 +97,7 @@ nsplit_t::nsplit_t(size_t n, set<size_t> tmp)
         assert(split[split.size()-1] <= n);
         // fill part1 and part2
         for (size_t i = 0, j = 0, k = 0; k <= n; k++) {
-                if (split[i] == k) {
+                if (i < tmp.size() && split[i] == k) {
                         _part1[i] = k; i++;
                 }
                 else {
@@ -280,7 +280,8 @@ ntree_t::next_splits(const nsplit_t& nsplit, vector<bool>& used) {
                 for (size_t j = 0; j < i; j++) {
                         if (used[j]) continue;
                         vector<size_t> tmp = intersection(nedge_set(i).part1(), nedge_set(j).part1());
-                        if (equal(tmp.begin(), tmp.end(), nsplit.part1().begin())) {
+                        if (tmp.size() == nsplit.part1().size() &&
+                            equal(tmp.begin(), tmp.end(), nsplit.part1().begin())) {
                                 // mark both edges used
                                 used[i] = true;
                                 used[j] = true;
@@ -301,7 +302,7 @@ ntree_t::export_tree() {
         // (this should optimize performance)
         vector<bool>   used(n()-2, false);
         // list of leafs for a given subtree
-        vector<size_t> leafs(n(), 0);
+        vector<size_t> leafs(n()+1, 0);
         for (size_t i = 0; i <= n(); i++) {
                 leafs[i] = i;
         }
@@ -405,11 +406,11 @@ incompatibility_graph_t::incompatibility_graph_t(
         double anorm = pow(a.length(), 2);
         double bnorm = pow(b.length(), 2);
 
-        _ia = (int    *)malloc(1+nrow()*2*sizeof(int));
-        _ja = (int    *)malloc(1+nrow()*2*sizeof(int));
-        _ar = (double *)malloc(1+nrow()*2*sizeof(double));
-        _xw = (double *)malloc(1+ncol()*  sizeof(double));
-        _au = (bool   *)malloc(1+nrow()*  sizeof(bool));
+        _ia = (int    *)malloc((1+nrow()*2)*sizeof(int));
+        _ja = (int    *)malloc((1+nrow()*2)*sizeof(int));
+        _ar = (double *)malloc((1+nrow()*2)*sizeof(double));
+        _xw = (double *)malloc((1+ncol()  )*sizeof(double));
+        _au = (bool   *)malloc((1+nrow()  )*sizeof(bool));
 
         // do not use elements indexed by zero
         _ia[0] = 0; _ja[0] = 0;
@@ -651,9 +652,10 @@ geodesic_t::geodesic_t(const ntree_t& t1, const ntree_t& t2)
                 incompatibility_graph_t graph(it->first, it->second);
                 vertex_cover_t vc = graph.min_weight_cover();
                 if (vc.weight < 1) {
-                        _npath.insert(it, support_pair_t(vc.a, vc.b_comp));
-                        _npath.insert(it, support_pair_t(vc.a_comp, vc.b));
-                        _npath.erase(it); --it; --it;
+                        it = _npath.erase(it);
+                        it = _npath.insert(it, support_pair_t(vc.a, vc.b_comp));
+                        it = _npath.insert(it, support_pair_t(vc.a_comp, vc.b));
+                        --it; --it;
                 }
                 else {
                         // advance iterator
@@ -700,7 +702,6 @@ geodesic_t::operator()(const double lambda) const
         for (size_t i = 0; i < leaf_d.size(); i++) {
                 leaf_d[i] = (1-lambda)*t1().leaf_d(i) + lambda*t2().leaf_d(i);
         }
-        cout << nedge_set << endl;
 
         return ntree_t(nedge_set, leaf_d, leaf_names);
 }

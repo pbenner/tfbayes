@@ -15,6 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <cstdio>
+
 #include <treespace.hh>
 
 using namespace std;
@@ -319,7 +321,7 @@ void test5()
 
         geodesic_t geodesic(nt1, nt2);
         cout << "geodesic length: " << geodesic.length() << endl;
-        pt_root_t* t3 = geodesic(0.1).export_tree();
+        pt_root_t* t3 = geodesic(1.0).export_tree();
         t3->print_phylotree(cout);
         t3->destroy();
 }
