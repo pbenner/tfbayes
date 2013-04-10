@@ -72,9 +72,46 @@ vector<size_t> intersection(const vector<size_t>& x, const vector<size_t>& y)
 }
 
 static
+nedge_set_t intersection(const nedge_set_t& x_, const nedge_set_t& y_)
+{
+        nedge_set_t result;
+        nedge_set_t x(x_); sort(x.begin(), x.end());
+        nedge_set_t y(y_); sort(y.begin(), y.end());
+        nedge_set_t::const_iterator i = x.begin();
+        nedge_set_t::const_iterator j = y.begin();
+        while (i != x.end() && j != y.end())
+        {
+                if (*i == *j) {
+                        result.push_back(*i);
+                        i++; j++;
+                }
+                else if (*i < *j) {
+                        i++;
+                }
+                else {
+                        j++;
+                }
+        }
+        return result;
+}
+
+static
 vector<size_t> difference(const vector<size_t>& x, const vector<size_t>& y)
 {
         vector<size_t> result;
+
+        set_difference(x.begin(), x.end(), y.begin(), y.end(),
+                       back_inserter(result));
+
+        return result;
+}
+static
+nedge_set_t difference(const nedge_set_t& x_, const nedge_set_t& y_)
+{
+        nedge_set_t result;
+
+        nedge_set_t x(x_); sort(x.begin(), x.end());
+        nedge_set_t y(y_); sort(y.begin(), y.end());
 
         set_difference(x.begin(), x.end(), y.begin(), y.end(),
                        back_inserter(result));
@@ -85,10 +122,12 @@ vector<size_t> difference(const vector<size_t>& x, const vector<size_t>& y)
 /* nsplit_t
  *****************************************************************************/
 
-nsplit_t::nsplit_t() : _n(0) { }
+nsplit_t::nsplit_t() : _n(0), _null(true) { }
 
 nsplit_t::nsplit_t(size_t n, const set<size_t>& tmp)
-        : _n(n), _part1(tmp.size(), 0), _part2(n-tmp.size()+1, 0) {
+        : _n(n), _part1(tmp.size(), 0), _part2(n-tmp.size()+1, 0),
+          _null(false)
+{
         // use vectors, which are more comfortable
         vector<size_t> split(tmp.size(), 0);
         copy(tmp.begin(), tmp.end(), split.begin());
@@ -133,6 +172,44 @@ nsplit_t::part2() const {
 size_t
 nsplit_t::part2(size_t i) const {
         return part2()[i];
+}
+
+bool
+nsplit_t::null() const {
+        return _null;
+}
+
+bool
+nsplit_t::operator<(const nsplit_t& nsplit) const
+{
+        for (part_t::const_iterator it = part1().begin(), is = nsplit.part1().begin();
+             it != part1().end() && is != nsplit.part1().end(); it++, is++) {
+                if (*it < *is) {
+                        return true;
+                }
+                if (*it > *is) {
+                        return false;
+                }
+        }
+        if (part1().size() < nsplit.part1().size()) {
+                return true;
+        }
+        return false;
+}
+
+bool
+nsplit_t::operator==(const nsplit_t& nsplit) const
+{
+        if (part1().size() != nsplit.part1().size()) {
+                return false;
+        }
+        for (part_t::const_iterator it = part1().begin(), is = nsplit.part1().begin();
+             it != part1().end() && is != nsplit.part1().end(); it++, is++) {
+                if (*it != *is) {
+                        return false;
+                }
+        }
+        return true;
 }
 
 bool compatible(const nsplit_t& s1, const nsplit_t& s2)
@@ -191,6 +268,10 @@ operator<< (ostream& o, const nedge_t& nedge)
 /* nedge_t
  *****************************************************************************/
 
+nedge_t::nedge_t()
+        : nsplit_t(), _d(0)
+{ }
+
 nedge_t::nedge_t(size_t n, std::set<size_t> tmp, double d)
         : nsplit_t(n, tmp), _d(d)
 { }
@@ -203,6 +284,35 @@ double
 nedge_t::d() const
 {
         return _d;
+}
+
+bool
+nedge_t::operator==(const nedge_t& nedge) const
+{
+        return (nsplit_t)(*this) == (nsplit_t)nedge && d() == nedge.d();
+}
+
+/* common_nedge_t
+ *****************************************************************************/
+
+common_nedge_t::common_nedge_t()
+        : nsplit_t(), _d1(0), _d2(0)
+{ }
+
+common_nedge_t::common_nedge_t(const nsplit_t& nsplit, double d1, double d2)
+        : nsplit_t(nsplit), _d1(d1), _d2(d2)
+{ }
+
+double
+common_nedge_t::d1() const
+{
+        return _d1;
+}
+
+double
+common_nedge_t::d2() const
+{
+        return _d2;
 }
 
 /* nedge_set_t
@@ -254,6 +364,21 @@ ntree_t::ntree_t(const nedge_set_t& nedge_set,
                         }
                 }
         }
+}
+
+const string ntree_t::_empty_string;
+const nedge_t ntree_t::_null_edge;
+
+const nedge_t&
+ntree_t::find_edge(const nsplit_t& nsplit) const
+{
+        for (nedge_set_t::const_iterator it = nedge_set().begin();
+             it != nedge_set().end(); it++) {
+                if ((nsplit_t)(*it) == nsplit) {
+                        return *it;
+                }
+        }
+        return _null_edge;
 }
 
 boost::tuple<ssize_t, ssize_t, ssize_t>
@@ -644,11 +769,46 @@ operator<< (ostream& o, const npath_t& npath)
 
 geodesic_t::geodesic_t(const ntree_t& t1, const ntree_t& t2)
         // start with the cone path
-        : _npath(support_pair_t(t1.nedge_set(), t2.nedge_set())),
-          _t1(t1), _t2(t2)
+        : //_npath(support_pair_t(t1.nedge_set(), t2.nedge_set())),
+        _common_edges(), _npath(support_pair_t()),
+        _leaf_n(t1.leaf_d().size()),
+        _leaf_names(t1.leaf_names()),
+        _t1_leaf_d(t1.leaf_d()),
+        _t2_leaf_d(t2.leaf_d())
 {
+        // assertions
+        assert(t1.leaf_d().size() == t2.leaf_d().size());
+        // loop through the set of edges and find common splits
+        for (nedge_set_t::const_iterator it = t1.nedge_set().begin();
+             it != t1.nedge_set().end(); it++) {
+                const nedge_t& edge1 = *it;
+                const nedge_t& edge2 = t2.find_edge(edge1);
+                // if this is not a common split, add edge1 to
+                // the npath (cone path)
+                if (edge2.null()) {
+                        _npath.begin()->first.push_back(edge1);
+                }
+                // otherwise add them to the common edges
+                else {
+                        _common_edges.push_back(common_nedge_t(edge1, edge1.d(), edge2.d()));
+                }
+        }
+        for (nedge_set_t::const_iterator is = t2.nedge_set().begin();
+             is != t2.nedge_set().end(); is++) {
+                const nedge_t& edge2 = *is;
+                const nedge_t& edge1 = t1.find_edge(edge2);
+                // if this is not a common split, add edge2 to
+                // the npath (cone path)
+                if (edge1.null()) {
+                        _npath.begin()->second.push_back(edge2);
+                }
+        }
+        // GTP algorithm
         for (npath_t::iterator it = _npath.begin(); it != _npath.end();)
         {
+                cout << "npath: " << endl;
+                cout << npath()   << endl;
+
                 incompatibility_graph_t graph(it->first, it->second);
                 vertex_cover_t vc = graph.min_weight_cover();
                 if (vc.weight < 1) {
@@ -657,10 +817,7 @@ geodesic_t::geodesic_t(const ntree_t& t1, const ntree_t& t2)
                         it = _npath.insert(it, support_pair_t(vc.a_comp, vc.b));
                         --it; --it;
                 }
-                else {
-                        // advance iterator
-                        ++it;
-                }
+                else { ++it; }
         }
         // TODO: sorting is probably not required here!
         _npath.sort();
@@ -669,14 +826,11 @@ geodesic_t::geodesic_t(const ntree_t& t1, const ntree_t& t2)
 ntree_t
 geodesic_t::operator()(const double lambda) const
 {
-        // assertions
-        assert(t1().leaf_d().size() == t2().leaf_d().size());
         // variables
         const double r = lambda/(1-lambda);
         nedge_set_t nedge_set;
         npath_t::const_iterator it = npath().begin();
-        vector<double> leaf_d(t1().leaf_d().size(), 0);
-        vector<string> leaf_names(t1().leaf_names());
+        vector<double> leaf_d(leaf_n(), 0);
 
         // fill edge set with edges from B_i
         for (; it != npath().end() && it->first.length()/it->second.length() <= r; it++) {
@@ -698,12 +852,17 @@ geodesic_t::operator()(const double lambda) const
                         nedge_set.push_back(nedge_t(nedge, d));
                 }
         }
+        // add edges that are common to both trees
+        for (list<common_nedge_t>::const_iterator it = common_edges().begin();
+             it != common_edges().end(); it++) {
+                nedge_set.push_back(nedge_t(*it, (1-lambda)*it->d1() + lambda*it->d2()));
+        }
         // compute leaf edge lengths
         for (size_t i = 0; i < leaf_d.size(); i++) {
-                leaf_d[i] = (1-lambda)*t1().leaf_d(i) + lambda*t2().leaf_d(i);
+                leaf_d[i] = (1-lambda)*t1_leaf_d(i) + lambda*t2_leaf_d(i);
         }
 
-        return ntree_t(nedge_set, leaf_d, leaf_names);
+        return ntree_t(nedge_set, leaf_d, leaf_names());
 }
 
 double
@@ -711,10 +870,20 @@ geodesic_t::length() const
 {
         double result = 0.0;
 
+        // npath distance
         for (npath_t::const_iterator it = npath().begin(); it != npath().end(); it++) {
                 result += pow(it->first.length() + it->second.length(), 2);
         }
+        // common edge distance
+        // leaf distance
+
         return sqrt(result);
+}
+
+const list<common_nedge_t>&
+geodesic_t::common_edges() const
+{
+        return _common_edges;
 }
 
 const npath_t&
@@ -723,14 +892,38 @@ geodesic_t::npath() const
         return _npath;
 }
 
-const ntree_t&
-geodesic_t::t1() const
+size_t
+geodesic_t::leaf_n() const
 {
-        return _t1;
+        return _leaf_n;
 }
 
-const ntree_t&
-geodesic_t::t2() const
+const vector<string>&
+geodesic_t::leaf_names() const
 {
-        return _t2;
+        return _leaf_names;
+}
+
+const vector<double>&
+geodesic_t::t1_leaf_d() const
+{
+        return _t1_leaf_d;
+}
+
+const vector<double>&
+geodesic_t::t2_leaf_d() const
+{
+        return _t2_leaf_d;
+}
+
+double
+geodesic_t::t1_leaf_d(size_t i) const
+{
+        return _t1_leaf_d[i];
+}
+
+double
+geodesic_t::t2_leaf_d(size_t i) const
+{
+        return _t2_leaf_d[i];
 }
