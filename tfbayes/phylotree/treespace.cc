@@ -875,7 +875,14 @@ geodesic_t::length() const
                 result += pow(it->first.length() + it->second.length(), 2);
         }
         // common edge distance
+        for (list<common_nedge_t>::const_iterator it = common_edges().begin();
+             it != common_edges().end(); it++) {
+                result += pow(it->d1() - it->d2(), 2);
+        }
         // leaf distance
+        for (size_t i = 0; i < leaf_n(); i++) {
+                result += pow(t1_leaf_d(i) - t2_leaf_d(i), 2);
+        }
 
         return sqrt(result);
 }

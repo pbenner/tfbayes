@@ -341,32 +341,45 @@ void test6()
         set<size_t> s3;
         s3.insert(4);
         s3.insert(5);
+        s3.insert(6);
         set<size_t> s4;
         s4.insert(0);
         s4.insert(2);
         s4.insert(3);
-        nedge_t e1(5, s1, 5.5);
-        nedge_t e2(5, s2, 2.5);
-        nedge_t e3(5, s3, 1.5);
-        nedge_t e4(5, s4, 0.5);
+        set<size_t> s5;
+        s5.insert(5);
+        s5.insert(6);
+        set<size_t> s6;
+        s6.insert(4);
+        s6.insert(5);
+        nedge_t e1(6, s1, 5.5);
+        nedge_t e2(6, s2, 2.5);
+        nedge_t e31(6, s3, 1.5);
+        nedge_t e32(6, s3, 2.5);
+        nedge_t e4(6, s4, 0.5);
+        nedge_t e5(6, s5, 3.5);
+        nedge_t e6(6, s6, 4.5);
         // construct trees
         nedge_set_t nedge_set1;
         nedge_set_t nedge_set2;
         // internal edge lengths
         nedge_set1.push_back(e1);
         nedge_set1.push_back(e2);
-        nedge_set1.push_back(e3);
+        nedge_set1.push_back(e31);
+        nedge_set1.push_back(e5);
         nedge_set2.push_back(e2);
-        nedge_set2.push_back(e3);
+        nedge_set2.push_back(e32);
         nedge_set2.push_back(e4);
+        nedge_set2.push_back(e6);
         // leaf edge lengths
-        vector<double> leaf_d(6, 1);
+        vector<double> leaf_d(7, 1);
         leaf_d[0] = 0.5;
         leaf_d[1] = 1.5;
         leaf_d[2] = 2.5;
         leaf_d[3] = 3.5;
         leaf_d[4] = 4.5;
         leaf_d[5] = 5.5;
+        leaf_d[6] = 6.5;
         // leaf names
         vector<string> leaf_names;
         leaf_names.push_back("leaf 0");
@@ -375,6 +388,7 @@ void test6()
         leaf_names.push_back("leaf 3");
         leaf_names.push_back("leaf 4");
         leaf_names.push_back("leaf 5");
+        leaf_names.push_back("leaf 6");
         ntree_t nt1(nedge_set1, leaf_d, leaf_names);
         ntree_t nt2(nedge_set2, leaf_d, leaf_names);
         // print tree
