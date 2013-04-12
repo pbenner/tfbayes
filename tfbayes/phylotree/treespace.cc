@@ -18,6 +18,7 @@
 #include <treespace.hh>
 
 #include <algorithm>
+#include <iomanip>
 #include <cmath>
 #include <cstdlib>
 
@@ -230,42 +231,6 @@ bool compatible(const nsplit_t& s1, const nsplit_t& s2)
         return false;
 }
 
-ostream&
-operator<< (ostream& o, const nsplit_t& nsplit)
-{
-        o << "{";
-        for (size_t i = 0; i < nsplit.part1().size(); i++) {
-                if (i < nsplit.part1().size()-1) {
-                        o << nsplit.part1(i)
-                          << ", ";
-                }
-                else {
-                        o << nsplit.part1(i)
-                          << "} | {";
-                }
-        }
-        for (size_t i = 0; i < nsplit.part2().size(); i++) {
-                if (i < nsplit.part2().size()-1) {
-                        o << nsplit.part2()[i]
-                          << ", ";
-                }
-                else {
-                        o << nsplit.part2()[i]
-                          << "}";
-                }
-        }
-        return o;
-}
-
-ostream&
-operator<< (ostream& o, const nedge_t& nedge)
-{
-        o << nedge.d() << ": "
-          << static_cast<nsplit_t>(nedge);
-
-        return o;
-}
-
 // nedge_t
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -330,42 +295,8 @@ nedge_set_t::length() const
         return sqrt(result);
 }
 
-ostream&
-operator<< (ostream& o, const nedge_set_t& nedge_set)
-{
-        for (nedge_set_t::const_iterator it = nedge_set.begin(); it != nedge_set.end(); it++) {
-                o << *it << endl;
-        }
-
-        return o;
-}
-
 // ntree_t
 ////////////////////////////////////////////////////////////////////////////////
-
-ntree_t::ntree_t(const nedge_set_t& nedge_set,
-                 const vector<double>& leaf_d,
-                 const vector<string> leaf_names)
-        : _n(nedge_set.size()+2),
-          _nedge_set(nedge_set),
-          _leaf_d(leaf_d),
-          _leaf_names(leaf_names) {
-        // check that there is at least one split
-        assert(nedge_set.size() > 0);
-        // we need n-2 internal edges to fully specify a tree
-        assert(nedge_set.size() == nedge_set.begin()->n()-2);
-        assert(leaf_names.size() == 0 || leaf_names.size() == n()+1);
-        // check splits for compatibility
-        for (nedge_set_t::const_iterator it = nedge_set.begin(); it != nedge_set.end(); it++) {
-                for (nedge_set_t::const_iterator is = nedge_set.begin(); is != it; is++) {
-                        if (!compatible(*it, *is)) {
-                                cerr << "Invalid set of internal edges."
-                                          << endl;
-                                exit(EXIT_FAILURE);
-                        }
-                }
-        }
-}
 
 static set<size_t>
 parse_pt_node_t(
@@ -388,10 +319,39 @@ parse_pt_node_t(
                 set<size_t> s1 = parse_pt_node_t(n, node->left,  nedge_set, leaf_d, leaf_names);
                 set<size_t> s2 = parse_pt_node_t(n, node->right, nedge_set, leaf_d, leaf_names);
                 set_union(s1.begin(), s1.end(), s2.begin(), s2.end(), inserter(s, s.begin()));
-                cout << "split: " << nsplit_t(n, s) << endl;
                 nedge_set.push_back(nedge_t(nsplit_t(n, s), node->d));
         }
         return s;
+}
+
+static void
+parse_pt_node_t(
+        size_t n,
+        const pt_root_t* node,
+        nedge_set_t& nedge_set,
+        vector<double>& leaf_d,
+        vector<string>& leaf_names)
+{
+        // initialize root
+        leaf_d[0]     = node->d;
+        leaf_names[0] = node->name;
+        // recursive calls
+        parse_pt_node_t(node->n_leafs, node->left,  nedge_set, leaf_d, leaf_names);
+        parse_pt_node_t(node->n_leafs, node->right, nedge_set, leaf_d, leaf_names);
+}
+
+ntree_t::ntree_t(const nedge_set_t& nedge_set,
+                 const vector<double>& leaf_d,
+                 const vector<string> leaf_names)
+        : _n(nedge_set.size()+2),
+          _nedge_set(nedge_set),
+          _leaf_d(leaf_d),
+          _leaf_names(leaf_names) {
+        // check that there is at least one split
+        assert(nedge_set.size() > 0);
+        // we need n-2 internal edges to fully specify a tree
+        assert(nedge_set.size() == nedge_set.begin()->n()-2);
+        assert(leaf_names.size() == 0 || leaf_names.size() == n()+1);
 }
 
 ntree_t::ntree_t(const pt_root_t* tree)
@@ -400,14 +360,10 @@ ntree_t::ntree_t(const pt_root_t* tree)
         vector<double> leaf_d(tree->n_leafs+1, 0);
         vector<string> leaf_names(tree->n_leafs+1, "");
 
-        // initialize root
-        leaf_d[0]     = tree->d;
-        leaf_names[0] = tree->name;
         // parse the tree
         parse_pt_node_t(tree->n_leafs, tree, nedge_set, leaf_d, leaf_names);
-        cout << "we have " << nedge_set.size() << " splits" << endl;
         // call constructor
-        ntree_t(nedge_set, leaf_d, leaf_names);
+        (*this) = ntree_t(nedge_set, leaf_d, leaf_names);
 }
 
 const string ntree_t::_empty_string;
@@ -554,6 +510,19 @@ ntree_t::leaf_name(size_t i) const {
         else {
                 return _empty_string;
         }
+}
+
+bool
+ntree_t::check_splits() const
+{
+        for (nedge_set_t::const_iterator it = nedge_set().begin(); it != nedge_set().end(); it++) {
+                for (nedge_set_t::const_iterator is = nedge_set().begin(); is != it; is++) {
+                        if (!compatible(*it, *is)) {
+                                return false;
+                        }
+                }
+        }
+        return true;
 }
 
 // incompatibility_graph_t
@@ -794,24 +763,6 @@ incompatibility_graph_t::au(size_t i) const
         return _au[i];
 }
 
-/* npath_t
- *****************************************************************************/
-// npath_t
-////////////////////////////////////////////////////////////////////////////////
-
-ostream&
-operator<< (ostream& o, const npath_t& npath)
-{
-        for (npath_t::const_iterator it = npath.begin(); it != npath.end(); it++) {
-                o << "replacing" << endl << it->first
-                  << "with"      << endl << it->second;
-        }
-
-        return o;
-}
-
-/* geodesic_t
- *****************************************************************************/
 // geodesic_t
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -981,4 +932,89 @@ double
 geodesic_t::t2_leaf_d(size_t i) const
 {
         return _t2_leaf_d[i];
+}
+
+// ostream
+////////////////////////////////////////////////////////////////////////////////
+
+ostream&
+operator<< (ostream& o, const nsplit_t& nsplit)
+{
+        o << "{";
+        for (size_t i = 0; i < nsplit.part1().size(); i++) {
+                if (i < nsplit.part1().size()-1) {
+                        o << nsplit.part1(i)
+                          << ", ";
+                }
+                else {
+                        o << nsplit.part1(i)
+                          << "} | {";
+                }
+        }
+        for (size_t i = 0; i < nsplit.part2().size(); i++) {
+                if (i < nsplit.part2().size()-1) {
+                        o << nsplit.part2()[i]
+                          << ", ";
+                }
+                else {
+                        o << nsplit.part2()[i]
+                          << "}";
+                }
+        }
+        return o;
+}
+
+ostream&
+operator<< (ostream& o, const nedge_t& nedge)
+{
+        o << static_cast<nsplit_t>(nedge) << ": "
+          << nedge.d();
+
+        return o;
+}
+
+ostream&
+operator<< (ostream& o, const ntree_t& ntree)
+{
+        o << "internal edges:" << endl
+          << ntree.nedge_set()
+          << "external edges and leafs:" << endl;
+        for (size_t i = 0; i <= ntree.n(); i++) {
+                if (ntree.leaf_names().size() > 0) {
+                        o << setw(8)
+                          << ntree.leaf_name(i)
+                          << "(" << i << "): "
+                          << ntree.leaf_d(i)
+                          << endl;
+                }
+                else {
+                        o << i
+                          << ": "
+                          << ntree.leaf_d(i)
+                          << endl;
+                }
+        }
+
+        return o;
+}
+
+ostream&
+operator<< (ostream& o, const nedge_set_t& nedge_set)
+{
+        for (nedge_set_t::const_iterator it = nedge_set.begin(); it != nedge_set.end(); it++) {
+                o << *it << endl;
+        }
+
+        return o;
+}
+
+ostream&
+operator<< (ostream& o, const npath_t& npath)
+{
+        for (npath_t::const_iterator it = npath.begin(); it != npath.end(); it++) {
+                o << "replacing" << endl << it->first
+                  << "with"      << endl << it->second;
+        }
+
+        return o;
 }

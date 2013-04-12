@@ -120,6 +120,8 @@ public:
         double leaf_d(size_t i) const;
         const std::vector<std::string>& leaf_names() const;
         const std::string& leaf_name(size_t i) const;
+        // check splits for compatibility
+        bool check_splits() const;
 
 protected:
         // hidden methods
@@ -256,7 +258,9 @@ protected:
 };
 
 std::ostream& operator<< (std::ostream& o, const nsplit_t& nsplit);
+std::ostream& operator<< (std::ostream& o, const ntree_t& ntree);
 std::ostream& operator<< (std::ostream& o, const nedge_t& nedge);
 std::ostream& operator<< (std::ostream& o, const nedge_set_t& nedge_set);
+std::ostream& operator<< (std::ostream& o, const npath_t& npath);
 
 #endif /* TREESPACE_HH */

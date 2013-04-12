@@ -426,6 +426,7 @@ void test7()
         ntree_t nt(pt_root);
 
         cout << pt_root << endl;
+        cout << nt      << endl;
 }
 
 int
