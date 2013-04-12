@@ -36,47 +36,47 @@ int main(void) {
         pt_leaf_t n8( 2, 8.0, "n8");
         pt_leaf_t n7( 1, 7.0, "n7");
         pt_leaf_t n6( 0, 6.0, "n6");
-        pt_node_t n5(-1, 5.0, &n8, &n9);
-        pt_node_t n4(-1, 4.0, &n6, &n7);
+        pt_node_t n5(5.0, &n8, &n9);
+        pt_node_t n4(4.0, &n6, &n7);
         pt_leaf_t n3( 0, 3.0, "n3");
-        pt_node_t n2(-1, 2.0, &n4, &n5);
-        pt_root_t n1(-1, &n2, &n3);
+        pt_node_t n2(2.0, &n4, &n5);
+        pt_root_t n1(&n2, &n3);
 
-        nodeset_t nodeset1;
-        nodeset1.insert(&n3);
-        nodeset1.insert(&n6);
-        nodeset1.insert(&n7);
-        nodeset1.insert(&n8);
-        nodeset1.insert(&n9);
-        nodeset1.insert(&n10);
+        leafset_t leafset1;
+        leafset1.insert(&n3);
+        leafset1.insert(&n6);
+        leafset1.insert(&n7);
+        leafset1.insert(&n8);
+        leafset1.insert(&n9);
+        leafset1.insert(&n10);
 
-        nodeset_t nodeset2;
-        nodeset2.insert(&n3);
-        nodeset2.insert(&n6);
+        leafset_t leafset2;
+        leafset2.insert(&n3);
+        leafset2.insert(&n6);
 
-        nodeset_t nodeset3;
-        nodeset3.insert(&n7);
-        nodeset3.insert(&n8);
-        nodeset3.insert(&n9);
-        nodeset3.insert(&n10);
+        leafset_t leafset3;
+        leafset3.insert(&n7);
+        leafset3.insert(&n8);
+        leafset3.insert(&n9);
+        leafset3.insert(&n10);
 
         polynomial_t<code_t, alphabet_size> result1;
         polynomial_t<code_t, alphabet_size> result2;
 
         /* phi(c; x_3, x_6, x_7, x_8, x_9, x_10) */
-        result1 += pt_expand_rec<code_t, alphabet_size>(nodeset1.begin(), nodeset1.end(), 1);
+        result1 += pt_expand_rec<code_t, alphabet_size>(leafset1.begin(), leafset1.end(), 1);
 
         /* phi(c; x_3, x_6, x_7, x_8, x_9, x_10) =
          *   phi(c  ; x_3, x_6) phi(c  ; x_7, x_8, x_9, x_10) +
          *   phi(c  ; x_3, x_6) phi(nil; x_7, x_8, x_9, x_10) +
          *   phi(nil; x_3, x_6) phi(c  ; x_7, x_8, x_9, x_10)
          */
-        result2 += pt_expand_rec<code_t, alphabet_size>(nodeset2.begin(), nodeset2.end(), 1)*
-                   pt_expand_rec<code_t, alphabet_size>(nodeset3.begin(), nodeset3.end(), 1);
-        result2 += pt_expand_rec<code_t, alphabet_size>(nodeset2.begin(), nodeset2.end(), 1)*
-                   pt_expand_rec<code_t, alphabet_size>(nodeset3.begin(), nodeset3.end(), alphabet_size);
-        result2 += pt_expand_rec<code_t, alphabet_size>(nodeset2.begin(), nodeset2.end(), alphabet_size)*
-                   pt_expand_rec<code_t, alphabet_size>(nodeset3.begin(), nodeset3.end(), 1);
+        result2 += pt_expand_rec<code_t, alphabet_size>(leafset2.begin(), leafset2.end(), 1)*
+                   pt_expand_rec<code_t, alphabet_size>(leafset3.begin(), leafset3.end(), 1);
+        result2 += pt_expand_rec<code_t, alphabet_size>(leafset2.begin(), leafset2.end(), 1)*
+                   pt_expand_rec<code_t, alphabet_size>(leafset3.begin(), leafset3.end(), alphabet_size);
+        result2 += pt_expand_rec<code_t, alphabet_size>(leafset2.begin(), leafset2.end(), alphabet_size)*
+                   pt_expand_rec<code_t, alphabet_size>(leafset3.begin(), leafset3.end(), 1);
 
         cout << result1 << endl;
         cout << result2 << endl;

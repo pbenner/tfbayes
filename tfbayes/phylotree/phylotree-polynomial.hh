@@ -58,9 +58,10 @@ private:
 
         static carry_t likelihood_leaf(const pt_node_t* node) {
                 carry_t carry;
-                if (node->x != -1) {
+                const pt_leaf_t* leaf = static_cast<const pt_leaf_t*>(node);
+                if (leaf->x != -1) {
                         // leaf is present and has a nucleotide
-                        carry[node->x] += 1.0;
+                        carry[leaf->x] += 1.0;
                 }
                 else {
                         // this leaf should be ignored, no nucleotide

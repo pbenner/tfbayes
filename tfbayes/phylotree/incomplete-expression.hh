@@ -26,9 +26,9 @@
 #include <boost/unordered_set.hpp>
 
 #include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/nodeset.hh>
+#include <tfbayes/phylotree/leafset.hh>
 
-class incomplete_nodeset_t : public boost::unordered_set<nodeset_t> {
+class incomplete_leafset_t : public boost::unordered_set<leafset_t> {
 public:
         bool is_complete() const {
                 if (incomplete().empty()) {
@@ -37,49 +37,49 @@ public:
                 return false;
         }
 
-        incomplete_nodeset_t& complete() {
+        incomplete_leafset_t& complete() {
                 if (!is_complete()) {
                         insert(incomplete());
-                        incomplete() = nodeset_t();
+                        incomplete() = leafset_t();
                 }
                 return *this;
         }
 
-        nodeset_t& incomplete() {
+        leafset_t& incomplete() {
                 return _incomplete;
         }
-        const nodeset_t& incomplete() const {
+        const leafset_t& incomplete() const {
                 return _incomplete;
         }
 
-        incomplete_nodeset_t& operator*=(const incomplete_nodeset_t& nodeset) {
-                for (incomplete_nodeset_t::const_iterator it = nodeset.begin(); it != nodeset.end(); it++) {
+        incomplete_leafset_t& operator*=(const incomplete_leafset_t& leafset) {
+                for (incomplete_leafset_t::const_iterator it = leafset.begin(); it != leafset.end(); it++) {
                         insert(*it);
                 }
-                for (nodeset_t::const_iterator it = nodeset.incomplete().begin(); it != nodeset.incomplete().end(); it++) {
+                for (leafset_t::const_iterator it = leafset.incomplete().begin(); it != leafset.incomplete().end(); it++) {
                         incomplete().insert(*it);
                 }
 
                 return *this;
         }
-        bool operator==(const incomplete_nodeset_t& nodeset) const {
-                return (const boost::unordered_set<nodeset_t>&)*this == (const boost::unordered_set<nodeset_t>&)nodeset &&
-                        incomplete() == nodeset.incomplete();
+        bool operator==(const incomplete_leafset_t& leafset) const {
+                return (const boost::unordered_set<leafset_t>&)*this == (const boost::unordered_set<leafset_t>&)leafset &&
+                        incomplete() == leafset.incomplete();
         }
 
 private:
-        nodeset_t _incomplete;
+        leafset_t _incomplete;
 };
 
-class incomplete_nodeterm_t : public incomplete_nodeset_t {
+class incomplete_nodeterm_t : public incomplete_leafset_t {
 public:
         incomplete_nodeterm_t()
-                : incomplete_nodeset_t(), _coefficient(1.0) { }
-        incomplete_nodeterm_t(std::pair<const incomplete_nodeset_t, double>& pair)
-                : incomplete_nodeset_t(pair.first), _coefficient(pair.second) { }
+                : incomplete_leafset_t(), _coefficient(1.0) { }
+        incomplete_nodeterm_t(std::pair<const incomplete_leafset_t, double>& pair)
+                : incomplete_leafset_t(pair.first), _coefficient(pair.second) { }
 
         incomplete_nodeterm_t& complete() {
-                incomplete_nodeset_t::complete();
+                incomplete_leafset_t::complete();
                 return *this;
         }
 
@@ -88,7 +88,7 @@ public:
                 return *this;
         }
         incomplete_nodeterm_t& operator*=(const incomplete_nodeterm_t& term) {
-                incomplete_nodeset_t::operator*=(term);
+                incomplete_leafset_t::operator*=(term);
                 coefficient() *= term.coefficient();
                 return *this;
         }
@@ -108,7 +108,7 @@ incomplete_nodeterm_t operator*(double constant, const incomplete_nodeterm_t& te
 incomplete_nodeterm_t operator*(const incomplete_nodeterm_t& term, double constant);
 incomplete_nodeterm_t operator*(const incomplete_nodeterm_t& term1, const incomplete_nodeterm_t& term2);
 
-class incomplete_expression_t : public boost::unordered_map<incomplete_nodeset_t, double> {
+class incomplete_expression_t : public boost::unordered_map<incomplete_leafset_t, double> {
 public:
         std::pair<size_t, size_t> size() {
                 size_t   complete = 0;
@@ -174,16 +174,16 @@ public:
 
         // Iterator
         ////////////////////////////////////////////////////////////////////////
-        class const_iterator : public boost::unordered_map<incomplete_nodeset_t, double>::const_iterator
+        class const_iterator : public boost::unordered_map<incomplete_leafset_t, double>::const_iterator
         {
         public:
-                const_iterator(boost::unordered_map<incomplete_nodeset_t, double>::const_iterator iterator)
-                        : boost::unordered_map<incomplete_nodeset_t, double>::const_iterator(iterator)
+                const_iterator(boost::unordered_map<incomplete_leafset_t, double>::const_iterator iterator)
+                        : boost::unordered_map<incomplete_leafset_t, double>::const_iterator(iterator)
                         { }
 
                 const incomplete_nodeterm_t* operator->() const
                 {
-                        return (const incomplete_nodeterm_t*)boost::unordered_map<incomplete_nodeset_t, double>::const_iterator::operator->();
+                        return (const incomplete_nodeterm_t*)boost::unordered_map<incomplete_leafset_t, double>::const_iterator::operator->();
                 }
                 const incomplete_nodeterm_t operator*() const
                 {
@@ -191,7 +191,7 @@ public:
                 }
         };
         const_iterator begin() const {
-                return const_iterator(boost::unordered_map<incomplete_nodeset_t, double>::begin());
+                return const_iterator(boost::unordered_map<incomplete_leafset_t, double>::begin());
         }
 };
 
@@ -204,6 +204,6 @@ incomplete_expression_t operator*(const incomplete_expression_t& expression1, co
 std::ostream& operator<< (std::ostream& o, const incomplete_nodeterm_t& term);
 std::ostream& operator<< (std::ostream& o, const incomplete_expression_t& expression);
 
-size_t hash_value(const incomplete_nodeset_t& nodeset);
+size_t hash_value(const incomplete_leafset_t& leafset);
 
 #endif /* INCOMPLETE_EXPRESSION_HH */

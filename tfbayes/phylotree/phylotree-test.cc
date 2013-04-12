@@ -1,4 +1,4 @@
-/* Copyright (C) 2012 Philipp Benner
+/* Copyright (C) 2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,33 +15,34 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef NODESET_HH
-#define NODESET_HH
-
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <boost/unordered_set.hpp>
+#include <iostream>
 
-#include <tfbayes/phylotree/phylotree.hh>
+#include <phylotree.hh>
 
-class nodeset_t : public boost::unordered_set<const pt_node_t*> {
-public:
-        bool empty() const {
-                return size() == 0;
-        }
-        void join(const nodeset_t& nodeset) {
-                for (nodeset_t::const_iterator it = nodeset.begin(); it != nodeset.end(); it++) {
-                        insert(*it);
-                }
-        }
-};
+using namespace std;
 
-#include <ostream>
+void test_tree1() {
+        cout << "Test 1:" << endl;
+        pt_leaf_t n9( 3, 9.0, "n9");
+        pt_leaf_t n8( 2, 8.0, "n8");
+        pt_leaf_t n7( 1, 7.0, "n7");
+        pt_leaf_t n6( 0, 6.0, "n6");
+        pt_node_t n5(5.0, &n8, &n9);
+        pt_node_t n4(4.0, &n6, &n7);
+        pt_leaf_t n3( 0, 3.0, "n3");
+        pt_node_t n2(2.0, &n4, &n5);
+        pt_root_t n1(&n2, &n3);
 
-size_t hash_value(const nodeset_t& set);
+        cout << &n1 << endl;
+        cout << newick_format(&n1) << endl;
+}
 
-std::ostream& operator<< (std::ostream& o, const nodeset_t& nodeset);
+int main(void) {
+        test_tree1();
 
-#endif /* NODESET_HH */
+        return 0.0;
+}

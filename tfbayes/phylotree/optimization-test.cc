@@ -189,11 +189,8 @@ pt_root_t* parse_tree_file(const char* file_tree)
 
 void run_optimization(const string& method, const char* file_tree, const char* file_alignment)
 {
-        stringstream ss;
-
         /* phylogenetic tree */
         pt_root_t* pt_root = parse_tree_file(file_tree);
-        pt_root->init(alphabet_size);
 
         /* pseudo counts */
         exponent_t<code_t, alphabet_size> alpha;
@@ -201,8 +198,7 @@ void run_optimization(const string& method, const char* file_tree, const char* f
                 alpha[i] = options.alpha;
         }
 
-        pt_root->print(ss, false);
-        cout << ss.str()
+        cout << pt_root
              << endl;
 
         /* alignment */

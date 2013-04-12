@@ -84,9 +84,9 @@ private:
          * Gradient descent
          ******************************************************************************/
 
-        partial_t gradient_leaf(const pt_node_t* node) {
+        partial_t gradient_leaf(const pt_leaf_t* leaf) {
                 partial_t partial;
-                partial[node->x] += 1.0;
+                partial[leaf->x] += 1.0;
                 return partial;
         }
         partial_t gradient_node(
@@ -189,7 +189,7 @@ private:
 
         partial_t gradient_rec(const pt_node_t* node) {
                 if (node->leaf()) {
-                        return gradient_leaf(node);
+                        return gradient_leaf(static_cast<const pt_leaf_t*>(node));
                 }
                 else {
                         partial_t partial_left  = gradient_rec(node->left);

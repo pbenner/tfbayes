@@ -64,8 +64,8 @@ void test1()
         ntree_t ntree(nedge_set, leaf_d, leaf_names);
         // print tree
         pt_root_t* tree = ntree.export_tree();
-        cout << "exporting tree:" << endl;
-        tree->print_phylotree(cout);
+        cout << "exporting tree:" << endl
+             << tree              << endl;
         tree->destroy();
 }
 
@@ -128,8 +128,8 @@ void test2()
         ntree_t ntree(nedge_set, leaf_d, leaf_names);
         // print tree
         pt_root_t* tree = ntree.export_tree();
-        cout << "exporting tree:" << endl;
-        tree->print_phylotree(cout);
+        cout << "exporting tree:" << endl
+             << tree              << endl;
         tree->destroy();
 }
 
@@ -314,15 +314,18 @@ void test5()
         pt_root_t* t1 = nt1.export_tree();
         pt_root_t* t2 = nt2.export_tree();
         cout << "exporting tree:" << endl;
-        t1->print_phylotree(cout);
-        t2->print_phylotree(cout);
+        cout << "exporting tree:" << endl
+             << t1                << endl;
+        cout << "exporting tree:" << endl
+             << t2                << endl;
         t1->destroy();
         t2->destroy();
 
         geodesic_t geodesic(nt1, nt2);
         cout << "geodesic length: " << geodesic.length() << endl;
         pt_root_t* t3 = geodesic(1.0).export_tree();
-        t3->print_phylotree(cout);
+        cout << "exporting tree:" << endl
+             << t3                << endl;
         t3->destroy();
 }
 
@@ -394,16 +397,18 @@ void test6()
         // print tree
         pt_root_t* t1 = nt1.export_tree();
         pt_root_t* t2 = nt2.export_tree();
-        cout << "exporting tree:" << endl;
-        t1->print_phylotree(cout);
-        t2->print_phylotree(cout);
+        cout << "exporting tree:" << endl
+             << t1                << endl;
+        cout << "exporting tree:" << endl
+             << t2                << endl;
         t1->destroy();
         t2->destroy();
 
         geodesic_t geodesic(nt1, nt2);
         cout << "geodesic length: " << geodesic.length() << endl;
         pt_root_t* t3 = geodesic(1.0).export_tree();
-        t3->print_phylotree(cout);
+        cout << "exporting tree:" << endl
+             << t3                << endl;
         t3->destroy();
 }
 
@@ -416,6 +421,7 @@ main(void)
         test4(); cout << endl;
         test5(); cout << endl;
         test6(); cout << endl;
+        glp_free_env();
 
         return 0;
 }

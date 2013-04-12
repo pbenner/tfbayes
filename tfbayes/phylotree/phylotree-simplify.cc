@@ -25,7 +25,7 @@
 
 using namespace std;
 
-incomplete_expression_t pt_simplify_leaf(pt_node_t* node) {
+incomplete_expression_t pt_simplify_leaf(pt_leaf_t* node) {
         incomplete_expression_t expression;
         incomplete_nodeterm_t term;
         term.incomplete().insert(node);
@@ -70,7 +70,7 @@ incomplete_expression_t pt_simplify_node(
 
 incomplete_expression_t pt_simplify_rec(pt_node_t* node) {
         if (node->leaf()) {
-                return pt_simplify_leaf(node);
+                return pt_simplify_leaf(static_cast<pt_leaf_t*>(node));
         }
         else {
                 const incomplete_expression_t expression_left  = pt_simplify_rec(node->left);

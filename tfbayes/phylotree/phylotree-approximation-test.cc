@@ -45,19 +45,19 @@ using namespace std;
 #define alphabet_size 4
 typedef float code_t;
 
-void pt_init_leaf(const boost::unordered_map<string, code_t>& observations, pt_node_t* node) {
-        if (observations.find(node->name) == observations.end()) {
-                node->x = rand()%alphabet_size;
+void pt_init_leaf(const boost::unordered_map<string, code_t>& observations, pt_leaf_t* leaf) {
+        if (observations.find(leaf->name) == observations.end()) {
+                leaf->x = rand()%alphabet_size;
         }
         else {
-                node->x = (*observations.find(node->name)).second;
+                leaf->x = (*observations.find(leaf->name)).second;
         }
 }
 
 void pt_init(const boost::unordered_map<string, code_t>& observations, pt_node_t* node) {
 
         if (node->leaf()) {
-                pt_init_leaf(observations, node);
+                pt_init_leaf(observations, static_cast<pt_leaf_t*>(node));
         }
         else {
                 pt_init(observations, node->left);

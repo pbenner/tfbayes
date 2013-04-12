@@ -145,8 +145,8 @@ public:
                                  double r, double lambda,
                                  const jumping_distribution_t& jumping_distribution,
                                  double acceptance_rate = 0.7)
-                : acceptance(tree->size(), 0.0),
-                  samples(tree->size(),    std::vector<double>()),
+                : acceptance(tree->n_nodes, 0.0),
+                  samples(tree->n_nodes,    std::vector<double>()),
                   alignment(alignment),
                   alpha(alpha),
                   gamma_distribution(r, lambda),
@@ -164,7 +164,7 @@ public:
                 gsl_rng_set(rng, seed);
 
                 // initialize jumping distributions
-                for (pt_node_t::id_t id = 0; id < tree->size(); id++) {
+                for (pt_node_t::id_t id = 0; id < tree->n_nodes; id++) {
                         jumping_distributions.push_back(jumping_distribution.clone());
                 }
         }
@@ -190,7 +190,7 @@ public:
                 gsl_rng_set(rng, seed);
 
                 // initialize nodes and jumping distributions
-                for (pt_node_t::id_t id = 0; id < tree->size(); id++) {
+                for (pt_node_t::id_t id = 0; id < tree->n_nodes; id++) {
                         jumping_distributions[id] = mh.jumping_distributions[id]->clone();
                 }
         }
@@ -198,7 +198,7 @@ public:
                 // free random generator
                 gsl_rng_free(rng);
                 // free jumping distributions
-                for (pt_node_t::id_t id = 0; id < tree->size(); id++) {
+                for (pt_node_t::id_t id = 0; id < tree->n_nodes; id++) {
                         delete(jumping_distributions[id]);
                 }
                 tree->destroy();
@@ -227,7 +227,7 @@ public:
                 // update root
                 samples[0].push_back(0.0);
                 // update samples
-                for (pt_node_t::id_t id = 1; id < tree->size(); id++) {
+                for (pt_node_t::id_t id = 1; id < tree->n_nodes; id++) {
                         pt_node_t* node = tree->node_map[id];
                         samples[id].push_back(node->d);
                         if (print) {
@@ -241,7 +241,7 @@ public:
                 }
         }
         void update_steps() {
-                for (pt_node_t::id_t id = 1; id < tree->size(); id++) {
+                for (pt_node_t::id_t id = 1; id < tree->n_nodes; id++) {
                         if (acceptance[id] > acceptance_rate) {
                                 jumping_distributions[id]->increase_jump(fabs(acceptance[id]-acceptance_rate));
                         }
@@ -301,7 +301,7 @@ public:
                 fflush(stderr);
                 funlockfile(stderr);
                 // loop over nodes
-                for (pt_node_t::id_t id = 1; id < tree->size(); id++) {
+                for (pt_node_t::id_t id = 1; id < tree->n_nodes; id++) {
                         log_likelihood_ref = sample_branch(id, log_likelihood_ref);
                 }
                 update_samples(print);
@@ -481,7 +481,7 @@ public:
                 fflush(stderr);
                 funlockfile(stderr);
                 // loop over nodes
-                for (pt_node_t::id_t id = 0; id < this->tree->size(); id++) {
+                for (pt_node_t::id_t id = 0; id < this->tree->n_nodes; id++) {
                         // if this is not a leaf then sample it
                         if (!this->tree->node_map[id]->leaf()) {
                                 log_likelihood_ref = sample_node(id, log_likelihood_ref);

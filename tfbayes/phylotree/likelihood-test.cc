@@ -33,7 +33,7 @@ void test_tree1() {
         cout << "Test 1:" << endl;
         pt_leaf_t n2( 1, 1.0, "n2");
         pt_leaf_t n3( 2, 2.0, "n3");
-        pt_root_t n1(-1, &n2, &n3);
+        pt_root_t n1(&n2, &n3);
 
         polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n1);
         cout << result << endl
@@ -45,7 +45,7 @@ void test_tree2() {
         cout << "Test 2:" << endl;
         pt_leaf_t n2( 1, 1.0, "n2");
         pt_leaf_t n3( 1, 2.0, "n3");
-        pt_root_t n1(-1, &n2, &n3);
+        pt_root_t n1(&n2, &n3);
 
         polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n1);
         cout << result << endl
@@ -58,8 +58,8 @@ void test_tree3() {
         pt_leaf_t n5( 1, 2.0, "n5");
         pt_leaf_t n4( 1, 1.0, "n4");
         pt_leaf_t n3( 2, 1.0, "n3");
-        pt_node_t n2(-1, 0.5, &n4, &n5);
-        pt_root_t n1(-1, &n2, &n3);
+        pt_node_t n2(0.5, &n4, &n5);
+        pt_root_t n1(&n2, &n3);
 
         polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n1);
         cout << result << endl
@@ -73,9 +73,9 @@ void test_tree4() {
         pt_leaf_t n6( 1, 1.0, "n6");
         pt_leaf_t n5( 1, 2.0, "n5");
         pt_leaf_t n4( 1, 1.0, "n4");
-        pt_node_t n3(-1, 0.5, &n6, &n7);
-        pt_node_t n2(-1, 0.5, &n4, &n5);
-        pt_root_t n1(-1, &n2, &n3);
+        pt_node_t n3(0.5, &n6, &n7);
+        pt_node_t n2(0.5, &n4, &n5);
+        pt_root_t n1(&n2, &n3);
 
         polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n1);
         cout << result << endl
@@ -89,9 +89,9 @@ void test_tree5() {
         pt_leaf_t n6( 1, 1.0, "n6");
         pt_leaf_t n5( 2, 2.0, "n5");
         pt_leaf_t n4( 3, 1.0, "n4");
-        pt_node_t n3(-1, 0.5, &n6, &n7);
-        pt_node_t n2(-1, 0.5, &n4, &n5);
-        pt_root_t n1(-1, &n2, &n3);
+        pt_node_t n3(0.5, &n6, &n7);
+        pt_node_t n2(0.5, &n4, &n5);
+        pt_root_t n1(&n2, &n3);
 
         polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n1);
         cout << result << endl
@@ -105,11 +105,11 @@ void test_tree6() {
         pt_leaf_t n8( 2, 8.0, "n8");
         pt_leaf_t n7( 1, 7.0, "n7");
         pt_leaf_t n6( 0, 6.0, "n6");
-        pt_node_t n5(-1, 5.0, &n8, &n9);
-        pt_node_t n4(-1, 4.0, &n6, &n7);
+        pt_node_t n5(5.0, &n8, &n9);
+        pt_node_t n4(4.0, &n6, &n7);
         pt_leaf_t n3( 0, 3.0, "n3");
-        pt_node_t n2(-1, 2.0, &n4, &n5);
-        pt_root_t n1(-1, &n2, &n3);
+        pt_node_t n2(2.0, &n4, &n5);
+        pt_root_t n1(&n2, &n3);
 
         polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n1);
         cout << result << endl

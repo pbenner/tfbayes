@@ -23,8 +23,8 @@
 
 using namespace std;
 
-ostream& operator<< (ostream& o, const incomplete_nodeset_t& exponent) {
-        for (incomplete_nodeset_t::const_iterator it = exponent.begin(); it != exponent.end(); it++) {
+ostream& operator<< (ostream& o, const incomplete_leafset_t& exponent) {
+        for (incomplete_leafset_t::const_iterator it = exponent.begin(); it != exponent.end(); it++) {
                 o << "phi("
                   << *it
                   << ")";
@@ -42,7 +42,7 @@ ostream& operator<< (ostream& o, const incomplete_nodeterm_t& term) {
                 o << term.coefficient()
                   << " ";
         }
-        o << (const incomplete_nodeset_t&)term;
+        o << (const incomplete_leafset_t&)term;
 
         return o;
 }
@@ -58,12 +58,12 @@ ostream& operator<< (ostream& o, const incomplete_expression_t& expression) {
         return o;
 }
 
-size_t hash_value(const incomplete_nodeset_t& nodeset) {
+size_t hash_value(const incomplete_leafset_t& leafset) {
         size_t seed = 0;
-        for (incomplete_nodeset_t::const_iterator it = nodeset.begin(); it != nodeset.end(); it++) {
+        for (incomplete_leafset_t::const_iterator it = leafset.begin(); it != leafset.end(); it++) {
                 boost::hash_combine(seed, hash_value(*it));
         }
-        boost::hash_combine(seed, hash_value(nodeset.incomplete()));
+        boost::hash_combine(seed, hash_value(leafset.incomplete()));
         return seed;
 }
 

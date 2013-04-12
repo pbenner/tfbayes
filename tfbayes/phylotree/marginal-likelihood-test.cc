@@ -35,7 +35,7 @@ void test_tree1(const exponent_t<code_t, alphabet_size> alpha) {
         cout << "Test 1:" << endl;
         pt_leaf_t n2(1, 1.0);
         pt_leaf_t n3(2, 2.0);
-        pt_root_t n1(-1, &n2, &n3);
+        pt_root_t n1(&n2, &n3);
 
         incomplete_expression_t incomplete_expression = pt_simplify(&n1);
         polynomial_t<code_t, alphabet_size> polynomial = pt_expand<code_t, alphabet_size>(incomplete_expression);
@@ -50,7 +50,7 @@ void test_tree2(const exponent_t<code_t, alphabet_size> alpha) {
         cout << "Test 2:" << endl;
         pt_leaf_t n2(1, 1.0);
         pt_leaf_t n3(1, 2.0);
-        pt_root_t n1(-1, &n2, &n3);
+        pt_root_t n1(&n2, &n3);
 
         double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl
@@ -63,8 +63,8 @@ void test_tree3(const exponent_t<code_t, alphabet_size> alpha) {
         pt_leaf_t n5(1, 2.0);
         pt_leaf_t n4(1, 1.0);
         pt_leaf_t n3(2, 1.0);
-        pt_node_t n2(-1, 0.5, &n4, &n5);
-        pt_root_t n1(-1, &n2, &n3);
+        pt_node_t n2(0.5, &n4, &n5);
+        pt_root_t n1(&n2, &n3);
 
         double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl
@@ -78,9 +78,9 @@ void test_tree4(const exponent_t<code_t, alphabet_size> alpha) {
         pt_leaf_t n6(1, 1.0);
         pt_leaf_t n5(1, 2.0);
         pt_leaf_t n4(1, 1.0);
-        pt_node_t n3(-1, 0.5, &n6, &n7);
-        pt_node_t n2(-1, 0.5, &n4, &n5);
-        pt_root_t n1(-1, &n2, &n3);
+        pt_node_t n3(0.5, &n6, &n7);
+        pt_node_t n2(0.5, &n4, &n5);
+        pt_root_t n1(&n2, &n3);
 
         double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl
@@ -94,9 +94,9 @@ void test_tree5(const exponent_t<code_t, alphabet_size> alpha) {
         pt_leaf_t n6(1, 1.0);
         pt_leaf_t n5(2, 2.0);
         pt_leaf_t n4(3, 1.0);
-        pt_node_t n3(-1, 0.5, &n6, &n7);
-        pt_node_t n2(-1, 0.5, &n4, &n5);
-        pt_root_t n1(-1, &n2, &n3);
+        pt_node_t n3(0.5, &n6, &n7);
+        pt_node_t n2(0.5, &n4, &n5);
+        pt_root_t n1(&n2, &n3);
 
         double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl
@@ -110,11 +110,11 @@ void test_tree6(const exponent_t<code_t, alphabet_size> alpha) {
         pt_leaf_t n8( 2, 8.0);
         pt_leaf_t n7( 1, 7.0);
         pt_leaf_t n6( 0, 6.0);
-        pt_node_t n5(-1, 5.0, &n8, &n9);
-        pt_node_t n4(-1, 4.0, &n6, &n7);
+        pt_node_t n5(5.0, &n8, &n9);
+        pt_node_t n4(4.0, &n6, &n7);
         pt_leaf_t n3( 0, 3.0);
-        pt_node_t n2(-1, 2.0, &n4, &n5);
-        pt_root_t n1(-1, &n2, &n3);
+        pt_node_t n2(2.0, &n4, &n5);
+        pt_root_t n1(&n2, &n3);
 
         double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
         cout << result << endl

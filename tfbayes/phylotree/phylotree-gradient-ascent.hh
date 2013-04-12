@@ -126,12 +126,10 @@ public:
                         node_epsilon[*is] = epsilon;
                 }
                 for (size_t i = 0; i < max; i++) {
-                        std::stringstream ss;
                         double total = run(nodes);
                         if (print) {
-                                tree->print(ss, true);
-                                std::cout << "total change: " << total << std::endl;
-                                std::cout << ss.str()                  << std::endl;
+                                std::cout << "total change:  "   << total << std::endl
+                                          << newick_format(tree) << std::endl;
                                 if (total < stop) {
                                         break;
                                 }

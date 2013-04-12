@@ -63,8 +63,7 @@ pt_parsetree_t::convert() const
         {
         case NODE_N:
                 assert(children[2]->type == DISTANCE_N);
-                node = new pt_node_t(-1,
-                                     *(double *)children[2]->data,
+                node = new pt_node_t(*(double *)children[2]->data,
                                      children[0]->convert(),
                                      children[1]->convert());
                 break;
@@ -80,8 +79,7 @@ pt_parsetree_t::convert() const
                        children[0]->type == LEAF_N);
                 assert(children[1]->type == NODE_N ||
                        children[1]->type == LEAF_N);
-                node = new pt_root_t(-1,
-                                     children[1]->convert(),
+                node = new pt_root_t(children[1]->convert(),
                                      children[0]->convert());
                 break;
         default:

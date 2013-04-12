@@ -123,7 +123,7 @@ size_t pt_num_leafs(pt_node_t* node)
 size_t pt_init(vector_t* observations, pt_node_t* node, size_t count)
 {
         if (node->leaf()) {
-                node->x = observations->vec[count];
+                static_cast<pt_leaf_t*>(node)->x = observations->vec[count];
                 count++;
         }
         else {

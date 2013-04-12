@@ -9,18 +9,22 @@ BUILT_SOURCES = phylotree-parser.h
 AM_YFLAGS = -d
 AM_LFLAGS = -o$(LEX_OUTPUT_ROOT).c
 
-bin_PROGRAMS = polynomial-test phylotree-expand-test phylotree-expected-terms phylotree-parser-test phylotree-approximation-test optimization-test likelihood-test likelihood-prime-test marginal-likelihood-test treespace-test
+bin_PROGRAMS = polynomial-test phylotree-test phylotree-expand-test phylotree-parser-test phylotree-approximation-test optimization-test likelihood-test likelihood-prime-test marginal-likelihood-test treespace-test
 
 polynomial_test_SOURCES = polynomial-test.cc
 polynomial_test_LDADD   = -lm
+
+phylotree_test_SOURCES = phylotree-test.cc
+phylotree_test_LDADD   = -lm
+phylotree_test_LDADD  += libtfbayes-phylotree.la
 
 phylotree_expand_test_SOURCES = phylotree-expand-test.cc
 phylotree_expand_test_LDADD   = -lm
 phylotree_expand_test_LDADD  += libtfbayes-phylotree.la
 
-phylotree_expected_terms_SOURCES = phylotree-expected-terms.cc
-phylotree_expected_terms_LDADD   = -lm
-phylotree_expected_terms_LDADD  += libtfbayes-phylotree.la
+# phylotree_expected_terms_SOURCES = phylotree-expected-terms.cc
+# phylotree_expected_terms_LDADD   = -lm
+# phylotree_expected_terms_LDADD  += libtfbayes-phylotree.la
 
 phylotree_parser_test_SOURCES = phylotree-parser-test.cc
 phylotree_parser_test_LDADD   = -lm
@@ -57,8 +61,8 @@ lib_LTLIBRARIES = libtfbayes-phylotree.la
 libtfbayes_phylotree_la_SOURCES = \
 	interface.hh \
 	interface.cc \
-	nodeset.cc \
-	nodeset.hh \
+	leafset.cc \
+	leafset.hh \
 	phylotree.cc \
 	phylotree.hh \
 	phylotree-approximate.hh \
@@ -72,7 +76,6 @@ libtfbayes_phylotree_la_SOURCES = \
 	phylotree-parser.yy \
 	phylotree-parsetree.cc \
 	phylotree-parsetree.hh \
-	phylotree-simple-polynomial.hh \
 	phylotree-simplify.cc \
 	phylotree-simplify.hh \
 	posterior.hh \

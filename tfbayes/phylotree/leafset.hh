@@ -15,29 +15,33 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef LEAFSET_HH
+#define LEAFSET_HH
+
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <tfbayes/phylotree/nodeset.hh>
+#include <boost/unordered_set.hpp>
 
-using namespace std;
+#include <tfbayes/phylotree/phylotree.hh>
 
-ostream& operator<< (ostream& o, const nodeset_t& nodeset) {
-        for (nodeset_t::const_iterator it = nodeset.begin(); it != nodeset.end(); it++) {
-                if (it != nodeset.begin()) {
-                        o << ",";
+class leafset_t : public boost::unordered_set<const pt_leaf_t*> {
+public:
+        bool empty() const {
+                return size() == 0;
+        }
+        void join(const leafset_t& leafset) {
+                for (leafset_t::const_iterator it = leafset.begin(); it != leafset.end(); it++) {
+                        insert(*it);
                 }
-                o << (*it)->name;
         }
+};
 
-        return o;
-}
+#include <ostream>
 
-size_t hash_value(const nodeset_t& set) {
-        size_t seed = 0;
-        for (nodeset_t::const_iterator it = set.begin(); it != set.end(); it++) {
-                seed += (size_t)*it;
-        }
-        return seed;
-}
+size_t hash_value(const leafset_t& set);
+
+std::ostream& operator<< (std::ostream& o, const leafset_t& leafset);
+
+#endif /* LEAFSET_HH */

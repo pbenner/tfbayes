@@ -36,7 +36,7 @@ polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> nucleotide_probability(CODE_TYPE x) 
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> mutation_model(const pt_node_t* u, CODE_TYPE y) {
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> mutation_model(const pt_leaf_t* u, CODE_TYPE y) {
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly;
         polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> px = nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(u->x);
         poly += u->mutation_probability()*px;
@@ -57,8 +57,8 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> mutation_model(const pt_node_t* u, CODE_T
  */
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
-        nodeset_t::const_iterator it,
-        nodeset_t::const_iterator end,
+        leafset_t::const_iterator it,
+        leafset_t::const_iterator end,
         CODE_TYPE condition)
 {
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> result(0.0);
@@ -92,8 +92,8 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
  */
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
-        nodeset_t::const_iterator it,
-        nodeset_t::const_iterator end)
+        leafset_t::const_iterator it,
+        leafset_t::const_iterator end)
 {
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> result(0.0);
 
@@ -110,8 +110,8 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
         polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> term,
-        nodeset_t::const_iterator it,
-        nodeset_t::const_iterator end,
+        leafset_t::const_iterator it,
+        leafset_t::const_iterator end,
         CODE_TYPE condition)
 {
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> result(0.0);
@@ -138,11 +138,11 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(const nodeset_t& nodeset) {
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(const leafset_t& leafset) {
         /* Algorithm 1 */
-//        return pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(1.0, nodeset.begin(), nodeset.end(), ALPHABET_SIZE);
+//        return pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(1.0, leafset.begin(), leafset.end(), ALPHABET_SIZE);
         /* Algorithm 2 */
-        return pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(nodeset.begin(), nodeset.end());
+        return pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(leafset.begin(), leafset.end());
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>

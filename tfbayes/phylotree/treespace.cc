@@ -443,7 +443,7 @@ ntree_t::export_tree() {
                 right_tree = new pt_leaf_t(-1, leaf_d(boost::get<2>(ns)), leaf_name(boost::get<2>(ns)));
         }
         // return resulting tree
-        return new pt_root_t(-1, left_tree, right_tree);
+        return new pt_root_t(left_tree, right_tree);
 }
 
 pt_node_t*
@@ -469,7 +469,7 @@ ntree_t::export_subtree(vector<bool>& used, size_t i) {
                         right_tree = new pt_leaf_t(-1, leaf_d(boost::get<2>(ns)), leaf_name(boost::get<2>(ns)));
                 }
         }
-        return new pt_node_t(-1, nedge_set(i).d(), left_tree, right_tree);
+        return new pt_node_t(nedge_set(i).d(), left_tree, right_tree);
 }
 
 size_t

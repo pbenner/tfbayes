@@ -46,14 +46,14 @@ public:
                 : alignment_ancestor_t(),
                   _length(length),
                   _tree(tree->clone()) {
-                pt_node_t::nodes_t nodes = _tree->get_nodes();
+                pt_node_t::leafs_t leafs = _tree->get_leafs();
 
-                for (pt_node_t::nodes_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
-                        pt_node_t* node = *it;
-                        _taxon_map[node->name] = node->id;
-                        this->operator[](node->name) = nucleotide_sequence_t<CODE_TYPE>(length, init);
+                for (pt_node_t::leafs_t::const_iterator it = leafs.begin(); it != leafs.end(); it++) {
+                        pt_leaf_t* leaf = *it;
+                        _taxon_map[leaf->name] = leaf->id;
+                        this->operator[](leaf->name) = nucleotide_sequence_t<CODE_TYPE>(length, init);
                 }
-                _size = nodes.size();
+                _size = leafs.size();
         }
         alignment_t(const char* filename, pt_root_t* tree)
                 : alignment_ancestor_t(),
@@ -176,7 +176,7 @@ public:
                              it != _taxon_map.end(); it++) {
                                 const std::string taxon  = it->first;
                                 const pt_node_t::id_t id = it->second;
-                                _tree->node_map[id]->x = _alignment.find(taxon)->second[position()];
+                                _tree->leaf_map[id]->x = _alignment.find(taxon)->second[position()];
                         }
                         return *_tree;
                 }

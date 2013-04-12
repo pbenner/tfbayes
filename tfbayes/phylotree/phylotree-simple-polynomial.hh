@@ -58,15 +58,15 @@ private:
                 return poly_sum;
         }
 
-        carry_t likelihood_leaf(pt_node_t* node) {
+        carry_t likelihood_leaf(pt_leaf_t* leaf) {
                 carry_t carry;
-                if (node->root()) {
-                        carry[ALPHABET_SIZE] = nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(node->x);
+                if (leaf->root()) {
+                        carry[ALPHABET_SIZE] = nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(leaf->x);
                 }
                 else {
                         // i: nucleotide of ancestor
                         for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                                carry[i] = mutation_model<CODE_TYPE, ALPHABET_SIZE>(node, i);
+                                carry[i] = mutation_model<CODE_TYPE, ALPHABET_SIZE>(leaf, i);
                         }
                 }
                 return carry;
