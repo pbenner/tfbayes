@@ -79,8 +79,18 @@ pt_parsetree_t::convert() const
                        children[0]->type == LEAF_N);
                 assert(children[1]->type == NODE_N ||
                        children[1]->type == LEAF_N);
-                node = new pt_root_t(children[1]->convert(),
-                                     children[0]->convert());
+                assert((n_children == 3 && children[2]->type == LEAF_N) ||
+                        n_children == 2);
+                if (n_children == 3) {
+                        node = new pt_root_t(children[1]->convert(),
+                                             children[0]->convert(),
+                                              (char   *)children[2]->children[0]->data,
+                                             *(double *)children[2]->children[1]->data);
+                }
+                else {
+                        node = new pt_root_t(children[1]->convert(),
+                                             children[0]->convert());
+                }
                 break;
         default:
                 assert(false);

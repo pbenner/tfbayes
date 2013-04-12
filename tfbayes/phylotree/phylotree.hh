@@ -102,7 +102,8 @@ class pt_root_t : public pt_node_t {
 public:
         pt_root_t(pt_node_t* left  = NULL,
                   pt_node_t* right = NULL,
-                  const std::string name = "");
+                  const std::string name = "",
+                  double d = -HUGE_VAL);
         pt_root_t(const pt_root_t& root);
 
         pt_root_t* clone() const;

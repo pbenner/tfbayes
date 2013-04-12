@@ -131,8 +131,9 @@ pt_leaf_t::get_leafs(leafs_t& leafs) {
 
 pt_root_t::pt_root_t(pt_node_t* left,
                      pt_node_t* right,
-                     const std::string name)
-        : pt_node_t(-HUGE_VAL, left, right, name, true) {
+                     const std::string name,
+                     double d)
+        : pt_node_t(d, left, right, name, true) {
 
         id_t leaf_id = 0;
         id_t node_id = n_leafs;
