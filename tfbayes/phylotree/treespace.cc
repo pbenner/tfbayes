@@ -17,6 +17,7 @@
 
 #include <treespace.hh>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 
@@ -24,8 +25,8 @@
 
 using namespace std;
 
-/* tools
- *****************************************************************************/
+// tools
+////////////////////////////////////////////////////////////////////////////////
 
 static
 bool empty_intersection(const vector<size_t>& x, const vector<size_t>& y)
@@ -119,8 +120,8 @@ nedge_set_t difference(const nedge_set_t& x_, const nedge_set_t& y_)
         return result;
 }
 
-/* nsplit_t
- *****************************************************************************/
+// nsplit_t
+////////////////////////////////////////////////////////////////////////////////
 
 nsplit_t::nsplit_t() : _n(0), _null(true) { }
 
@@ -265,8 +266,8 @@ operator<< (ostream& o, const nedge_t& nedge)
         return o;
 }
 
-/* nedge_t
- *****************************************************************************/
+// nedge_t
+////////////////////////////////////////////////////////////////////////////////
 
 nedge_t::nedge_t()
         : nsplit_t(), _d(0)
@@ -292,8 +293,8 @@ nedge_t::operator==(const nedge_t& nedge) const
         return (nsplit_t)(*this) == (nsplit_t)nedge && d() == nedge.d();
 }
 
-/* common_nedge_t
- *****************************************************************************/
+// common_nedge_t
+////////////////////////////////////////////////////////////////////////////////
 
 common_nedge_t::common_nedge_t()
         : nsplit_t(), _d1(0), _d2(0)
@@ -315,8 +316,8 @@ common_nedge_t::d2() const
         return _d2;
 }
 
-/* nedge_set_t
- *****************************************************************************/
+// nedge_set_t
+////////////////////////////////////////////////////////////////////////////////
 
 double
 nedge_set_t::length() const
@@ -339,8 +340,8 @@ operator<< (ostream& o, const nedge_set_t& nedge_set)
         return o;
 }
 
-/* ntree_t
- *****************************************************************************/
+// ntree_t
+////////////////////////////////////////////////////////////////////////////////
 
 ntree_t::ntree_t(const nedge_set_t& nedge_set,
                  const vector<double>& leaf_d,
@@ -364,6 +365,61 @@ ntree_t::ntree_t(const nedge_set_t& nedge_set,
                         }
                 }
         }
+}
+
+static set<size_t>
+parse_pt_root_t(
+        size_t n,
+        const pt_node_t* node,
+        nedge_set_t& nedge_set,
+        vector<double>& leaf_d,
+        vector<string>& leaf_names)
+{
+        set<size_t> s1;
+
+                    s1 = parse_pt_node_t(n, node->left,  nedge_set, leaf_d, leaf_names, s1);
+        set<size_t> s2 = parse_pt_node_t(n, node->right, nedge_set, leaf_d, leaf_names, set<size_t>());
+        set_union(s1.begin(), s1.end(), s2.begin(), s2.end(), inserter(s, s.begin()));
+        nedge_set.push_back(nedge_t(nsplit_t(n, s1), node->d));
+
+        return s;
+}
+
+static set<size_t>
+parse_pt_node_t(
+        size_t n,
+        const pt_node_t* node,
+        nedge_set_t& nedge_set,
+        vector<double>& leaf_d,
+        vector<string>& leaf_names,
+        set<size_t> s1)
+{
+        set<size_t> s;
+
+        if (node->leaf()) {
+                s.insert(node->id);
+                leaf_d    [node->id+1] = node->d;
+                leaf_names[node->id+1] = node->name;
+        }
+        else {
+                set<size_t> s1 = parse_pt_node_t(n, node->left,  nedge_set, leaf_d, leaf_names);
+                set<size_t> s2 = parse_pt_node_t(n, node->right, nedge_set, leaf_d, leaf_names);
+                set_union(s1.begin(), s1.end(), s2.begin(), s2.end(), inserter(s, s.begin()));
+                nedge_set.push_back(nedge_t(nsplit_t(n, s1), node->d));
+        }
+        return s;
+}
+
+ntree_t::ntree_t(const pt_root_t* tree, double root_d, const string& root_name)
+{
+        nedge_set_t nedge_set;
+        vector<double> leaf_d(tree->n_leafs+1, 0);
+        vector<string> leaf_names(tree->n_leafs+1, "");
+
+        // initialize root
+        leaf_d[0]     = root_d;
+        leaf_names[0] = root_name;
+        
 }
 
 const string ntree_t::_empty_string;
@@ -512,8 +568,8 @@ ntree_t::leaf_name(size_t i) const {
         }
 }
 
-/* incompatibility_graph_t
- *****************************************************************************/
+// incompatibility_graph_t
+////////////////////////////////////////////////////////////////////////////////
 
 incompatibility_graph_t::incompatibility_graph_t(
         const nedge_set_t& a,
@@ -752,6 +808,8 @@ incompatibility_graph_t::au(size_t i) const
 
 /* npath_t
  *****************************************************************************/
+// npath_t
+////////////////////////////////////////////////////////////////////////////////
 
 ostream&
 operator<< (ostream& o, const npath_t& npath)
@@ -766,6 +824,8 @@ operator<< (ostream& o, const npath_t& npath)
 
 /* geodesic_t
  *****************************************************************************/
+// geodesic_t
+////////////////////////////////////////////////////////////////////////////////
 
 geodesic_t::geodesic_t(const ntree_t& t1, const ntree_t& t2)
         // start with the cone path
