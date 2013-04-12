@@ -118,6 +118,29 @@ void test_tree6() {
 
 }
 
+void test_tree7() {
+        cout << "Test 7:" << endl;
+        // first tree
+        pt_leaf_t na( 0, 0.1, "A");
+        pt_leaf_t nb( 1, 0.3, "B");
+        pt_leaf_t nc( 0, 0.4, "C");
+        pt_node_t n2(    0.2, &nb, &nc);
+        pt_root_t n1(         &na, &n2);
+        // second tree
+        pt_leaf_t ma( 0, 0.3, "A");
+        pt_leaf_t mb( 1, 0.3, "B");
+        pt_leaf_t mc( 0, 0.2, "C");
+        pt_node_t m2(    0.2, &ma, &mb);
+        pt_root_t m1(         &m2, &mc);
+
+        polynomial_t<code_t, alphabet_size> result1 = pt_polynomial<code_t, alphabet_size>(&n1);
+        polynomial_t<code_t, alphabet_size> result2 = pt_polynomial<code_t, alphabet_size>(&m1);
+
+        cout << result1 << endl
+             << result2 << endl;
+
+}
+
 int main(void) {
         test_tree1();
         test_tree2();
@@ -125,6 +148,7 @@ int main(void) {
         test_tree4();
         test_tree5();
         test_tree6();
+        test_tree7();
 
         return 0.0;
 }
