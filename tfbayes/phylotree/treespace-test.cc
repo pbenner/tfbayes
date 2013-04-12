@@ -18,6 +18,7 @@
 #include <cstdio>
 
 #include <treespace.hh>
+#include <tfbayes/phylotree/phylotree-parser.hh>
 
 using namespace std;
 
@@ -412,6 +413,21 @@ void test6()
         t3->destroy();
 }
 
+void test7()
+{
+        cout << "test 7" << endl
+             <<"------------------------------------------------------------"
+             << endl;
+
+        
+        yyparse();
+
+        pt_root_t* pt_root = (pt_root_t*)pt_parsetree->convert();
+        ntree_t nt(pt_root);
+
+        cout << pt_root << endl;
+}
+
 int
 main(void)
 {
@@ -421,6 +437,7 @@ main(void)
         test4(); cout << endl;
         test5(); cout << endl;
         test6(); cout << endl;
+        test7(); cout << endl;
         glp_free_env();
 
         return 0;

@@ -368,36 +368,19 @@ ntree_t::ntree_t(const nedge_set_t& nedge_set,
 }
 
 static set<size_t>
-parse_pt_root_t(
+parse_pt_node_t(
         size_t n,
         const pt_node_t* node,
         nedge_set_t& nedge_set,
         vector<double>& leaf_d,
         vector<string>& leaf_names)
 {
-        set<size_t> s1;
-
-                    s1 = parse_pt_node_t(n, node->left,  nedge_set, leaf_d, leaf_names, s1);
-        set<size_t> s2 = parse_pt_node_t(n, node->right, nedge_set, leaf_d, leaf_names, set<size_t>());
-        set_union(s1.begin(), s1.end(), s2.begin(), s2.end(), inserter(s, s.begin()));
-        nedge_set.push_back(nedge_t(nsplit_t(n, s1), node->d));
-
-        return s;
-}
-
-static set<size_t>
-parse_pt_node_t(
-        size_t n,
-        const pt_node_t* node,
-        nedge_set_t& nedge_set,
-        vector<double>& leaf_d,
-        vector<string>& leaf_names,
-        set<size_t> s1)
-{
         set<size_t> s;
 
         if (node->leaf()) {
-                s.insert(node->id);
+                // add one to every node id since we add an additional
+                // leaf to the root with id zero
+                s.insert(node->id+1);
                 leaf_d    [node->id+1] = node->d;
                 leaf_names[node->id+1] = node->name;
         }
@@ -405,21 +388,26 @@ parse_pt_node_t(
                 set<size_t> s1 = parse_pt_node_t(n, node->left,  nedge_set, leaf_d, leaf_names);
                 set<size_t> s2 = parse_pt_node_t(n, node->right, nedge_set, leaf_d, leaf_names);
                 set_union(s1.begin(), s1.end(), s2.begin(), s2.end(), inserter(s, s.begin()));
-                nedge_set.push_back(nedge_t(nsplit_t(n, s1), node->d));
+                cout << "split: " << nsplit_t(n, s) << endl;
+                nedge_set.push_back(nedge_t(nsplit_t(n, s), node->d));
         }
         return s;
 }
 
-ntree_t::ntree_t(const pt_root_t* tree, double root_d, const string& root_name)
+ntree_t::ntree_t(const pt_root_t* tree)
 {
         nedge_set_t nedge_set;
         vector<double> leaf_d(tree->n_leafs+1, 0);
         vector<string> leaf_names(tree->n_leafs+1, "");
 
         // initialize root
-        leaf_d[0]     = root_d;
-        leaf_names[0] = root_name;
-        
+        leaf_d[0]     = tree->d;
+        leaf_names[0] = tree->name;
+        // parse the tree
+        parse_pt_node_t(tree->n_leafs, tree, nedge_set, leaf_d, leaf_names);
+        cout << "we have " << nedge_set.size() << " splits" << endl;
+        // call constructor
+        ntree_t(nedge_set, leaf_d, leaf_names);
 }
 
 const string ntree_t::_empty_string;
