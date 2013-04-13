@@ -123,22 +123,25 @@ void test_tree7() {
         // first tree
         pt_leaf_t na( 0, 0.1, "A");
         pt_leaf_t nb( 1, 0.3, "B");
-        pt_leaf_t nc( 0, 0.4, "C");
-        pt_node_t n2(    0.2, &nb, &nc);
+        pt_leaf_t nc( 0, 0.5, "C");
+        pt_leaf_t nd( 0, 0.6, "D");
+        pt_node_t n3(    0.4, &nc, &nd);
+        pt_node_t n2(    0.2, &nb, &n3);
         pt_root_t n1(         &na, &n2);
         // second tree
         pt_leaf_t ma( 0, 0.3, "A");
         pt_leaf_t mb( 1, 0.3, "B");
-        pt_leaf_t mc( 0, 0.2, "C");
-        pt_node_t m2(    0.2, &ma, &mb);
-        pt_root_t m1(         &m2, &mc);
+        pt_leaf_t mc( 0, 0.5, "C");
+        pt_leaf_t md( 0, 0.6, "D");
+        pt_node_t m3(    0.2, &ma, &mb);
+        pt_node_t m2(    0.2, &mc, &md);
+        pt_root_t m1(         &m2, &m3);
 
         polynomial_t<code_t, alphabet_size> result1 = pt_polynomial<code_t, alphabet_size>(&n1);
         polynomial_t<code_t, alphabet_size> result2 = pt_polynomial<code_t, alphabet_size>(&m1);
 
         cout << result1 << endl
              << result2 << endl;
-
 }
 
 int main(void) {
