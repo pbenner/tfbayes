@@ -142,7 +142,7 @@ void test_tree7() {
 
         cout << result1 << endl
              << result2 << endl;
-}
+} 
 
 int main(void) {
         test_tree1();
