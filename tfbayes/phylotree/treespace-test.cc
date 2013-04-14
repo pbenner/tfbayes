@@ -521,8 +521,6 @@ void test8()
         cout << "geodesic length: "
              << geodesic.length()
              << endl;
-
-        cout << newick_format(pt_root1) << endl;
 }
 
 int
