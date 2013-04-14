@@ -334,11 +334,10 @@ ntree_t::ntree_t(const nedge_set_t& nedge_set,
           _nedge_set(nedge_set),
           _leaf_d(leaf_d),
           _leaf_names(leaf_names) {
-        // check that there is at least one split
-        assert(nedge_set.size() > 0);
-        // we need n-2 internal edges to fully specify a tree
-        assert(nedge_set.size() == nedge_set.begin()->n()-2);
         assert(leaf_names.size() == 0 || leaf_names.size() == n()+1);
+        for (nedge_set_t::const_iterator it = nedge_set.begin(); it != nedge_set.end(); it++) {
+                assert(n() == nedge_set.begin()->n());
+        }
 }
 
 ntree_t::ntree_t(const pt_root_t* tree)

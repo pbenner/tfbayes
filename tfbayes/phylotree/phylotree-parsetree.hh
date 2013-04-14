@@ -58,6 +58,8 @@ public:
         pt_parsetree_t **children;
 };
 
+std::list<pt_root_t*> parse_tree_list();
+
 std::ostream& operator<< (std::ostream& o, pt_parsetree_t* const tree);
 
 #endif /* PHYLOTREE_PARSETREE_HH */

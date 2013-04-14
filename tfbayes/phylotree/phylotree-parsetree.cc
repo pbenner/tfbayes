@@ -18,6 +18,7 @@
 #include <cassert>
 #include <cstdlib>
 
+#include <tfbayes/phylotree/phylotree-parser.hh>
 #include <tfbayes/phylotree/phylotree-parsetree.hh>
 
 using namespace std;
@@ -169,6 +170,30 @@ ostream& print_parsetree(
         }
         return o;
 }
+
+// bison/flex interface
+////////////////////////////////////////////////////////////////////////////////
+
+int yylex_destroy(void);
+
+list<pt_root_t*> parse_tree_list()
+{
+        list<pt_root_t*> tree_list;
+
+        if (yyparse()) {
+                // error parsing
+                return tree_list;
+        }
+        tree_list = pt_parsetree->convert();
+ 
+        yylex_destroy();
+        pt_parsetree->destroy();
+ 
+        return tree_list;
+}
+
+// ostream
+////////////////////////////////////////////////////////////////////////////////
 
 ostream& operator<< (ostream& o, pt_parsetree_t* const tree) {
         print_parsetree(o, tree, 0);

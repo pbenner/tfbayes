@@ -499,9 +499,7 @@ void test8()
              <<"------------------------------------------------------------"
              << endl;
 
-        yyparse();
-
-        list<pt_root_t*> tree_list    = pt_parsetree->convert();
+        list<pt_root_t*> tree_list = parse_tree_list();
         assert(tree_list.size() == 2);
         list<pt_root_t*>::iterator it = tree_list.begin();
         pt_root_t* pt_root1 = *it++;
@@ -521,6 +519,9 @@ void test8()
         cout << "geodesic length: "
              << geodesic.length()
              << endl;
+
+        pt_root1->destroy();
+        pt_root2->destroy();
 }
 
 int
