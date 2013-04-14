@@ -274,6 +274,8 @@ protected:
         std::vector<double> _t2_leaf_d;
         // empty common edge
         static const common_nedge_t _null_common_nedge;
+        // epsilon for comparing double values
+        static const double epsilon = 0.000001;
 };
 
 std::ostream& operator<< (std::ostream& o, const nsplit_t& nsplit);

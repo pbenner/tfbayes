@@ -59,7 +59,6 @@ pt_parsetree_t::convert() const
 {
         list<pt_root_t*> tree_list;
 
-        cout << "converting tree list" << endl;
         convert(tree_list);
 
         return tree_list;
@@ -93,15 +92,12 @@ pt_parsetree_t::convert(list<pt_root_t*>& tree_list) const
                        children[1]->type == LEAF_N);
                 assert((n_children == 3 && children[2]->type == LEAF_N) ||
                         n_children == 2);
+                node = new pt_root_t(children[0]->convert(tree_list),
+                                     children[1]->convert(tree_list));
                 if (n_children == 3) {
-                        node = new pt_root_t(children[1]->convert(tree_list),
-                                             children[0]->convert(tree_list),
-                                             (char   *)children[2]->children[0]->data,
-                                             *(double *)children[2]->children[1]->data);
-                }
-                else {
-                        node = new pt_root_t(children[1]->convert(tree_list),
-                                             children[0]->convert(tree_list));
+                        node->d = *(double *)children[2]->children[1]->data;
+                        static_cast<pt_root_t*>(node)->outgroup_name =
+                                string((char   *)children[2]->children[0]->data);
                 }
                 break;
         case TREE_N:

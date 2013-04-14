@@ -31,7 +31,8 @@ pt_node_t::pt_node_t(double d,
                      bool is_root,
                      id_t id)
         : d(d), left(left), right(right), name(name),
-          is_root(is_root), id(id) {
+          is_root(is_root), id(id)
+{
         assert ((left == NULL && right == NULL) ||
                 (left != NULL && right != NULL));
         
@@ -48,7 +49,8 @@ pt_node_t::pt_node_t(double d,
 pt_node_t::pt_node_t(const pt_node_t& node)
         : d(node.d), left(NULL), right(NULL),
           name(node.name), is_root(node.is_root),
-          n_leafs(node.n_leafs) {
+          n_leafs(node.n_leafs)
+{
         
         if (!node.leaf()) {
                 left  = node.left ->clone();
@@ -57,12 +59,14 @@ pt_node_t::pt_node_t(const pt_node_t& node)
 }
 
 pt_node_t*
-pt_node_t::clone() const {
+pt_node_t::clone() const
+{
         return new pt_node_t(*this);
 }
 
 void
-pt_node_t::destroy() {
+pt_node_t::destroy()
+{
         if (!leaf()) {
                 left ->destroy();
                 right->destroy();
@@ -71,22 +75,26 @@ pt_node_t::destroy() {
 }
 
 bool
-pt_node_t::leaf() const {
+pt_node_t::leaf() const
+{
         return left == NULL && right == NULL;
 }
 
 bool
-pt_node_t::root() const {
+pt_node_t::root() const
+{
         return is_root;
 }
 
 double
-pt_node_t::mutation_probability() const {
+pt_node_t::mutation_probability() const
+{
         return 1.0-exp(-d);
 }
 
 void
-pt_node_t::scale(double c) {
+pt_node_t::scale(double c)
+{
         d *= c;
         if (!leaf()) {
                 left->scale(c);
@@ -95,7 +103,8 @@ pt_node_t::scale(double c) {
 }
 
 void
-pt_node_t::get_leafs(leafs_t& leafs) {
+pt_node_t::get_leafs(leafs_t& leafs)
+{
         if (!leaf()) {
                 left ->get_leafs(leafs);
                 right->get_leafs(leafs);
@@ -103,7 +112,8 @@ pt_node_t::get_leafs(leafs_t& leafs) {
 }
 
 void
-pt_node_t::get_nodes(nodes_t& nodes) {
+pt_node_t::get_nodes(nodes_t& nodes)
+{
         if (!root()) {
                 nodes.insert(this);
         }
@@ -122,7 +132,8 @@ pt_leaf_t::pt_leaf_t(short x, double d, const std::string name)
 { }
 
 void
-pt_leaf_t::get_leafs(leafs_t& leafs) {
+pt_leaf_t::get_leafs(leafs_t& leafs)
+{
         leafs.insert(this);
 }
 
@@ -133,7 +144,9 @@ pt_root_t::pt_root_t(pt_node_t* left,
                      pt_node_t* right,
                      const std::string name,
                      double d)
-        : pt_node_t(d, left, right, name, true) {
+        : pt_node_t(d, left, right, name, true),
+          outgroup_x(-1), outgroup_name("")
+{
 
         id_t leaf_id = 0;
         id_t node_id = n_leafs;
@@ -146,26 +159,30 @@ pt_root_t::pt_root_t(pt_node_t* left,
 }
 
 pt_root_t::pt_root_t(const pt_root_t& root)
-        : pt_node_t(root), leaf_map(root.leaf_map) {
+        : pt_node_t(root), leaf_map(root.leaf_map)
+{
         // recreate leaf map since we clone all leafs
         create_leaf_map(this);
         create_node_map(this);
 }
 
 pt_root_t*
-pt_root_t::clone() const {
+pt_root_t::clone() const
+{
         return new pt_root_t(*this);
 }
 
 pt_root_t::leafs_t
-pt_root_t::get_leafs() {
+pt_root_t::get_leafs()
+{
         leafs_t leafs;
         get_leafs(leafs);
         return leafs;
 }
 
 pt_root_t::nodes_t
-pt_root_t::get_nodes() {
+pt_root_t::get_nodes()
+{
         nodes_t nodes;
         get_nodes(nodes);
         return nodes;
@@ -182,8 +199,15 @@ pt_root_t::get_id(const std::string& taxon) const
         return -1;
 }
 
+bool
+pt_root_t::outgroup() const
+{
+        return d != -HUGE_VAL;
+}
+
 void
-pt_root_t::create_leaf_map(pt_node_t* node) {
+pt_root_t::create_leaf_map(pt_node_t* node)
+{
         if (node->leaf()) {
                 pt_leaf_t* leaf = static_cast<pt_leaf_t*>(node);
                 leaf_map[leaf->id] = leaf;
@@ -195,7 +219,8 @@ pt_root_t::create_leaf_map(pt_node_t* node) {
 }
 
 void
-pt_root_t::create_node_map(pt_node_t* node) {
+pt_root_t::create_node_map(pt_node_t* node)
+{
         if (node->leaf()) {
                 node_map[node->id] = node;
         }
@@ -206,7 +231,8 @@ pt_root_t::create_node_map(pt_node_t* node) {
 }
 
 void
-pt_root_t::set_id(pt_node_t* node, pt_node_t::id_t& leaf_id, pt_node_t::id_t& node_id) {
+pt_root_t::set_id(pt_node_t* node, pt_node_t::id_t& leaf_id, pt_node_t::id_t& node_id)
+{
         if (node->leaf()) {
                 node->id = leaf_id++;
         }
@@ -223,14 +249,16 @@ pt_root_t::set_id(pt_node_t* node, pt_node_t::id_t& leaf_id, pt_node_t::id_t& no
 static const short TAB_WIDTH = 2;
 
 static void
-indent(std::ostream& o, size_t nesting) {
+indent(std::ostream& o, size_t nesting)
+{
         for(size_t i = 0; i < nesting*TAB_WIDTH; i++) {
                 o << " ";
         }
 }
 
 static ostream&
-print_phylotree(ostream& o, const pt_node_t* node, size_t nesting) {
+print_phylotree(ostream& o, const pt_node_t* node, size_t nesting)
+{
         if (node->root()) {
                 if (node->id != -1) {
                         o << "(root:"
@@ -285,18 +313,23 @@ print_phylotree(ostream& o, const pt_node_t* node, size_t nesting) {
 }
 
 static ostream&
-print_newick(ostream& o, const pt_node_t* node, size_t nesting) {
+print_newick(ostream& o, const pt_node_t* node, size_t nesting)
+{
         if (node->root()) {
+                const pt_root_t* root = static_cast<const pt_root_t*>(node);
                 o << "(";
                 print_newick(o, node->left, nesting+1);
                 o << ",";
                 print_newick(o, node->right, nesting+1);
-                o << ");"
-                  << std::endl;
+                if (root->outgroup()) {
+                        o << ","
+                          << root->outgroup_name
+                          << ":"
+                          << root->d;
+                }
+                o << ");";
         }
         else if (node->leaf()) {
-                o << std::endl;
-                indent(o, nesting);
                 o << node->name
                   << ":"
                   << node->d;
@@ -313,7 +346,8 @@ print_newick(ostream& o, const pt_node_t* node, size_t nesting) {
 }
 
 static std::ostream&
-print_newick(std::ostream& o, const pt_node_t* node) {
+print_newick(std::ostream& o, const pt_node_t* node)
+{
         return print_newick(o, node, 0);
 }
 
@@ -328,11 +362,13 @@ newick_format::operator()(std::ostream& o) const
         return print_newick(o, tree);
 }
 
-ostream& operator<< (ostream& o, const pt_node_t* node) {
+ostream& operator<< (ostream& o, const pt_node_t* node)
+{
         print_phylotree(o, node, 0);
         return o;
 }
 
-ostream& operator<< (ostream& o, const newick_format& nf) {
+ostream& operator<< (ostream& o, const newick_format& nf)
+{
         return nf(o);
 }

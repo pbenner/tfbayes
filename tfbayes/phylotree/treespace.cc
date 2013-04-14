@@ -916,7 +916,7 @@ geodesic_t::gtp(npath_t& npath)
         {
                 incompatibility_graph_t graph(it->first, it->second);
                 vertex_cover_t vc = graph.min_weight_cover();
-                if (vc.weight < 1) {
+                if (abs(vc.weight - 1.0) > epsilon && vc.weight < 1.0) {
                         it = npath.erase(it);
                         it = npath.insert(it, support_pair_t(vc.a, vc.b_comp));
                         it = npath.insert(it, support_pair_t(vc.a_comp, vc.b));
@@ -963,6 +963,11 @@ geodesic_t::initial_npath_list(const ntree_t& t1, const ntree_t& t2) const
                         // this is not a common edge
                         l2.begin()->push_back(*it);
                 }
+        }
+        // check if there is at least one edge which is not common to
+        // both trees
+        if (l1.begin()->size() == 0) {
+                return result;
         }
         // loop through common edges and split edge sets
         for (list<common_nedge_t>::const_iterator it = common_edges().begin();

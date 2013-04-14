@@ -501,15 +501,28 @@ void test8()
 
         yyparse();
 
-        list<pt_root_t*> tree_list = pt_parsetree->convert();
-        for (list<pt_root_t*>::iterator it = tree_list.begin(); it != tree_list.end(); it++) {
-                pt_root_t* pt_root = *it;
+        list<pt_root_t*> tree_list    = pt_parsetree->convert();
+        assert(tree_list.size() == 2);
+        list<pt_root_t*>::iterator it = tree_list.begin();
+        pt_root_t* pt_root1 = *it++;
+        pt_root_t* pt_root2 = *it++;
 
-                ntree_t nt(pt_root);
+        ntree_t nt1(pt_root1);
+        ntree_t nt2(pt_root2);
 
-                cout << pt_root << endl;
-                cout << nt      << endl;
-        }
+        cout << nt1 << endl;
+        cout << nt2 << endl;
+
+        geodesic_t geodesic(nt1, nt2);
+
+        cout << geodesic.npath_list()
+             << endl;
+
+        cout << "geodesic length: "
+             << geodesic.length()
+             << endl;
+
+        cout << newick_format(pt_root1) << endl;
 }
 
 int

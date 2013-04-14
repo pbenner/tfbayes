@@ -114,9 +114,13 @@ public:
         virtual leafs_t get_leafs();
 
         id_t get_id(const std::string& taxon) const;
+        bool outgroup() const;
         
         leaf_map_t leaf_map;
         node_map_t node_map;
+
+        nucleotide_t outgroup_x;
+        std::string  outgroup_name;
 
 protected:
         void create_leaf_map(pt_node_t* node);
