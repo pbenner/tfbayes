@@ -51,8 +51,17 @@ public:
         size_t part2(size_t i) const;
         bool null() const;
         // operators
-        bool operator<(const nsplit_t& nsplit) const;
         bool operator==(const nsplit_t& nsplit) const;
+        // s1 <= s2 means: if s1 is removed from the tree, then
+        // the node with split s2 is _not_ part of the subtree that
+        // contains leaf 0
+        bool operator<=(const nsplit_t& nsplit) const;
+        // s1 >= s2 means: if s1 is removed from the tree, then
+        // the node with split s2 is part of the subtree that
+        // contains leaf 0
+        bool operator>=(const nsplit_t& nsplit) const;
+
+        static bool is_subset(const nsplit_t::part_t& p1, const nsplit_t::part_t& p2);
 
 protected:
         size_t _n;
@@ -97,6 +106,7 @@ protected:
 class nedge_set_t : public std::vector<nedge_t> {
 public:
         double length() const;
+        std::pair<nedge_set_t, nedge_set_t> split(nsplit_t split) const;
 };
 
 bool compatible(const nsplit_t& s1, const nsplit_t& s2);
@@ -122,6 +132,9 @@ public:
         const std::string& leaf_name(size_t i) const;
         // check splits for compatibility
         bool check_splits() const;
+        // find common edges of two trees, here an edge is common if
+        // the split is the same, regardless of the edge length
+        std::list<common_nedge_t> common_edges(const ntree_t& tree) const;
 
 protected:
         // hidden methods
@@ -138,7 +151,7 @@ protected:
         // empty leaf name
         static const std::string _empty_string;
         // empty edge
-        static const nedge_t _null_edge;
+        static const nedge_t _null_nedge;
 };
 
 class vertex_cover_t {
@@ -237,7 +250,7 @@ public:
 
         ntree_t operator()(const double lambda) const;
 
-        const npath_t& npath() const;
+        const std::list<npath_t>& npath_list() const;
         double length() const;
 
         const std::list<common_nedge_t>& common_edges() const;
@@ -249,12 +262,18 @@ public:
         double t2_leaf_d(size_t i) const;
 
 protected:
+        std::list<npath_t> initial_npath_list(const ntree_t& t1, const ntree_t& t2) const;
+        const common_nedge_t& find_common_edge(const nsplit_t& nsplit) const;
+        void gtp(npath_t& npath);
+
         std::list<common_nedge_t> _common_edges;
-        npath_t _npath;
+        std::list<npath_t> _npath_list;
         size_t _leaf_n;
         std::vector<std::string> _leaf_names;
         std::vector<double> _t1_leaf_d;
         std::vector<double> _t2_leaf_d;
+        // empty common edge
+        static const common_nedge_t _null_common_nedge;
 };
 
 std::ostream& operator<< (std::ostream& o, const nsplit_t& nsplit);
@@ -262,5 +281,6 @@ std::ostream& operator<< (std::ostream& o, const ntree_t& ntree);
 std::ostream& operator<< (std::ostream& o, const nedge_t& nedge);
 std::ostream& operator<< (std::ostream& o, const nedge_set_t& nedge_set);
 std::ostream& operator<< (std::ostream& o, const npath_t& npath);
+std::ostream& operator<< (std::ostream& o, const std::list<npath_t>& npath_list);
 
 #endif /* TREESPACE_HH */
