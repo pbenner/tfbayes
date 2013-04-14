@@ -319,9 +319,10 @@ parse_pt_node_t(
         vector<double>& leaf_d,
         vector<string>& leaf_names)
 {
+        assert(node->outgroup());
         // initialize root
         leaf_d[0]     = node->d;
-        leaf_names[0] = node->name;
+        leaf_names[0] = node->outgroup_name;
         // recursive calls
         parse_pt_node_t(node->n_leafs, node->left,  nedge_set, leaf_d, leaf_names);
         parse_pt_node_t(node->n_leafs, node->right, nedge_set, leaf_d, leaf_names);
