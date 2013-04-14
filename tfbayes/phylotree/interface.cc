@@ -49,7 +49,7 @@ pt_root_t* pt_parse_file(const char* file_name)
         yyparse();
         fclose(yyin);
 
-        pt_root_t* pt_root = (pt_root_t*)pt_parsetree->convert();
+        pt_root_t* pt_root = *pt_parsetree->convert().begin();
         pt_parsetree->destroy();
 
         return pt_root;

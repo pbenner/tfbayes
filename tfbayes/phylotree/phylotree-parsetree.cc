@@ -54,18 +54,30 @@ pt_parsetree_t::destroy() {
         delete(this);
 }
 
-pt_node_t*
+list<pt_root_t*>
 pt_parsetree_t::convert() const
 {
-        pt_node_t* node;
+        list<pt_root_t*> tree_list;
+
+        cout << "converting tree list" << endl;
+        convert(tree_list);
+
+        return tree_list;
+}
+
+pt_node_t*
+pt_parsetree_t::convert(list<pt_root_t*>& tree_list) const
+{
+        pt_node_t* node = NULL;
+        pt_root_t* root;
 
         switch (type)
         {
         case NODE_N:
                 assert(children[2]->type == DISTANCE_N);
                 node = new pt_node_t(*(double *)children[2]->data,
-                                     children[0]->convert(),
-                                     children[1]->convert());
+                                     children[0]->convert(tree_list),
+                                     children[1]->convert(tree_list));
                 break;
         case LEAF_N:
                 assert(children[0]->type == NAME_N);
@@ -82,14 +94,23 @@ pt_parsetree_t::convert() const
                 assert((n_children == 3 && children[2]->type == LEAF_N) ||
                         n_children == 2);
                 if (n_children == 3) {
-                        node = new pt_root_t(children[1]->convert(),
-                                             children[0]->convert(),
-                                              (char   *)children[2]->children[0]->data,
+                        node = new pt_root_t(children[1]->convert(tree_list),
+                                             children[0]->convert(tree_list),
+                                             (char   *)children[2]->children[0]->data,
                                              *(double *)children[2]->children[1]->data);
                 }
                 else {
-                        node = new pt_root_t(children[1]->convert(),
-                                             children[0]->convert());
+                        node = new pt_root_t(children[1]->convert(tree_list),
+                                             children[0]->convert(tree_list));
+                }
+                break;
+        case TREE_N:
+                assert(children[0]->type == ROOT_N);
+                root = static_cast<pt_root_t*>(children[0]->convert(tree_list));
+                tree_list.push_back(root);
+                if (n_children == 2) {
+                        assert(children[1]->type == TREE_N);
+                        children[1]->convert(tree_list);
                 }
                 break;
         default:

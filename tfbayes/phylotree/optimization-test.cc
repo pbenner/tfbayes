@@ -184,7 +184,7 @@ pt_root_t* parse_tree_file(const char* file_tree)
         yyparse();
         fclose(yyin);
 
-        return (pt_root_t*)pt_parsetree->convert();
+        return *pt_parsetree->convert().begin();
 }
 
 void run_optimization(const string& method, const char* file_tree, const char* file_alignment)

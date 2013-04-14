@@ -22,12 +22,16 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <list>
 #include <cstdarg>
 #include <ostream>
 
 #include <tfbayes/phylotree/phylotree.hh>
 
 typedef enum {
+        /* tree list */
+        TREE_N,
+
         /* Root node, internal node, and leaf */
         ROOT_N, NODE_N, LEAF_N,
 
@@ -36,9 +40,6 @@ typedef enum {
 
         /* Distance to ancestor */
         DISTANCE_N,
-
-        /* Nucleotide */
-        NUCLEOTIDE_N
 } nodetype_t;
 
 class pt_parsetree_t {
@@ -48,7 +49,8 @@ public:
 
         void destroy();
 
-        pt_node_t* convert() const;
+        std::list<pt_root_t*> convert() const;
+                  pt_node_t*  convert(std::list<pt_root_t*>& tree_list) const;
 
         void * const data;
         const nodetype_t type;

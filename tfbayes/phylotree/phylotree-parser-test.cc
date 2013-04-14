@@ -98,7 +98,7 @@ int main(void) {
         p[2] = 0.4;
         p[3] = 0.05;
 
-        pt_root_t* pt_root = (pt_root_t*)pt_parsetree->convert();
+        pt_root_t* pt_root = *pt_parsetree->convert().begin();
 
         pt_init(observations, pt_root);
 

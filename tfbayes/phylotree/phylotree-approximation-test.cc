@@ -142,7 +142,7 @@ int main(void) {
         alpha[2] = 1;
         alpha[3] = 1;
 
-        pt_root_t* pt_root = (pt_root_t*)pt_parsetree->convert();
+        pt_root_t* pt_root = *pt_parsetree->convert().begin();
 
         pt_init(observations, pt_root);
 

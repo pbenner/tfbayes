@@ -501,11 +501,15 @@ void test8()
 
         yyparse();
 
-        pt_root_t* pt_root = (pt_root_t*)pt_parsetree->convert();
-        ntree_t nt(pt_root);
+        list<pt_root_t*> tree_list = pt_parsetree->convert();
+        for (list<pt_root_t*>::iterator it = tree_list.begin(); it != tree_list.end(); it++) {
+                pt_root_t* pt_root = *it;
 
-        cout << pt_root << endl;
-        cout << nt      << endl;
+                ntree_t nt(pt_root);
+
+                cout << pt_root << endl;
+                cout << nt      << endl;
+        }
 }
 
 int
@@ -518,7 +522,7 @@ main(void)
         test5(); cout << endl;
         test6(); cout << endl;
         test7(); cout << endl;
-        //test8(); cout << endl;
+        test8(); cout << endl;
         glp_free_env();
 
         return 0;

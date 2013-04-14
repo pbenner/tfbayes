@@ -28,14 +28,22 @@ int yyerror(const char *msg) {
 %token COLON COMMA SEMICOLON LPAREN RPAREN NAME FLOAT
 
 %%
-root: LPAREN node COMMA node COMMA node RPAREN SEMICOLON
-      { pt_parsetree = new pt_parsetree_t(ROOT_N, 3, NULL, $2, $4, $6); }
-    | LPAREN node COMMA node COMMA node RPAREN
-      { pt_parsetree = new pt_parsetree_t(ROOT_N, 3, NULL, $2, $4, $6); }
-    | LPAREN node COMMA node RPAREN SEMICOLON
-      { pt_parsetree = new pt_parsetree_t(ROOT_N, 2, NULL, $2, $4); }
+start:
+      root SEMICOLON tree_list
+      { pt_parsetree = new pt_parsetree_t(TREE_N, 2, NULL, $1, $3); }
+    | root SEMICOLON
+      { pt_parsetree = new pt_parsetree_t(TREE_N, 1, NULL, $1); }
+    ;
+tree_list:
+      root SEMICOLON tree_list
+      { $$ = new pt_parsetree_t(TREE_N, 2, NULL, $1, $3); }
+    | root SEMICOLON
+      { $$ = new pt_parsetree_t(TREE_N, 1, NULL, $1); }
+    ;
+root:  LPAREN node COMMA node COMMA node RPAREN
+      { $$ = new pt_parsetree_t(ROOT_N, 3, NULL, $2, $4, $6); }
     | LPAREN node COMMA node RPAREN
-      { pt_parsetree = new pt_parsetree_t(ROOT_N, 2, NULL, $2, $4); }
+      { $$ = new pt_parsetree_t(ROOT_N, 2, NULL, $2, $4); }
     ;
 node: LPAREN node COMMA node RPAREN COLON distance
       { $$ = new pt_parsetree_t(NODE_N, 3, NULL, $2, $4, $7); }
