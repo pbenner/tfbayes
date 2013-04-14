@@ -278,6 +278,8 @@ protected:
         static const double epsilon = 0.000001;
 };
 
+ntree_t frechet_mean(const std::list<ntree_t>& ntree_list, size_t n = 1000);
+
 std::ostream& operator<< (std::ostream& o, const nsplit_t& nsplit);
 std::ostream& operator<< (std::ostream& o, const ntree_t& ntree);
 std::ostream& operator<< (std::ostream& o, const nedge_t& nedge);

@@ -1005,6 +1005,24 @@ geodesic_t::initial_npath_list(const ntree_t& t1, const ntree_t& t2) const
 
 const common_nedge_t geodesic_t::_null_common_nedge;
 
+// Frechet mean
+////////////////////////////////////////////////////////////////////////////////
+
+ntree_t
+frechet_mean(const list<ntree_t>& ntree_list, size_t n)
+{
+        ntree_t sk = ntree_list.back();
+
+        for (size_t i = 1, k = 0; k < n; k++) {
+                for (list<ntree_t>::const_iterator it = ntree_list.begin();
+                     it != ntree_list.end(); it++, i++) {
+                        geodesic_t geodesic(sk, *it);
+                        sk = geodesic(1/(double)(i+1));
+                }
+        }
+        return sk;
+}
+
 // ostream
 ////////////////////////////////////////////////////////////////////////////////
 

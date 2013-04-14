@@ -17,7 +17,7 @@
 
 #include <cstdio>
 
-#include <treespace.hh>
+#include <tfbayes/phylotree/treespace.hh>
 #include <tfbayes/phylotree/phylotree-parser.hh>
 
 using namespace std;
@@ -496,7 +496,7 @@ void test7()
 void test8()
 {
         cout << "test 8" << endl
-             <<"------------------------------------------------------------"
+             << "------------------------------------------------------------"
              << endl;
 
         list<pt_root_t*> tree_list = parse_tree_list();
