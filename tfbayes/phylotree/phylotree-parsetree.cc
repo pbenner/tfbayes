@@ -15,9 +15,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <iostream>
 #include <cassert>
 #include <cstdlib>
 
+#include <tfbayes/phylotree/phylotree-parser.h>
 #include <tfbayes/phylotree/phylotree-parser.hh>
 #include <tfbayes/phylotree/phylotree-parsetree.hh>
 
@@ -174,19 +176,36 @@ ostream& print_parsetree(
 // bison/flex interface
 ////////////////////////////////////////////////////////////////////////////////
 
-int yylex_destroy(void);
+typedef void* yyscan_t;
+int yylex_init   (yyscan_t* scanner);
+int yylex_destroy(yyscan_t  scanner);
+void yylex_set_input(yyscan_t scanner, FILE* file);
 
-list<pt_root_t*> parse_tree_list()
+list<pt_root_t*> parse_tree_list(FILE * file)
 {
         list<pt_root_t*> tree_list;
+        yyscan_t scanner;
 
-        if (yyparse()) {
+        // initialize lexer
+        yylex_init(&scanner);
+
+        // set input file if necessary
+        if (file != NULL) {
+                yylex_set_input(scanner, file);
+        }
+
+        // parse input
+        if (yyparse(scanner)) {
                 // error parsing
                 return tree_list;
         }
+        // convert AST to phylotree
         tree_list = pt_parsetree->convert();
  
-        yylex_destroy();
+        // free lexer memory
+        yylex_destroy(scanner);
+
+        // free AST
         pt_parsetree->destroy();
  
         return tree_list;

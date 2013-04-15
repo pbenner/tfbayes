@@ -173,18 +173,18 @@ void print_version(FILE *fp)
                       "FOR A PARTICULAR PURPOSE.\n\n");
 }
 
-extern FILE *yyin;
-
 pt_root_t* parse_tree_file(const char* file_tree)
 {
-        yyin = fopen(file_tree, "r");
+        FILE* yyin = fopen(file_tree, "r");
         if (yyin == NULL) {
                 std_err(PERR, "Could not open phylogenetic tree");
         }
-        yyparse();
+        list<pt_root_t*> tree_list = parse_tree_list(yyin);
+        assert(tree_list.size() == 1);
+        pt_root_t* pt_root = tree_list.front();
         fclose(yyin);
 
-        return *pt_parsetree->convert().begin();
+        return pt_root;
 }
 
 void run_optimization(const string& method, const char* file_tree, const char* file_alignment)

@@ -22,12 +22,11 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <tfbayes/phylotree/phylotree-parser.h>
 #include <tfbayes/phylotree/phylotree-parsetree.hh>
 
 extern char* yytext;
 extern size_t line_count;
 extern pt_parsetree_t* pt_parsetree;
-
-int yyparse(void);
 
 #endif /* PHYLOTREE_PARSER_HH */

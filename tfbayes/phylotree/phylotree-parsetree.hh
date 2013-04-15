@@ -58,7 +58,7 @@ public:
         pt_parsetree_t **children;
 };
 
-std::list<pt_root_t*> parse_tree_list();
+std::list<pt_root_t*> parse_tree_list(FILE * file = NULL);
 
 std::ostream& operator<< (std::ostream& o, pt_parsetree_t* const tree);
 

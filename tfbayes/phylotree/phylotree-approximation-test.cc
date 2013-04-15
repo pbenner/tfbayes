@@ -133,7 +133,6 @@ void test_line_search(
 int main(void) {
 
         init();
-        yyparse();
 
         boost::unordered_map<string, code_t> observations;
         exponent_t<code_t, alphabet_size> alpha;
@@ -142,7 +141,9 @@ int main(void) {
         alpha[2] = 1;
         alpha[3] = 1;
 
-        pt_root_t* pt_root = *pt_parsetree->convert().begin();
+        list<pt_root_t*> tree_list = parse_tree_list();
+        assert(tree_list.size() == 1);
+        pt_root_t* pt_root = tree_list.front();
 
         pt_init(observations, pt_root);
 

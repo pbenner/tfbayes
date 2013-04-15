@@ -75,7 +75,6 @@ int main(void) {
 
         MET_INIT;
         init();
-        yyparse();
 
         boost::unordered_map<string, code_t> observations;
         // observations["hg19"]    = 1;
@@ -98,7 +97,9 @@ int main(void) {
         p[2] = 0.4;
         p[3] = 0.05;
 
-        pt_root_t* pt_root = *pt_parsetree->convert().begin();
+        list<pt_root_t*> tree_list = parse_tree_list();
+        assert(tree_list.size() == 1);
+        pt_root_t* pt_root = tree_list.front();
 
         pt_init(observations, pt_root);
 

@@ -30,6 +30,7 @@
 #include <tfbayes/interface/common.hh>
 #include <tfbayes/phylotree/interface.hh>
 #include <tfbayes/phylotree/utility.hh>
+#include <tfbayes/phylotree/phylotree-parser.h>
 
 using namespace std;
 
@@ -46,7 +47,7 @@ pt_root_t* pt_parse_file(const char* file_name)
         if (yyin == NULL) {
                 std_err(PERR, "Could not open phylogenetic tree");
         }
-        yyparse();
+//        yyparse();
         fclose(yyin);
 
         pt_root_t* pt_root = *pt_parsetree->convert().begin();

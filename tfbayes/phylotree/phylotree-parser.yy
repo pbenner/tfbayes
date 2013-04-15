@@ -1,3 +1,12 @@
+
+// lexer definitions
+////////////////////////////////////////////////////////////////////////////////
+
+%code requires {
+#include <tfbayes/phylotree/phylotree-parsetree.hh>
+#define YYSTYPE pt_parsetree_t *
+}
+
 %{
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -8,25 +17,40 @@
 #include <inttypes.h>
 #include <string.h>
 
-#include <tfbayes/phylotree/phylotree-parsetree.hh>
-
-#define YYSTYPE pt_parsetree_t *
-
-int yylex (void);
+#include <tfbayes/phylotree/phylotree-parser.h>
 
 pt_parsetree_t* pt_parsetree;
 extern char *yytext;
 extern size_t line_count;
+typedef void* yyscan_t;
+char *yyget_text (yyscan_t scanner);
 
-int yyerror(const char *msg) {
-        fprintf(stderr, "%s at line %d near `%s'\n", msg, (int)line_count, yytext);
+int yylex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param, yyscan_t yyscanner);
+
+int yyerror(YYLTYPE* locp, void * scanner, const char* err) {
+        fprintf(stderr, "`%d': %s\n", locp->first_line, err);
         exit(EXIT_FAILURE);
 }
 
 %}
 
+// bison options
+////////////////////////////////////////////////////////////////////////////////
+
+%pure-parser
+%locations
+%defines
+%error-verbose
+%parse-param {void * scanner}
+%lex-param {void * scanner}
+
+// token definitions
+////////////////////////////////////////////////////////////////////////////////
+
 %token COLON COMMA SEMICOLON LPAREN RPAREN NAME FLOAT
 
+// grammar
+////////////////////////////////////////////////////////////////////////////////
 %%
 start:
       root SEMICOLON tree_list
@@ -50,13 +74,13 @@ node: LPAREN node COMMA node RPAREN COLON distance
     | name COLON distance
       { $$ = new pt_parsetree_t(LEAF_N, 2, NULL, $1, $3); }
     ;
-name: NAME { $$ = new pt_parsetree_t(NAME_N, 0, strdup(yytext)); }
+name: NAME { $$ = new pt_parsetree_t(NAME_N, 0, strdup(yyget_text(scanner))); }
     ;
 distance:
       FLOAT
       {
         $$ = new pt_parsetree_t(DISTANCE_N, 0, calloc(1, sizeof(double)));
-        *((double *)$$->data) = atof(yytext);
+        *((double *)$$->data) = atof(yyget_text(scanner));
       }
     ;
 %%
