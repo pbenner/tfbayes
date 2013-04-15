@@ -47,11 +47,11 @@ pt_root_t* pt_parse_file(const char* file_name)
         if (yyin == NULL) {
                 std_err(PERR, "Could not open phylogenetic tree");
         }
-//        yyparse();
-        fclose(yyin);
 
-        pt_root_t* pt_root = *pt_parsetree->convert().begin();
-        pt_parsetree->destroy();
+        list<pt_root_t*> tree_list = parse_tree_list(yyin);
+        assert(tree_list.size() == 1);
+        pt_root_t* pt_root = tree_list.front();
+        fclose(yyin);
 
         return pt_root;
 }
