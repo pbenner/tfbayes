@@ -112,8 +112,8 @@ public:
         using pt_node_t::get_leafs;
         virtual nodes_t get_nodes();
         virtual leafs_t get_leafs();
-
-        id_t get_id(const std::string& taxon) const;
+        id_t get_node_id(const std::string& taxon) const;
+        id_t get_leaf_id(const std::string& taxon) const;
         bool outgroup() const;
         
         leaf_map_t leaf_map;

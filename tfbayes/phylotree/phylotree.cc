@@ -48,8 +48,11 @@ pt_node_t::pt_node_t(double d,
 
 pt_node_t::pt_node_t(const pt_node_t& node)
         : d(node.d), left(NULL), right(NULL),
-          name(node.name), is_root(node.is_root),
-          n_leafs(node.n_leafs)
+          name(node.name),
+          is_root(node.is_root),
+          n_leafs(node.n_leafs),
+          n_nodes(node.n_nodes),
+          id(node.id)
 {
         
         if (!node.leaf()) {
@@ -147,7 +150,6 @@ pt_root_t::pt_root_t(pt_node_t* left,
         : pt_node_t(d, left, right, name, true),
           outgroup_x(-1), outgroup_name("")
 {
-
         id_t leaf_id = 0;
         id_t node_id = n_leafs;
         set_id(this, leaf_id, node_id);
@@ -159,7 +161,11 @@ pt_root_t::pt_root_t(pt_node_t* left,
 }
 
 pt_root_t::pt_root_t(const pt_root_t& root)
-        : pt_node_t(root), leaf_map(root.leaf_map)
+        : pt_node_t(root),
+          leaf_map(root.leaf_map),
+          node_map(root.node_map),
+          outgroup_x(root.outgroup_x),
+          outgroup_name(root.outgroup_name)
 {
         // recreate leaf map since we clone all leafs
         create_leaf_map(this);
@@ -189,9 +195,22 @@ pt_root_t::get_nodes()
 }
 
 pt_root_t::id_t
-pt_root_t::get_id(const std::string& taxon) const
+pt_root_t::get_node_id(const std::string& taxon) const
 {
-        for (node_map_t::const_iterator it = node_map.begin(); it != node_map.end(); it++) {
+        for (node_map_t::const_iterator it = node_map.begin();
+             it != node_map.end(); it++) {
+                if ((*it)->name == taxon) {
+                        return (*it)->id;
+                }
+        }
+        return -1;
+}
+
+pt_root_t::id_t
+pt_root_t::get_leaf_id(const std::string& taxon) const
+{
+        for (leaf_map_t::const_iterator it = leaf_map.begin();
+             it != leaf_map.end(); it++) {
                 if ((*it)->name == taxon) {
                         return (*it)->id;
                 }
@@ -221,10 +240,8 @@ pt_root_t::create_leaf_map(pt_node_t* node)
 void
 pt_root_t::create_node_map(pt_node_t* node)
 {
-        if (node->leaf()) {
-                node_map[node->id] = node;
-        }
-        else {
+        node_map[node->id] = node;
+        if (!node->leaf()) {
                 create_node_map(node->left );
                 create_node_map(node->right);
         }

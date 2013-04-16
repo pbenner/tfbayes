@@ -22,6 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <list>
+#include <vector>
 #include <cmath>
 #include <algorithm> /* std::min */
 #include <iomanip>
@@ -79,33 +81,6 @@ private:
         double sigma_square;
 };
 
-class geometric_jump_t : public jumping_distribution_t
-{
-public:
-        geometric_jump_t(double sigma_square = 0.05)
-                : sigma_square(sigma_square) { }
-
-        geometric_jump_t* clone() const {
-                return new geometric_jump_t(*this);
-        }
-
-        double p(double d_old, double d_new) const {
-                return 1.0;
-        }
-        double sample(gsl_rng * rng, double d_old) const {
-                return d_old+gsl_ran_gaussian(rng, sigma_square);
-        }
-        double sample(gsl_rng * rng, double d_old, double sigma) const {
-                return d_old+gsl_ran_gaussian(rng, 0.001+sigma);
-        }
-        void increase_jump(double eta) {
-        }
-        void decrease_jump(double eta) {
-        }
-private:
-        double sigma_square;
-};
-
 class gamma_jump_t : public jumping_distribution_t
 {
 public:
@@ -146,7 +121,7 @@ public:
                                  const jumping_distribution_t& jumping_distribution,
                                  double acceptance_rate = 0.7)
                 : acceptance(tree->n_nodes, 0.0),
-                  samples(tree->n_nodes,    std::vector<double>()),
+                  samples(),
                   alignment(alignment),
                   alpha(alpha),
                   gamma_distribution(r, lambda),
@@ -170,7 +145,7 @@ public:
         }
         pt_metropolis_hastings_t(const pt_metropolis_hastings_t& mh)
                 : acceptance(mh.acceptance),
-                  samples(mh.samples),
+                  samples(),
                   alignment(mh.alignment),
                   alpha(mh.alpha),
                   gamma_distribution(mh.gamma_distribution),
@@ -193,6 +168,11 @@ public:
                 for (pt_node_t::id_t id = 0; id < tree->n_nodes; id++) {
                         jumping_distributions[id] = mh.jumping_distributions[id]->clone();
                 }
+                // clone tree samples
+                for (std::list<pt_root_t*>::const_iterator it = mh.samples.begin();
+                     it != mh.samples.end(); it++) {
+                        samples.push_back((*it)->clone());
+                }
         }
         virtual ~pt_metropolis_hastings_t() {
                 // free random generator
@@ -201,6 +181,12 @@ public:
                 for (pt_node_t::id_t id = 0; id < tree->n_nodes; id++) {
                         delete(jumping_distributions[id]);
                 }
+                // free tree samples
+                for (std::list<pt_root_t*>::const_iterator it = samples.begin();
+                     it != samples.end(); it++) {
+                        (*it)->destroy();
+                }
+                // free tree
                 tree->destroy();
         }
 
@@ -224,20 +210,13 @@ public:
                 return result;
         }
         void update_samples(bool print) {
-                // update root
-                samples[0].push_back(0.0);
-                // update samples
-                for (pt_node_t::id_t id = 1; id < tree->n_nodes; id++) {
-                        pt_node_t* node = tree->node_map[id];
-                        samples[id].push_back(node->d);
-                        if (print) {
-                                std::cout << std::setprecision(8)
-                                          << std::fixed
-                                          << node->d << " ";
-                        }
-                }
+                samples.push_back(tree->clone());
                 if (print) {
-                        std::cout << std::endl;
+                        flockfile(stdout);
+                        std::cout << newick_format(tree)
+                                  << std::endl;
+                        fflush(stdout);
+                        funlockfile(stdout);
                 }
         }
         void update_steps() {
@@ -323,7 +302,7 @@ public:
         }
 
         std::vector<double> acceptance;
-        std::vector<std::vector<double> > samples;
+        std::list<pt_root_t*> samples;
 protected:
         const alignment_t<CODE_TYPE>& alignment;
         exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha;
@@ -337,159 +316,6 @@ protected:
         size_t step;
 
         pt_root_t* tree;
-};
-
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-class pt_geometric_hastings_t : public pt_metropolis_hastings_t<CODE_TYPE, ALPHABET_SIZE>
-{
-public:
-        pt_geometric_hastings_t(const pt_root_t* tree,
-                                const alignment_t<CODE_TYPE>& alignment,
-                                const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
-                                double r, double lambda,
-                                const jumping_distribution_t& jumping_distribution)
-                : pt_metropolis_hastings_t<CODE_TYPE, ALPHABET_SIZE>(tree, alignment, alpha, r, lambda, jumping_distribution)
-                { }
-        pt_geometric_hastings_t(const pt_geometric_hastings_t& mh)
-                : pt_metropolis_hastings_t<CODE_TYPE, ALPHABET_SIZE>(mh)
-                { }
-
-        virtual pt_geometric_hastings_t* clone() const {
-                return new pt_geometric_hastings_t(*this);
-        }
-
-        virtual double sample_eta(pt_node_t::id_t id, double log_likelihood_ref) {
-                double rho;
-                double x;
-                double log_likelihood_new;
-
-                pt_node_t::id_t id_left  = this->tree->node_map[id]->left ->id;
-                pt_node_t::id_t id_right = this->tree->node_map[id]->right->id;
-                jumping_distribution_t* jumping_distribution =
-                        this->jumping_distributions[id_left];
-
-                // save old branch lengths
-                double d1_old = this->tree->node_map[id_left ]->d;
-                double d2_old = this->tree->node_map[id_right]->d;
-                // generate a proposal
-                double eta_old = (d1_old + d2_old)/2.0;
-                double  xi_old = (d1_old - d2_old)/2.0;
-                double eta_new = std::max(fabs(xi_old), jumping_distribution->sample(this->rng, eta_old, eta_old/2.0));
-                double  d1_new = eta_new + xi_old;
-                double  d2_new = eta_new - xi_old;
-                print_debug(" d1_old: %f\n",  d1_old);
-                print_debug(" d2_old: %f\n",  d2_old);
-                print_debug(" d1_new: %f\n",  d1_new);
-                print_debug(" d2_new: %f\n",  d2_new);
-                print_debug("eta_old: %f\n", eta_old);
-                print_debug(" xi_old: %f\n",  xi_old);
-                print_debug("eta_new: %f\n", eta_new);
-                this->tree->node_map[id_left ]->d = d1_new;
-                this->tree->node_map[id_right]->d = d2_new;
-
-                log_likelihood_new = this->log_likelihood();
-
-                rho = exp(log_likelihood_new-log_likelihood_ref)
-                        *this->gamma_distribution.pdf(d1_new)/this->gamma_distribution.pdf(d1_old)
-                        *this->gamma_distribution.pdf(d2_new)/this->gamma_distribution.pdf(d2_old)
-                        *jumping_distribution->p(eta_old, eta_new);
-                print_debug("    rho: %f\n",  rho);
-                x = gsl_ran_flat(this->rng, 0.0, 1.0);
-                if (x <= std::min(1.0, rho)) {
-                        // sample accepted
-                        print_debug("accepted d1 (eta): %f\n", d1_new);
-                        print_debug("accepted d2 (eta): %f\n", d2_new);
-                        this->update_acceptance(id_left, true);
-                        return log_likelihood_new;
-                }
-                else {
-                        // sample rejected
-                        this->tree->node_map[id_left ]->d = d1_old;
-                        this->tree->node_map[id_right]->d = d2_old;
-                        print_debug("rejected d1 (eta): %f\n", d1_new);
-                        print_debug("rejected d2 (eta): %f\n", d2_new);
-                        this->update_acceptance(id_left, false);
-                        return log_likelihood_ref;
-                }
-        }
-        virtual double sample_xi(pt_node_t::id_t id, double log_likelihood_ref) {
-                double rho;
-                double x;
-                double log_likelihood_new;
-
-                pt_node_t::id_t id_left  = this->tree->node_map[id]->left ->id;
-                pt_node_t::id_t id_right = this->tree->node_map[id]->right->id;
-                jumping_distribution_t* jumping_distribution =
-                        this->jumping_distributions[id_right];
-
-                // save old branch lengths
-                double d1_old = this->tree->node_map[id_left ]->d;
-                double d2_old = this->tree->node_map[id_right]->d;
-                // generate a proposal
-                double eta_old = (d1_old + d2_old)/2.0;
-                double  xi_old = (d1_old - d2_old)/2.0;
-                double  xi_new = std::min(eta_old, std::max(-eta_old, jumping_distribution->sample(this->rng, xi_old, eta_old)));
-                double  d1_new = eta_old + xi_new;
-                double  d2_new = eta_old - xi_new;
-                print_debug(" d1_old: %f\n",  d1_old);
-                print_debug(" d2_old: %f\n",  d2_old);
-                print_debug(" d1_new: %f\n",  d1_new);
-                print_debug(" d2_new: %f\n",  d2_new);
-                print_debug("eta_old: %f\n", eta_old);
-                print_debug(" xi_old: %f\n",  xi_old);
-                print_debug(" xi_new: %f\n",  xi_new);
-                this->tree->node_map[id_left ]->d = d1_new;
-                this->tree->node_map[id_right]->d = d2_new;
-
-                log_likelihood_new = this->log_likelihood();
-
-                rho = exp(log_likelihood_new-log_likelihood_ref)
-                        *this->gamma_distribution.pdf(d1_new)/this->gamma_distribution.pdf(d1_old)
-                        *this->gamma_distribution.pdf(d2_new)/this->gamma_distribution.pdf(d2_old)
-                        *jumping_distribution->p(xi_old, xi_new);
-                print_debug("    rho: %f\n",  rho);
-                x   = gsl_ran_flat(this->rng, 0.0, 1.0);
-                if (x <= std::min(1.0, rho)) {
-                        // sample accepted
-                        print_debug("accepted d1 (xi) : %f\n", d1_new);
-                        print_debug("accepted d2 (xi) : %f\n", d2_new);
-                        this->update_acceptance(id_right, true);
-                        return log_likelihood_new;
-                }
-                else {
-                        // sample rejected
-                        this->tree->node_map[id_left ]->d = d1_old;
-                        this->tree->node_map[id_right]->d = d2_old;
-                        print_debug("rejected d1 (xi) : %f\n", d1_new);
-                        print_debug("rejected d2 (xi) : %f\n", d2_new);
-                        this->update_acceptance(id_right, false);
-                        return log_likelihood_ref;
-                }
-        }
-        virtual double sample_node(pt_node_t::id_t id, double log_likelihood_ref) {
-                log_likelihood_ref = sample_eta(id, log_likelihood_ref);
-                log_likelihood_ref = sample_xi (id, log_likelihood_ref);
-                print_debug("--------------------------------------\n");
-                return log_likelihood_ref;
-        }
-        virtual void generate_sample(bool print) {
-                double log_likelihood_ref = this->log_likelihood();
-                flockfile(stderr);
-                std::cerr << "step: "
-                          << this->step
-                          << std::endl;
-                fflush(stderr);
-                funlockfile(stderr);
-                // loop over nodes
-                for (pt_node_t::id_t id = 0; id < this->tree->n_nodes; id++) {
-                        // if this is not a leaf then sample it
-                        if (!this->tree->node_map[id]->leaf()) {
-                                log_likelihood_ref = sample_node(id, log_likelihood_ref);
-                        }
-                }
-                this->update_samples(print);
-                this->step++;
-        }
 };
 
 #include <assert.h>
@@ -507,9 +333,24 @@ public:
                         population.push_back(mh.clone());
                 }
         }
+        pt_pmcmc_hastings_t(const pt_pmcmc_hastings_t& pmcmc) {
+                for (size_t i = 0; i < pmcmc.population.size(); i++) {
+                        population.push_back(pmcmc.population[i]->clone());
+                }
+                // free tree samples
+                for (std::list<pt_root_t*>::const_iterator it = pmcmc.samples.begin();
+                     it != pmcmc.samples.end(); it++) {
+                        samples.push_back((*it)->clone());
+                }
+        }
         ~pt_pmcmc_hastings_t() {
                 for (size_t i = 0; i < population.size(); i++) {
                         delete(population[i]);
+                }
+                // free tree samples
+                for (std::list<pt_root_t*>::const_iterator it = samples.begin();
+                     it != samples.end(); it++) {
+                        (*it)->destroy();
                 }
         }
 
@@ -537,7 +378,6 @@ public:
 
                 return NULL;
         }
-
         void sample(size_t samples, size_t burnin) {
 
                 pthread_data_t data[population.size()];
@@ -549,7 +389,6 @@ public:
                         data[i].samples = samples;
                         data[i].burnin  = burnin;
                 }
-
                 // sample
                 for (size_t i = 0; i < population.size(); i++) {
                         rc = pthread_create(&threads[i], NULL, sample_thread, (void *)&data[i]);
@@ -569,23 +408,16 @@ public:
                 update_samples();
         }
         void update_samples() {
-                size_t n = population[0]->samples.size();
-                size_t t = population[0]->samples[0].size();
-                for (size_t i = 0; i < t; i++) {
-                        std::vector<double> sample_mean(n, 0.0);
-                        for (size_t j = 1; j < n; j++) {
-                                double sum = 0.0;
-                                for (typename std::vector<pt_sampler_t*>::iterator it = population.begin(); it != population.end(); it++) {
-                                        sum += (*it)->samples[j][i];
-                                }
-                                sample_mean[j] = sum/(double)population.size();
+                for (typename std::vector<pt_sampler_t*>::const_iterator it = population.begin();
+                     it != population.end(); it++) {
+                        for (typename std::list<pt_root_t*>::const_iterator is = (*it)->samples.begin();
+                             is != (*it)->samples.end(); is++) {
+                                samples.push_back((*is)->clone());
                         }
-                        samples.push_back(sample_mean);
                 }
         }
 
-        std::vector<std::vector<double> > samples;
-
+        std::list<pt_root_t*> samples;
 private:
         std::vector<pt_sampler_t*> population;
 };

@@ -64,7 +64,7 @@ public:
 
                 while ((sequence = parser.read_sequence()) != "") {
                         std::string taxon  = token(parser.description()[0], '.')[0];
-                        pt_node_t::id_t id = _tree->get_id(taxon);
+                        pt_node_t::id_t id = _tree->get_leaf_id(taxon);
                         if (id != -1) {
                                 _taxon_map[taxon] = id;
                                 operator[](taxon) = nucleotide_sequence_t<CODE_TYPE>(sequence);
@@ -149,6 +149,7 @@ public:
                         return *this;
                 }
                 void apply(pt_root_t* tree) {
+                        assert("serious fuck up");
                 }
                 const size_t& position() const {
                         return _position;

@@ -38,27 +38,17 @@ typedef float code_t;
 
 using namespace std;
 
-ostream& operator<< (ostream& o, const pt_pmcmc_hastings_t<code_t, alphabet_size>& mh) {
-        size_t n = mh.samples.size();
-        size_t m = mh.samples[0].size();
-        for (size_t i = 1; i < m; i++) {
-                o << setw(10)
-                  << i;
-                o << " ";
+ostream& operator<< (ostream& o, const pt_pmcmc_hastings_t<code_t, alphabet_size>& mh)
+{
+        for (std::list<pt_root_t*>::const_iterator it = mh.samples.begin();
+             it != mh.samples.end(); it++) {
+                o << newick_format(*it) << endl;
         }
-        o << endl;
-        for (size_t i = 1; i < n; i++) {
-                for (size_t j = 1; j < m; j++) {
-                        o << setprecision(8)
-                          << fixed
-                          << mh.samples[i][j] << " ";
-                }
-                o << endl;
-        }
+
         return o;
 }
-
-ostream& operator<< (ostream& o, const exponent_t<code_t, alphabet_size>& exponent) {
+ostream& operator<< (ostream& o, const exponent_t<code_t, alphabet_size>& exponent)
+{
         if(exponent[0]) o << " Pa^" << exponent[0];
         if(exponent[1]) o << " Pc^" << exponent[1];
         if(exponent[2]) o << " Pg^" << exponent[2];
@@ -66,13 +56,15 @@ ostream& operator<< (ostream& o, const exponent_t<code_t, alphabet_size>& expone
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_term_t<code_t, alphabet_size>& term) {
+ostream& operator<< (ostream& o, const polynomial_term_t<code_t, alphabet_size>& term)
+{
         o << term.coefficient()
           << term.exponent();
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size>& polynomial) {
+ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size>& polynomial)
+{
         for (polynomial_t<code_t, alphabet_size>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 if (it != polynomial.begin()) {
@@ -86,7 +78,8 @@ ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size>& poly
         return o;
 }
 
-size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent) {
+size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent)
+{
         size_t seed = 0;
         seed += (size_t)exponent[0] << 0;
         seed += (size_t)exponent[1] << 2;
@@ -209,21 +202,12 @@ void run_optimization(const string& method, const char* file_tree, const char* f
                 pt_gradient_ascent.run(options.max_steps, options.min_change);
         }
         else if (method == "metropolis-hastings") {
-                geometric_jump_t jump(options.sigma);
-//                normal_jump_t jump(options.sigma);
+                normal_jump_t jump(options.sigma);
 //                gamma_jump_t jump(1.6, 0.4);
-                if (options.jobs == 1) {
-                        pt_geometric_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump);
-                        pt_metropolis_hastings.burnin(options.burnin);
-                        pt_metropolis_hastings.sample(options.max_steps);
-                }
-                else {
-                        //pt_metropolis_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
-                        pt_geometric_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump);
-                        pt_pmcmc_hastings_t<code_t, alphabet_size> pmcmc(options.jobs, pt_metropolis_hastings);
-                        pmcmc.sample(options.max_steps, options.burnin);
-                        cout << pmcmc;
-                }
+                pt_metropolis_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
+                pt_pmcmc_hastings_t<code_t, alphabet_size> pmcmc(options.jobs, pt_metropolis_hastings);
+                pmcmc.sample(options.max_steps, options.burnin);
+                cout << pmcmc;
         }
         else {
                 cerr << "Unknown optimization method: " << method
