@@ -22,14 +22,16 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <vector>
+
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/utility/polynomial.hh>
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_polynomial_class {
 public:
-        static polynomial_t<CODE_TYPE, ALPHABET_SIZE> likelihood(const pt_root_t* root) {
-                return poly_sum(likelihood_rec(root));
+        static polynomial_t<CODE_TYPE, ALPHABET_SIZE> likelihood(const pt_root_t* root, const std::vector<CODE_TYPE>& observations) {
+                return poly_sum(likelihood_rec(root, observations));
         }
 
 private:
@@ -56,12 +58,12 @@ private:
                 return poly_sum;
         }
 
-        static carry_t likelihood_leaf(const pt_node_t* node) {
+        static carry_t likelihood_leaf(const pt_node_t* node, const std::vector<CODE_TYPE>& observations) {
                 carry_t carry;
                 const pt_leaf_t* leaf = static_cast<const pt_leaf_t*>(node);
-                if (leaf->x != -1) {
+                if (observations[leaf->id] != -1) {
                         // leaf is present and has a nucleotide
-                        carry[leaf->x] += 1.0;
+                        carry[observations[leaf->id]] += 1.0;
                 }
                 else {
                         // this leaf should be ignored, no nucleotide
@@ -73,7 +75,8 @@ private:
         static carry_t likelihood_node(
                 const pt_node_t* node,
                 const carry_t& carry_left,
-                const carry_t& carry_right) {
+                const carry_t& carry_right,
+                const std::vector<CODE_TYPE>& observations) {
                 double pm_left  = 1.0-exp(-node->left->d);
                 double pm_right = 1.0-exp(-node->right->d);
                 carry_t carry;
@@ -94,23 +97,23 @@ private:
                 return carry;
         }
 
-        static carry_t likelihood_rec(const pt_node_t* node) {
+        static carry_t likelihood_rec(const pt_node_t* node, const std::vector<CODE_TYPE>& observations) {
                 if (node->leaf()) {
-                        return likelihood_leaf(node);
+                        return likelihood_leaf(node, observations);
                 }
                 else {
-                        const carry_t carry_left  = likelihood_rec(node->left);
-                        const carry_t carry_right = likelihood_rec(node->right);
+                        const carry_t carry_left  = likelihood_rec(node->left,  observations);
+                        const carry_t carry_right = likelihood_rec(node->right, observations);
 
-                        return likelihood_node(node, carry_left, carry_right);
+                        return likelihood_node(node, carry_left, carry_right, observations);
                 }
         }
 };
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_polynomial(const pt_root_t* root)
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_polynomial(const pt_root_t* root, const std::vector<CODE_TYPE>& observations)
 {
-        return pt_polynomial_class<CODE_TYPE, ALPHABET_SIZE>::likelihood(root);
+        return pt_polynomial_class<CODE_TYPE, ALPHABET_SIZE>::likelihood(root, observations);
 }
 
 #endif /* PHYLOTREE_POLYNOMIAL_HH */

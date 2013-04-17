@@ -427,7 +427,7 @@ ntree_t::export_tree() {
         }
         else {
                 left_tree  = export_subtree(used, boost::get<0>(ns));
-                right_tree = new pt_leaf_t(-1, leaf_d(boost::get<2>(ns)), leaf_name(boost::get<2>(ns)));
+                right_tree = new pt_leaf_t(leaf_d(boost::get<2>(ns)), leaf_name(boost::get<2>(ns)));
         }
         // return resulting tree
         return new pt_root_t(left_tree, right_tree);
@@ -439,8 +439,8 @@ ntree_t::export_subtree(vector<bool>& used, size_t i) {
         pt_node_t* right_tree;
         // check if there are only leafs following
         if (nedge_set(i).part2().size() == 2) {
-                left_tree  = new pt_leaf_t(-1, leaf_d(nedge_set(i).part2(0)), leaf_name(nedge_set(i).part2(0)));
-                right_tree = new pt_leaf_t(-1, leaf_d(nedge_set(i).part2(1)), leaf_name(nedge_set(i).part2(1)));
+                left_tree  = new pt_leaf_t(leaf_d(nedge_set(i).part2(0)), leaf_name(nedge_set(i).part2(0)));
+                right_tree = new pt_leaf_t(leaf_d(nedge_set(i).part2(1)), leaf_name(nedge_set(i).part2(1)));
         }
         // otherwise we need to do a recursive call
         else {
@@ -453,7 +453,7 @@ ntree_t::export_subtree(vector<bool>& used, size_t i) {
                 }
                 else {
                         left_tree  = export_subtree(used, boost::get<0>(ns));
-                        right_tree = new pt_leaf_t(-1, leaf_d(boost::get<2>(ns)), leaf_name(boost::get<2>(ns)));
+                        right_tree = new pt_leaf_t(leaf_d(boost::get<2>(ns)), leaf_name(boost::get<2>(ns)));
                 }
         }
         return new pt_node_t(nedge_set(i).d(), left_tree, right_tree);

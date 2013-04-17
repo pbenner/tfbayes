@@ -106,38 +106,45 @@ pt_node_t::scale(double c)
 }
 
 void
-pt_node_t::get_leafs(leafs_t& leafs)
+pt_node_t::create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
+                           node_map_t& node_map, nodes_t& nodes)
 {
-        if (!leaf()) {
-                left ->get_leafs(leafs);
-                right->get_leafs(leafs);
+        if (name != "") {
+                node_map[name] = this;
         }
-}
+        nodes[id]      = this;
 
-void
-pt_node_t::get_nodes(nodes_t& nodes)
-{
-        if (!root()) {
-                nodes.insert(this);
-        }
-        if (!leaf()) {
-                left ->get_nodes(nodes);
-                right->get_nodes(nodes);
-        }
+        left-> create_mappings(leaf_map, leafs, node_map, nodes);
+        right->create_mappings(leaf_map, leafs, node_map, nodes);
 }
 
 // pt_leaf_t
 ////////////////////////////////////////////////////////////////////////////////
 
-pt_leaf_t::pt_leaf_t(short x, double d, const std::string name)
-        : pt_node_t(d, NULL, NULL, name),
-          x(x)
+pt_leaf_t::pt_leaf_t(double d, const std::string name)
+        : pt_node_t(d, NULL, NULL, name)
 { }
 
-void
-pt_leaf_t::get_leafs(leafs_t& leafs)
+pt_leaf_t::pt_leaf_t(const pt_leaf_t& leaf)
+        : pt_node_t(leaf)
+{ }
+
+pt_leaf_t*
+pt_leaf_t::clone() const
 {
-        leafs.insert(this);
+        return new pt_leaf_t(*this);
+}
+
+void
+pt_leaf_t::create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
+                           node_map_t& node_map, nodes_t& nodes)
+{
+        if (name != "") {
+                leaf_map[name] = this;
+                node_map[name] = this;
+        }
+        leafs[id]      = this;
+        nodes[id]      = this;
 }
 
 // pt_root_t
@@ -148,28 +155,26 @@ pt_root_t::pt_root_t(pt_node_t* left,
                      const std::string name,
                      double d)
         : pt_node_t(d, left, right, name, true),
-          outgroup_x(-1), outgroup_name("")
+          outgroup_name("")
 {
         id_t leaf_id = 0;
         id_t node_id = n_leafs;
         set_id(this, leaf_id, node_id);
 
-        leaf_map = leaf_map_t(n_leafs, (pt_leaf_t*)NULL);
-        node_map = node_map_t(n_nodes, (pt_node_t*)NULL);
-        create_leaf_map(this);
-        create_node_map(this);
+        leafs = leafs_t(n_leafs, (pt_leaf_t*)NULL);
+        nodes = nodes_t(n_nodes, (pt_node_t*)NULL);
+        create_mappings();
 }
 
 pt_root_t::pt_root_t(const pt_root_t& root)
         : pt_node_t(root),
-          leaf_map(root.leaf_map),
-          node_map(root.node_map),
-          outgroup_x(root.outgroup_x),
+          // copy leafs and nodes since those are vectors
+          leafs(root.leafs),
+          nodes(root.nodes),
           outgroup_name(root.outgroup_name)
 {
-        // recreate leaf map since we clone all leafs
-        create_leaf_map(this);
-        create_node_map(this);
+        // recreate all mappings since we clone all nodes
+        create_mappings();
 }
 
 pt_root_t*
@@ -178,30 +183,12 @@ pt_root_t::clone() const
         return new pt_root_t(*this);
 }
 
-pt_root_t::leafs_t
-pt_root_t::get_leafs()
-{
-        leafs_t leafs;
-        get_leafs(leafs);
-        return leafs;
-}
-
-pt_root_t::nodes_t
-pt_root_t::get_nodes()
-{
-        nodes_t nodes;
-        get_nodes(nodes);
-        return nodes;
-}
-
 pt_root_t::id_t
 pt_root_t::get_node_id(const std::string& taxon) const
 {
-        for (node_map_t::const_iterator it = node_map.begin();
-             it != node_map.end(); it++) {
-                if ((*it)->name == taxon) {
-                        return (*it)->id;
-                }
+        node_map_t::const_iterator it = node_map.find(taxon);
+        if (it != node_map.end()) {
+                return it->second->id;
         }
         return -1;
 }
@@ -209,13 +196,39 @@ pt_root_t::get_node_id(const std::string& taxon) const
 pt_root_t::id_t
 pt_root_t::get_leaf_id(const std::string& taxon) const
 {
-        for (leaf_map_t::const_iterator it = leaf_map.begin();
-             it != leaf_map.end(); it++) {
-                if ((*it)->name == taxon) {
-                        return (*it)->id;
-                }
+        leaf_map_t::const_iterator it = leaf_map.find(taxon);
+        if (it != leaf_map.end()) {
+                return it->second->id;
         }
         return -1;
+}
+
+pt_leaf_t*
+pt_root_t::operator()(const std::string& taxon)
+{
+        leaf_map_t::iterator it = leaf_map.find(taxon);
+        if (it != leaf_map.end()) {
+                return it->second;
+        }
+        return NULL;
+}
+
+const pt_leaf_t*
+pt_root_t::operator()(const std::string& taxon) const
+{
+        return operator()(taxon);
+}
+
+pt_leaf_t*
+pt_root_t::operator()(id_t id)
+{
+        return leafs[id];
+}
+
+const pt_leaf_t*
+pt_root_t::operator()(id_t id) const
+{
+        return operator()(id);
 }
 
 bool
@@ -225,26 +238,9 @@ pt_root_t::outgroup() const
 }
 
 void
-pt_root_t::create_leaf_map(pt_node_t* node)
+pt_root_t::create_mappings()
 {
-        if (node->leaf()) {
-                pt_leaf_t* leaf = static_cast<pt_leaf_t*>(node);
-                leaf_map[leaf->id] = leaf;
-        }
-        else {
-                create_leaf_map(node->left );
-                create_leaf_map(node->right);
-        }
-}
-
-void
-pt_root_t::create_node_map(pt_node_t* node)
-{
-        node_map[node->id] = node;
-        if (!node->leaf()) {
-                create_node_map(node->left );
-                create_node_map(node->right);
-        }
+        create_mappings(leaf_map, leafs, node_map, nodes);
 }
 
 void
@@ -302,10 +298,6 @@ print_phylotree(ostream& o, const pt_node_t* node, size_t nesting)
                 else {
                         o << "(" << node->name
                           << " " << node->d;
-                }
-                if (static_cast<const pt_leaf_t*>(node)->x != -1) {
-                        o << " "
-                          << static_cast<const pt_leaf_t*>(node)->x;
                 }
                 o << ")";
         }

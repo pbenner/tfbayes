@@ -27,13 +27,13 @@ using namespace std;
 
 void test_tree1() {
         cout << "Test 1:" << endl;
-        pt_leaf_t n9( 3, 9.0, "n9");
-        pt_leaf_t n8( 2, 8.0, "n8");
-        pt_leaf_t n7( 1, 7.0, "n7");
-        pt_leaf_t n6( 0, 6.0, "n6");
+        pt_leaf_t n9(9.0, "n9");
+        pt_leaf_t n8(8.0, "n8");
+        pt_leaf_t n7(7.0, "n7");
+        pt_leaf_t n6(6.0, "n6");
         pt_node_t n5(5.0, &n8, &n9);
         pt_node_t n4(4.0, &n6, &n7);
-        pt_leaf_t n3( 0, 3.0, "n3");
+        pt_leaf_t n3(3.0, "n3");
         pt_node_t n2(2.0, &n4, &n5);
         pt_root_t n1(&n2, &n3);
 

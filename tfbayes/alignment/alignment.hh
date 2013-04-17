@@ -24,6 +24,7 @@
 
 #include <set>
 #include <string>
+#include <vector>
 
 #include <boost/unordered_map.hpp>
 
@@ -33,38 +34,34 @@
 #include <tfbayes/utility/strtools.hh>
 
 template <typename CODE_TYPE>
-class alignment_t : boost::unordered_map<std::string, nucleotide_sequence_t<CODE_TYPE> > {
+class alignment_t : std::vector<nucleotide_sequence_t<CODE_TYPE> > {
 public:
         // Typedefs
         ////////////////////////////////////////////////////////////////////////
-        typedef boost::unordered_map<std::string, nucleotide_sequence_t<CODE_TYPE> > alignment_ancestor_t;
+        typedef std::vector<nucleotide_sequence_t<CODE_TYPE> > alignment_ancestor_t;
         typedef boost::unordered_map<std::string, pt_node_t::id_t> taxon_map_t;
 
         // Constructors
         ////////////////////////////////////////////////////////////////////////
-        alignment_t(const size_t length, CODE_TYPE init, pt_root_t* tree)
+        alignment_t(const size_t length, CODE_TYPE init, const pt_root_t* tree)
                 : alignment_ancestor_t(),
                   _length(length),
-                  _tree(tree->clone()) {
-                pt_node_t::leafs_t leafs = _tree->get_leafs();
-
-                for (pt_node_t::leafs_t::const_iterator it = leafs.begin(); it != leafs.end(); it++) {
+                  _n_species(tree->n_leafs) {
+                for (pt_node_t::leafs_t::const_iterator it = tree->leafs.begin(); it != tree->leafs.end(); it++) {
                         pt_leaf_t* leaf = *it;
                         _taxon_map[leaf->name] = leaf->id;
                         this->operator[](leaf->name) = nucleotide_sequence_t<CODE_TYPE>(length, init);
                 }
-                _size = leafs.size();
         }
-        alignment_t(const char* filename, pt_root_t* tree)
-                : alignment_ancestor_t(),
-                  _tree(tree->clone()) {
+        alignment_t(const char* filename, const pt_root_t* tree)
+                : alignment_ancestor_t() {
 
                 FastaParser parser(filename);
                 std::string sequence;
 
                 while ((sequence = parser.read_sequence()) != "") {
                         std::string taxon  = token(parser.description()[0], '.')[0];
-                        pt_node_t::id_t id = _tree->get_leaf_id(taxon);
+                        pt_node_t::id_t id = tree->get_leaf_id(taxon);
                         if (id != -1) {
                                 _taxon_map[taxon] = id;
                                 operator[](taxon) = nucleotide_sequence_t<CODE_TYPE>(sequence);
@@ -77,35 +74,36 @@ public:
                         }
                 }
                 if (alignment_ancestor_t::size() > 0) {
-                        _length = alignment_ancestor_t::begin()->second.size();
+                        _length = alignment_ancestor_t::begin()->size();
                 }
                 else {
                         _length = 0;
                 }
-                _size = _taxon_map.size();
+                _n_species = _taxon_map.size();
         }
         alignment_t(const alignment_t& alignment)
-                : alignment_ancestor_t(),
-                  _tree(NULL) {
+                : alignment_ancestor_t() {
                 operator=(alignment);
         }
         virtual ~alignment_t() {
-                if (_tree) {
-                        _tree->destroy();
-                }
         }
+
         // Operators
         ////////////////////////////////////////////////////////////////////////
         alignment_t& operator=(const alignment_t& alignment) {
                 alignment_ancestor_t::operator=(alignment);
-                if (_tree) {
-                        _tree->destroy();
-                }
-                _tree      = alignment._tree->clone();
+                _length    = alignment._length;
+                _n_species = alignment._n_species;
                 _taxon_map = alignment._taxon_map;
                 return *this;
         }
         using alignment_ancestor_t::operator[];
+        const nucleotide_sequence_t<CODE_TYPE>& operator[](const std::string& taxon) const {
+                return operator[](taxon_map(taxon));
+        }
+        nucleotide_sequence_t<CODE_TYPE>& operator[](const std::string& taxon) {
+                return operator[](taxon_map(taxon));
+        }
 
         // Iterator
         ////////////////////////////////////////////////////////////////////////
@@ -114,42 +112,30 @@ public:
         public:
                 iterator(size_t position,
                          size_t length,
-                         pt_root_t *tree,
+                         size_t n_species,
                          const alignment_ancestor_t& alignment,
                          const taxon_map_t& taxon_map)
                         : _position(position),
-                          _tree(tree->clone()),
                           _length(length),
+                          _n_species(n_species),
                           _alignment(alignment),
-                          _taxon_map(taxon_map)
+                          _observations(n_species, 0)
                 { }
                 iterator(const iterator& it)
                         : _position(0),
-                          _tree(NULL),
                           _length(it._length),
+                          _n_species(it._n_species),
                           _alignment(it._alignment),
-                          _taxon_map(it._taxon_map)
+                          _observations(it._observations)
                 {
                         operator=(it);
                 }
-                ~iterator()
-                {
-                        if (_tree) {
-                                _tree->destroy();
-                        }
-                }
                 iterator& operator=(const iterator& it)
                 {
-                        _position = it._position;
-                        if (_tree) {
-                                _tree->destroy();
-                        }
-                        _tree = it._tree->clone();
+                        _position     = it._position;
+                        _observations = it._observations;
 
                         return *this;
-                }
-                void apply(pt_root_t* tree) {
-                        assert("serious fuck up");
                 }
                 const size_t& position() const {
                         return _position;
@@ -163,61 +149,68 @@ public:
                 iterator& operator++(int _) {
                         if (_position < _length) {
                                 _position++;
+                                fill_observations();
                         }
                         return *this;
                 }
                 iterator& operator--(int _) {
                         if (_position > 0) {
                                 _position--;
+                                fill_observations();
                         }
                         return *this;
                 }
-                const pt_root_t& operator*() {
-                        for (taxon_map_t::const_iterator it = _taxon_map.begin();
-                             it != _taxon_map.end(); it++) {
-                                const std::string taxon  = it->first;
-                                const pt_node_t::id_t id = it->second;
-                                _tree->leaf_map[id]->x = _alignment.find(taxon)->second[position()];
-                        }
-                        return *_tree;
+                const std::vector<CODE_TYPE>& operator*() const {
+                        return _observations;
                 }
-                const pt_root_t* operator->() {
+                const std::vector<CODE_TYPE>* operator->() const {
                         return &operator*();
                 }
         protected:
+                void fill_observations() {
+                        for (size_t i = 0; i < _n_species; i++) {
+                                _observations[i] = _alignment[i][position()];
+                        }
+                }
+
                 size_t _position;
-                pt_root_t* _tree;
                 const size_t _length;
+                const size_t _n_species;
                 const alignment_ancestor_t& _alignment;
-                const taxon_map_t& _taxon_map;
+                std::vector<CODE_TYPE> _observations;
         };
         virtual iterator begin() const {
-                return iterator(0, _length, _tree, *this, _taxon_map);
+                return iterator(0, _length, _n_species, *this, _taxon_map);
         }
         virtual iterator end() const {
-                return iterator(_length, _length, _tree, *this, _taxon_map);
+                return iterator(_length, _length, _n_species, *this, _taxon_map);
         }
         // Methods
         ////////////////////////////////////////////////////////////////////////
-        const size_t& size() const {
-                return _size;
+        const size_t& n_species() const {
+                return _n_species;
         }
         const size_t& length() const {
                 return _length;
         }
+        const taxon_map_t& taxon_map() const {
+                return _taxon_map;
+        }
+        pt_node_t::id_t taxon_map(const std::string& taxon) const {
+                taxon_map_t::const_iterator it = _taxon_map.find(taxon);
+                if (it != _taxon_map.end()) {
+                        return it->second;\
+                }
+                return -1;
+        }
 
 protected:
         // number of species
-        size_t _size;
+        size_t _n_species;
         // length of the nucleotide sequence
         size_t _length;
         // map taxon name to nodes in the phylogenetic tree
         taxon_map_t _taxon_map;
-        // clean phylogenetic tree, this tree should not be
-        // initialized with actual nucleotides at the leafs,
-        // whenever a new iterator is requested this tree is cloned so
-        // each iterator gets a clean tree
-        pt_root_t* _tree;
 };
 
 #endif /* ALIGNMENT_HH */

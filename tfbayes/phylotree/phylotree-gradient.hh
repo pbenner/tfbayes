@@ -37,11 +37,11 @@
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_gradient_t : public boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> > {
 public:
-        pt_gradient_t(pt_root_t* root)
+        pt_gradient_t(const pt_root_t* root, const std::vector<CODE_TYPE>& observations)
                 : boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> >() { 
 
-                _nodes = root->get_nodes();
-                partial_t partial = gradient_rec(root);
+                _nodes = root->nodes;
+                partial_t partial = gradient_rec(root, observations);
                 _normalization = poly_sum(partial);
 
                 for (pt_node_t::nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
@@ -84,15 +84,18 @@ private:
          * Gradient descent
          ******************************************************************************/
 
-        partial_t gradient_leaf(const pt_leaf_t* leaf) {
+        partial_t gradient_leaf(
+                const pt_leaf_t* leaf,
+                const std::vector<CODE_TYPE>& observations) {
                 partial_t partial;
-                partial[leaf->x] += 1.0;
+                partial[observations[leaf->id]] += 1.0;
                 return partial;
         }
         partial_t gradient_node(
                 const pt_node_t* node,
                 partial_t& partial_left,
-                partial_t& partial_right) {
+                partial_t& partial_right,
+                const std::vector<CODE_TYPE>& observations) {
 
                 double  pm_left  = 1.0-exp(-node->left ->d);
                 double  pm_right = 1.0-exp(-node->right->d);
@@ -187,15 +190,17 @@ private:
                 return partial;
         }
 
-        partial_t gradient_rec(const pt_node_t* node) {
+        partial_t gradient_rec(
+                const pt_node_t* node,
+                const std::vector<CODE_TYPE>& observations) {
                 if (node->leaf()) {
-                        return gradient_leaf(static_cast<const pt_leaf_t*>(node));
+                        return gradient_leaf(static_cast<const pt_leaf_t*>(node), observations);
                 }
                 else {
-                        partial_t partial_left  = gradient_rec(node->left);
-                        partial_t partial_right = gradient_rec(node->right);
+                        partial_t partial_left  = gradient_rec(node->left,  observations);
+                        partial_t partial_right = gradient_rec(node->right, observations);
 
-                        return gradient_node(node, partial_left, partial_right);
+                        return gradient_node(node, partial_left, partial_right, observations);
                 }
         }
 

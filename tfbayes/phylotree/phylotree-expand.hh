@@ -36,12 +36,12 @@ polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> nucleotide_probability(CODE_TYPE x) 
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> mutation_model(const pt_leaf_t* u, CODE_TYPE y) {
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> mutation_model(const pt_leaf_t* leaf, CODE_TYPE x, CODE_TYPE y) {
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly;
-        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> px = nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(u->x);
-        poly += u->mutation_probability()*px;
-        if (u->x == y) {
-                poly += (1.0-u->mutation_probability());
+        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> px = nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(x);
+        poly += leaf->mutation_probability()*px;
+        if (x == y) {
+                poly += (1.0-leaf->mutation_probability());
         }
         return poly;
 }
@@ -59,6 +59,7 @@ template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
         leafset_t::const_iterator it,
         leafset_t::const_iterator end,
+        const std::vector<CODE_TYPE>& observations,
         CODE_TYPE condition)
 {
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> result(0.0);
@@ -69,18 +70,18 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
                 }
         }
         else {
-                const CODE_TYPE x = (*it)->x;
+                const CODE_TYPE x = observations[(*it)->id];
                 const double pm   = (*it)->mutation_probability();
                 const polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> px =
                         nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(x);
 
-                polynomial_t<CODE_TYPE, ALPHABET_SIZE> tmp = pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(++it, end, condition);
+                polynomial_t<CODE_TYPE, ALPHABET_SIZE> tmp = pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(++it, end, observations, condition);
 
                 result += pm*px*tmp;
 
                 if (condition == x) {
                         result += (1.0-pm)*tmp;
-                        result += (1.0-pm)*pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(it, end, ALPHABET_SIZE);
+                        result += (1.0-pm)*pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(it, end, observations, ALPHABET_SIZE);
                 }
         }
         return result;
@@ -93,16 +94,17 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
         leafset_t::const_iterator it,
-        leafset_t::const_iterator end)
+        leafset_t::const_iterator end,
+        const std::vector<CODE_TYPE>& observations)
 {
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> result(0.0);
 
         for (size_t x = 0; x < ALPHABET_SIZE; x++) {
                 const polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> px =
                         nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(x);
-                result += px*pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(it, end, x);
+                result += px*pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(it, end, observations, x);
         }
-        result += pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(it, end, ALPHABET_SIZE);
+        result += pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(it, end, observations, ALPHABET_SIZE);
 
         return result;
 }
@@ -112,6 +114,7 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
         polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> term,
         leafset_t::const_iterator it,
         leafset_t::const_iterator end,
+        const std::vector<CODE_TYPE>& observations,
         CODE_TYPE condition)
 {
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> result(0.0);
@@ -124,7 +127,7 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
         }
         else {
                 const double pm   = (*it)->mutation_probability();
-                const CODE_TYPE x = (*it)->x; it++;
+                const CODE_TYPE x = observations[(*it)->id]; it++;
 
                 /* no mutation */
                 if (condition == ALPHABET_SIZE || condition == x) {
@@ -138,27 +141,36 @@ polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand_rec(
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(const leafset_t& leafset) {
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(
+        const leafset_t& leafset,
+        const std::vector<CODE_TYPE>& observations)
+{
         /* Algorithm 1 */
 //        return pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(1.0, leafset.begin(), leafset.end(), ALPHABET_SIZE);
         /* Algorithm 2 */
-        return pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(leafset.begin(), leafset.end());
+        return pt_expand_rec<CODE_TYPE, ALPHABET_SIZE>(leafset.begin(), leafset.end(), observations);
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(const incomplete_nodeterm_t& nodeterm) {
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(
+        const incomplete_nodeterm_t& nodeterm,
+        const std::vector<CODE_TYPE>& observations)
+{
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> result(1.0);
         for (incomplete_nodeterm_t::const_iterator it = nodeterm.begin(); it != nodeterm.end(); it++) {
-                result *= pt_expand<CODE_TYPE, ALPHABET_SIZE>(*it);
+                result *= pt_expand<CODE_TYPE, ALPHABET_SIZE>(*it, observations);
         }
         return nodeterm.coefficient()*result;
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(const incomplete_expression_t& expression) {
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_expand(
+        const incomplete_expression_t& expression,
+        const std::vector<CODE_TYPE>& observations)
+{
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> result;
         for (incomplete_expression_t::const_iterator it = expression.begin(); it != expression.end(); it++) {
-                result += pt_expand<CODE_TYPE, ALPHABET_SIZE>(*it);
+                result += pt_expand<CODE_TYPE, ALPHABET_SIZE>(*it, observations);
         }
 
         return result;

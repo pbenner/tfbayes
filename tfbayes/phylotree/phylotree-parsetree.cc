@@ -84,9 +84,8 @@ pt_parsetree_t::convert(list<pt_root_t*>& tree_list) const
         case LEAF_N:
                 assert(children[0]->type == NAME_N);
                 assert(children[1]->type == DISTANCE_N);
-                node = new pt_leaf_t(-1,
-                                    *(double *)children[1]->data,
-                                     (char   *)children[0]->data);
+                node = new pt_leaf_t(*(double *)children[1]->data,
+                                      (char   *)children[0]->data);
                 break;
         case ROOT_N:
                 assert(children[0]->type == NODE_N ||

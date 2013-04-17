@@ -33,12 +33,13 @@ using namespace std;
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 double pt_marginal_likelihood(
         const pt_root_t* const node,
+        const std::vector<CODE_TYPE>& observations,
         const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
 {
         double result = -HUGE_VAL;
         double mbeta_alpha = mbeta_log(alpha);
 
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial = pt_polynomial<CODE_TYPE, ALPHABET_SIZE>(node);
+        const polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial = pt_polynomial<CODE_TYPE, ALPHABET_SIZE>(node, observations);
 
         for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {

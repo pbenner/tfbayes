@@ -79,94 +79,28 @@ char* pt_print(pt_root_t* pt_root)
         return result;
 }
 
-const char* pt_leaf_name_rec(pt_node_t* node, size_t* count)
+const char* pt_leaf_name(pt_root_t* root, size_t leaf)
 {
-        const char* result = NULL;
-
-        if (node->leaf()) {
-                if (*count == 0) {
-                        result = node->name.c_str();
-                }
-                else {
-                        (*count)--;
-                }
-        }
-        else {
-                result = pt_leaf_name_rec(node->left, count);
-                if (result == NULL) {
-                        result= pt_leaf_name_rec(node->right, count);
-                }
-        }
-        return result;
+        return (*root)(leaf)->name.c_str();
 }
 
-const char* pt_leaf_name(pt_node_t* node, size_t leaf)
+size_t pt_num_leafs(pt_root_t* root)
 {
-        size_t count = leaf;
-
-        return pt_leaf_name_rec(node, &count);
+        return root->n_leafs;
 }
 
-size_t pt_num_leafs(pt_node_t* node)
+ssize_t pt_index(pt_root_t* root, const char* name)
 {
-        size_t count = 0;
-
-        if (node->leaf()) {
-                count++;
-        }
-        else {
-                count += pt_num_leafs(node->left);
-                count += pt_num_leafs(node->right);
-        }
-        return count;
-}
-
-size_t pt_init(vector_t* observations, pt_node_t* node, size_t count)
-{
-        if (node->leaf()) {
-                static_cast<pt_leaf_t*>(node)->x = observations->vec[count];
-                count++;
-        }
-        else {
-                count = pt_init(observations, node->left,  count);
-                count = pt_init(observations, node->right, count);
-        }
-        return count;
-}
-
-ssize_t pt_index_rec(pt_node_t* node, const string& name, size_t* count)
-{
-        ssize_t result = -1;
-
-        if (node->leaf()) {
-                if (node->name == name) {
-                        result = *count;
-                }
-                (*count)++;
-        }
-        else {
-                result = pt_index_rec(node->left,  name, count);
-                if (result == -1) {
-                        result = pt_index_rec(node->right, name, count);
-                }
-        }
-        return result;
-}
-
-ssize_t pt_index(pt_root_t* pt_root, const char* name)
-{
-        size_t count = 0;
-        string str(name);
-
-        return pt_index_rec(pt_root, str, &count);
+        return (*root)(name)->id;
 }
 
 vector_t* pt_expectation(pt_root_t* pt_root, vector_t* observations, vector_t* prior)
 {
-        pt_init(observations, pt_root, 0);
-
         vector_t* result = alloc_vector(alphabet_size);
-        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(pt_root);
+        // convert observations to an std array
+        vector<code_t> tmp(observations->vec, observations->vec+observations->size);
+        // compute the polynomial
+        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(pt_root, tmp);
 
         exponent_t<code_t, alphabet_size> alpha;
         for (size_t i = 0; i < alphabet_size; i++) {
@@ -174,7 +108,6 @@ vector_t* pt_expectation(pt_root_t* pt_root, vector_t* observations, vector_t* p
         }
 
         boost::array<double, alphabet_size> expectation =
-//                pt_posterior_expectation_prime<code_t, alphabet_size>(poly, alpha);
                 pt_posterior_expectation<code_t, alphabet_size>(poly, alpha);
 
         for (size_t i = 0; i < alphabet_size; i++) {
@@ -186,10 +119,11 @@ vector_t* pt_expectation(pt_root_t* pt_root, vector_t* observations, vector_t* p
 
 vector_t* pt_approximate(pt_root_t* pt_root, vector_t* observations)
 {
-        pt_init(observations, pt_root, 0);
-
         vector_t* result = alloc_vector(alphabet_size);
-        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(pt_root);
+        // convert observations to an std array
+        vector<code_t> tmp(observations->vec, observations->vec+observations->size);
+        // compute the polynomial
+        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(pt_root, tmp);
 
         polynomial_t<code_t, alphabet_size> variational
                 = dkl_approximate<code_t, alphabet_size>(poly);
@@ -203,7 +137,11 @@ vector_t* pt_approximate(pt_root_t* pt_root, vector_t* observations)
 
 vector_t* pt_dkl_optimize(pt_root_t* pt_root, vector_t* observations)
 {
-        pt_init(observations, pt_root, 0);
+        vector_t* result = alloc_vector(alphabet_size);
+        // convert observations to an std array
+        vector<code_t> tmp(observations->vec, observations->vec+observations->size);
+        // compute the polynomial
+        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(pt_root, tmp);
 
         exponent_t<code_t, alphabet_size> alpha;
         alpha[0] = 1;
@@ -211,9 +149,6 @@ vector_t* pt_dkl_optimize(pt_root_t* pt_root, vector_t* observations)
         alpha[2] = 1;
         alpha[3] = 1;
         alpha[4] = 1;
-
-        vector_t* result = alloc_vector(alphabet_size);
-        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(pt_root);
 
         polynomial_t<code_t, alphabet_size> variational
                 = dkl_optimize(poly, alpha);

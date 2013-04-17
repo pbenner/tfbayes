@@ -43,26 +43,6 @@ using namespace std;
 #define alphabet_size 4
 typedef short code_t;
 
-void pt_init_leaf(const boost::unordered_map<string, code_t>& observations, pt_leaf_t* leaf) {
-        if (observations.find(leaf->name) == observations.end()) {
-                leaf->x = rand()%alphabet_size;
-        }
-        else {
-                leaf->x = (*observations.find(leaf->name)).second;
-        }
-}
-
-void pt_init(const boost::unordered_map<string, code_t>& observations, pt_node_t* node) {
-
-        if (node->leaf()) {
-                pt_init_leaf(observations, static_cast<pt_leaf_t*>(node));
-        }
-        else {
-                pt_init(observations, node->left);
-                pt_init(observations, node->right);
-        }
-}
-
 void init() {
         struct timeval tv;
         gettimeofday(&tv, NULL);
@@ -76,15 +56,16 @@ int main(void) {
         MET_INIT;
         init();
 
-        boost::unordered_map<string, code_t> observations;
-        // observations["hg19"]    = 1;
-        // observations["panTro2"] = 2;
-        // observations["gorGor1"] = 0;
-        // observations["ponAbe2"] = 1;
-        // observations["rheMac2"] = 0;
-        // observations["papHam1"] = 1;
-        // observations["calJac1"] = 3;
-        // observations["tarSyr1"] = 0;
+        // parse tree
+        list<pt_root_t*> tree_list = parse_tree_list();
+        assert(tree_list.size() == 1);
+        pt_root_t* pt_root = tree_list.front();
+
+        // random observations
+        vector<code_t> observations(pt_root->n_leafs, 0);
+        for (pt_node_t::id_t i = 0; i < pt_root->n_leafs; i++) {
+                observations[i] = rand()%alphabet_size;
+        }
 
         exponent_t<code_t, alphabet_size> alpha;
         alpha[0] = 1;
@@ -96,12 +77,6 @@ int main(void) {
         p[1] = 0.25;
         p[2] = 0.4;
         p[3] = 0.05;
-
-        list<pt_root_t*> tree_list = parse_tree_list();
-        assert(tree_list.size() == 1);
-        pt_root_t* pt_root = tree_list.front();
-
-        pt_init(observations, pt_root);
 
         cout << "Parsetree:" << endl
              << pt_parsetree << endl;
@@ -116,13 +91,13 @@ int main(void) {
              << incomplete_expression    << endl;
 
         MET("Expanding",
-            polynomial_t<code_t, alphabet_size> result1 = pt_expand<code_t, alphabet_size>(incomplete_expression));
+            polynomial_t<code_t, alphabet_size> result1 = pt_expand<code_t, alphabet_size>(incomplete_expression, observations));
 
         cout << "Expanded polynomial:" << endl
              << result1                << endl;
 
         MET("Direct computation",
-            polynomial_t<code_t, alphabet_size> result2 = pt_polynomial<code_t, alphabet_size>(pt_root));
+            polynomial_t<code_t, alphabet_size> result2 = pt_polynomial<code_t, alphabet_size>(pt_root, observations));
 
         cout << "Direct polynomial:" << endl
              << result2              << endl;

@@ -45,26 +45,6 @@ using namespace std;
 #define alphabet_size 4
 typedef float code_t;
 
-void pt_init_leaf(const boost::unordered_map<string, code_t>& observations, pt_leaf_t* leaf) {
-        if (observations.find(leaf->name) == observations.end()) {
-                leaf->x = rand()%alphabet_size;
-        }
-        else {
-                leaf->x = (*observations.find(leaf->name)).second;
-        }
-}
-
-void pt_init(const boost::unordered_map<string, code_t>& observations, pt_node_t* node) {
-
-        if (node->leaf()) {
-                pt_init_leaf(observations, static_cast<pt_leaf_t*>(node));
-        }
-        else {
-                pt_init(observations, node->left);
-                pt_init(observations, node->right);
-        }
-}
-
 void init() {
         struct timeval tv;
         gettimeofday(&tv, NULL);
@@ -130,24 +110,28 @@ void test_line_search(
 
 }
 
-int main(void) {
-
+int main(void)
+{
         init();
 
-        boost::unordered_map<string, code_t> observations;
+        // parse tree
+        list<pt_root_t*> tree_list = parse_tree_list();
+        assert(tree_list.size() == 1);
+        pt_root_t* pt_root = tree_list.front();
+
+        // random observations
+        vector<code_t> observations(pt_root->n_leafs, 0);
+        for (pt_node_t::id_t i = 0; i < pt_root->n_leafs; i++) {
+                observations[i] = rand()%alphabet_size;
+        }
+
         exponent_t<code_t, alphabet_size> alpha;
         alpha[0] = 1;
         alpha[1] = 1;
         alpha[2] = 1;
         alpha[3] = 1;
 
-        list<pt_root_t*> tree_list = parse_tree_list();
-        assert(tree_list.size() == 1);
-        pt_root_t* pt_root = tree_list.front();
-
-        pt_init(observations, pt_root);
-
-        polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(pt_root);
+        polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(pt_root, observations);
         polynomial_t<code_t, alphabet_size> approximation;
         polynomial_t<code_t, alphabet_size> variational;
 

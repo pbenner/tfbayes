@@ -197,8 +197,7 @@ public:
         double log_likelihood() {
                 double result = 0;
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        it.apply(tree);
-                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial = pt_polynomial<CODE_TYPE, ALPHABET_SIZE>(tree);
+                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial = pt_polynomial<CODE_TYPE, ALPHABET_SIZE>(tree, *it);
                         // loop over monomials
                         double tmp = -HUGE_VAL;
                         for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = polynomial.begin();
@@ -245,9 +244,9 @@ public:
                 double log_likelihood_new;
 
                 // generate a proposal
-                double d_old = tree->node_map[id]->d;
+                double d_old = (*tree)(id)->d;
                 double d_new = std::min(0.0, jumping_distributions[id]->sample(rng, d_old));
-                tree->node_map[id]->d = d_new;
+                (*tree)(id)->d = d_new;
                 print_debug("old sample: %f\n", d_old);
 
                 log_likelihood_new = log_likelihood();
@@ -265,7 +264,7 @@ public:
                 }
                 else {
                         // sample rejected
-                        tree->node_map[id]->d = d_old;
+                        (*tree)(id)->d = d_old;
                         print_debug("rejected: %f\n", d_new);
                         update_acceptance(id, false);
                         return log_likelihood_ref;

@@ -25,7 +25,6 @@
 #include <math.h>
 #include <cstddef>
 #include <cassert>
-#include <set>
 #include <string>
 #include <ostream>
 #include <vector>
@@ -34,18 +33,16 @@
 
 #include <tfbayes/utility/clonable.hh>
 
-typedef short nucleotide_t;
-
 class pt_leaf_t;
 class pt_root_t;
 
 class pt_node_t : public clonable {
 public:
         /* typedefs */
-        typedef std::vector<pt_leaf_t*> leaf_map_t;
-        typedef std::vector<pt_node_t*> node_map_t;
-        typedef std::set<pt_leaf_t*> leafs_t;
-        typedef std::set<pt_node_t*> nodes_t;
+        typedef boost::unordered_map<std::string, pt_leaf_t*> leaf_map_t;
+        typedef boost::unordered_map<std::string, pt_node_t*> node_map_t;
+        typedef std::vector<pt_leaf_t*> leafs_t;
+        typedef std::vector<pt_node_t*> nodes_t;
         typedef ssize_t id_t;
 
         pt_node_t(double d = 0.0,
@@ -83,19 +80,22 @@ public:
         id_t id;
 
 protected:
-        virtual void get_leafs(leafs_t& leafs);
-        virtual void get_nodes(nodes_t& nodes);
-
+        virtual
+        void create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
+                             node_map_t& node_map, nodes_t& nodes);
 };
 
 class pt_leaf_t : public pt_node_t {
 public:
-        pt_leaf_t(short x, double d, const std::string name = "");
+        pt_leaf_t(double d, const std::string name = "");
+        pt_leaf_t(const pt_leaf_t& leaf);
 
-        virtual void get_leafs(leafs_t& leafs);
+        pt_leaf_t* clone() const;
 
-        /* coded nucleotide */
-        nucleotide_t x;
+protected:
+        virtual
+        void create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
+                             node_map_t& node_map, nodes_t& nodes);
 };
 
 class pt_root_t : public pt_node_t {
@@ -108,23 +108,28 @@ public:
 
         pt_root_t* clone() const;
 
-        using pt_node_t::get_nodes;
-        using pt_node_t::get_leafs;
-        virtual nodes_t get_nodes();
-        virtual leafs_t get_leafs();
         id_t get_node_id(const std::string& taxon) const;
         id_t get_leaf_id(const std::string& taxon) const;
         bool outgroup() const;
-        
+
+              pt_leaf_t* operator()(const std::string& taxon);
+        const pt_leaf_t* operator()(const std::string& taxon) const;
+              pt_leaf_t* operator()(id_t id);
+        const pt_leaf_t* operator()(id_t id) const;
+
+        // leaf or node name -> leaf or node
         leaf_map_t leaf_map;
         node_map_t node_map;
+        // leaf or node id -> leaf or node
+        leafs_t leafs;
+        nodes_t nodes;
 
-        nucleotide_t outgroup_x;
         std::string  outgroup_name;
 
 protected:
-        void create_leaf_map(pt_node_t* node);
-        void create_node_map(pt_node_t* node);
+        using pt_node_t::create_mappings;
+        virtual void create_mappings();
+
         void set_id(pt_node_t* node, id_t& leaf_id, id_t& node_id);
 };
 

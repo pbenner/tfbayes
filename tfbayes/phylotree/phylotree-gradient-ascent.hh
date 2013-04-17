@@ -49,13 +49,12 @@ public:
         double log_posterior(const pt_node_t::nodes_t& nodes) {
                 double result = 0;
                 // initialize sum with gradients of the gamma distribution
-                for (pt_node_t::nodes_t::iterator it = nodes.begin(); it != nodes.end(); it++) {
+                for (pt_node_t::nodes_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
                         result += log(gamma_distribution.pdf((*it)->d));
                 }
 
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        it.apply(tree);
-                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial = pt_polynomial<CODE_TYPE, ALPHABET_SIZE>(tree);
+                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial = pt_polynomial<CODE_TYPE, ALPHABET_SIZE>(tree, *it);
                         // loop over monomials
                         double tmp = -HUGE_VAL;
                         for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = polynomial.begin();
@@ -72,13 +71,12 @@ public:
                 double total = 0.0;
 
                 // initialize sum with gradients of the gamma distribution
-                for (pt_node_t::nodes_t::iterator it = nodes.begin(); it != nodes.end(); it++) {
+                for (pt_node_t::nodes_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
                         sum[*it] = gamma_distribution.log_gradient((*it)->d);
                 }
                 // loop through the alignment
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        it.apply(tree);
-                        pt_gradient_t<CODE_TYPE, ALPHABET_SIZE> gradient(tree);
+                        pt_gradient_t<CODE_TYPE, ALPHABET_SIZE> gradient(tree, *it);
 
                         double norm = 0.0;
                         // loop over monomials
@@ -121,8 +119,9 @@ public:
                 return total;
         }
         void run(size_t max, double stop = 0.0, bool print = true) {
-                pt_node_t::nodes_t nodes = tree->get_nodes();
-                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                pt_node_t::nodes_t nodes = tree->nodes;
+                for (pt_node_t::nodes_t::const_iterator is = tree->nodes.begin();
+                     is != tree->nodes.end(); is++) {
                         node_epsilon[*is] = epsilon;
                 }
                 for (size_t i = 0; i < max; i++) {
