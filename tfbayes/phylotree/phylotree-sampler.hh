@@ -238,35 +238,39 @@ public:
                 }
                 print_debug("acceptance: %d=%f\n",  (int)id, acceptance[id]);
         }
-        double sample_branch(pt_node_t::id_t id, double log_likelihood_ref) {
+        double sample_branch(pt_node_t* node, double log_likelihood_ref) {
                 double rho;
                 double x;
                 double log_likelihood_new;
 
                 // generate a proposal
-                double d_old = (*tree)(id)->d;
-                double d_new = std::min(0.0, jumping_distributions[id]->sample(rng, d_old));
-                (*tree)(id)->d = d_new;
-                print_debug("old sample: %f\n", d_old);
+                double d_old = node->d;
+                double d_new = std::max(0.0, jumping_distributions[node->id]->sample(rng, d_old));
+                node->d = d_new;
 
+                // compute new log likelihood
                 log_likelihood_new = log_likelihood();
+
+                print_debug("proposal for node %d: %f\n", (int)node->id, d_new);
+                print_debug("likelihood reference: %f\n", log_likelihood_ref);
+                print_debug("likelihood proposal : %f\n", log_likelihood_new);
 
                 // compute acceptance probability
                 rho = exp(log_likelihood_new-log_likelihood_ref)
                         *gamma_distribution.pdf(d_new)/gamma_distribution.pdf(d_old)
-                        *jumping_distributions[id]->p(d_old, d_new);
+                        *jumping_distributions[node->id]->p(d_old, d_new);
                 x   = gsl_ran_flat(rng, 0.0, 1.0);
                 if (x <= std::min(1.0, rho)) {
                         // sample accepted
                         print_debug("accepted: %f\n", d_new);
-                        update_acceptance(id, true);
+                        update_acceptance(node->id, true);
                         return log_likelihood_new;
                 }
                 else {
                         // sample rejected
-                        (*tree)(id)->d = d_old;
+                        node->d = d_old;
                         print_debug("rejected: %f\n", d_new);
-                        update_acceptance(id, false);
+                        update_acceptance(node->id, false);
                         return log_likelihood_ref;
                 }
         }
@@ -279,8 +283,12 @@ public:
                 fflush(stderr);
                 funlockfile(stderr);
                 // loop over nodes
-                for (pt_node_t::id_t id = 1; id < tree->n_nodes; id++) {
-                        log_likelihood_ref = sample_branch(id, log_likelihood_ref);
+                for (pt_node_t::nodes_t::iterator it = tree->nodes.begin();
+                     it != tree->nodes.end(); it++) {
+                        // skip the root
+                        if ((*it)->root()) continue;
+                        // otherwise sample
+                        log_likelihood_ref = sample_branch(*it, log_likelihood_ref);
                 }
                 update_samples(print);
                 step++;

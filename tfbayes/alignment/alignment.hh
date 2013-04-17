@@ -44,17 +44,17 @@ public:
         // Constructors
         ////////////////////////////////////////////////////////////////////////
         alignment_t(const size_t length, CODE_TYPE init, const pt_root_t* tree)
-                : alignment_ancestor_t(),
+                : alignment_ancestor_t(tree->n_leafs, nucleotide_sequence_t<CODE_TYPE>()),
                   _length(length),
                   _n_species(tree->n_leafs) {
                 for (pt_node_t::leafs_t::const_iterator it = tree->leafs.begin(); it != tree->leafs.end(); it++) {
                         pt_leaf_t* leaf = *it;
-                        _taxon_map[leaf->name] = leaf->id;
-                        this->operator[](leaf->name) = nucleotide_sequence_t<CODE_TYPE>(length, init);
+                        _taxon_map[leaf->name]     = leaf->id;
+                        this->operator[](leaf->id) = nucleotide_sequence_t<CODE_TYPE>(length, init);
                 }
         }
         alignment_t(const char* filename, const pt_root_t* tree)
-                : alignment_ancestor_t() {
+                : alignment_ancestor_t(tree->n_leafs, nucleotide_sequence_t<CODE_TYPE>()) {
 
                 FastaParser parser(filename);
                 std::string sequence;
@@ -64,7 +64,7 @@ public:
                         pt_node_t::id_t id = tree->get_leaf_id(taxon);
                         if (id != -1) {
                                 _taxon_map[taxon] = id;
-                                operator[](taxon) = nucleotide_sequence_t<CODE_TYPE>(sequence);
+                                operator[](id)    = nucleotide_sequence_t<CODE_TYPE>(sequence);
                         }
                         else {
                                 std::cerr << "Warning: taxon `"
@@ -119,8 +119,9 @@ public:
                           _length(length),
                           _n_species(n_species),
                           _alignment(alignment),
-                          _observations(n_species, 0)
-                { }
+                          _observations(n_species, 0) {
+                        fill_observations();
+                }
                 iterator(const iterator& it)
                         : _position(0),
                           _length(it._length),
@@ -168,8 +169,10 @@ public:
                 }
         protected:
                 void fill_observations() {
-                        for (size_t i = 0; i < _n_species; i++) {
-                                _observations[i] = _alignment[i][position()];
+                        if (position() < _length) {
+                                for (size_t i = 0; i < _n_species; i++) {
+                                        _observations[i] = _alignment[i][position()];
+                                }
                         }
                 }
 

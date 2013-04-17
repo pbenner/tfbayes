@@ -58,6 +58,13 @@ public:
         pt_parsetree_t **children;
 };
 
+typedef void* yyscan_t;
+
+typedef struct {
+	pt_parsetree_t* pt_parsetree;
+	yyscan_t scanner;
+} context_t;
+
 std::list<pt_root_t*> parse_tree_list(FILE * file = NULL);
 
 std::ostream& operator<< (std::ostream& o, pt_parsetree_t* const tree);

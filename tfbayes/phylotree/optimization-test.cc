@@ -214,6 +214,7 @@ void run_optimization(const string& method, const char* file_tree, const char* f
                      << endl;
                 exit(EXIT_FAILURE);
         }
+        pt_root->destroy();
 }
 
 int main(int argc, char *argv[])

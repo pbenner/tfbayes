@@ -103,12 +103,21 @@ pt_parsetree_t::convert(list<pt_root_t*>& tree_list) const
                 }
                 break;
         case TREE_N:
-                assert(children[0]->type == ROOT_N);
-                root = static_cast<pt_root_t*>(children[0]->convert(tree_list));
-                tree_list.push_back(root);
                 if (n_children == 2) {
-                        assert(children[1]->type == TREE_N);
-                        children[1]->convert(tree_list);
+                        assert(children[1]->type == ROOT_N);
+                        // convert the tree on the right which is a
+                        // phylogenetic tree
+                        root = static_cast<pt_root_t*>(children[1]->convert(tree_list));
+                        tree_list.push_back(root);
+                        // on the left is the tree list
+                        assert(children[0]->type == TREE_N);
+                        children[0]->convert(tree_list);
+                }
+                else {
+                        assert(children[0]->type == ROOT_N);
+                        // we only have the phylogenetic tree
+                        root = static_cast<pt_root_t*>(children[0]->convert(tree_list));
+                        tree_list.push_back(root);
                 }
                 break;
         default:
@@ -175,7 +184,6 @@ ostream& print_parsetree(
 // bison/flex interface
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef void* yyscan_t;
 int yylex_init   (yyscan_t* scanner);
 int yylex_destroy(yyscan_t  scanner);
 void yylex_set_input(yyscan_t scanner, FILE* file);
@@ -183,29 +191,29 @@ void yylex_set_input(yyscan_t scanner, FILE* file);
 list<pt_root_t*> parse_tree_list(FILE * file)
 {
         list<pt_root_t*> tree_list;
-        yyscan_t scanner;
+        context_t context;
 
         // initialize lexer
-        yylex_init(&scanner);
+        yylex_init(&context.scanner);
 
         // set input file if necessary
         if (file != NULL) {
-                yylex_set_input(scanner, file);
+                yylex_set_input(context.scanner, file);
         }
 
         // parse input
-        if (yyparse(scanner)) {
+        if (yyparse(&context)) {
                 // error parsing
                 return tree_list;
         }
         // convert AST to phylotree
-        tree_list = pt_parsetree->convert();
+        tree_list = context.pt_parsetree->convert();
  
         // free lexer memory
-        yylex_destroy(scanner);
+        yylex_destroy(context.scanner);
 
         // free AST
-        pt_parsetree->destroy();
+        context.pt_parsetree->destroy();
  
         return tree_list;
 }

@@ -78,9 +78,6 @@ int main(void) {
         p[2] = 0.4;
         p[3] = 0.05;
 
-        cout << "Parsetree:" << endl
-             << pt_parsetree << endl;
-
         cout << "Phylogenetic tree:" << endl
              << pt_root              << endl;
 
@@ -118,7 +115,6 @@ int main(void) {
         }
         cout << "Sum: " << sum << endl;
 
-        pt_parsetree->destroy();
         pt_root->destroy();
 
         return 0.0;

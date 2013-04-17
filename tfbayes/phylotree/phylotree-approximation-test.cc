@@ -163,7 +163,6 @@ int main(void)
              << ";"
              << endl;
 
-        pt_parsetree->destroy();
         pt_root->destroy();
 
         return 0.0;

@@ -3,36 +3,37 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 %code requires {
-#include <tfbayes/phylotree/phylotree-parsetree.hh>
-#define YYSTYPE pt_parsetree_t *
-}
-
-%{
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <tfbayes/phylotree/phylotree-parsetree.hh>
+#define YYSTYPE pt_parsetree_t *
+#define YYLEX_PARAM context->scanner
+}
+
+%code {
+
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <inttypes.h>
 #include <string.h>
 
 #include <tfbayes/phylotree/phylotree-parser.h>
 
-pt_parsetree_t* pt_parsetree;
-extern char *yytext;
-extern size_t line_count;
 typedef void* yyscan_t;
 char *yyget_text (yyscan_t scanner);
 
-int yylex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param, yyscan_t yyscanner);
+int yylex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param, yyscan_t scanner);
 
-int yyerror(YYLTYPE* locp, void * scanner, const char* err) {
-        fprintf(stderr, "`%d': %s\n", locp->first_line, err);
+int yyerror(YYLTYPE* locp, context_t* context, const char* err) {
+        fprintf(stderr, "parsing error at line %d colum %d near `%s': %s\n",
+		locp->first_line+1, locp->first_column,
+		yyget_text(context->scanner), err);
         exit(EXIT_FAILURE);
 }
 
-%}
+}
 
 // bison options
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +42,7 @@ int yyerror(YYLTYPE* locp, void * scanner, const char* err) {
 %locations
 %defines
 %error-verbose
-%parse-param {void * scanner}
+%parse-param {context_t* context}
 %lex-param {void * scanner}
 
 // token definitions
@@ -53,14 +54,14 @@ int yyerror(YYLTYPE* locp, void * scanner, const char* err) {
 ////////////////////////////////////////////////////////////////////////////////
 %%
 start:
-      root SEMICOLON tree_list
-      { pt_parsetree = new pt_parsetree_t(TREE_N, 2, NULL, $1, $3); }
+      tree_list root SEMICOLON
+      { context->pt_parsetree = new pt_parsetree_t(TREE_N, 2, NULL, $1, $2); }
     | root SEMICOLON
-      { pt_parsetree = new pt_parsetree_t(TREE_N, 1, NULL, $1); }
+      { context->pt_parsetree = new pt_parsetree_t(TREE_N, 1, NULL, $1); }
     ;
 tree_list:
-      root SEMICOLON tree_list
-      { $$ = new pt_parsetree_t(TREE_N, 2, NULL, $1, $3); }
+      tree_list root SEMICOLON
+      { $$ = new pt_parsetree_t(TREE_N, 2, NULL, $1, $2); }
     | root SEMICOLON
       { $$ = new pt_parsetree_t(TREE_N, 1, NULL, $1); }
     ;
@@ -74,13 +75,13 @@ node: LPAREN node COMMA node RPAREN COLON distance
     | name COLON distance
       { $$ = new pt_parsetree_t(LEAF_N, 2, NULL, $1, $3); }
     ;
-name: NAME { $$ = new pt_parsetree_t(NAME_N, 0, strdup(yyget_text(scanner))); }
+name: NAME { $$ = new pt_parsetree_t(NAME_N, 0, strdup(yyget_text(context->scanner))); }
     ;
 distance:
       FLOAT
       {
         $$ = new pt_parsetree_t(DISTANCE_N, 0, calloc(1, sizeof(double)));
-        *((double *)$$->data) = atof(yyget_text(scanner));
+        *((double *)$$->data) = atof(yyget_text(context->scanner));
       }
     ;
 %%
