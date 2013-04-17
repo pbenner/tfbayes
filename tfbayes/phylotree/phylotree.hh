@@ -54,7 +54,7 @@ public:
         pt_node_t(const pt_node_t& node);
 
         pt_node_t* clone() const;
-        void destroy();
+        virtual void destroy();
 
         bool leaf() const;
         bool root() const;
@@ -80,9 +80,10 @@ public:
         id_t id;
 
 protected:
-        virtual
-        void create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
-                             node_map_t& node_map, nodes_t& nodes);
+        virtual void create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
+                                     node_map_t& node_map, nodes_t& nodes);
+
+        virtual void set_id(id_t& leaf_id, id_t& node_id);
 };
 
 class pt_leaf_t : public pt_node_t {
@@ -92,25 +93,30 @@ public:
 
         pt_leaf_t* clone() const;
 
+        virtual void create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
+                                     node_map_t& node_map, nodes_t& nodes);
+
 protected:
-        virtual
-        void create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
-                             node_map_t& node_map, nodes_t& nodes);
+        virtual void set_id(id_t& leaf_id, id_t& node_id);
+
 };
 
 class pt_root_t : public pt_node_t {
 public:
-        pt_root_t(pt_node_t* left  = NULL,
-                  pt_node_t* right = NULL,
+        pt_root_t(pt_node_t* left,
+                  pt_node_t* right,
+                  pt_leaf_t* outgroup = NULL,
                   const std::string name = "",
                   double d = -HUGE_VAL);
         pt_root_t(const pt_root_t& root);
+
+        virtual void destroy();
 
         pt_root_t* clone() const;
 
         id_t get_node_id(const std::string& taxon) const;
         id_t get_leaf_id(const std::string& taxon) const;
-        bool outgroup() const;
+        bool has_outgroup() const;
 
               pt_leaf_t* operator()(const std::string& taxon);
         const pt_leaf_t* operator()(const std::string& taxon) const;
@@ -124,13 +130,14 @@ public:
         leafs_t leafs;
         nodes_t nodes;
 
-        std::string  outgroup_name;
+        pt_leaf_t* outgroup;
 
 protected:
-        using pt_node_t::create_mappings;
+        virtual void create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
+                                     node_map_t& node_map, nodes_t& nodes);
         virtual void create_mappings();
 
-        void set_id(pt_node_t* node, id_t& leaf_id, id_t& node_id);
+        virtual void set_id(id_t& leaf_id, id_t& node_id);
 };
 
 class newick_format {

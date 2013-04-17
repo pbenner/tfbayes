@@ -296,11 +296,9 @@ parse_pt_node_t(
         set<size_t> s;
 
         if (node->leaf()) {
-                // add one to every node id since we add an additional
-                // leaf to the root with id zero
-                s.insert(node->id+1);
-                leaf_d    [node->id+1] = node->d;
-                leaf_names[node->id+1] = node->name;
+                s.insert(node->id);
+                leaf_d    [node->id] = node->d;
+                leaf_names[node->id] = node->name;
         }
         else {
                 set<size_t> s1 = parse_pt_node_t(n, node->left,  nedge_set, leaf_d, leaf_names);
@@ -313,19 +311,18 @@ parse_pt_node_t(
 
 static void
 parse_pt_node_t(
-        size_t n,
         const pt_root_t* node,
         nedge_set_t& nedge_set,
         vector<double>& leaf_d,
         vector<string>& leaf_names)
 {
-        assert(node->outgroup());
-        // initialize root
-        leaf_d[0]     = node->d;
-        leaf_names[0] = node->outgroup_name;
+        assert(node->has_outgroup());
+        // add outgroup
+        leaf_d    [node->outgroup->id] = node->outgroup->d;
+        leaf_names[node->outgroup->id] = node->outgroup->name;
         // recursive calls
-        parse_pt_node_t(node->n_leafs, node->left,  nedge_set, leaf_d, leaf_names);
-        parse_pt_node_t(node->n_leafs, node->right, nedge_set, leaf_d, leaf_names);
+        parse_pt_node_t(node->n_leafs-1, node->left,  nedge_set, leaf_d, leaf_names);
+        parse_pt_node_t(node->n_leafs-1, node->right, nedge_set, leaf_d, leaf_names);
 }
 
 ntree_t::ntree_t(const nedge_set_t& nedge_set,
@@ -344,11 +341,11 @@ ntree_t::ntree_t(const nedge_set_t& nedge_set,
 ntree_t::ntree_t(const pt_root_t* tree)
 {
         nedge_set_t nedge_set;
-        vector<double> leaf_d(tree->n_leafs+1, 0);
-        vector<string> leaf_names(tree->n_leafs+1, "");
+        vector<double> leaf_d(tree->n_leafs, 0);
+        vector<string> leaf_names(tree->n_leafs, "");
 
         // parse the tree
-        parse_pt_node_t(tree->n_leafs, tree, nedge_set, leaf_d, leaf_names);
+        parse_pt_node_t(tree, nedge_set, leaf_d, leaf_names);
         // call constructor
         (*this) = ntree_t(nedge_set, leaf_d, leaf_names);
 }

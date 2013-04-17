@@ -70,6 +70,7 @@ pt_parsetree_t::convert() const
 pt_node_t*
 pt_parsetree_t::convert(list<pt_root_t*>& tree_list) const
 {
+        pt_leaf_t* outgroup = NULL;
         pt_node_t* node = NULL;
         pt_root_t* root;
 
@@ -94,13 +95,14 @@ pt_parsetree_t::convert(list<pt_root_t*>& tree_list) const
                        children[1]->type == LEAF_N);
                 assert((n_children == 3 && children[2]->type == LEAF_N) ||
                         n_children == 2);
-                node = new pt_root_t(children[0]->convert(tree_list),
-                                     children[1]->convert(tree_list));
+                // check if an outgroup is available
                 if (n_children == 3) {
-                        node->d = *(double *)children[2]->children[1]->data;
-                        static_cast<pt_root_t*>(node)->outgroup_name =
-                                string((char   *)children[2]->children[0]->data);
+                        outgroup = new pt_leaf_t(*(double *)children[2]->children[1]->data,
+                                                  (char   *)children[2]->children[0]->data);
                 }
+                node = new pt_root_t(children[0]->convert(tree_list),
+                                     children[1]->convert(tree_list),
+                                     outgroup);
                 break;
         case TREE_N:
                 if (n_children == 2) {

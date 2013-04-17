@@ -112,10 +112,18 @@ pt_node_t::create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
         if (name != "") {
                 node_map[name] = this;
         }
-        nodes[id]      = this;
+        nodes[id] = this;
 
         left-> create_mappings(leaf_map, leafs, node_map, nodes);
         right->create_mappings(leaf_map, leafs, node_map, nodes);
+}
+
+void
+pt_node_t::set_id(pt_node_t::id_t& leaf_id, pt_node_t::id_t& node_id)
+{
+        id = node_id++;
+        left ->set_id(leaf_id, node_id);
+        right->set_id(leaf_id, node_id);
 }
 
 // pt_leaf_t
@@ -143,8 +151,14 @@ pt_leaf_t::create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
                 leaf_map[name] = this;
                 node_map[name] = this;
         }
-        leafs[id]      = this;
-        nodes[id]      = this;
+        leafs[id] = this;
+        nodes[id] = this;
+}
+
+void
+pt_leaf_t::set_id(pt_node_t::id_t& leaf_id, pt_node_t::id_t& node_id)
+{
+        id = leaf_id++;
 }
 
 // pt_root_t
@@ -152,14 +166,20 @@ pt_leaf_t::create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
 
 pt_root_t::pt_root_t(pt_node_t* left,
                      pt_node_t* right,
+                     pt_leaf_t* outgroup,
                      const std::string name,
                      double d)
         : pt_node_t(d, left, right, name, true),
-          outgroup_name("")
+          outgroup(outgroup)
 {
+        // count outgroup as leaf if present
+        if (has_outgroup()) {
+                n_leafs++; n_nodes++;
+        }
+
         id_t leaf_id = 0;
         id_t node_id = n_leafs;
-        set_id(this, leaf_id, node_id);
+        set_id(leaf_id, node_id);
 
         leafs = leafs_t(n_leafs, (pt_leaf_t*)NULL);
         nodes = nodes_t(n_nodes, (pt_node_t*)NULL);
@@ -171,10 +191,22 @@ pt_root_t::pt_root_t(const pt_root_t& root)
           // copy leafs and nodes since those are vectors
           leafs(root.leafs),
           nodes(root.nodes),
-          outgroup_name(root.outgroup_name)
+          outgroup(NULL)
 {
+        if (root.has_outgroup()) {
+                outgroup = root.outgroup->clone();
+        }
         // recreate all mappings since we clone all nodes
         create_mappings();
+}
+
+void
+pt_root_t::destroy()
+{
+        if (has_outgroup()) {
+                outgroup->destroy();
+        }
+        pt_node_t::destroy();
 }
 
 pt_root_t*
@@ -232,9 +264,21 @@ pt_root_t::operator()(id_t id) const
 }
 
 bool
-pt_root_t::outgroup() const
+pt_root_t::has_outgroup() const
 {
-        return d != -HUGE_VAL;
+        return outgroup != NULL;
+}
+
+void
+pt_root_t::create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
+                           node_map_t& node_map, nodes_t& nodes)
+{
+        pt_node_t::create_mappings(leaf_map, leafs, node_map, nodes);
+
+        // also add the outgroup if available
+        if (has_outgroup()) {
+                outgroup->create_mappings(leaf_map, leafs, node_map, nodes);
+        }
 }
 
 void
@@ -244,16 +288,14 @@ pt_root_t::create_mappings()
 }
 
 void
-pt_root_t::set_id(pt_node_t* node, pt_node_t::id_t& leaf_id, pt_node_t::id_t& node_id)
+pt_root_t::set_id(pt_node_t::id_t& leaf_id, pt_node_t::id_t& node_id)
 {
-        if (node->leaf()) {
-                node->id = leaf_id++;
+        // check for the outgroup and if it is available make sure
+        // that it gets the first id
+        if (has_outgroup()) {
+                outgroup->id = leaf_id++;
         }
-        else {
-                node->id = node_id++;
-                set_id(node->left , leaf_id, node_id);
-                set_id(node->right, leaf_id, node_id);
-        }
+        pt_node_t::set_id(leaf_id, node_id);
 }
 
 // ostream
@@ -330,11 +372,11 @@ print_newick(ostream& o, const pt_node_t* node, size_t nesting)
                 print_newick(o, node->left, nesting+1);
                 o << ",";
                 print_newick(o, node->right, nesting+1);
-                if (root->outgroup()) {
+                if (root->has_outgroup()) {
                         o << ","
-                          << root->outgroup_name
+                          << root->outgroup->name
                           << ":"
-                          << root->d;
+                          << root->outgroup->d;
                 }
                 o << ");";
         }
