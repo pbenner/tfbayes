@@ -35,7 +35,7 @@ main(void)
         // convert and print trees
         for (list<pt_root_t*>::const_iterator it = tree_list.begin();
              it != tree_list.end(); it++) {
-                pt_root_t* pt_root = *it; cout << *it << endl;
+                pt_root_t* pt_root = *it;
 
                 ntree_list.push_back(pt_root);
                 pt_root->destroy();

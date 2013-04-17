@@ -8,7 +8,6 @@
 %{
 #include <stdio.h>
 #include <tfbayes/phylotree/phylotree-parser.h>
-size_t line_count;
 %}
 
 COLON :
@@ -20,7 +19,7 @@ WHITESPACE [\ \t]
 
 %%
 {WHITESPACE}+              { }
-{NEWLINE}                  { line_count++; }
+{NEWLINE}                  { }
 {COLON}                    { return COLON; }
 {COMMA}                    { return COMMA; }
 {SEMICOLON}                { return SEMICOLON; }
