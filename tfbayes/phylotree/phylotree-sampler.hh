@@ -251,12 +251,11 @@ public:
                 double d_old = node->d;
                 double d_new = jumping_distributions[node->id]->sample(rng, d_old);
                 if (!node->leaf() && (d_new < 0.0 ||  gsl_ran_bernoulli(rng, 0.5))) {
-                        print_debug("\n\n\n!!!!proposing new topology!!!!\n\n\n\n");
                         // propose new topology
                         which = gsl_ran_bernoulli(rng, 0.5);
                         switch (which) {
-                        case 1: node->move_a(); break;
-                        case 2: node->move_b(); break;
+                        case 0: node->move_a(); break;
+                        case 1: node->move_b(); break;
                         default: break;
                         }
                 }
@@ -288,8 +287,8 @@ public:
                         node->d = d_old;
                         // if topology changed then switch it back
                         switch (which) {
-                        case 1: node->move_a(); break;
-                        case 2: node->move_b(); break;
+                        case 0: node->move_a(); break;
+                        case 1: node->move_b(); break;
                         default: break;
                         }
                         print_debug("rejected: %f\n", d_new);
@@ -312,6 +311,7 @@ public:
                         if ((*it)->root()) continue;
                         // otherwise sample
                         log_likelihood_ref = sample_branch(*it, log_likelihood_ref);
+                        std::cout << tree << std::endl << std::endl;
                 }
                 update_samples(print);
                 step++;

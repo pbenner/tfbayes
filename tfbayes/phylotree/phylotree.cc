@@ -52,7 +52,7 @@ pt_node_t::pt_node_t(double d,
 pt_node_t::pt_node_t(const pt_node_t& node)
         : d(node.d),
           left(NULL), right(NULL),
-          ancestor(node.ancestor),
+          ancestor(NULL),
           name(node.name),
           n_leafs(node.n_leafs),
           n_nodes(node.n_nodes),
@@ -62,6 +62,8 @@ pt_node_t::pt_node_t(const pt_node_t& node)
         if (!node.leaf()) {
                 left  = node.left ->clone();
                 right = node.right->clone();
+                left ->ancestor = this;
+                right->ancestor = this;
         }
 }
 
@@ -139,14 +141,23 @@ pt_node_t::move_a()
                 return;
         }
         if (ancestor->left == this) {
+                // relink ancestors
+                left->ancestor  = ancestor;
+                // relink node
                 tmp             = left;
                 left            = ancestor->right;
                 ancestor->right = tmp;
+                // relink ancestors
+                left->ancestor  = this;
         }
         else {
+                // relink ancestors
+                right->ancestor = ancestor;
                 tmp             = right;
                 right           = ancestor->left;
                 ancestor->left  = tmp;
+                // relink ancestors
+                right->ancestor = this;
         }
 }
 
@@ -159,14 +170,24 @@ pt_node_t::move_b()
                 return;
         }
         if (ancestor->left == this) {
+                // relink ancestors
+                right->ancestor = ancestor;
+                // relink node
                 tmp             = right;
                 right           = ancestor->right;
                 ancestor->right = tmp;
+                // relink ancestors
+                right->ancestor = this;
         }
         else {
+                // relink ancestors
+                left->ancestor  = ancestor;
+                // relink node
                 tmp             = left;
                 left            = ancestor->left;
                 ancestor->left  = tmp;
+                // relink ancestors
+                left->ancestor  = this;
         }
 }
 
