@@ -11,4 +11,5 @@ otherinclude_HEADERS = \
 	linalg.h \
 	logarithmetic.h \
 	polynomial.hh \
+	progress.hh \
 	strtools.hh
