@@ -39,11 +39,9 @@ __BEGIN_DECLS
 // library interface
 ////////////////////////////////////////////////////////////////////////////////
 
-extern FILE *yyin;
-
 pt_root_t* pt_parse_file(const char* file_name)
 {
-        yyin = fopen(file_name, "r");
+        FILE* yyin = fopen(file_name, "r");
         if (yyin == NULL) {
                 std_err(PERR, "Could not open phylogenetic tree");
         }
