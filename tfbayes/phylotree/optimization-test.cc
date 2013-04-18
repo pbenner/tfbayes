@@ -107,7 +107,7 @@ typedef struct _options_t {
                 : alpha(0.2),
                   burnin(1000),
                   lambda(0.1),
-                  r(2.0),
+                  r(1.0),
                   max_steps(1000),
                   min_change(0.0005),
                   epsilon(0.001),

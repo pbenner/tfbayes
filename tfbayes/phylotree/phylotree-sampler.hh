@@ -245,10 +245,24 @@ public:
                 double rho;
                 double x;
                 double log_likelihood_new;
+                int which = -1;
 
                 // generate a proposal
                 double d_old = node->d;
-                double d_new = std::max(0.0, jumping_distributions[node->id]->sample(rng, d_old));
+                double d_new = jumping_distributions[node->id]->sample(rng, d_old);
+                if (!node->leaf() && (d_new < 0.0 ||  gsl_ran_bernoulli(rng, 0.5))) {
+                        print_debug("\n\n\n!!!!proposing new topology!!!!\n\n\n\n");
+                        // propose new topology
+                        which = gsl_ran_bernoulli(rng, 0.5);
+                        switch (which) {
+                        case 1: node->move_a(); break;
+                        case 2: node->move_b(); break;
+                        default: break;
+                        }
+                }
+                if (d_new < 0.0) {
+                        d_new = -d_new;
+                }
                 node->d = d_new;
 
                 // compute new log likelihood
@@ -272,6 +286,12 @@ public:
                 else {
                         // sample rejected
                         node->d = d_old;
+                        // if topology changed then switch it back
+                        switch (which) {
+                        case 1: node->move_a(); break;
+                        case 2: node->move_b(); break;
+                        default: break;
+                        }
                         print_debug("rejected: %f\n", d_new);
                         update_acceptance(node->id, false);
                         return log_likelihood_ref;
