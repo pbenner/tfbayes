@@ -31,7 +31,12 @@ template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_polynomial_class {
 public:
         static polynomial_t<CODE_TYPE, ALPHABET_SIZE> likelihood(const pt_root_t* root, const std::vector<CODE_TYPE>& observations) {
-                return poly_sum(likelihood_rec(root, observations));
+                if (root->has_outgroup()) {
+                        return poly_sum(likelihood_rec(root, observations), root->outgroup, observations);
+                }
+                else {
+                        return poly_sum(likelihood_rec(root, observations));
+                }
         }
 
 private:
@@ -49,15 +54,23 @@ private:
                 polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum;
 
                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> term(1.0);
-                        term.exponent()[i] = 1;
-                        poly_sum += term*carry[i];
+                        poly_sum += nucleotide_probability(i)*carry[i];
                 }
                 poly_sum += carry[ALPHABET_SIZE];
 
                 return poly_sum;
         }
+        static polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum(const carry_t& carry, const pt_leaf_t* outgroup,
+                                                               const std::vector<CODE_TYPE>& observations) {
+                polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum;
 
+                for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                        poly_sum += mutation_model(outgroup, observations[outgroup->id], i)*carry[i];
+                }
+                poly_sum += carry[ALPHABET_SIZE];
+
+                return poly_sum;
+        }
         static carry_t likelihood_leaf(const pt_node_t* node, const std::vector<CODE_TYPE>& observations) {
                 carry_t carry;
                 const pt_leaf_t* leaf = static_cast<const pt_leaf_t*>(node);
@@ -96,7 +109,6 @@ private:
                 }
                 return carry;
         }
-
         static carry_t likelihood_rec(const pt_node_t* node, const std::vector<CODE_TYPE>& observations) {
                 if (node->leaf()) {
                         return likelihood_leaf(node, observations);
@@ -107,6 +119,20 @@ private:
 
                         return likelihood_node(node, carry_left, carry_right, observations);
                 }
+        }
+        static polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> nucleotide_probability(CODE_TYPE x) {
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> px(1.0);
+                px.exponent()[x] = 1;
+                return px;
+        }
+        static polynomial_t<CODE_TYPE, ALPHABET_SIZE> mutation_model(const pt_node_t* node, CODE_TYPE x, CODE_TYPE y) {
+                polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly;
+                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> py = nucleotide_probability(y);
+                poly += node->mutation_probability()*py;
+                if (x == y) {
+                        poly += (1.0-node->mutation_probability());
+                }
+                return poly;
         }
 };
 

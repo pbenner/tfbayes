@@ -36,12 +36,12 @@ polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> nucleotide_probability(CODE_TYPE x) 
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> mutation_model(const pt_leaf_t* leaf, CODE_TYPE x, CODE_TYPE y) {
+polynomial_t<CODE_TYPE, ALPHABET_SIZE> mutation_model(const pt_node_t* node, CODE_TYPE x, CODE_TYPE y) {
         polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly;
-        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> px = nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(x);
-        poly += leaf->mutation_probability()*px;
+        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> py = nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(y);
+        poly += node->mutation_probability()*py;
         if (x == y) {
-                poly += (1.0-leaf->mutation_probability());
+                poly += (1.0-node->mutation_probability());
         }
         return poly;
 }

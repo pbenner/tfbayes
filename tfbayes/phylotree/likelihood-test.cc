@@ -177,8 +177,26 @@ void test_tree7() {
         polynomial_t<code_t, alphabet_size> result2 = pt_polynomial<code_t, alphabet_size>(&m1, observations2);
 
         cout << result1 << endl
-             << result2 << endl;
+             << result2 << endl
+             << endl;
 } 
+
+void test_tree8() {
+        cout << "Test 8:" << endl;
+        pt_leaf_t n2(1.0, "n2");
+        pt_leaf_t n3(2.0, "n3");
+        pt_leaf_t outgroup(3.0, "outgroup");
+        pt_root_t n1(&n2, &n3, &outgroup);
+        vector<code_t> observations(n1.n_leafs, 0);
+        observations[n1("n2")->id] = 1;
+        observations[n1("n3")->id] = 2;
+        observations[n1("outgroup")->id] = 1;
+
+        polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n1, observations);
+        cout << result << endl
+             << "0.0158369 Pg^1 + 0.930117 Pc^1 Pg^1 (correct polynomial)"
+             << endl << endl;
+}
 
 int main(void) {
         test_tree1();
@@ -188,6 +206,7 @@ int main(void) {
         test_tree5();
         test_tree6();
         test_tree7();
+        test_tree8();
 
         return 0.0;
 }
