@@ -4,10 +4,18 @@
 /* tell flex that the scanner is combined with a bison parser */
 %option bison-bridge
 %option bison-locations
+%option yylineno
 
 %{
 #include <stdio.h>
 #include <tfbayes/phylotree/phylotree-parser.h>
+
+#define YY_USER_ACTION \
+	yylloc->first_line   = yylloc->last_line = yylineno; \
+	yylloc->first_column = yycolumn; \
+	yylloc->last_column  = yycolumn + yyleng - 1; \
+	yycolumn            += yyleng;
+
 %}
 
 COLON :

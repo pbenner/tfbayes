@@ -237,10 +237,13 @@ pt_root_t::pt_root_t(pt_node_t* left,
         : pt_node_t(d, left, right, name),
           outgroup(outgroup)
 {
-        // count outgroup as leaf if present
+        // count outgroup as leaf if present and set the ancestor of
+        // the outgroup
         if (has_outgroup()) {
                 n_leafs++; n_nodes++;
+                outgroup->ancestor = this;
         }
+        
 
         id_t leaf_id = 0;
         id_t node_id = n_leafs;
@@ -260,6 +263,7 @@ pt_root_t::pt_root_t(const pt_root_t& root)
 {
         if (root.has_outgroup()) {
                 outgroup = root.outgroup->clone();
+                outgroup->ancestor = this;
         }
         // recreate all mappings since we clone all nodes
         create_mappings();
@@ -441,14 +445,14 @@ print_newick(ostream& o, const pt_node_t* node, size_t nesting)
                         o << ","
                           << root->outgroup->name
                           << ":"
-                          << root->outgroup->d;
+                          << fixed << root->outgroup->d;
                 }
                 o << ");";
         }
         else if (node->leaf()) {
                 o << node->name
                   << ":"
-                  << node->d;
+                  << fixed << node->d;
         }
         else {
                 o << "(";
@@ -456,7 +460,7 @@ print_newick(ostream& o, const pt_node_t* node, size_t nesting)
                 o << ",";
                 print_newick(o, node->right, nesting+1);
                 o << "):"
-                  << node->d;
+                  << fixed << node->d;
         }
         return o;
 }

@@ -37,6 +37,7 @@
 #include <tfbayes/utility/distribution.hh>
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/polynomial.hh>
+#include <tfbayes/utility/progress.hh>
 
 class jumping_distribution_t : public clonable
 {
@@ -211,15 +212,8 @@ public:
                 }
                 return result;
         }
-        void update_samples(bool print) {
+        void update_samples() {
                 samples.push_back(tree->clone());
-                if (print) {
-                        flockfile(stdout);
-                        std::cout << newick_format(tree)
-                                  << std::endl;
-                        fflush(stdout);
-                        funlockfile(stdout);
-                }
         }
         void update_steps() {
                 for (pt_node_t::id_t id = 1; id < tree->n_nodes; id++) {
@@ -251,6 +245,7 @@ public:
                 double d_old = node->d;
                 double d_new = jumping_distributions[node->id]->sample(rng, d_old);
                 if (!node->leaf() && (d_new < 0.0 ||  gsl_ran_bernoulli(rng, 0.5))) {
+                        print_debug("proposing new topology\n");
                         // propose new topology
                         which = gsl_ran_bernoulli(rng, 0.5);
                         switch (which) {
@@ -296,39 +291,43 @@ public:
                         return log_likelihood_ref;
                 }
         }
-        virtual void generate_sample(bool print) {
+        virtual void generate_sample() {
                 double log_likelihood_ref = log_likelihood();
-                flockfile(stderr);
-                std::cerr << "step: "
-                          << step
-                          << std::endl;
-                fflush(stderr);
-                funlockfile(stderr);
                 // loop over nodes
                 for (pt_node_t::nodes_t::iterator it = tree->nodes.begin();
                      it != tree->nodes.end(); it++) {
                         // skip the root
-                        if ((*it)->root()) continue;
+                        if ((*it)->root()) {
+                                continue;
+                        }
                         // otherwise sample
                         log_likelihood_ref = sample_branch(*it, log_likelihood_ref);
-                        std::cout << tree << std::endl << std::endl;
                 }
-                update_samples(print);
+                update_samples();
                 step++;
         }
-        void burnin(size_t n, bool print = true) {
+        void print_progress(size_t i, size_t n) {
+                flockfile(stderr);
+                fflush(stderr);
+                std::cerr << progress_t((i+1.0)/(double)n);
+                funlockfile(stderr);
+        }
+        void burnin(size_t n, bool progress = true) {
                 // burn in
                 for (size_t i = 0; i < n; i++) {
-                        generate_sample(print);
+                        if (progress) print_progress(i, n);
+                        generate_sample();
                         update_steps();
                 }
                 step = 0;
         }
-        void sample(size_t n, bool print = true) {
+        void sample(size_t n, bool progress = true) {
                 // sample n times
                 for (size_t i = 0; i < n; i++) {
-                        generate_sample(print);
+                        if (progress) print_progress(i, n);
+                        generate_sample();
                 }
+                if (progress) std::cerr << std::endl;
         }
 
         std::vector<double> acceptance;
@@ -403,8 +402,8 @@ public:
                 const size_t  samples = data->samples;
                 const size_t burnin   = data->burnin;
 
-                sampler->burnin(burnin,  false);
-                sampler->sample(samples, false);
+                sampler->burnin(burnin,  true);
+                sampler->sample(samples, true);
 
                 return NULL;
         }

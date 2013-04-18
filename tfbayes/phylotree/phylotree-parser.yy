@@ -28,7 +28,7 @@ int yylex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param, yyscan_t scanner);
 
 int yyerror(YYLTYPE* locp, context_t* context, const char* err) {
         fprintf(stderr, "parsing error at line %d colum %d near `%s': %s\n",
-		locp->first_line+1, locp->first_column,
+		locp->first_line, locp->first_column,
 		yyget_text(context->scanner), err);
         exit(EXIT_FAILURE);
 }

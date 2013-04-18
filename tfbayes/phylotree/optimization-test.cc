@@ -191,9 +191,6 @@ void run_optimization(const string& method, const char* file_tree, const char* f
                 alpha[i] = options.alpha;
         }
 
-        cout << pt_root
-             << endl;
-
         /* alignment */
         alignment_t<code_t> alignment(file_alignment, pt_root);
 
