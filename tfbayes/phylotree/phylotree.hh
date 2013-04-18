@@ -49,7 +49,6 @@ public:
                   pt_node_t* left  = NULL,
                   pt_node_t* right = NULL,
                   const std::string& name = "",
-                  bool is_root = false,
                   id_t id = -1);
         pt_node_t(const pt_node_t& node);
 
@@ -63,16 +62,20 @@ public:
         /* scale distances in the tree by a constant factor */
         void scale(double c);
 
+        /* moves */
+        void move_a();
+        void move_b();
+
         /* distance to ancestor */
         double d;
         /* left child */
         pt_node_t* left;
         /* right child */
         pt_node_t* right;
+        /* link to ancestor */
+        pt_node_t* ancestor;
         /* name of the node */
         const std::string name;
-        /* is this the root node? */
-        bool is_root;
         /* number of leafs in this tree */
         ssize_t n_leafs;
         ssize_t n_nodes;

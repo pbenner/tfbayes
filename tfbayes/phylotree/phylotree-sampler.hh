@@ -194,17 +194,20 @@ public:
                 return new pt_metropolis_hastings_t(*this);
         }
 
+        double log_likelihood(const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& polynomial) {
+                // loop over monomials
+                double result = -HUGE_VAL;
+                for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = polynomial.begin();
+                     ut != polynomial.end(); ut++) {
+                        result = logadd(result, log(ut->coefficient()) + mbeta_log(ut->exponent(), alpha) - mbeta_log(alpha));
+                }
+                return result;
+        }
         double log_likelihood() {
                 double result = 0;
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
                         const polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial = pt_polynomial<CODE_TYPE, ALPHABET_SIZE>(tree, *it);
-                        // loop over monomials
-                        double tmp = -HUGE_VAL;
-                        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = polynomial.begin();
-                             ut != polynomial.end(); ut++) {
-                                tmp = logadd(tmp, log(ut->coefficient()) + mbeta_log(ut->exponent(), alpha) - mbeta_log(alpha));
-                        }
-                        result += tmp;
+                        result += log_likelihood(polynomial);
                 }
                 return result;
         }

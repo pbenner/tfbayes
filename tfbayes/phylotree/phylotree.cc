@@ -28,10 +28,9 @@ pt_node_t::pt_node_t(double d,
                      pt_node_t* left,
                      pt_node_t* right,
                      const string& name,
-                     bool is_root,
                      id_t id)
-        : d(d), left(left), right(right), name(name),
-          is_root(is_root), id(id)
+        : d(d), left(left), right(right), ancestor(NULL),
+          name(name), id(id)
 {
         assert ((left == NULL && right == NULL) ||
                 (left != NULL && right != NULL));
@@ -41,15 +40,20 @@ pt_node_t::pt_node_t(double d,
                 n_nodes = 1;
         }
         else {
+                // update leaf counts and node counts
                 n_leafs = left->n_leafs + right->n_leafs;
                 n_nodes = left->n_nodes + right->n_nodes + 1;
+                // record this node as the ancestor
+                left ->ancestor = this;
+                right->ancestor = this;
         }
 }
 
 pt_node_t::pt_node_t(const pt_node_t& node)
-        : d(node.d), left(NULL), right(NULL),
+        : d(node.d),
+          left(NULL), right(NULL),
+          ancestor(node.ancestor),
           name(node.name),
-          is_root(node.is_root),
           n_leafs(node.n_leafs),
           n_nodes(node.n_nodes),
           id(node.id)
@@ -86,7 +90,7 @@ pt_node_t::leaf() const
 bool
 pt_node_t::root() const
 {
-        return is_root;
+        return ancestor == NULL;
 }
 
 double
@@ -124,6 +128,46 @@ pt_node_t::set_id(pt_node_t::id_t& leaf_id, pt_node_t::id_t& node_id)
         id = node_id++;
         left ->set_id(leaf_id, node_id);
         right->set_id(leaf_id, node_id);
+}
+
+void
+pt_node_t::move_a()
+{
+        pt_node_t* tmp;
+
+        if (root() || leaf()) {
+                return;
+        }
+        if (ancestor->left == this) {
+                tmp             = left;
+                left            = ancestor->right;
+                ancestor->right = tmp;
+        }
+        else {
+                tmp             = right;
+                right           = ancestor->left;
+                ancestor->left  = tmp;
+        }
+}
+
+void
+pt_node_t::move_b()
+{
+        pt_node_t* tmp;
+
+        if (root() || leaf()) {
+                return;
+        }
+        if (ancestor->left == this) {
+                tmp             = right;
+                right           = ancestor->right;
+                ancestor->right = tmp;
+        }
+        else {
+                tmp             = left;
+                left            = ancestor->left;
+                ancestor->left  = tmp;
+        }
 }
 
 // pt_leaf_t
@@ -169,7 +213,7 @@ pt_root_t::pt_root_t(pt_node_t* left,
                      pt_leaf_t* outgroup,
                      const std::string name,
                      double d)
-        : pt_node_t(d, left, right, name, true),
+        : pt_node_t(d, left, right, name),
           outgroup(outgroup)
 {
         // count outgroup as leaf if present
