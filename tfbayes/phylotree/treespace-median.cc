@@ -37,11 +37,11 @@ main(void)
                 pt_root->destroy();
         }
 
-        cout << "Computing Frechet mean" << endl
+        cout << "Computing median" << endl
              << "------------------------------------------------------------"
              << endl;
 
-        cout << mean_tree(ntree_list)
+        cout << median_tree(ntree_list)
              << endl;
 
         return 0;

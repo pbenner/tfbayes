@@ -278,7 +278,26 @@ protected:
         static const double epsilon = 0.000001;
 };
 
-ntree_t frechet_mean(const std::list<ntree_t>& ntree_list, size_t n = 1000);
+class lambda_t {
+public:
+        virtual double operator()(size_t k) const = 0;
+};
+
+class default_lambda_t : public lambda_t {
+public:
+        virtual double operator()(size_t k) const {
+                return 1.0/(2.0*(double)k);
+        }
+};
+
+ntree_t mean_tree(const std::list<ntree_t>& ntree_list, size_t n = 100,
+                  const lambda_t& lambda = default_lambda_t());
+ntree_t mean_tree(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights,
+                  size_t n = 100, const lambda_t& lambda = default_lambda_t());
+ntree_t median_tree(const std::list<ntree_t>& ntree_list, size_t n = 100,
+                    const lambda_t& lambda = default_lambda_t());
+ntree_t median_tree(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights,
+                    size_t n = 100, const lambda_t& lambda = default_lambda_t());
 
 std::ostream& operator<< (std::ostream& o, const nsplit_t& nsplit);
 std::ostream& operator<< (std::ostream& o, const ntree_t& ntree);
