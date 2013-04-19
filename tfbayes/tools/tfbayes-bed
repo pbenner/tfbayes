@@ -92,7 +92,7 @@ def process_entry(chromosome, seq_start, seq_end, identifier):
 
 def parse_bed(bed_file):
     fp = open(bed_file, 'r')
-    pattern = re.compile('^(chr[XY0-9]+)[ \t]([0-9]+)[ \t]([0-9]+)')
+    pattern = re.compile('^(chr[MXY0-9]+)[ \t]([0-9]+)[ \t]([0-9]+)')
     n = 0
 
     # parse bed file
