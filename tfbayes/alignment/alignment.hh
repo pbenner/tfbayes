@@ -30,6 +30,7 @@
 
 #include <tfbayes/fasta/fasta.hh>
 #include <tfbayes/phylotree/phylotree.hh>
+#include <tfbayes/uipac/code.hh>
 #include <tfbayes/uipac/nucleotide-sequence.hh>
 #include <tfbayes/utility/strtools.hh>
 
@@ -59,11 +60,20 @@ public:
                 FastaParser parser(filename);
                 std::string sequence;
 
+                // we have as many sequences in this alignment as
+                // there are leafs in the tree
+                _n_species = tree->n_leafs;
+                // fill taxon map seperately since some species might
+                // not be present in the alignment
+                for (pt_node_t::leafs_t::const_iterator it = tree->leafs.begin();
+                     it != tree->leafs.end(); it++) {
+                        _taxon_map[(*it)->name] = (*it)->id;
+                }
+                // parse fasta file
                 while ((sequence = parser.read_sequence()) != "") {
                         std::string taxon  = token(parser.description()[0], '.')[0];
                         pt_node_t::id_t id = tree->get_leaf_id(taxon);
                         if (id != -1) {
-                                _taxon_map[taxon] = id;
                                 operator[](id)    = nucleotide_sequence_t<CODE_TYPE>(sequence);
                         }
                         else {
@@ -73,13 +83,28 @@ public:
                                           << std::endl;
                         }
                 }
-                if (alignment_ancestor_t::size() > 0) {
-                        _length = alignment_ancestor_t::begin()->size();
+                // find a sequence that has length greater than zero
+                // to set the length of this alignment
+                _length = 0;
+                for (typename alignment_ancestor_t::const_iterator it = alignment_ancestor_t::begin();
+                     it != alignment_ancestor_t::end(); it++) {
+                        if (it->size() > 0) {
+                                _length = it->size();
+                        }
                 }
-                else {
-                        _length = 0;
+                // check that every sequence has either length zero or
+                // length equal to the length of this alignment
+                for (taxon_map_t::const_iterator it = _taxon_map.begin();
+                     it != _taxon_map.end(); it++) {
+                        if (operator[](it->second).size() == 0) {
+                                std::cerr << "Warning: nucleotide sequence for taxon `"
+                                          << it->first
+                                          << "' has length zero."
+                                          << std::endl;
+                        }
+                        assert(operator[](it->second).size() == 0 ||
+                               operator[](it->second).size() == _length);
                 }
-                _n_species = _taxon_map.size();
         }
         alignment_t(const alignment_t& alignment)
                 : alignment_ancestor_t() {
@@ -171,7 +196,12 @@ public:
                 void fill_observations() {
                         if (position() < _length) {
                                 for (size_t i = 0; i < _n_species; i++) {
-                                        _observations[i] = _alignment[i][position()];
+                                        if (_alignment[i].size() > 0) {
+                                                _observations[i] = _alignment[i][position()];
+                                        }
+                                        else {
+                                                _observations[i] = code_nucleotide<CODE_TYPE>('-');
+                                        }
                                 }
                         }
                 }

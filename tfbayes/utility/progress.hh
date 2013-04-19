@@ -40,7 +40,8 @@ public:
                                 ss << " ";
                         }
                 }
-                ss << "| " << std::fixed << p*100 << "%";
+                ss << "| " << std::fixed << std::setprecision(2)
+                   << p*100 << "%";
                 // copy to string
                 std::string::operator=(ss.str());
         }

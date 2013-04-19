@@ -40,6 +40,20 @@ using namespace std;
 
 ostream& operator<< (ostream& o, const pt_pmcmc_hastings_t<code_t, alphabet_size>& mh)
 {
+        // print log posterior
+        for (std::list<vector<double> >::const_iterator it = mh.log_posterior_history.begin();
+             it != mh.log_posterior_history.end(); it++) {
+                o << "c(";
+                for (vector<double>::const_iterator is = it->begin();
+                     is != it->end(); is++) {
+                        o << (*is);
+                        if (is != it->end()-1) {
+                                o << ", ";
+                        }
+                }
+                o << ")" << endl;
+        }
+        // print trees
         for (std::list<pt_root_t*>::const_iterator it = mh.samples.begin();
              it != mh.samples.end(); it++) {
                 o << newick_format(*it) << endl;
@@ -193,6 +207,7 @@ void run_optimization(const string& method, const char* file_tree, const char* f
 
         /* alignment */
         alignment_t<code_t> alignment(file_alignment, pt_root);
+        assert(alignment.length() > 0);
 
         if (method == "gradient-ascent") {
                 pt_gradient_ascent_t<code_t, alphabet_size> pt_gradient_ascent(pt_root, alignment, alpha, options.r, options.lambda, options.epsilon);
