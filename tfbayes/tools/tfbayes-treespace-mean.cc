@@ -47,12 +47,12 @@ void init() {
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct _options_t {
-        bool cyclic;
+        bool random;
         size_t drop;
         size_t k;
         size_t iterations;
         _options_t()
-                : cyclic(false),
+                : random(false),
                   drop(0),
                   k(1),
                   iterations(100)
@@ -72,7 +72,7 @@ void print_usage(char *pname, FILE *fp)
                       "Commands: mean, median\n"
                       "\n"
                       "Options:\n"
-                      "             -c              - use cyclic version\n"
+                      "             -r              - use random instead of cyclic version\n"
                       "             -n INTEGER      - number of iterations\n"
                       "             -d INTEGER      - drop first n trees\n"
                       "             -k INTEGER      - compute mean from every kth tree\n"
@@ -122,6 +122,15 @@ list<ntree_t> parse_tree_file()
         return ntree_list;
 }
 
+list<ntree_t> randomize_ntree_list(const list<ntree_t>& ntree_list)
+{
+        vector<ntree_t> tmp(ntree_list.begin(), ntree_list.end());
+
+        random_shuffle(tmp.begin(), tmp.end());
+
+        return list<ntree_t>(tmp.begin(), tmp.end());
+}
+
 void mean(const string& command)
 {
         /* init random number generator */
@@ -129,19 +138,19 @@ void mean(const string& command)
 
         ntree_t result;
         /* phylogenetic tree */
-        list<ntree_t> ntree_list = parse_tree_file();
+        list<ntree_t> ntree_list = randomize_ntree_list(parse_tree_file());
         /* return if there is no tree in the list */
         if (ntree_list.size() == 0) return;
 
         if (command == "mean") {
-                result = options.cyclic ?
-                        mean_tree_cyc (ntree_list, options.iterations) :
-                        mean_tree_rand(ntree_list, options.iterations);
+                result = options.random ?
+                        mean_tree_rand(ntree_list, options.iterations) :
+                        mean_tree_cyc (ntree_list, options.iterations);
         }
         else if (command == "median") {
-                result = options.cyclic ?
-                        median_tree_cyc (ntree_list, options.iterations) :
-                        median_tree_rand(ntree_list, options.iterations);
+                result = options.random ?
+                        median_tree_rand(ntree_list, options.iterations) :
+                        median_tree_cyc (ntree_list, options.iterations);
         }
         else {
                 wrong_usage("Unknown command.");
@@ -161,7 +170,7 @@ int main(int argc, char *argv[])
                         { "version",         0, 0, 'v' }
                 };
 
-                c = getopt_long(argc, argv, "cd:k:n:",
+                c = getopt_long(argc, argv, "rd:k:n:",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -169,8 +178,8 @@ int main(int argc, char *argv[])
                 }
 
                 switch(c) {
-                case 'c':
-                        options.cyclic = true;
+                case 'r':
+                        options.random = true;
                         break;
                 case 'd':
                         if (atoi(optarg) < 0) {
