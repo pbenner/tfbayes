@@ -72,6 +72,14 @@ size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent)
         return seed;
 }
 
+void init() {
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        time_t seed = tv.tv_sec*tv.tv_usec;
+
+        srand(seed);
+}
+
 // Options
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -164,6 +172,8 @@ pt_root_t* parse_tree_file(const char* file_tree)
 
 void run_optimization(const string& method, const char* file_tree, const char* file_alignment)
 {
+        init();
+
         /* phylogenetic tree */
         pt_root_t* pt_root = parse_tree_file(file_tree);
 

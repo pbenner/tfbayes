@@ -10,6 +10,7 @@ otherinclude_HEADERS = \
 	distribution.hh \
 	linalg.h \
 	logarithmetic.h \
+	permutation.hh \
 	polynomial.hh \
 	progress.hh \
 	strtools.hh

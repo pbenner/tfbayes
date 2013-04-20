@@ -1005,24 +1005,10 @@ const common_nedge_t geodesic_t::_null_common_nedge;
 // Frechet mean
 ////////////////////////////////////////////////////////////////////////////////
 
-ntree_t
-mean_tree(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda)
-{
-        // start with the laste element
-        ntree_t sk = ntree_list.back();
-
-        for (size_t i = 1, k = 0; k < n; k++) {
-                for (list<ntree_t>::const_iterator it = ntree_list.begin();
-                     it != ntree_list.end(); it++, i++) {
-                        geodesic_t geodesic(sk, *it);
-                        sk = geodesic(2.0*lambda(i+1)/(1.0+2.0*lambda(i+1)));
-                }
-        }
-        return sk;
-}
+#include <tfbayes/utility/permutation.hh>
 
 ntree_t
-mean_tree(const list<ntree_t>& ntree_list, const vector<double>& weights,
+mean_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
           size_t n, const lambda_t& lambda)
 {
         // assure that we have as many weights as we have trees
@@ -1042,23 +1028,15 @@ mean_tree(const list<ntree_t>& ntree_list, const vector<double>& weights,
 }
 
 ntree_t
-median_tree(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda)
+mean_tree_cyc(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda)
 {
-        // start with the laste element
-        ntree_t sk = ntree_list.back();
+        const vector<double> weights(ntree_list.size(), 1.0);
 
-        for (size_t i = 1, k = 0; k < n; k++) {
-                for (list<ntree_t>::const_iterator it = ntree_list.begin();
-                     it != ntree_list.end(); it++, i++) {
-                        geodesic_t geodesic(sk, *it);
-                        sk = geodesic(min(1.0, lambda(i+1)/geodesic.length()));
-                }
-        }
-        return sk;
+        return mean_tree_cyc(ntree_list, weights, n, lambda);
 }
 
 ntree_t
-median_tree(const list<ntree_t>& ntree_list, const vector<double>& weights,
+median_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
             size_t n, const lambda_t& lambda)
 {
         // assure that we have as many weights as we have trees
@@ -1075,6 +1053,84 @@ median_tree(const list<ntree_t>& ntree_list, const vector<double>& weights,
                 }
         }
         return sk;
+}
+
+ntree_t
+median_tree_cyc(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda)
+{
+        const vector<double> weights(ntree_list.size(), 1.0);
+
+        return median_tree_cyc(ntree_list, weights, n, lambda);
+}
+
+ntree_t
+mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
+          size_t n, const lambda_t& lambda)
+{
+        vector<ntree_t> ntree_list(_ntree_list.begin(), _ntree_list.end());
+        vector<double > weights(_weights);
+        // assure that we have as many weights as we have trees
+        assert(ntree_list.size() == weights.size());
+        // start with the laste element
+        ntree_t sk = ntree_list.back();
+
+        for (size_t i = 1, k = 0; k < n; k++) {
+                // shuffle elements in each iteration
+                random_permutation_t permutation(ntree_list.size());
+                random_shuffle(ntree_list.begin(), ntree_list.end(), permutation);
+                random_shuffle(   weights.begin(),    weights.end(), permutation);
+
+                vector<ntree_t>::const_iterator it = ntree_list.begin();
+                vector<double >::const_iterator is = weights.begin();
+                for (; it != ntree_list.end() && is != weights.end(); it++, is++, i++) {
+                        geodesic_t geodesic(sk, *it);
+                        sk = geodesic(2.0*lambda(i+1)*(*is)/(1.0+2.0*lambda(i+1)*(*is)));
+                }
+        }
+        return sk;
+}
+
+ntree_t
+mean_tree_rand(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda)
+{
+        const vector<double> weights(ntree_list.size(), 1.0);
+
+        return mean_tree_rand(ntree_list, weights, n, lambda);
+}
+
+ntree_t
+median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
+            size_t n, const lambda_t& lambda)
+{
+        vector<ntree_t> ntree_list(_ntree_list.begin(), _ntree_list.end());
+        vector<double > weights(_weights);
+        // assure that we have as many weights as we have trees
+        assert(ntree_list.size() == weights.size());
+        // start with the laste element
+        ntree_t sk = ntree_list.back();
+
+        for (size_t i = 1, k = 0; k < n; k++) {
+                // shuffle elements in each iteration
+                random_permutation_t permutation(ntree_list.size());
+                random_shuffle(ntree_list.begin(), ntree_list.end(), permutation);
+                random_shuffle(   weights.begin(),    weights.end(), permutation);
+
+                vector<ntree_t>::const_iterator it = ntree_list.begin();
+                vector<double >::const_iterator is = weights.begin();
+                for (; it != ntree_list.end(); it++, i++) {
+                        geodesic_t geodesic(sk, *it);
+                        sk = geodesic(min(1.0, lambda(i+1)*(*is)/geodesic.length()));
+                }
+        }
+        return sk;
+}
+
+ntree_t
+median_tree_rand(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda)
+{
+        const vector<double> weights(ntree_list.size(), 1.0);
+
+        return median_tree_rand(ntree_list, weights, n, lambda);
 }
 
 // ostream

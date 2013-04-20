@@ -9,7 +9,7 @@ BUILT_SOURCES = phylotree-parser.h
 AM_YFLAGS = -d
 AM_LFLAGS = -o$(LEX_OUTPUT_ROOT).c
 
-bin_PROGRAMS = polynomial-test phylotree-test phylotree-expand-test phylotree-parser-test phylotree-approximation-test likelihood-test likelihood-prime-test marginal-likelihood-test treespace-test treespace-mean treespace-median
+bin_PROGRAMS = polynomial-test phylotree-test phylotree-expand-test phylotree-parser-test phylotree-approximation-test likelihood-test likelihood-prime-test marginal-likelihood-test treespace-test
 
 polynomial_test_SOURCES = polynomial-test.cc
 polynomial_test_LDADD   = -lm
@@ -49,14 +49,6 @@ marginal_likelihood_test_LDADD  += libtfbayes-phylotree.la
 treespace_test_SOURCES = treespace-test.cc
 treespace_test_LDADD   = -lm
 treespace_test_LDADD  += libtfbayes-phylotree.la
-
-treespace_mean_SOURCES = treespace-mean.cc
-treespace_mean_LDADD   = -lm
-treespace_mean_LDADD  += libtfbayes-phylotree.la
-
-treespace_median_SOURCES = treespace-median.cc
-treespace_median_LDADD   = -lm
-treespace_median_LDADD  += libtfbayes-phylotree.la
 
 lib_LTLIBRARIES = libtfbayes-phylotree.la
 

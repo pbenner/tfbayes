@@ -23,6 +23,7 @@
 
 #include <cstdio>
 #include <getopt.h>
+#include <sys/time.h>
 
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/phylotree-parser.hh>
@@ -33,6 +34,14 @@
 typedef float code_t;
 
 using namespace std;
+
+void init() {
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        time_t seed = tv.tv_sec*tv.tv_usec;
+
+        srand(seed);
+}
 
 // Options
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,6 +124,9 @@ list<ntree_t> parse_tree_file()
 
 void mean(const string& command)
 {
+        /* init random number generator */
+        init();
+
         ntree_t result;
         /* phylogenetic tree */
         list<ntree_t> ntree_list = parse_tree_file();
@@ -122,10 +134,14 @@ void mean(const string& command)
         if (ntree_list.size() == 0) return;
 
         if (command == "mean") {
-                result = mean_tree(ntree_list, options.iterations);
+                result = options.cyclic ?
+                        mean_tree_cyc (ntree_list, options.iterations) :
+                        mean_tree_rand(ntree_list, options.iterations);
         }
         else if (command == "median") {
-                result = median_tree(ntree_list, options.iterations);
+                result = options.cyclic ?
+                        median_tree_cyc (ntree_list, options.iterations) :
+                        median_tree_rand(ntree_list, options.iterations);
         }
         else {
                 wrong_usage("Unknown command.");
