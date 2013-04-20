@@ -90,6 +90,7 @@ public:
                      it != alignment_ancestor_t::end(); it++) {
                         if (it->size() > 0) {
                                 _length = it->size();
+                                break;
                         }
                 }
                 // check that every sequence has either length zero or
