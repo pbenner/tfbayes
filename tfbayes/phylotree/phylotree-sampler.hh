@@ -452,12 +452,18 @@ public:
         void update_samples() {
                 // first remove all samples from previous runs
                 delete_samples();
-                // fill the list again
+                // fill the list such that the order of samples is preserved
+                std::vector<std::list<pt_root_t*>::const_iterator> it_vec;
                 for (typename std::vector<pt_sampler_t*>::const_iterator it = population.begin();
                      it != population.end(); it++) {
-                        for (typename std::list<pt_root_t*>::const_iterator is = (*it)->samples.begin();
-                             is != (*it)->samples.end(); is++) {
-                                samples.push_back((*is)->clone());
+                        it_vec.push_back((*it)->samples.begin());
+                }
+                while (it_vec[0] != population[0]->samples.end())
+                {
+                        for (size_t i = 0; i < population.size(); i++) {
+                                samples.push_back((*it_vec[i])->clone());
+                                // advance iteration for sampler i
+                                it_vec[i]++;
                         }
                 }
         }
