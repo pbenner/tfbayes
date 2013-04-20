@@ -28,6 +28,7 @@
 #include <algorithm> /* std::min */
 
 #include <tfbayes/phylotree/phylotree-gradient.hh>
+#include <tfbayes/phylotree/statistics.hh>
 
 /* This is a gradient ascent method to compute the maximum posterior
  * value with an adaptive step-size similar to resilient

@@ -160,14 +160,15 @@ extern FILE *yyin;
 static
 pt_root_t* parse_tree_file(const char* file_tree)
 {
-        yyin = fopen(file_tree, "r");
+        FILE* yyin = fopen(file_tree, "r");
         if (yyin == NULL) {
                 std_err(PERR, "Could not open phylogenetic tree");
         }
-        yyparse();
+        list<pt_root_t*> tree_list = parse_tree_list(yyin);
         fclose(yyin);
+        assert(tree_list.size() == 1);
 
-        return (pt_root_t*)pt_parsetree->convert();
+        return tree_list.front();
 }
 
 static
@@ -177,7 +178,6 @@ void run_hmm(const char* file_tree, const char* file_alignment)
 
         /* phylogenetic tree */
         pt_root_t* pt_root = parse_tree_file(file_tree);
-        pt_root->init(alphabet_size);
 
         /* alignment */
         alignment_t<code_t> alignment(file_alignment, pt_root);
@@ -186,7 +186,7 @@ void run_hmm(const char* file_tree, const char* file_alignment)
         phylotree_hmm_t<code_t, alphabet_size>::vector_t px_0(dimension, 1.0/(double)dimension);
 
         phylotree_hmm_t<code_t, alphabet_size> hmm(px_0, options.transition, options.priors);
-        hmm.run(alignment);
+        hmm.run(pt_root, alignment);
 
         for (size_t i = 0; i < hmm.size(); i++) {
                 cout << setprecision(8)
@@ -195,6 +195,8 @@ void run_hmm(const char* file_tree, const char* file_alignment)
                      << hmm[i][1]
                      << endl;
         }
+        /* free phylogenetic tree */
+        pt_root->destroy();
 }
 
 void init_options(const string& alpha, const string& transition)

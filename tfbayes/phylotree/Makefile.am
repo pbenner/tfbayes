@@ -9,7 +9,7 @@ BUILT_SOURCES = phylotree-parser.h
 AM_YFLAGS = -d
 AM_LFLAGS = -o$(LEX_OUTPUT_ROOT).c
 
-bin_PROGRAMS = polynomial-test phylotree-test phylotree-expand-test phylotree-parser-test phylotree-approximation-test optimization-test likelihood-test likelihood-prime-test marginal-likelihood-test treespace-test treespace-mean treespace-median
+bin_PROGRAMS = polynomial-test phylotree-test phylotree-expand-test phylotree-parser-test phylotree-approximation-test likelihood-test likelihood-prime-test marginal-likelihood-test treespace-test treespace-mean treespace-median
 
 polynomial_test_SOURCES = polynomial-test.cc
 polynomial_test_LDADD   = -lm
@@ -33,12 +33,6 @@ phylotree_parser_test_LDADD  += libtfbayes-phylotree.la
 phylotree_approximation_test_SOURCES = phylotree-approximation-test.cc
 phylotree_approximation_test_LDADD   = -lm
 phylotree_approximation_test_LDADD  += libtfbayes-phylotree.la
-
-optimization_test_SOURCES = optimization-test.cc
-optimization_test_LDADD   = -lm
-optimization_test_LDADD  += -lpthread
-optimization_test_LDADD  += libtfbayes-phylotree.la
-optimization_test_LDADD  += ../fasta/libtfbayes-fasta.la
 
 likelihood_test_SOURCES = likelihood-test.cc
 likelihood_test_LDADD   = -lm
@@ -73,7 +67,7 @@ libtfbayes_phylotree_la_SOURCES = \
 	leafset.hh \
 	phylotree.cc \
 	phylotree.hh \
-	phylotree-approximate.hh \
+	phylotree-approximation.hh \
 	phylotree-expand.hh \
 	phylotree-gradient.hh \
 	phylotree-gradient-ascent.hh \
@@ -100,6 +94,28 @@ libtfbayes_phylotree_la_LIBADD += $(LIB_GLPK)
 libtfbayes_phylotree_la_LIBADD += $(top_builddir)/tfbayes/exception/libtfbayes-exception.la
 libtfbayes_phylotree_la_LIBADD += $(top_builddir)/tfbayes/interface/libtfbayes-interface.la
 libtfbayes_phylotree_la_LDFLAGS = -no-undefined -version-info 0:0:0
+
+otherincludedir = $(includedir)/tfbayes/phylotree
+otherinclude_HEADERS = \
+	interface.hh \
+	leafset.hh \
+	phylotree.hh \
+	phylotree-approximation.hh \
+	phylotree-expand.hh \
+	phylotree-gradient.hh \
+	phylotree-gradient-ascent.hh \
+	phylotree-polynomial.hh \
+	phylotree-sampler.hh \
+	phylotree-parser.h \
+	phylotree-parser.hh \
+	phylotree-parsetree.hh \
+	phylotree-simplify.hh \
+	posterior.hh \
+	incomplete-expression.hh \
+	marginal-likelihood.hh \
+	statistics.hh \
+	utility.hh \
+	treespace.hh
 
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/phylotree

@@ -1,5 +1,17 @@
 ## Process this file with automake to produce Makefile.in
 
+INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)
+
+bin_PROGRAMS = tfbayes-treespace-optimize tfbayes-treespace-mean
+
+tfbayes_treespace_optimize_SOURCES = tfbayes-treespace-optimize.cc
+tfbayes_treespace_optimize_LDADD   = -lpthread
+tfbayes_treespace_optimize_LDADD  += ../phylotree/libtfbayes-phylotree.la
+tfbayes_treespace_optimize_LDADD  += ../fasta/libtfbayes-fasta.la
+
+tfbayes_treespace_mean_SOURCES = tfbayes-treespace-mean.cc
+tfbayes_treespace_mean_LDADD   = ../phylotree/libtfbayes-phylotree.la
+
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/dpm
 

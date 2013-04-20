@@ -46,8 +46,7 @@ public:
         ////////////////////////////////////////////////////////////////////////
         alignment_t(const size_t length, CODE_TYPE init, const pt_root_t* tree)
                 : alignment_ancestor_t(tree->n_leafs, nucleotide_sequence_t<CODE_TYPE>()),
-                  _length(length),
-                  _n_species(tree->n_leafs) {
+                  _n_species(tree->n_leafs), _length(length) {
                 for (pt_node_t::leafs_t::const_iterator it = tree->leafs.begin(); it != tree->leafs.end(); it++) {
                         pt_leaf_t* leaf = *it;
                         _taxon_map[leaf->name]     = leaf->id;

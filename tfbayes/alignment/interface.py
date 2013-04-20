@@ -41,10 +41,10 @@ _lib.alignment_set.restype  = None
 _lib.alignment_set.argtypes = [POINTER(ALIGNMENT), c_char_p, POINTER(VECTOR)]
 
 _lib.alignment_marginal_likelihood.restype  = POINTER(VECTOR)
-_lib.alignment_marginal_likelihood.argtypes = [POINTER(ALIGNMENT), POINTER(VECTOR)]
+_lib.alignment_marginal_likelihood.argtypes = [POINTER(phylotree.PT_ROOT), POINTER(ALIGNMENT), POINTER(VECTOR)]
 
 _lib.alignment_scan.restype  = POINTER(VECTOR)
-_lib.alignment_scan.argtypes = [POINTER(ALIGNMENT), POINTER(MATRIX)]
+_lib.alignment_scan.argtypes = [POINTER(phylotree.PT_ROOT), POINTER(ALIGNMENT), POINTER(MATRIX)]
 
 _lib.alignment_free.restype  = None
 _lib.alignment_free.argtypes = [POINTER(ALIGNMENT)]
@@ -60,6 +60,7 @@ class alignment_t():
      def __init__(self, alignment, tree):
           c_record = _lib._alloc_vector(alignment.get_alignment_length())
           self.c_alignment = _lib.alignment_new(alignment.get_alignment_length(), tree)
+          self.c_tree = tree
           for record in alignment:
                c_taxon = c_char_p(record.id)
                copy_vector_to_c(DNA.code(record), c_record)
@@ -70,7 +71,7 @@ class alignment_t():
      def marginal_likelihood(self, prior):
           c_prior  = _lib._alloc_vector(len(prior))
           copy_vector_to_c(prior, c_prior)
-          c_result = _lib.alignment_marginal_likelihood(self.c_alignment, c_prior)
+          c_result = _lib.alignment_marginal_likelihood(self.c_tree, self.c_alignment, c_prior)
           result   = get_vector(c_result)
           _lib._free_vector(c_result)
           _lib._free_vector(c_prior)
@@ -78,7 +79,7 @@ class alignment_t():
      def scan(self, counts):
           c_counts = _lib._alloc_matrix(len(counts), len(counts[0]))
           copy_matrix_to_c(counts, c_counts)
-          c_result = _lib.alignment_scan(self.c_alignment, c_counts)
+          c_result = _lib.alignment_scan(self.c_tree, self.c_alignment, c_counts)
           result   = get_vector(c_result)
           _lib._free_vector(c_result)
           _lib._free_matrix(c_counts)

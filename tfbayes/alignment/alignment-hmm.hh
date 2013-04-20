@@ -53,14 +53,14 @@ public:
                 dim = px_0.size();
         }
 
-        void run(alignment_t<CODE_TYPE>& alignment) {
+        void run(const pt_root_t* tree, const alignment_t<CODE_TYPE>& alignment) {
                 // initialize data structures
                 likelihood = matrix_t();
                 prediction = matrix_t();
                 forward    = matrix_t();
                 // run forward and backward algorithm
-                run_forward (alignment);
-                run_backward(alignment);
+                run_forward (tree, alignment);
+                run_backward();
                 // compute posterior marginals
                 size_t length = likelihood.size();
                 operator=(matrix_t(length-1, vector_t(dim, 0.0)));
@@ -73,7 +73,7 @@ public:
         }
 
 protected:
-        void run_forward(alignment_t<CODE_TYPE>& alignment) {
+        void run_forward(const pt_root_t* tree, const alignment_t<CODE_TYPE>& alignment) {
 
                 likelihood.push_back(vector_t(dim, 1.0));
                 prediction.push_back(vector_t(dim, 0.0));
@@ -89,11 +89,10 @@ protected:
                         vector_t likelihood_k(dim, 0.0); // p(z_k | x_k)
                         vector_t prediction_k(dim, 0.0); // p(x_k | z_1:k-1)
                         vector_t forward_k(dim, 0.0);
-                        const pt_root_t* tree = &(*it);
 
                         // compute likelihood
                         for (size_t j = 0; j < dim; j++) {
-                                likelihood_k[j] = exp(pt_marginal_likelihood(tree, priors[j]));
+                                likelihood_k[j] = exp(pt_marginal_likelihood(tree, *it, priors[j]));
                         }
 
                         // compute prediction
@@ -118,7 +117,7 @@ protected:
                         forward.push_back(forward_k);
                 }
         }
-        void run_backward(alignment_t<CODE_TYPE>& alignment) {
+        void run_backward() {
                 size_t length = likelihood.size();
                 backward = matrix_t(length, vector_t(dim, 0.0));
                 backward[length-1] = likelihood[length-1];

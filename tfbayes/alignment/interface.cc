@@ -56,7 +56,7 @@ void alignment_set(alignment_t<code_t>* alignment, const char* taxon, vector_t* 
         }
 }
 
-vector_t* alignment_marginal_likelihood(alignment_t<code_t>* alignment, vector_t* prior)
+vector_t* alignment_marginal_likelihood(const pt_root_t* tree, alignment_t<code_t>* alignment, vector_t* prior)
 {
         exponent_t<code_t, alphabet_size> alpha;
         vector_t* result = alloc_vector(alignment->length());
@@ -68,13 +68,12 @@ vector_t* alignment_marginal_likelihood(alignment_t<code_t>* alignment, vector_t
         /* go through the alignment and compute the marginal
          * likelihood for each position */
         for (alignment_t<code_t>::iterator it = alignment->begin(); it != alignment->end(); it++) {
-                const pt_root_t *tree = &(*it);
-                result->vec[it.position()] = pt_marginal_likelihood<code_t, alphabet_size>(tree, alpha);
+                result->vec[it.position()] = pt_marginal_likelihood<code_t, alphabet_size>(tree, *it, alpha);
         }
         return result;
 }
 
-vector_t* alignment_scan(alignment_t<code_t>* alignment, matrix_t* c_counts)
+vector_t* alignment_scan(const pt_root_t* tree, alignment_t<code_t>* alignment, matrix_t* c_counts)
 {
         vector_t* result = alloc_vector(alignment->length());
         vector<exponent_t<code_t, alphabet_size> > counts;
@@ -97,8 +96,7 @@ vector_t* alignment_scan(alignment_t<code_t>* alignment, matrix_t* c_counts)
                         continue;
                 }
                 for (alignment_t<code_t>::iterator is(it); is.position() < it.position() + counts.size(); is++) {
-                        const pt_root_t *tree = &(*is);
-                        result->vec[it.position()] += pt_marginal_likelihood<code_t, alphabet_size>(tree, counts[is.position()-it.position()]);
+                        result->vec[it.position()] += pt_marginal_likelihood<code_t, alphabet_size>(tree, *is, counts[is.position()-it.position()]);
                 }
         }
         return result;

@@ -11,6 +11,11 @@ libtfbayes_uipac_la_SOURCES = \
 	nucleotide-sequence.hh
 libtfbayes_uipac_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
+otherincludedir = $(includedir)/tfbayes/uipac
+otherinclude_HEADERS = \
+	code.hh \
+	nucleotide-sequence.hh
+
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/uipac
 

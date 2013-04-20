@@ -34,6 +34,7 @@
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/exception/exception.h>
 #include <tfbayes/phylotree/phylotree.hh>
+#include <tfbayes/phylotree/phylotree-polynomial.hh>
 #include <tfbayes/utility/distribution.hh>
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/polynomial.hh>
@@ -393,6 +394,7 @@ public:
                 pt_sampler_t* sampler;
                 size_t samples;
                 size_t burnin;
+                bool print_status;
         } pthread_data_t;
 
         // sampling methods
@@ -404,8 +406,8 @@ public:
                 const size_t  samples = data->samples;
                 const size_t burnin   = data->burnin;
 
-                sampler->burnin(burnin,  true);
-                sampler->sample(samples, true);
+                sampler->burnin(burnin,  data->print_status);
+                sampler->sample(samples, data->print_status);
 
                 return NULL;
         }
@@ -416,9 +418,10 @@ public:
                 int rc;
 
                 for (size_t i = 0; i < population.size(); i++) {
-                        data[i].sampler = population[i];
-                        data[i].samples = samples;
-                        data[i].burnin  = burnin;
+                        data[i].sampler      = population[i];
+                        data[i].samples      = samples;
+                        data[i].burnin       = burnin;
+                        data[i].print_status = (i == 0);
                 }
                 // sample
                 for (size_t i = 0; i < population.size(); i++) {

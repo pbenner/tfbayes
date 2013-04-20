@@ -33,7 +33,7 @@
 
 #include <boost/tuple/tuple.hpp>
 
-#include <phylotree.hh>
+#include <tfbayes/phylotree/phylotree.hh>
 
 class nsplit_t {
 public:

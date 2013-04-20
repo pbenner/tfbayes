@@ -8,6 +8,10 @@ libtfbayes_fasta_la_SOURCES = fasta.cc fasta.hh
 libtfbayes_fasta_la_LIBADD  = ../exception/libtfbayes-exception.la
 libtfbayes_fasta_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
+otherincludedir = $(includedir)/tfbayes/fasta
+otherinclude_HEADERS = \
+	fasta.hh
+
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/fasta
 

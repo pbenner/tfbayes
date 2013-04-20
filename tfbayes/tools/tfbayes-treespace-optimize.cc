@@ -1,4 +1,4 @@
-/* Copyright (C) 2012 Philipp Benner
+/* Copyright (C) 2012, 2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,11 +26,9 @@
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/phylotree-parser.hh>
-#include <tfbayes/phylotree/phylotree-polynomial.hh>
 #include <tfbayes/phylotree/phylotree-sampler.hh>
 #include <tfbayes/phylotree/phylotree-gradient.hh>
 #include <tfbayes/phylotree/phylotree-gradient-ascent.hh>
-#include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/exception/exception.h>
 
 #define alphabet_size 5
@@ -57,36 +55,6 @@ ostream& operator<< (ostream& o, const pt_pmcmc_hastings_t<code_t, alphabet_size
         for (std::list<pt_root_t*>::const_iterator it = mh.samples.begin();
              it != mh.samples.end(); it++) {
                 o << newick_format(*it) << endl;
-        }
-
-        return o;
-}
-ostream& operator<< (ostream& o, const exponent_t<code_t, alphabet_size>& exponent)
-{
-        if(exponent[0]) o << " Pa^" << exponent[0];
-        if(exponent[1]) o << " Pc^" << exponent[1];
-        if(exponent[2]) o << " Pg^" << exponent[2];
-        if(exponent[3]) o << " Pt^" << exponent[3];
-
-        return o;
-}
-ostream& operator<< (ostream& o, const polynomial_term_t<code_t, alphabet_size>& term)
-{
-        o << term.coefficient()
-          << term.exponent();
-
-        return o;
-}
-ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size>& polynomial)
-{
-        for (polynomial_t<code_t, alphabet_size>::const_iterator it = polynomial.begin();
-             it != polynomial.end(); it++) {
-                if (it != polynomial.begin()) {
-                        o << " + " << *it;
-                }
-                else {
-                        o << *it;
-                }
         }
 
         return o;
@@ -164,7 +132,7 @@ void wrong_usage(const char *msg)
                 (void)fprintf(stderr, "%s\n", msg);
         }
         (void)fprintf(stderr,
-                      "Try `optimization-test --help' for more information.\n");
+                      "Try `tfbayes-treespace-optimize --help' for more information.\n");
 
         exit(EXIT_FAILURE);
 

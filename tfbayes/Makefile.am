@@ -10,8 +10,12 @@ SUBDIRS += cluster
 SUBDIRS += phylotree
 SUBDIRS += alignment
 SUBDIRS += uipac
-SUBDIRS += tools
 SUBDIRS += utility
+SUBDIRS += tools
+
+otherincludedir = $(includedir)/tfbayes
+otherinclude_HEADERS = \
+	config.h
 
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes
