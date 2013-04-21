@@ -100,9 +100,18 @@ pt_parsetree_t::convert(list<pt_root_t*>& tree_list) const
                         outgroup = new pt_leaf_t(*(double *)children[2]->children[1]->data,
                                                   (char   *)children[2]->children[0]->data);
                 }
-                node = new pt_root_t(children[0]->convert(tree_list),
-                                     children[1]->convert(tree_list),
-                                     outgroup);
+                if (tree_list.size() > 0) {
+                        // copy leaf ids from existing trees to ensure
+                        // consistency!
+                        node = new pt_root_t(children[0]->convert(tree_list),
+                                             children[1]->convert(tree_list),
+                                             outgroup, "", tree_list.front());
+                }
+                else {
+                        node = new pt_root_t(children[0]->convert(tree_list),
+                                             children[1]->convert(tree_list),
+                                             outgroup);
+                }
                 break;
         case TREE_N:
                 if (n_children == 2) {
@@ -119,7 +128,9 @@ pt_parsetree_t::convert(list<pt_root_t*>& tree_list) const
                         assert(children[0]->type == ROOT_N);
                         // we only have the phylogenetic tree
                         root = static_cast<pt_root_t*>(children[0]->convert(tree_list));
-                        tree_list.push_back(root);
+                        // push tree to the front so that the order of
+                        // the trees is the same as in the file
+                        tree_list.push_front(root);
                 }
                 break;
         default:

@@ -499,29 +499,120 @@ void test8()
              << "------------------------------------------------------------"
              << endl;
 
-        list<pt_root_t*> tree_list = parse_tree_list();
-        assert(tree_list.size() == 2);
-        list<pt_root_t*>::iterator it = tree_list.begin();
-        pt_root_t* pt_root1 = *it++;
-        pt_root_t* pt_root2 = *it++;
-
-        ntree_t nt1(pt_root1);
-        ntree_t nt2(pt_root2);
-
-        cout << nt1 << endl;
-        cout << nt2 << endl;
+        // Tree 1
+        //////////////////////////////////////////////////////////////////////
+        set<size_t> s1;
+        s1.insert(1);
+        s1.insert(2);
+        set<size_t> s3;
+        s3.insert(0);
+        s3.insert(4);
+        set<size_t> s4;
+        s4.insert(2);
+        s4.insert(3);
+        set<size_t> s5;
+        s5.insert(0);
+        s5.insert(1);
+        nedge_t e1(4, s1, 1.0, "e1");
+        nedge_t e3_1(4, s3, 0.0, "e3");
+        nedge_t e3_2(4, s3, 1.0, "e3");
+        nedge_t e4(4, s4, 1.0, "e4");
+        nedge_t e5(4, s5, 1.0, "e5");
+        // construct trees
+        nedge_set_t nedge_set1;
+        nedge_set_t nedge_set2;
+        // internal edge lengths
+        nedge_set1.push_back(e1);
+        //nedge_set1.push_back(e3_1);
+        nedge_set2.push_back(e3_2);
+        nedge_set2.push_back(e4);
+        // leaf edge lengths
+        vector<double> leaf_d(5, 1);
+        leaf_d[0] = 1.5;
+        leaf_d[1] = 1.5;
+        leaf_d[2] = 1.5;
+        leaf_d[3] = 1.5;
+        leaf_d[4] = 1.5;
+        // leaf names
+        vector<string> leaf_names;
+        leaf_names.push_back("leaf 0");
+        leaf_names.push_back("leaf 1");
+        leaf_names.push_back("leaf 2");
+        leaf_names.push_back("leaf 3");
+        leaf_names.push_back("leaf 4");
+        ntree_t nt1(nedge_set1, leaf_d, leaf_names);
+        ntree_t nt2(nedge_set2, leaf_d, leaf_names);
 
         geodesic_t geodesic(nt1, nt2);
+        cout << geodesic.npath_list() << endl;
+}
 
-        cout << geodesic.npath_list()
+void test9()
+{
+        cout << "test 9" << endl
+             << "------------------------------------------------------------"
              << endl;
 
-        cout << "geodesic length: "
+        // Tree 1
+        //////////////////////////////////////////////////////////////////////
+        set<size_t> s1;
+        s1.insert(1);
+        s1.insert(2);
+        set<size_t> s2;
+        s2.insert(4);
+        s2.insert(5);
+        set<size_t> s3;
+        s3.insert(0);
+        s3.insert(4);
+        s3.insert(5);
+        set<size_t> s4;
+        s4.insert(0);
+        s4.insert(5);
+        set<size_t> s5;
+        s5.insert(0);
+        s5.insert(3);
+        nedge_t e1(5, s1, 1.0);
+        nedge_t e2(5, s2, 1.0);
+        nedge_t e3(5, s3, 1.0);
+        nedge_t e4(5, s4, 1.0);
+        nedge_t e5(5, s5, 0.0);
+        // construct trees
+        nedge_set_t nedge_set1;
+        nedge_set_t nedge_set2;
+        // internal edge lengths
+        nedge_set1.push_back(e1);
+        nedge_set1.push_back(e2);
+        //nedge_set1.push_back(e5);
+        nedge_set2.push_back(e1);
+        nedge_set2.push_back(e3);
+        nedge_set2.push_back(e4);
+        // leaf edge lengths
+        vector<double> leaf_d(6, 1);
+        leaf_d[0] = 1.5;
+        leaf_d[1] = 1.5;
+        leaf_d[2] = 1.5;
+        leaf_d[3] = 1.5;
+        leaf_d[4] = 1.5;
+        leaf_d[5] = 1.5;
+        // leaf names
+        vector<string> leaf_names;
+        leaf_names.push_back("leaf 0");
+        leaf_names.push_back("leaf 1");
+        leaf_names.push_back("leaf 2");
+        leaf_names.push_back("leaf 3");
+        leaf_names.push_back("leaf 4");
+        leaf_names.push_back("leaf 5");
+        ntree_t nt1(nedge_set1, leaf_d, leaf_names);
+        ntree_t nt2(nedge_set2, leaf_d, leaf_names);
+
+        geodesic_t geodesic(nt1, nt2);
+        cout << geodesic.npath_list() << endl;
+
+        // print length
+        cout << "length: "
              << geodesic.length()
              << endl;
 
-        pt_root1->destroy();
-        pt_root2->destroy();
 }
 
 int
@@ -535,6 +626,7 @@ main(void)
         test6(); cout << endl;
         test7(); cout << endl;
         test8(); cout << endl;
+        test9(); cout << endl;
         glp_free_env();
 
         return 0;

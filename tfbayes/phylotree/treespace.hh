@@ -74,17 +74,19 @@ class nedge_t : public nsplit_t {
 public:
         // constructors
         nedge_t();
-        nedge_t(size_t n, std::set<size_t> tmp, double d);
-        nedge_t(const nsplit_t& nsplit, double d);
+        nedge_t(size_t n, std::set<size_t> tmp, double d, std::string name = "");
+        nedge_t(const nsplit_t& nsplit, double d, std::string name = "");
 
         // methods
         double d() const;
+        const std::string& name() const;
         // operators
         bool operator==(const nedge_t& nedge) const;
 
 protected:
         nsplit_t _nsplit;
         double _d;
+        std::string _name;
 };
 
 class common_nedge_t : public nsplit_t {
@@ -130,6 +132,8 @@ public:
         double leaf_d(size_t i) const;
         const std::vector<std::string>& leaf_names() const;
         const std::string& leaf_name(size_t i) const;
+        bool compatible(const nsplit_t& nsplit) const;
+        void add_edge(const nedge_t& edge);
         // check splits for compatibility
         bool check_splits() const;
         // find common edges of two trees, here an edge is common if
@@ -231,7 +235,17 @@ public:
                 : std::pair<nedge_set_t, nedge_set_t>(s1, s2)
                 { }
         bool operator<(const support_pair_t& s) {
-                return first.length()/second.length() < s.first.length()/s.second.length();
+                const double A1 = first .length();
+                const double B1 = second.length();
+                const double A2 = s.first .length();
+                const double B2 = s.second.length();
+                if (B1 == 0.0) {
+                        return false;
+                }
+                if (B2 == 0.0 /* && B1 != 0.0 */) {
+                        return true;
+                }
+                return A1/B1 < A2/B2;
         }
 };
 
@@ -260,18 +274,21 @@ public:
         const std::vector<double>& t2_leaf_d() const;
         double t1_leaf_d(size_t i) const;
         double t2_leaf_d(size_t i) const;
+        const ntree_t& t1() const;
+        const ntree_t& t2() const;
 
 protected:
-        std::list<npath_t> initial_npath_list(const ntree_t& t1, const ntree_t& t2) const;
+        std::list<npath_t> initial_npath_list() const;
         const common_nedge_t& find_common_edge(const nsplit_t& nsplit) const;
         void gtp(npath_t& npath);
+        void complement_trees();
 
         std::list<common_nedge_t> _common_edges;
         std::list<npath_t> _npath_list;
         size_t _leaf_n;
         std::vector<std::string> _leaf_names;
-        std::vector<double> _t1_leaf_d;
-        std::vector<double> _t2_leaf_d;
+        ntree_t _t1;
+        ntree_t _t2;
         // empty common edge
         static const common_nedge_t _null_common_nedge;
         // epsilon for comparing double values
@@ -311,6 +328,7 @@ ntree_t median_tree_rand(const std::list<ntree_t>& ntree_list, const std::vector
 std::ostream& operator<< (std::ostream& o, const nsplit_t& nsplit);
 std::ostream& operator<< (std::ostream& o, const ntree_t& ntree);
 std::ostream& operator<< (std::ostream& o, const nedge_t& nedge);
+std::ostream& operator<< (std::ostream& o, const common_nedge_t& common_nedge);
 std::ostream& operator<< (std::ostream& o, const nedge_set_t& nedge_set);
 std::ostream& operator<< (std::ostream& o, const npath_t& npath);
 std::ostream& operator<< (std::ostream& o, const std::list<npath_t>& npath_list);

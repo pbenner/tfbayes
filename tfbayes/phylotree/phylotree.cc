@@ -133,6 +133,14 @@ pt_node_t::set_id(pt_node_t::id_t& leaf_id, pt_node_t::id_t& node_id)
 }
 
 void
+pt_node_t::set_id(const pt_root_t* tree, pt_node_t::id_t& node_id)
+{
+        id = node_id++;
+        left ->set_id(tree, node_id);
+        right->set_id(tree, node_id);
+}
+
+void
 pt_node_t::move_a()
 {
         pt_node_t* tmp;
@@ -226,6 +234,14 @@ pt_leaf_t::set_id(pt_node_t::id_t& leaf_id, pt_node_t::id_t& node_id)
         id = leaf_id++;
 }
 
+void
+pt_leaf_t::set_id(const pt_root_t* tree, pt_node_t::id_t& node_id)
+{
+        assert(name != "");
+        id = tree->get_leaf_id(name);
+        assert(id != -1);
+}
+
 // pt_root_t
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -233,8 +249,8 @@ pt_root_t::pt_root_t(pt_node_t* left,
                      pt_node_t* right,
                      pt_leaf_t* outgroup,
                      const std::string name,
-                     double d)
-        : pt_node_t(d, left, right, name),
+                     const pt_root_t* tree)
+        : pt_node_t(-HUGE_VAL, left, right, name),
           outgroup(outgroup)
 {
         // count outgroup as leaf if present and set the ancestor of
@@ -243,11 +259,18 @@ pt_root_t::pt_root_t(pt_node_t* left,
                 n_leafs++; n_nodes++;
                 outgroup->ancestor = this;
         }
-        
-
-        id_t leaf_id = 0;
-        id_t node_id = n_leafs;
-        set_id(leaf_id, node_id);
+        // set leaf/node ids
+        if (tree == NULL) {
+                id_t leaf_id = 0;
+                id_t node_id = n_leafs;
+                set_id(leaf_id, node_id);
+        }
+        // copy leaf ids from second tree
+        else {
+                assert (n_leafs == tree->n_leafs);
+                id_t node_id = n_leafs;
+                set_id(tree, node_id);
+        }
 
         leafs = leafs_t(n_leafs, (pt_leaf_t*)NULL);
         nodes = nodes_t(n_nodes, (pt_node_t*)NULL);
@@ -365,6 +388,19 @@ pt_root_t::set_id(pt_node_t::id_t& leaf_id, pt_node_t::id_t& node_id)
                 outgroup->id = leaf_id++;
         }
         pt_node_t::set_id(leaf_id, node_id);
+}
+
+void
+pt_root_t::set_id(const pt_root_t* tree, id_t& node_id)
+{
+        // check for the outgroup and if it is available make sure
+        // that it gets the first id
+        if (has_outgroup()) {
+                assert(outgroup->name != "");
+                outgroup->id = tree->get_leaf_id(outgroup->name);
+                assert(outgroup->id != -1);
+        }
+        pt_node_t::set_id(tree, node_id);
 }
 
 // ostream

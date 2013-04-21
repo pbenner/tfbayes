@@ -208,18 +208,24 @@ nedge_t::nedge_t()
         : nsplit_t(), _d(0)
 { }
 
-nedge_t::nedge_t(size_t n, set<size_t> tmp, double d)
-        : nsplit_t(n, tmp), _d(d)
+nedge_t::nedge_t(size_t n, set<size_t> tmp, double d, std::string name)
+        : nsplit_t(n, tmp), _d(d), _name(name)
 { }
 
-nedge_t::nedge_t(const nsplit_t& nsplit, double d)
-        : nsplit_t(nsplit), _d(d)
+nedge_t::nedge_t(const nsplit_t& nsplit, double d, std::string name)
+        : nsplit_t(nsplit), _d(d), _name(name)
 { }
 
 double
 nedge_t::d() const
 {
         return _d;
+}
+
+const string&
+nedge_t::name() const
+{
+        return _name;
 }
 
 bool
@@ -304,7 +310,10 @@ parse_pt_node_t(
                 set<size_t> s1 = parse_pt_node_t(n, node->left,  nedge_set, leaf_d, leaf_names);
                 set<size_t> s2 = parse_pt_node_t(n, node->right, nedge_set, leaf_d, leaf_names);
                 set_union(s1.begin(), s1.end(), s2.begin(), s2.end(), inserter(s, s.begin()));
-                nedge_set.push_back(nedge_t(nsplit_t(n, s), node->d));
+                // insert node only if edge length is greater zero
+                if (node->d > 0.0) {
+                        nedge_set.push_back(nedge_t(nsplit_t(n, s), node->d));
+                }
         }
         return s;
 }
@@ -502,11 +511,28 @@ ntree_t::leaf_name(size_t i) const {
 }
 
 bool
+ntree_t::compatible(const nsplit_t& nsplit) const
+{
+        for (nedge_set_t::const_iterator it = nedge_set().begin(); it != nedge_set().end(); it++) {
+                if (!::compatible(*it, nsplit)) {
+                        return false;
+                }
+        }
+        return true;
+}
+
+void
+ntree_t::add_edge(const nedge_t& edge)
+{
+        _nedge_set.push_back(edge);
+}
+
+bool
 ntree_t::check_splits() const
 {
         for (nedge_set_t::const_iterator it = nedge_set().begin(); it != nedge_set().end(); it++) {
                 for (nedge_set_t::const_iterator is = nedge_set().begin(); is != it; is++) {
-                        if (!compatible(*it, *is)) {
+                        if (!::compatible(*it, *is)) {
                                 return false;
                         }
                 }
@@ -544,9 +570,13 @@ incompatibility_graph_t::incompatibility_graph_t(
           _nrow(a.size()*b.size()),
           _ncol(a.size()+b.size())
 {
+        cout << "Constructing graph" << endl;
+        cout << "--------------------------------------------------------" << endl;
         assert(na() > 0);
         assert(nb() > 0);
 
+        cout << "anorm: " << a.length() << endl;
+        cout << "bnorm: " << b.length() << endl;
         double anorm = pow(a.length(), 2);
         double bnorm = pow(b.length(), 2);
 
@@ -571,12 +601,18 @@ incompatibility_graph_t::incompatibility_graph_t(
                         _ja[2*(i*nb() + j) + 2] = j + 1 + na();
                         // value of the constraint matrix
                         if (compatible(a[i], b[j])) {
+                                cout << "compatible: " << endl
+                                     << a[i] << endl
+                                     << b[j] << endl;
                                 _ar[2*(i*nb() + j) + 1] = 0.0;
                                 _ar[2*(i*nb() + j) + 2] = 0.0;
                                 // edge is not present
                                 _au[i*nb() + j] = false;
                         }
                         else {
+                                cout << "incompatible: " << endl
+                                     << a[i] << endl
+                                     << b[j] << endl;
                                 _ar[2*(i*nb() + j) + 1] = 1.0;
                                 _ar[2*(i*nb() + j) + 2] = 1.0;
                                 // edge is present
@@ -586,10 +622,25 @@ incompatibility_graph_t::incompatibility_graph_t(
         }
         // weights
         for (size_t i = 0; i < na(); i++) {
-                _xw[i + 1] = pow(a[i].d(), 2)/anorm;
+                // in case the norm is there, there are only edges
+                // with length zero, so we have to give them equal
+                // weight
+                if (anorm == 0) {
+                        _xw[i + 1] = 1.0/(double)na();
+                }
+                else {
+                        _xw[i + 1] = pow(a[i].d(), 2)/anorm;
+                }
+                cout << "weight: " << a[i] << ": " << _xw[i + 1] << endl;
         }
         for (size_t j = 0; j < nb(); j++) {
-                _xw[j + 1 + na()] = pow(b[j].d(), 2)/bnorm;
+                if (anorm == 0) {
+                        _xw[j + 1 + na()] = 1.0/(double)nb();
+                }
+                else {
+                        _xw[j + 1 + na()] = pow(b[j].d(), 2)/bnorm;
+                }
+                cout << "weight: " << b[j] << ": " << _xw[j + 1 + na()] << endl;
         }
 }
 
@@ -640,7 +691,10 @@ incompatibility_graph_t::min_weight_cover(double max_weight) const
         }
         // load the constraint matrix
         glp_load_matrix(lp, nrow()*2, ia(), ja(), ar());
-        glp_simplex(lp, &parm);
+        if (glp_simplex(lp, &parm) != 0) {
+                cerr << "Warning: The simplex method failed to find a vertex cover!"
+                     << endl;
+        }
         // save result
         weight = glp_get_obj_val(lp);
         if (weight < max_weight) {
@@ -655,6 +709,12 @@ incompatibility_graph_t::min_weight_cover(double max_weight) const
                 ra = a();
                 rb = b();
         }
+        // print result
+        cout << "vertex cover:" << endl
+             << "a:" << endl
+             << ra   << endl
+             << "b:" << endl
+             << rb   << endl;
         // free space
         glp_delete_prob(lp);
         // return result
@@ -772,21 +832,25 @@ incompatibility_graph_t::au(size_t i) const
 // geodesic_t
 ////////////////////////////////////////////////////////////////////////////////
 
-geodesic_t::geodesic_t(const ntree_t& t1, const ntree_t& t2)
+geodesic_t::geodesic_t(const ntree_t& __t1, const ntree_t& __t2)
         // start with the cone path
         : //_npath(support_pair_t(t1.nedge_set(), t2.nedge_set())),
         _common_edges(), _npath_list(),
-        _leaf_n(t1.leaf_d().size()),
-        _leaf_names(t1.leaf_names()),
-        _t1_leaf_d(t1.leaf_d()),
-        _t2_leaf_d(t2.leaf_d())
+        _leaf_n(__t1.leaf_d().size()),
+        _leaf_names(__t1.leaf_names()),
+        _t1(__t1),
+        _t2(__t2)
 {
+        cout << "t1: " << endl << t1() << endl;
+        cout << "t2: " << endl << t2() << endl;
         // assertions
-        assert(t1.leaf_d().size() == t2.leaf_d().size());
+        assert(t1().leaf_d().size() == t2().leaf_d().size());
+        // complement internal edges
+        complement_trees();
         // initialize common edges
-        _common_edges = t1.common_edges(t2);
+        _common_edges = t1().common_edges(t2());
         // initialize npath list
-        _npath_list = initial_npath_list(t1, t2);
+        _npath_list = initial_npath_list();
         // apply GTP algorithm to all npaths
         for (list<npath_t>::iterator it = _npath_list.begin(); it != _npath_list.end(); it++) {
                 gtp(*it);
@@ -796,8 +860,10 @@ geodesic_t::geodesic_t(const ntree_t& t1, const ntree_t& t2)
 ntree_t
 geodesic_t::operator()(const double lambda) const
 {
+        // handle sepcial cases
+        if (lambda == 0.0) return t1();
+        if (lambda == 1.0) return t2();
         // variables
-        const double r = lambda/(1-lambda);
         nedge_set_t nedge_set;
         vector<double> leaf_d(leaf_n(), 0);
 
@@ -805,8 +871,12 @@ geodesic_t::operator()(const double lambda) const
                 const npath_t& npath(*it);
                 npath_t::const_iterator is = npath.begin();
                 // fill edge set with edges from B_i
-                for (; is != npath.end() && is->first.length()/is->second.length() <= r; is++) {
-                        const double length_a = is->first.length();
+                for (; is != npath.end() &&
+                             // slightly different condition than in the paper to prevent
+                             // numerical trouble
+                             is->first.length()*(1.0-lambda) <= is->second.length()*lambda;
+                     is++) {
+                        const double length_a = is->first .length();
                         const double length_b = is->second.length();
                         for (nedge_set_t::const_iterator iu = is->second.begin(); iu != is->second.end(); iu++) {
                                 const nedge_t& nedge = *iu;
@@ -816,7 +886,7 @@ geodesic_t::operator()(const double lambda) const
                 }
                 // fill edge set with edges from A_i
                 for (; is != npath.end(); is++) {
-                        const double length_a = is->first.length();
+                        const double length_a = is->first .length();
                         const double length_b = is->second.length();
                         for (nedge_set_t::const_iterator iu = is->first.begin(); iu != is->first.end(); iu++) {
                                 const nedge_t& nedge = *iu;
@@ -890,34 +960,50 @@ geodesic_t::leaf_names() const
 const vector<double>&
 geodesic_t::t1_leaf_d() const
 {
-        return _t1_leaf_d;
+        return t1().leaf_d();
 }
 
 const vector<double>&
 geodesic_t::t2_leaf_d() const
 {
-        return _t2_leaf_d;
+        return t2().leaf_d();
 }
 
 double
 geodesic_t::t1_leaf_d(size_t i) const
 {
-        return _t1_leaf_d[i];
+        return t1().leaf_d(i);
 }
 
 double
 geodesic_t::t2_leaf_d(size_t i) const
 {
-        return _t2_leaf_d[i];
+        return t2().leaf_d(i);
+}
+
+const ntree_t&
+geodesic_t::t1() const
+{
+        return _t1;
+}
+
+const ntree_t&
+geodesic_t::t2() const
+{
+        return _t2;
 }
 
 void
 geodesic_t::gtp(npath_t& npath)
 {
+        cout << "-------------------------------------" << endl;
         for (npath_t::iterator it = npath.begin(); it != npath.end();)
         {
+                cout << "ITER:" << endl;
+                cout << npath << endl;
                 incompatibility_graph_t graph(it->first, it->second);
                 vertex_cover_t vc = graph.min_weight_cover();
+                cout << "weight: " << vc.weight << endl;
                 if (abs(vc.weight - 1.0) > epsilon && vc.weight < 1.0) {
                         it = npath.erase(it);
                         it = npath.insert(it, support_pair_t(vc.a, vc.b_comp));
@@ -943,23 +1029,23 @@ geodesic_t::find_common_edge(const nsplit_t& nsplit) const
 }
 
 list<npath_t>
-geodesic_t::initial_npath_list(const ntree_t& t1, const ntree_t& t2) const
+geodesic_t::initial_npath_list() const
 {
         list<npath_t> result;
         list<nedge_set_t> l1; l1.push_back(nedge_set_t());
         list<nedge_set_t> l2; l2.push_back(nedge_set_t());
 
         // start with the cone path
-        for (nedge_set_t::const_iterator it = t1.nedge_set().begin();
-             it != t1.nedge_set().end(); it++) {
+        for (nedge_set_t::const_iterator it = t1().nedge_set().begin();
+             it != t1().nedge_set().end(); it++) {
                 const common_nedge_t& common_nedge = find_common_edge(*it);
                 if (common_nedge.null()) {
                         // this is not a common edge
                         l1.begin()->push_back(*it);
                 }
         }
-        for (nedge_set_t::const_iterator it = t2.nedge_set().begin();
-             it != t2.nedge_set().end(); it++) {
+        for (nedge_set_t::const_iterator it = t2().nedge_set().begin();
+             it != t2().nedge_set().end(); it++) {
                 const common_nedge_t& common_nedge = find_common_edge(*it);
                 if (common_nedge.null()) {
                         // this is not a common edge
@@ -1003,6 +1089,42 @@ geodesic_t::initial_npath_list(const ntree_t& t1, const ntree_t& t2) const
         }
         // loop through l1 and l2 to construct the npath list
         return result;
+}
+
+void
+geodesic_t::complement_trees()
+{
+        // one of the trees might have a smaller number of edges, in this
+        // case it lies on the boundary between orthants; for the algorithm
+        // to work, we need to add those missing edges from the other tree!
+        if (t1().nedge_set().size() < t2().nedge_set().size()) {
+                cout << "complementing tree 1" << endl;
+                for (nedge_set_t::const_iterator it = t2().nedge_set().begin();
+                     it != t2().nedge_set().end(); it++) {
+                        const nsplit_t& split = t1().find_edge(*it);
+                        if (split.null() && t1().compatible(*it)) {
+                                // add edge with length zero
+                                cout << "adding edge: "
+                                     << nedge_t(*it, 0.0)
+                                     << endl;
+                                _t1.add_edge(nedge_t(*it, 0.0));
+                        }
+                }
+        }
+        else if (t2().nedge_set().size() < t1().nedge_set().size()) {
+                cout << "complementing tree 2" << endl;
+                for (nedge_set_t::const_iterator it = t1().nedge_set().begin();
+                     it != t1().nedge_set().end(); it++) {
+                        const nsplit_t& split = t2().find_edge(*it);
+                        if (split.null() && t2().compatible(*it)) {
+                                // add edge with length zero
+                                cout << "adding edge: "
+                                     << nedge_t(*it, 0.0)
+                                     << endl;
+                                _t2.add_edge(nedge_t(*it, 0.0));
+                        }
+                }
+        }
 }
 
 const common_nedge_t geodesic_t::_null_common_nedge;
@@ -1171,8 +1293,22 @@ operator<< (ostream& o, const nsplit_t& nsplit)
 ostream&
 operator<< (ostream& o, const nedge_t& nedge)
 {
+        if (nedge.name() != "") {
+                o << nedge.name() << ": ";
+        }
         o << static_cast<nsplit_t>(nedge) << ": "
           << nedge.d();
+
+        return o;
+}
+
+ostream&
+operator<< (ostream& o, const common_nedge_t& common_nedge)
+{
+        o << static_cast<nsplit_t>(common_nedge) << ": "
+          << "(" << common_nedge.d1()
+          << "," << common_nedge.d2()
+          << ")";
 
         return o;
 }

@@ -41,6 +41,10 @@ main(void)
         // geodesic
         geodesic_t geodesic(ntree1, ntree2);
 
+        // print npath list
+        cout << geodesic.npath_list() << endl;
+
+        // print length
         cout << "length: "
              << geodesic.length()
              << endl;

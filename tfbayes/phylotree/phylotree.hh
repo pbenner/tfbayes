@@ -87,6 +87,7 @@ protected:
                                      node_map_t& node_map, nodes_t& nodes);
 
         virtual void set_id(id_t& leaf_id, id_t& node_id);
+        virtual void set_id(const pt_root_t* tree, id_t& node_id);
 };
 
 class pt_leaf_t : public pt_node_t {
@@ -101,7 +102,7 @@ public:
 
 protected:
         virtual void set_id(id_t& leaf_id, id_t& node_id);
-
+        virtual void set_id(const pt_root_t* tree, id_t& node_id);
 };
 
 class pt_root_t : public pt_node_t {
@@ -110,7 +111,8 @@ public:
                   pt_node_t* right,
                   pt_leaf_t* outgroup = NULL,
                   const std::string name = "",
-                  double d = -HUGE_VAL);
+                  // if root is not null then copy ids from this tree
+                  const pt_root_t* tree = NULL);
         pt_root_t(const pt_root_t& root);
 
         virtual void destroy();
@@ -141,6 +143,7 @@ protected:
         virtual void create_mappings();
 
         virtual void set_id(id_t& leaf_id, id_t& node_id);
+        virtual void set_id(const pt_root_t* tree, id_t& node_id);
 };
 
 class newick_format {
