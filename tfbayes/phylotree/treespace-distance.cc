@@ -20,6 +20,8 @@
 #include <tfbayes/phylotree/treespace.hh>
 #include <tfbayes/phylotree/phylotree-parser.hh>
 
+#include <glpk.h>
+
 using namespace std;
 
 int
@@ -38,16 +40,23 @@ main(void)
         tree_list.front()->destroy();
         tree_list.back ()->destroy();
 
+        // print trees
+        cout << "tree 1: " << endl << ntree1 << endl;
+        cout << "tree 2: " << endl << ntree2 << endl;
+
         // geodesic
         geodesic_t geodesic(ntree1, ntree2);
 
         // print npath list
-        cout << geodesic.npath_list() << endl;
+        cout << "npath list:"         << endl
+             << geodesic.npath_list() << endl;
 
         // print length
         cout << "length: "
              << geodesic.length()
              << endl;
+
+        glp_free_env();
 
         return 0;
 }

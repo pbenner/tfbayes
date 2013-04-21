@@ -20,6 +20,8 @@
 #include <tfbayes/phylotree/treespace.hh>
 #include <tfbayes/phylotree/phylotree-parser.hh>
 
+#include <glpk.h>
+
 using namespace std;
 
 void test1()
@@ -133,8 +135,6 @@ void test2()
              << tree              << endl;
         tree->destroy();
 }
-
-#include <glpk.h>
 
 void test3()
 {

@@ -52,11 +52,13 @@ typedef struct _options_t {
         size_t drop;
         size_t k;
         size_t iterations;
+        bool verbose;
         _options_t()
                 : random(false),
                   drop(0),
                   k(1),
-                  iterations(100)
+                  iterations(100),
+                  verbose(false)
                 { }
 } options_t;
 
@@ -77,6 +79,7 @@ void print_usage(char *pname, FILE *fp)
                       "             -n INTEGER      - number of iterations\n"
                       "             -d INTEGER      - drop first n trees\n"
                       "             -k INTEGER      - compute mean from every kth tree\n"
+                      "             -v              - be verbose and print progress bar"
                       "\n"
                       "   --help                    - print help and exit\n"
                       "   --version                 - print version information and exit\n\n");
@@ -145,13 +148,13 @@ void mean(const string& command)
 
         if (command == "mean") {
                 result = options.random ?
-                        mean_tree_rand(ntree_list, options.iterations) :
-                        mean_tree_cyc (ntree_list, options.iterations);
+                        mean_tree_rand(ntree_list, options.iterations, default_lambda_t(), options.verbose) :
+                        mean_tree_cyc (ntree_list, options.iterations, default_lambda_t(), options.verbose);
         }
         else if (command == "median") {
                 result = options.random ?
-                        median_tree_rand(ntree_list, options.iterations) :
-                        median_tree_cyc (ntree_list, options.iterations);
+                        median_tree_rand(ntree_list, options.iterations, default_lambda_t(), options.verbose) :
+                        median_tree_cyc (ntree_list, options.iterations, default_lambda_t(), options.verbose);
         }
         else {
                 wrong_usage("Unknown command.");
@@ -172,10 +175,10 @@ int main(int argc, char *argv[])
                 int c, option_index = 0;
                 static struct option long_options[] = {
                         { "help",            0, 0, 'h' },
-                        { "version",         0, 0, 'v' }
+                        { "version",         0, 0, 'q' }
                 };
 
-                c = getopt_long(argc, argv, "rd:k:n:",
+                c = getopt_long(argc, argv, "rd:k:n:v",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -203,10 +206,13 @@ int main(int argc, char *argv[])
                 case 'n':
                         options.iterations = atoi(optarg);
                         break;
+                case 'v':
+                        options.verbose = true;
+                        break;
                 case 'h':
                         print_usage(argv[0], stdout);
                         exit(EXIT_SUCCESS);
-                case 'v':
+                case 'q':
                         print_version(stdout);
                         exit(EXIT_SUCCESS);
                 default:

@@ -16,6 +16,7 @@
  */
 
 #include <treespace.hh>
+#include <tfbayes/utility/progress.hh>
 
 #include <algorithm>
 #include <iomanip>
@@ -440,8 +441,10 @@ ntree_t::export_tree() {
                 left_tree  = export_subtree(used, boost::get<0>(ns));
                 right_tree = new pt_leaf_t(leaf_d(boost::get<2>(ns)), leaf_name(boost::get<2>(ns)));
         }
+        // construct outgroup
+        pt_leaf_t* outgroup = new pt_leaf_t(leaf_d(0), leaf_name(0));
         // return resulting tree
-        return new pt_root_t(left_tree, right_tree);
+        return new pt_root_t(left_tree, right_tree, outgroup);
 }
 
 pt_node_t*
@@ -570,13 +573,9 @@ incompatibility_graph_t::incompatibility_graph_t(
           _nrow(a.size()*b.size()),
           _ncol(a.size()+b.size())
 {
-        cout << "Constructing graph" << endl;
-        cout << "--------------------------------------------------------" << endl;
         assert(na() > 0);
         assert(nb() > 0);
 
-        cout << "anorm: " << a.length() << endl;
-        cout << "bnorm: " << b.length() << endl;
         double anorm = pow(a.length(), 2);
         double bnorm = pow(b.length(), 2);
 
@@ -601,18 +600,12 @@ incompatibility_graph_t::incompatibility_graph_t(
                         _ja[2*(i*nb() + j) + 2] = j + 1 + na();
                         // value of the constraint matrix
                         if (compatible(a[i], b[j])) {
-                                cout << "compatible: " << endl
-                                     << a[i] << endl
-                                     << b[j] << endl;
                                 _ar[2*(i*nb() + j) + 1] = 0.0;
                                 _ar[2*(i*nb() + j) + 2] = 0.0;
                                 // edge is not present
                                 _au[i*nb() + j] = false;
                         }
                         else {
-                                cout << "incompatible: " << endl
-                                     << a[i] << endl
-                                     << b[j] << endl;
                                 _ar[2*(i*nb() + j) + 1] = 1.0;
                                 _ar[2*(i*nb() + j) + 2] = 1.0;
                                 // edge is present
@@ -631,7 +624,6 @@ incompatibility_graph_t::incompatibility_graph_t(
                 else {
                         _xw[i + 1] = pow(a[i].d(), 2)/anorm;
                 }
-                cout << "weight: " << a[i] << ": " << _xw[i + 1] << endl;
         }
         for (size_t j = 0; j < nb(); j++) {
                 if (anorm == 0) {
@@ -640,7 +632,6 @@ incompatibility_graph_t::incompatibility_graph_t(
                 else {
                         _xw[j + 1 + na()] = pow(b[j].d(), 2)/bnorm;
                 }
-                cout << "weight: " << b[j] << ": " << _xw[j + 1 + na()] << endl;
         }
 }
 
@@ -709,12 +700,6 @@ incompatibility_graph_t::min_weight_cover(double max_weight) const
                 ra = a();
                 rb = b();
         }
-        // print result
-        cout << "vertex cover:" << endl
-             << "a:" << endl
-             << ra   << endl
-             << "b:" << endl
-             << rb   << endl;
         // free space
         glp_delete_prob(lp);
         // return result
@@ -841,8 +826,6 @@ geodesic_t::geodesic_t(const ntree_t& __t1, const ntree_t& __t2)
         _t1(__t1),
         _t2(__t2)
 {
-        cout << "t1: " << endl << t1() << endl;
-        cout << "t2: " << endl << t2() << endl;
         // assertions
         assert(t1().leaf_d().size() == t2().leaf_d().size());
         // complement internal edges
@@ -996,14 +979,10 @@ geodesic_t::t2() const
 void
 geodesic_t::gtp(npath_t& npath)
 {
-        cout << "-------------------------------------" << endl;
         for (npath_t::iterator it = npath.begin(); it != npath.end();)
         {
-                cout << "ITER:" << endl;
-                cout << npath << endl;
                 incompatibility_graph_t graph(it->first, it->second);
                 vertex_cover_t vc = graph.min_weight_cover();
-                cout << "weight: " << vc.weight << endl;
                 if (abs(vc.weight - 1.0) > epsilon && vc.weight < 1.0) {
                         it = npath.erase(it);
                         it = npath.insert(it, support_pair_t(vc.a, vc.b_comp));
@@ -1098,29 +1077,21 @@ geodesic_t::complement_trees()
         // case it lies on the boundary between orthants; for the algorithm
         // to work, we need to add those missing edges from the other tree!
         if (t1().nedge_set().size() < t2().nedge_set().size()) {
-                cout << "complementing tree 1" << endl;
                 for (nedge_set_t::const_iterator it = t2().nedge_set().begin();
                      it != t2().nedge_set().end(); it++) {
                         const nsplit_t& split = t1().find_edge(*it);
                         if (split.null() && t1().compatible(*it)) {
                                 // add edge with length zero
-                                cout << "adding edge: "
-                                     << nedge_t(*it, 0.0)
-                                     << endl;
                                 _t1.add_edge(nedge_t(*it, 0.0));
                         }
                 }
         }
         else if (t2().nedge_set().size() < t1().nedge_set().size()) {
-                cout << "complementing tree 2" << endl;
                 for (nedge_set_t::const_iterator it = t1().nedge_set().begin();
                      it != t1().nedge_set().end(); it++) {
                         const nsplit_t& split = t2().find_edge(*it);
                         if (split.null() && t2().compatible(*it)) {
                                 // add edge with length zero
-                                cout << "adding edge: "
-                                     << nedge_t(*it, 0.0)
-                                     << endl;
                                 _t2.add_edge(nedge_t(*it, 0.0));
                         }
                 }
@@ -1136,7 +1107,7 @@ const common_nedge_t geodesic_t::_null_common_nedge;
 
 ntree_t
 mean_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
-          size_t n, const lambda_t& lambda)
+              size_t n, const lambda_t& lambda, bool verbose)
 {
         // assure that we have as many weights as we have trees
         assert(ntree_list.size() == weights.size());
@@ -1147,6 +1118,9 @@ mean_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
                 list  <ntree_t>::const_iterator it = ntree_list.begin();
                 vector<double >::const_iterator is = weights.begin();
                 for (; it != ntree_list.end() && is != weights.end(); it++, is++, i++) {
+                        if (verbose) {
+                                cerr << progress_t(i/(double)(n*ntree_list.size()));
+                        }
                         geodesic_t geodesic(sk, *it);
                         sk = geodesic(2.0*lambda(i+1)*(*is)/(1.0+2.0*lambda(i+1)*(*is)));
                 }
@@ -1155,16 +1129,17 @@ mean_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
 }
 
 ntree_t
-mean_tree_cyc(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda)
+mean_tree_cyc(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda,
+              bool verbose)
 {
         const vector<double> weights(ntree_list.size(), 1.0);
 
-        return mean_tree_cyc(ntree_list, weights, n, lambda);
+        return mean_tree_cyc(ntree_list, weights, n, lambda, verbose);
 }
 
 ntree_t
 median_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
-            size_t n, const lambda_t& lambda)
+                size_t n, const lambda_t& lambda, bool verbose)
 {
         // assure that we have as many weights as we have trees
         assert(ntree_list.size() == weights.size());
@@ -1175,6 +1150,9 @@ median_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
                 list  <ntree_t>::const_iterator it = ntree_list.begin();
                 vector<double >::const_iterator is = weights.begin();
                 for (; it != ntree_list.end(); it++, i++) {
+                        if (verbose) {
+                                cerr << progress_t(i/(double)(n*ntree_list.size()));
+                        }
                         geodesic_t geodesic(sk, *it);
                         sk = geodesic(min(1.0, lambda(i+1)*(*is)/geodesic.length()));
                 }
@@ -1183,16 +1161,17 @@ median_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
 }
 
 ntree_t
-median_tree_cyc(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda)
+median_tree_cyc(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda,
+                bool verbose)
 {
         const vector<double> weights(ntree_list.size(), 1.0);
 
-        return median_tree_cyc(ntree_list, weights, n, lambda);
+        return median_tree_cyc(ntree_list, weights, n, lambda, verbose);
 }
 
 ntree_t
 mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
-          size_t n, const lambda_t& lambda)
+               size_t n, const lambda_t& lambda, bool verbose)
 {
         vector<ntree_t> ntree_list(_ntree_list.begin(), _ntree_list.end());
         vector<double > weights(_weights);
@@ -1210,6 +1189,9 @@ mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
                 vector<ntree_t>::const_iterator it = ntree_list.begin();
                 vector<double >::const_iterator is = weights.begin();
                 for (; it != ntree_list.end() && is != weights.end(); it++, is++, i++) {
+                        if (verbose) {
+                                cerr << progress_t(i/(double)(n*ntree_list.size()));
+                        }
                         geodesic_t geodesic(sk, *it);
                         sk = geodesic(2.0*lambda(i+1)*(*is)/(1.0+2.0*lambda(i+1)*(*is)));
                 }
@@ -1218,16 +1200,17 @@ mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
 }
 
 ntree_t
-mean_tree_rand(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda)
+mean_tree_rand(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda,
+               bool verbose)
 {
         const vector<double> weights(ntree_list.size(), 1.0);
 
-        return mean_tree_rand(ntree_list, weights, n, lambda);
+        return mean_tree_rand(ntree_list, weights, n, lambda, verbose);
 }
 
 ntree_t
 median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
-            size_t n, const lambda_t& lambda)
+                 size_t n, const lambda_t& lambda, bool verbose)
 {
         vector<ntree_t> ntree_list(_ntree_list.begin(), _ntree_list.end());
         vector<double > weights(_weights);
@@ -1245,6 +1228,9 @@ median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weight
                 vector<ntree_t>::const_iterator it = ntree_list.begin();
                 vector<double >::const_iterator is = weights.begin();
                 for (; it != ntree_list.end(); it++, i++) {
+                        if (verbose) {
+                                cerr << progress_t(i/(double)(n*ntree_list.size()));
+                        }
                         geodesic_t geodesic(sk, *it);
                         sk = geodesic(min(1.0, lambda(i+1)*(*is)/geodesic.length()));
                 }
@@ -1253,11 +1239,12 @@ median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weight
 }
 
 ntree_t
-median_tree_rand(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda)
+median_tree_rand(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda,
+                 bool verbose)
 {
         const vector<double> weights(ntree_list.size(), 1.0);
 
-        return median_tree_rand(ntree_list, weights, n, lambda);
+        return median_tree_rand(ntree_list, weights, n, lambda, verbose);
 }
 
 // ostream

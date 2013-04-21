@@ -308,22 +308,30 @@ public:
 };
 
 ntree_t mean_tree_cyc(const std::list<ntree_t>& ntree_list, size_t n = 100,
-                      const lambda_t& lambda = default_lambda_t());
+                      const lambda_t& lambda = default_lambda_t(),
+                      bool verbose = false);
 ntree_t mean_tree_cyc(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights,
-                      size_t n = 100, const lambda_t& lambda = default_lambda_t());
+                      size_t n = 100, const lambda_t& lambda = default_lambda_t(),
+                      bool verbose = false);
 ntree_t median_tree_cyc(const std::list<ntree_t>& ntree_list, size_t n = 100,
-                        const lambda_t& lambda = default_lambda_t());
+                        const lambda_t& lambda = default_lambda_t(),
+                        bool verbose = false);
 ntree_t median_tree_cyc(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights,
-                    size_t n = 100, const lambda_t& lambda = default_lambda_t());
+                        size_t n = 100, const lambda_t& lambda = default_lambda_t(),
+                        bool verbose = false);
 
 ntree_t mean_tree_rand(const std::list<ntree_t>& ntree_list, size_t n = 100,
-                       const lambda_t& lambda = default_lambda_t());
+                       const lambda_t& lambda = default_lambda_t(),
+                       bool verbose = false);
 ntree_t mean_tree_rand(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights,
-                       size_t n = 100, const lambda_t& lambda = default_lambda_t());
+                       size_t n = 100, const lambda_t& lambda = default_lambda_t(),
+                       bool verbose = false);
 ntree_t median_tree_rand(const std::list<ntree_t>& ntree_list, size_t n = 100,
-                         const lambda_t& lambda = default_lambda_t());
+                         const lambda_t& lambda = default_lambda_t(),
+                         bool verbose = false);
 ntree_t median_tree_rand(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights,
-                         size_t n = 100, const lambda_t& lambda = default_lambda_t());
+                         size_t n = 100, const lambda_t& lambda = default_lambda_t(),
+                         bool verbose = false);
 
 std::ostream& operator<< (std::ostream& o, const nsplit_t& nsplit);
 std::ostream& operator<< (std::ostream& o, const ntree_t& ntree);

@@ -24,6 +24,7 @@
 
 #include <string>
 #include <sstream>
+#include <iomanip>
 
 class progress_t : public std::string {
 public:
