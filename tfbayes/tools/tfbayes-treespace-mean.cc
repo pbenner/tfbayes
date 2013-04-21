@@ -24,6 +24,7 @@
 #include <cstdio>
 #include <getopt.h>
 #include <sys/time.h>
+#include <glpk.h>
 
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/phylotree-parser.hh>
@@ -157,8 +158,12 @@ void mean(const string& command)
         }
         /* print result */
         pt_root_t* tmp = result.export_tree();
+        cout << result << endl;
         cout << newick_format(tmp) << endl;
         tmp->destroy();
+
+        /* free glp library space */
+        glp_free_env();
 }
 
 int main(int argc, char *argv[])

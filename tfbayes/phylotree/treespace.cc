@@ -328,13 +328,18 @@ parse_pt_node_t(
 ntree_t::ntree_t(const nedge_set_t& nedge_set,
                  const vector<double>& leaf_d,
                  const vector<string> leaf_names)
-        : _n(nedge_set.size()+2),
+        : _n(2),
           _nedge_set(nedge_set),
           _leaf_d(leaf_d),
           _leaf_names(leaf_names) {
-        assert(leaf_names.size() == 0 || leaf_names.size() == n()+1);
+        /* TODO: when computing means we might get trees that are not
+         * ntrees! */
+        //assert(leaf_names.size() == 0 || leaf_names.size() == n()+1);
+        if (nedge_set.size() > 0) {
+                _n = nedge_set.begin()->n();
+        }
         for (nedge_set_t::const_iterator it = nedge_set.begin(); it != nedge_set.end(); it++) {
-                assert(n() == nedge_set.begin()->n());
+                assert(n() == it->n());
         }
 }
 
