@@ -281,18 +281,20 @@ AX_CFLAGS_GCC_OPTION([-Wwrite-strings])
 AX_CFLAGS_GCC_OPTION([-Wstrict-prototypes])
 AX_CFLAGS_GCC_OPTION([-Wno-trigraphs])
 AX_CFLAGS_GCC_OPTION([-Wtrampolines])
-AX_CFLAGS_GCC_OPTION([-fPIC])
+#AX_CFLAGS_GCC_OPTION([-fPIC])
 AX_CFLAGS_GCC_OPTION([-fno-nested-functions])
+AX_CFLAGS_GCC_OPTION([-flto])
 
 AX_CXXFLAGS_GCC_OPTION([-Wall])
 AX_CXXFLAGS_GCC_OPTION([-Wwrite-strings])
 AX_CXXFLAGS_GCC_OPTION([-Wstrict-prototypes])
 AX_CXXFLAGS_GCC_OPTION([-Wno-trigraphs])
 AX_CXXFLAGS_GCC_OPTION([-Wtrampolines])
-AX_CXXFLAGS_GCC_OPTION([-fPIC])
+#AX_CXXFLAGS_GCC_OPTION([-fPIC])
 AX_CXXFLAGS_GCC_OPTION([-fno-nested-functions])
 dnl no runtime type information
 AX_CXXFLAGS_GCC_OPTION([-fno-rtti])
+AX_CXXFLAGS_GCC_OPTION([-flto])
 AX_CXXFLAGS_GCC_OPTION([-DBOOST_NO_TYPEID])
 
 dnl ,---------------------------- 
