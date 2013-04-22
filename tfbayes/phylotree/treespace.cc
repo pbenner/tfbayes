@@ -31,58 +31,44 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 static
-bool empty_intersection(const vector<size_t>& x, const vector<size_t>& y)
+bool empty_intersection(const nsplit_t::part_t& x, const nsplit_t::part_t& y)
 {
-        // both vectors are assumed to be sorted!
-        vector<size_t>::const_iterator i = x.begin();
-        vector<size_t>::const_iterator j = y.begin();
-        while (i != x.end() && j != y.end())
-        {
-                if (*i == *j) {
-                        return false;
-                }
-                else if (*i < *j) {
-                        i++;
-                }
-                else {
-                        j++;
-                }
-        }
-        return true;
+        nsplit_t::part_t result(x);
+
+        result &= y;
+
+        return !result.any();
 }
 
 static
-vector<size_t> intersection(const vector<size_t>& x, const vector<size_t>& y)
+nsplit_t::part_t intersection(const nsplit_t::part_t& x, const nsplit_t::part_t& y)
 {
-        vector<size_t> result;
-        // both vectors are assumed to be sorted!
-        vector<size_t>::const_iterator i = x.begin();
-        vector<size_t>::const_iterator j = y.begin();
-        while (i != x.end() && j != y.end())
-        {
-                if (*i == *j) {
-                        result.push_back(*i);
-                        i++; j++;
-                }
-                else if (*i < *j) {
-                        i++;
-                }
-                else {
-                        j++;
-                }
-        }
+        nsplit_t::part_t result(x);
+
+        // compute intersection
+        result &= y;
+
         return result;
 }
 
 static
-vector<size_t> difference(const vector<size_t>& x, const vector<size_t>& y)
+nsplit_t::part_t difference(const nsplit_t::part_t& x, const nsplit_t::part_t& y)
 {
-        vector<size_t> result;
+        nsplit_t::part_t result(x);
 
-        set_difference(x.begin(), x.end(), y.begin(), y.end(),
-                       back_inserter(result));
+        result -= y;
 
         return result;
+}
+
+static
+bool is_subset(const nsplit_t::part_t& x, const nsplit_t::part_t& y)
+{
+        nsplit_t::part_t result(x);
+
+        result &= (~y);
+
+        return !result.any();
 }
 
 // nsplit_t
@@ -91,26 +77,23 @@ vector<size_t> difference(const vector<size_t>& x, const vector<size_t>& y)
 nsplit_t::nsplit_t() : _n(0), _null(true) { }
 
 nsplit_t::nsplit_t(size_t n, const set<size_t>& tmp)
-        : _n(n), _part1(tmp.size(), 0), _part2(n-tmp.size()+1, 0),
+        : _n(n), _part1(n+1), _part2(n+1),
           _null(false)
 {
-        // use vectors, which are more comfortable
-        vector<size_t> split(tmp.size(), 0);
-        copy(tmp.begin(), tmp.end(), split.begin());
+        // switch all bits in part2 on
+        _part2.flip();
+        // use vectors, which are more comfortable than sets
+        vector<size_t> split(tmp.begin(), tmp.end());
         // check arguments
         assert(split.size() > 0);
         assert(split[split.size()-1] <= n);
         // fill part1 and part2
-        for (size_t i = 0, j = 0, k = 0; k <= n; k++) {
-                if (i < tmp.size() && split[i] == k) {
-                        _part1[i] = k; i++;
-                }
-                else {
-                        _part2[j] = k; j++;
-                }
+        for (size_t i = 0; i < split.size(); i++) {
+                _part1[split[i]] = true;
+                _part2[split[i]] = false;
         }
         // leaf zero should always be in part1
-        if (_part2[0] == 0) {
+        if (_part2[0] == true) {
                 _part1.swap(_part2);
         }
 }
@@ -120,7 +103,7 @@ nsplit_t::n() const {
         return _n;
 }
 
-const vector<size_t>&
+const nsplit_t::part_t&
 nsplit_t::part1() const {
         return _part1;
 }
@@ -130,7 +113,7 @@ nsplit_t::part1(size_t i) const {
         return part1()[i];
 }
 
-const vector<size_t>&
+const nsplit_t::part_t&
 nsplit_t::part2() const {
         return _part2;
 }
@@ -148,22 +131,7 @@ nsplit_t::null() const {
 bool
 nsplit_t::operator==(const nsplit_t& nsplit) const
 {
-        if (part1().size() != nsplit.part1().size()) {
-                return false;
-        }
-        for (part_t::const_iterator it = part1().begin(), is = nsplit.part1().begin();
-             it != part1().end() && is != nsplit.part1().end(); it++, is++) {
-                if (*it != *is) {
-                        return false;
-                }
-        }
-        return true;
-}
-
-bool
-nsplit_t::is_subset(const nsplit_t::part_t& p1, const nsplit_t::part_t& p2)
-{
-        return includes(p2.begin(), p2.end(), p1.begin(), p1.end());
+        return part1() == nsplit.part1();
 }
 
 bool
@@ -388,9 +356,9 @@ ntree_t::next_splits(const nsplit_t& nsplit, vector<bool>& used) {
         // check first if we need only one internal edge
         for (size_t i = 0; i < n()-2; i++) {
                 if (used[i]) continue;
-                if (nedge_set(i).part1().size() == nsplit.part1().size() + 1) {
-                        vector<size_t> tmp = difference(nedge_set(i).part1(), nsplit.part1());
-                        if (tmp.size() == 1) {
+                if (nedge_set(i).part1().count() == nsplit.part1().count() + 1) {
+                        const nsplit_t::part_t tmp = difference(nedge_set(i).part1(), nsplit.part1());
+                        if (tmp.count() == 1) {
                                 // mark edge used
                                 used[i] = true;
                                 // return index of that edge
@@ -403,9 +371,9 @@ ntree_t::next_splits(const nsplit_t& nsplit, vector<bool>& used) {
                 if (used[i]) continue;
                 for (size_t j = 0; j < i; j++) {
                         if (used[j]) continue;
-                        vector<size_t> tmp = intersection(nedge_set(i).part1(), nedge_set(j).part1());
-                        if (tmp.size() == nsplit.part1().size() &&
-                            equal(tmp.begin(), tmp.end(), nsplit.part1().begin())) {
+                        const nsplit_t::part_t tmp = intersection(nedge_set(i).part1(), nedge_set(j).part1());
+                        if (tmp.count() == nsplit.part1().count() &&
+                            tmp == nsplit.part1()) {
                                 // mark both edges used
                                 used[i] = true;
                                 used[j] = true;
@@ -415,7 +383,7 @@ ntree_t::next_splits(const nsplit_t& nsplit, vector<bool>& used) {
                 }
         }
         // we should never arrive here
-        return boost::make_tuple(-1, -1, -1);
+        assert(false);
 }
 
 pt_root_t*
@@ -452,9 +420,11 @@ ntree_t::export_subtree(vector<bool>& used, size_t i) {
         pt_node_t* left_tree;
         pt_node_t* right_tree;
         // check if there are only leafs following
-        if (nedge_set(i).part2().size() == 2) {
-                left_tree  = new pt_leaf_t(leaf_d(nedge_set(i).part2(0)), leaf_name(nedge_set(i).part2(0)));
-                right_tree = new pt_leaf_t(leaf_d(nedge_set(i).part2(1)), leaf_name(nedge_set(i).part2(1)));
+        if (nedge_set(i).part2().count() == 2) {
+                size_t p = nedge_set(i).part2().find_first();
+                size_t q = nedge_set(i).part2().find_next (p);
+                left_tree  = new pt_leaf_t(leaf_d(p), leaf_name(p));
+                right_tree = new pt_leaf_t(leaf_d(q), leaf_name(q));
         }
         // otherwise we need to do a recursive call
         else {
@@ -1254,26 +1224,21 @@ ostream&
 operator<< (ostream& o, const nsplit_t& nsplit)
 {
         o << "{";
-        for (size_t i = 0; i < nsplit.part1().size(); i++) {
-                if (i < nsplit.part1().size()-1) {
-                        o << nsplit.part1(i)
-                          << ", ";
-                }
-                else {
-                        o << nsplit.part1(i)
-                          << "} | {";
-                }
+        for (nsplit_t::part_t::size_type k = nsplit.part1().find_first();
+             k != nsplit.part1().npos;
+             k = nsplit.part1().find_next(k)) {
+                if (k != 0) o << ", ";
+                o << k;
         }
-        for (size_t i = 0; i < nsplit.part2().size(); i++) {
-                if (i < nsplit.part2().size()-1) {
-                        o << nsplit.part2()[i]
-                          << ", ";
-                }
-                else {
-                        o << nsplit.part2()[i]
-                          << "}";
-                }
+        o << "} | {";
+        for (nsplit_t::part_t::size_type k = nsplit.part2().find_first();
+             k != nsplit.part2().npos;
+             k = nsplit.part2().find_next(k)) {
+                if (k != nsplit.part2().find_first()) o << ", ";
+                o << k;
         }
+        o << "}";
+
         return o;
 }
 

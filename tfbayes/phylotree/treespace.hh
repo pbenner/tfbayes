@@ -32,12 +32,13 @@
 #include <cstdlib>
 
 #include <boost/tuple/tuple.hpp>
+#include <boost/dynamic_bitset/dynamic_bitset.hpp>
 
 #include <tfbayes/phylotree/phylotree.hh>
 
 class nsplit_t {
 public:
-        typedef std::vector<size_t> part_t;
+        typedef boost::dynamic_bitset<> part_t;
 
         // constructors
         nsplit_t();
@@ -45,9 +46,9 @@ public:
 
         // methods
         size_t n() const;
-        const std::vector<size_t>& part1() const;
+        const part_t& part1() const;
         size_t part1(size_t i) const;
-        const std::vector<size_t>& part2() const;
+        const part_t& part2() const;
         size_t part2(size_t i) const;
         bool null() const;
         // operators
@@ -60,8 +61,6 @@ public:
         // the node with split s2 is part of the subtree that
         // contains leaf 0
         bool operator>=(const nsplit_t& nsplit) const;
-
-        static bool is_subset(const nsplit_t::part_t& p1, const nsplit_t::part_t& p2);
 
 protected:
         size_t _n;

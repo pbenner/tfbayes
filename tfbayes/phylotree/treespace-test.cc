@@ -65,7 +65,10 @@ void test1()
         leaf_names.push_back("leaf 4");
         leaf_names.push_back("leaf 5");
         ntree_t ntree(nedge_set, leaf_d, leaf_names);
-        // print tree
+        // print ntree
+        cout << ntree
+             << endl;
+        // print exported tree
         pt_root_t* tree = ntree.export_tree();
         cout << "exporting tree:" << endl
              << tree              << endl;
