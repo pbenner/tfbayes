@@ -74,11 +74,10 @@ bool is_subset(const nsplit_t::part_t& x, const nsplit_t::part_t& y)
 // nsplit_t
 ////////////////////////////////////////////////////////////////////////////////
 
-nsplit_t::nsplit_t() : _n(0), _null(true) { }
+nsplit_t::nsplit_t() : _n(0) { }
 
 nsplit_t::nsplit_t(size_t n, const set<size_t>& tmp)
-        : _n(n), _part1(n+1), _part2(n+1),
-          _null(false)
+        : _n(n), _part1(n+1), _part2(n+1)
 {
         // switch all bits in part2 on
         _part2.flip();
@@ -121,11 +120,6 @@ nsplit_t::part2() const {
 size_t
 nsplit_t::part2(size_t i) const {
         return part2()[i];
-}
-
-bool
-nsplit_t::null() const {
-        return _null;
 }
 
 bool
@@ -174,15 +168,19 @@ bool compatible(const nsplit_t& s1, const nsplit_t& s2)
 ////////////////////////////////////////////////////////////////////////////////
 
 nedge_t::nedge_t()
-        : nsplit_t(), _d(0)
+        : nsplit_ptr_t(), _d(0)
+{ }
+
+nedge_t::nedge_t(const nedge_t& nedge)
+        : nsplit_ptr_t(nedge), _d(nedge.d()), _name(nedge.name())
 { }
 
 nedge_t::nedge_t(size_t n, set<size_t> tmp, double d, std::string name)
-        : nsplit_t(n, tmp), _d(d), _name(name)
+        : nsplit_ptr_t(new nsplit_t(n, tmp)), _d(d), _name(name)
 { }
 
-nedge_t::nedge_t(const nsplit_t& nsplit, double d, std::string name)
-        : nsplit_t(nsplit), _d(d), _name(name)
+nedge_t::nedge_t(const nsplit_ptr_t& nsplit_ptr, double d, std::string name)
+        : nsplit_ptr_t(nsplit_ptr), _d(d), _name(name)
 { }
 
 double
@@ -200,18 +198,19 @@ nedge_t::name() const
 bool
 nedge_t::operator==(const nedge_t& nedge) const
 {
-        return (nsplit_t)(*this) == (nsplit_t)nedge && d() == nedge.d();
+        return *boost::static_pointer_cast<const nsplit_t>(*this) ==
+                *boost::static_pointer_cast<const nsplit_t>(nedge) && d() == nedge.d();
 }
 
 // common_nedge_t
 ////////////////////////////////////////////////////////////////////////////////
 
 common_nedge_t::common_nedge_t()
-        : nsplit_t(), _d1(0), _d2(0)
+        : nsplit_ptr_t(), _d1(0), _d2(0)
 { }
 
-common_nedge_t::common_nedge_t(const nsplit_t& nsplit, double d1, double d2)
-        : nsplit_t(nsplit), _d1(d1), _d2(d2)
+common_nedge_t::common_nedge_t(const nsplit_ptr_t& nsplit_ptr, double d1, double d2)
+        : nsplit_ptr_t(nsplit_ptr), _d1(d1), _d2(d2)
 { }
 
 double
@@ -247,7 +246,7 @@ nedge_set_t::split(nsplit_t split) const
 
         for (const_iterator it = begin(); it != end(); it++) {
                 const nedge_t& nedge = *it;
-                if (nedge <= split) {
+                if (*nedge <= split) {
                         p.first.push_back(nedge);
                 }
                 else {
@@ -281,7 +280,8 @@ parse_pt_node_t(
                 set_union(s1.begin(), s1.end(), s2.begin(), s2.end(), inserter(s, s.begin()));
                 // insert node only if edge length is greater zero
                 if (node->d > 0.0) {
-                        nedge_set.push_back(nedge_t(nsplit_t(n, s), node->d));
+                        nsplit_ptr_t nsplit_ptr(new nsplit_t(n, s));
+                        nedge_set.push_back(nedge_t(nsplit_ptr, node->d));
                 }
         }
         return s;
@@ -314,10 +314,10 @@ ntree_t::ntree_t(const nedge_set_t& nedge_set,
          * ntrees! */
         //assert(leaf_names.size() == 0 || leaf_names.size() == n()+1);
         if (nedge_set.size() > 0) {
-                _n = nedge_set.begin()->n();
+                _n = (*nedge_set.begin())->n();
         }
         for (nedge_set_t::const_iterator it = nedge_set.begin(); it != nedge_set.end(); it++) {
-                assert(n() == it->n());
+                assert(n() == (*it)->n());
         }
 }
 
@@ -341,7 +341,7 @@ ntree_t::find_edge(const nsplit_t& nsplit) const
 {
         for (nedge_set_t::const_iterator it = nedge_set().begin();
              it != nedge_set().end(); it++) {
-                if ((nsplit_t)(*it) == nsplit) {
+                if (*boost::static_pointer_cast<const nsplit_t>(*it) == nsplit) {
                         return *it;
                 }
         }
@@ -349,19 +349,19 @@ ntree_t::find_edge(const nsplit_t& nsplit) const
 }
 
 boost::tuple<nedge_t, nedge_t, ssize_t>
-ntree_t::next_splits(const nsplit_t& nsplit, nedge_set_t& free_edges) {
+ntree_t::next_splits(nedge_set_t& free_edges, const nsplit_t& nsplit) {
         // return value:
         // (int edge, int edge, -1) OR (int edge, -1, leaf edge)
         //
         // check first if we need only one internal edge
         for (nedge_set_t::iterator it = free_edges.begin(); it != free_edges.end(); it++) {
-                if (it->null()) continue;
-                if (it->part1().count() == nsplit.part1().count() + 1) {
-                        const nsplit_t::part_t tmp = difference(it->part1(), nsplit.part1());
+                if (!(*it)) continue;
+                if ((*it)->part1().count() == nsplit.part1().count() + 1) {
+                        const nsplit_t::part_t tmp = difference((*it)->part1(), nsplit.part1());
                         if (tmp.count() == 1) {
                                 const nedge_t edge = *it;
                                 // remove edge from free edges
-                                it = free_edges.erase(it);
+                                *it = nedge_t();
                                 // return index of that edge
                                 return boost::make_tuple(edge, nedge_t(), tmp.find_first());
                         }
@@ -369,10 +369,10 @@ ntree_t::next_splits(const nsplit_t& nsplit, nedge_set_t& free_edges) {
         }
         // now search for the two next internal edges
         for (nedge_set_t::iterator it = free_edges.begin(); it != free_edges.end(); it++) {
-                if (it->null()) continue;
+                if (!(*it)) continue;
                 for (nedge_set_t::iterator is = free_edges.begin(); is != free_edges.end(); is++) {
-                        if (is->null()) continue;
-                        const nsplit_t::part_t tmp = intersection(it->part1(), is->part1());
+                        if (!(*is)) continue;
+                        const nsplit_t::part_t tmp = intersection((*it)->part1(), (*is)->part1());
                         if (tmp == nsplit.part1()) {
                                 const nedge_t edge1 = *it;
                                 const nedge_t edge2 = *is;
@@ -402,7 +402,7 @@ ntree_t::export_tree() {
         }
         // start with leaf zero to build the tree
         set<size_t> tmp; tmp.insert(0);
-        boost::tuple<nedge_t, nedge_t, ssize_t> ns = next_splits(nsplit_t(n(), tmp), free_edges);
+        boost::tuple<nedge_t, nedge_t, ssize_t> ns = next_splits(free_edges, nsplit_t(n(), tmp));
         if (boost::get<2>(ns) == -1) {
                 left_tree  = export_subtree(free_edges, boost::get<0>(ns));
                 right_tree = export_subtree(free_edges, boost::get<1>(ns));
@@ -422,16 +422,16 @@ ntree_t::export_subtree(nedge_set_t& free_edges, const nedge_t& edge) {
         pt_node_t* left_tree;
         pt_node_t* right_tree;
         // check if there are only leafs following
-        if (edge.part2().count() == 2) {
-                size_t p = edge.part2().find_first();
-                size_t q = edge.part2().find_next (p);
+        if (edge->part2().count() == 2) {
+                size_t p = edge->part2().find_first();
+                size_t q = edge->part2().find_next (p);
                 left_tree  = new pt_leaf_t(leaf_d(p), leaf_name(p));
                 right_tree = new pt_leaf_t(leaf_d(q), leaf_name(q));
         }
         // otherwise we need to do a recursive call
         else {
                 // find the next internal edge(s)
-                boost::tuple<nedge_t, nedge_t, ssize_t> ns = next_splits(edge, free_edges);
+                boost::tuple<nedge_t, nedge_t, ssize_t> ns = next_splits(free_edges, *edge);
                 // check if there is one or two edges folliwing
                 if (boost::get<2>(ns) == -1) {
                         left_tree  = export_subtree(free_edges, boost::get<0>(ns));
@@ -484,7 +484,7 @@ bool
 ntree_t::compatible(const nsplit_t& nsplit) const
 {
         for (nedge_set_t::const_iterator it = nedge_set().begin(); it != nedge_set().end(); it++) {
-                if (!::compatible(*it, nsplit)) {
+                if (!::compatible(**it, nsplit)) {
                         return false;
                 }
         }
@@ -502,7 +502,7 @@ ntree_t::check_splits() const
 {
         for (nedge_set_t::const_iterator it = nedge_set().begin(); it != nedge_set().end(); it++) {
                 for (nedge_set_t::const_iterator is = nedge_set().begin(); is != it; is++) {
-                        if (!::compatible(*it, *is)) {
+                        if (!::compatible(**it, **is)) {
                                 return false;
                         }
                 }
@@ -519,8 +519,8 @@ ntree_t::common_edges(const ntree_t& tree) const
         for (nedge_set_t::const_iterator it = nedge_set().begin();
              it != nedge_set().end(); it++) {
                 const nedge_t& edge1 = *it;
-                const nedge_t& edge2 = tree.find_edge(edge1);
-                if (!edge2.null()) {
+                const nedge_t& edge2 = tree.find_edge(*edge1);
+                if (edge2) {
                         result.push_back(common_nedge_t(edge1, edge1.d(), edge2.d()));
                 }
         }
@@ -566,7 +566,7 @@ incompatibility_graph_t::incompatibility_graph_t(
                         _ja[2*(i*nb() + j) + 1] = i + 1;
                         _ja[2*(i*nb() + j) + 2] = j + 1 + na();
                         // value of the constraint matrix
-                        if (compatible(a[i], b[j])) {
+                        if (compatible(*a[i], *b[j])) {
                                 _ar[2*(i*nb() + j) + 1] = 0.0;
                                 _ar[2*(i*nb() + j) + 2] = 0.0;
                                 // edge is not present
@@ -967,7 +967,7 @@ geodesic_t::find_common_edge(const nsplit_t& nsplit) const
 {
         for (list<common_nedge_t>::const_iterator it = common_edges().begin();
              it != common_edges().end(); it++) {
-                if (*it == nsplit) {
+                if (**it == nsplit) {
                         return *it;
                 }
         }
@@ -984,16 +984,16 @@ geodesic_t::initial_npath_list() const
         // start with the cone path
         for (nedge_set_t::const_iterator it = t1().nedge_set().begin();
              it != t1().nedge_set().end(); it++) {
-                const common_nedge_t& common_nedge = find_common_edge(*it);
-                if (common_nedge.null()) {
+                const common_nedge_t& common_nedge = find_common_edge(**it);
+                if (!common_nedge) {
                         // this is not a common edge
                         l1.begin()->push_back(*it);
                 }
         }
         for (nedge_set_t::const_iterator it = t2().nedge_set().begin();
              it != t2().nedge_set().end(); it++) {
-                const common_nedge_t& common_nedge = find_common_edge(*it);
-                if (common_nedge.null()) {
+                const common_nedge_t& common_nedge = find_common_edge(**it);
+                if (!common_nedge) {
                         // this is not a common edge
                         l2.begin()->push_back(*it);
                 }
@@ -1009,7 +1009,7 @@ geodesic_t::initial_npath_list() const
                 const common_nedge_t& common_nedge = *it;
                 // loop through l1
                 for (list<nedge_set_t>::iterator is = l1.begin(); is != l1.end(); is++) {
-                        pair<nedge_set_t, nedge_set_t> p = is->split(common_nedge);
+                        pair<nedge_set_t, nedge_set_t> p = is->split(*common_nedge);
                         if (p.first.size() > 0 && p.second.size() > 0) {
                                 is = l1.erase(is);
                                 is = l1.insert(is, p.first);
@@ -1019,7 +1019,7 @@ geodesic_t::initial_npath_list() const
                 }
                 // loop through l2
                 for (list<nedge_set_t>::iterator is = l2.begin(); is != l2.end(); is++) {
-                        pair<nedge_set_t, nedge_set_t> p = is->split(common_nedge);
+                        pair<nedge_set_t, nedge_set_t> p = is->split(*common_nedge);
                         if (p.first.size() > 0 && p.second.size() > 0) {
                                 is = l2.erase(is);
                                 is = l2.insert(is, p.first);
@@ -1046,8 +1046,8 @@ geodesic_t::complement_trees()
         if (t1().nedge_set().size() < t2().nedge_set().size()) {
                 for (nedge_set_t::const_iterator it = t2().nedge_set().begin();
                      it != t2().nedge_set().end(); it++) {
-                        const nsplit_t& split = t1().find_edge(*it);
-                        if (split.null() && t1().compatible(*it)) {
+                        const nedge_t& nedge = t1().find_edge(**it);
+                        if (!nedge && t1().compatible(**it)) {
                                 // add edge with length zero
                                 _t1.add_edge(nedge_t(*it, 0.0));
                         }
@@ -1056,8 +1056,8 @@ geodesic_t::complement_trees()
         else if (t2().nedge_set().size() < t1().nedge_set().size()) {
                 for (nedge_set_t::const_iterator it = t1().nedge_set().begin();
                      it != t1().nedge_set().end(); it++) {
-                        const nsplit_t& split = t2().find_edge(*it);
-                        if (split.null() && t2().compatible(*it)) {
+                        const nedge_t& nedge = t2().find_edge(**it);
+                        if (!nedge && t2().compatible(**it)) {
                                 // add edge with length zero
                                 _t2.add_edge(nedge_t(*it, 0.0));
                         }
@@ -1245,7 +1245,7 @@ operator<< (ostream& o, const nedge_t& nedge)
         if (nedge.name() != "") {
                 o << nedge.name() << ": ";
         }
-        o << static_cast<nsplit_t>(nedge) << ": "
+        o << *nedge << ": "
           << nedge.d();
 
         return o;
@@ -1254,7 +1254,7 @@ operator<< (ostream& o, const nedge_t& nedge)
 ostream&
 operator<< (ostream& o, const common_nedge_t& common_nedge)
 {
-        o << static_cast<nsplit_t>(common_nedge) << ": "
+        o << *common_nedge << ": "
           << "(" << common_nedge.d1()
           << "," << common_nedge.d2()
           << ")";

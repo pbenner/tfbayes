@@ -408,6 +408,9 @@ void test6()
         t1->destroy();
         t2->destroy();
 
+        cout << nt1 << endl;
+        cout << nt2 << endl;
+
         geodesic_t geodesic(nt1, nt2);
         cout << "geodesic length: " << geodesic.length() << endl;
         pt_root_t* t3 = geodesic(1.0).export_tree();
@@ -489,11 +492,6 @@ void test7()
         cout << "exporting tree:" << endl
              << t3                << endl;
         t3->destroy();
-
-        cout << "s1 <= s3: " << (e1 <= e3) << endl;
-        cout << "s2 <= s3: " << (e2 <= e3) << endl;
-        cout << "s4 <= s3: " << (e4 <= e3) << endl;
-        cout << "s5 <= s3: " << (e5 <= e3) << endl;
 }
 
 void test8()

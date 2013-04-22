@@ -33,6 +33,7 @@
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <tfbayes/phylotree/phylotree.hh>
 
@@ -50,7 +51,6 @@ public:
         size_t part1(size_t i) const;
         const part_t& part2() const;
         size_t part2(size_t i) const;
-        bool null() const;
         // operators
         bool operator==(const nsplit_t& nsplit) const;
         // s1 <= s2 means: if s1 is removed from the tree, then
@@ -66,15 +66,17 @@ protected:
         size_t _n;
         part_t _part1;
         part_t _part2;
-        bool   _null;
 };
 
-class nedge_t : public nsplit_t {
+typedef boost::shared_ptr<const nsplit_t> nsplit_ptr_t;
+
+class nedge_t : public nsplit_ptr_t {
 public:
         // constructors
         nedge_t();
+        nedge_t(const nedge_t& nedge);
         nedge_t(size_t n, std::set<size_t> tmp, double d, std::string name = "");
-        nedge_t(const nsplit_t& nsplit, double d, std::string name = "");
+        nedge_t(const nsplit_ptr_t& nsplit, double d, std::string name = "");
 
         // methods
         double d() const;
@@ -88,11 +90,11 @@ protected:
         std::string _name;
 };
 
-class common_nedge_t : public nsplit_t {
+class common_nedge_t : public nsplit_ptr_t {
 public:
         // constructors
         common_nedge_t();
-        common_nedge_t(const nsplit_t& nsplit, double d1, double d2);
+        common_nedge_t(const nsplit_ptr_t& nsplit, double d1, double d2);
 
         // methods
         double d1() const;
@@ -148,7 +150,7 @@ public:
 
 protected:
         // hidden methods
-        boost::tuple<nedge_t, nedge_t, ssize_t> next_splits(const nsplit_t& nsplit, nedge_set_t& free_edges);
+        boost::tuple<nedge_t, nedge_t, ssize_t> next_splits(nedge_set_t& free_edges, const nsplit_t& nsplit);
         pt_node_t* export_subtree(nedge_set_t& free_edges, const nedge_t& edge);
 
         size_t _n;
