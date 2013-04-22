@@ -348,37 +348,39 @@ ntree_t::find_edge(const nsplit_t& nsplit) const
         return _null_nedge;
 }
 
-boost::tuple<ssize_t, ssize_t, ssize_t>
-ntree_t::next_splits(const nsplit_t& nsplit, vector<bool>& used) {
+boost::tuple<nedge_t, nedge_t, ssize_t>
+ntree_t::next_splits(const nsplit_t& nsplit, nedge_set_t& free_edges) {
         // return value:
         // (int edge, int edge, -1) OR (int edge, -1, leaf edge)
         //
         // check first if we need only one internal edge
-        for (size_t i = 0; i < n()-2; i++) {
-                if (used[i]) continue;
-                if (nedge_set(i).part1().count() == nsplit.part1().count() + 1) {
-                        const nsplit_t::part_t tmp = difference(nedge_set(i).part1(), nsplit.part1());
+        for (nedge_set_t::iterator it = free_edges.begin(); it != free_edges.end(); it++) {
+                if (it->null()) continue;
+                if (it->part1().count() == nsplit.part1().count() + 1) {
+                        const nsplit_t::part_t tmp = difference(it->part1(), nsplit.part1());
                         if (tmp.count() == 1) {
-                                // mark edge used
-                                used[i] = true;
+                                const nedge_t edge = *it;
+                                // remove edge from free edges
+                                it = free_edges.erase(it);
                                 // return index of that edge
-                                return boost::make_tuple(i, -1, tmp[0]);
+                                return boost::make_tuple(edge, nedge_t(), tmp.find_first());
                         }
                 }
         }
         // now search for the two next internal edges
-        for (size_t i = 0; i < n()-2; i++) {
-                if (used[i]) continue;
-                for (size_t j = 0; j < i; j++) {
-                        if (used[j]) continue;
-                        const nsplit_t::part_t tmp = intersection(nedge_set(i).part1(), nedge_set(j).part1());
-                        if (tmp.count() == nsplit.part1().count() &&
-                            tmp == nsplit.part1()) {
-                                // mark both edges used
-                                used[i] = true;
-                                used[j] = true;
+        for (nedge_set_t::iterator it = free_edges.begin(); it != free_edges.end(); it++) {
+                if (it->null()) continue;
+                for (nedge_set_t::iterator is = free_edges.begin(); is != free_edges.end(); is++) {
+                        if (is->null()) continue;
+                        const nsplit_t::part_t tmp = intersection(it->part1(), is->part1());
+                        if (tmp == nsplit.part1()) {
+                                const nedge_t edge1 = *it;
+                                const nedge_t edge2 = *is;
+                                // remove edges from free edges
+                                *it = nedge_t();
+                                *is = nedge_t();
                                 // return indices of both edges
-                                return boost::make_tuple(i, j, -1);
+                                return boost::make_tuple(edge1, edge2, -1);
                         }
                 }
         }
@@ -392,7 +394,7 @@ ntree_t::export_tree() {
         pt_node_t* right_tree;
         // the vecor used stores which edges were already used
         // (this should optimize performance)
-        vector<bool>   used(n()-2, false);
+        nedge_set_t free_edges(nedge_set().begin(), nedge_set().end());
         // list of leafs for a given subtree
         vector<size_t> leafs(n()+1, 0);
         for (size_t i = 0; i <= n(); i++) {
@@ -400,13 +402,13 @@ ntree_t::export_tree() {
         }
         // start with leaf zero to build the tree
         set<size_t> tmp; tmp.insert(0);
-        boost::tuple<ssize_t, ssize_t, ssize_t> ns = next_splits(nsplit_t(n(), tmp), used);
-        if (boost::get<1>(ns) != -1) {
-                left_tree  = export_subtree(used, boost::get<0>(ns));
-                right_tree = export_subtree(used, boost::get<1>(ns));
+        boost::tuple<nedge_t, nedge_t, ssize_t> ns = next_splits(nsplit_t(n(), tmp), free_edges);
+        if (boost::get<2>(ns) == -1) {
+                left_tree  = export_subtree(free_edges, boost::get<0>(ns));
+                right_tree = export_subtree(free_edges, boost::get<1>(ns));
         }
         else {
-                left_tree  = export_subtree(used, boost::get<0>(ns));
+                left_tree  = export_subtree(free_edges, boost::get<0>(ns));
                 right_tree = new pt_leaf_t(leaf_d(boost::get<2>(ns)), leaf_name(boost::get<2>(ns)));
         }
         // construct outgroup
@@ -416,31 +418,31 @@ ntree_t::export_tree() {
 }
 
 pt_node_t*
-ntree_t::export_subtree(vector<bool>& used, size_t i) {
+ntree_t::export_subtree(nedge_set_t& free_edges, const nedge_t& edge) {
         pt_node_t* left_tree;
         pt_node_t* right_tree;
         // check if there are only leafs following
-        if (nedge_set(i).part2().count() == 2) {
-                size_t p = nedge_set(i).part2().find_first();
-                size_t q = nedge_set(i).part2().find_next (p);
+        if (edge.part2().count() == 2) {
+                size_t p = edge.part2().find_first();
+                size_t q = edge.part2().find_next (p);
                 left_tree  = new pt_leaf_t(leaf_d(p), leaf_name(p));
                 right_tree = new pt_leaf_t(leaf_d(q), leaf_name(q));
         }
         // otherwise we need to do a recursive call
         else {
                 // find the next internal edge(s)
-                boost::tuple<ssize_t, ssize_t, ssize_t> ns = next_splits(nedge_set(i), used);
+                boost::tuple<nedge_t, nedge_t, ssize_t> ns = next_splits(edge, free_edges);
                 // check if there is one or two edges folliwing
-                if (boost::get<1>(ns) != -1) {
-                        left_tree  = export_subtree(used, boost::get<0>(ns));
-                        right_tree = export_subtree(used, boost::get<1>(ns));
+                if (boost::get<2>(ns) == -1) {
+                        left_tree  = export_subtree(free_edges, boost::get<0>(ns));
+                        right_tree = export_subtree(free_edges, boost::get<1>(ns));
                 }
                 else {
-                        left_tree  = export_subtree(used, boost::get<0>(ns));
+                        left_tree  = export_subtree(free_edges, boost::get<0>(ns));
                         right_tree = new pt_leaf_t(leaf_d(boost::get<2>(ns)), leaf_name(boost::get<2>(ns)));
                 }
         }
-        return new pt_node_t(nedge_set(i).d(), left_tree, right_tree);
+        return new pt_node_t(edge.d(), left_tree, right_tree);
 }
 
 size_t
@@ -451,11 +453,6 @@ ntree_t::n() const {
 const nedge_set_t&
 ntree_t::nedge_set() const {
         return _nedge_set;
-}
-
-const nedge_t&
-ntree_t::nedge_set(size_t i) const {
-        return nedge_set()[i];
 }
 
 const vector<double>&

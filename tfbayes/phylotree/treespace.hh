@@ -106,6 +106,14 @@ protected:
 
 class nedge_set_t : public std::vector<nedge_t> {
 public:
+        nedge_set_t()
+                : std::vector<nedge_t>() { }
+        template <class InputIterator>
+        nedge_set_t(InputIterator first, InputIterator last)
+                : std::vector<nedge_t>(first, last) { }
+        nedge_set_t(const nedge_set_t& nedge_set)
+                : std::vector<nedge_t>(nedge_set) { }
+
         double length() const;
         std::pair<nedge_set_t, nedge_set_t> split(nsplit_t split) const;
 };
@@ -126,7 +134,6 @@ public:
         size_t n() const;
         const nedge_t& find_edge(const nsplit_t& nsplit) const;
         const nedge_set_t& nedge_set() const;
-        const nedge_t& nedge_set(size_t i) const;
         const std::vector<double>& leaf_d() const;
         double leaf_d(size_t i) const;
         const std::vector<std::string>& leaf_names() const;
@@ -141,13 +148,13 @@ public:
 
 protected:
         // hidden methods
-        boost::tuple<ssize_t, ssize_t, ssize_t> next_splits(const nsplit_t& nsplit, std::vector<bool>& used);
-        pt_node_t* export_subtree(std::vector<bool>& used, size_t i);
+        boost::tuple<nedge_t, nedge_t, ssize_t> next_splits(const nsplit_t& nsplit, nedge_set_t& free_edges);
+        pt_node_t* export_subtree(nedge_set_t& free_edges, const nedge_t& edge);
 
         size_t _n;
         // n-2 splits
         nedge_set_t _nedge_set;
-        // leaf edge lengths,     indexed by an integer 0, 1, ..., n
+        // leaf edge lengths, indexed by an integer 0, 1, ..., n
         std::vector<double> _leaf_d;
         // leaf names
         std::vector<std::string> _leaf_names;
