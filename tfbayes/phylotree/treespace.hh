@@ -315,6 +315,11 @@ public:
         }
 };
 
+double frechet_variance(const std::list<ntree_t>& ntree_list,
+                        const std::vector<double>& weights,
+                        const ntree_t& mean);
+double frechet_variance(const std::list<ntree_t>& ntree_list, const ntree_t& mean);
+
 ntree_t mean_tree_cyc(const std::list<ntree_t>& ntree_list, size_t n = 100,
                       const lambda_t& lambda = default_lambda_t(),
                       bool verbose = false);

@@ -49,12 +49,14 @@ void init() {
 
 typedef struct _options_t {
         bool random;
+        bool variance;
         size_t drop;
         size_t k;
         size_t iterations;
         bool verbose;
         _options_t()
                 : random(false),
+                  variance(false),
                   drop(0),
                   k(1),
                   iterations(100),
@@ -76,6 +78,7 @@ void print_usage(char *pname, FILE *fp)
                       "\n"
                       "Options:\n"
                       "             -r              - use random instead of cyclic version\n"
+                      "             -f              - compute Frechet variance"
                       "             -n INTEGER      - number of iterations\n"
                       "             -d INTEGER      - drop first n trees\n"
                       "             -k INTEGER      - compute mean from every kth tree\n"
@@ -165,6 +168,13 @@ void mean(const string& command)
         cout << newick_format(tmp) << endl;
         tmp->destroy();
 
+        /* Frechet variance */
+        if (command == "mean" && options.variance) {
+                cout << "Frechet variance: "
+                     << frechet_variance(ntree_list, result)
+                     << endl;
+        }
+
         /* free glp library space */
         glp_free_env();
 }
@@ -178,7 +188,7 @@ int main(int argc, char *argv[])
                         { "version",         0, 0, 'q' }
                 };
 
-                c = getopt_long(argc, argv, "rd:k:n:v",
+                c = getopt_long(argc, argv, "rfd:k:n:v",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -188,6 +198,9 @@ int main(int argc, char *argv[])
                 switch(c) {
                 case 'r':
                         options.random = true;
+                        break;
+                case 'f':
+                        options.variance = true;
                         break;
                 case 'd':
                         if (atoi(optarg) < 0) {

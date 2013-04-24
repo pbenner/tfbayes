@@ -43,6 +43,10 @@ public:
                 }
                 ss << "| " << std::fixed << std::setprecision(2)
                    << p*100 << "%";
+                // add newline if finished
+                if (p == 1.0) {
+                        ss << "\n";
+                }
                 // copy to string
                 std::string::operator=(ss.str());
         }
