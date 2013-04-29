@@ -78,7 +78,7 @@ void print_usage(char *pname, FILE *fp)
                       "\n"
                       "Options:\n"
                       "             -r              - use random instead of cyclic version\n"
-                      "             -f              - compute Frechet variance"
+                      "             -f              - compute Frechet variance\n"
                       "             -n INTEGER      - number of iterations\n"
                       "             -d INTEGER      - drop first n trees\n"
                       "             -k INTEGER      - compute mean from every kth tree\n"
