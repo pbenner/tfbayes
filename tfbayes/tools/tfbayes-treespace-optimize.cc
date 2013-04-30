@@ -20,6 +20,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <iostream>
+#include <fstream>
 
 #include <getopt.h>
 
@@ -92,6 +93,7 @@ typedef struct _options_t {
         double min_change;
         double epsilon;
         double sigma;
+        string posterior;
         size_t jobs;
         _options_t()
                 : alpha(0.2),
@@ -102,6 +104,7 @@ typedef struct _options_t {
                   min_change(0.0005),
                   epsilon(0.001),
                   sigma(0.01),
+                  posterior(""),
                   jobs(1)
                 { }
 } options_t;
@@ -126,6 +129,8 @@ void print_usage(char *pname, FILE *fp)
                       "             -e DOUBLE       - gradient ascent step size\n"
                       "             -r DOUBLE       - r parameter for the gamma distribution\n"
                       "             -l DOUBLE       - lambda parameter for the gamma distribution\n"
+                      "             -p FILE         - save the value of the log posterior\n"
+                      "                               for each sample to FILE\n"
                       "             -s DOUBLE       - sigma^2 parameter for proposal distribution\n"
                       "             -j INTEGER      - number of parallel jobs\n"
                       "\n"
@@ -197,7 +202,18 @@ void run_optimization(const string& method, const char* file_tree, const char* f
                 pt_metropolis_hastings_t<code_t, alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
                 pt_pmcmc_hastings_t<code_t, alphabet_size> pmcmc(options.jobs, pt_metropolis_hastings);
                 pmcmc.sample(options.max_steps, options.burnin);
-                cout << pmcmc;
+                /* print posterior values to separate file */
+                if (options.posterior != "") {
+                        ofstream csv(options.posterior.c_str());
+                        if (!csv.is_open()) {
+                                cerr << "Unable to open file: "
+                                     << options.posterior
+                                     << endl;
+                                exit(EXIT_FAILURE);
+                        }
+                        csv << pmcmc << endl;
+                        csv.close();
+                }
         }
         else {
                 cerr << "Unknown optimization method: " << method
@@ -219,7 +235,7 @@ int main(int argc, char *argv[])
                         { "version",         0, 0, 'v' }
                 };
 
-                c = getopt_long(argc, argv, "a:b:e:m:n:r:l:s:j:hv",
+                c = getopt_long(argc, argv, "a:b:e:m:n:r:l:p:s:j:hv",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -250,6 +266,9 @@ int main(int argc, char *argv[])
                         break;
                 case 's':
                         options.sigma = atof(optarg);
+                        break;
+                case 'p':
+                        options.posterior = string(optarg);
                         break;
                 case 'j':
                         options.jobs = atoi(optarg);

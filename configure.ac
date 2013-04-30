@@ -294,7 +294,8 @@ AX_CXXFLAGS_GCC_OPTION([-Wtrampolines])
 AX_CXXFLAGS_GCC_OPTION([-fno-nested-functions])
 dnl no runtime type information
 AX_CXXFLAGS_GCC_OPTION([-fno-rtti])
-AX_CXXFLAGS_GCC_OPTION([-flto])
+dnl turn link time optimization on (works only on some systems so far)
+#AX_CXXFLAGS_GCC_OPTION([-flto])
 AX_CXXFLAGS_GCC_OPTION([-DBOOST_NO_TYPEID])
 
 dnl ,---------------------------- 

@@ -162,7 +162,7 @@ void mean(const string& command)
         else {
                 wrong_usage("Unknown command.");
         }
-        /* print result */
+        /* print resulting tree */
         pt_root_t* tmp = result.export_tree();
         cout << result << endl;
         cout << newick_format(tmp) << endl;
