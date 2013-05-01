@@ -37,21 +37,37 @@ typedef float code_t;
 
 using namespace std;
 
+class posterior_values {
+public:
+        posterior_values(const pt_pmcmc_hastings_t<code_t, alphabet_size>& mh)
+                : mh(mh) { }
+
+        std::ostream& operator()(std::ostream& o) const {
+                // print log posterior
+                size_t n = mh.log_posterior_history.begin()->size();
+                for (size_t i = 0; i < n; i++) {
+                        for (std::list<vector<double> >::const_iterator it = mh.log_posterior_history.begin();
+                             it != mh.log_posterior_history.end(); it++) {
+                                if (it != mh.log_posterior_history.begin()) {
+                                        o << " ";
+                                }
+                                o << fixed << it->operator[](i);
+                        }
+                        o << endl;
+                }
+                return o;
+        }
+protected:
+        const pt_pmcmc_hastings_t<code_t, alphabet_size>& mh;
+};
+
+ostream& operator<< (ostream& o, const posterior_values& pv)
+{
+        return pv(o);
+}
+
 ostream& operator<< (ostream& o, const pt_pmcmc_hastings_t<code_t, alphabet_size>& mh)
 {
-        // print log posterior
-        for (std::list<vector<double> >::const_iterator it = mh.log_posterior_history.begin();
-             it != mh.log_posterior_history.end(); it++) {
-                o << "c(";
-                for (vector<double>::const_iterator is = it->begin();
-                     is != it->end(); is++) {
-                        o << (*is);
-                        if (is != it->end()-1) {
-                                o << ", ";
-                        }
-                }
-                o << ")" << endl;
-        }
         // print trees
         for (std::list<pt_root_t*>::const_iterator it = mh.samples.begin();
              it != mh.samples.end(); it++) {
@@ -211,9 +227,11 @@ void run_optimization(const string& method, const char* file_tree, const char* f
                                      << endl;
                                 exit(EXIT_FAILURE);
                         }
-                        csv << pmcmc << endl;
+                        csv << posterior_values(pmcmc) << endl;
                         csv.close();
                 }
+                /* print tree samples */
+                cout << pmcmc;
         }
         else {
                 cerr << "Unknown optimization method: " << method
