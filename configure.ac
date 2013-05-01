@@ -38,6 +38,8 @@ AC_PROG_YACC
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 LT_INIT
+dnl we have a README.md instead of a README
+AM_INIT_AUTOMAKE([foreign])
 
 dnl ,---------------------------- 
 dnl | GENERAL PACKAGE INFO

@@ -43,15 +43,23 @@ public:
                 : mh(mh) { }
 
         std::ostream& operator()(std::ostream& o) const {
+                if (mh.log_posterior_history.begin() ==
+                    mh.log_posterior_history.end()) {
+                        return o;
+                }
+                // print header
+                o << "x";
+                for (size_t i = 0; i < mh.log_posterior_history.size(); i++) {
+                        o << " y" << (i+1);
+                }
+                o << endl;
                 // print log posterior
                 size_t n = mh.log_posterior_history.begin()->size();
                 for (size_t i = 0; i < n; i++) {
+                        o << (i+1);
                         for (std::list<vector<double> >::const_iterator it = mh.log_posterior_history.begin();
                              it != mh.log_posterior_history.end(); it++) {
-                                if (it != mh.log_posterior_history.begin()) {
-                                        o << " ";
-                                }
-                                o << fixed << it->operator[](i);
+                                o << " " << fixed << it->operator[](i);
                         }
                         o << endl;
                 }

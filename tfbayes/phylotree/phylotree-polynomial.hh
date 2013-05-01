@@ -68,6 +68,7 @@ private:
                         poly_sum += mutation_model(outgroup, observations[outgroup->id], i)*carry[i];
                 }
                 poly_sum += carry[ALPHABET_SIZE];
+                poly_sum *= nucleotide_probability(observations[outgroup->id]);
 
                 return poly_sum;
         }

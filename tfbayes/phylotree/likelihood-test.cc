@@ -183,18 +183,41 @@ void test_tree7() {
 
 void test_tree8() {
         cout << "Test 8:" << endl;
-        pt_leaf_t n2(1.0, "n2");
-        pt_leaf_t n3(2.0, "n3");
-        pt_leaf_t outgroup(3.0, "outgroup");
-        pt_root_t n1(&n2, &n3, &outgroup);
+        pt_leaf_t n5(2.0, "n5");
+        pt_leaf_t n4(1.0, "n4");
+        pt_leaf_t n3(1.0, "n3");
+        pt_node_t n2(0.5, &n4, &n5);
+        pt_leaf_t n0(3.0, "n0");
+        pt_root_t n1(&n2, &n3, &n0);
         vector<code_t> observations(n1.n_leafs, 0);
-        observations[n1("n2")->id] = 1;
+        observations[n1("n5")->id] = 1;
+        observations[n1("n4")->id] = 1;
         observations[n1("n3")->id] = 2;
-        observations[n1("outgroup")->id] = 1;
+        observations[n1("n0")->id] = 1;
 
         polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n1, observations);
         cout << result << endl
-             << "0.0158369 Pg^1 + 0.930117 Pc^1 Pg^1 (correct polynomial)"
+             << "0.839524 Pc^3 Pg^1 + 0.000950355 Pc^1 Pg^1 + 0.0450738 Pc^2 Pg^1 (correct polynomial)"
+             << endl << endl;
+}
+
+void test_tree9() {
+        cout << "Test 9:" << endl;
+        pt_leaf_t n5(2.0, "n5");
+        pt_leaf_t n4(1.0, "n4");
+        pt_leaf_t n3(1.0, "n3");
+        pt_leaf_t n0(3.0, "n0");
+        pt_node_t n1(0.5, &n0, &n3);
+        pt_root_t n2(&n1, &n5, &n4);
+        vector<code_t> observations(n2.n_leafs, 0);
+        observations[n2("n5")->id] = 1;
+        observations[n2("n4")->id] = 1;
+        observations[n2("n3")->id] = 2;
+        observations[n2("n0")->id] = 1;
+
+        polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n2, observations);
+        cout << result << endl
+             << "0.839524 Pc^3 Pg^1 + 0.000950355 Pc^1 Pg^1 + 0.0450738 Pc^2 Pg^1 (correct polynomial)"
              << endl << endl;
 }
 
@@ -207,6 +230,7 @@ int main(void) {
         test_tree6();
         test_tree7();
         test_tree8();
+        test_tree9();
 
         return 0.0;
 }
