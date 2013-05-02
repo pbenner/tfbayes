@@ -183,6 +183,23 @@ void test_tree7() {
 
 void test_tree8() {
         cout << "Test 8:" << endl;
+        pt_leaf_t n3(0.1, "n3");
+        pt_leaf_t n2(0.2, "n2");
+        pt_leaf_t n0(0.3, "n0");
+        pt_root_t n1(&n2, &n3, &n0);
+        vector<code_t> observations(n1.n_leafs, 0);
+        observations[n1("n0")->id] = 2;
+        observations[n1("n2")->id] = 1;
+        observations[n1("n3")->id] = 1;
+
+        polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n1, observations);
+        cout << result << endl
+             << "0.192007 Pc^1 Pg^1 + 0.0799543 Pc^2 Pg^1 (correct polynomial)"
+             << endl << endl;
+}
+
+void test_tree9() {
+        cout << "Test 9:" << endl;
         pt_leaf_t n5(2.0, "n5");
         pt_leaf_t n4(1.0, "n4");
         pt_leaf_t n3(1.0, "n3");
@@ -201,8 +218,8 @@ void test_tree8() {
              << endl << endl;
 }
 
-void test_tree9() {
-        cout << "Test 9:" << endl;
+void test_tree10() {
+        cout << "Test 10:" << endl;
         pt_leaf_t n5(2.0, "n5");
         pt_leaf_t n4(1.0, "n4");
         pt_leaf_t n3(1.0, "n3");
@@ -231,6 +248,7 @@ int main(void) {
         test_tree7();
         test_tree8();
         test_tree9();
+        test_tree10();
 
         return 0.0;
 }
