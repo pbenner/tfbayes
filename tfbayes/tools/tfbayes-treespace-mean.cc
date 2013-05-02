@@ -113,16 +113,13 @@ void print_version(FILE *fp)
 
 list<ntree_t> parse_tree_file()
 {
-        list<pt_root_t*>  tree_list = parse_tree_list();
+        list<pt_root_t*>  tree_list = parse_tree_list(NULL, options.drop, options.k);
         list<ntree_t   > ntree_list;
         // convert trees
-        list<pt_root_t*>::const_iterator it;
-        size_t i;
-        for (it = tree_list.begin(), i = 0; it != tree_list.end(); it++, i++) {
+        for (list<pt_root_t*>::const_iterator it = tree_list.begin();
+             it != tree_list.end(); it++) {
                 pt_root_t* pt_root = *it;
-                if (i >= options.drop && i % options.k == 0) {
-                        ntree_list.push_back(pt_root);
-                }
+                ntree_list.push_back(pt_root);
                 pt_root->destroy();
         }
 

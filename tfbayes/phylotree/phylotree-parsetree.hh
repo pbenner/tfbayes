@@ -49,8 +49,8 @@ public:
 
         void destroy();
 
-        std::list<pt_root_t*> convert() const;
-                  pt_node_t*  convert(std::list<pt_root_t*>& tree_list) const;
+        std::list<pt_root_t*> convert(size_t drop, size_t skip) const;
+        pt_node_t*  convert(const pt_root_t* sample_tree = NULL) const;
 
         void * const data;
         const nodetype_t type;
@@ -65,7 +65,7 @@ typedef struct {
 	yyscan_t scanner;
 } context_t;
 
-std::list<pt_root_t*> parse_tree_list(FILE * file = NULL);
+std::list<pt_root_t*> parse_tree_list(FILE * file = NULL, size_t drop = 0, size_t skip = 0);
 
 std::ostream& operator<< (std::ostream& o, pt_parsetree_t* const tree);
 

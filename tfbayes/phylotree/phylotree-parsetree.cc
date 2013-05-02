@@ -58,29 +58,70 @@ pt_parsetree_t::destroy() {
 }
 
 list<pt_root_t*>
-pt_parsetree_t::convert() const
+pt_parsetree_t::convert(size_t drop, size_t skip) const
 {
+        size_t n = 0;
         list<pt_root_t*> tree_list;
+        const pt_parsetree_t* pt = this;
+        // this is used as the sample tree, initialize with NULL!
+        pt_root_t* tree = NULL;
 
-        convert(tree_list);
+        // find the number of trees in the list
+        for (size_t i = 0; pt != NULL; i++) {
+                if (pt->n_children == 2) {
+                        pt = pt->children[0]; n++;
+                }
+                else {
+                        pt = NULL;
+                }
+        }
+        pt = this;
+
+        // iterate throught the tree list non-recursively
+        // since it might get very big!
+        for (size_t i = 0; pt != NULL; i++) {
+                assert(pt->type == TREE_N);
+
+                if (pt->n_children == 2) {
+                        assert(pt->children[1]->type == ROOT_N);
+                        // convert the tree on the right which is a
+                        // phylogenetic tree
+                        if (n-i >= drop && i % skip == 0) {
+                                tree = static_cast<pt_root_t*>(pt->children[1]->convert(tree));
+                                tree_list.push_front(tree);
+                        }
+                        // on the left is the tree list
+                        assert(children[0]->type == TREE_N);
+                        pt = pt->children[0];
+                }
+                else {
+                        assert(pt->children[0]->type == ROOT_N);
+                        // we only have the phylogenetic tree
+                        if (n-i >= drop && i % skip == 0) {
+                                tree = static_cast<pt_root_t*>(pt->children[0]->convert(tree));
+                                tree_list.push_front(tree);
+                        }
+                        // end loop
+                        pt = NULL;
+                }
+        }
 
         return tree_list;
 }
 
 pt_node_t*
-pt_parsetree_t::convert(list<pt_root_t*>& tree_list) const
+pt_parsetree_t::convert(const pt_root_t* sample_tree) const
 {
         pt_leaf_t* outgroup = NULL;
         pt_node_t* node = NULL;
-        pt_root_t* root;
 
         switch (type)
         {
         case NODE_N:
                 assert(children[2]->type == DISTANCE_N);
                 node = new pt_node_t(*(double *)children[2]->data,
-                                     children[0]->convert(tree_list),
-                                     children[1]->convert(tree_list));
+                                     children[0]->convert(sample_tree),
+                                     children[1]->convert(sample_tree));
                 break;
         case LEAF_N:
                 assert(children[0]->type == NAME_N);
@@ -100,38 +141,13 @@ pt_parsetree_t::convert(list<pt_root_t*>& tree_list) const
                         outgroup = new pt_leaf_t(*(double *)children[2]->children[1]->data,
                                                   (char   *)children[2]->children[0]->data);
                 }
-                if (tree_list.size() > 0) {
-                        // copy leaf ids from existing trees to ensure
-                        // consistency!
-                        node = new pt_root_t(children[0]->convert(tree_list),
-                                             children[1]->convert(tree_list),
-                                             outgroup, "", tree_list.front());
-                }
-                else {
-                        node = new pt_root_t(children[0]->convert(tree_list),
-                                             children[1]->convert(tree_list),
-                                             outgroup);
-                }
+                node = new pt_root_t(children[0]->convert(sample_tree),
+                                     children[1]->convert(sample_tree),
+                                     outgroup, "", sample_tree);
                 break;
         case TREE_N:
-                if (n_children == 2) {
-                        assert(children[1]->type == ROOT_N);
-                        // convert the tree on the right which is a
-                        // phylogenetic tree
-                        root = static_cast<pt_root_t*>(children[1]->convert(tree_list));
-                        tree_list.push_back(root);
-                        // on the left is the tree list
-                        assert(children[0]->type == TREE_N);
-                        children[0]->convert(tree_list);
-                }
-                else {
-                        assert(children[0]->type == ROOT_N);
-                        // we only have the phylogenetic tree
-                        root = static_cast<pt_root_t*>(children[0]->convert(tree_list));
-                        // push tree to the front so that the order of
-                        // the trees is the same as in the file
-                        tree_list.push_front(root);
-                }
+                // this shouldn't happen
+                assert(type != TREE_N);
                 break;
         default:
                 assert(false);
@@ -201,7 +217,7 @@ int yylex_init   (yyscan_t* scanner);
 int yylex_destroy(yyscan_t  scanner);
 void yylex_set_input(yyscan_t scanner, FILE* file);
 
-list<pt_root_t*> parse_tree_list(FILE * file)
+list<pt_root_t*> parse_tree_list(FILE * file, size_t drop, size_t skip)
 {
         list<pt_root_t*> tree_list;
         context_t context;
@@ -220,7 +236,7 @@ list<pt_root_t*> parse_tree_list(FILE * file)
                 return tree_list;
         }
         // convert AST to phylotree
-        tree_list = context.pt_parsetree->convert();
+        tree_list = context.pt_parsetree->convert(drop, skip);
  
         // free lexer memory
         yylex_destroy(context.scanner);
