@@ -113,6 +113,10 @@ otherinclude_HEADERS = \
 	utility.hh \
 	treespace.hh
 
+
+## other files that should be distributed
+EXTRA_DIST = phylotree-polynomial.nb
+
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/phylotree
 
