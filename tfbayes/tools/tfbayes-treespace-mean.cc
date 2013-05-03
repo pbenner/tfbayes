@@ -161,13 +161,13 @@ void mean(const string& command)
         }
         /* print resulting tree */
         pt_root_t* tmp = result.export_tree();
-        cout << result << endl;
+        cerr << result << endl;
         cout << newick_format(tmp) << endl;
         tmp->destroy();
 
         /* Frechet variance */
         if (command == "mean" && options.variance) {
-                cout << "Frechet variance: "
+                cerr << "Frechet variance: "
                      << frechet_variance(ntree_list, result)
                      << endl;
         }
