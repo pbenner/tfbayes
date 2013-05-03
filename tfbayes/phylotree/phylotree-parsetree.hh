@@ -65,7 +65,7 @@ typedef struct {
 	yyscan_t scanner;
 } context_t;
 
-std::list<pt_root_t*> parse_tree_list(FILE * file = NULL, size_t drop = 0, size_t skip = 0);
+std::list<pt_root_t*> parse_tree_list(FILE * file = NULL, size_t drop = 0, size_t skip = 1);
 
 std::ostream& operator<< (std::ostream& o, pt_parsetree_t* const tree);
 
