@@ -68,6 +68,19 @@ protected:
         part_t _part2;
 };
 
+class named_nsplit_t : public nsplit_t {
+public:
+        named_nsplit_t(const nsplit_t& nsplit, const std::vector<std::string>& names)
+                : nsplit_t(nsplit), _names(names) { }
+
+        const std::vector<std::string> names() const {
+                return _names;
+        }
+
+protected:
+        const std::vector<std::string> _names;
+};
+
 typedef boost::shared_ptr<const nsplit_t> nsplit_ptr_t;
 
 class nedge_t : public nsplit_ptr_t {
@@ -347,6 +360,7 @@ ntree_t median_tree_rand(const std::list<ntree_t>& ntree_list, const std::vector
                          bool verbose = false);
 
 std::ostream& operator<< (std::ostream& o, const nsplit_t& nsplit);
+std::ostream& operator<< (std::ostream& o, const named_nsplit_t& names_nsplit);
 std::ostream& operator<< (std::ostream& o, const ntree_t& ntree);
 std::ostream& operator<< (std::ostream& o, const nedge_t& nedge);
 std::ostream& operator<< (std::ostream& o, const common_nedge_t& common_nedge);

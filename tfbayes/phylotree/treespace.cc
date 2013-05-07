@@ -1257,7 +1257,7 @@ operator<< (ostream& o, const nsplit_t& nsplit)
         o << "{";
         for (nsplit_t::part_t::size_type k = nsplit.part1().find_first();
              k != nsplit.part1().npos;
-             k = nsplit.part1().find_next(k)) {
+             k  = nsplit.part1().find_next(k)) {
                 if (k != 0) o << ", ";
                 o << k;
         }
@@ -1267,6 +1267,28 @@ operator<< (ostream& o, const nsplit_t& nsplit)
              k = nsplit.part2().find_next(k)) {
                 if (k != nsplit.part2().find_first()) o << ", ";
                 o << k;
+        }
+        o << "}";
+
+        return o;
+}
+
+ostream&
+operator<< (ostream& o, const named_nsplit_t& named_nsplit)
+{
+        o << "{";
+        for (nsplit_t::part_t::size_type k = named_nsplit.part1().find_first();
+             k != named_nsplit.part1().npos;
+             k  = named_nsplit.part1().find_next(k)) {
+                if (k != 0) o << ", ";
+                o << named_nsplit.names()[k];
+        }
+        o << "} | {";
+        for (nsplit_t::part_t::size_type k = named_nsplit.part2().find_first();
+             k != named_nsplit.part2().npos;
+             k  = named_nsplit.part2().find_next(k)) {
+                if (k != named_nsplit.part2().find_first()) o << ", ";
+                o << named_nsplit.names()[k];
         }
         o << "}";
 
