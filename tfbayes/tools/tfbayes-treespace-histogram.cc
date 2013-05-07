@@ -46,18 +46,12 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct _options_t {
-        bool random;
-        bool variance;
         size_t drop;
         size_t k;
-        size_t iterations;
         bool verbose;
         _options_t()
-                : random(false),
-                  variance(false),
-                  drop(0),
+                : drop(0),
                   k(1),
-                  iterations(100),
                   verbose(false)
                 { }
 } options_t;
@@ -70,9 +64,14 @@ static options_t options;
 static
 void print_usage(char *pname, FILE *fp)
 {
-        (void)fprintf(fp, "\nUsage: %s [OPTION] TREE_LIST\n\n", pname);
+        (void)fprintf(fp, "\nUsage: %s [OPTION] < TREE_LIST\n\n", pname);
         (void)fprintf(fp,
+                      "Format the list of posterior samples such that a histogram\n"
+                      "of edge lengths can be easily computed.\n"
+                      "\n"
                       "Options:\n"
+                      "             -d INTEGER      - drop first n trees\n"
+                      "             -k INTEGER      - compute histogram from every kth tree\n"
                       "             -v              - be verbose and print progress bar"
                       "\n"
                       "   --help                    - print help and exit\n"
@@ -86,7 +85,7 @@ void wrong_usage(const char *msg)
                 (void)fprintf(stderr, "%s\n", msg);
         }
         (void)fprintf(stderr,
-                      "Try `tfbayes-treespace-count-splits --help' for more information.\n");
+                      "Try `tfbayes-treespace-histogram --help' for more information.\n");
 
         exit(EXIT_FAILURE);
 
@@ -158,7 +157,7 @@ ostream& operator<<(ostream& o, const split_map_t& map)
         return o;
 }
 
-void count_splits()
+void histogram()
 {
         split_map_t map;
         ntree_t result;
@@ -193,7 +192,7 @@ int main(int argc, char *argv[])
                         { "version",         0, 0, 'q' }
                 };
 
-                c = getopt_long(argc, argv, "v",
+                c = getopt_long(argc, argv, "d:k:v",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -201,6 +200,20 @@ int main(int argc, char *argv[])
                 }
 
                 switch(c) {
+                case 'd':
+                        if (atoi(optarg) < 0) {
+                                print_usage(argv[0], stdout);
+                                exit(EXIT_SUCCESS);
+                        }
+                        options.drop = atoi(optarg);
+                        break;
+                case 'k':
+                        if (atoi(optarg) < 1) {
+                                print_usage(argv[0], stdout);
+                                exit(EXIT_SUCCESS);
+                        }
+                        options.k = atoi(optarg);
+                        break;
                 case 'v':
                         options.verbose = true;
                         break;
@@ -219,7 +232,7 @@ int main(int argc, char *argv[])
                 wrong_usage("Wrong number of arguments.");
                 exit(EXIT_FAILURE);
         }
-        count_splits();
+        histogram();
 
         return 0;
 }
