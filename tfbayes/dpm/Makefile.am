@@ -93,7 +93,7 @@ libtfbayes_dpm_la_LIBADD += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM
 libtfbayes_dpm_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
 ## extra dist
-EXTRA_DIST = dpm-tfbs-demo-1.cfg dpm-tfbs-demo-1.fa dpm-tfbs-demo-2.cfg dpm-tfbs-demo-2.fa
+EXTRA_DIST = dpm-tfbs-demo-1.cfg dpm-tfbs-demo-1.fa.in dpm-tfbs-demo-2.cfg dpm-tfbs-demo-2.fa.in
 
 ## clean python files
 clean-local:

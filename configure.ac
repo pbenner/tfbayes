@@ -323,6 +323,7 @@ dnl `----------------------------
 AC_CONFIG_HEADER([tfbayes/config.h:tfbayes/config.h.in])
 AC_CONFIG_FILES([
 	Makefile
+	data/Makefile
 	include/Makefile
 	tfbayes/version.h
 	tfbayes/Makefile

@@ -115,7 +115,7 @@ otherinclude_HEADERS = \
 
 
 ## other files that should be distributed
-EXTRA_DIST = phylotree-polynomial.nb
+EXTRA_DIST = phylotree.nb
 
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/phylotree
