@@ -2,7 +2,7 @@
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/include
 
-bin_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug
+noinst_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug
 
 # mcm_test_SOURCES = mcm-test.cc
 # mcm_test_LDADD   = libtfbayes-dpm.la

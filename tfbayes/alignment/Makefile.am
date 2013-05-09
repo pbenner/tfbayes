@@ -6,7 +6,7 @@ INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)
 otherincludedir = $(includedir)/tfbayes/alignment
 otherinclude_HEADERS = alignment.hh alignment-hmm.hh
 
-bin_PROGRAMS = alignment-hmm-test
+noinst_PROGRAMS = alignment-hmm-test
 
 alignment_hmm_test_SOURCES = alignment-hmm-test.cc
 alignment_hmm_test_LDADD   = -lm

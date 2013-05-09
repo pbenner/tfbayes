@@ -2,7 +2,7 @@
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/include
 
-bin_PROGRAMS = fast-test
+noinst_PROGRAMS = fast-test
 
 fast_test_SOURCES = fast-test.cc
 fast_test_LDADD   = -lm
