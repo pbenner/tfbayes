@@ -23,22 +23,18 @@
 
 #include <cstdio>
 #include <getopt.h>
+#include <map>
+#include <vector>
 #include <sys/time.h>
-#include <glpk.h>
-
-#define BOOST_DYNAMIC_BITSET_DONT_USE_FRIENDS
-#include <boost/dynamic_bitset/dynamic_bitset.hpp>
 
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/phylotree-parser.hh>
 #include <tfbayes/phylotree/treespace.hh>
 #include <tfbayes/exception/exception.h>
 
-#include <boost/unordered_map.hpp>
-
 #define alphabet_size 5
 typedef float code_t;
-typedef boost::unordered_map<nsplit_t, std::vector<double> > split_map_t;
+typedef std::map<named_nsplit_t, std::vector<double> > split_map_t;
 
 using namespace std;
 
@@ -116,16 +112,6 @@ list<ntree_t> parse_tree_file()
         return ntree_list;
 }
 
-size_t hash_value(const boost::dynamic_bitset<>& bs)
-{
-        return boost::hash_value(bs.m_bits);
-}
-
-size_t hash_value(const nsplit_t& nsplit)
-{
-        return hash_value(nsplit.part1());
-}
-
 ostream& operator<<(ostream& o, const split_map_t& map)
 {
         size_t size = 0;
@@ -134,6 +120,13 @@ ostream& operator<<(ostream& o, const split_map_t& map)
                 if (it->second.size() > size) {
                         size = it->second.size();
                 }
+        }
+        // print splits
+        size_t i = 0;
+        for (split_map_t::const_iterator it = map.begin(); it != map.end(); it++, i++) {
+                cout << "# s" << i << ": "
+                     << it->first
+                     << endl;
         }
         // print header
         for (size_t i = 0; i < map.size(); i++) {
@@ -170,15 +163,9 @@ void histogram()
              it != ntree_list.end(); it++) {
                 for (nedge_set_t::const_iterator is = it->nedge_set().begin();
                      is != it->nedge_set().end(); is++) {
-                        map[**is].push_back(is->d());
+                        const named_nsplit_t named_nsplit(**is, ntree_list.begin()->leaf_names());
+                        map[named_nsplit].push_back(is->d());
                 }
-        }
-        // print header
-        size_t i = 0;
-        for (split_map_t::const_iterator it = map.begin(); it != map.end(); it++, i++) {
-                cout << "# s" << i << ": "
-                     << named_nsplit_t(it->first, ntree_list.begin()->leaf_names())
-                     << endl;
         }
         cout << map << endl;
 }

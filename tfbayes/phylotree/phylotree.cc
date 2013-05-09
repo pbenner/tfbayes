@@ -34,7 +34,7 @@ pt_node_t::pt_node_t(double d,
 {
         assert ((left == NULL && right == NULL) ||
                 (left != NULL && right != NULL));
-        
+
         if (leaf()) {
                 n_leafs = 1;
                 n_nodes = 1;

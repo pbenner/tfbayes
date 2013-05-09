@@ -70,15 +70,21 @@ protected:
 
 class named_nsplit_t : public nsplit_t {
 public:
-        named_nsplit_t(const nsplit_t& nsplit, const std::vector<std::string>& names)
+        typedef std::vector<std::string> names_t;
+
+        named_nsplit_t(const nsplit_t& nsplit, const names_t& names)
                 : nsplit_t(nsplit), _names(names) { }
 
         const std::vector<std::string> names() const {
                 return _names;
         }
 
+        bool operator<(const named_nsplit_t& named_nsplit) const {
+                return part1() < named_nsplit.part1();
+        }
+
 protected:
-        const std::vector<std::string> _names;
+        const names_t _names;
 };
 
 typedef boost::shared_ptr<const nsplit_t> nsplit_ptr_t;
