@@ -19,3 +19,6 @@ configure
 config.status
 config.log
 Makefile
+tfbayes/phylotree/phylotree-lexer.cc
+tfbayes/phylotree/phylotree-parser.cc
+tfbayes/phylotree/phylotree-parser.h
