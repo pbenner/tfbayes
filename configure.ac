@@ -23,7 +23,8 @@ AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR([auxtools/compile])
-AM_INIT_AUTOMAKE([gnu dist-bzip2])
+dnl we have a README.md instead of a README
+AM_INIT_AUTOMAKE([gnu dist-bzip2 foreign])
 dnl turn of AC_PROG_CC's default behaviour
 : ${CFLAGS=""}
 AC_PROG_CC
@@ -38,8 +39,6 @@ AC_PROG_YACC
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 LT_INIT
-dnl we have a README.md instead of a README
-AM_INIT_AUTOMAKE([foreign])
 
 dnl ,---------------------------- 
 dnl | GENERAL PACKAGE INFO
