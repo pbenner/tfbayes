@@ -238,6 +238,29 @@ void test_tree10() {
              << endl << endl;
 }
 
+void test_tree11() {
+        cout << "Test 10:" << endl;
+        pt_leaf_t n0(0.7, "n0");
+        pt_leaf_t n1(0.3, "n1");
+        pt_leaf_t n2(0.1, "n2");
+        pt_leaf_t n3(0.2, "n3");
+        pt_leaf_t n4(0.6, "n4");
+        pt_node_t n5(0.4, &n2, &n3);
+        pt_node_t n6(0.5, &n1, &n5);
+        pt_root_t n7(&n6, &n4, &n0);
+        vector<code_t> observations(n7.n_leafs, 0);
+        observations[n7("n0")->id] = 1;
+        observations[n7("n1")->id] = 0;
+        observations[n7("n2")->id] = 1;
+        observations[n7("n3")->id] = 1;
+        observations[n7("n4")->id] = 3;
+
+        polynomial_t<code_t, alphabet_size> result = pt_polynomial<code_t, alphabet_size>(&n7, observations);
+        cout << result << endl
+             << "0.0665841 Pa^1 Pc^3 Pt^1 + 0.183048 Pa^1 Pc^2 Pt^1 + 0.0174905 Pa^1 Pc^1 Pt^1 (correct polynomial)"
+             << endl << endl;
+}
+
 int main(void) {
         test_tree1();
         test_tree2();
@@ -249,6 +272,7 @@ int main(void) {
         test_tree8();
         test_tree9();
         test_tree10();
+        test_tree11();
 
         return 0.0;
 }
