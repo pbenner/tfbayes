@@ -137,6 +137,9 @@ void test2()
         cout << "exporting tree:" << endl
              << tree              << endl;
         tree->destroy();
+
+
+        nedge_node_t(ntree.nedge_set(), 7);
 }
 
 void test3()
@@ -619,15 +622,15 @@ void test9()
 int
 main(void)
 {
-        test1(); cout << endl;
+        //test1(); cout << endl;
         test2(); cout << endl;
-        test3(); cout << endl;
-        test4(); cout << endl;
-        test5(); cout << endl;
-        test6(); cout << endl;
-        test7(); cout << endl;
-        test8(); cout << endl;
-        test9(); cout << endl;
+        //test3(); cout << endl;
+        //test4(); cout << endl;
+        //test5(); cout << endl;
+        //test6(); cout << endl;
+        //test7(); cout << endl;
+        //test8(); cout << endl;
+        //test9(); cout << endl;
         glp_free_env();
 
         return 0;

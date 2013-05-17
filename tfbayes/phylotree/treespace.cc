@@ -131,14 +131,11 @@ nsplit_t::operator==(const nsplit_t& nsplit) const
 bool
 nsplit_t::operator<=(const nsplit_t& nsplit) const
 {
-        const part_t& p1 = this ->part1();
-        const part_t& p2 = this ->part2();
-        const part_t& p3 = nsplit.part1();
+        const part_t& p1 = this ->part2();
+        const part_t& p2 = nsplit.part1();
+        const part_t& p3 = nsplit.part2();
 
-        if (is_subset(p1, p3) || is_subset(p2, p3)) {
-                return true;
-        }
-        return false;
+        return is_subset(p1, p2) || is_subset(p1, p3);
 }
 
 bool
@@ -254,6 +251,83 @@ nedge_set_t::split(nsplit_t split) const
                 }
         }
         return p;
+}
+
+// nedge_tree_t
+////////////////////////////////////////////////////////////////////////////////
+
+nedge_node_t::nedge_node_t(const nedge_t& nedge, const nsplit_t::part_t& open_leaves)
+        : _left (NULL),
+          _right(NULL),
+          _nedge(nedge),
+          _leaves((*nedge).part2() & open_leaves)
+{
+        cout << "creating node: " << _leaves << endl;
+}
+
+nedge_node_t::nedge_node_t(const nedge_set_t& nedge_set, size_t n)
+        : _left (NULL),
+          _right(NULL),
+          _leaves(n+1)
+{
+        // leaf 0 is above and all other edges below this node
+        _leaves.flip();
+        _leaves[0] = false;
+        cout << "creating node: " << _leaves << endl;
+
+        for (size_t i = 0; i < nedge_set.size(); i++) {
+                cout << endl << "propagating : " << nedge_set[i] << endl;
+                propagate(nedge_set[i]);
+        }
+}
+
+nedge_node_t::nedge_node_t(
+        nedge_node_t* left,
+        nedge_node_t* right,
+        const nedge_t& nedge,
+        nsplit_t::part_t leaves)
+        : _left  (left ),
+          _right (right),
+          _nedge (nedge),
+          _leaves(leaves)
+{ }
+
+nedge_node_t::nedge_node_t(const nedge_node_t& nedge_node)
+        // just copy links without cloning!
+        : _left  (nedge_node._left ),
+          _right (nedge_node._right),
+          _nedge (nedge_node._nedge),
+          _leaves(nedge_node._leaves)
+{ }
+
+void
+nedge_node_t::propagate(const nedge_t& e) {
+        if (_left == NULL) {
+                _left = new nedge_node_t(e, leaves());
+        }
+        else if (*left().nedge() >= *e) {
+                cout << *left().nedge() << " < " << *e << endl;
+                _left->propagate(e);
+        }
+        else if (_right == NULL) {
+                _right = new nedge_node_t(e, leaves());
+                // now this node has it's final leaf set
+                _leaves = left().leaves() | right().leaves();
+        }
+        else if (*right().nedge() >= *e) {
+                cout << *right().nedge() << " < " << *e << endl;
+                _right->propagate(e);
+        }
+        else {
+                // attach an edge to the root of the tree
+                _left  = new nedge_node_t(_left, _right, e, _leaves);
+                _right = NULL;
+                //_nedge = nedge_t();
+                // and reset bitset
+                _leaves.reset();
+                _leaves.flip();
+                _leaves[0] = false;
+        }
 }
 
 // ntree_t

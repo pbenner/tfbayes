@@ -141,6 +141,38 @@ public:
 
 bool compatible(const nsplit_t& s1, const nsplit_t& s2);
 
+class nedge_node_t {
+public:
+        nedge_node_t(const nedge_t& nedge, const nsplit_t::part_t& open_leaves);
+        nedge_node_t(const nedge_set_t& nedge_set, size_t n);
+        nedge_node_t(nedge_node_t* left, nedge_node_t* right, const nedge_t& nedge, nsplit_t::part_t leaves);
+        nedge_node_t(const nedge_node_t& nedge_node);
+
+        void propagate(const nedge_t& e);
+
+        const nedge_node_t& left () const {
+                return *_left;
+        }
+        const nedge_node_t& right() const {
+                return *_right;
+        }
+        const nedge_t nedge() const {
+                return _nedge;
+        }
+        const nsplit_t::part_t& leaves() const {
+                return _leaves;
+        }
+
+protected:
+        nedge_node_t* _left;
+        nedge_node_t* _right;
+
+        nedge_t _nedge;
+
+        // leaves that are below this edge
+        nsplit_t::part_t _leaves;
+};
+
 class ntree_t {
 public:
         // constructors
