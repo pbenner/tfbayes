@@ -36,6 +36,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <tfbayes/phylotree/phylotree.hh>
+#include <tfbayes/utility/clonable.hh>
 
 class nsplit_t {
 public:
@@ -141,12 +142,16 @@ public:
 
 bool compatible(const nsplit_t& s1, const nsplit_t& s2);
 
-class nedge_node_t {
+class nedge_node_t : public clonable {
 public:
         nedge_node_t(const nedge_t& nedge, const nsplit_t::part_t& open_leaves);
         nedge_node_t(const nedge_set_t& nedge_set, size_t n);
         nedge_node_t(nedge_node_t* left, nedge_node_t* right, const nedge_t& nedge, nsplit_t::part_t leaves);
         nedge_node_t(const nedge_node_t& nedge_node);
+
+        nedge_node_t* clone() const;
+
+        void destroy();
 
         void propagate(const nedge_t& e);
 
