@@ -253,8 +253,40 @@ nedge_set_t::split(nsplit_t split) const
         return p;
 }
 
-// nedge_tree_t
+// nedge_node_t and nedge_root_t
 ////////////////////////////////////////////////////////////////////////////////
+
+pt_node_t*
+convert_leaf_set(
+        const vector<double>& leaf_d,
+        const vector<string>& leaf_names,
+        const nsplit_t::part_t& leaves)
+{
+        // get the first non-zero bit
+        size_t i = leaves.find_first();
+
+        // if there are no leaves, then return NULL
+        if (i == leaves.npos) {
+                return NULL;
+        }
+
+        // start with the first leaf
+        pt_leaf_t* current_leaf;
+        pt_node_t* current_node = new pt_leaf_t(leaf_d[i], leaf_names[i]);
+
+        // for every other leaf, create a new node and update current_node
+        for (; i != leaves.npos; i = leaves.find_next(i)) {
+                current_leaf = new pt_leaf_t(leaf_d[i], leaf_names[i]);
+                current_node = new pt_node_t(0.0, current_node, current_leaf);
+        }
+        return current_node;
+}
+
+nedge_node_t::nedge_node_t(size_t n)
+        : _left (NULL),
+          _right(NULL),
+          _leaves(n+1)
+{ }
 
 nedge_node_t::nedge_node_t(const nedge_t& nedge, const nsplit_t::part_t& open_leaves)
         : _left (NULL),
@@ -262,20 +294,6 @@ nedge_node_t::nedge_node_t(const nedge_t& nedge, const nsplit_t::part_t& open_le
           _nedge(nedge),
           _leaves((*nedge).part2() & open_leaves)
 { }
-
-nedge_node_t::nedge_node_t(const nedge_set_t& nedge_set, size_t n)
-        : _left (NULL),
-          _right(NULL),
-          _leaves(n+1)
-{
-        // leaf 0 is above and all other edges below this node
-        _leaves.flip();
-        _leaves[0] = false;
-
-        for (size_t i = 0; i < nedge_set.size(); i++) {
-                propagate(nedge_set[i]);
-        }
-}
 
 nedge_node_t::nedge_node_t(
         nedge_node_t* left,
@@ -345,6 +363,79 @@ nedge_node_t::propagate(const nedge_t& e) {
                 _leaves.flip();
                 _leaves[0] = false;
         }
+}
+
+pt_node_t*
+nedge_node_t::convert(
+        const vector<double>& leaf_d,
+        const vector<string>& leaf_names) const
+{
+        pt_node_t* result   = NULL;
+        pt_node_t* pt_left  = NULL;
+        pt_node_t* pt_right = NULL;
+
+        if (_left  == NULL) {
+                // this node is a leaf
+                result = convert_leaf_set(leaf_d, leaf_names, leaves());
+                // something went wrong if result is NULL
+                assert(result != NULL);
+                result->d = nedge().d();
+        }
+        else {
+                pt_left = left().convert(leaf_d, leaf_names);
+                if (_right == NULL) {
+                        // incomplete nedge set
+                        pt_right = convert_leaf_set(leaf_d, leaf_names, leaves() - left().leaves());
+                        assert(pt_right != NULL);
+                }
+                else {
+                        // both leaves exist
+                        pt_right = right().convert(leaf_d, leaf_names);
+                }
+                result = new pt_node_t(nedge().d(), pt_left, pt_right);
+        }
+        return result;
+}
+
+nedge_root_t::nedge_root_t(const nedge_set_t& nedge_set, size_t n,
+        const vector<double>& leaf_d, const vector<string>& leaf_names)
+        : nedge_node_t(n),
+          _leaf_d(leaf_d),
+          _leaf_names(leaf_names)
+{
+        // leaf 0 is above and all other edges below this node
+        _leaves.flip();
+        _leaves[0] = false;
+
+        for (size_t i = 0; i < nedge_set.size(); i++) {
+                propagate(nedge_set[i]);
+        }
+}
+
+nedge_root_t::nedge_root_t(const nedge_root_t& nedge_root)
+        : nedge_node_t(nedge_root),
+          _leaf_d(nedge_root._leaf_d),
+          _leaf_names(nedge_root._leaf_names)
+{ }
+
+nedge_root_t*
+nedge_root_t::clone() const
+{
+        return new nedge_root_t(*this);
+}
+
+pt_root_t*
+nedge_root_t::convert() const
+{
+        pt_node_t* tmp = nedge_node_t::convert(leaf_d(), leaf_names());
+        pt_leaf_t* outgroup = new pt_leaf_t(leaf_d(0), leaf_names(0));
+        pt_root_t* result;
+
+        assert(!tmp->leaf());
+        result = new pt_root_t(tmp->left, tmp->right, outgroup);
+        delete(tmp);
+
+        return result;
 }
 
 // ntree_t

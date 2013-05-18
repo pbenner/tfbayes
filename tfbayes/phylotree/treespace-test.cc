@@ -139,7 +139,7 @@ void test2()
         tree->destroy();
 
 
-        nedge_node_t(ntree.nedge_set(), 7);
+        nedge_root_t(ntree.nedge_set(), 7, leaf_d, leaf_names);
 }
 
 void test3()

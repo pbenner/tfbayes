@@ -38,6 +38,9 @@
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/utility/clonable.hh>
 
+// nsplit_t forms the basic type for defining edges and ntrees
+////////////////////////////////////////////////////////////////////////////////
+
 class nsplit_t {
 public:
         typedef boost::dynamic_bitset<> part_t;
@@ -110,6 +113,9 @@ protected:
         std::string _name;
 };
 
+// common_nedge_t defines edges that are common to two ntrees
+////////////////////////////////////////////////////////////////////////////////
+
 class common_nedge_t : public nsplit_ptr_t {
 public:
         // constructors
@@ -125,6 +131,9 @@ protected:
         double _d1;
         double _d2;
 };
+
+// ntrees store their nedges in the nedge_set_t
+////////////////////////////////////////////////////////////////////////////////
 
 class nedge_set_t : public std::vector<nedge_t> {
 public:
@@ -142,18 +151,23 @@ public:
 
 bool compatible(const nsplit_t& s1, const nsplit_t& s2);
 
+// nedge_node_t and nedge_root_t for convertig ntrees to pt_root_t trees
+////////////////////////////////////////////////////////////////////////////////
+
 class nedge_node_t : public clonable {
 public:
-        nedge_node_t(const nedge_t& nedge, const nsplit_t::part_t& open_leaves);
-        nedge_node_t(const nedge_set_t& nedge_set, size_t n);
-        nedge_node_t(nedge_node_t* left, nedge_node_t* right, const nedge_t& nedge, nsplit_t::part_t leaves);
-        nedge_node_t(const nedge_node_t& nedge_node);
+         nedge_node_t(size_t n);
+         nedge_node_t(const nedge_t& nedge, const nsplit_t::part_t& open_leaves);
+         nedge_node_t(nedge_node_t* left, nedge_node_t* right, const nedge_t& nedge, nsplit_t::part_t leaves);
+         nedge_node_t(const nedge_node_t& nedge_node);
+        ~nedge_node_t() { };
 
-        nedge_node_t* clone() const;
+        virtual nedge_node_t* clone() const;
+        virtual void destroy();
 
-        void destroy();
-
-        void propagate(const nedge_t& e);
+        virtual void propagate(const nedge_t& e);
+        virtual pt_node_t* convert(const std::vector<double>& leaf_d,
+                                   const std::vector<std::string>& leaf_names) const;
 
         const nedge_node_t& left () const {
                 return *_left;
@@ -177,6 +191,39 @@ protected:
         // leaves that are below this edge
         nsplit_t::part_t _leaves;
 };
+
+class nedge_root_t : public nedge_node_t {
+public:
+         nedge_root_t(const nedge_set_t& nedge_set, size_t n,
+                      const std::vector<double>& leaf_d,
+                      const std::vector<std::string>& leaf_names);
+         nedge_root_t(const nedge_root_t& nedge_root);
+        ~nedge_root_t() { };
+
+        virtual nedge_root_t* clone() const;
+
+        virtual pt_root_t* convert() const;
+
+        const std::vector<double>& leaf_d() const {
+                return _leaf_d;
+        }
+        const double leaf_d(size_t i) const {
+                return _leaf_d[i];
+        }
+        const std::vector<std::string>& leaf_names() const {
+                return _leaf_names;
+        }
+        const std::string& leaf_names(size_t i) const {
+                return _leaf_names[i];
+        }
+
+protected:
+        std::vector<double> _leaf_d;
+        std::vector<std::string> _leaf_names;
+};
+
+// ntree_t definition
+////////////////////////////////////////////////////////////////////////////////
 
 class ntree_t {
 public:
@@ -221,6 +268,9 @@ protected:
         // empty edge
         static const nedge_t _null_nedge;
 };
+
+// geodesic computations
+////////////////////////////////////////////////////////////////////////////////
 
 class vertex_cover_t {
 public:
@@ -359,6 +409,9 @@ protected:
         static const double epsilon = 0.000001;
 };
 
+// mean and median algorithms
+////////////////////////////////////////////////////////////////////////////////
+
 class lambda_t {
 public:
         virtual double operator()(size_t k) const = 0;
@@ -401,6 +454,9 @@ ntree_t median_tree_rand(const std::list<ntree_t>& ntree_list, size_t n = 100,
 ntree_t median_tree_rand(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights,
                          size_t n = 100, const lambda_t& lambda = default_lambda_t(),
                          bool verbose = false);
+
+// i/o operators
+////////////////////////////////////////////////////////////////////////////////
 
 std::ostream& operator<< (std::ostream& o, const nsplit_t& nsplit);
 std::ostream& operator<< (std::ostream& o, const named_nsplit_t& names_nsplit);
