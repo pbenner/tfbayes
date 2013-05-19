@@ -21,19 +21,17 @@ The following libraries are required for tfbayes:
 	gsl
 	pthread
 
-To read phylogenetic trees in newick format, it is required to have
+Requirements for parsing phylogenetic trees in newick format:
 
 	bison
 	flex
 
-installed. Some of the scripts also require *python* with
+Some of the scripts are written in *python* and require:
 
 	biopython
 	numpy
 	matplotlib
 	weblogolib
-
-installed.
 
 ## Installation
 
