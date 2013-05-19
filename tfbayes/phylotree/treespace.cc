@@ -1031,18 +1031,12 @@ geodesic_t::gtp(npath_t& npath)
 {
         for (npath_t::iterator it = npath.begin(); it != npath.end();)
         {
+                if (it->first.size() == 0 || it->second.size() == 0) {
+                        ++it; continue;
+                }
                 incompatibility_graph_t graph(it->first, it->second);
                 vertex_cover_t vc = graph.min_weight_cover();
                 if (abs(vc.weight - 1.0) > epsilon && vc.weight < 1.0) {
-                        // if (vc.a.size() == 0 || vc.a_comp.size() == 0 ||
-                        //     vc.b.size() == 0 || vc.b_comp.size() == 0) {
-                        //         cerr << "Vertex cover is singular! VC weight: "
-                        //              << vc.weight << endl;
-                        //         cerr << "vc.a     : " << vc.a      << endl;
-                        //         cerr << "vc.a_comp: " << vc.a_comp << endl;
-                        //         cerr << "vc.b     : " << vc.b      << endl;
-                        //         cerr << "vc.b_comp: " << vc.b_comp << endl;
-                        // }
                         it = npath.erase(it);
                         it = npath.insert(it, support_pair_t(vc.a, vc.b_comp));
                         it = npath.insert(it, support_pair_t(vc.a_comp, vc.b));
