@@ -108,19 +108,13 @@ nsplit_t::operator==(const nsplit_t& nsplit) const
 }
 
 bool
-nsplit_t::operator<=(const nsplit_t& nsplit) const
+nsplit_t::is_ancestor_of(const nsplit_t& nsplit) const
 {
-        const part_t& p1 = this ->part2();
-        const part_t& p2 = nsplit.part1();
-        const part_t& p3 = nsplit.part2();
+        const nsplit_t::part_t& p1 = part2();
+        const nsplit_t::part_t& p2 = nsplit.part1();
+        const nsplit_t::part_t& p3 = nsplit.part2();
 
-        return is_subset(p1, p2) || is_subset(p1, p3);
-}
-
-bool
-nsplit_t::operator>=(const nsplit_t& nsplit) const
-{
-        return !operator<=(nsplit);
+        return !(is_subset(p1, p2) || is_subset(p1, p3));
 }
 
 bool compatible(const nsplit_t& s1, const nsplit_t& s2)
@@ -162,11 +156,7 @@ nedge_t::nedge_t(const nsplit_ptr_t& nsplit_ptr, double d, string name)
 bool
 nedge_t::is_ancestor_of(const nedge_t& nedge) const
 {
-        const nsplit_t::part_t& p1 = operator*().part2();
-        const nsplit_t::part_t& p2 = nedge->part1();
-        const nsplit_t::part_t& p3 = nedge->part2();
-
-        return !(is_subset(p1, p2) || is_subset(p1, p3));
+        return operator*().is_ancestor_of(*nedge);
 }
 
 double
@@ -232,7 +222,7 @@ nedge_set_t::split(nsplit_t split) const
 
         for (const_iterator it = begin(); it != end(); it++) {
                 const nedge_t& nedge = *it;
-                if (*nedge <= split) {
+                if (split.is_ancestor_of(*nedge)) {
                         p.first.push_back(nedge);
                 }
                 else {

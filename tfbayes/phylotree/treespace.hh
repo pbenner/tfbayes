@@ -57,14 +57,11 @@ public:
         size_t part2(size_t i) const;
         // operators
         bool operator==(const nsplit_t& nsplit) const;
-        // s1 <= s2 means: if s1 is removed from the tree, then
-        // the node with split s2 is _not_ part of the subtree that
-        // contains leaf 0
-        bool operator<=(const nsplit_t& nsplit) const;
-        // s1 >= s2 means: if s1 is removed from the tree, then
-        // the node with split s2 is part of the subtree that
-        // contains leaf 0
-        bool operator>=(const nsplit_t& nsplit) const;
+
+
+        // ancestor relation where the tree is assumed to be rooted at
+        // leaf zero
+        bool is_ancestor_of(const nsplit_t& nsplit) const;
 
 protected:
         size_t _n;
