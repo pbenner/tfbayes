@@ -635,6 +635,68 @@ void test9()
 
 }
 
+void test10()
+{
+        cout << "test 10" << endl
+             << "------------------------------------------------------------"
+             << endl;
+
+        // Tree 1
+        //////////////////////////////////////////////////////////////////////
+        set<size_t> s1;
+        s1.insert(4);
+        s1.insert(5);
+        set<size_t> s2;
+        s2.insert(2);
+        s2.insert(3);
+        set<size_t> s3;
+        s3.insert(1);
+        s3.insert(2);
+        s3.insert(3);
+        nedge_t e1(5, s1, 1.0);
+        nedge_t e2(5, s2, 1.0);
+        nedge_t e3(5, s3, 1.0);
+        // construct trees
+        nedge_set_t nedge_set1;
+        nedge_set_t nedge_set2;
+        // internal edge lengths
+        nedge_set1.push_back(e1);
+        nedge_set1.push_back(e2);
+        nedge_set1.push_back(e3);
+        //nedge_set1.push_back(e5);
+        nedge_set2.push_back(e2);
+        nedge_set2.push_back(e1);
+        nedge_set2.push_back(e3);
+        // leaf edge lengths
+        vector<double> leaf_d(6, 1);
+        leaf_d[0] = 1.5;
+        leaf_d[1] = 1.5;
+        leaf_d[2] = 1.5;
+        leaf_d[3] = 1.5;
+        leaf_d[4] = 1.5;
+        leaf_d[5] = 1.5;
+        // leaf names
+        vector<string> leaf_names;
+        leaf_names.push_back("mm9");
+        leaf_names.push_back("papHam1");
+        leaf_names.push_back("gorGor1");
+        leaf_names.push_back("panTro2");
+        leaf_names.push_back("ponAbe2");
+        leaf_names.push_back("hg19");
+        ntree_t nt1(nedge_set1, leaf_d, leaf_names);
+        ntree_t nt2(nedge_set2, leaf_d, leaf_names);
+
+        pt_root_t* t1 = nt1.export_tree();
+        cout << "exporting tree:" << endl
+             << t1                << endl;
+        t1->destroy();
+
+        pt_root_t* t2 = nt2.export_tree();
+        cout << "exporting tree:" << endl
+             << t2                << endl;
+        t2->destroy();
+}
+
 int
 main(void)
 {
@@ -647,6 +709,7 @@ main(void)
         test7(); cout << endl;
         test8(); cout << endl;
         test9(); cout << endl;
+        test10(); cout << endl;
         glp_free_env();
 
         return 0;

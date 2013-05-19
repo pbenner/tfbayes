@@ -328,8 +328,24 @@ nedge_node_t::propagate(const nedge_t& e) {
         }
         else {
                 // attach an edge to the root of the tree
-                _left  = new nedge_node_t(_left, _right, e);
-                _right = NULL;
+                if (_right != NULL) {
+                        if (e.is_ancestor_of(left ().nedge()) &&
+                            e.is_ancestor_of(right().nedge()))
+                        {
+                                _left  = new nedge_node_t(_left, _right, e);
+                                _right = NULL;
+                        }
+                        else if (e.is_ancestor_of(left ().nedge()))
+                        {
+                                _left  = new nedge_node_t(_left,  NULL, e);
+                        }
+                        else {
+                                _right = new nedge_node_t(_right, NULL, e);
+                        }
+                }
+                else {
+                        _left  = new nedge_node_t(_left,  NULL, e);
+                }
         }
 }
 
@@ -343,12 +359,10 @@ nedge_node_t::convert(
         pt_node_t* pt_right = NULL;
 
         if (_left  == NULL) {
-                if (nedge()) {
-                        result = convert_leaf_set(leaf_d, leaf_names, nedge()->part2());
-                        // something went wrong if result is NULL
-                        assert(result != NULL);
-                        result->d = nedge().d();
-                }
+                result = convert_leaf_set(leaf_d, leaf_names, nedge()->part2());
+                // something went wrong if result is NULL
+                assert(result != NULL);
+                result->d = nedge().d();
         }
         else {
                 pt_left = left().convert(leaf_d, leaf_names);
@@ -1020,6 +1034,15 @@ geodesic_t::gtp(npath_t& npath)
                 incompatibility_graph_t graph(it->first, it->second);
                 vertex_cover_t vc = graph.min_weight_cover();
                 if (abs(vc.weight - 1.0) > epsilon && vc.weight < 1.0) {
+                        // if (vc.a.size() == 0 || vc.a_comp.size() == 0 ||
+                        //     vc.b.size() == 0 || vc.b_comp.size() == 0) {
+                        //         cerr << "Vertex cover is singular! VC weight: "
+                        //              << vc.weight << endl;
+                        //         cerr << "vc.a     : " << vc.a      << endl;
+                        //         cerr << "vc.a_comp: " << vc.a_comp << endl;
+                        //         cerr << "vc.b     : " << vc.b      << endl;
+                        //         cerr << "vc.b_comp: " << vc.b_comp << endl;
+                        // }
                         it = npath.erase(it);
                         it = npath.insert(it, support_pair_t(vc.a, vc.b_comp));
                         it = npath.insert(it, support_pair_t(vc.a_comp, vc.b));
