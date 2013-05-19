@@ -95,14 +95,27 @@ void test2()
         s4.insert(0);
         s4.insert(1);
         s4.insert(2);
+        s4.insert(8);
+        s4.insert(9);
         set<size_t> s5;
         s5.insert(0);
         s5.insert(1);
-        nedge_t e1(7, s1, 1);
-        nedge_t e2(7, s2, 1);
-        nedge_t e3(7, s3, 1);
-        nedge_t e4(7, s4, 1);
-        nedge_t e5(7, s5, 1);
+        s5.insert(8);
+        s5.insert(9);
+        set<size_t> s6;
+        s6.insert(1);
+        s6.insert(8);
+        s6.insert(9);
+        set<size_t> s7;
+        s7.insert(8);
+        s7.insert(9);
+        nedge_t e1(9, s1, 1);
+        nedge_t e2(9, s2, 1);
+        nedge_t e3(9, s3, 1);
+        nedge_t e4(9, s4, 1);
+        nedge_t e5(9, s5, 1);
+        nedge_t e6(9, s6, 1);
+        nedge_t e7(9, s7, 1);
         // construct tree
         nedge_set_t nedge_set;
         // internal edge lengths
@@ -111,8 +124,10 @@ void test2()
         nedge_set.push_back(e3);
         nedge_set.push_back(e4);
         nedge_set.push_back(e5);
+        nedge_set.push_back(e6);
+        nedge_set.push_back(e7);
         // leaf edge lengths
-        vector<double> leaf_d(8, 1);
+        vector<double> leaf_d(10, 1);
         leaf_d[0] = 0.5;
         leaf_d[1] = 1.5;
         leaf_d[2] = 2.5;
@@ -121,6 +136,8 @@ void test2()
         leaf_d[5] = 5.5;
         leaf_d[6] = 6.5;
         leaf_d[7] = 7.5;
+        leaf_d[8] = 8.5;
+        leaf_d[9] = 9.5;
         // leaf names
         vector<string> leaf_names;
         leaf_names.push_back("leaf 0");
@@ -131,15 +148,14 @@ void test2()
         leaf_names.push_back("leaf 5");
         leaf_names.push_back("leaf 6");
         leaf_names.push_back("leaf 7");
+        leaf_names.push_back("leaf 8");
+        leaf_names.push_back("leaf 9");
         ntree_t ntree(nedge_set, leaf_d, leaf_names);
         // print tree
         pt_root_t* tree = ntree.export_tree();
         cout << "exporting tree:" << endl
              << tree              << endl;
         tree->destroy();
-
-
-        nedge_root_t(ntree.nedge_set(), 7, leaf_d, leaf_names);
 }
 
 void test3()
@@ -622,15 +638,15 @@ void test9()
 int
 main(void)
 {
-        //test1(); cout << endl;
+        test1(); cout << endl;
         test2(); cout << endl;
-        //test3(); cout << endl;
-        //test4(); cout << endl;
-        //test5(); cout << endl;
-        //test6(); cout << endl;
-        //test7(); cout << endl;
-        //test8(); cout << endl;
-        //test9(); cout << endl;
+        test3(); cout << endl;
+        test4(); cout << endl;
+        test5(); cout << endl;
+        test6(); cout << endl;
+        test7(); cout << endl;
+        test8(); cout << endl;
+        test9(); cout << endl;
         glp_free_env();
 
         return 0;

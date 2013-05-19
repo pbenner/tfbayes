@@ -41,27 +41,6 @@ bool empty_intersection(const nsplit_t::part_t& x, const nsplit_t::part_t& y)
 }
 
 static
-nsplit_t::part_t intersection(const nsplit_t::part_t& x, const nsplit_t::part_t& y)
-{
-        nsplit_t::part_t result(x);
-
-        // compute intersection
-        result &= y;
-
-        return result;
-}
-
-static
-nsplit_t::part_t difference(const nsplit_t::part_t& x, const nsplit_t::part_t& y)
-{
-        nsplit_t::part_t result(x);
-
-        result -= y;
-
-        return result;
-}
-
-static
 bool is_subset(const nsplit_t::part_t& x, const nsplit_t::part_t& y)
 {
         nsplit_t::part_t result(x);
@@ -180,6 +159,16 @@ nedge_t::nedge_t(const nsplit_ptr_t& nsplit_ptr, double d, string name)
         : nsplit_ptr_t(nsplit_ptr), _d(d), _name(name)
 { }
 
+bool
+nedge_t::is_ancestor_of(const nedge_t& nedge) const
+{
+        const nsplit_t::part_t& p1 = operator*().part2();
+        const nsplit_t::part_t& p2 = nedge->part1();
+        const nsplit_t::part_t& p3 = nedge->part2();
+
+        return !(is_subset(p1, p2) || is_subset(p1, p3));
+}
+
 double
 nedge_t::d() const
 {
@@ -275,42 +264,37 @@ convert_leaf_set(
         pt_node_t* current_node = new pt_leaf_t(leaf_d[i], leaf_names[i]);
 
         // for every other leaf, create a new node and update current_node
-        for (; i != leaves.npos; i = leaves.find_next(i)) {
+        for (i = leaves.find_next(i); i != leaves.npos; i = leaves.find_next(i)) {
                 current_leaf = new pt_leaf_t(leaf_d[i], leaf_names[i]);
                 current_node = new pt_node_t(0.0, current_node, current_leaf);
         }
         return current_node;
 }
 
-nedge_node_t::nedge_node_t(size_t n)
+nedge_node_t::nedge_node_t()
         : _left (NULL),
-          _right(NULL),
-          _leaves(n+1)
+          _right(NULL)
 { }
 
-nedge_node_t::nedge_node_t(const nedge_t& nedge, const nsplit_t::part_t& open_leaves)
+nedge_node_t::nedge_node_t(const nedge_t& nedge)
         : _left (NULL),
           _right(NULL),
-          _nedge(nedge),
-          _leaves((*nedge).part2() & open_leaves)
+          _nedge(nedge)
 { }
 
 nedge_node_t::nedge_node_t(
         nedge_node_t* left,
         nedge_node_t* right,
-        const nedge_t& nedge,
-        nsplit_t::part_t leaves)
+        const nedge_t& nedge)
         : _left  (left ),
           _right (right),
-          _nedge (nedge),
-          _leaves(leaves)
+          _nedge (nedge)
 { }
 
 nedge_node_t::nedge_node_t(const nedge_node_t& nedge_node)
         : _left  (NULL),
           _right (NULL),
-          _nedge (nedge_node._nedge),
-          _leaves(nedge_node._leaves)
+          _nedge (nedge_node._nedge)
 {
         if (nedge_node._left  != NULL) {
                 _left  = nedge_node._left ->clone();
@@ -341,27 +325,21 @@ nedge_node_t::destroy()
 void
 nedge_node_t::propagate(const nedge_t& e) {
         if (_left == NULL) {
-                _left = new nedge_node_t(e, leaves());
+                _left = new nedge_node_t(e);
         }
-        else if (*left().nedge() >= *e) {
+        else if (left().nedge().is_ancestor_of(e)) {
                 _left->propagate(e);
         }
-        else if (_right == NULL) {
-                _right = new nedge_node_t(e, leaves());
-                // now this node has it's final leaf set
-                _leaves = left().leaves() | right().leaves();
+        else if (_right == NULL && !e.is_ancestor_of(left().nedge())) {
+                _right = new nedge_node_t(e);
         }
-        else if (*right().nedge() >= *e) {
+        else if (_right != NULL && right().nedge().is_ancestor_of(e)) {
                 _right->propagate(e);
         }
         else {
                 // attach an edge to the root of the tree
-                _left  = new nedge_node_t(_left, _right, e, _leaves);
+                _left  = new nedge_node_t(_left, _right, e);
                 _right = NULL;
-                // and reset bitset
-                _leaves.reset();
-                _leaves.flip();
-                _leaves[0] = false;
         }
 }
 
@@ -375,37 +353,45 @@ nedge_node_t::convert(
         pt_node_t* pt_right = NULL;
 
         if (_left  == NULL) {
-                // this node is a leaf
-                result = convert_leaf_set(leaf_d, leaf_names, leaves());
-                // something went wrong if result is NULL
-                assert(result != NULL);
-                result->d = nedge().d();
+                if (nedge()) {
+                        result = convert_leaf_set(leaf_d, leaf_names, nedge()->part2());
+                        // something went wrong if result is NULL
+                        assert(result != NULL);
+                        result->d = nedge().d();
+                }
         }
         else {
                 pt_left = left().convert(leaf_d, leaf_names);
                 if (_right == NULL) {
-                        // incomplete nedge set
-                        pt_right = convert_leaf_set(leaf_d, leaf_names, leaves() - left().leaves());
+                        pt_right = convert_leaf_set(leaf_d, leaf_names, nedge()->part2() - left().nedge()->part2());
                         assert(pt_right != NULL);
                 }
                 else {
                         // both leaves exist
                         pt_right = right().convert(leaf_d, leaf_names);
+                        // the edge set might be incomplete so
+                        // we need to generate additional nodes
+                        nsplit_t::part_t leaves = nedge()->part2();
+                        leaves -= left().nedge()->part2() | right().nedge()->part2();
+                        if (leaves.any()) {
+                                pt_right = new pt_node_t(0, pt_right, convert_leaf_set(leaf_d, leaf_names, leaves));
+                        }
                 }
                 result = new pt_node_t(nedge().d(), pt_left, pt_right);
         }
+
         return result;
 }
 
-nedge_root_t::nedge_root_t(const nedge_set_t& nedge_set, size_t n,
+nedge_root_t::nedge_root_t(
+        const nedge_set_t& nedge_set,
         const vector<double>& leaf_d, const vector<string>& leaf_names)
-        : nedge_node_t(n),
+        : nedge_node_t(),
           _leaf_d(leaf_d),
           _leaf_names(leaf_names)
 {
-        // leaf 0 is above and all other edges below this node
-        _leaves.flip();
-        _leaves[0] = false;
+        set<size_t> s; s.insert(0);
+        _nedge = nedge_t(leaf_d.size()-1, s, 0.0);
 
         for (size_t i = 0; i < nedge_set.size(); i++) {
                 propagate(nedge_set[i]);
@@ -530,101 +516,12 @@ ntree_t::find_edge(const nsplit_t& nsplit) const
         return _null_nedge;
 }
 
-boost::tuple<nedge_t, nedge_t, ssize_t>
-ntree_t::next_splits(nedge_set_t& free_edges, const nsplit_t& nsplit) {
-        // return value:
-        // (int edge, int edge, -1) OR (int edge, -1, leaf edge)
-        //
-        // check first if we need only one internal edge
-        for (nedge_set_t::iterator it = free_edges.begin(); it != free_edges.end(); it++) {
-                if (!(*it)) continue;
-                if ((*it)->part1().count() == nsplit.part1().count() + 1) {
-                        const nsplit_t::part_t tmp = difference((*it)->part1(), nsplit.part1());
-                        if (tmp.count() == 1) {
-                                const nedge_t edge = *it;
-                                // remove edge from free edges
-                                *it = nedge_t();
-                                // return index of that edge
-                                return boost::make_tuple(edge, nedge_t(), tmp.find_first());
-                        }
-                }
-        }
-        // now search for the two next internal edges
-        for (nedge_set_t::iterator it = free_edges.begin(); it != free_edges.end(); it++) {
-                if (!(*it)) continue;
-                for (nedge_set_t::iterator is = free_edges.begin(); is != free_edges.end(); is++) {
-                        if (!(*is)) continue;
-                        const nsplit_t::part_t tmp = intersection((*it)->part1(), (*is)->part1());
-                        if (tmp == nsplit.part1()) {
-                                const nedge_t edge1 = *it;
-                                const nedge_t edge2 = *is;
-                                // remove edges from free edges
-                                *it = nedge_t();
-                                *is = nedge_t();
-                                // return indices of both edges
-                                return boost::make_tuple(edge1, edge2, -1);
-                        }
-                }
-        }
-        // we should never arrive here
-        assert(false);
-}
-
 pt_root_t*
 ntree_t::export_tree() {
-        pt_node_t* left_tree;
-        pt_node_t* right_tree;
-        // the vecor used stores which edges were already used
-        // (this should optimize performance)
-        nedge_set_t free_edges(nedge_set().begin(), nedge_set().end());
-        // list of leafs for a given subtree
-        vector<size_t> leafs(n()+1, 0);
-        for (size_t i = 0; i <= n(); i++) {
-                leafs[i] = i;
-        }
-        // start with leaf zero to build the tree
-        set<size_t> tmp; tmp.insert(0);
-        boost::tuple<nedge_t, nedge_t, ssize_t> ns = next_splits(free_edges, nsplit_t(n(), tmp));
-        if (boost::get<2>(ns) == -1) {
-                left_tree  = export_subtree(free_edges, boost::get<0>(ns));
-                right_tree = export_subtree(free_edges, boost::get<1>(ns));
-        }
-        else {
-                left_tree  = export_subtree(free_edges, boost::get<0>(ns));
-                right_tree = new pt_leaf_t(leaf_d(boost::get<2>(ns)), leaf_name(boost::get<2>(ns)));
-        }
-        // construct outgroup
-        pt_leaf_t* outgroup = new pt_leaf_t(leaf_d(0), leaf_name(0));
-        // return resulting tree
-        return new pt_root_t(left_tree, right_tree, outgroup);
-}
-
-pt_node_t*
-ntree_t::export_subtree(nedge_set_t& free_edges, const nedge_t& edge) {
-        pt_node_t* left_tree;
-        pt_node_t* right_tree;
-        // check if there are only leafs following
-        if (edge->part2().count() == 2) {
-                size_t p = edge->part2().find_first();
-                size_t q = edge->part2().find_next (p);
-                left_tree  = new pt_leaf_t(leaf_d(p), leaf_name(p));
-                right_tree = new pt_leaf_t(leaf_d(q), leaf_name(q));
-        }
-        // otherwise we need to do a recursive call
-        else {
-                // find the next internal edge(s)
-                boost::tuple<nedge_t, nedge_t, ssize_t> ns = next_splits(free_edges, *edge);
-                // check if there is one or two edges folliwing
-                if (boost::get<2>(ns) == -1) {
-                        left_tree  = export_subtree(free_edges, boost::get<0>(ns));
-                        right_tree = export_subtree(free_edges, boost::get<1>(ns));
-                }
-                else {
-                        left_tree  = export_subtree(free_edges, boost::get<0>(ns));
-                        right_tree = new pt_leaf_t(leaf_d(boost::get<2>(ns)), leaf_name(boost::get<2>(ns)));
-                }
-        }
-        return new pt_node_t(edge.d(), left_tree, right_tree);
+        nedge_root_t* nedge_root = new nedge_root_t(nedge_set(), leaf_d(), leaf_names());
+        pt_root_t* pt_root = nedge_root->convert();
+        nedge_root->destroy();
+        return pt_root;
 }
 
 size_t

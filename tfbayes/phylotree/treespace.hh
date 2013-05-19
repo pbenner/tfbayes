@@ -101,6 +101,10 @@ public:
         nedge_t(size_t n, std::set<size_t> tmp, double d, std::string name = "");
         nedge_t(const nsplit_ptr_t& nsplit, double d, std::string name = "");
 
+        // ancestor relation where the tree is assumed to be rooted at
+        // leaf zero
+        bool is_ancestor_of(const nedge_t& nedge) const;
+
         // methods
         double d() const;
         const std::string& name() const;
@@ -156,9 +160,9 @@ bool compatible(const nsplit_t& s1, const nsplit_t& s2);
 
 class nedge_node_t : public clonable {
 public:
-         nedge_node_t(size_t n);
-         nedge_node_t(const nedge_t& nedge, const nsplit_t::part_t& open_leaves);
-         nedge_node_t(nedge_node_t* left, nedge_node_t* right, const nedge_t& nedge, nsplit_t::part_t leaves);
+         nedge_node_t();
+         nedge_node_t(const nedge_t& nedge);
+         nedge_node_t(nedge_node_t* left, nedge_node_t* right, const nedge_t& nedge);
          nedge_node_t(const nedge_node_t& nedge_node);
         ~nedge_node_t() { };
 
@@ -178,23 +182,17 @@ public:
         const nedge_t nedge() const {
                 return _nedge;
         }
-        const nsplit_t::part_t& leaves() const {
-                return _leaves;
-        }
 
 protected:
         nedge_node_t* _left;
         nedge_node_t* _right;
 
         nedge_t _nedge;
-
-        // leaves that are below this edge
-        nsplit_t::part_t _leaves;
 };
 
 class nedge_root_t : public nedge_node_t {
 public:
-         nedge_root_t(const nedge_set_t& nedge_set, size_t n,
+         nedge_root_t(const nedge_set_t& nedge_set,
                       const std::vector<double>& leaf_d,
                       const std::vector<std::string>& leaf_names);
          nedge_root_t(const nedge_root_t& nedge_root);
@@ -252,10 +250,6 @@ public:
         std::list<common_nedge_t> common_edges(const ntree_t& tree) const;
 
 protected:
-        // hidden methods
-        boost::tuple<nedge_t, nedge_t, ssize_t> next_splits(nedge_set_t& free_edges, const nsplit_t& nsplit);
-        pt_node_t* export_subtree(nedge_set_t& free_edges, const nedge_t& edge);
-
         size_t _n;
         // n-2 splits
         nedge_set_t _nedge_set;
