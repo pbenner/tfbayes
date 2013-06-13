@@ -1,3 +1,7 @@
+## Documentation
+
+Please read our [paper](http://arxiv.org/abs/1305.3692) on inference of phylogenetic trees.
+
 ## Configuration of local installations
 
 It is necessary to export some environment variables for a local installation. Here is an example:
