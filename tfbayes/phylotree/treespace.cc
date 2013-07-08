@@ -491,6 +491,8 @@ ntree_t::ntree_t(const nedge_set_t& nedge_set,
         for (nedge_set_t::const_iterator it = nedge_set.begin(); it != nedge_set.end(); it++) {
                 assert(n() == (*it)->n());
         }
+        assert(n()+1 == leaf_d.size());
+        assert(n()+1 == leaf_names.size());
 }
 
 ntree_t::ntree_t(const pt_root_t* tree)
