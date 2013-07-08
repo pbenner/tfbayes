@@ -697,6 +697,117 @@ void test10()
         t2->destroy();
 }
 
+void test11()
+{
+        cout << "test 11" << endl
+             << "------------------------------------------------------------"
+             << endl;
+
+        // Tree 1
+        //////////////////////////////////////////////////////////////////////
+        set<size_t> s1;
+        s1.insert(1);
+        s1.insert(2);
+        set<size_t> s2;
+        s2.insert(1);
+        s2.insert(2);
+        s2.insert(3);
+        set<size_t> s3;
+        s3.insert(1);
+        s3.insert(2);
+        s3.insert(3);
+        set<size_t> s4;
+        s4.insert(1);
+        s4.insert(2);
+        s4.insert(3);
+        s4.insert(4);
+        set<size_t> s5;
+        s5.insert(1);
+        s5.insert(2);
+        s5.insert(3);
+        s5.insert(4);
+        s5.insert(5);
+        set<size_t> s6;
+        s6.insert(1);
+        s6.insert(2);
+        s6.insert(3);
+        s6.insert(4);
+        s6.insert(5);
+        s6.insert(6);
+        set<size_t> s7;
+        s7.insert(7);
+        s7.insert(8);
+        set<size_t> s8;
+        s8.insert(7);
+        s8.insert(8);
+        s8.insert(9);
+        set<size_t> s9;
+        s9.insert(10);
+        s9.insert(11);
+        set<size_t> s10;
+        s10.insert(10);
+        s10.insert(11);
+        s10.insert(12);
+        set<size_t> s11;
+        s11.insert(7);
+        s11.insert(8);
+        s11.insert(9);
+        s11.insert(10);
+        s11.insert(11);
+        s11.insert(12);
+        nedge_t e1 (12,  s1, 1.0);
+        nedge_t e2 (12,  s2, 1.0);
+        nedge_t e3 (12,  s3, 1.0);
+        nedge_t e4 (12,  s4, 1.0);
+        nedge_t e5 (12,  s5, 1.0);
+        nedge_t e6 (12,  s6, 1.0);
+        nedge_t e7 (12,  s7, 1.0);
+        nedge_t e8 (12,  s8, 1.0);
+        nedge_t e9 (12,  s9, 1.0);
+        nedge_t e10(12, s10, 1.0);
+        nedge_t e11(12, s11, 1.0);
+        // construct tree
+        nedge_set_t nedge_set;
+        // internal edge lengths
+        nedge_set.push_back(e1);
+        nedge_set.push_back(e2);
+        nedge_set.push_back(e3);
+        nedge_set.push_back(e4);
+        nedge_set.push_back(e5);
+        nedge_set.push_back(e6);
+        nedge_set.push_back(e7);
+        nedge_set.push_back(e8);
+        nedge_set.push_back(e9);
+        nedge_set.push_back(e10);
+        nedge_set.push_back(e11);
+        // leaf edge lengths
+        vector<double> leaf_d(13, 1);
+        // leaf names
+        vector<string> leaf_names;
+        leaf_names.push_back("ochPri2");
+        leaf_names.push_back("hg19");
+        leaf_names.push_back("panTro2");
+        leaf_names.push_back("gorGor1");
+        leaf_names.push_back("ponAbe2");
+        leaf_names.push_back("papHam1");
+        leaf_names.push_back("calJac1");
+        leaf_names.push_back("speTri1");
+        leaf_names.push_back("oryCun2");
+        leaf_names.push_back("cavPor3");
+        leaf_names.push_back("mm9");
+        leaf_names.push_back("rn4");
+        leaf_names.push_back("dipOrd1");
+        // tree
+        ntree_t nt(nedge_set, leaf_d, leaf_names);
+        cout << "tree:" << endl
+             << nt      << endl;
+
+        pt_root_t* tree = nt.export_tree();
+        cout << "exporting tree:" << endl
+             << tree              << endl;
+        tree->destroy();
+}
+
 int
 main(void)
 {
@@ -710,6 +821,7 @@ main(void)
         test8(); cout << endl;
         test9(); cout << endl;
         test10(); cout << endl;
+        test11(); cout << endl;
         glp_free_env();
 
         return 0;
