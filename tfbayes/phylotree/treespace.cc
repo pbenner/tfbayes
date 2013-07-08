@@ -471,8 +471,8 @@ parse_pt_node_t(
         leaf_d    [node->outgroup->id] = node->outgroup->d;
         leaf_names[node->outgroup->id] = node->outgroup->name;
         // recursive calls
-        parse_pt_node_t(node->n_leafs-1, node->left,  nedge_set, leaf_d, leaf_names);
-        parse_pt_node_t(node->n_leafs-1, node->right, nedge_set, leaf_d, leaf_names);
+        parse_pt_node_t(node->n_leaves-1, node->left,  nedge_set, leaf_d, leaf_names);
+        parse_pt_node_t(node->n_leaves-1, node->right, nedge_set, leaf_d, leaf_names);
 }
 
 ntree_t::ntree_t(const nedge_set_t& nedge_set,
@@ -496,8 +496,8 @@ ntree_t::ntree_t(const nedge_set_t& nedge_set,
 ntree_t::ntree_t(const pt_root_t* tree)
 {
         nedge_set_t nedge_set;
-        vector<double> leaf_d(tree->n_leafs, 0);
-        vector<string> leaf_names(tree->n_leafs, "");
+        vector<double> leaf_d(tree->n_leaves, 0);
+        vector<string> leaf_names(tree->n_leaves, "");
 
         // parse the tree
         parse_pt_node_t(tree, nedge_set, leaf_d, leaf_names);
@@ -1409,7 +1409,7 @@ operator<< (ostream& o, const ntree_t& ntree)
 {
         o << "internal edges:" << endl
           << ntree.nedge_set()
-          << "external edges and leafs:" << endl;
+          << "external edges and leaves:" << endl;
         for (size_t i = 0; i <= ntree.n(); i++) {
                 if (ntree.leaf_names().size() > 0) {
                         o << setw(8)

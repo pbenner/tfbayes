@@ -41,7 +41,7 @@ int main(void) {
         pt_leaf_t  n3(3.0, "n3");
         pt_node_t  n2(2.0, &n4, &n5);
         pt_root_t  n1(&n2, &n3);
-        vector<code_t> observations(n1.n_leafs, 0);
+        vector<code_t> observations(n1.n_leaves, 0);
         observations[n1("n10")->id] = 3;
         observations[n1("n9" )->id] = 3;
         observations[n1("n8" )->id] = 2;

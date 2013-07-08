@@ -62,8 +62,8 @@ int main(void) {
         pt_root_t* pt_root = tree_list.front();
 
         // random observations
-        vector<code_t> observations(pt_root->n_leafs, 0);
-        for (pt_node_t::id_t i = 0; i < pt_root->n_leafs; i++) {
+        vector<code_t> observations(pt_root->n_leaves, 0);
+        for (pt_node_t::id_t i = 0; i < pt_root->n_leaves; i++) {
                 observations[i] = rand()%alphabet_size;
         }
 

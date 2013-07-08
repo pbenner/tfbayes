@@ -86,15 +86,15 @@ def alignment_approximate(multiple_alignment, phylotree):
     """For every column in the alignment, approximate the likelihood
     given by the phylogenetic tree by a simple multinomial
     distribution with averaged count statistics."""
-    leafmap   = options['leafmap']
-    num_leafs = pt_num_leafs(phylotree)
+    leafmap    = options['leafmap']
+    num_leaves = pt_num_leaves(phylotree)
 
-    # initialize leafs to '-'
-    #observations = [ DNA.code('-') ]*num_leafs
+    # initialize leaves to '-'
+    #observations = [ DNA.code('-') ]*num_leaves
 
-    # initialize leafs to -1 meaning that all species that are not present in
+    # initialize leaves to -1 meaning that all species that are not present in
     # this alignment will be fully ignored by the phylogenetic model
-    observations = [ -1.0 ]*num_leafs
+    observations = [ -1.0 ]*num_leaves
 
     # index of the sequence from which to strip all dashes
     stripindex = None

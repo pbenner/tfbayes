@@ -82,9 +82,9 @@ const char* pt_leaf_name(pt_root_t* root, size_t leaf)
         return (*root)(leaf)->name.c_str();
 }
 
-size_t pt_num_leafs(pt_root_t* root)
+size_t pt_num_leaves(pt_root_t* root)
 {
-        return root->n_leafs;
+        return root->n_leaves;
 }
 
 ssize_t pt_index(pt_root_t* root, const char* name)

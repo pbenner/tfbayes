@@ -34,7 +34,7 @@ void test_tree1() {
         pt_leaf_t n2(1.0, "n2");
         pt_leaf_t n3(2.0, "n3");
         pt_root_t n1(&n2, &n3);
-        vector<code_t> observations(n1.n_leafs, 0);
+        vector<code_t> observations(n1.n_leaves, 0);
         observations[n1("n2")->id] = 1;
         observations[n1("n3")->id] = 2;
 
@@ -49,7 +49,7 @@ void test_tree2() {
         pt_leaf_t n2(1.0, "n2");
         pt_leaf_t n3(2.0, "n3");
         pt_root_t n1(&n2, &n3);
-        vector<code_t> observations(n1.n_leafs, 0);
+        vector<code_t> observations(n1.n_leaves, 0);
         observations[n1("n2")->id] = 1;
         observations[n1("n3")->id] = 1;
 
@@ -66,7 +66,7 @@ void test_tree3() {
         pt_leaf_t n3(1.0, "n3");
         pt_node_t n2(0.5, &n4, &n5);
         pt_root_t n1(&n2, &n3);
-        vector<code_t> observations(n1.n_leafs, 0);
+        vector<code_t> observations(n1.n_leaves, 0);
         observations[n1("n5")->id] = 1;
         observations[n1("n4")->id] = 1;
         observations[n1("n3")->id] = 2;
@@ -86,7 +86,7 @@ void test_tree4() {
         pt_node_t n3(0.5, &n6, &n7);
         pt_node_t n2(0.5, &n4, &n5);
         pt_root_t n1(&n2, &n3);
-        vector<code_t> observations(n1.n_leafs, 0);
+        vector<code_t> observations(n1.n_leaves, 0);
         observations[n1("n7")->id] = 1;
         observations[n1("n6")->id] = 1;
         observations[n1("n5")->id] = 1;
@@ -107,7 +107,7 @@ void test_tree5() {
         pt_node_t n3(0.5, &n6, &n7);
         pt_node_t n2(0.5, &n4, &n5);
         pt_root_t n1(&n2, &n3);
-        vector<code_t> observations(n1.n_leafs, 0);
+        vector<code_t> observations(n1.n_leaves, 0);
         observations[n1("n7")->id] = 1;
         observations[n1("n6")->id] = 1;
         observations[n1("n5")->id] = 2;
@@ -130,7 +130,7 @@ void test_tree6() {
         pt_leaf_t n3(3.0, "n3");
         pt_node_t n2(2.0, &n4, &n5);
         pt_root_t n1(&n2, &n3);
-        vector<code_t> observations(n1.n_leafs, 0);
+        vector<code_t> observations(n1.n_leaves, 0);
         observations[n1("n9")->id] = 3;
         observations[n1("n8")->id] = 2;
         observations[n1("n7")->id] = 1;
@@ -154,7 +154,7 @@ void test_tree7() {
         pt_node_t n3(0.4, &nc, &nd);
         pt_node_t n2(0.2, &nb, &n3);
         pt_root_t n1(     &na, &n2);
-        vector<code_t> observations1(n1.n_leafs, 0);
+        vector<code_t> observations1(n1.n_leaves, 0);
         observations1[n1("A")->id] = 0;
         observations1[n1("B")->id] = 1;
         observations1[n1("C")->id] = 0;
@@ -167,7 +167,7 @@ void test_tree7() {
         pt_node_t m3(0.2, &ma, &mb);
         pt_node_t m2(0.2, &mc, &md);
         pt_root_t m1(     &m2, &m3);
-        vector<code_t> observations2(m1.n_leafs, 0);
+        vector<code_t> observations2(m1.n_leaves, 0);
         observations2[m1("A")->id] = 0;
         observations2[m1("B")->id] = 1;
         observations2[m1("C")->id] = 0;
@@ -187,7 +187,7 @@ void test_tree8() {
         pt_leaf_t n2(0.2, "n2");
         pt_leaf_t n0(0.3, "n0");
         pt_root_t n1(&n2, &n3, &n0);
-        vector<code_t> observations(n1.n_leafs, 0);
+        vector<code_t> observations(n1.n_leaves, 0);
         observations[n1("n0")->id] = 2;
         observations[n1("n2")->id] = 1;
         observations[n1("n3")->id] = 1;
@@ -206,7 +206,7 @@ void test_tree9() {
         pt_node_t n2(0.5, &n4, &n5);
         pt_leaf_t n0(3.0, "n0");
         pt_root_t n1(&n2, &n3, &n0);
-        vector<code_t> observations(n1.n_leafs, 0);
+        vector<code_t> observations(n1.n_leaves, 0);
         observations[n1("n5")->id] = 1;
         observations[n1("n4")->id] = 1;
         observations[n1("n3")->id] = 2;
@@ -226,7 +226,7 @@ void test_tree10() {
         pt_leaf_t n0(3.0, "n0");
         pt_node_t n1(0.5, &n0, &n3);
         pt_root_t n2(&n1, &n5, &n4);
-        vector<code_t> observations(n2.n_leafs, 0);
+        vector<code_t> observations(n2.n_leaves, 0);
         observations[n2("n5")->id] = 1;
         observations[n2("n4")->id] = 1;
         observations[n2("n3")->id] = 2;
@@ -248,7 +248,7 @@ void test_tree11() {
         pt_node_t n5(0.4, &n2, &n3);
         pt_node_t n6(0.5, &n1, &n5);
         pt_root_t n7(&n6, &n4, &n0);
-        vector<code_t> observations(n7.n_leafs, 0);
+        vector<code_t> observations(n7.n_leaves, 0);
         observations[n7("n0")->id] = 1;
         observations[n7("n1")->id] = 0;
         observations[n7("n2")->id] = 1;

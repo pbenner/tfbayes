@@ -53,8 +53,8 @@ _lib.pt_print.argtypes = [POINTER(PT_ROOT)]
 _lib.pt_index.restype  = c_long
 _lib.pt_index.argtypes = [POINTER(PT_ROOT), c_char_p]
 
-_lib.pt_num_leafs.restype  = c_ulong
-_lib.pt_num_leafs.argtypes = [POINTER(PT_ROOT)]
+_lib.pt_num_leaves.restype  = c_ulong
+_lib.pt_num_leaves.argtypes = [POINTER(PT_ROOT)]
 
 _lib.pt_leaf_name.restype  = c_char_p
 _lib.pt_leaf_name.argtypes = [POINTER(PT_ROOT), c_ulong]
@@ -93,16 +93,16 @@ def pt_index(pt_root, name):
     else:
         return result
 
-def pt_num_leafs(pt_root):
-    return _lib.pt_num_leafs(pt_root)
+def pt_num_leaves(pt_root):
+    return _lib.pt_num_leaves(pt_root)
 
 def pt_leaf_name(pt_root, leaf):
     return _lib.pt_leaf_name(pt_root, leaf)
 
 def pt_create_map(pt_root):
-    n_leafs  = pt_num_leafs(pt_root)
+    n_leaves  = pt_num_leaves(pt_root)
     leaf_map = {}
-    for i in range(n_leafs):
+    for i in range(n_leaves):
         name = pt_leaf_name(pt_root, i)
         leaf_map[name] = i
     return leaf_map

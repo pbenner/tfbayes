@@ -45,27 +45,27 @@ public:
         // Constructors
         ////////////////////////////////////////////////////////////////////////
         alignment_t(const size_t length, CODE_TYPE init, const pt_root_t* tree)
-                : alignment_ancestor_t(tree->n_leafs, nucleotide_sequence_t<CODE_TYPE>()),
-                  _n_species(tree->n_leafs), _length(length) {
-                for (pt_node_t::leafs_t::const_iterator it = tree->leafs.begin(); it != tree->leafs.end(); it++) {
+                : alignment_ancestor_t(tree->n_leaves, nucleotide_sequence_t<CODE_TYPE>()),
+                  _n_species(tree->n_leaves), _length(length) {
+                for (pt_node_t::leaves_t::const_iterator it = tree->leaves.begin(); it != tree->leaves.end(); it++) {
                         pt_leaf_t* leaf = *it;
                         _taxon_map[leaf->name]     = leaf->id;
                         this->operator[](leaf->id) = nucleotide_sequence_t<CODE_TYPE>(length, init);
                 }
         }
         alignment_t(const char* filename, const pt_root_t* tree)
-                : alignment_ancestor_t(tree->n_leafs, nucleotide_sequence_t<CODE_TYPE>()) {
+                : alignment_ancestor_t(tree->n_leaves, nucleotide_sequence_t<CODE_TYPE>()) {
 
                 FastaParser parser(filename);
                 std::string sequence;
 
                 // we have as many sequences in this alignment as
-                // there are leafs in the tree
-                _n_species = tree->n_leafs;
+                // there are leaves in the tree
+                _n_species = tree->n_leaves;
                 // fill taxon map seperately since some species might
                 // not be present in the alignment
-                for (pt_node_t::leafs_t::const_iterator it = tree->leafs.begin();
-                     it != tree->leafs.end(); it++) {
+                for (pt_node_t::leaves_t::const_iterator it = tree->leaves.begin();
+                     it != tree->leaves.end(); it++) {
                         _taxon_map[(*it)->name] = (*it)->id;
                 }
                 // parse fasta file

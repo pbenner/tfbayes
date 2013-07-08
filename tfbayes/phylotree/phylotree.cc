@@ -36,12 +36,12 @@ pt_node_t::pt_node_t(double d,
                 (left != NULL && right != NULL));
 
         if (leaf()) {
-                n_leafs = 1;
+                n_leaves = 1;
                 n_nodes = 1;
         }
         else {
                 // update leaf counts and node counts
-                n_leafs = left->n_leafs + right->n_leafs;
+                n_leaves = left->n_leaves + right->n_leaves;
                 n_nodes = left->n_nodes + right->n_nodes + 1;
                 // record this node as the ancestor
                 left ->ancestor = this;
@@ -54,7 +54,7 @@ pt_node_t::pt_node_t(const pt_node_t& node)
           left(NULL), right(NULL),
           ancestor(NULL),
           name(node.name),
-          n_leafs(node.n_leafs),
+          n_leaves(node.n_leaves),
           n_nodes(node.n_nodes),
           id(node.id)
 {
@@ -112,7 +112,7 @@ pt_node_t::scale(double c)
 }
 
 void
-pt_node_t::create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
+pt_node_t::create_mappings(leaf_map_t& leaf_map, leaves_t& leaves,
                            node_map_t& node_map, nodes_t& nodes)
 {
         if (name != "") {
@@ -120,8 +120,8 @@ pt_node_t::create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
         }
         nodes[id] = this;
 
-        left-> create_mappings(leaf_map, leafs, node_map, nodes);
-        right->create_mappings(leaf_map, leafs, node_map, nodes);
+        left-> create_mappings(leaf_map, leaves, node_map, nodes);
+        right->create_mappings(leaf_map, leaves, node_map, nodes);
 }
 
 void
@@ -217,14 +217,14 @@ pt_leaf_t::clone() const
 }
 
 void
-pt_leaf_t::create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
+pt_leaf_t::create_mappings(leaf_map_t& leaf_map, leaves_t& leaves,
                            node_map_t& node_map, nodes_t& nodes)
 {
         if (name != "") {
                 leaf_map[name] = this;
                 node_map[name] = this;
         }
-        leafs[id] = this;
+        leaves[id] = this;
         nodes[id] = this;
 }
 
@@ -256,31 +256,31 @@ pt_root_t::pt_root_t(pt_node_t* left,
         // count outgroup as leaf if present and set the ancestor of
         // the outgroup
         if (has_outgroup()) {
-                n_leafs++; n_nodes++;
+                n_leaves++; n_nodes++;
                 outgroup->ancestor = this;
         }
         // set leaf/node ids
         if (tree == NULL) {
                 id_t leaf_id = 0;
-                id_t node_id = n_leafs;
+                id_t node_id = n_leaves;
                 set_id(leaf_id, node_id);
         }
         // copy leaf ids from second tree
         else {
-                assert (n_leafs == tree->n_leafs);
-                id_t node_id = n_leafs;
+                assert (n_leaves == tree->n_leaves);
+                id_t node_id = n_leaves;
                 set_id(tree, node_id);
         }
 
-        leafs = leafs_t(n_leafs, (pt_leaf_t*)NULL);
+        leaves = leaves_t(n_leaves, (pt_leaf_t*)NULL);
         nodes = nodes_t(n_nodes, (pt_node_t*)NULL);
         create_mappings();
 }
 
 pt_root_t::pt_root_t(const pt_root_t& root)
         : pt_node_t(root),
-          // copy leafs and nodes since those are vectors
-          leafs(root.leafs),
+          // copy leaves and nodes since those are vectors
+          leaves(root.leaves),
           nodes(root.nodes),
           outgroup(NULL)
 {
@@ -346,7 +346,7 @@ pt_root_t::operator()(const std::string& taxon) const
 pt_leaf_t*
 pt_root_t::operator()(id_t id)
 {
-        return leafs[id];
+        return leaves[id];
 }
 
 const pt_leaf_t*
@@ -362,21 +362,21 @@ pt_root_t::has_outgroup() const
 }
 
 void
-pt_root_t::create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
+pt_root_t::create_mappings(leaf_map_t& leaf_map, leaves_t& leaves,
                            node_map_t& node_map, nodes_t& nodes)
 {
-        pt_node_t::create_mappings(leaf_map, leafs, node_map, nodes);
+        pt_node_t::create_mappings(leaf_map, leaves, node_map, nodes);
 
         // also add the outgroup if available
         if (has_outgroup()) {
-                outgroup->create_mappings(leaf_map, leafs, node_map, nodes);
+                outgroup->create_mappings(leaf_map, leaves, node_map, nodes);
         }
 }
 
 void
 pt_root_t::create_mappings()
 {
-        create_mappings(leaf_map, leafs, node_map, nodes);
+        create_mappings(leaf_map, leaves, node_map, nodes);
 }
 
 void

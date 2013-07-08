@@ -41,7 +41,7 @@ public:
         /* typedefs */
         typedef boost::unordered_map<std::string, pt_leaf_t*> leaf_map_t;
         typedef boost::unordered_map<std::string, pt_node_t*> node_map_t;
-        typedef std::vector<pt_leaf_t*> leafs_t;
+        typedef std::vector<pt_leaf_t*> leaves_t;
         typedef std::vector<pt_node_t*> nodes_t;
         typedef ssize_t id_t;
 
@@ -76,14 +76,14 @@ public:
         pt_node_t* ancestor;
         /* name of the node */
         const std::string name;
-        /* number of leafs in this tree */
-        ssize_t n_leafs;
+        /* number of leaves in this tree */
+        ssize_t n_leaves;
         ssize_t n_nodes;
         /* identifier */
         id_t id;
 
 protected:
-        virtual void create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
+        virtual void create_mappings(leaf_map_t& leaf_map, leaves_t& leaves,
                                      node_map_t& node_map, nodes_t& nodes);
 
         virtual void set_id(id_t& leaf_id, id_t& node_id);
@@ -97,7 +97,7 @@ public:
 
         pt_leaf_t* clone() const;
 
-        virtual void create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
+        virtual void create_mappings(leaf_map_t& leaf_map, leaves_t& leaves,
                                      node_map_t& node_map, nodes_t& nodes);
 
 protected:
@@ -132,13 +132,13 @@ public:
         leaf_map_t leaf_map;
         node_map_t node_map;
         // leaf or node id -> leaf or node
-        leafs_t leafs;
+        leaves_t leaves;
         nodes_t nodes;
 
         pt_leaf_t* outgroup;
 
 protected:
-        virtual void create_mappings(leaf_map_t& leaf_map, leafs_t& leafs,
+        virtual void create_mappings(leaf_map_t& leaf_map, leaves_t& leaves,
                                      node_map_t& node_map, nodes_t& nodes);
         virtual void create_mappings();
 
