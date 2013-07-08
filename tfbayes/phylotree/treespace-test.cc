@@ -716,45 +716,41 @@ void test11()
         s3.insert(1);
         s3.insert(2);
         s3.insert(3);
+        s3.insert(4);
         set<size_t> s4;
         s4.insert(1);
         s4.insert(2);
         s4.insert(3);
         s4.insert(4);
+        s4.insert(5);
         set<size_t> s5;
         s5.insert(1);
         s5.insert(2);
         s5.insert(3);
         s5.insert(4);
         s5.insert(5);
+        s5.insert(6);
         set<size_t> s6;
-        s6.insert(1);
-        s6.insert(2);
-        s6.insert(3);
-        s6.insert(4);
-        s6.insert(5);
-        s6.insert(6);
+        s6.insert(7);
+        s6.insert(8);
         set<size_t> s7;
         s7.insert(7);
         s7.insert(8);
+        s7.insert(9);
         set<size_t> s8;
-        s8.insert(7);
-        s8.insert(8);
-        s8.insert(9);
+        s8.insert(10);
+        s8.insert(11);
         set<size_t> s9;
         s9.insert(10);
         s9.insert(11);
+        s9.insert(12);
         set<size_t> s10;
+        s10.insert(7);
+        s10.insert(8);
+        s10.insert(9);
         s10.insert(10);
         s10.insert(11);
         s10.insert(12);
-        set<size_t> s11;
-        s11.insert(7);
-        s11.insert(8);
-        s11.insert(9);
-        s11.insert(10);
-        s11.insert(11);
-        s11.insert(12);
         nedge_t e1 (12,  s1, 1.0);
         nedge_t e2 (12,  s2, 1.0);
         nedge_t e3 (12,  s3, 1.0);
@@ -765,7 +761,6 @@ void test11()
         nedge_t e8 (12,  s8, 1.0);
         nedge_t e9 (12,  s9, 1.0);
         nedge_t e10(12, s10, 1.0);
-        nedge_t e11(12, s11, 1.0);
         // construct tree
         nedge_set_t nedge_set;
         // internal edge lengths
@@ -779,7 +774,6 @@ void test11()
         nedge_set.push_back(e8);
         nedge_set.push_back(e9);
         nedge_set.push_back(e10);
-        nedge_set.push_back(e11);
         // leaf edge lengths
         vector<double> leaf_d(13, 1);
         // leaf names
