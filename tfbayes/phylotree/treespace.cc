@@ -321,7 +321,7 @@ nedge_node_t::propagate(const nedge_t& e)
                         it++;
                 }
         }
-        _nedge_set[e] = new nedge_node_t(children);        
+        _nedge_set[e] = new nedge_node_t(children);
 }
 
 pt_node_t*
