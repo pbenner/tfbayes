@@ -42,7 +42,7 @@ pt_node_t::pt_node_t(double d,
         else {
                 // update leaf counts and node counts
                 n_leaves = left->n_leaves + right->n_leaves;
-                n_nodes = left->n_nodes + right->n_nodes + 1;
+                n_nodes  = left->n_nodes  + right->n_nodes + 1;
                 // record this node as the ancestor
                 left ->ancestor = this;
                 right->ancestor = this;

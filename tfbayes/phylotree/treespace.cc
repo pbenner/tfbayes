@@ -262,35 +262,20 @@ convert_leaf_set(
 }
 
 nedge_node_t::nedge_node_t()
-        : _left (NULL),
-          _right(NULL)
-{ }
-
-nedge_node_t::nedge_node_t(const nedge_t& nedge)
-        : _left (NULL),
-          _right(NULL),
-          _nedge(nedge)
+        : _nedge_set()
 { }
 
 nedge_node_t::nedge_node_t(
-        nedge_node_t* left,
-        nedge_node_t* right,
-        const nedge_t& nedge)
-        : _left  (left ),
-          _right (right),
-          _nedge (nedge)
+        const map_t& nedge_set)
+        : _nedge_set(nedge_set)
 { }
 
 nedge_node_t::nedge_node_t(const nedge_node_t& nedge_node)
-        : _left  (NULL),
-          _right (NULL),
-          _nedge (nedge_node._nedge)
+        : _nedge_set()
 {
-        if (nedge_node._left  != NULL) {
-                _left  = nedge_node._left ->clone();
-        }
-        if (nedge_node._right != NULL) {
-                _right = nedge_node._right->clone();
+        for (map_t::const_iterator it = nedge_node._nedge_set.begin();
+             it != nedge_node._nedge_set.end(); it++) {
+                _nedge_set[it->first] = it->second->clone();
         }
 }
 
@@ -303,50 +288,40 @@ nedge_node_t::clone() const
 void
 nedge_node_t::destroy()
 {
-        if (_left  != NULL) {
-                _left ->destroy();
-        }
-        if (_right != NULL) {
-                _right->destroy();
+        for (map_t::iterator it = _nedge_set.begin();
+             it != _nedge_set.end(); it++) {
+                it->second->destroy();
         }
         delete(this);
 }
 
 void
-nedge_node_t::propagate(const nedge_t& e) {
-        if (_left == NULL) {
-                _left = new nedge_node_t(e);
+nedge_node_t::propagate(const nedge_t& e)
+{
+        map_t children;
+
+        // is there an edge which is an ancestor of e?
+        for (map_t::iterator it = _nedge_set.begin();
+             it != _nedge_set.end(); it++) {
+                if (it->first.is_ancestor_of(e)) {
+                        cout << it->first << " is an ancestor of " << e << " ... propagating!" << endl;
+                        it->second->propagate(e);
+                        return;
+                }
         }
-        else if (left().nedge().is_ancestor_of(e)) {
-                _left->propagate(e);
-        }
-        else if (_right == NULL && !e.is_ancestor_of(left().nedge())) {
-                _right = new nedge_node_t(e);
-        }
-        else if (_right != NULL && right().nedge().is_ancestor_of(e)) {
-                _right->propagate(e);
-        }
-        else {
-                // attach an edge to the root of the tree
-                if (_right != NULL) {
-                        if (e.is_ancestor_of(left ().nedge()) &&
-                            e.is_ancestor_of(right().nedge()))
-                        {
-                                _left  = new nedge_node_t(_left, _right, e);
-                                _right = NULL;
-                        }
-                        else if (e.is_ancestor_of(left ().nedge()))
-                        {
-                                _left  = new nedge_node_t(_left,  NULL, e);
-                        }
-                        else {
-                                _right = new nedge_node_t(_right, NULL, e);
-                        }
+        // is e an ancestor of a subset of edges at this node?
+        for (map_t::iterator it = _nedge_set.begin();
+             it != _nedge_set.end();) {
+                if (e.is_ancestor_of(it->first)) {
+                        cout << e << " is an ancestor of " << it->first << " ... restructuring tree!" << endl;
+                        children[it->first] = it->second;
+                        it = _nedge_set.erase(it);
                 }
                 else {
-                        _left  = new nedge_node_t(_left,  NULL, e);
+                        it++;
                 }
         }
+        _nedge_set[e] = new nedge_node_t(children);        
 }
 
 pt_node_t*
@@ -355,34 +330,6 @@ nedge_node_t::convert(
         const vector<string>& leaf_names) const
 {
         pt_node_t* result   = NULL;
-        pt_node_t* pt_left  = NULL;
-        pt_node_t* pt_right = NULL;
-
-        if (_left  == NULL) {
-                result = convert_leaf_set(leaf_d, leaf_names, nedge()->part2());
-                // something went wrong if result is NULL
-                assert(result != NULL);
-                result->d = nedge().d();
-        }
-        else {
-                pt_left = left().convert(leaf_d, leaf_names);
-                if (_right == NULL) {
-                        pt_right = convert_leaf_set(leaf_d, leaf_names, nedge()->part2() - left().nedge()->part2());
-                        assert(pt_right != NULL);
-                }
-                else {
-                        // both leaves exist
-                        pt_right = right().convert(leaf_d, leaf_names);
-                        // the edge set might be incomplete so
-                        // we need to generate additional nodes
-                        nsplit_t::part_t leaves = nedge()->part2();
-                        leaves -= left().nedge()->part2() | right().nedge()->part2();
-                        if (leaves.any()) {
-                                pt_right = new pt_node_t(0, pt_right, convert_leaf_set(leaf_d, leaf_names, leaves));
-                        }
-                }
-                result = new pt_node_t(nedge().d(), pt_left, pt_right);
-        }
 
         return result;
 }
@@ -390,22 +337,29 @@ nedge_node_t::convert(
 nedge_root_t::nedge_root_t(
         const nedge_set_t& nedge_set,
         const vector<double>& leaf_d, const vector<string>& leaf_names)
-        : nedge_node_t(),
-          _leaf_d(leaf_d),
+        : _leaf_d(leaf_d),
           _leaf_names(leaf_names)
 {
-        set<size_t> s; s.insert(0);
-        _nedge = nedge_t(leaf_d.size()-1, s, 0.0);
+        _left  = new nedge_node_t();
+        _right = new nedge_node_t();
 
         for (size_t i = 0; i < nedge_set.size(); i++) {
-                propagate(nedge_set[i]);
+                if (is_subset(nedge_set[i]->part2(), nedge_set[0]->part1())) {
+                        cout << "propagating left" << endl;
+                        _left ->propagate(nedge_set[i]);
+                }
+                else {
+                        cout << "propagating right" << endl;
+                        _right->propagate(nedge_set[i]);
+                }
         }
 }
 
 nedge_root_t::nedge_root_t(const nedge_root_t& nedge_root)
-        : nedge_node_t(nedge_root),
-          _leaf_d(nedge_root._leaf_d),
-          _leaf_names(nedge_root._leaf_names)
+        : _leaf_d(nedge_root._leaf_d),
+          _leaf_names(nedge_root._leaf_names),
+          _left (nedge_root._left ->clone()),
+          _right(nedge_root._right->clone())
 { }
 
 nedge_root_t*
@@ -414,18 +368,19 @@ nedge_root_t::clone() const
         return new nedge_root_t(*this);
 }
 
+void
+nedge_root_t::destroy()
+{
+}
+
 pt_root_t*
 nedge_root_t::convert() const
 {
-        pt_node_t* tmp = nedge_node_t::convert(leaf_d(), leaf_names());
-        pt_leaf_t* outgroup = new pt_leaf_t(leaf_d(0), leaf_names(0));
-        pt_root_t* result;
+        pt_node_t* left     = _left ->convert(leaf_d( ), leaf_names( ));
+        pt_node_t* right    = _right->convert(leaf_d( ), leaf_names( ));
+        pt_leaf_t* outgroup =   new pt_leaf_t(leaf_d(0), leaf_names(0));
 
-        assert(!tmp->leaf());
-        result = new pt_root_t(tmp->left, tmp->right, outgroup);
-        delete(tmp);
-
-        return result;
+        return new pt_root_t(left, right, outgroup);
 }
 
 // ntree_t

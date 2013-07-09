@@ -157,9 +157,10 @@ bool compatible(const nsplit_t& s1, const nsplit_t& s2);
 
 class nedge_node_t : public clonable {
 public:
+        typedef boost::unordered_map<nedge_t, nedge_node_t*> map_t;
+
          nedge_node_t();
-         nedge_node_t(const nedge_t& nedge);
-         nedge_node_t(nedge_node_t* left, nedge_node_t* right, const nedge_t& nedge);
+         nedge_node_t(const map_t& children);
          nedge_node_t(const nedge_node_t& nedge_node);
         ~nedge_node_t() { };
 
@@ -170,24 +171,16 @@ public:
         virtual pt_node_t* convert(const std::vector<double>& leaf_d,
                                    const std::vector<std::string>& leaf_names) const;
 
-        const nedge_node_t& left () const {
-                return *_left;
-        }
-        const nedge_node_t& right() const {
-                return *_right;
-        }
-        const nedge_t nedge() const {
-                return _nedge;
+        const map_t& nedge_set() const {
+                return _nedge_set;
         }
 
 protected:
-        nedge_node_t* _left;
-        nedge_node_t* _right;
-
-        nedge_t _nedge;
+        // a set of edges where each edge might have a child
+        map_t _nedge_set;
 };
 
-class nedge_root_t : public nedge_node_t {
+class nedge_root_t {
 public:
          nedge_root_t(const nedge_set_t& nedge_set,
                       const std::vector<double>& leaf_d,
@@ -196,6 +189,7 @@ public:
         ~nedge_root_t() { };
 
         virtual nedge_root_t* clone() const;
+        virtual void destroy();
 
         virtual pt_root_t* convert() const;
 
@@ -215,6 +209,9 @@ public:
 protected:
         std::vector<double> _leaf_d;
         std::vector<std::string> _leaf_names;
+
+        nedge_node_t* _left;
+        nedge_node_t* _right;
 };
 
 // ntree_t definition
