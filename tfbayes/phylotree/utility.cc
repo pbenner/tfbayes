@@ -52,6 +52,34 @@ ostream& operator<< (ostream& o, const polynomial_t<short, 4>& polynomial) {
 
         return o;
 }
+ostream& operator<< (ostream& o, const exponent_t<short, 5>& exponent) {
+        if(exponent[0]) o << " Pa^" << exponent[0];
+        if(exponent[1]) o << " Pc^" << exponent[1];
+        if(exponent[2]) o << " Pg^" << exponent[2];
+        if(exponent[3]) o << " Pt^" << exponent[3];
+        if(exponent[4]) o << " Pn^" << exponent[4];
+
+        return o;
+}
+ostream& operator<< (ostream& o, const polynomial_term_t<short, 5>& term) {
+        o << term.coefficient()
+          << term.exponent();
+
+        return o;
+}
+ostream& operator<< (ostream& o, const polynomial_t<short, 5>& polynomial) {
+        for (polynomial_t<short, 5>::const_iterator it = polynomial.begin();
+             it != polynomial.end(); it++) {
+                if (it != polynomial.begin()) {
+                        o << " + " << *it;
+                }
+                else {
+                        o << *it;
+                }
+        }
+
+        return o;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -82,6 +110,34 @@ ostream& operator<< (ostream& o, const polynomial_t<float, 4>& polynomial) {
 
         return o;
 }
+ostream& operator<< (ostream& o, const exponent_t<float, 5>& exponent) {
+        if(exponent[0]) o << " Pa^" << exponent[0];
+        if(exponent[1]) o << " Pc^" << exponent[1];
+        if(exponent[2]) o << " Pg^" << exponent[2];
+        if(exponent[3]) o << " Pt^" << exponent[3];
+        if(exponent[4]) o << " Pn^" << exponent[4];
+
+        return o;
+}
+ostream& operator<< (ostream& o, const polynomial_term_t<float, 5>& term) {
+        o << term.coefficient()
+          << term.exponent();
+
+        return o;
+}
+ostream& operator<< (ostream& o, const polynomial_t<float, 5>& polynomial) {
+        for (polynomial_t<float, 5>::const_iterator it = polynomial.begin();
+             it != polynomial.end(); it++) {
+                if (it != polynomial.begin()) {
+                        o << " + " << *it;
+                }
+                else {
+                        o << *it;
+                }
+        }
+
+        return o;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,6 +157,34 @@ ostream& operator<< (ostream& o, const polynomial_term_t<double, 4>& term) {
 }
 ostream& operator<< (ostream& o, const polynomial_t<double, 4>& polynomial) {
         for (polynomial_t<double, 4>::const_iterator it = polynomial.begin();
+             it != polynomial.end(); it++) {
+                if (it != polynomial.begin()) {
+                        o << " + " << *it;
+                }
+                else {
+                        o << *it;
+                }
+        }
+
+        return o;
+}
+ostream& operator<< (ostream& o, const exponent_t<double, 5>& exponent) {
+        if(exponent[0]) o << " Pa^" << exponent[0];
+        if(exponent[1]) o << " Pc^" << exponent[1];
+        if(exponent[2]) o << " Pg^" << exponent[2];
+        if(exponent[3]) o << " Pt^" << exponent[3];
+        if(exponent[4]) o << " Pn^" << exponent[4];
+
+        return o;
+}
+ostream& operator<< (ostream& o, const polynomial_term_t<double, 5>& term) {
+        o << term.coefficient()
+          << term.exponent();
+
+        return o;
+}
+ostream& operator<< (ostream& o, const polynomial_t<double, 5>& polynomial) {
+        for (polynomial_t<double, 5>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 if (it != polynomial.begin()) {
                         o << " + " << *it;

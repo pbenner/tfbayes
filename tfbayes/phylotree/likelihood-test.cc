@@ -26,7 +26,7 @@
 
 using namespace std;
 
-#define alphabet_size 4
+#define alphabet_size 5
 typedef short code_t;
 
 void test_tree1() {
@@ -239,7 +239,7 @@ void test_tree10() {
 }
 
 void test_tree11() {
-        cout << "Test 10:" << endl;
+        cout << "Test 11:" << endl;
         pt_leaf_t n0(0.7, "n0");
         pt_leaf_t n1(0.3, "n1");
         pt_leaf_t n2(0.1, "n2");

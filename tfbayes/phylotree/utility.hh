@@ -29,14 +29,23 @@
 std::ostream& operator<< (std::ostream& o, const exponent_t<short, 4>& exponent);
 std::ostream& operator<< (std::ostream& o, const polynomial_term_t<short, 4>& term);
 std::ostream& operator<< (std::ostream& o, const polynomial_t<short, 4>& polynomial);
+std::ostream& operator<< (std::ostream& o, const exponent_t<short, 5>& exponent);
+std::ostream& operator<< (std::ostream& o, const polynomial_term_t<short, 5>& term);
+std::ostream& operator<< (std::ostream& o, const polynomial_t<short, 5>& polynomial);
 
 std::ostream& operator<< (std::ostream& o, const exponent_t<float, 4>& exponent);
 std::ostream& operator<< (std::ostream& o, const polynomial_term_t<float, 4>& term);
 std::ostream& operator<< (std::ostream& o, const polynomial_t<float, 4>& polynomial);
+std::ostream& operator<< (std::ostream& o, const exponent_t<float, 5>& exponent);
+std::ostream& operator<< (std::ostream& o, const polynomial_term_t<float, 5>& term);
+std::ostream& operator<< (std::ostream& o, const polynomial_t<float, 5>& polynomial);
 
 std::ostream& operator<< (std::ostream& o, const exponent_t<double, 4>& exponent);
 std::ostream& operator<< (std::ostream& o, const polynomial_term_t<double, 4>& term);
 std::ostream& operator<< (std::ostream& o, const polynomial_t<double, 4>& polynomial);
+std::ostream& operator<< (std::ostream& o, const exponent_t<double, 5>& exponent);
+std::ostream& operator<< (std::ostream& o, const polynomial_term_t<double, 5>& term);
+std::ostream& operator<< (std::ostream& o, const polynomial_t<double, 5>& polynomial);
 
 size_t hash_value(const exponent_t<short, 2>& exponent);
 size_t hash_value(const exponent_t<short, 3>& exponent);
