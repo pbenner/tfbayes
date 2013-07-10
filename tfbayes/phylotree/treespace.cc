@@ -470,10 +470,8 @@ ntree_t::ntree_t(const nedge_set_t& nedge_set,
         : _n(2),
           _nedge_set(nedge_set),
           _leaf_d(leaf_d),
-          _leaf_names(leaf_names) {
-        /* TODO: when computing means we might get trees that are not
-         * ntrees! */
-        //assert(leaf_names.size() == 0 || leaf_names.size() == n()+1);
+          _leaf_names(leaf_names)
+{
         if (nedge_set.size() > 0) {
                 _n = (*nedge_set.begin())->n();
         }
