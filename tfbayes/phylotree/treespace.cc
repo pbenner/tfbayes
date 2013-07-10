@@ -310,7 +310,6 @@ nedge_node_t::propagate(const nedge_t& e)
         for (map_t::iterator it = _nedge_set.begin();
              it != _nedge_set.end(); it++) {
                 if (it->first.is_ancestor_of(e)) {
-                        cout << it->first << " is an ancestor of " << e << " ... propagating!" << endl;
                         it->second->propagate(e);
                         return;
                 }
@@ -319,7 +318,6 @@ nedge_node_t::propagate(const nedge_t& e)
         for (map_t::iterator it = _nedge_set.begin();
              it != _nedge_set.end();) {
                 if (e.is_ancestor_of(it->first)) {
-                        cout << e << " is an ancestor of " << it->first << " ... restructuring tree!" << endl;
                         children[it->first] = it->second;
                         it = _nedge_set.erase(it);
                 }
@@ -355,9 +353,10 @@ nedge_node_t::convert(
                         leaves    |= tmp_leaves;
                 }
                 // create leaves that are missing so far
-                if ((tmp_leaves - it->first->part2()).any()) {
+                if ((it->first->part2() - tmp_leaves).any()) {
                         tmp_node = new pt_node_t(0.0, tmp_node,
-                                                 convert_leaf_set(leaf_d, leaf_names, tmp_leaves - it->first->part2()));
+                                                 convert_leaf_set(leaf_d, leaf_names, it->first->part2() - tmp_leaves));
+                        leaves |= it->first->part2() - tmp_leaves;
                 }
                 // assign edge length
                 tmp_node->d = it->first.d();
@@ -379,10 +378,10 @@ nedge_root_t::nedge_root_t(
 
         for (size_t i = 0; i < nedge_set.size(); i++) {
                 if (is_subset(nedge_set[i]->part2(), nedge_set[0]->part1())) {
-                        _left ->propagate(nedge_set[i]);
+                        _right->propagate(nedge_set[i]);
                 }
                 else {
-                        _right->propagate(nedge_set[i]);
+                        _left ->propagate(nedge_set[i]);
                 }
         }
 }

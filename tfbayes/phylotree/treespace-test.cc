@@ -751,16 +751,16 @@ void test11()
         s10.insert(10);
         s10.insert(11);
         s10.insert(12);
-        nedge_t e1 (12,  s1, 1.0);
-        nedge_t e2 (12,  s2, 1.0);
-        nedge_t e3 (12,  s3, 1.0);
-        nedge_t e4 (12,  s4, 1.0);
-        nedge_t e5 (12,  s5, 1.0);
-        nedge_t e6 (12,  s6, 1.0);
-        nedge_t e7 (12,  s7, 1.0);
-        nedge_t e8 (12,  s8, 1.0);
-        nedge_t e9 (12,  s9, 1.0);
-        nedge_t e10(12, s10, 1.0);
+        nedge_t e1 (12,  s1, 1.1);
+        nedge_t e2 (12,  s2, 1.2);
+        nedge_t e3 (12,  s3, 1.3);
+        nedge_t e4 (12,  s4, 1.4);
+        nedge_t e5 (12,  s5, 1.5);
+        nedge_t e6 (12,  s6, 1.6);
+        nedge_t e7 (12,  s7, 1.7);
+        nedge_t e8 (12,  s8, 1.8);
+        nedge_t e9 (12,  s9, 1.9);
+        nedge_t e10(12, s10, 1.10);
         // construct tree
         nedge_set_t nedge_set;
         // internal edge lengths
