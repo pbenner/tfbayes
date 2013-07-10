@@ -335,22 +335,28 @@ nedge_node_t::convert(
         const vector<double>& leaf_d,
         const vector<string>& leaf_names) const
 {
-        pt_node_t* tree = NULL;
+        pt_node_t *tree = NULL, *tmp_node;
+        convert_t tmp;
+        nsplit_t::part_t tmp_leaves;
         nsplit_t::part_t leaves(leaf_d.size());
 
         for (map_t::const_iterator it = nedge_set().begin();
              it != nedge_set().end(); it++) {
 
                 if (it->second->empty()) {
-                        leaves |= it->first->part2();
-                        convert_leaf_set(leaf_d, leaf_names, it->first->part2());
+                        tmp_node = convert_leaf_set(leaf_d, leaf_names, it->first->part2());
+                        leaves  |= it->first->part2();
                 }
                 else {
-                        convert_t        tmp        = it->second->convert(leaf_d, leaf_names);
-                        pt_node_t*       tmp_node   = boost::get<0>(tmp);
-                        nsplit_t::part_t tmp_leaves = boost::get<1>(tmp);
-                        leaves |= tmp_leaves;
+                        tmp        = it->second->convert(leaf_d, leaf_names);
+                        tmp_node   = boost::get<0>(tmp);
+                        tmp_leaves = boost::get<1>(tmp);
+                        leaves    |= tmp_leaves;
                 }
+                // assign edge length
+                tmp_node->d = it->first.d();
+                // append node to tree
+                tree = tree ? new pt_node_t(0.0, tree, tmp_node) : tmp_node;
         }
 
         cout << "leaves: " << leaves << endl;
