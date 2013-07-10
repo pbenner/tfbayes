@@ -34,7 +34,7 @@ double mbeta_log(
         double sum1 = 0;
         double sum2 = 0;
 
-        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+        for (size_t i = 0; i < ALPHABET_SIZE && alpha[i] > 0; i++) {
                 sum1 += alpha[i];
                 sum2 += gsl_sf_lngamma(alpha[i]);
         }
@@ -51,8 +51,10 @@ double mbeta_log(
         double sum2 = 0;
 
         for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                sum1 += exponent[i] + alpha[i];
-                sum2 += gsl_sf_lngamma(exponent[i] + alpha[i]);
+                if (exponent[i] + alpha[i] > 0) {
+                        sum1 += exponent[i] + alpha[i];
+                        sum2 += gsl_sf_lngamma(exponent[i] + alpha[i]);
+                }
         }
 
         return sum2 - gsl_sf_lngamma(sum1);
@@ -67,9 +69,11 @@ double mbeta_log(
         double sum1 = 0;
         double sum2 = 0;
 
-        for (size_t i = from; i < to; i++) {
-                sum1 += exponent[i] + alpha[i];
-                sum2 += gsl_sf_lngamma(exponent[i] + alpha[i]);
+        for (size_t i = from; i < to && alpha[i] > 0; i++) {
+                if (exponent[i] + alpha[i] > 0) {
+                        sum1 += exponent[i] + alpha[i];
+                        sum2 += gsl_sf_lngamma(exponent[i] + alpha[i]);
+                }
         }
 
         return sum2 - gsl_sf_lngamma(sum1);

@@ -28,8 +28,8 @@
 
 using namespace std;
 
-#define alphabet_size 4
-typedef short code_t;
+#define alphabet_size 5
+typedef float code_t;
 
 void test_tree1(const exponent_t<code_t, alphabet_size> alpha) {
         cout << "Test 1:" << endl;
@@ -150,10 +150,11 @@ void test_tree6(const exponent_t<code_t, alphabet_size> alpha) {
 
 int main(void) {
         exponent_t<code_t, alphabet_size> alpha;
-        alpha[0] = 1;
-        alpha[1] = 1;
-        alpha[2] = 1;
-        alpha[3] = 1;
+        alpha[0] = 1.0;
+        alpha[1] = 1.0;
+        alpha[2] = 1.0;
+        alpha[3] = 1.0;
+        alpha[4] = 0.0;
 
         test_tree1(alpha);
         test_tree2(alpha);
