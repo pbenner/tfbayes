@@ -73,7 +73,7 @@ public:
                         std::string taxon  = token(parser.description()[0], '.')[0];
                         pt_node_t::id_t id = tree->get_leaf_id(taxon);
                         if (id != -1) {
-                                operator[](id)    = nucleotide_sequence_t<CODE_TYPE>(sequence);
+                                operator[](id) = nucleotide_sequence_t<CODE_TYPE>(sequence);
                         }
                         else {
                                 std::cerr << "Warning: taxon `"

@@ -23,7 +23,6 @@
 #endif /* HAVE_CONFIG_H */
 
 bool is_nucleotide(const char S);
-bool is_nucleotide_or_masked(const char S);
 
 template <typename CODE_TYPE>
 CODE_TYPE code_nucleotide(char a)
@@ -47,8 +46,11 @@ CODE_TYPE code_nucleotide(char a)
         break;
         case 'N':
         case 'n':
-        case '-':
                 return 4;
+        case '-':
+                return -1;
+        case '*':
+                return -2;
         default:
                 break;
         }
@@ -72,7 +74,11 @@ char decode_nucleotide(CODE_TYPE a)
                 return 'T';
         break;
         case 4:
+                return 'N';
+        case -1:
                 return '-';
+        case -2:
+                return '*';
         default:
                 break;
         }

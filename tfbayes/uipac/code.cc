@@ -35,13 +35,3 @@ bool is_nucleotide(const char S) {
                 return false;
         }
 }
-
-bool is_nucleotide_or_masked(const char S) {
-        if (S == 'A' || S == 'C' || S == 'G' || S == 'T' || S == 'N' ||
-            S == 'a' || S == 'c' || S == 'g' || S == 't') {
-                return true;
-        }
-        else {
-                return false;
-        }
-}
