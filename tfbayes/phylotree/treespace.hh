@@ -158,6 +158,7 @@ bool compatible(const nsplit_t& s1, const nsplit_t& s2);
 class nedge_node_t : public clonable {
 public:
         typedef boost::unordered_map<nedge_t, nedge_node_t*> map_t;
+        typedef boost::tuple<pt_node_t*, nsplit_t::part_t> convert_t;
 
          nedge_node_t();
          nedge_node_t(const map_t& children);
@@ -167,9 +168,11 @@ public:
         virtual nedge_node_t* clone() const;
         virtual void destroy();
 
+        virtual bool empty() const;
         virtual void propagate(const nedge_t& e);
-        virtual pt_node_t* convert(const std::vector<double>& leaf_d,
-                                   const std::vector<std::string>& leaf_names) const;
+        virtual boost::tuple<pt_node_t*, nsplit_t::part_t>
+        convert(const std::vector<double>& leaf_d,
+                const std::vector<std::string>& leaf_names) const;
 
         const map_t& nedge_set() const {
                 return _nedge_set;

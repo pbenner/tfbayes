@@ -295,6 +295,12 @@ nedge_node_t::destroy()
         delete(this);
 }
 
+bool
+nedge_node_t::empty() const
+{
+        return nedge_set().size() == 0;
+}
+
 void
 nedge_node_t::propagate(const nedge_t& e)
 {
@@ -324,14 +330,32 @@ nedge_node_t::propagate(const nedge_t& e)
         _nedge_set[e] = new nedge_node_t(children);
 }
 
-pt_node_t*
+nedge_node_t::convert_t
 nedge_node_t::convert(
         const vector<double>& leaf_d,
         const vector<string>& leaf_names) const
 {
-        pt_node_t* result   = NULL;
+        pt_node_t* tree = NULL;
+        nsplit_t::part_t leaves(leaf_d.size());
 
-        return result;
+        for (map_t::const_iterator it = nedge_set().begin();
+             it != nedge_set().end(); it++) {
+
+                if (it->second->empty()) {
+                        leaves |= it->first->part2();
+                        convert_leaf_set(leaf_d, leaf_names, it->first->part2());
+                }
+                else {
+                        convert_t        tmp        = it->second->convert(leaf_d, leaf_names);
+                        pt_node_t*       tmp_node   = boost::get<0>(tmp);
+                        nsplit_t::part_t tmp_leaves = boost::get<1>(tmp);
+                        leaves |= tmp_leaves;
+                }
+        }
+
+        cout << "leaves: " << leaves << endl;
+
+        return make_tuple(tree, leaves);
 }
 
 nedge_root_t::nedge_root_t(
@@ -376,11 +400,16 @@ nedge_root_t::destroy()
 pt_root_t*
 nedge_root_t::convert() const
 {
-        pt_node_t* left     = _left ->convert(leaf_d( ), leaf_names( ));
-        pt_node_t* right    = _right->convert(leaf_d( ), leaf_names( ));
-        pt_leaf_t* outgroup =   new pt_leaf_t(leaf_d(0), leaf_names(0));
+        boost::tuple<pt_node_t*, nsplit_t::part_t> left  = _left ->convert(leaf_d(), leaf_names());
+        boost::tuple<pt_node_t*, nsplit_t::part_t> right = _right->convert(leaf_d(), leaf_names());
 
-        return new pt_root_t(left, right, outgroup);
+        cout << "DONE" << endl;
+
+        pt_node_t* tree_left  = boost::get<0>(left);
+        pt_node_t* tree_right = boost::get<0>(right);
+        pt_leaf_t* outgroup   = new pt_leaf_t(leaf_d(0), leaf_names(0));
+
+        return new pt_root_t(tree_left, tree_right, outgroup);
 }
 
 // ntree_t
