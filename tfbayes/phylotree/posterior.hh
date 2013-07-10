@@ -97,7 +97,7 @@ boost::array<double, ALPHABET_SIZE> pt_posterior_expectation_prime(
                 }
                 for (size_t i = 0; i < ALPHABET_SIZE/2; i++) {
                         tmp  = log(it->coefficient());
-                        tmp += mbeta_log(it->exponent(), alpha,               0,  ALPHABET_SIZE/2);
+                        tmp += mbeta_log(it->exponent(), alpha,               0, ALPHABET_SIZE/2);
                         tmp += mbeta_log(it->exponent(), alpha, ALPHABET_SIZE/2, ALPHABET_SIZE);
                         tmp -= norm;
                         tmp  = exp(tmp);
