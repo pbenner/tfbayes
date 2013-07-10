@@ -91,7 +91,7 @@ private:
                 const carry_t& carry_left,
                 const carry_t& carry_right,
                 const std::vector<CODE_TYPE>& observations) {
-                double pm_left  = 1.0-exp(-node->left->d);
+                double pm_left  = 1.0-exp(-node->left ->d);
                 double pm_right = 1.0-exp(-node->right->d);
                 carry_t carry;
                 const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_left  = poly_sum(carry_left);
