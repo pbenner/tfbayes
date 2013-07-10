@@ -265,8 +265,7 @@ nedge_node_t::nedge_node_t()
         : _nedge_set()
 { }
 
-nedge_node_t::nedge_node_t(
-        const map_t& nedge_set)
+nedge_node_t::nedge_node_t(const map_t& nedge_set)
         : _nedge_set(nedge_set)
 { }
 
@@ -370,28 +369,21 @@ nedge_node_t::convert(
 
 nedge_root_t::nedge_root_t(
         const nedge_set_t& nedge_set,
-        const vector<double>& leaf_d, const vector<string>& leaf_names)
-        : _leaf_d(leaf_d),
+        const vector<double>& leaf_d,
+        const vector<string>& leaf_names)
+        : nedge_node_t(),
+          _leaf_d(leaf_d),
           _leaf_names(leaf_names)
 {
-        _left  = new nedge_node_t();
-        _right = new nedge_node_t();
-
         for (size_t i = 0; i < nedge_set.size(); i++) {
-                if (is_subset(nedge_set[i]->part2(), nedge_set[0]->part1())) {
-                        _right->propagate(nedge_set[i]);
-                }
-                else {
-                        _left ->propagate(nedge_set[i]);
-                }
+                propagate(nedge_set[i]);
         }
 }
 
 nedge_root_t::nedge_root_t(const nedge_root_t& nedge_root)
-        : _leaf_d(nedge_root._leaf_d),
-          _leaf_names(nedge_root._leaf_names),
-          _left (nedge_root._left ->clone()),
-          _right(nedge_root._right->clone())
+        : nedge_node_t(nedge_root),
+          _leaf_d(nedge_root._leaf_d),
+          _leaf_names(nedge_root._leaf_names)
 { }
 
 nedge_root_t*
@@ -400,53 +392,29 @@ nedge_root_t::clone() const
         return new nedge_root_t(*this);
 }
 
-void
-nedge_root_t::destroy()
-{
-        _left ->destroy();
-        _right->destroy();
-        delete(this);
-}
-
 pt_root_t*
 nedge_root_t::convert() const
 {
-        boost::tuple<pt_node_t*, nsplit_t::part_t> left  = _left ->convert(leaf_d(), leaf_names());
-        boost::tuple<pt_node_t*, nsplit_t::part_t> right = _right->convert(leaf_d(), leaf_names());
-        nsplit_t::part_t leaves_left  = boost::get<1>(left);
-        nsplit_t::part_t leaves_right = boost::get<1>(right);
-        nsplit_t::part_t leaves = (leaves_left | leaves_right).flip();
-        pt_node_t* tree_left  = boost::get<0>(left);
-        pt_node_t* tree_right = boost::get<0>(right);
-        pt_root_t* tree;
+        boost::tuple<pt_node_t*, nsplit_t::part_t> result =
+                nedge_node_t::convert(leaf_d(), leaf_names());
+        pt_node_t* tree         = boost::get<0>(result);
+        nsplit_t::part_t leaves = boost::get<1>(result);
 
         // leaf 0 should always be missing
+        leaves = leaves.flip();
         assert(leaves[0] == 1);
         leaves[0] = 0;
 
         // create leaves that are missing so far
         if (leaves.any()) {
-                tree_left = new pt_node_t(0.0, tree_left,
-                                          convert_leaf_set(leaf_d(), leaf_names(), leaves));
+                tree = new pt_node_t(0.0, tree,
+                                     convert_leaf_set(leaf_d(), leaf_names(), leaves));
         }
         // construct outgroup
         pt_leaf_t* outgroup = new pt_leaf_t(leaf_d(0), leaf_names(0));
 
         // construct tree
-        assert(tree_left != NULL || tree_right != NULL);
-        if (tree_left == NULL) {
-                tree = new pt_root_t(*tree_right);
-                delete(tree_right);
-        }
-        else
-        if (tree_right == NULL) {
-                tree = new pt_root_t(*tree_left);
-                delete(tree_left);
-        }
-        else {
-                tree = new pt_root_t(tree_left, tree_right, outgroup);
-        }
-        return tree;
+        return new pt_root_t(tree, outgroup);
 }
 
 // ntree_t

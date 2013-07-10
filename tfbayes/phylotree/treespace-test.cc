@@ -50,12 +50,12 @@ void test1()
         nedge_set.push_back(e3);
         // leaf edge lengths
         vector<double> leaf_d(6, 1);
-        leaf_d[0] = 0.5;
-        leaf_d[1] = 1.5;
-        leaf_d[2] = 2.5;
-        leaf_d[3] = 3.5;
-        leaf_d[4] = 4.5;
-        leaf_d[5] = 5.5;
+        leaf_d[0] = 0.0;
+        leaf_d[1] = 1.0;
+        leaf_d[2] = 2.0;
+        leaf_d[3] = 3.0;
+        leaf_d[4] = 4.0;
+        leaf_d[5] = 5.0;
         // leaf names
         vector<string> leaf_names;
         leaf_names.push_back("leaf 0");

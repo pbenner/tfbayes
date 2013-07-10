@@ -183,7 +183,7 @@ protected:
         map_t _nedge_set;
 };
 
-class nedge_root_t {
+class nedge_root_t : public nedge_node_t {
 public:
          nedge_root_t(const nedge_set_t& nedge_set,
                       const std::vector<double>& leaf_d,
@@ -192,7 +192,6 @@ public:
         ~nedge_root_t() { };
 
         virtual nedge_root_t* clone() const;
-        virtual void destroy();
 
         virtual pt_root_t* convert() const;
 
@@ -212,9 +211,6 @@ public:
 protected:
         std::vector<double> _leaf_d;
         std::vector<std::string> _leaf_names;
-
-        nedge_node_t* _left;
-        nedge_node_t* _right;
 };
 
 // ntree_t definition
