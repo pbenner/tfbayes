@@ -356,7 +356,8 @@ nedge_node_t::convert(
                 if ((it->first->part2() - tmp_leaves).any()) {
                         tmp_node = new pt_node_t(0.0, tmp_node,
                                                  convert_leaf_set(leaf_d, leaf_names, it->first->part2() - tmp_leaves));
-                        leaves |= it->first->part2() - tmp_leaves;
+                        // add generated leaves
+                        leaves  |= it->first->part2() - tmp_leaves;
                 }
                 // assign edge length
                 tmp_node->d = it->first.d();
@@ -412,11 +413,12 @@ nedge_root_t::convert() const
 {
         boost::tuple<pt_node_t*, nsplit_t::part_t> left  = _left ->convert(leaf_d(), leaf_names());
         boost::tuple<pt_node_t*, nsplit_t::part_t> right = _right->convert(leaf_d(), leaf_names());
-        pt_node_t* tree_left  = boost::get<0>(left);
-        pt_node_t* tree_right = boost::get<0>(right);
         nsplit_t::part_t leaves_left  = boost::get<1>(left);
         nsplit_t::part_t leaves_right = boost::get<1>(right);
         nsplit_t::part_t leaves = (leaves_left | leaves_right).flip();
+        pt_node_t* tree_left  = boost::get<0>(left);
+        pt_node_t* tree_right = boost::get<0>(right);
+        pt_root_t* tree;
 
         // leaf 0 should always be missing
         assert(leaves[0] == 1);
@@ -428,9 +430,23 @@ nedge_root_t::convert() const
                                           convert_leaf_set(leaf_d(), leaf_names(), leaves));
         }
         // construct outgroup
-        pt_leaf_t* outgroup   = new pt_leaf_t(leaf_d(0), leaf_names(0));
+        pt_leaf_t* outgroup = new pt_leaf_t(leaf_d(0), leaf_names(0));
 
-        return new pt_root_t(tree_left, tree_right, outgroup);
+        // construct tree
+        assert(tree_left != NULL || tree_right != NULL);
+        if (tree_left == NULL) {
+                tree = new pt_root_t(*tree_right);
+                delete(tree_right);
+        }
+        else
+        if (tree_right == NULL) {
+                tree = new pt_root_t(*tree_left);
+                delete(tree_left);
+        }
+        else {
+                tree = new pt_root_t(tree_left, tree_right, outgroup);
+        }
+        return tree;
 }
 
 // ntree_t

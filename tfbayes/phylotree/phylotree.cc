@@ -273,7 +273,28 @@ pt_root_t::pt_root_t(pt_node_t* left,
         }
 
         leaves = leaves_t(n_leaves, (pt_leaf_t*)NULL);
-        nodes = nodes_t(n_nodes, (pt_node_t*)NULL);
+        nodes  = nodes_t (n_nodes,  (pt_node_t*)NULL);
+        create_mappings();
+}
+
+pt_root_t::pt_root_t(const pt_node_t& node, pt_leaf_t* outgroup)
+        : pt_node_t(node),
+          // copy leaves and nodes since those are vectors
+          outgroup(outgroup)
+{
+        // count outgroup as leaf if present and set the ancestor of
+        // the outgroup
+        if (has_outgroup()) {
+                n_leaves++; n_nodes++;
+                outgroup->ancestor = this;
+        }
+        // set leaf/node ids
+        id_t leaf_id = 0;
+        id_t node_id = n_leaves;
+        set_id(leaf_id, node_id);
+
+        leaves = leaves_t(n_leaves, (pt_leaf_t*)NULL);
+        nodes  = nodes_t (n_nodes,  (pt_node_t*)NULL);
         create_mappings();
 }
 

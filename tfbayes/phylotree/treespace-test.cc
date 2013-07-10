@@ -865,8 +865,8 @@ main(void)
         test3(); cout << endl;
         test4(); cout << endl;
         test5(); cout << endl;
-        //test6(); cout << endl;
-        //test7(); cout << endl;
+        test6(); cout << endl;
+        test7(); cout << endl;
         test8(); cout << endl;
         test9(); cout << endl;
         test10(); cout << endl;

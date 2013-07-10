@@ -113,6 +113,7 @@ public:
                   const std::string name = "",
                   // if root is not null then copy ids from this tree
                   const pt_root_t* tree = NULL);
+        pt_root_t(const pt_node_t& node, pt_leaf_t* outgroup = NULL);
         pt_root_t(const pt_root_t& root);
 
         virtual void destroy();
