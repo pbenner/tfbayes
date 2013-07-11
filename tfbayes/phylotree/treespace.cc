@@ -1336,7 +1336,7 @@ majority_consensus(const list<ntree_t>& ntree_list, bool verbose)
 {
         assert(ntree_list.size() > 0);
 
-        typedef boost::unordered_map<const nsplit_t&, boost::tuple<double, double, nsplit_ptr_t> > nsplit_map_t;
+        typedef boost::unordered_map<const nsplit_t, boost::tuple<double, double, nsplit_ptr_t> > nsplit_map_t;
 
         const size_t n = ntree_list.begin()->n();
         const size_t m = ntree_list.size();
