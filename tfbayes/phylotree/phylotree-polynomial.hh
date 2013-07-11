@@ -75,14 +75,22 @@ private:
         static carry_t likelihood_leaf(const pt_node_t* node, const std::vector<CODE_TYPE>& observations) {
                 carry_t carry;
                 const pt_leaf_t* leaf = static_cast<const pt_leaf_t*>(node);
-                if (observations[leaf->id] != -1) {
-                        // leaf is present and has a nucleotide
-                        carry[observations[leaf->id]] += 1.0;
-                }
-                else {
+                if (observations[leaf->id] == -1) {
                         // this leaf should be ignored, no nucleotide
                         // is present
                         carry[ALPHABET_SIZE] = 1.0;
+                }
+                else if (observations[leaf->id] == -2) {
+                        // missing data, generate all nucleotides
+                        // (except for the last one which is used for
+                        // gaps)
+                        for (size_t i = 0; i < ALPHABET_SIZE-1; i++) {
+                                carry[i] += 1.0;
+                        }
+                }
+                else {
+                        // leaf is present and has a nucleotide
+                        carry[observations[leaf->id]] += 1.0;
                 }
                 return carry;
         }
