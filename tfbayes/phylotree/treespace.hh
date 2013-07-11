@@ -442,6 +442,11 @@ ntree_t median_tree_rand(const std::list<ntree_t>& ntree_list, const std::vector
                          size_t n = 100, const lambda_t& lambda = default_lambda_t(),
                          bool verbose = false);
 
+// consensus trees
+////////////////////////////////////////////////////////////////////////////////
+
+ntree_t majority_consensus(const std::list<ntree_t>& ntree_list);
+
 // i/o operators
 ////////////////////////////////////////////////////////////////////////////////
 

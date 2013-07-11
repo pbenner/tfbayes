@@ -1323,6 +1323,46 @@ median_tree_rand(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lamb
         return median_tree_rand(ntree_list, weights, n, lambda, verbose);
 }
 
+// consensus trees
+////////////////////////////////////////////////////////////////////////////////
+
+ntree_t
+majority_consensus(const list<ntree_t>& ntree_list)
+{
+        typedef boost::unordered_map<nsplit_ptr_t, boost::tuple<double, double> > nsplit_map_t;
+
+        nsplit_map_t nsplit_map;
+        nedge_set_t  nedge_set;
+
+        // loop through the list of trees an count occurences of splits
+        for (list<ntree_t>::const_iterator it = ntree_list.begin();
+             it != ntree_list.end(); it++) {
+                const ntree_t& ntree(*it);
+                for (nedge_set_t::const_iterator is = ntree.nedge_set().begin();
+                     is != ntree.nedge_set().end(); is++) {
+                        const nedge_t& nedge(*is);
+                        if (nsplit_map.find(nedge) == nsplit_map.end()) {
+                                // split not yet present
+                                nsplit_map[nedge] = boost::make_tuple(nedge.d(), 1);
+                        }
+                        else {
+                                boost::get<0>(nsplit_map[nedge]) += nedge.d();
+                                boost::get<1>(nsplit_map[nedge]) += 1;
+                        }
+                }
+        }
+        // loop through nsplit_map and find splits that occured in more
+        // than half of the trees
+        for (nsplit_map_t::const_iterator it = nsplit_map.begin();
+             it != nsplit_map.end(); it++) {
+                const size_t n = boost::get<1>(it->second);
+                const double d = boost::get<0>(it->second)/(double)n;
+                if (n > ntree_list.size()/2) {
+                        nedge_set.push_back(nedge_t(it->first, d));
+                }
+        }
+}
+
 // ostream
 ////////////////////////////////////////////////////////////////////////////////
 
