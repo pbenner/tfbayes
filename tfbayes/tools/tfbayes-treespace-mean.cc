@@ -76,6 +76,11 @@ void print_usage(char *pname, FILE *fp)
         (void)fprintf(fp,
                       "Commands: mean, median, majority-consensus\n"
                       "\n"
+                      "      mean                   - Frechet mean\n"
+                      "      median                 - geometric median\n"
+                      "      majority-consensus     - majority rule consensus tree with\n"
+                      "                               average branch lengths\n"
+                      "\n"
                       "Options:\n"
                       "             -r              - use random instead of cyclic version\n"
                       "             -f              - compute Frechet variance\n"
