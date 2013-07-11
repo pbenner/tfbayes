@@ -176,8 +176,8 @@ void test_tree7() {
         polynomial_t<code_t, alphabet_size> result1 = pt_polynomial<code_t, alphabet_size>(&n1, observations1);
         polynomial_t<code_t, alphabet_size> result2 = pt_polynomial<code_t, alphabet_size>(&m1, observations2);
 
-        cout << result1 << endl
-             << result2 << endl
+        cout << result1 << " (first tree)" << endl
+             << result2 << " (second tree with root at different location)" << endl
              << endl;
 } 
 
@@ -261,6 +261,33 @@ void test_tree11() {
              << endl << endl;
 }
 
+void test_tree12() {
+        cout << "Test 12:" << endl;
+        // first tree
+        pt_leaf_t n5(2.0, "n5");
+        pt_leaf_t n4(1.0, "n4");
+        pt_leaf_t n3(1.0, "n3");
+        pt_node_t n2(0.5, &n4, &n5);
+        pt_root_t n1(&n2, &n3);
+        vector<code_t> observations1(n1.n_leaves, 0);
+        observations1[n1("n5")->id] = -1;
+        observations1[n1("n4")->id] =  1;
+        observations1[n1("n3")->id] =  2;
+        // second tree
+        pt_leaf_t m2(1.5, "m2");
+        pt_leaf_t m3(1.0, "m3");
+        pt_root_t m1(&m2, &m3);
+        vector<code_t> observations2(m1.n_leaves, 0);
+        observations2[m1("m2")->id] = 1;
+        observations2[m1("m3")->id] = 2;
+
+        polynomial_t<code_t, alphabet_size> result1 = pt_polynomial<code_t, alphabet_size>(&n1, observations1);
+        polynomial_t<code_t, alphabet_size> result2 = pt_polynomial<code_t, alphabet_size>(&m1, observations2);
+        cout << result1 << " (observation with gap '-')" << endl
+             << result2 << " (tree with leaf removed)"   << endl
+             << endl;
+}
+
 int main(void) {
         test_tree1();
         test_tree2();
@@ -273,6 +300,7 @@ int main(void) {
         test_tree9();
         test_tree10();
         test_tree11();
+        test_tree12();
 
         return 0.0;
 }
