@@ -134,6 +134,11 @@ bool compatible(const nsplit_t& s1, const nsplit_t& s2)
         return false;
 }
 
+bool hash_value(const nsplit_t& nsplit)
+{
+        return boost::hash_value(nsplit.part1().m_bits);
+}
+
 // nedge_t
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1327,37 +1332,41 @@ median_tree_rand(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lamb
 ////////////////////////////////////////////////////////////////////////////////
 
 ntree_t
-majority_consensus(const list<ntree_t>& ntree_list)
+majority_consensus(const list<ntree_t>& ntree_list, bool verbose)
 {
         assert(ntree_list.size() > 0);
 
-        typedef boost::unordered_map<nsplit_ptr_t, boost::tuple<double, double> > nsplit_map_t;
+        typedef boost::unordered_map<const nsplit_t&, boost::tuple<double, double, nsplit_ptr_t> > nsplit_map_t;
 
         const size_t n = ntree_list.begin()->n();
+        const size_t m = ntree_list.size();
         nsplit_map_t nsplit_map;
         nedge_set_t  nedge_set;
         vector<double> leaf_d(n+1, 0);
         vector<string> leaf_names(ntree_list.begin()->leaf_names());
 
         // loop through the list of trees an count occurences of splits
-        for (list<ntree_t>::const_iterator it = ntree_list.begin();
-             it != ntree_list.end(); it++) {
+        list<ntree_t>::const_iterator it = ntree_list.begin();
+        for (size_t i = 1; it != ntree_list.end(); it++, i++) {
+                if (verbose && i % 100 == 0) {
+                        cerr << progress_t(i/(double)m);
+                }
                 const ntree_t& ntree(*it);
                 for (nedge_set_t::const_iterator is = ntree.nedge_set().begin();
                      is != ntree.nedge_set().end(); is++) {
                         const nedge_t& nedge(*is);
-                        if (nsplit_map.find(nedge) == nsplit_map.end()) {
+                        if (nsplit_map.find(*nedge) == nsplit_map.end()) {
                                 // split not yet present
-                                nsplit_map[nedge] = boost::make_tuple(nedge.d(), 1);
+                                nsplit_map[*nedge] = boost::make_tuple(nedge.d(), 1, nedge);
                         }
                         else {
-                                boost::get<0>(nsplit_map[nedge]) += nedge.d();
-                                boost::get<1>(nsplit_map[nedge]) += 1;
+                                boost::get<0>(nsplit_map[*nedge]) += nedge.d();
+                                boost::get<1>(nsplit_map[*nedge]) += 1;
                         }
                 }
                 // loop over leafs and compute the average branch length
                 for (size_t i = 0; i < n+1; i++) {
-                        leaf_d[i] += it->leaf_d(i)/(double)ntree_list.size();
+                        leaf_d[i] += it->leaf_d(i)/(double)m;
                 }
         }
         // loop through nsplit_map and find splits that occured in more
@@ -1366,8 +1375,8 @@ majority_consensus(const list<ntree_t>& ntree_list)
              it != nsplit_map.end(); it++) {
                 const size_t n = boost::get<1>(it->second);
                 const double d = boost::get<0>(it->second)/(double)n;
-                if (n > ntree_list.size()/2) {
-                        nedge_set.push_back(nedge_t(it->first, d));
+                if (n > m/2) {
+                        nedge_set.push_back(nedge_t(boost::get<2>(it->second), d));
                 }
         }
         // construct tree

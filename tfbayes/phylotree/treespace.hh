@@ -31,6 +31,7 @@
 #include <cassert>
 #include <cstdlib>
 
+#define BOOST_DYNAMIC_BITSET_DONT_USE_FRIENDS
 #include <boost/tuple/tuple.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <boost/shared_ptr.hpp>
@@ -445,7 +446,7 @@ ntree_t median_tree_rand(const std::list<ntree_t>& ntree_list, const std::vector
 // consensus trees
 ////////////////////////////////////////////////////////////////////////////////
 
-ntree_t majority_consensus(const std::list<ntree_t>& ntree_list);
+ntree_t majority_consensus(const std::list<ntree_t>& ntree_list, bool verbose = false);
 
 // i/o operators
 ////////////////////////////////////////////////////////////////////////////////

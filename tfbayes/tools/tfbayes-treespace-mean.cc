@@ -162,7 +162,7 @@ void mean(const string& command)
                         median_tree_cyc (ntree_list, options.iterations, default_lambda_t(), options.verbose);
         }
         else if (command == "majority-consensus") {
-                result = majority_consensus(ntree_list);
+                result = majority_consensus(ntree_list, options.verbose);
         }
         else {
                 wrong_usage("Unknown command.");
