@@ -77,16 +77,8 @@ private:
                 const pt_leaf_t* leaf = static_cast<const pt_leaf_t*>(node);
                 if (observations[leaf->id] == -1) {
                         // this leaf should be ignored, no nucleotide
-                        // is present
+                        // is present (missing data)
                         carry[ALPHABET_SIZE] = 1.0;
-                }
-                else if (observations[leaf->id] == -2) {
-                        // missing data, generate all nucleotides
-                        // (except for the last one which is used for
-                        // gaps)
-                        for (size_t i = 0; i < ALPHABET_SIZE-1; i++) {
-                                carry[i] += 1.0;
-                        }
                 }
                 else {
                         // leaf is present and has a nucleotide

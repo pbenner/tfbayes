@@ -31,26 +31,20 @@ CODE_TYPE code_nucleotide(char a)
         case 'A':
         case 'a':
                 return 1;
-        break;
         case 'C':
         case 'c':
                 return 3;
-        break;
         case 'G':
         case 'g':
                 return 0;
-        break;
         case 'T':
         case 't':
                 return 2;
-        break;
+        case '-':
+                return 4;
         case 'N':
         case 'n':
-                return 4;
-        case '-':
                 return -1;
-        case '*':
-                return -2;
         default:
                 break;
         }
@@ -63,22 +57,16 @@ char decode_nucleotide(CODE_TYPE a)
         switch (a) {
         case 1:
                 return 'A';
-        break;
         case 3:
                 return 'C';
-        break;
         case 0:
                 return 'G';
-        break;
         case 2:
                 return 'T';
-        break;
         case 4:
-                return 'N';
-        case -1:
                 return '-';
-        case -2:
-                return '*';
+        case -1:
+                return 'N';
         default:
                 break;
         }
