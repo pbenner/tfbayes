@@ -74,7 +74,7 @@ to compute the median.
 
 ## Alignment gaps
 
-The library supports three ways of handling alignment gaps. Which one is used is coded in the alignment data:
+The library supports two ways of handling alignment gaps. Which one is used is coded in the alignment data:
 
 + 'N': The gap is considered as missing data, which means that a nucleotide should be present at this position, but we simply do not know which one (wildcard). It is equivalent to treating the species as if it was not present in the data set, i.e. the species is removed from the phylogenetic tree.
 + '-': The gap is interpreted as an additional character in the alphabet (i.e. a fifth nucleotide). Note that if this is not used in the alignment, the prior counts for this character should be set to zero.
