@@ -1329,10 +1329,15 @@ median_tree_rand(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lamb
 ntree_t
 majority_consensus(const list<ntree_t>& ntree_list)
 {
+        assert(ntree_list.size() > 0);
+
         typedef boost::unordered_map<nsplit_ptr_t, boost::tuple<double, double> > nsplit_map_t;
 
+        const size_t n = ntree_list.begin()->n();
         nsplit_map_t nsplit_map;
         nedge_set_t  nedge_set;
+        vector<double> leaf_d(n+1, 0);
+        vector<string> leaf_names(ntree_list.begin()->leaf_names());
 
         // loop through the list of trees an count occurences of splits
         for (list<ntree_t>::const_iterator it = ntree_list.begin();
@@ -1350,6 +1355,10 @@ majority_consensus(const list<ntree_t>& ntree_list)
                                 boost::get<1>(nsplit_map[nedge]) += 1;
                         }
                 }
+                // loop over leafs and compute the average branch length
+                for (size_t i = 0; i < n+1; i++) {
+                        leaf_d[i] += it->leaf_d(i)/(double)ntree_list.size();
+                }
         }
         // loop through nsplit_map and find splits that occured in more
         // than half of the trees
@@ -1361,6 +1370,8 @@ majority_consensus(const list<ntree_t>& ntree_list)
                         nedge_set.push_back(nedge_t(it->first, d));
                 }
         }
+        // construct tree
+        return ntree_t(nedge_set, leaf_d, leaf_names);
 }
 
 // ostream

@@ -74,7 +74,7 @@ void print_usage(char *pname, FILE *fp)
 {
         (void)fprintf(fp, "\nUsage: %s [OPTION] COMMAND < TREE_LIST\n\n", pname);
         (void)fprintf(fp,
-                      "Commands: mean, median\n"
+                      "Commands: mean, median, majority-consensus\n"
                       "\n"
                       "Options:\n"
                       "             -r              - use random instead of cyclic version\n"
@@ -155,6 +155,9 @@ void mean(const string& command)
                 result = options.random ?
                         median_tree_rand(ntree_list, options.iterations, default_lambda_t(), options.verbose) :
                         median_tree_cyc (ntree_list, options.iterations, default_lambda_t(), options.verbose);
+        }
+        else if (command == "majority-consensus") {
+                result = majority_consensus(ntree_list);
         }
         else {
                 wrong_usage("Unknown command.");
