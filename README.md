@@ -70,7 +70,9 @@ which drops the first *8000* samples and performs *100* iterations of the algori
 
 	zcat test.nh.gz > tfbayes-treespace-mean -n 100 -r -d 8000 -v median > test.median.nh
 
-to compute the median.
+to compute the median. To compare the result with the majority rule consensus tree use
+
+	zcat test.nh.gz > tfbayes-treespace-mean -d 8000 -v majority-consensus
 
 ## Alignment gaps
 
