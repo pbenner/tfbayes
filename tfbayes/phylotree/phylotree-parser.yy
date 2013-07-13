@@ -70,26 +70,33 @@ int yyerror(YYLTYPE* locp, context_t* context, const char* err) {
 ////////////////////////////////////////////////////////////////////////////////
 %%
 start:
-      tree_list root SEMICOLON
-      { context->pt_parsetree = new pt_parsetree_t(TREE_N, 2, NULL, $1, $2); }
-    | root SEMICOLON
-      { context->pt_parsetree = new pt_parsetree_t(TREE_N, 1, NULL, $1); }
+      tree_list tree SEMICOLON
+      { context->pt_parsetree = new pt_parsetree_t(TREE_LIST_N, 2, NULL, $1, $2); }
+    | tree SEMICOLON
+      { context->pt_parsetree = new pt_parsetree_t(TREE_LIST_N, 1, NULL, $1); }
     ;
 tree_list:
-      tree_list root SEMICOLON
-      { $$ = new pt_parsetree_t(TREE_N, 2, NULL, $1, $2); }
-    | root SEMICOLON
-      { $$ = new pt_parsetree_t(TREE_N, 1, NULL, $1); }
+      tree_list tree SEMICOLON
+      { $$ = new pt_parsetree_t(TREE_LIST_N, 2, NULL, $1, $2); }
+    | tree SEMICOLON
+      { $$ = new pt_parsetree_t(TREE_LIST_N, 1, NULL, $1); }
     ;
-root:  LPAREN node COMMA node COMMA node RPAREN
-      { $$ = new pt_parsetree_t(ROOT_N, 3, NULL, $2, $4, $6); }
-    | LPAREN node COMMA node RPAREN
-      { $$ = new pt_parsetree_t(ROOT_N, 2, NULL, $2, $4); }
+tree: LPAREN node_list COMMA outgroup RPAREN
+      { $$ = new pt_parsetree_t(TREE_N, 2, NULL, $2, $4); }
     ;
-node: LPAREN node COMMA node RPAREN COLON distance
-      { $$ = new pt_parsetree_t(NODE_N, 3, NULL, $2, $4, $7); }
-    | name COLON distance
+outgroup:
+      name COLON distance
       { $$ = new pt_parsetree_t(LEAF_N, 2, NULL, $1, $3); }
+node_list:
+      node_list COMMA node
+      { $$ = new pt_parsetree_t(NODE_LIST_N, 2, NULL, $1, $3); }
+    | node
+      { $$ = new pt_parsetree_t(NODE_LIST_N, 1, NULL, $1); }
+    ;
+node: name COLON distance
+      { $$ = new pt_parsetree_t(LEAF_N, 2, NULL, $1, $3); }
+    | LPAREN node_list RPAREN COLON distance
+      { $$ = new pt_parsetree_t(NODE_N, 2, NULL, $2, $5); }
     ;
 name: NAME { $$ = new pt_parsetree_t(NAME_N, 0, strdup(yyget_text(context->scanner))); }
     ;

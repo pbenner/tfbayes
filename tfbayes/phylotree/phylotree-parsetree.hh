@@ -30,10 +30,10 @@
 
 typedef enum {
         /* tree list */
-        TREE_N,
+        TREE_LIST_N, TREE_N,
 
-        /* Root node, internal node, and leaf */
-        ROOT_N, NODE_N, LEAF_N,
+        /* nodes and leaf */
+        NODE_LIST_N, NODE_N, LEAF_N,
 
         /* Species name */
         NAME_N,

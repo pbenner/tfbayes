@@ -78,8 +78,8 @@ int main(void) {
         p[2] = 0.4;
         p[3] = 0.05;
 
-        cout << "Phylogenetic tree:" << endl
-             << pt_root              << endl;
+        cout << "Phylogenetic tree:"   << endl
+             << newick_format(pt_root) << endl;
 
         MET("Simplifying",
             incomplete_expression_t incomplete_expression = pt_simplify(pt_root));

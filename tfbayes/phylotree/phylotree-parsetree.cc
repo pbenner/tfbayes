@@ -80,10 +80,10 @@ pt_parsetree_t::convert(size_t drop, size_t skip) const
         // iterate throught the tree list non-recursively
         // since it might get very big!
         for (size_t i = 0; pt != NULL; i++) {
-                assert(pt->type == TREE_N);
+                assert(pt->type == TREE_LIST_N);
 
                 if (pt->n_children == 2) {
-                        assert(pt->children[1]->type == ROOT_N);
+                        assert(pt->children[1]->type == TREE_N);
                         // convert the tree on the right which is a
                         // phylogenetic tree
                         if (n-i >= drop && i % skip == 0) {
@@ -91,11 +91,11 @@ pt_parsetree_t::convert(size_t drop, size_t skip) const
                                 tree_list.push_front(tree);
                         }
                         // on the left is the tree list
-                        assert(children[0]->type == TREE_N);
+                        assert(children[0]->type == TREE_LIST_N);
                         pt = pt->children[0];
                 }
                 else {
-                        assert(pt->children[0]->type == ROOT_N);
+                        assert(pt->children[0]->type == TREE_N);
                         // we only have the phylogenetic tree
                         if (n-i >= drop && i % skip == 0) {
                                 tree = static_cast<pt_root_t*>(pt->children[0]->convert(tree));
@@ -117,11 +117,22 @@ pt_parsetree_t::convert(const pt_root_t* sample_tree) const
 
         switch (type)
         {
+        case NODE_LIST_N:
+                if (n_children == 1) {
+                        return children[0]->convert(sample_tree);
+                }
+                else {
+                        node = new pt_node_t(0.0,
+                                             children[0]->convert(sample_tree),
+                                             children[1]->convert(sample_tree));
+                }
+                break;
         case NODE_N:
-                assert(children[2]->type == DISTANCE_N);
-                node = new pt_node_t(*(double *)children[2]->data,
-                                     children[0]->convert(sample_tree),
-                                     children[1]->convert(sample_tree));
+                assert(n_children == 2);
+                assert(children[0]->type == NODE_LIST_N);
+                assert(children[1]->type == DISTANCE_N);
+                node    = children[0]->convert(sample_tree);
+                node->d = *(double *)children[1]->data;
                 break;
         case LEAF_N:
                 assert(children[0]->type == NAME_N);
@@ -129,25 +140,20 @@ pt_parsetree_t::convert(const pt_root_t* sample_tree) const
                 node = new pt_leaf_t(*(double *)children[1]->data,
                                       (char   *)children[0]->data);
                 break;
-        case ROOT_N:
-                assert(children[0]->type == NODE_N ||
-                       children[0]->type == LEAF_N);
-                assert(children[1]->type == NODE_N ||
-                       children[1]->type == LEAF_N);
-                assert((n_children == 3 && children[2]->type == LEAF_N) ||
-                        n_children == 2);
-                // check if an outgroup is available
-                if (n_children == 3) {
-                        outgroup = new pt_leaf_t(*(double *)children[2]->children[1]->data,
-                                                  (char   *)children[2]->children[0]->data);
-                }
-                node = new pt_root_t(children[0]->convert(sample_tree),
-                                     children[1]->convert(sample_tree),
-                                     outgroup, "", sample_tree);
-                break;
         case TREE_N:
+                assert(n_children == 2);
+                assert(children[0]->type == NODE_LIST_N);
+                assert(children[1]->type == LEAF_N);
+                // make sure that there are at least three childs
+                // attached to the root (including outgroup)
+                assert(children[0]->n_children == 2);
+                outgroup = static_cast<pt_leaf_t*>(children[1]->convert(sample_tree));
+                node     = children[0]->convert(sample_tree);
+                node     = new pt_root_t(node, outgroup);
+                break;
+        case TREE_LIST_N:
                 // this shouldn't happen
-                assert(type != TREE_N);
+                assert(type != TREE_LIST_N);
                 break;
         default:
                 assert(false);
@@ -193,12 +199,16 @@ ostream& print_parsetree(
                 o << "NODE"
                   << endl;
                 break;
+        case NODE_LIST_N:
+                o << "NODE_LIST"
+                  << endl;
+                break;
         case LEAF_N:
                 o << "LEAF"
                   << endl;
                 break;
-        case ROOT_N:
-                o << "ROOT"
+        case TREE_N:
+                o << "TREE"
                   << endl;
                 break;
         default:
@@ -242,6 +252,7 @@ list<pt_root_t*> parse_tree_list(FILE * file, size_t drop, size_t skip)
         yylex_destroy(context.scanner);
 
         // free AST
+        print_parsetree(cout, context.pt_parsetree, 0);
         context.pt_parsetree->destroy();
  
         return tree_list;

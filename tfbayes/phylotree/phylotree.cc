@@ -37,7 +37,7 @@ pt_node_t::pt_node_t(double d,
 
         if (leaf()) {
                 n_leaves = 1;
-                n_nodes = 1;
+                n_nodes  = 1;
         }
         else {
                 // update leaf counts and node counts
@@ -277,8 +277,8 @@ pt_root_t::pt_root_t(pt_node_t* left,
         create_mappings();
 }
 
-pt_root_t::pt_root_t(const pt_node_t& node, pt_leaf_t* outgroup)
-        : pt_node_t(node),
+pt_root_t::pt_root_t(pt_node_t* node, pt_leaf_t* outgroup)
+        : pt_node_t(node->d, node->left, node->right, node->name),
           // copy leaves and nodes since those are vectors
           outgroup(outgroup)
 {
@@ -296,6 +296,9 @@ pt_root_t::pt_root_t(const pt_node_t& node, pt_leaf_t* outgroup)
         leaves = leaves_t(n_leaves, (pt_leaf_t*)NULL);
         nodes  = nodes_t (n_nodes,  (pt_node_t*)NULL);
         create_mappings();
+
+        // delete old node
+        delete(node);
 }
 
 pt_root_t::pt_root_t(const pt_root_t& root)
