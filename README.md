@@ -96,4 +96,4 @@ TFBayes uses the following grammar to parse trees in newick format:
 	name      -> [a-zA-Z][a-zA-Z0-9]*
 	distance  -> -?{[0-9]}+("."{[0-9]}*)?
 
-The grammar shows that trees are not required to have binary branching points. However, thee root is expected to have three nodes attached to it, i.e. trees are required to have the structure of unrooted trees. The third node attached to a leaf is required to be a leaf, similar to the convention of MrBayes.
+The grammar shows that trees are not required to have binary branching points. However, thee root is expected to have at least three nodes attached to it, i.e. trees are required to have the structure of unrooted trees. The last node attached to the root is required to be a leaf, similar to the convention of MrBayes.
