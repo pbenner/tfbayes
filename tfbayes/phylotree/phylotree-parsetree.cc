@@ -252,7 +252,6 @@ list<pt_root_t*> parse_tree_list(FILE * file, size_t drop, size_t skip)
         yylex_destroy(context.scanner);
 
         // free AST
-        print_parsetree(cout, context.pt_parsetree, 0);
         context.pt_parsetree->destroy();
  
         return tree_list;
