@@ -515,12 +515,19 @@ print_newick(ostream& o, const pt_node_t* node, size_t nesting)
                   << fixed << node->d;
         }
         else {
-                o << "(";
-                print_newick(o, node->left, nesting+1);
-                o << ",";
-                print_newick(o, node->right, nesting+1);
-                o << "):"
-                  << fixed << node->d;
+                if (node->d != 0.0) {
+                        o << "(";
+                        print_newick(o, node->left, nesting+1);
+                        o << ",";
+                        print_newick(o, node->right, nesting+1);
+                        o << "):"
+                          << fixed << node->d;
+                }
+                else {
+                        print_newick(o, node->left, nesting+1);
+                        o << ",";
+                        print_newick(o, node->right, nesting+1);
+                }
         }
         return o;
 }
