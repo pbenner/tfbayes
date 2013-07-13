@@ -80,3 +80,18 @@ The library supports two ways of handling alignment gaps. Which one is used is c
 
 + 'N': The gap is considered as missing data, which means that a nucleotide should be present at this position, but we simply do not know which one (wildcard). It is equivalent to treating the species as if it was not present in the data set, i.e. the species is removed from the phylogenetic tree. An 'N' is commonly used by repeat masking software.
 + '-': The gap is interpreted as an additional character in the alphabet (i.e. a fifth nucleotide). Note that if this is not used in the alignment, the prior counts for this character should be set to zero.
+
+## Newick format
+
+TFBayes uses the following grammar to parse trees in newick format:
+
+	tree_list -> tree_list tree ";"
+	tree_list -> tree ";"
+	tree      -> "(" node_list "," outgroup ")"
+	node_list -> node_list "," node
+	node_list -> node
+	node      -> "(" node_list "):" distance
+	node      -> name ":" distance
+	outgroup  -> name ":" distance
+	name      -> [a-zA-Z][a-zA-Z0-9]*
+	distance  -> -?{[0-9]}+("."{[0-9]}*)?
