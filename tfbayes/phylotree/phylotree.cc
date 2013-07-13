@@ -277,7 +277,8 @@ pt_root_t::pt_root_t(pt_node_t* left,
         create_mappings();
 }
 
-pt_root_t::pt_root_t(pt_node_t* node, pt_leaf_t* outgroup)
+pt_root_t::pt_root_t(pt_node_t* node, pt_leaf_t* outgroup,
+                     const pt_root_t* tree)
         : pt_node_t(node->d, node->left, node->right, node->name),
           // copy leaves and nodes since those are vectors
           outgroup(outgroup)
@@ -289,9 +290,16 @@ pt_root_t::pt_root_t(pt_node_t* node, pt_leaf_t* outgroup)
                 outgroup->ancestor = this;
         }
         // set leaf/node ids
-        id_t leaf_id = 0;
-        id_t node_id = n_leaves;
-        set_id(leaf_id, node_id);
+        if (tree == NULL) {
+                id_t leaf_id = 0;
+                id_t node_id = n_leaves;
+                set_id(leaf_id, node_id);
+        }
+        else {
+                assert (n_leaves == tree->n_leaves);
+                id_t node_id = n_leaves;
+                set_id(tree, node_id);
+        }
 
         leaves = leaves_t(n_leaves, (pt_leaf_t*)NULL);
         nodes  = nodes_t (n_nodes,  (pt_node_t*)NULL);

@@ -149,7 +149,7 @@ pt_parsetree_t::convert(const pt_root_t* sample_tree) const
                 assert(children[0]->n_children == 2);
                 outgroup = static_cast<pt_leaf_t*>(children[1]->convert(sample_tree));
                 node     = children[0]->convert(sample_tree);
-                node     = new pt_root_t(node, outgroup);
+                node     = new pt_root_t(node, outgroup, sample_tree);
                 break;
         case TREE_LIST_N:
                 // this shouldn't happen
