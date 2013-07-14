@@ -231,6 +231,7 @@ public:
         size_t n() const;
         const nedge_t& find_edge(const nsplit_t& nsplit) const;
         const nedge_set_t& nedge_set() const;
+              nedge_set_t& nedge_set();
         const std::vector<double>& leaf_d() const;
         double leaf_d(size_t i) const;
         const std::vector<std::string>& leaf_names() const;

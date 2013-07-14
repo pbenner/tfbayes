@@ -81,17 +81,17 @@ int main(void) {
         cout << "Phylogenetic tree:"   << endl
              << newick_format(pt_root) << endl;
 
-        MET("Simplifying",
-            incomplete_expression_t incomplete_expression = pt_simplify(pt_root));
+        // MET("Simplifying",
+        //     incomplete_expression_t incomplete_expression = pt_simplify(pt_root));
 
-        cout << "Simplified polynomial:" << endl
-             << incomplete_expression    << endl;
+        // cout << "Simplified polynomial:" << endl
+        //      << incomplete_expression    << endl;
 
-        MET("Expanding",
-            polynomial_t<code_t, alphabet_size> result1 = pt_expand<code_t, alphabet_size>(incomplete_expression, observations));
+        // MET("Expanding",
+        //     polynomial_t<code_t, alphabet_size> result1 = pt_expand<code_t, alphabet_size>(incomplete_expression, observations));
 
-        cout << "Expanded polynomial:" << endl
-             << result1                << endl;
+        // cout << "Expanded polynomial:" << endl
+        //      << result1                << endl;
 
         MET("Direct computation",
             polynomial_t<code_t, alphabet_size> result2 = pt_polynomial<code_t, alphabet_size>(pt_root, observations));
@@ -99,11 +99,11 @@ int main(void) {
         cout << "Direct polynomial:" << endl
              << result2              << endl;
 
-        cout << "Marginal result1: " << pt_marginal_likelihood<code_t, alphabet_size>(result1, alpha) << endl
+        cout //<< "Marginal result1: " << pt_marginal_likelihood<code_t, alphabet_size>(result1, alpha) << endl
              << "Marginal result2: " << pt_marginal_likelihood<code_t, alphabet_size>(result2, alpha) << endl
              << endl;
 
-        cout << "Eval result1: " << result1.eval(p) << endl
+        cout //<< "Eval result1: " << result1.eval(p) << endl
              << "Eval result2: " << result2.eval(p) << endl
              << endl;
 

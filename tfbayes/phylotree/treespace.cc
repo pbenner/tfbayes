@@ -532,6 +532,11 @@ ntree_t::nedge_set() const {
         return _nedge_set;
 }
 
+nedge_set_t&
+ntree_t::nedge_set() {
+        return _nedge_set;
+}
+
 const vector<double>&
 ntree_t::leaf_d() const {
         return _leaf_d;

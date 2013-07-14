@@ -48,6 +48,7 @@ void init() {
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct _options_t {
+        double cut;
         bool random;
         bool variance;
         size_t drop;
@@ -55,7 +56,8 @@ typedef struct _options_t {
         size_t iterations;
         bool verbose;
         _options_t()
-                : random(false),
+                : cut(1e-8),
+                  random(false),
                   variance(false),
                   drop(0),
                   k(1),
@@ -82,6 +84,9 @@ void print_usage(char *pname, FILE *fp)
                       "                               average branch lengths\n"
                       "\n"
                       "Options:\n"
+                      "             -c FLOAT        - remove edges from resulting tree\n"
+                      "                               if the length is shorter than FLOAT\n"
+                      "                               (default: %e)\n"
                       "             -r              - use random instead of cyclic version\n"
                       "             -f              - compute Frechet variance\n"
                       "             -n INTEGER      - number of iterations\n"
@@ -90,7 +95,8 @@ void print_usage(char *pname, FILE *fp)
                       "             -v              - be verbose and print progress bar"
                       "\n"
                       "   --help                    - print help and exit\n"
-                      "   --version                 - print version information and exit\n\n");
+                      "   --version                 - print version information and exit\n\n",
+                      options.cut);
 }
 
 void wrong_usage(const char *msg)
@@ -167,6 +173,13 @@ void mean(const string& command)
         else {
                 wrong_usage("Unknown command.");
         }
+        /* remove edges that are too short */
+        for (nedge_set_t::iterator it = result.nedge_set().begin();
+             it != result.nedge_set().end(); it++) {
+                if (it->d() < options.cut) {
+                        it = result.nedge_set().erase(it);
+                }
+        }
         /* print resulting tree */
         pt_root_t* tmp = result.export_tree();
         cerr << result << endl;
@@ -193,7 +206,7 @@ int main(int argc, char *argv[])
                         { "version",         0, 0, 'q' }
                 };
 
-                c = getopt_long(argc, argv, "rfd:k:n:v",
+                c = getopt_long(argc, argv, "c:rfd:k:n:v",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -201,6 +214,9 @@ int main(int argc, char *argv[])
                 }
 
                 switch(c) {
+                case 'c':
+                        options.cut = atof(optarg);
+                        break;
                 case 'r':
                         options.random = true;
                         break;
