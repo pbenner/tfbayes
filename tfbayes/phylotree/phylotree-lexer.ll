@@ -47,7 +47,7 @@ WHITESPACE [\ \t]
 {COLON}                    { return COLON; }
 {COMMA}                    { return COMMA; }
 {SEMICOLON}                { return SEMICOLON; }
-[a-zA-Z][a-zA-Z0-9]*       { return NAME; }
+[a-zA-Z_][a-zA-Z0-9_]*     { return NAME; }
 \)                         { return RPAREN; }
 \(                         { return LPAREN; }
 -?{DIGIT}+("."{DIGIT}*)?   { return FLOAT; }
