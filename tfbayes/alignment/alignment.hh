@@ -73,7 +73,10 @@ public:
                         std::string taxon  = token(parser.description()[0], '.')[0];
                         pt_node_t::id_t id = tree->get_leaf_id(taxon);
                         if (id != -1) {
-                                operator[](id) = nucleotide_sequence_t<CODE_TYPE>(sequence);
+                                // there might be multiple entries for
+                                // each species, join all entries into
+                                // a single sequence
+                                operator[](id) = nucleotide_sequence_t<CODE_TYPE>(operator[](id), sequence);
                         }
                         else {
                                 std::cerr << "Warning: taxon `"
@@ -102,9 +105,16 @@ public:
                                           << "' has length zero."
                                           << std::endl;
                         }
-                        assert(operator[](it->second).size() == 0 ||
-                               operator[](it->second).size() == _length);
+                        if(operator[](it->second).size() != 0 &&
+                           operator[](it->second).size() != _length) {
+                                std::cerr << "Warning: nucleotide sequence for taxon `"
+                                          << it->first
+                                          << "' has invalid length."
+                                          << std::endl;
+                                exit(EXIT_FAILURE);
+                        }
                 }
+                std::cout << "alignment length: " << _length << std::endl;
         }
         alignment_t(const alignment_t& alignment)
                 : alignment_ancestor_t() {

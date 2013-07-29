@@ -42,6 +42,12 @@ public:
                         this->push_back(code_nucleotide<CODE_TYPE>(sequence[i]));
                 }
         }
+        nucleotide_sequence_t(const nucleotide_sequence_t<CODE_TYPE>& ns, const std::string& sequence)
+                : std::vector<CODE_TYPE>(ns) {
+                for (size_t i = 0; i < sequence.length(); i++) {
+                        this->push_back(code_nucleotide<CODE_TYPE>(sequence[i]));
+                }
+        }
 };
 
 #endif /* NUCLEOTIDE_SEQUENCE_HH */
