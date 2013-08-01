@@ -51,6 +51,10 @@ and otherwise simply
 
 	./configure
 
+The preferred compiler is *clang*, to use it type
+
+	CC=clang CXX=clang++ ./configure
+
 Now the source can be compiled and installed with
 
 	make
