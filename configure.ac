@@ -38,6 +38,7 @@ AM_PROG_LEX
 AC_PROG_YACC
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
+AC_PROG_RANLIB
 LT_INIT
 
 dnl ,---------------------------- 
@@ -299,6 +300,25 @@ AX_CXXFLAGS_GCC_OPTION([-fno-rtti])
 dnl turn link time optimization on (works only on some systems so far)
 #AX_CXXFLAGS_GCC_OPTION([-flto])
 AX_CXXFLAGS_GCC_OPTION([-DBOOST_NO_TYPEID])
+
+dnl ,---------------------------- 
+dnl | CLANG LTO
+dnl `----------------------------
+
+# Check LTO
+AC_CHECK_PROG([llvm_config], [llvm-config],[yes],[no])
+if test "x$llvm-config" = "xno"; then
+        AC_MSG_ERROR("Could not find llvm-config.")
+else
+        LLVM_LIBDIR=`llvm-config --libdir`
+        if test -f $LLVM_LIBDIR/libLTO.so;then
+                LTO_LIBS="-L`llvm-config --libdir` -lLTO"
+                LTO_DEFS="-DLTO_SUPPORT=1"
+        fi
+fi
+
+AC_SUBST(LTO_LIBS)
+AC_SUBST(LTO_DEFS)
 
 dnl ,---------------------------- 
 dnl | PYTHON
