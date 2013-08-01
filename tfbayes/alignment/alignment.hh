@@ -114,7 +114,6 @@ public:
                                 exit(EXIT_FAILURE);
                         }
                 }
-                std::cout << "alignment length: " << _length << std::endl;
         }
         alignment_t(const alignment_t& alignment)
                 : alignment_ancestor_t() {
