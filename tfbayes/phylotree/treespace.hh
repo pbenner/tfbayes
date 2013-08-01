@@ -199,7 +199,7 @@ public:
         const std::vector<double>& leaf_d() const {
                 return _leaf_d;
         }
-        const double leaf_d(size_t i) const {
+        double leaf_d(size_t i) const {
                 return _leaf_d[i];
         }
         const std::vector<std::string>& leaf_names() const {
@@ -301,19 +301,19 @@ public:
         size_t na() const;
         size_t nb() const;
         // row and column indices
-        const int* ia() const;
-        const int* ja() const;
-        const int  ia(size_t i) const;
-        const int  ja(size_t i) const;
+        int* ia() const;
+        int* ja() const;
+        int  ia(size_t i) const;
+        int  ja(size_t i) const;
         // values of the constraint matrix
-        const double* ar() const;
-        const double  ar(size_t i) const;
+        double* ar() const;
+        double  ar(size_t i) const;
         // vertex weights
-        const double* xw() const;
-        const double  xw(size_t i) const;
+        double* xw() const;
+        double  xw(size_t i) const;
         // logical values that indicate the presence of an edge
-        const bool* au() const;
-        const bool  au(size_t i) const;
+        bool* au() const;
+        bool  au(size_t i) const;
 
 protected:
         nedge_set_t _a;

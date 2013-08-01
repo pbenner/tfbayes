@@ -803,61 +803,61 @@ incompatibility_graph_t::ncol() const
         return _ncol;
 }
 
-const int*
+int*
 incompatibility_graph_t::ia() const
 {
         return _ia;
 }
 
-const int
+int
 incompatibility_graph_t::ia(size_t i) const
 {
         return _ia[i];
 }
 
-const int*
+int*
 incompatibility_graph_t::ja() const
 {
         return _ja;
 }
 
-const int
+int
 incompatibility_graph_t::ja(size_t i) const
 {
         return _ja[i];
 }
 
-const double*
+double*
 incompatibility_graph_t::ar() const
 {
         return _ar;
 }
 
-const double
+double
 incompatibility_graph_t::ar(size_t i) const
 {
         return _ar[i];
 }
 
-const double*
+double*
 incompatibility_graph_t::xw() const
 {
         return _xw;
 }
 
-const double
+double
 incompatibility_graph_t::xw(size_t i) const
 {
         return _xw[i];
 }
 
-const bool*
+bool*
 incompatibility_graph_t::au() const
 {
         return _au;
 }
 
-const bool
+bool
 incompatibility_graph_t::au(size_t i) const
 {
         return _au[i];

@@ -82,7 +82,7 @@ public:
                 _i   = 0;
         }
 
-        const bool operator++(int i) {
+        bool operator++(int i) {
                 if (_i+1 < _length) {
                         _pos++; _i++;
                         return true;
@@ -117,7 +117,7 @@ public:
                 _i   = 0;
         }
 
-        const bool operator++(int i) {
+        bool operator++(int i) {
                 if (_i+1 < _length) {
                         _pos++; _i++;
                         return true;
