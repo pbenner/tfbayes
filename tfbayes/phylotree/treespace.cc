@@ -1151,6 +1151,7 @@ geodesic_t::complement_trees()
 }
 
 const common_nedge_t geodesic_t::_null_common_nedge;
+const double geodesic_t::epsilon = 0.000001;
 
 // Frechet mean
 ////////////////////////////////////////////////////////////////////////////////

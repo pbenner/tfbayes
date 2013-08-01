@@ -194,6 +194,9 @@ public:
 
         virtual nedge_root_t* clone() const;
 
+        // import convert function so that it is not hidden by our own
+        // definition
+        using nedge_node_t::convert;
         virtual pt_root_t* convert() const;
 
         const std::vector<double>& leaf_d() const {
@@ -395,7 +398,7 @@ protected:
         // empty common edge
         static const common_nedge_t _null_common_nedge;
         // epsilon for comparing double values
-        static const double epsilon = 0.000001;
+        static const double epsilon;
 };
 
 // mean and median algorithms

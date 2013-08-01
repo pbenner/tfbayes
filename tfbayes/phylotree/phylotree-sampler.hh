@@ -413,7 +413,7 @@ public:
         }
         void sample(size_t samples, size_t burnin) {
 
-                pthread_data_t data[population.size()];
+                pthread_data_t* data = new pthread_data_t[population.size()];
                 pthread_t threads[population.size()];
                 int rc;
 
