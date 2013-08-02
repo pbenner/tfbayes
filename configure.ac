@@ -41,6 +41,7 @@ AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AC_PROG_RANLIB
 LT_INIT
+LT_PATH_LD
 
 dnl ,---------------------------- 
 dnl | GENERAL PACKAGE INFO
@@ -227,22 +228,27 @@ AC_ARG_ENABLE([debug],
 	[enable_debug=no])
 AC_ARG_ENABLE([profiling],
 	[AS_HELP_STRING([--enable-profiling],
-								[turn on profiling support @<:@profiling=no@:>@])],
+								[turn on profiling support @<:@default=no@:>@])],
 	[],
 	[enable_profiling=no])
 AC_ARG_ENABLE([profile-generate],
 	[AS_HELP_STRING([--enable-profile-generate],
-								[generate optimization profiles @<:@profile-generate=no@:>@])],
+								[generate optimization profiles @<:@default=no@:>@])],
 	[],
 	[enable_profile_generate=no])
+AC_ARG_ENABLE([lto],
+	[AS_HELP_STRING([--enable-lto],
+								[enable link time optimization (LTO) @<:@default=no@:>@])],
+	[],
+	[enable_lto=no])
 AC_ARG_ENABLE([profile-use],
 	[AS_HELP_STRING([--enable-profile-use],
-								[use optimization profiles @<:@profile-use=no@:>@])],
+								[use optimization profiles @<:@default=no@:>@])],
 	[],
 	[enable_profile_use=no])
 AC_ARG_ENABLE([native],
 	[AS_HELP_STRING([--enable-native],
-								[compile with native support @<:@native=no@:>@])],
+								[compile with native support @<:@default=no@:>@])],
 	[],
 	[enable_native=no])
 AS_IF([test "x$enable_debug" = "xyes"],
@@ -261,6 +267,9 @@ AS_IF([test "x$enable_debug" = "xyes"],
 	 dnl
 	 AX_CXXFLAGS_GCC_OPTION([-O3])
    AX_CXXFLAGS_GCC_OPTION([-ffast-math])])
+AS_IF([test "x$enable_lto" = "xyes"],
+  [AX_CFLAGS_GCC_OPTION([-flto])
+	 AX_CXXFLAGS_GCC_OPTION([-flto])])
 AS_IF([test "x$enable_profiling" = "xyes"],
 	[AX_CFLAGS_GCC_OPTION([-pg])
 	 AX_CXXFLAGS_GCC_OPTION([-pg])
@@ -301,25 +310,6 @@ AX_CXXFLAGS_GCC_OPTION([-fno-rtti])
 dnl turn link time optimization on (works only on some systems so far)
 #AX_CXXFLAGS_GCC_OPTION([-flto])
 AX_CXXFLAGS_GCC_OPTION([-DBOOST_NO_TYPEID])
-
-dnl ,---------------------------- 
-dnl | CLANG LTO
-dnl `----------------------------
-
-# Check LTO
-AC_CHECK_PROG([llvm_config], [llvm-config],[yes],[no])
-if test "x$llvm-config" = "xno"; then
-        AC_MSG_ERROR("Could not find llvm-config.")
-else
-        LLVM_LIBDIR=`llvm-config --libdir`
-        if test -f $LLVM_LIBDIR/libLTO.so;then
-                LTO_LIBS="-L`llvm-config --libdir` -lLTO"
-                LTO_DEFS="-DLTO_SUPPORT=1"
-        fi
-fi
-
-AC_SUBST(LTO_LIBS)
-AC_SUBST(LTO_DEFS)
 
 dnl ,---------------------------- 
 dnl | PYTHON

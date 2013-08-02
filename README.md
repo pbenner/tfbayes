@@ -60,13 +60,26 @@ Now the source can be compiled and installed with
 	make
 	make install
 
-### Known Errors
+### Link time optimization (LTO)
 
-The macro *__extern_always_inline* may not always be defined and causes an error
+LTO can significantly improve the performance of TFBayes. It is recommended to use it with *clang* and *clang++*. It is disabled by default, to switch it on use
+
+	CC=clang CXX=clang++ ./configure --enable-lto
+
+If you obtain the error message
+
+	no archive symbol table (run ranlib)
+
+it means that your linker is not using the LLVMgold plugin.
+
+### Known errors
+
+The macro *__extern_always_inline* may not always be defined and in this case cause the error
 
 	error: unknown type name '__extern_always_inline'
 
-In this case it es necessary to define *CXXFLAGS='-D__extern_always_inline=inline'*.
+If this happens it es necessary to use *CXXFLAGS='-D__extern_always_inline=inline'*.
+
 
 ## Example: Phylogenetic tree inference
 
