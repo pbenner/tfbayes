@@ -27,6 +27,7 @@ dnl we have a README.md instead of a README
 AM_INIT_AUTOMAKE([gnu dist-bzip2 foreign])
 dnl turn of AC_PROG_CC's default behaviour
 : ${CFLAGS=""}
+: ${CXXFLAGS=""}
 AC_PROG_CC
 AC_PROG_CXX
 AC_C_CONST
@@ -219,8 +220,6 @@ dnl ,----------------------------
 dnl | GCC_OPTIONS
 dnl `----------------------------
 
-CFLAGS=""
-CXXFLAGS=""
 AC_ARG_ENABLE([debug],
 	[AS_HELP_STRING([--enable-debug],
 								[turn on debugging @<:@default=no@:>@])],
@@ -285,6 +284,7 @@ AX_CFLAGS_GCC_OPTION([-Wno-trigraphs])
 AX_CFLAGS_GCC_OPTION([-Wtrampolines])
 #AX_CFLAGS_GCC_OPTION([-fPIC])
 AX_CFLAGS_GCC_OPTION([-fno-nested-functions])
+AX_CFLAGS_GCC_OPTION([-fomit-frame-pointer])
 dnl turn link time optimization on (works only on some systems so far)
 #AX_CFLAGS_GCC_OPTION([-flto])
 
@@ -295,6 +295,7 @@ AX_CXXFLAGS_GCC_OPTION([-Wno-trigraphs])
 AX_CXXFLAGS_GCC_OPTION([-Wtrampolines])
 #AX_CXXFLAGS_GCC_OPTION([-fPIC])
 AX_CXXFLAGS_GCC_OPTION([-fno-nested-functions])
+AX_CXXFLAGS_GCC_OPTION([-fomit-frame-pointer])
 dnl no runtime type information
 AX_CXXFLAGS_GCC_OPTION([-fno-rtti])
 dnl turn link time optimization on (works only on some systems so far)

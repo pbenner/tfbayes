@@ -60,6 +60,14 @@ Now the source can be compiled and installed with
 	make
 	make install
 
+### Known Errors
+
+The macro *__extern_always_inline* may not always be defined and causes an error
+
+	error: unknown type name '__extern_always_inline'
+
+In this case it es necessary to define *CXXFLAGS='-D__extern_always_inline=inline'*.
+
 ## Example: Phylogenetic tree inference
 
 The *data* directory contains some data sets for phylogenetic tree inference. We consider the *a subsequence of the MT-RNR2 alignment* for this example. The following command runs *10* Markov chains in parallel, each generates *10000* tree samples:
