@@ -108,6 +108,25 @@ which can be visuablized with R
 	> attach(read.table("test.topology.dat", header=T))
 	> hist(topology)
 
+The topologies are sorted according to their frequencies. With
+
+	zcat test.nh.gz | tfbayes-treespace-histogram -d 8000 edges > test.edges.dat
+
+a table of edge lengths is printed, which can be visualized with
+
+	hist.edges <- function(t, s1, s2, from=-0.2, to=0.2, n=50, main="", ...)
+	{
+	  x <- c(-t[[s1]], t[[s2]])
+	  x <- x[x > from & x < to]
+	  hist(x, breaks=seq(from=from,to=to, length.out=n), freq=F,
+	       ylab="Density estimate", main=main, ...)
+	  lines(density(x,  na.rm=T, adjust=2))
+	}
+	t <- read.table("test.edges.dat", header=T)
+	hist.edges(t, "s14", "s15")
+
+The histogram shows edge lengths of split *s14* as negative values and lengths of split *s15* as positive values. Split identifiers are declared in the header of *test.edges.dat*.
+
 ## Alignment gaps
 
 The library supports two ways of handling alignment gaps. Which one is used is coded in the alignment data:
