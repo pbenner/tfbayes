@@ -134,9 +134,20 @@ bool compatible(const nsplit_t& s1, const nsplit_t& s2)
         return false;
 }
 
-bool hash_value(const nsplit_t& nsplit)
+size_t hash_value(const nsplit_t& nsplit)
 {
         return boost::hash_value(nsplit.part1().m_bits);
+}
+
+size_t hash_value(const topology_t& topology)
+{
+        size_t seed = 0;
+
+        for (topology_t::const_iterator it = topology.begin();
+             it != topology.end(); it++) {
+                boost::hash_combine(seed, hash_value(**it));
+        }
+        return seed;
 }
 
 // nedge_t
@@ -235,6 +246,39 @@ nedge_set_t::split(nsplit_t split) const
                 }
         }
         return p;
+}
+
+// topology_t
+////////////////////////////////////////////////////////////////////////////////
+
+topology_t::topology_t(const nedge_set_t& nedge_set)
+        : vector<nsplit_ptr_t>() {
+        for (nedge_set_t::const_iterator it = nedge_set.begin();
+             it != nedge_set.end(); it++) {
+                push_back(*it);
+        }
+}
+
+bool
+topology_t::contains(const nsplit_ptr_t& nsplit_ptr) const
+{
+        for (const_iterator is = begin(); is != end(); is++) {
+                if (*nsplit_ptr == **is) {
+                        return true;
+                }
+        }
+        return false;
+}
+
+bool
+topology_t::operator==(const topology_t& topology) const
+{
+        for (const_iterator it = topology.begin(); it != topology.end(); it++) {
+                if (!contains(*it)) {
+                        return false;
+                }
+        }
+        return true;
 }
 
 // nedge_node_t and nedge_root_t
@@ -607,6 +651,12 @@ ntree_t::common_edges(const ntree_t& tree) const
                 }
         }
         return result;
+}
+
+topology_t
+ntree_t::topology() const
+{
+        return topology_t(nedge_set());
 }
 
 // incompatibility_graph_t

@@ -151,7 +151,19 @@ public:
         std::pair<nedge_set_t, nedge_set_t> split(nsplit_t split) const;
 };
 
+class topology_t : public std::vector<nsplit_ptr_t> {
+public:
+        topology_t()
+                : std::vector<nsplit_ptr_t>() { }
+        topology_t(const nedge_set_t& nedge_set);
+
+        bool contains(const nsplit_ptr_t& nsplit_ptr) const;
+        bool operator==(const topology_t& topology) const;
+};
+
 bool compatible(const nsplit_t& s1, const nsplit_t& s2);
+size_t hash_value(const nsplit_t& nsplit);
+size_t hash_value(const topology_t& topology);
 
 // nedge_node_t and nedge_root_t for convertig ntrees to pt_root_t trees
 ////////////////////////////////////////////////////////////////////////////////
@@ -246,6 +258,8 @@ public:
         // find common edges of two trees, here an edge is common if
         // the split is the same, regardless of the edge length
         std::list<common_nedge_t> common_edges(const ntree_t& tree) const;
+        // return the topology of this tree, i.e. the set of splits
+        topology_t topology() const;
 
 protected:
         size_t _n;

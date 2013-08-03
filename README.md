@@ -99,6 +99,15 @@ to compute the median. To compare the result with the majority rule consensus tr
 
 	zcat test.nh.gz > tfbayes-treespace-mean -d 8000 -v majority-consensus
 
+With *tfbayes-treespace-histogram* several summarizing statistics can be computed. For instance, to obtain a histogram of tree topologies use
+
+	zcat test.nh.gz | tfbayes-treespace-histogram -d 8000 topology > test.topology.dat
+
+which can be visuablized with R
+
+	> attach(read.table("test.topology.dat", header=T))
+	> hist(topology)
+
 ## Alignment gaps
 
 The library supports two ways of handling alignment gaps. Which one is used is coded in the alignment data:

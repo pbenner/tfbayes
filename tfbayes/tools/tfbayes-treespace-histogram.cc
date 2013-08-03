@@ -24,6 +24,7 @@
 #include <cstdio>
 #include <getopt.h>
 #include <map>
+#include <algorithm>
 #include <vector>
 #include <sys/time.h>
 
@@ -32,11 +33,12 @@
 #include <tfbayes/phylotree/treespace.hh>
 #include <tfbayes/exception/exception.h>
 
+using namespace std;
+
 #define alphabet_size 5
 typedef float code_t;
 typedef std::map<named_nsplit_t, std::vector<double> > split_map_t;
-
-using namespace std;
+typedef boost::unordered_map<topology_t, size_t> topology_map_t;
 
 // Options
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,10 +62,14 @@ static options_t options;
 static
 void print_usage(char *pname, FILE *fp)
 {
-        (void)fprintf(fp, "\nUsage: %s [OPTION] < TREE_LIST\n\n", pname);
+        (void)fprintf(fp, "\nUsage: %s [OPTION]... COMMAND < TREE_LIST\n\n", pname);
         (void)fprintf(fp,
                       "Format the list of posterior samples such that a histogram\n"
-                      "of edge lengths can be easily computed.\n"
+                      "can be easily computed.\n"
+                      "\n"
+                      "Commands:\n"
+                      "             edges           - histogram of edge lengths\n"
+                      "             topology        - histogram of topologies\n"
                       "\n"
                       "Options:\n"
                       "             -d INTEGER      - drop first n trees\n"
@@ -150,7 +156,26 @@ ostream& operator<<(ostream& o, const split_map_t& map)
         return o;
 }
 
-void histogram()
+ostream& operator<<(ostream& o, const topology_map_t& map)
+{
+        vector<size_t> vec;
+
+        for (topology_map_t::const_iterator it = map.begin();
+             it != map.end(); it++) {
+                vec.push_back(it->second);
+        }
+        sort(vec.begin(), vec.end(), greater<int>());
+
+        o << "topology" << endl;
+        for (size_t i = 0; i < vec.size(); i++) {
+                for (size_t j = 0; j < vec[i]; j++) {
+                        o << i+1 << endl;
+                }
+        }
+        return o;
+}
+
+void histogram_edges()
 {
         split_map_t map;
         ntree_t result;
@@ -166,6 +191,23 @@ void histogram()
                         const named_nsplit_t named_nsplit(**is, ntree_list.begin()->leaf_names());
                         map[named_nsplit].push_back(is->d());
                 }
+        }
+        cout << map << endl;
+}
+
+void histogram_topology()
+{
+        topology_map_t map;
+
+        ntree_t result;
+        /* phylogenetic tree */
+        list<ntree_t> ntree_list = parse_tree_file();
+        /* return if there is no tree in the list */
+        if (ntree_list.size() == 0) return;
+
+        for (list<ntree_t>::const_iterator it = ntree_list.begin();
+             it != ntree_list.end(); it++) {
+                map[it->topology()]++;
         }
         cout << map << endl;
 }
@@ -215,11 +257,19 @@ int main(int argc, char *argv[])
                         exit(EXIT_FAILURE);
                 }
         }
-        if(optind != argc) {
+        if(optind+1 != argc) {
                 wrong_usage("Wrong number of arguments.");
                 exit(EXIT_FAILURE);
         }
-        histogram();
-
+        if (string(argv[optind]) == "edges") {
+                histogram_edges();
+        }
+        else if (string(argv[optind]) == "topology") {
+                histogram_topology();
+        }
+        else {
+                wrong_usage("Unknown command.");
+                exit(EXIT_FAILURE);
+        }
         return 0;
 }
