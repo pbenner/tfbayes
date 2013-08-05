@@ -31,7 +31,7 @@ template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_polynomial_class {
 public:
         static polynomial_t<CODE_TYPE, ALPHABET_SIZE> likelihood(const pt_root_t* root, const std::vector<CODE_TYPE>& observations) {
-                if (root->has_outgroup()) {
+                if (root->has_outgroup() && observations[root->outgroup->id] != -1) {
                         return poly_sum(likelihood_rec(root, observations), root->outgroup, observations);
                 }
                 else {
