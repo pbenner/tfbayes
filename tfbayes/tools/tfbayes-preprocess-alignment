@@ -42,6 +42,7 @@ def usage():
     print "       --format=STR       - format of the input file(s) (fasta or maf)"
     print "                            [default: maf]"
     print
+    print "   -m NUM                 - mask all regions that have more than NUM gaps"
     print "   -s SPECIES             - remove all columns that have no nucleotide"
     print "                            in this SPECIES"
     print
@@ -54,6 +55,7 @@ def usage():
 
 options = {
     'strip'          : None,
+    'mask'           : None,
     'format'         : 'maf',
     'verbose'        : False,
     }
@@ -64,10 +66,9 @@ options = {
 def remove_column(multiple_alignment, i):
     multiple_alignment = multiple_alignment[:,0:i]+multiple_alignment[:,i+1:]
     return multiple_alignment
-#    for j in range(len(multiple_alignment)):
-#        multiple_alignment[j] = multiple_alignment[j][0:i]+multiple_alignment[j][i+1:]
 
 def strip_gaps_from_species(multiple_alignment):
+    sys.stderr.write("Stripping all dashes from %s.\n" % options['strip'])
     # index of the sequence from which to strip all dashes
     stripindex = None
     # search the multiple alignment for this index
@@ -85,9 +86,25 @@ def strip_gaps_from_species(multiple_alignment):
         while multiple_alignment[stripindex][i] == '-':
             multiple_alignment = remove_column(multiple_alignment, i)
         i = i + 1
-        print i
 
     return multiple_alignment
+
+def mask_gaps(multiple_alignment):
+    sys.stderr.write("Masking alignment gaps.\n")
+    for alignment in multiple_alignment:
+        alignment.seq = alignment.seq.tomutable()
+        for j in range(len(alignment)-options['mask']+1):
+            mask = True
+            for k in range(j, j+options['mask']):
+                if alignment[k] != '-' and alignment[k] != 'N':
+                    mask = False
+                    break
+            if mask:
+                for k in range(j, j+options['mask']):
+                    alignment.seq[k] = 'N'
+
+    return multiple_alignment
+
 
 # parse alignment
 # ------------------------------------------------------------------------------
@@ -106,6 +123,8 @@ def get_alignment(file_name):
 def main(alignment):
     if options['strip']:
         alignment = strip_gaps_from_species(alignment)
+    if options['mask']:
+        alignment = mask_gaps(alignment)
 
     return alignment
 
@@ -131,7 +150,7 @@ def __main__():
     global options
     try:
         longopts   = ["format=", "help", "verbose"]
-        opts, tail = getopt.getopt(sys.argv[1:], "s:hv", longopts)
+        opts, tail = getopt.getopt(sys.argv[1:], "m:s:hv", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -149,9 +168,13 @@ def __main__():
             return 0
         if o == "--format":
             options['format'] = a
+        if o == "-m":
+            if int(a) < 0:
+                usage()
+                return 1
+            options['mask'] = int(a)
         if o == "-s":
             options['strip'] = a
-            sys.stderr.write("Stripping all dashes from %s.\n" % a)
     # call main with files as argument
     if options['format'] == 'fasta':
         main_fasta(tail[0])
