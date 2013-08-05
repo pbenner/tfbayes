@@ -54,8 +54,6 @@ mixture_state_t::mixture_state_t(const mixture_state_t& cm)
           free_clusters_size(cm.free_clusters_size),
           _cluster_assignments(cm._cluster_assignments->clone())
 {
-        cout << "MIXTURE STATE COPY CONSTRUCTOR CALLED" << endl;
-
         for (size_t i = 0; i < cm.clusters.size(); i++) {
                 cluster_t* c = new cluster_t(*cm.clusters[i]);
                 c->set_observer(this);
