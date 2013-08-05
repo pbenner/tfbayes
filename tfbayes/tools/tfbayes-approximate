@@ -50,8 +50,6 @@ def usage():
     print "                            [default: maf]"
     print
     print "   -t, --threads=N        - run N jobs in parallel"
-    print "   -s SPECIES             - remove all columns have no nucleotide"
-    print "                            in this SPECIES"
     print
     print "   -h, --help             - print help"
     print "   -v, --verbose          - be verbose"
@@ -63,7 +61,6 @@ def usage():
 options = {
     'phylotree'      : None,
     'leafmap'        : None,
-    'strip'          : None,
     'format'         : 'maf',
     'threads'        : 1,
     'verbose'        : False,
@@ -96,22 +93,8 @@ def alignment_approximate(multiple_alignment, phylotree):
     # this alignment will be fully ignored by the phylogenetic model
     observations = [ -1.0 ]*num_leaves
 
-    # index of the sequence from which to strip all dashes
-    stripindex = None
-    # search the multiple alignment for this index
-    if options['strip']:
-        for i in range(len(multiple_alignment)):
-            name = multiple_alignment[i].name.split(".")[0]
-            if options['strip'] == name:
-                stripindex = i
-        if stripindex == None:
-            sys.stderr.write("Species `%s' not found in the alignment.\n" % options['strip'])
-
     result = []
     for i in range(len(multiple_alignment[0])):
-        # filter all positions where the reference sequence has a gap
-        if not stripindex == None and multiple_alignment[stripindex][i] == '-':
-            continue
         # fill observations array
         for alignment in multiple_alignment:
             name = alignment.name.split(".")[0]
@@ -220,7 +203,7 @@ def __main__():
     global options
     try:
         longopts   = ["format=", "threads=", "help", "verbose"]
-        opts, tail = getopt.getopt(sys.argv[1:], "s:t:hv", longopts)
+        opts, tail = getopt.getopt(sys.argv[1:], "t:hv", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -238,9 +221,6 @@ def __main__():
             return 0
         if o == "--format":
             options['format'] = a
-        if o == "-s":
-            options['strip'] = a
-            sys.stderr.write("Stripping all dashes from %s.\n" % a)
         if o in ("-t", "--threads"):
             options['threads'] = int(a)
             if not options['threads'] >= 1:

@@ -29,10 +29,12 @@ dist_bin_SCRIPTS = \
 	tfbayes-generate \
 	tfbayes-motifformat \
 	tfbayes-fasta-to-maf \
+	tfbayes-filter-alignment \
 	tfbayes-maf-to-fasta \
 	tfbayes-optimize \
 	tfbayes-plot \
 	tfbayes-partition \
+	tfbayes-preprocess-alignment \
 	tfbayes-sampler \
 	tfbayes-scan
 
