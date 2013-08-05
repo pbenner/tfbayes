@@ -13,3 +13,6 @@ zcat ${ROOT}.nh.gz | tfbayes-treespace-mean -n 100 -r -f -d 8000 -v mean > ${ROO
 
 # compute median
 zcat ${ROOT}.nh.gz | tfbayes-treespace-mean -n 100 -r -f -d 8000 -v median > ${ROOT}.median.nh
+
+# histogram of topologies
+zcat ${ROOT}.nh.gz | tfbayes-treespace-histogram -d 8000 topology > ${ROOT}.topology.dat
