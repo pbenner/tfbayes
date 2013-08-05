@@ -68,7 +68,8 @@ def remove_column(multiple_alignment, i):
     return multiple_alignment
 
 def strip_gaps_from_species(multiple_alignment):
-    sys.stderr.write("Stripping all dashes from %s.\n" % options['strip'])
+    if options['verbose']:
+        sys.stderr.write("Stripping all dashes from %s.\n" % options['strip'])
     # index of the sequence from which to strip all dashes
     stripindex = None
     # search the multiple alignment for this index
@@ -90,7 +91,8 @@ def strip_gaps_from_species(multiple_alignment):
     return multiple_alignment
 
 def mask_gaps(multiple_alignment):
-    sys.stderr.write("Masking alignment gaps.\n")
+    if options['verbose']:
+        sys.stderr.write("Masking alignment gaps.\n")
     for alignment in multiple_alignment:
         alignment.seq = alignment.seq.tomutable()
         for j in range(len(alignment)-options['mask']+1):
