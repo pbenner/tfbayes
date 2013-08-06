@@ -33,11 +33,13 @@
 
 using namespace std;
 
-dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
+dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, const alignment_set_t<short>& alignment_set)
         : // baseline
           _baseline_weights(options.baseline_weights),
-          // raw sequences
+          // phylogenetic information
           _data(data),
+          // coded nucleotide sequences
+          _alignment_set(alignment_set),
           // cluster manager
           _state(data.sizes(), options.tfbs_length, 0, _data),
           // mixture weight for the dirichlet process
@@ -48,6 +50,15 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
           _tfbs_length(options.tfbs_length),
           _construct_graph(options.construct_graph)
 {
+        ////////////////////////////////////////////////////////////////////////////////
+        // check that the alignment data matches the phylogenetic data
+        cout << "data size: " << data.size() << endl;
+        cout << "alignment_set size: " << alignment_set.size() << endl;
+        assert(data.size() == alignment_set.size());
+        for (size_t i = 0; i < data.size(); i++) {
+                assert(data[i].size() == alignment_set[i].length());
+        }
+
         ////////////////////////////////////////////////////////////////////////////////
         // initialize samples
         for (size_t i = 0; i < data.size(); i++) {
@@ -159,8 +170,10 @@ dpm_tfbs_t::dpm_tfbs_t(const dpm_tfbs_t& dpm)
         : // baseline
           _baseline_weights(dpm._baseline_weights),
           _baseline_tags(dpm._baseline_tags),
-          // raw sequences
+          // phylogenetic data
           _data(dpm._data),
+          // coded nucleotide sequences
+          _alignment_set(dpm._alignment_set),
           // cluster manager
           _state(dpm._state),
           // mixture weight for the dirichlet process

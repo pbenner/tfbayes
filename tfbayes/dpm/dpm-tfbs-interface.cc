@@ -23,6 +23,7 @@
 
 #include <fstream>
 
+#include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/interface/common.hh>
 #include <tfbayes/dpm/init.hh>
 #include <tfbayes/dpm/dpm-tfbs.hh>
@@ -61,7 +62,8 @@ typedef struct {
 
 static options_t _options;
 static dpm_tfbs_pmcmc_t* _sampler;
-static sequence_data_t<data_tfbs_t::code_t> _sequences;
+static sequence_data_t<data_tfbs_t::code_t> _phylogenetic_data;
+static alignment_set_t<short> _alignment_set;
 
 ostream&
 operator<<(std::ostream& o, const options_t& options) {
@@ -91,13 +93,14 @@ options_t* _dpm_tfbs_options()
         return &_options;
 }
 
-void _dpm_tfbs_init(const char* file_name)
+void _dpm_tfbs_init(const char* phylogenetic_input, const char* alignment_input)
 {
         tfbs_options_t tfbs_options;
 
         __dpm_init__();
 
-        _sequences = data_tfbs_t::read_fasta(file_name);
+        _phylogenetic_data = data_tfbs_t::read_fasta(phylogenetic_input);
+        _alignment_set = alignment_set_t<short>(alignment_input);
 
         // background alpha
         for (size_t i = 0; i < _options.background_alpha->rows; i++) {
@@ -141,7 +144,7 @@ void _dpm_tfbs_init(const char* file_name)
                 tfbs_options.partition   = *_options.partition;
         }
 
-        _sampler = new dpm_tfbs_pmcmc_t(tfbs_options, _sequences, _options.population_size);
+        _sampler = new dpm_tfbs_pmcmc_t(tfbs_options, _phylogenetic_data, _alignment_set, _options.population_size);
 
         cout << _options << endl;
 }

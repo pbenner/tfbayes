@@ -37,9 +37,9 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
         const string name,
         save_queue_t<command_t*>& command_queue,
         save_queue_t<string>& output_queue,
-        const sequence_data_t<data_tfbs_t::code_t>& sequences)
+        const sequence_data_t<data_tfbs_t::code_t>& phylogenetic_data)
         : gibbs_sampler_t(dpm, state, indexer, name),
-          sequences(sequences),
+          phylogenetic_data(phylogenetic_data),
           _command_queue(command_queue),
           _output_queue(output_queue),
           _state(state),
@@ -377,17 +377,17 @@ dpm_tfbs_sampler_t::optimize() {
 
 dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
         const tfbs_options_t& options,
-        const sequence_data_t<data_tfbs_t::code_t>& sequences,
+        const sequence_data_t<data_tfbs_t::code_t>& phylogenetic_data,
+        const alignment_set_t<short>& alignment_set,
         size_t n)
         : population_mcmc_t(n),
-          _data(sequences, options.tfbs_length),
+          _data(phylogenetic_data, options.tfbs_length),
           _gdpm(n, NULL),
           _socket_file(options.socket_file),
           _server(NULL),
-          _bt(NULL),
-          _sequences(sequences) {
+          _bt(NULL) {
 
-        const dpm_tfbs_t dpm_tfbs(options, _data);
+        const dpm_tfbs_t dpm_tfbs(options, _data, alignment_set);
 
         for (size_t i = 0; i < _size; i++) {
                 std::stringstream ss; ss << "Sampler " << i+1;
@@ -404,7 +404,7 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
                                                         ss.str(),
                                                         *command_queue,
                                                         _output_queue,
-                                                        _sequences);
+                                                        phylogenetic_data);
         }
         update_samples();
         _start_server();

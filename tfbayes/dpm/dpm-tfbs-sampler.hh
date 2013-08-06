@@ -39,7 +39,7 @@ public:
                 const std::string name,
                 save_queue_t<command_t*>& command_queue,
                 save_queue_t<std::string>& output_queue,
-                const sequence_data_t<data_tfbs_t::code_t>& sequences);
+                const sequence_data_t<data_tfbs_t::code_t>& phylogenetic_data);
 
         // after sampling this function locally optimizes the current state
         bool optimize(cluster_t& cluster);
@@ -47,12 +47,14 @@ public:
 
         dpm_tfbs_sampler_t* clone() const;
 
+        // phylogenetic and alignment data for diagnostics
+        ////////////////////////////////////////////////////////////////////////
+        const sequence_data_t<data_tfbs_t::code_t> phylogenetic_data;
+
         // auxiliary types
         ////////////////////////////////////////////////////////////////////////
         typedef mixture_state_t::const_iterator cm_iterator;
         typedef mixture_state_t::iterator cl_iterator;
-
-        const sequence_data_t<data_tfbs_t::code_t> sequences;
 
 protected:
         bool _sample(size_t i, size_t n, bool is_burnin);
@@ -82,7 +84,8 @@ class dpm_tfbs_pmcmc_t : public population_mcmc_t {
 public:
         dpm_tfbs_pmcmc_t(
                 const tfbs_options_t& options,
-                const sequence_data_t<data_tfbs_t::code_t>& sequences,
+                const sequence_data_t<data_tfbs_t::code_t>& phylogenetic_data,
+                const alignment_set_t<short>& alignment_set,
                 size_t n);
         virtual ~dpm_tfbs_pmcmc_t();
 
@@ -102,7 +105,6 @@ private:
 
         std::vector<save_queue_t<command_t*>* > _command_queue;
         save_queue_t<std::string> _output_queue;
-        const sequence_data_t<data_tfbs_t::code_t> _sequences;
 };
 
 #endif /* DPM_TFBS_SAMPLER_HH */

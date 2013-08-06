@@ -77,9 +77,13 @@ def sample():
     burnin  = sampler_config['samples'][1]
     if options['resume']:
         partition = resume(options['resume'])
-        dpm_init(sampler_config, sampler_config['seq_file'], partition)
+        dpm_init(sampler_config,
+                 sampler_config['phylogenetic_data'],
+                 sampler_config['alignment_data'], partition)
     else:
-        dpm_init(sampler_config, sampler_config['seq_file'])
+        dpm_init(sampler_config,
+                 sampler_config['phylogenetic_data'],
+                 sampler_config['alignment_data'])
     dpm_sample(samples, burnin)
     dpm_save(sampler_config['save'])
     dpm_free()

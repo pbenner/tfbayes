@@ -83,7 +83,7 @@ print_cluster_elements_t::operator()(const dpm_tfbs_state_t& state, dpm_tfbs_sam
                                    << position << ": "
                                    << endl;
                                 for (size_t i = 0; i < length; i++) {
-                                        ss << sampler.sequences[sequence][position+i];
+                                        ss << sampler.phylogenetic_data[sequence][position+i];
                                 }
                                 ss << endl;
                         }

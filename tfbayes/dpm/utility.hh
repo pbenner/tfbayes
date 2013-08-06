@@ -25,21 +25,6 @@
 #include <string>
 #include <vector>
 #include <sstream>
-
-static inline
-std::vector<std::string> token(const std::string& str, char t) {
-        std::string token;
-        std::vector<std::string> tokens;
-        std::istringstream iss(str);
-
-        while (getline(iss, token, t)) {
-                if (token != "") {
-                        tokens.push_back(token);
-                }
-        }
-        return tokens;
-}
-
 #include <queue>
 #include <boost/thread.hpp>
 

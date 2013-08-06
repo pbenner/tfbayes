@@ -44,6 +44,12 @@ public:
 
         // Constructors
         ////////////////////////////////////////////////////////////////////////
+        alignment_t(const alignment_ancestor_t sequences, const taxon_map_t& taxon_map)
+                : alignment_ancestor_t(sequences),
+                  _taxon_map(taxon_map) {
+                check_lengths();
+                
+        }
         alignment_t(const size_t length, CODE_TYPE init, const pt_root_t* tree)
                 : alignment_ancestor_t(tree->n_leaves, nucleotide_sequence_t<CODE_TYPE>()),
                   _n_species(tree->n_leaves), _length(length) {
@@ -85,35 +91,7 @@ public:
                                           << std::endl;
                         }
                 }
-                // find a sequence that has length greater than zero
-                // to set the length of this alignment
-                _length = 0;
-                for (typename alignment_ancestor_t::const_iterator it = alignment_ancestor_t::begin();
-                     it != alignment_ancestor_t::end(); it++) {
-                        if (it->size() > 0) {
-                                _length = it->size();
-                                break;
-                        }
-                }
-                // check that every sequence has either length zero or
-                // length equal to the length of this alignment
-                for (taxon_map_t::const_iterator it = _taxon_map.begin();
-                     it != _taxon_map.end(); it++) {
-                        if (operator[](it->second).size() == 0) {
-                                std::cerr << "Warning: nucleotide sequence for taxon `"
-                                          << it->first
-                                          << "' has length zero."
-                                          << std::endl;
-                        }
-                        if(operator[](it->second).size() != 0 &&
-                           operator[](it->second).size() != _length) {
-                                std::cerr << "Warning: nucleotide sequence for taxon `"
-                                          << it->first
-                                          << "' has invalid length."
-                                          << std::endl;
-                                exit(EXIT_FAILURE);
-                        }
-                }
+                check_lengths();
         }
         alignment_t(const alignment_t& alignment)
                 : alignment_ancestor_t() {
@@ -253,6 +231,114 @@ protected:
         size_t _length;
         // map taxon name to nodes in the phylogenetic tree
         taxon_map_t _taxon_map;
+
+        // private methods
+        void check_lengths() {
+                // find a sequence that has length greater than zero
+                // to set the length of this alignment
+                _length = 0;
+                for (typename alignment_ancestor_t::const_iterator it = alignment_ancestor_t::begin();
+                     it != alignment_ancestor_t::end(); it++) {
+                        if (it->size() > 0) {
+                                _length = it->size();
+                                break;
+                        }
+                }
+                // check that every sequence has either length zero or
+                // length equal to the length of this alignment
+                for (taxon_map_t::const_iterator it = _taxon_map.begin();
+                     it != _taxon_map.end(); it++) {
+                        if (operator[](it->second).size() == 0) {
+                                std::cerr << "Warning: nucleotide sequence for taxon `"
+                                          << it->first
+                                          << "' has length zero."
+                                          << std::endl;
+                        }
+                        if(operator[](it->second).size() != 0 &&
+                           operator[](it->second).size() != _length) {
+                                std::cerr << "Warning: nucleotide sequence for taxon `"
+                                          << it->first
+                                          << "' has invalid length."
+                                          << std::endl;
+                                exit(EXIT_FAILURE);
+                        }
+                }
+        }
+};
+
+
+template <typename CODE_TYPE>
+class alignment_set_t : public std::vector<alignment_t<CODE_TYPE> > {
+public:
+        // Typedefs
+        ////////////////////////////////////////////////////////////////////////
+        typedef boost::unordered_map<std::string, pt_node_t::id_t> taxon_map_t;
+
+        // Constructors
+        ////////////////////////////////////////////////////////////////////////
+        alignment_set_t() { };
+        alignment_set_t(const char* filename) {
+                read_fasta(filename);
+        }
+
+private:
+        taxon_map_t get_species_from_fasta(const char* filename) {
+                /* this automatically parses the fasta file format */
+                FastaParser parser(filename);
+                std::set<std::string> species;
+                taxon_map_t taxon_map;
+
+                while (parser.read_sequence() != "") {
+                        assert(parser.description().size()    > 0);
+                        assert(parser.description()[0].size() > 0);
+                        species.insert(parser.description()[0]);
+                }
+                std::vector<std::string> tmp(species.begin(), species.end());
+                for (size_t i = 0; i < tmp.size(); i++) {
+                        taxon_map[tmp[i]] = i;
+                }
+                return taxon_map;
+        }
+
+        void read_fasta(const char* filename) {
+                /* first check what species are available */
+                taxon_map_t taxon_map = get_species_from_fasta(filename);
+
+                /* number of species */
+                size_t n = taxon_map.size();
+
+                /* exit if this file is empty */
+                if (n == 0) return;
+
+                /* this automatically parses the fasta file format */
+                FastaParser parser(filename);
+
+                /* storage for a single line */
+                std::string line;
+
+                /* remember which species already occured */
+                std::map<std::string, bool> occurred;
+
+                /* current alignment */
+                std::vector<nucleotide_sequence_t<CODE_TYPE> > sequences(n, nucleotide_sequence_t<CODE_TYPE>());
+
+                /* the fasta parser returns a single line for each
+                 * sequence */
+                while ((line = parser.read_sequence()) != "") {
+                        const std::string& name = parser.description()[0];
+                        if (occurred[name]) {
+                                // push alignment
+                                this->push_back(alignment_t<CODE_TYPE>(sequences, taxon_map));
+                                // reset occurrences
+                                occurred = std::map<std::string, bool>();
+                                // start new alignment
+                                sequences = std::vector<nucleotide_sequence_t<CODE_TYPE> >(n, nucleotide_sequence_t<CODE_TYPE>());
+                        }
+                        occurred[name] = true;
+                        sequences[taxon_map[name]] = nucleotide_sequence_t<CODE_TYPE>(line);
+                }
+                this->push_back(alignment_t<CODE_TYPE>(sequences, taxon_map));
+        }
 };
 
 #endif /* ALIGNMENT_HH */

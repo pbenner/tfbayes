@@ -132,7 +132,7 @@ data_tfbs_t::is_blank(const index_i& index) const
 }
 
 #include <boost/regex.hpp>
-#include <utility.hh>
+#include <tfbayes/utility/strtools.hh>
 
 sequence_data_t<data_tfbs_t::code_t>
 data_tfbs_t::read_fasta(const char* file_name)

@@ -37,7 +37,8 @@ default_sampler_config_ = {
     'background_weights'  : 'decay',
     'population_size'     : 1,
     'tfbs_length'         : 10,
-    'seq_file'            : None,
+    'alignment_data'      : None,
+    'phylogenetic_data'   : None,
     'baseline_names'      : [],
     'baseline_weights'    : {},
     'baseline_priors'     : {},
@@ -71,7 +72,8 @@ def parse_sampler_config(config_file, sampler_config):
     config_parser.read(config_file)
     if not config_parser.has_section('TFBS-Sampler'):
         raise IOError("Invalid configuration file.")
-    sampler_config['seq_file'] = config_parser.get('TFBS-Sampler', 'sequences')
+    sampler_config['alignment_data']    = config_parser.get('TFBS-Sampler', 'alignment-data')
+    sampler_config['phylogenetic_data'] = config_parser.get('TFBS-Sampler', 'phylogenetic-data')
     if config_parser.has_option('TFBS-Sampler', 'alpha'):
         sampler_config['alpha'] = float(config_parser.get('TFBS-Sampler', 'alpha'))
     if config_parser.has_option('TFBS-Sampler', 'discount'):

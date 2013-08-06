@@ -21,6 +21,7 @@
 
 #include <tfbayes/dpm/dpm-tfbs-repl.hh>
 #include <tfbayes/dpm/dpm-tfbs-sampler.hh>
+#include <tfbayes/utility/strtools.hh>
 
 using namespace std;
 using namespace boost::asio;

@@ -34,6 +34,7 @@
 #include <tfbayes/dpm/utility.hh>
 #include <tfbayes/exception/exception.h>
 #include <tfbayes/fasta/fasta.hh>
+#include <tfbayes/utility/strtools.hh>
 
 using namespace std;
 
@@ -96,7 +97,7 @@ static
 void print_usage(char *pname, FILE *fp)
 {
 	(void)fprintf(fp,
-                      "\nUsage: %s [OPTION]... FASTA_ALIGNMENT\n\n", pname);
+                      "\nUsage: %s [OPTION]... FASTA_ALIGNMENT PHYLOGENETIC_DATA\n\n", pname);
 	(void)fprintf(fp,
                       "Options:\n"
                       "   --alpha=ALPHA             - alpha parameter for the dirichlet process\n"
@@ -149,10 +150,11 @@ ostream& operator<< (ostream& o, const product_dirichlet_t& pd) {
 }
 
 static
-void run_dpm(const char* file_name)
+void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_file)
 {
         tfbs_options_t tfbs_options;
-        sequence_data_t<data_tfbs_t::code_t> sequences(data_tfbs_t::read_fasta(file_name));
+        sequence_data_t<data_tfbs_t::code_t> phylogenetic_data(data_tfbs_t::read_fasta(phylogenetic_data_file));
+        alignment_set_t<short> alignment_set = alignment_set_t<short>(fasta_alignment_file);
 
         // background alpha
         tfbs_options.background_alpha.push_back(vector<double>(data_tfbs_t::alphabet_size, options.background_alpha));
@@ -180,7 +182,7 @@ void run_dpm(const char* file_name)
         tfbs_options.baseline_tags.push_back("baseline_default");
 
         // create data, dpm, and sampler objects
-        dpm_tfbs_pmcmc_t pmcmc(tfbs_options, sequences, options.population_size);
+        dpm_tfbs_pmcmc_t pmcmc(tfbs_options, phylogenetic_data, alignment_set, options.population_size);
 
         // execute the sampler
         pmcmc.sample(options.samples, options.burnin);
@@ -201,7 +203,8 @@ int main(int argc, char *argv[])
 {
         __dpm_init__();
 
-	char *file_name;
+        char *phylogenetic_data_file;
+	char *fasta_alignment_file;
 
 	if(argc == 1) {
 		wrong_usage("Too few arguments.");
@@ -276,16 +279,17 @@ int main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 	}
-        if(optind+1 != argc) {
+        if(optind+2 != argc) {
                 wrong_usage("Wrong number of arguments.");
                 exit(EXIT_FAILURE);
         }
 
         cout << options << endl;
 
-	file_name = argv[optind];
+	phylogenetic_data_file = argv[optind+0];
+        fasta_alignment_file   = argv[optind+1];
 
-        run_dpm(file_name);
+        run_dpm(phylogenetic_data_file, fasta_alignment_file);
 
         return 0;
 }

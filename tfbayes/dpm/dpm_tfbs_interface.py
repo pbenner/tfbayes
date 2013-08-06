@@ -54,7 +54,7 @@ _lib._dpm_tfbs_options.restype       = POINTER(OPTIONS)
 _lib._dpm_tfbs_options.argtypes      = []
 
 _lib._dpm_tfbs_init.restype          = None
-_lib._dpm_tfbs_init.argtypes         = [c_char_p]
+_lib._dpm_tfbs_init.argtypes         = [c_char_p, c_char_p]
 
 _lib._dpm_tfbs_num_clusters.restype  = c_uint
 _lib._dpm_tfbs_num_clusters.argtypes = []
@@ -112,7 +112,7 @@ def generate_c_partition(partition):
 # functions that interface with the library
 # ------------------------------------------------------------------------------
 
-def dpm_init(options, input_file, partition=None):
+def dpm_init(options, phylogenetic_input, alignment_input, partition=None):
      # do some sanity checks
      if not len(options['baseline_priors']) == len(options['baseline_weights']):
           raise IOError('Length mismatch between baseline priors and weights.')
@@ -160,7 +160,7 @@ def dpm_init(options, input_file, partition=None):
      c_options.contents.baseline_tags       = cast(c_baseline_tags, POINTER(c_char_p))
 
      # call the library
-     _lib._dpm_tfbs_init(input_file)
+     _lib._dpm_tfbs_init(phylogenetic_input, alignment_input)
 
      # free everything
      _lib._free_vector(c_options.contents.baseline_weights)

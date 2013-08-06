@@ -22,6 +22,7 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/dpm/mixture-model.hh>
 #include <tfbayes/dpm/data-tfbs.hh>
 #include <tfbayes/dpm/dpm-tfbs-options.hh>
@@ -31,7 +32,9 @@
 
 class dpm_tfbs_t : public mixture_model_t {
 public:
-         dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data);
+         dpm_tfbs_t(const tfbs_options_t& options,
+                    const data_tfbs_t& data,
+                    const alignment_set_t<short>& alignment_set);
          dpm_tfbs_t(const dpm_tfbs_t& dpm);
         ~dpm_tfbs_t();
 
@@ -87,6 +90,7 @@ protected:
 
         // data and clusters
         const data_tfbs_t& _data;
+        const alignment_set_t<short>& _alignment_set;
         dpm_tfbs_state_t _state;
 
         // parameters
