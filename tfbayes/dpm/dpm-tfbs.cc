@@ -52,8 +52,6 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
 {
         ////////////////////////////////////////////////////////////////////////////////
         // check that the alignment data matches the phylogenetic data
-        cout << "data size: " << data.size() << endl;
-        cout << "alignment_set size: " << alignment_set.size() << endl;
         assert(data.size() == alignment_set.size());
         for (size_t i = 0; i < data.size(); i++) {
                 assert(data[i].size() == alignment_set[i].length());
@@ -92,7 +90,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
         }
         else if (options.background_model == "uniform") {
                 /* all sequences have the same probability (no phylogeny!) */
-                uniform_background_t* bg = new uniform_background_t();
+                uniform_background_t* bg = new uniform_background_t(alignment_set);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
         }
         else if (options.background_model == "markov chain mixture") {

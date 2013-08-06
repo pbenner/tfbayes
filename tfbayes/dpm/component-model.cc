@@ -535,13 +535,17 @@ product_dirichlet_t::print_counts() const {
 // Uniform Background Model
 ////////////////////////////////////////////////////////////////////////////////
 
-uniform_background_t::uniform_background_t()
-        : component_model_t()
+uniform_background_t::uniform_background_t(
+        const sequence_data_t<data_tfbs_t::code_t>& data,
+        const alignment_set_t<short>& alignment_set)
+        : component_model_t(),
+          _events(data.sizes(), 0)
 {
 }
 
 uniform_background_t::uniform_background_t(const uniform_background_t& distribution)
-        : component_model_t(distribution)
+        : component_model_t(distribution),
+          _events(distribution._events)
 {
 }
 

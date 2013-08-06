@@ -169,7 +169,8 @@ protected:
 
 class uniform_background_t : public component_model_t {
 public:
-         uniform_background_t();
+         uniform_background_t(const sequence_data_t<data_tfbs_t::code_t>& data,
+                              const alignment_set_t<short>& alignment_set);
          uniform_background_t(const uniform_background_t& distribution);
         ~uniform_background_t();
 
@@ -189,6 +190,9 @@ public:
         virtual std::string print_counts() const;
 
         friend std::ostream& operator<< (std::ostream& o, const uniform_background_t& pd);
+
+protected:
+        sequence_data_t<size_t> _events;
 
 };
 
