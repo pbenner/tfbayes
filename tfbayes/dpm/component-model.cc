@@ -532,6 +532,73 @@ product_dirichlet_t::print_counts() const {
         return ss.str();
 }
 
+// Uniform Background Model
+////////////////////////////////////////////////////////////////////////////////
+
+uniform_background_t::uniform_background_t()
+        : component_model_t()
+{
+}
+
+uniform_background_t::uniform_background_t(const uniform_background_t& distribution)
+        : component_model_t(distribution)
+{
+}
+
+uniform_background_t::~uniform_background_t() {
+}
+
+uniform_background_t*
+uniform_background_t::clone() const {
+        return new uniform_background_t(*this);
+}
+
+size_t
+uniform_background_t::add(const range_t& range) {
+        return range.length();
+}
+
+size_t
+uniform_background_t::remove(const range_t& range) {
+        return range.length();
+}
+
+size_t
+uniform_background_t::count(const range_t& range) {
+        return range.length();
+}
+
+/*
+ *  p(y|x) = Beta(n(x) + n(y) + alpha) / Beta(n(x) + alpha)
+ */
+double uniform_background_t::predictive(const range_t& range) {
+        return 1;
+}
+
+double uniform_background_t::predictive(const vector<range_t>& range_set) {
+        return 1;
+}
+
+double uniform_background_t::log_predictive(const range_t& range) {
+        return 0;
+}
+
+double uniform_background_t::log_predictive(const vector<range_t>& range_set) {
+        return 0;
+}
+
+/*
+ *  p(x) = Beta(n(x) + alpha) / Beta(alpha)
+ */
+double uniform_background_t::log_likelihood() const {
+        return 0;
+}
+
+string
+uniform_background_t::print_counts() const {
+        return string();
+}
+
 // Markov Chain Mixture
 ////////////////////////////////////////////////////////////////////////////////
 

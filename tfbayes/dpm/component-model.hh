@@ -164,6 +164,34 @@ protected:
         const size_t _size2;
 };
 
+// Void Model
+////////////////////////////////////////////////////////////////////////////////
+
+class uniform_background_t : public component_model_t {
+public:
+         uniform_background_t();
+         uniform_background_t(const uniform_background_t& distribution);
+        ~uniform_background_t();
+
+        uniform_background_t* clone() const;
+
+        // datatypes
+        typedef data_tfbs_t::code_t counts_t;
+
+        size_t add(const range_t& range);
+        size_t remove(const range_t& range);
+        size_t count(const range_t& range);
+        double predictive(const range_t& range);
+        double predictive(const std::vector<range_t>& range);
+        double log_predictive(const range_t& range);
+        double log_predictive(const std::vector<range_t>& range);
+        double log_likelihood() const;
+        virtual std::string print_counts() const;
+
+        friend std::ostream& operator<< (std::ostream& o, const uniform_background_t& pd);
+
+};
+
 // Markov Chain Mixture
 ////////////////////////////////////////////////////////////////////////////////
 

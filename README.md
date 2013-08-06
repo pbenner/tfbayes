@@ -66,20 +66,10 @@ LTO can significantly improve the performance of TFBayes. It is recommended to u
 
 	CC=clang CXX=clang++ ./configure --enable-lto
 
-If you obtain the error message
-
-	no archive symbol table (run ranlib)
-
-it means that your linker is not using the LLVMgold plugin.
-
 ### Known errors
 
-The macro *__extern_always_inline* may not always be defined and in this case cause the error
-
-	error: unknown type name '__extern_always_inline'
-
-If this happens it es necessary to use *CXXFLAGS='-D__extern_always_inline=inline'*.
-
+ * **error: unknown type name '__extern_always_inline'**: The macro *__extern_always_inline* may not always be defined and in this case causes an error. If this happens it es necessary to declare *CXXFLAGS='-D__extern_always_inline=inline'*.
+ * **no archive symbol table (run ranlib)**: Your linker is not using the LLVMgold plugin. Either you are not using the gold linker or the plugin is not found.
 
 ## Example: Phylogenetic tree inference
 

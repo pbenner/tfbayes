@@ -79,6 +79,11 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data)
                 product_dirichlet_t* bg = new product_dirichlet_t(options.background_alpha, _data);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
         }
+        else if (options.background_model == "uniform") {
+                /* all sequences have the same probability (no phylogeny!) */
+                uniform_background_t* bg = new uniform_background_t();
+                _state.bg_cluster_tag = _state.add_cluster(bg);
+        }
         else if (options.background_model == "markov chain mixture") {
                 assert(options.background_context >= 0);
                 markov_chain_mixture_t* bg = new markov_chain_mixture_t(data_tfbs_t::alphabet_size, options, _data, _state.cluster_assignments(), 0);
