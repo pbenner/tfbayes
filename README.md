@@ -115,7 +115,31 @@ a table of edge lengths is printed, which can be visualized with
 	t <- read.table("test.edges.dat", header=T)
 	hist.edges(t, "s14", "s15")
 
-The histogram shows edge lengths of split *s14* as negative values and lengths of split *s15* as positive values. Split identifiers are declared in the header of *test.edges.dat*.
+The histogram shows edge lengths of split *s14* as negative values and lengths of split *s15* as positive values. Split identifiers are declared in the header of *test.edges.dat*. After learning a tree it can be used to generate an alignment. By comparing this alignment to some real data one assess the goodness of the learned tree. For instance, use
+
+	tfbayes-generate-alignment -a 0.2:0.2:0.2:0.2:0.2 test.mean.nh
+
+to generate a conserved region
+
+	ochPri2: TCAATACGAG-C-CCACA--GCG--GC-T--GGCTTGCAA-CAA-CA-ATACC-AGTAAGCCGA-TCT-AGGT-G-GACATTCCAGCT-GTCACT-ATAG
+	calJac1: TCAAT-CGTGA--CGAC---GCGT-GCTTAGGGCTTACAA-TTA-CTGA-GCC-AAAAGGCCGA-TCACAGCA-GTCACATTC-AGCTCGTAAGA-GTCG
+	papHam1: TCAAT-CGAGA--CGACG-CGCGT-GCTT-GGGCTTACAA-TTA-CT-A--CA-CGAAGGCCGA-TCACAGCA-G-GCCACTCC-GCTCGTCACT-ATCG
+	panTro2: TCAAT-CGAGA--CGACAG-GCGT-GATT--GGCTTTCAA-CTA-CT-A-ACACCGAAGGCCGA-TCA-ATCA-G-GACATTCCAGCT-GTCACT-ATAG
+	   hg19: TCAAT-CGAGA--C-ACA--GCGT-GCTT--GGCTTTCAA-CTA-CT-A-GCACCGAAGGCCGA-TCA-ATCA-G-CCCATTCCAGCT-GTCACT-ATAG
+	gorGor1: TCAATCCGAGA--CGACAG-GCGT-GCTT-GGGCTTTCAA-CTA-CT-A-ACACCGAAGGCCGA-TCA-ATCA-G-GCCATTCCAGCTCGTCACT-ATAG
+	ponAbe2: TCAAT-CGAGA--CGACA--GCG--GCTT--GGCTTTCAA-CAA-CT-A-ACACCGAAGGCCGA-TCACAGCA-GGGCCATTCCAGCT-GTCACT-ATAG
+	    mm9: TCAATACGAGAC-CGAAA--GCGTTGCTT--GGCTATC-A-CAA-CT-G--CACTGAAGGCCGA-TCA-AGCTCG-CACATTCCAGCT-GTCACT-ATAG
+	    rn4: TCAATCCGAGAC-CGACA--GCGT-GC-T--GGCTATC-A-CAA-CT-GGACACCGAAGGCCGA-TCACAGCTCG-CACATTC-AGCT-GTCACT-ATTG
+	dipOrd1: ACAAT-CGAGAC-CGAAA--GCGT-GC-T--GGCTTTTAG-CAA-CT-GTGCCCCGAACGCCTA-TCA-AGCT-G-GACATTCC-GCT-GT-ACT-ATAG
+	cavPor3: ACAAT-CGAG-C-CGACA--G-GT-GC-T--TGCTTTCAA--TA-CTGG-ACACCGAAGGCCGAGTCACCCCT-G-GACAGTCGAGCTCGTCACT-GTAG
+	speTri1: TCAAT-CGAGAC-CGACA--GCCT-GCTT--TGCTTACAA-CTA-CT-G-ACACCGAAGGACGA-TCA-AGCT-GGGAAATTCCAGCT-GTCACT-ATAG
+	oryCun2: TCAATACGAGAC-CGACA--G-GT-GATT--GGCTTGCAA-CAA-CA-G-ACACAGAACGCCTA-TCT-AGCT-GGGACATTCCAGCT-GTCAC--ATAG
+
+On the other hand, the command
+
+	tfbayes-generate-alignment -a 10:10:10:10:20 test.mean.nh
+
+generates a less conserved region with plenty of gaps.
 
 ## Alignment gaps
 
