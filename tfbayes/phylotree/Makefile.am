@@ -9,7 +9,7 @@ BUILT_SOURCES = phylotree-parser.h
 AM_YFLAGS = -d
 AM_LFLAGS = -o$(LEX_OUTPUT_ROOT).c
 
-noinst_PROGRAMS = polynomial-test phylotree-test phylotree-expand-test phylotree-parser-test phylotree-approximation-test likelihood-test likelihood-prime-test marginal-likelihood-test treespace-test treespace-distance
+noinst_PROGRAMS = polynomial-test phylotree-test phylotree-expand-test phylotree-parser-test phylotree-approximation-test likelihood-test likelihood-prime-test marginal-likelihood-test treespace-test treespace-distance phylotree-generate-observations-test
 
 polynomial_test_SOURCES = polynomial-test.cc
 polynomial_test_LDADD   = -lm
@@ -53,6 +53,10 @@ treespace_test_LDADD  += libtfbayes-phylotree.la
 treespace_distance_SOURCES = treespace-distance.cc
 treespace_distance_LDADD   = -lm
 treespace_distance_LDADD  += libtfbayes-phylotree.la
+
+phylotree_generate_observations_test_SOURCES = phylotree-generate-observations-test.cc
+phylotree_generate_observations_test_LDADD   = -lm
+phylotree_generate_observations_test_LDADD  += libtfbayes-phylotree.la
 
 lib_LTLIBRARIES = libtfbayes-phylotree.la
 
@@ -98,6 +102,7 @@ otherinclude_HEADERS = \
 	phylotree.hh \
 	phylotree-approximation.hh \
 	phylotree-expand.hh \
+	phylotree-generate-observations.hh \
 	phylotree-gradient.hh \
 	phylotree-gradient-ascent.hh \
 	phylotree-polynomial.hh \

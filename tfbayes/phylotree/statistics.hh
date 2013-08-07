@@ -22,8 +22,14 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <math.h>
+#include <vector>
+#include <cstdlib>
+#include <cmath>
+
+#include <gsl/gsl_randist.h>
 #include <gsl/gsl_sf_gamma.h>
+
+#include <tfbayes/utility/polynomial.hh>
 
 using namespace std;
 
@@ -77,6 +83,41 @@ double mbeta_log(
         }
 
         return sum2 - gsl_sf_lngamma(sum1);
+}
+
+template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+size_t categorial_sample(const std::vector<double>& p)
+{
+        double r = (double)rand()/RAND_MAX;
+        double c = 0.0;
+
+        for (size_t i = 0; i < ALPHABET_SIZE-1; i++) {
+                /* comute cumulative probabilities */
+                c += p[i];
+                /* return if c is large enough */
+                if (r <= c) return i;
+        }
+        return ALPHABET_SIZE-1;
+}
+
+template <size_t ALPHABET_SIZE>
+std::vector<double> dirichlet_sample(const std::vector<double>& _alpha, gsl_rng* r)
+{
+        double alpha[ALPHABET_SIZE];
+        double theta[ALPHABET_SIZE];
+        std::vector<double> _theta(ALPHABET_SIZE, 0);
+
+        /* copy pseudo counts */
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                alpha[i] = _alpha[i];
+        }
+        /* generate sample */
+        gsl_ran_dirichlet(r, ALPHABET_SIZE, alpha, theta);
+        /* copy result */
+        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                _theta[i] = theta[i];
+        }
+        return _theta;
 }
 
 #endif /* STATISTICS_HH */

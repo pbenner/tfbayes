@@ -219,7 +219,7 @@ public:
         pt_node_t::id_t taxon_map(const std::string& taxon) const {
                 taxon_map_t::const_iterator it = _taxon_map.find(taxon);
                 if (it != _taxon_map.end()) {
-                        return it->second;\
+                        return it->second;
                 }
                 return -1;
         }
