@@ -539,15 +539,29 @@ uniform_background_t::uniform_background_t(
         const sequence_data_t<data_tfbs_t::code_t>& data,
         const alignment_set_t<short>& alignment_set)
         : component_model_t(),
-          _events(data.sizes(), 0)
+          _events(data.sizes(), 0),
+          _log_likelihood(0)
 {
+        for (size_t i = 0; i < alignment_set.size(); i++) {
+                for (size_t j = 0; j < alignment_set[i].length(); j++) {
+                        for (size_t k = 0; k < alignment_set[i].n_species(); k++) {
+                                // some sequences might be empty
+                                if (alignment_set[i][k].size() == 0) {
+                                        continue;
+                                }
+                                if (alignment_set[i][k][j] != -1) {
+                                        _events[i][j] += 1.0;
+                                }
+                        }
+                }
+        }
 }
 
 uniform_background_t::uniform_background_t(const uniform_background_t& distribution)
         : component_model_t(distribution),
-          _events(distribution._events)
-{
-}
+          _events(distribution._events),
+          _log_likelihood(distribution._log_likelihood)
+{ }
 
 uniform_background_t::~uniform_background_t() {
 }
@@ -559,11 +573,25 @@ uniform_background_t::clone() const {
 
 size_t
 uniform_background_t::add(const range_t& range) {
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
+        for (size_t i = 0; i < length; i++) {
+                const seq_index_t index(sequence, position+i);
+                _log_likelihood += -_events[index]*log(data_tfbs_t::alphabet_size);
+        }
         return range.length();
 }
 
 size_t
 uniform_background_t::remove(const range_t& range) {
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
+        for (size_t i = 0; i < length; i++) {
+                const seq_index_t index(sequence, position+i);
+                _log_likelihood -= -_events[index]*log(data_tfbs_t::alphabet_size);
+        }
         return range.length();
 }
 
@@ -572,30 +600,37 @@ uniform_background_t::count(const range_t& range) {
         return range.length();
 }
 
-/*
- *  p(y|x) = Beta(n(x) + n(y) + alpha) / Beta(n(x) + alpha)
- */
 double uniform_background_t::predictive(const range_t& range) {
-        return 1;
+        return exp(log_predictive(range));
 }
 
 double uniform_background_t::predictive(const vector<range_t>& range_set) {
-        return 1;
+        return exp(log_predictive(range_set));
 }
 
 double uniform_background_t::log_predictive(const range_t& range) {
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
+        double result = 0;
+        for (size_t i = 0; i < length; i++) {
+                const seq_index_t index(sequence, position+i);
+                result += -_events[index]*log(data_tfbs_t::alphabet_size);
+        }
+        //return result;
         return 0;
 }
 
 double uniform_background_t::log_predictive(const vector<range_t>& range_set) {
-        return 0;
+        double result = 0;
+        for (size_t i = 0; i < range_set.size(); i++) {
+                result += log_predictive(range_set[i]);
+        }
+        return result;
 }
 
-/*
- *  p(x) = Beta(n(x) + alpha) / Beta(alpha)
- */
 double uniform_background_t::log_likelihood() const {
-        return 0;
+        return _log_likelihood;
 }
 
 string

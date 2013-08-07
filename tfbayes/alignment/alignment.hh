@@ -46,9 +46,9 @@ public:
         ////////////////////////////////////////////////////////////////////////
         alignment_t(const alignment_ancestor_t sequences, const taxon_map_t& taxon_map)
                 : alignment_ancestor_t(sequences),
+                  _n_species(sequences.size()),
                   _taxon_map(taxon_map) {
                 check_lengths();
-                
         }
         alignment_t(const size_t length, CODE_TYPE init, const pt_root_t* tree)
                 : alignment_ancestor_t(tree->n_leaves, nucleotide_sequence_t<CODE_TYPE>()),

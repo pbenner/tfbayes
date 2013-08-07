@@ -34,6 +34,7 @@
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_matrix.h>
 
+#include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/dpm/data-tfbs.hh>
 #include <tfbayes/dpm/datatypes.hh>
@@ -192,8 +193,8 @@ public:
         friend std::ostream& operator<< (std::ostream& o, const uniform_background_t& pd);
 
 protected:
-        sequence_data_t<size_t> _events;
-
+        sequence_data_t<double> _events;
+        double _log_likelihood;
 };
 
 // Markov Chain Mixture

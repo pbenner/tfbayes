@@ -90,7 +90,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
         }
         else if (options.background_model == "uniform") {
                 /* all sequences have the same probability (no phylogeny!) */
-                uniform_background_t* bg = new uniform_background_t(alignment_set);
+                uniform_background_t* bg = new uniform_background_t(_data, _alignment_set);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
         }
         else if (options.background_model == "markov chain mixture") {
