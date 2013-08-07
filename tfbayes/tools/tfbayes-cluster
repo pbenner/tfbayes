@@ -91,7 +91,7 @@ def main(command, sampler_config_file, cluster_number):
         cluster_list = fileio.load_cluster_list(config_parser_load, sampler_config)
     else:
         # parse sequences fasta file
-        descriptions, sequences = parse_sequences(sampler_config['seq_file'])
+        descriptions, sequences = parse_sequences(sampler_config['phylogenetic_data'])
         cluster_list = generate_cluster_list(sequences, sampler_config, results_config)
     cluster = find_cluster(cluster_list, cluster_number)
     if command == 'export-pwm':

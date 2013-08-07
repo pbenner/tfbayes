@@ -617,8 +617,7 @@ double uniform_background_t::log_predictive(const range_t& range) {
                 const seq_index_t index(sequence, position+i);
                 result += -_events[index]*log(data_tfbs_t::alphabet_size);
         }
-        //return result;
-        return 0;
+        return result;
 }
 
 double uniform_background_t::log_predictive(const vector<range_t>& range_set) {

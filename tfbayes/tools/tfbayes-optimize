@@ -70,7 +70,9 @@ def optimize():
     parse_results_config(sampler_config['save'], results_config)
     # obtain the partition from the results config
     partition = parse_partition(results_config)
-    dpm_init(sampler_config, sampler_config['seq_file'], partition)
+    dpm_init(sampler_config,
+             sampler_config['phylogenetic_data'],
+             sampler_config['alignment_data'], partition)
     dpm_optimize()
     # save result to a temporary file where it
     # can be parsed
