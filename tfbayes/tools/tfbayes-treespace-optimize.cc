@@ -135,6 +135,21 @@ typedef struct _options_t {
 
 static options_t options;
 
+ostream&
+operator<<(std::ostream& o, const options_t& options) {
+        o << "Options:"              << endl
+          << "-> alpha                 = " << options.alpha               << endl
+          << "-> burnin                = " << options.burnin              << endl
+          << "-> gamma scale           = " << options.lambda              << endl
+          << "-> gamma shape           = " << options.r                   << endl
+          << "-> max steps             = " << options.max_steps           << endl
+          << "-> min change            = " << options.min_change          << endl
+          << "-> gradient step size    = " << options.epsilon             << endl
+          << "-> proposal variance     = " << options.sigma               << endl
+          << "-> save posterior values = " << options.posterior           << endl;
+        return o;
+}
+
 // Main
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -318,6 +333,9 @@ int main(int argc, char *argv[])
         string method(argv[optind]);
         file_tree      = argv[optind+1];
         file_alignment = argv[optind+2];
+
+        // print options
+        cerr << options << endl;
 
         run_optimization(method, file_tree, file_alignment);
 

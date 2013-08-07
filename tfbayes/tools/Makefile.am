@@ -2,7 +2,10 @@
 
 INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)
 
-bin_PROGRAMS = tfbayes-treespace-optimize tfbayes-treespace-mean tfbayes-treespace-histogram
+bin_PROGRAMS = tfbayes-generate-alignment tfbayes-treespace-optimize tfbayes-treespace-mean tfbayes-treespace-histogram
+
+tfbayes_generate_alignment_SOURCES = tfbayes-generate-alignment.cc
+tfbayes_generate_alignment_LDADD   = ../phylotree/libtfbayes-phylotree.la
 
 tfbayes_treespace_optimize_SOURCES = tfbayes-treespace-optimize.cc
 tfbayes_treespace_optimize_LDADD   = -lpthread
