@@ -41,27 +41,6 @@ typedef short code_t;
 using namespace std;
 using boost::format;
 
-void init() {
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        time_t seed = tv.tv_sec*tv.tv_usec;
-
-        srand(seed);
-}
-
-void print_alignment(const pt_root_t* root, const alignment_t<code_t>& alignment)
-{
-        for (size_t i = 0; i < alignment.n_species(); i++) {
-                cout << format("%10s: ")
-                        % root->leaves[i]->name;
-
-                for (size_t j = 0; j < alignment.length(); j++) {
-                        cout << decode_nucleotide(alignment[i][j]);
-                }
-                cout << endl;
-        }
-}
-
 // Options
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -76,15 +55,63 @@ typedef struct _options_t {
 
 static options_t options;
 
+// Alignments
+////////////////////////////////////////////////////////////////////////////////
+
+void print_alignment(const pt_root_t* root, const alignment_t<code_t>& alignment)
+{
+        for (size_t i = 0; i < alignment.n_species(); i++) {
+                cout << format("%10s: ")
+                        % root->leaves[i]->name;
+
+                for (size_t j = 0; j < alignment.length(); j++) {
+                        cout << decode_nucleotide(alignment[i][j]);
+                }
+                cout << endl;
+        }
+}
+
+void generate_simple_alignment(const pt_root_t* pt_root, gsl_rng * r)
+{
+        // alignment
+        alignment_t<code_t> alignment(options.n, -1, pt_root);
+
+        // generate
+        for (size_t i = 0; i < options.n; i++) {
+                vector<double> stationary   = dirichlet_sample<alphabet_size>(options.alpha, r);
+                vector<code_t> observations = pt_generate_observations<code_t, alphabet_size>(pt_root, stationary);
+
+                for (size_t k = 0; k < observations.size(); k++) {
+                        alignment[k][i] = observations[k];
+                }
+        }
+        // print result
+        print_alignment(pt_root, alignment);
+}
+
+void generate_tfbs_alignment(const pt_root_t* pt_root, gsl_rng * r)
+{
+}
+
 // Main
 ////////////////////////////////////////////////////////////////////////////////
+
+void init() {
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        time_t seed = tv.tv_sec*tv.tv_usec;
+
+        srand(seed);
+}
 
 static
 void print_usage(char *pname, FILE *fp)
 {
-        (void)fprintf(fp, "\nUsage: %s [OPTION] TREE\n\n", pname);
+        (void)fprintf(fp, "\nUsage: %s [OPTION] MODEL TREE\n\n", pname);
         (void)fprintf(fp,
-                      "Methods: gradient-ascent, metropolis-hastings\n"
+                      "Models:\n"
+                      "             simple          - all columns are generated with the same pseudocounts"
+                      "             tfbs            - enrich alignment with certain patterns"
                       "\n"
                       "Options:\n"
                       "             -a F:F:F:F:F    - pseudo counts (five floats separated by a colon)\n"
@@ -94,6 +121,7 @@ void print_usage(char *pname, FILE *fp)
                       "   --version                 - print version information and exit\n\n");
 }
 
+static
 void wrong_usage(const char *msg)
 {
 
@@ -131,7 +159,7 @@ pt_root_t* parse_tree_file(const char* file_tree)
         return pt_root;
 }
 
-void generate_alignment(const char* treefile)
+void generate_alignment(const string& model, const char* treefile)
 {
         init();
 
@@ -143,20 +171,17 @@ void generate_alignment(const char* treefile)
         // parse tree
         pt_root_t* pt_root = parse_tree_file(treefile);
 
-        // alignment
-        alignment_t<code_t> alignment(options.n, -1, pt_root);
-
-        // generate
-        for (size_t i = 0; i < options.n; i++) {
-                vector<double> stationary   = dirichlet_sample<alphabet_size>(options.alpha, r);
-                vector<code_t> observations = pt_generate_observations<code_t, alphabet_size>(pt_root, stationary);
-
-                for (size_t k = 0; k < observations.size(); k++) {
-                        alignment[k][i] = observations[k];
-                }
+        // switch command
+        if (model == "simple") {
+                generate_simple_alignment(pt_root, r);
         }
-        // print result
-        print_alignment(pt_root, alignment);
+        else if (model == "tfbs") {
+                generate_tfbs_alignment(pt_root, r);
+        }
+        else {
+                wrong_usage("Invalid statistical model.");
+                exit(EXIT_FAILURE);
+        }
 
         // clean up
         pt_root->destroy();
@@ -174,7 +199,7 @@ int main(int argc, char *argv[])
                         { "version",         0, 0, 'v' }
                 };
 
-                c = getopt_long(argc, argv, "a:b:e:m:n:r:l:p:s:j:hv",
+                c = getopt_long(argc, argv, "a:n:hv",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -206,11 +231,11 @@ int main(int argc, char *argv[])
                         exit(EXIT_FAILURE);
                 }
         }
-        if(optind+1 != argc) {
+        if(optind+2 != argc) {
                 wrong_usage("Wrong number of arguments.");
                 exit(EXIT_FAILURE);
         }
-        generate_alignment(argv[optind]);
+        generate_alignment(string(argv[optind]), argv[optind+1]);
 
         return 0;
 }
