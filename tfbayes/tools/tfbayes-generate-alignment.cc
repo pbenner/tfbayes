@@ -51,31 +51,84 @@ typedef struct _options_t {
         double lambda;
         size_t n;
         size_t m;
+        string format;
         _options_t()
                 : alpha(alphabet_size, 0.2),
                   beta (alphabet_size, 2.0),
                   d(1.0),
                   lambda(0.01),
                   n(100),
-                  m(10)
+                  m(10),
+                  format("pretty")
                 { }
 } options_t;
 
 static options_t options;
 
+// Usage
+////////////////////////////////////////////////////////////////////////////////
+
+static
+void print_usage(char *pname, FILE *fp)
+{
+        (void)fprintf(fp, "\nUsage: %s [OPTION] MODEL TREE\n\n", pname);
+        (void)fprintf(fp,
+                      "Models:\n"
+                      "             simple           - all columns are generated with the same pseudocounts"
+                      "             tfbs             - enrich alignment with certain patterns"
+                      "\n"
+                      "Options:\n"
+                      "             -a F:F:F:F:F     - pseudo counts (five floats separated by a colon)\n"
+                      "             -b F:F:F:F:F     - background pseudo counts\n"
+                      "             -d CONCENTRATION - dirichlet process concentration parameter\n"
+                      "             -l WEIGHT        - weight of the foreground\n"
+                      "             -n LENGTH        - length of the alignment\n"
+                      "             -m LENGTH        - tfbs/pattern length\n"
+                      "             --format=FORMAT  - output format (pretty, fasta)\n"
+                      "\n"
+                      "   --help                     - print help and exit\n"
+                      "   --version                  - print version information and exit\n\n");
+}
+
+static
+void wrong_usage(const char *msg)
+{
+        if(msg != NULL) {
+                (void)fprintf(stderr, "%s\n", msg);
+        }
+        (void)fprintf(stderr,
+                      "Try `tfbayes-generate-alignment --help' for more information.\n");
+
+        exit(EXIT_FAILURE);
+}
+
+static
+void print_version(FILE *fp)
+{
+        (void)fprintf(fp,
+                      "This is free software, and you are welcome to redistribute it\n"
+                      "under certain conditions; see the source for copying conditions.\n"
+                      "There is NO warranty; not even for MERCHANTABILITY or FITNESS\n"
+                      "FOR A PARTICULAR PURPOSE.\n\n");
+}
+
 // Alignments
 ////////////////////////////////////////////////////////////////////////////////
 
-void print_alignment(const pt_root_t* root, const alignment_t<code_t>& alignment)
-{
-        for (size_t i = 0; i < alignment.n_species(); i++) {
-                cout << format("%10s: ")
-                        % root->leaves[i]->name;
+template ostream& operator<< <code_t>(ostream& o, const print_alignment_pretty<code_t>& alignment_container);
+template ostream& operator<< <code_t>(ostream& o, const print_alignment_fasta <code_t>& alignment_container);
 
-                for (size_t j = 0; j < alignment.length(); j++) {
-                        cout << decode_nucleotide(alignment[i][j]);
-                }
-                cout << endl;
+void print_alignment(const alignment_t<code_t>& alignment)
+{
+        if (options.format == "pretty") {
+                cout << print_alignment_pretty<code_t>(alignment) << endl;
+        }
+        else if (options.format == "fasta") {
+                cout << print_alignment_fasta<code_t>(alignment) << endl;
+        }
+        else {
+                wrong_usage("Unknown output format.");
+                exit(EXIT_FAILURE);
         }
 }
 
@@ -187,7 +240,7 @@ void generate_tfbs_alignment(const pt_root_t* pt_root, gsl_rng * r)
         // print cluster
         cerr << dirichlet_process << endl;
         // print result
-        print_alignment(pt_root, alignment);
+        print_alignment(alignment);
 }
 
 void generate_simple_alignment(const pt_root_t* pt_root, gsl_rng * r)
@@ -205,7 +258,7 @@ void generate_simple_alignment(const pt_root_t* pt_root, gsl_rng * r)
                 }
         }
         // print result
-        print_alignment(pt_root, alignment);
+        print_alignment(alignment);
 }
 
 // Main
@@ -217,49 +270,6 @@ void init() {
         time_t seed = tv.tv_sec*tv.tv_usec;
 
         srand(seed);
-}
-
-static
-void print_usage(char *pname, FILE *fp)
-{
-        (void)fprintf(fp, "\nUsage: %s [OPTION] MODEL TREE\n\n", pname);
-        (void)fprintf(fp,
-                      "Models:\n"
-                      "             simple           - all columns are generated with the same pseudocounts"
-                      "             tfbs             - enrich alignment with certain patterns"
-                      "\n"
-                      "Options:\n"
-                      "             -a F:F:F:F:F     - pseudo counts (five floats separated by a colon)\n"
-                      "             -b F:F:F:F:F     - background pseudo counts\n"
-                      "             -d CONCENTRATION - dirichlet process concentration parameter\n"
-                      "             -l WEIGHT        - weight of the foreground\n"
-                      "             -n LENGTH        - length of the alignment\n"
-                      "             -m LENGTH        - tfbs/pattern length\n"
-                      "\n"
-                      "   --help                     - print help and exit\n"
-                      "   --version                  - print version information and exit\n\n");
-}
-
-static
-void wrong_usage(const char *msg)
-{
-        if(msg != NULL) {
-                (void)fprintf(stderr, "%s\n", msg);
-        }
-        (void)fprintf(stderr,
-                      "Try `tfbayes-generate-alignment --help' for more information.\n");
-
-        exit(EXIT_FAILURE);
-}
-
-static
-void print_version(FILE *fp)
-{
-        (void)fprintf(fp,
-                      "This is free software, and you are welcome to redistribute it\n"
-                      "under certain conditions; see the source for copying conditions.\n"
-                      "There is NO warranty; not even for MERCHANTABILITY or FITNESS\n"
-                      "FOR A PARTICULAR PURPOSE.\n\n");
 }
 
 pt_root_t* parse_tree_file(const char* file_tree)
@@ -312,6 +322,7 @@ int main(int argc, char *argv[])
         for(;;) {
                 int c, option_index = 0;
                 static struct option long_options[] = {
+                        { "format",          1, 0, 'f' },
                         { "help",            0, 0, 'h' },
                         { "version",         0, 0, 'v' }
                 };
@@ -343,6 +354,9 @@ int main(int argc, char *argv[])
                         for (size_t i = 0; i < alphabet_size; i++) {
                                 options.beta[i] = atof(tokens[i].c_str());
                         }
+                        break;
+                case 'f':
+                        options.format = string(optarg);
                         break;
                 case 'd':
                         options.d = atof(optarg);

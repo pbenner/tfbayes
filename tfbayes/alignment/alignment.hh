@@ -25,7 +25,9 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <ostream>
 
+#include <boost/format.hpp>
 #include <boost/unordered_map.hpp>
 
 #include <tfbayes/fasta/fasta.hh>
@@ -340,5 +342,76 @@ private:
                 this->push_back(alignment_t<CODE_TYPE>(sequences, taxon_map));
         }
 };
+
+template <typename CODE_TYPE>
+class print_alignment_t {
+public:
+        print_alignment_t(const alignment_t<CODE_TYPE>& alignment)
+        : _alignment(&alignment)
+                { }
+
+        virtual const alignment_t<CODE_TYPE>& alignment() const {
+                return *_alignment;
+        }
+protected:
+        const alignment_t<CODE_TYPE>* _alignment;
+};
+
+template <typename CODE_TYPE>
+class print_alignment_pretty : public print_alignment_t<CODE_TYPE> {
+public:
+        print_alignment_pretty(const alignment_t<CODE_TYPE>& alignment)
+                : print_alignment_t<CODE_TYPE>(alignment)
+                { }
+};
+
+template <typename CODE_TYPE>
+class print_alignment_fasta : public print_alignment_t<CODE_TYPE> {
+public:
+        print_alignment_fasta(const alignment_t<CODE_TYPE>& alignment)
+                : print_alignment_t<CODE_TYPE>(alignment)
+                { }
+};
+
+template <typename CODE_TYPE>
+std::ostream& operator<< (std::ostream& o, const print_alignment_pretty<CODE_TYPE>& alignment_container)
+{
+        const alignment_t<CODE_TYPE>& alignment(alignment_container.alignment());
+
+        for (typename alignment_t<CODE_TYPE>::taxon_map_t::const_iterator it = alignment.taxon_map().begin();
+             it != alignment.taxon_map().end(); it++) {
+                size_t i = it->second;
+
+                o << boost::format("%10s: ") % it->first;
+                for (size_t j = 0; j < alignment.length(); j++) {
+                        o << decode_nucleotide(alignment[i][j]);
+                }
+                o << std::endl;
+
+        }
+        return o;
+}
+
+template <typename CODE_TYPE>
+std::ostream& operator<< (std::ostream& o, const print_alignment_fasta<CODE_TYPE>&  alignment_container)
+{
+        const alignment_t<CODE_TYPE>& alignment(alignment_container.alignment());
+
+        for (typename alignment_t<CODE_TYPE>::taxon_map_t::const_iterator it = alignment.taxon_map().begin();
+             it != alignment.taxon_map().end(); it++) {
+                size_t i = it->second;
+
+                o << boost::format(">%s") % it->first;
+                for (size_t j = 0; j < alignment.length(); j++) {
+                        if (j % 80 == 0) {
+                                o << std::endl;
+                        }
+                        o << decode_nucleotide(alignment[i][j]);
+                }
+                o << std::endl;
+
+        }
+        return o;
+}
 
 #endif /* ALIGNMENT_HH */
