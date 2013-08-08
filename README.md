@@ -117,7 +117,7 @@ a table of edge lengths is printed, which can be visualized with
 
 The histogram shows edge lengths of split *s14* as negative values and lengths of split *s15* as positive values. Split identifiers are declared in the header of *test.edges.dat*. After learning a tree it can be used to generate alignments. By comparing generated alignments to some real data one may assess the goodness of the learned tree. For instance, use
 
-	tfbayes-generate-alignment -a 0.2:0.2:0.2:0.2:0.2 test.mean.nh
+	tfbayes-generate-alignment -a 0.2:0.2:0.2:0.2:0.2 simple test.mean.nh
 
 to generate a conserved region
 
@@ -137,7 +137,7 @@ to generate a conserved region
 
 On the other hand, the command
 
-	tfbayes-generate-alignment -a 10:10:10:10:20 test.mean.nh
+	tfbayes-generate-alignment -a 10:10:10:10:20 simple test.mean.nh
 
 generates a less conserved region with plenty of gaps, i.e.
 

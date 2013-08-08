@@ -109,11 +109,9 @@ public:
                         if (ra <= sum) {
                                 occurrences[i] += 1.0;
                                 n += 1.0;
-                                cout << "selecting pattern: " << i << endl;
                                 return patterns[i];
                         }
                 }
-                cout << "generating new pattern" << endl;
                 // generate new pattern
                 patterns   .push_back(pattern_t(pseudocounts, r));
                 occurrences.push_back(1);
@@ -121,6 +119,7 @@ public:
 
                 return patterns[c];
         }
+        friend ostream& operator<<(ostream& o, const dirichlet_process_t& dirichlet_process);
 
 protected:
         double alpha;
@@ -130,6 +129,27 @@ protected:
         vector<pattern_t> patterns;
         gsl_rng * r;
 };
+
+ostream& operator<<(ostream& o, const dirichlet_process_t& dirichlet_process)
+{
+        o << "Cluster: " << dirichlet_process.occurrences.size() << endl
+          << "Total N: " << dirichlet_process.n                  << endl
+          << endl;
+
+        for (size_t k = 0; k < dirichlet_process.occurrences.size(); k++) {
+                const pattern_t& pattern = dirichlet_process.patterns[k];
+                o << format("Cluster %d (occurred %d times)\n") % k % dirichlet_process.occurrences[k];
+                o << "-----------------------------------------------------" << endl;
+                for (size_t j = 0; j < pattern[0].size(); j++) {
+                        for (size_t i = 0; i < pattern.size(); i++) {
+                                o << format("%5f ") % pattern[i][j];
+                        }
+                        o << endl;
+                }
+                o << endl;
+        }
+        return o;
+}
 
 void insert_observations(alignment_t<code_t>& alignment, size_t i, const vector<code_t>& observations)
 {
@@ -155,6 +175,7 @@ void generate_tfbs_alignment(const pt_root_t* pt_root, gsl_rng * r)
                                 observations = pt_generate_observations<code_t, alphabet_size>(pt_root, pattern[j]);
                                 insert_observations(alignment, i+j, observations);
                         }
+                        i += pattern.size() - 1;
                 }
                 // generate background
                 else {
@@ -163,6 +184,8 @@ void generate_tfbs_alignment(const pt_root_t* pt_root, gsl_rng * r)
                         insert_observations(alignment, i, observations);
                 }
         }
+        // print cluster
+        cerr << dirichlet_process << endl;
         // print result
         print_alignment(pt_root, alignment);
 }
