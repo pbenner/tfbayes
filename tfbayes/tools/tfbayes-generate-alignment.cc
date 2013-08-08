@@ -45,11 +45,19 @@ using boost::format;
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct _options_t {
-        vector<double> alpha;
+        vector<double> alpha; // pseudocounts for the motifs
+        vector<double> beta;  // pseudocounts for the background
+        double d;
+        double lambda;
         size_t n;
+        size_t m;
         _options_t()
                 : alpha(alphabet_size, 0.2),
-                  n(100)
+                  beta (alphabet_size, 2.0),
+                  d(1.0),
+                  lambda(0.01),
+                  n(100),
+                  m(10)
                 { }
 } options_t;
 
@@ -71,6 +79,13 @@ void print_alignment(const pt_root_t* root, const alignment_t<code_t>& alignment
         }
 }
 
+void generate_tfbs_alignment(const pt_root_t* pt_root, gsl_rng * r)
+{
+        // alignment
+        alignment_t<code_t> alignment(options.n, -1, pt_root);
+
+}
+
 void generate_simple_alignment(const pt_root_t* pt_root, gsl_rng * r)
 {
         // alignment
@@ -87,10 +102,6 @@ void generate_simple_alignment(const pt_root_t* pt_root, gsl_rng * r)
         }
         // print result
         print_alignment(pt_root, alignment);
-}
-
-void generate_tfbs_alignment(const pt_root_t* pt_root, gsl_rng * r)
-{
 }
 
 // Main
@@ -110,21 +121,24 @@ void print_usage(char *pname, FILE *fp)
         (void)fprintf(fp, "\nUsage: %s [OPTION] MODEL TREE\n\n", pname);
         (void)fprintf(fp,
                       "Models:\n"
-                      "             simple          - all columns are generated with the same pseudocounts"
-                      "             tfbs            - enrich alignment with certain patterns"
+                      "             simple           - all columns are generated with the same pseudocounts"
+                      "             tfbs             - enrich alignment with certain patterns"
                       "\n"
                       "Options:\n"
-                      "             -a F:F:F:F:F    - pseudo counts (five floats separated by a colon)\n"
-                      "             -n LENGTH       - length of the alignment\n"
+                      "             -a F:F:F:F:F     - pseudo counts (five floats separated by a colon)\n"
+                      "             -b F:F:F:F:F     - background pseudo counts\n"
+                      "             -d CONCENTRATION - dirichlet process concentration parameter\n"
+                      "             -l WEIGHT        - weight of the foreground\n"
+                      "             -n LENGTH        - length of the alignment\n"
+                      "             -m LENGTH        - tfbs/pattern length\n"
                       "\n"
-                      "   --help                    - print help and exit\n"
-                      "   --version                 - print version information and exit\n\n");
+                      "   --help                     - print help and exit\n"
+                      "   --version                  - print version information and exit\n\n");
 }
 
 static
 void wrong_usage(const char *msg)
 {
-
         if(msg != NULL) {
                 (void)fprintf(stderr, "%s\n", msg);
         }
@@ -132,7 +146,6 @@ void wrong_usage(const char *msg)
                       "Try `tfbayes-generate-alignment --help' for more information.\n");
 
         exit(EXIT_FAILURE);
-
 }
 
 static
@@ -199,7 +212,7 @@ int main(int argc, char *argv[])
                         { "version",         0, 0, 'v' }
                 };
 
-                c = getopt_long(argc, argv, "a:n:hv",
+                c = getopt_long(argc, argv, "a:b:d:l:n:hv",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -216,6 +229,22 @@ int main(int argc, char *argv[])
                         for (size_t i = 0; i < alphabet_size; i++) {
                                 options.alpha[i] = atof(tokens[i].c_str());
                         }
+                        break;
+                case 'b':
+                        tokens = token(string(optarg), ':');
+                        if (tokens.size() != alphabet_size) {
+                                wrong_usage(NULL);
+                                exit(EXIT_FAILURE);
+                        }
+                        for (size_t i = 0; i < alphabet_size; i++) {
+                                options.beta[i] = atof(tokens[i].c_str());
+                        }
+                        break;
+                case 'd':
+                        options.d = atof(optarg);
+                        break;
+                case 'l':
+                        options.lambda = atof(optarg);
                         break;
                 case 'n':
                         options.n = atoi(optarg);
