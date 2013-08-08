@@ -79,11 +79,92 @@ void print_alignment(const pt_root_t* root, const alignment_t<code_t>& alignment
         }
 }
 
+class pattern_t : public vector<vector<double> > {
+public:
+        pattern_t()
+                : vector<vector<double> >(options.m, vector<double>(alphabet_size, 0.0))
+                { }
+        pattern_t(const vector<double>& pseudocounts, gsl_rng * r)
+                : vector<vector<double> >(options.m, vector<double>()) {
+                // generate new pattern
+                for (size_t i = 0; i < options.m; i++) {
+                        operator[](i) = dirichlet_sample<alphabet_size>(pseudocounts, r);
+                }
+        }
+};
+
+class dirichlet_process_t {
+public:
+        dirichlet_process_t(double alpha, const vector<double>& pseudocounts, gsl_rng * r)
+                : alpha(alpha), n(0), pseudocounts(pseudocounts), r(r) {
+        }
+        const pattern_t& operator()() {
+                size_t c   = occurrences.size();
+                double sum = 0.0;
+                double ra  = (double)rand()/RAND_MAX;
+
+                // draw from an existing cluster
+                for (size_t i = 0; i < c; i++) {
+                        sum += occurrences[i]/(n + alpha);
+                        if (ra <= sum) {
+                                occurrences[i] += 1.0;
+                                n += 1.0;
+                                cout << "selecting pattern: " << i << endl;
+                                return patterns[i];
+                        }
+                }
+                cout << "generating new pattern" << endl;
+                // generate new pattern
+                patterns   .push_back(pattern_t(pseudocounts, r));
+                occurrences.push_back(1);
+                n += 1.0;
+
+                return patterns[c];
+        }
+
+protected:
+        double alpha;
+        double n;
+        vector<double> pseudocounts;
+        vector<double> occurrences;
+        vector<pattern_t> patterns;
+        gsl_rng * r;
+};
+
+void insert_observations(alignment_t<code_t>& alignment, size_t i, const vector<code_t>& observations)
+{
+        for (size_t k = 0; k < observations.size(); k++) {
+                alignment[k][i] = observations[k];
+        }
+}
+
 void generate_tfbs_alignment(const pt_root_t* pt_root, gsl_rng * r)
 {
+        dirichlet_process_t dirichlet_process(options.d, options.alpha, r);
+        vector<double> stationary;
+        vector<code_t> observations;
         // alignment
         alignment_t<code_t> alignment(options.n, -1, pt_root);
 
+        // generate
+        for (size_t i = 0; i < options.n; i++) {
+                // generate foreground
+                if ((double)rand()/RAND_MAX <= options.lambda) {
+                        const pattern_t& pattern = dirichlet_process();
+                        for (size_t j = 0; j < pattern.size() && i+j < options.n; j++) {
+                                observations = pt_generate_observations<code_t, alphabet_size>(pt_root, pattern[j]);
+                                insert_observations(alignment, i+j, observations);
+                        }
+                }
+                // generate background
+                else {
+                        stationary   = dirichlet_sample<alphabet_size>(options.beta, r);
+                        observations = pt_generate_observations<code_t, alphabet_size>(pt_root, stationary);
+                        insert_observations(alignment, i, observations);
+                }
+        }
+        // print result
+        print_alignment(pt_root, alignment);
 }
 
 void generate_simple_alignment(const pt_root_t* pt_root, gsl_rng * r)
