@@ -45,7 +45,9 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
           _state(state),
           _dpm(dpm),
           _t0(options.initial_temperature)
-{ }
+{
+        assert(options.initial_temperature >= 1.0);
+}
 
 dpm_tfbs_sampler_t*
 dpm_tfbs_sampler_t::clone() const {
