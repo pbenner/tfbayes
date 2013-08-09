@@ -183,6 +183,18 @@ protected:
         gsl_rng * r;
 };
 
+ostream& operator<<(ostream& o, const pattern_t& pattern)
+{
+        for (size_t j = 0; j < pattern[0].size(); j++) {
+                o << format("%c: ") % decode_nucleotide(j);
+                for (size_t i = 0; i < pattern.size(); i++) {
+                        o << format("%5f ") % pattern[i][j];
+                }
+                o << endl;
+        }
+        return o;
+}
+
 ostream& operator<<(ostream& o, const dirichlet_process_t& dirichlet_process)
 {
         o << "Cluster: " << dirichlet_process.occurrences.size() << endl
@@ -193,13 +205,7 @@ ostream& operator<<(ostream& o, const dirichlet_process_t& dirichlet_process)
                 const pattern_t& pattern = dirichlet_process.patterns[k];
                 o << format("Cluster %d (occurred %d times)\n") % k % dirichlet_process.occurrences[k];
                 o << "-----------------------------------------------------" << endl;
-                for (size_t j = 0; j < pattern[0].size(); j++) {
-                        for (size_t i = 0; i < pattern.size(); i++) {
-                                o << format("%5f ") % pattern[i][j];
-                        }
-                        o << endl;
-                }
-                o << endl;
+                o << pattern << endl;
         }
         return o;
 }
