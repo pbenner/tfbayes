@@ -104,7 +104,8 @@ public:
         bool is_ancestor_of(const nedge_t& nedge) const;
 
         // methods
-        double d() const;
+        const double& d() const;
+        double& d();
         const std::string& name() const;
         // operators
         bool operator==(const nedge_t& nedge) const;
@@ -235,19 +236,20 @@ protected:
 class ntree_t {
 public:
         // constructors
-        ntree_t() { };
+        ntree_t() : _n(0) { };
         ntree_t(const nedge_set_t& nedge_set,
                 const std::vector<double>& leaf_d,
                 const std::vector<std::string> leaf_names = std::vector<std::string>());
         ntree_t(const pt_root_t* tree);
 
         // methods
-        pt_root_t* export_tree();
+        pt_root_t* export_tree() const;
         size_t n() const;
         const nedge_t& find_edge(const nsplit_t& nsplit) const;
         const nedge_set_t& nedge_set() const;
               nedge_set_t& nedge_set();
         const std::vector<double>& leaf_d() const;
+              std::vector<double>& leaf_d();
         double leaf_d(size_t i) const;
         const std::vector<std::string>& leaf_names() const;
         const std::string& leaf_name(size_t i) const;
@@ -260,6 +262,9 @@ public:
         std::list<common_nedge_t> common_edges(const ntree_t& tree) const;
         // return the topology of this tree, i.e. the set of splits
         topology_t topology() const;
+        // scale the tree by a positive factor
+        void scale(double lambda);
+        bool null() const { return _n == 0; }
 
 protected:
         size_t _n;

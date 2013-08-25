@@ -175,8 +175,14 @@ nedge_t::is_ancestor_of(const nedge_t& nedge) const
         return operator*().is_ancestor_of(*nedge);
 }
 
-double
+const double&
 nedge_t::d() const
+{
+        return _d;
+}
+
+double&
+nedge_t::d()
 {
         return _d;
 }
@@ -255,7 +261,9 @@ topology_t::topology_t(const nedge_set_t& nedge_set)
         : vector<nsplit_ptr_t>() {
         for (nedge_set_t::const_iterator it = nedge_set.begin();
              it != nedge_set.end(); it++) {
-                push_back(*it);
+                if (it->d() != 0.0) {
+                        push_back(*it);
+                }
         }
 }
 
@@ -273,6 +281,9 @@ topology_t::contains(const nsplit_ptr_t& nsplit_ptr) const
 bool
 topology_t::operator==(const topology_t& topology) const
 {
+        if (size() != topology.size()) {
+                return false;
+        }
         for (const_iterator it = topology.begin(); it != topology.end(); it++) {
                 if (!contains(*it)) {
                         return false;
@@ -559,7 +570,7 @@ ntree_t::find_edge(const nsplit_t& nsplit) const
 }
 
 pt_root_t*
-ntree_t::export_tree() {
+ntree_t::export_tree() const {
         nedge_root_t* nedge_root = new nedge_root_t(nedge_set(), leaf_d(), leaf_names());
         pt_root_t* pt_root = nedge_root->convert();
         nedge_root->destroy();
@@ -583,6 +594,11 @@ ntree_t::nedge_set() {
 
 const vector<double>&
 ntree_t::leaf_d() const {
+        return _leaf_d;
+}
+
+vector<double>&
+ntree_t::leaf_d() {
         return _leaf_d;
 }
 
@@ -651,6 +667,19 @@ ntree_t::common_edges(const ntree_t& tree) const
                 }
         }
         return result;
+}
+
+void
+ntree_t::scale(double lambda)
+{
+        for (nedge_set_t::iterator it = nedge_set().begin();
+             it != nedge_set().end(); it++) {
+                it->d() *= lambda;
+        }
+        for (vector<double>::iterator it = leaf_d().begin();
+             it != leaf_d().end(); it++) {
+                (*it) *= lambda;
+        }
 }
 
 topology_t

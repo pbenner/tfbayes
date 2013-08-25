@@ -31,8 +31,12 @@
 #include <tfbayes/phylotree/treespace.hh>
 #include <tfbayes/exception/exception.h>
 
+#include <boost/unordered/unordered_map.hpp>
+
 #define alphabet_size 5
 typedef float code_t;
+
+typedef boost::unordered_map<topology_t, size_t> topology_map_t;
 
 using namespace std;
 
@@ -82,6 +86,7 @@ void print_usage(char *pname, FILE *fp)
                       "      median                 - geometric median\n"
                       "      majority-consensus     - majority rule consensus tree with\n"
                       "                               average branch lengths\n"
+                      "      simple-mean            - compute the mean for each topology\n"
                       "\n"
                       "Options:\n"
                       "             -c FLOAT        - remove edges from resulting tree\n"
@@ -146,50 +151,117 @@ list<ntree_t> randomize_ntree_list(const list<ntree_t>& ntree_list)
         return list<ntree_t>(tmp.begin(), tmp.end());
 }
 
+void simple_mean(list<ntree_t>& result, const list<ntree_t>& ntree_list, const topology_t& topology)
+{
+        ntree_t mean;
+        size_t n = 1;
+
+        for (list<ntree_t>::const_iterator it = ntree_list.begin();
+             it != ntree_list.end(); it++) {
+                if (it->topology() == topology) {
+                        if (n == 1) {
+                                mean = *it;
+                        }
+                        else {
+                                mean.scale(n-1);
+                                mean = geodesic_t(mean, *it)(0.5);
+                                mean.scale(2.0/(double)n);
+                        }
+                        n++;
+                }
+        }
+        result.push_back(mean);
+}
+
+struct topology_counts_t {
+        topology_counts_t(const topology_t& topology, const size_t n)
+                : topology(topology), n(n) { }
+        topology_t topology;
+        size_t n;
+};
+struct by_counts {
+        bool operator()(const topology_counts_t& a, const topology_counts_t& b) { 
+                return a.n > b.n;
+        }
+};
+
+void simple_mean(list<ntree_t>& result, const list<ntree_t>& ntree_list)
+{
+        topology_map_t map;
+        vector<topology_counts_t> counts;
+
+        // construct a set of topologies
+        for (list<ntree_t>::const_iterator it = ntree_list.begin();
+             it != ntree_list.end(); it++) {
+                map[it->topology()]++;
+        }
+        for (topology_map_t::const_iterator it = map.begin();
+             it != map.end(); it++) {
+                counts.push_back(topology_counts_t(it->first, it->second));
+        }
+        sort(counts.begin(), counts.end(), by_counts());
+        // for each topology compute the mean
+        for (size_t i = 0; i < counts.size(); i++) {
+                simple_mean(result, ntree_list, counts[i].topology);
+        }
+}
+
 void mean(const string& command)
 {
         /* init random number generator */
         init();
 
-        ntree_t result;
+        list<ntree_t> result_list;
         /* phylogenetic tree */
         list<ntree_t> ntree_list = randomize_ntree_list(parse_tree_file());
         /* return if there is no tree in the list */
         if (ntree_list.size() == 0) return;
 
         if (command == "mean") {
-                result = options.random ?
+                result_list.push_back(
+                        options.random ?
                         mean_tree_rand(ntree_list, options.iterations, default_lambda_t(), options.verbose) :
-                        mean_tree_cyc (ntree_list, options.iterations, default_lambda_t(), options.verbose);
+                        mean_tree_cyc (ntree_list, options.iterations, default_lambda_t(), options.verbose));
         }
         else if (command == "median") {
-                result = options.random ?
+                result_list.push_back(
+                        options.random ?
                         median_tree_rand(ntree_list, options.iterations, default_lambda_t(), options.verbose) :
-                        median_tree_cyc (ntree_list, options.iterations, default_lambda_t(), options.verbose);
+                        median_tree_cyc (ntree_list, options.iterations, default_lambda_t(), options.verbose));
         }
         else if (command == "majority-consensus") {
-                result = majority_consensus(ntree_list, options.verbose);
+                result_list.push_back(
+                        majority_consensus(ntree_list, options.verbose));
+        }
+        else if (command == "simple-mean") {
+                simple_mean(result_list, ntree_list);
         }
         else {
                 wrong_usage("Unknown command.");
         }
         /* remove edges that are too short */
-        for (nedge_set_t::iterator it = result.nedge_set().begin();
-             it != result.nedge_set().end(); it++) {
-                if (it->d() < options.cut) {
-                        it = result.nedge_set().erase(it);
+        for (list<ntree_t>::iterator it = result_list.begin(); it != result_list.end(); it++) {
+                for (nedge_set_t::iterator is = it->nedge_set().begin();
+                     is != it->nedge_set().end(); is++) {
+                        if (is->d() < options.cut) {
+                                is = it->nedge_set().erase(is);
+                        }
                 }
         }
         /* print resulting tree */
-        pt_root_t* tmp = result.export_tree();
-        cerr << result << endl;
-        cout << newick_format(tmp) << endl;
-        tmp->destroy();
+        for (list<ntree_t>::iterator it = result_list.begin(); it != result_list.end(); it++) {
+                pt_root_t* tmp = it->export_tree();
+                if (options.verbose) {
+                        cerr << *it << endl;
+                }
+                cout << newick_format(tmp) << endl;
+                tmp->destroy();
+        }
 
         /* Frechet variance */
         if (command == "mean" && options.variance) {
                 cerr << "Frechet variance: "
-                     << frechet_variance(ntree_list, result)
+                     << frechet_variance(ntree_list, result_list.front())
                      << endl;
         }
 
