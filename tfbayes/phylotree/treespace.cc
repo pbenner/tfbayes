@@ -145,7 +145,10 @@ size_t hash_value(const topology_t& topology)
 
         for (topology_t::const_iterator it = topology.begin();
              it != topology.end(); it++) {
-                boost::hash_combine(seed, hash_value(**it));
+                // do not use hash combine here, since it depends on
+                // the ordering!
+                //boost::hash_combine(seed, hash_value(**it));
+                seed += hash_value(**it);
         }
         return seed;
 }
@@ -1568,6 +1571,15 @@ operator<< (ostream& o, const nedge_set_t& nedge_set)
 {
         for (nedge_set_t::const_iterator it = nedge_set.begin(); it != nedge_set.end(); it++) {
                 o << *it << endl;
+        }
+
+        return o;
+}
+
+ostream& operator<< (ostream& o, const topology_t& topology)
+{
+        for (topology_t::const_iterator it = topology.begin(); it != topology.end(); it++) {
+                o << **it << endl;
         }
 
         return o;

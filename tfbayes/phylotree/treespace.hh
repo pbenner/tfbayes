@@ -480,6 +480,7 @@ std::ostream& operator<< (std::ostream& o, const ntree_t& ntree);
 std::ostream& operator<< (std::ostream& o, const nedge_t& nedge);
 std::ostream& operator<< (std::ostream& o, const common_nedge_t& common_nedge);
 std::ostream& operator<< (std::ostream& o, const nedge_set_t& nedge_set);
+std::ostream& operator<< (std::ostream& o, const topology_t& topology);
 std::ostream& operator<< (std::ostream& o, const npath_t& npath);
 std::ostream& operator<< (std::ostream& o, const std::list<npath_t>& npath_list);
 
