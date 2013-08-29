@@ -19,12 +19,7 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <stdlib.h>
-#include <string.h>
-
 #include <tfbayes/uipac/code.hh>
-
-using namespace std;
 
 bool is_nucleotide(const char S) {
         if (S == 'A' || S == 'C' || S == 'G' || S == 'T' ||
