@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 #include <ostream>
+#include <map>
 
 #include <boost/format.hpp>
 #include <boost/unordered_map.hpp>
