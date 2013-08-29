@@ -46,7 +46,7 @@ void sample(
         const size_t cluster = _pi->size;
 
         data_gaussian_t* _data    = new data_gaussian_t(cluster, (size_t)samples, Sigma, _pi->vec);
-        DPM_Gaussian* _gdpm       = new DPM_Gaussian(alpha, Sigma, Sigma_0, mu_0, *_data);
+        dpm_gaussian_t*  _gdpm    = new dpm_gaussian_t(alpha, Sigma, Sigma_0, mu_0, *_data);
         gibbs_sampler_t* _sampler = new gibbs_sampler_t(*_gdpm, *_gdpm, *_data);
 
         gsl_matrix_free(Sigma);

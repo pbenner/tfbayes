@@ -31,7 +31,7 @@
 
 using namespace std;
 
-DPM_Gaussian::DPM_Gaussian(
+dpm_gaussian_t::dpm_gaussian_t(
         double alpha,
         gsl_matrix* Sigma,
         gsl_matrix* Sigma_0,
@@ -51,40 +51,40 @@ DPM_Gaussian::DPM_Gaussian(
         }
 }
 
-DPM_Gaussian::~DPM_Gaussian() {
+dpm_gaussian_t::~dpm_gaussian_t() {
 }
 
-DPM_Gaussian*
-DPM_Gaussian::clone() const {
-        return new DPM_Gaussian(*this);
+dpm_gaussian_t*
+dpm_gaussian_t::clone() const {
+        return new dpm_gaussian_t(*this);
 }
 
 bool
-DPM_Gaussian::valid_for_sampling(const index_i& index) const
+dpm_gaussian_t::valid_for_sampling(const index_i& index) const
 {
         return true;
 }
 
 void
-DPM_Gaussian::add(const index_i& index, cluster_tag_t cluster_tag)
+dpm_gaussian_t::add(const index_i& index, cluster_tag_t cluster_tag)
 {
         gibbs_state_t::operator[](cluster_tag).add_observations(range_t(index,1));
 }
 
 void
-DPM_Gaussian::remove(const index_i& index, cluster_tag_t cluster_tag)
+dpm_gaussian_t::remove(const index_i& index, cluster_tag_t cluster_tag)
 {
         gibbs_state_t::operator[](cluster_tag).remove_observations(range_t(index,1));
 }
 
 size_t
-DPM_Gaussian::mixture_components() const
+dpm_gaussian_t::mixture_components() const
 {
         return gibbs_state_t::size();
 }
 
 void
-DPM_Gaussian::mixture_weights(const index_i& index, double log_weights[], cluster_tag_t cluster_tags[])
+dpm_gaussian_t::mixture_weights(const index_i& index, double log_weights[], cluster_tag_t cluster_tags[])
 {
         size_t components = mixture_components();
         double sum        = -HUGE_VAL;
@@ -109,7 +109,7 @@ DPM_Gaussian::mixture_weights(const index_i& index, double log_weights[], cluste
 }
 
 gsl_matrix*
-DPM_Gaussian::means() const {
+dpm_gaussian_t::means() const {
         if (mixture_components() == 0) {
                 return NULL;
         }
@@ -130,7 +130,7 @@ DPM_Gaussian::means() const {
 }
 
 double
-DPM_Gaussian::likelihood() const {
+dpm_gaussian_t::likelihood() const {
         double result = 0;
 
         for (mixture_state_t::const_iterator it = gibbs_state_t::begin();
@@ -142,33 +142,33 @@ DPM_Gaussian::likelihood() const {
 }
 
 double
-DPM_Gaussian::posterior() const {
+dpm_gaussian_t::posterior() const {
         return 0;
 }
 
 void
-DPM_Gaussian::update_samples(size_t sampling_steps) {
+dpm_gaussian_t::update_samples(size_t sampling_steps) {
 }
 
 samples_t&
-DPM_Gaussian::samples() {
+dpm_gaussian_t::samples() {
         return _samples;
 }
 
 const mixture_state_t&
-DPM_Gaussian::state() const {
+dpm_gaussian_t::state() const {
         return *this;
 }
 
 mixture_state_t&
-DPM_Gaussian::state() {
+dpm_gaussian_t::state() {
         return *this;
 }
 
 // misc methods
 ////////////////////////////////////////////////////////////////////////////////
 
-ostream& operator<< (ostream& o, const DPM_Gaussian& dpm)
+ostream& operator<< (ostream& o, const dpm_gaussian_t& dpm)
 {
         return o;
 }

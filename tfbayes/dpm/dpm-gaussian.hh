@@ -29,20 +29,20 @@
 #include <tfbayes/dpm/mixture-model.hh>
 #include <tfbayes/dpm/state.hh>
 
-class DPM_Gaussian : public mixture_model_t, public gibbs_state_t {
+class dpm_gaussian_t : public mixture_model_t, public gibbs_state_t {
 public:
-         DPM_Gaussian(double alpha,
+         dpm_gaussian_t(double alpha,
                       gsl_matrix* _Sigma,
                       gsl_matrix* _Sigma_0,
                       gsl_vector* _mu_0,
                       const data_gaussian_t& data);
-        ~DPM_Gaussian();
+        ~dpm_gaussian_t();
 
-        DPM_Gaussian* clone() const;
+        dpm_gaussian_t* clone() const;
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-        friend std::ostream& operator<<(std::ostream& o, const DPM_Gaussian& dpm);
+        friend std::ostream& operator<<(std::ostream& o, const dpm_gaussian_t& dpm);
 
         // methods
         ////////////////////////////////////////////////////////////////////////
