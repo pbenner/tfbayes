@@ -23,6 +23,7 @@
 
 using namespace std;
 
+static
 ostream& operator<< (ostream& o, const vector<vector<double> >& m)
 {
         for (size_t i = 0; i < m.size(); i++) {
@@ -35,6 +36,7 @@ ostream& operator<< (ostream& o, const vector<vector<double> >& m)
         return o;
 }
 
+static
 ostream& operator<< (ostream& o, const vector<vector<size_t> >& m)
 {
         for (size_t i = 0; i < m.size(); i++) {
@@ -47,6 +49,7 @@ ostream& operator<< (ostream& o, const vector<vector<size_t> >& m)
         return o;
 }
 
+static
 ostream& operator<< (ostream& o, const dpm_partition_t& partition)
 {
         for (dpm_partition_t::const_iterator it = partition.begin();
@@ -69,6 +72,7 @@ ostream& operator<< (ostream& o, const dpm_partition_t& partition)
         return o;
 }
 
+static
 ostream& operator<< (ostream& o, const pair<dpm_graph_t,double>& tmp)
 {
         const dpm_graph_t graph(tmp.first);
