@@ -34,6 +34,7 @@ class OPTIONS(Structure):
                  ("lambda_",             c_double),
                  ("initial_temperature", c_double),
                  ("construct_graph",     c_bool),
+                 ("median_partition",    c_bool),
                  ("process_prior",       c_char_p),
                  ("background_model",    c_char_p),
                  ("background_alpha",    POINTER(MATRIX)),
@@ -128,6 +129,7 @@ def dpm_init(options, phylogenetic_input, alignment_input, partition=None):
      c_options.contents.lambda_             = options['lambda']
      c_options.contents.initial_temperature = options['initial_temperature']
      c_options.contents.construct_graph     = options['construct_graph']
+     c_options.contents.median_partition    = options['median_partition']
      c_options.contents.process_prior       = options['process_prior']
      c_options.contents.background_model    = options['background_model']
      c_options.contents.background_context  = options['background_context']

@@ -23,6 +23,66 @@
 
 using namespace std;
 
+ostream& operator<< (ostream& o, const vector<vector<double> >& m)
+{
+        for (size_t i = 0; i < m.size(); i++) {
+                o << "\t";
+                for (size_t j = 0; j < m[i].size(); j++) {
+                        o << m[i][j] << " ";
+                }
+                o << endl;
+        }
+        return o;
+}
+
+ostream& operator<< (ostream& o, const vector<vector<size_t> >& m)
+{
+        for (size_t i = 0; i < m.size(); i++) {
+                o << "\t";
+                for (size_t j = 0; j < m[i].size(); j++) {
+                        o << m[i][j] << " ";
+                }
+                o << endl;
+        }
+        return o;
+}
+
+ostream& operator<< (ostream& o, const dpm_partition_t& partition)
+{
+        for (dpm_partition_t::const_iterator it = partition.begin();
+             it != partition.end(); it++) {
+                if (it != partition.begin()) {
+                        o << ", ";
+                }
+                o << it->dpm_subset_tag() << ":{";
+
+                for (dpm_subset_t::const_iterator is = it->begin(); is != it->end(); is++)
+                {
+                        if (is != it->begin()) {
+                                o << ", ";
+                        }
+
+                        o << *static_cast<const seq_index_t*>(*is);
+                }
+                o << "}";
+        }
+        return o;
+}
+
+ostream& operator<< (ostream& o, const pair<dpm_graph_t,double>& tmp)
+{
+        const dpm_graph_t graph(tmp.first);
+        const double sampling_steps = tmp.second;
+
+        for (dpm_graph_t::const_iterator it = graph.begin();
+             it != graph.end(); it++) {
+                o << *static_cast<const seq_index_t*>(&(*it).first.index1) << "-"
+                  << *static_cast<const seq_index_t*>(&(*it).first.index2) << "="
+                  << static_cast<double>((*it).second)/sampling_steps << " ";
+        }
+        return o;
+}
+
 void dpm_tfbs_save_result(ostream& file, dpm_tfbs_pmcmc_t& sampler)
 {
         const samples_t& samples          = sampler.samples();
@@ -32,63 +92,21 @@ void dpm_tfbs_save_result(ostream& file, dpm_tfbs_pmcmc_t& sampler)
         file.setf(ios::showpoint);
 
         file << "[Result]" << endl;
-        file << "components =" << endl;
-        for (size_t i = 0; i < history.components.size(); i++) {
-                file << "\t";
-                for (size_t j = 0; j < history.components[i].size(); j++) {
-                        file << history.components[i][j] << " ";
-                }
-                file << endl;
-        }
-        file << "switches =" << endl;
-        for (size_t i = 0; i < history.switches.size(); i++) {
-                file << "\t";
-                for (size_t j = 0; j < history.switches[i].size(); j++) {
-                        file << history.switches[i][j] << " ";
-                }
-                file << endl;
-        }
-        file << "likelihood =" << endl;
-        for (size_t i = 0; i < history.likelihood.size(); i++) {
-                file << "\t";
-                for (size_t j = 0; j < history.likelihood[i].size(); j++) {
-                        file << history.likelihood[i][j] << " ";
-                }
-                file << endl;
-        }
-        file << "posterior =" << endl;
-        for (size_t i = 0; i < history.posterior.size(); i++) {
-                file << "\t";
-                for (size_t j = 0; j < history.posterior[i].size(); j++) {
-                        file << history.posterior[i][j] << " ";
-                }
-                file << endl;
-        }
-        file << "graph = ";
-        for (dpm_graph_t::const_iterator it = samples.graph.begin();
-             it != samples.graph.end(); it++) {
-                file << *static_cast<const seq_index_t*>(&(*it).first.index1) << "-"
-                     << *static_cast<const seq_index_t*>(&(*it).first.index2) << "="
-                     << static_cast<double>((*it).second)/sampling_steps << " ";
-        }
-        file << endl;
-        file << "map_partition = ";
-        for (dpm_partition_t::const_iterator it = samples.map_partition.begin();
-             it != samples.map_partition.end(); it++) {
-                if (it != samples.map_partition.begin()) {
-                        file << ", ";
-                }
-                file << it->dpm_subset_tag() << ":{";
-
-                for (dpm_subset_t::const_iterator is = it->begin(); is != it->end(); is++)
-                {
-                        if (is != it->begin()) {
-                                file << ", ";
-                        }
-
-                        file << *static_cast<const seq_index_t*>(*is);
-                }
-                file << "}";
-        }
-        file << endl;
+        file << "components =" << endl
+             << history.components;
+        file << "switches =" << endl
+             << history.switches;
+        file << "likelihood =" << endl
+             << history.likelihood;
+        file << "posterior =" << endl
+             << history.posterior;
+        file << "graph = "
+             << pair<dpm_graph_t,double>(samples.graph, sampling_steps)
+             << endl;
+        file << "map_partition = "
+             << samples.map_partition
+             << endl;
+        file << "median_partition = "
+             << samples.median_partition
+             << endl;
 }

@@ -46,6 +46,7 @@ typedef struct {
         double lambda;
         double initial_temperature;
         bool construct_graph;
+        bool median_partition;
         const char* process_prior;
         const char* background_model;
         matrix_t* background_alpha;
@@ -71,13 +72,14 @@ operator<<(std::ostream& o, const options_t& options) {
           << "-> alpha               = " << options.alpha               << endl
           << "-> discount            = " << options.discount            << endl
           << "-> lambda              = " << options.lambda              << endl
-          << "-> initial_temperature = " << options.initial_temperature << endl
+          << "-> initial temperature = " << options.initial_temperature << endl
           << "-> tfbs_length         = " << options.tfbs_length         << endl
           << "-> process prior       = " << options.process_prior       << endl
           << "-> background model    = " << options.background_model    << endl
-          << "-> background_context  = " << options.background_context  << endl
-          << "-> background_weights  = " << options.background_weights  << endl
-          << "-> construct_graph     = " << options.construct_graph     << endl
+          << "-> background context  = " << options.background_context  << endl
+          << "-> background weights  = " << options.background_weights  << endl
+          << "-> construct graph     = " << options.construct_graph     << endl
+          << "-> median partition    = " << options.median_partition     << endl
           << "-> population_size     = " << options.population_size     << endl
           << "-> socket_file         = " << options.socket_file         << endl;
         return o;
@@ -133,6 +135,7 @@ void _dpm_tfbs_init(const char* phylogenetic_input, const char* alignment_input)
         tfbs_options.lambda              = _options.lambda;
         tfbs_options.initial_temperature = _options.initial_temperature;
         tfbs_options.construct_graph     = _options.construct_graph;
+        tfbs_options.median_partition    = _options.median_partition;
         tfbs_options.tfbs_length         = _options.tfbs_length;
         tfbs_options.process_prior       = _options.process_prior;
         tfbs_options.background_model    = _options.background_model;

@@ -65,6 +65,10 @@ typedef struct {
         // sampling
         dpm_partition_t map_partition;
         double          map_value;
+        // median partition computed from samples
+        dpm_partition_t median_partition;
+        // partition samples
+        std::vector<dpm_partition_t> partitions;
 } samples_t;
 
 #endif /* DATATYPES_HH */

@@ -382,6 +382,12 @@ dpm_tfbs_t::update_map()
 }
 
 void
+dpm_tfbs_t::record_partition()
+{
+        _samples.partitions.push_back(_state.dpm_partition());
+}
+
+void
 dpm_tfbs_t::update_samples(size_t sampling_steps)
 {
         // record for every position the average number of times it
@@ -412,6 +418,8 @@ dpm_tfbs_t::update_samples(size_t sampling_steps)
         }
         // update map partition and value
         update_map();
+        // record current partition
+        record_partition();
 }
 
 samples_t&

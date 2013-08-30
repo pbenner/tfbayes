@@ -63,6 +63,7 @@ public:
         void   update_map();
         void   update_graph(sequence_data_t<short> tfbs_start_positions);
         void   update_samples(size_t sampling_steps);
+        void   record_partition();
         double likelihood() const;
         double posterior() const;
         bool   valid_for_sampling(const index_i& index) const;
