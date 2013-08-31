@@ -54,10 +54,10 @@ protected:
         sampling_history_t* _sampling_history;
         samples_t* _samples;
 
-        // private methods
+        // protected methods
         ////////////////////////////////////////////////////////////////////////
-        void update_samples();
-        void update_sampling_history();
+        virtual void update_samples();
+        virtual void update_sampling_history();
 };
 
 #endif /* PMCMC_HH */

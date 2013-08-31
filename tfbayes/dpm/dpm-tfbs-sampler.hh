@@ -94,7 +94,7 @@ public:
 
         void optimize();
 
-private:
+protected:
         void _start_server();
         void _stop_server();
 
@@ -105,6 +105,8 @@ private:
 
         std::vector<save_queue_t<command_t*>* > _command_queue;
         save_queue_t<std::string> _output_queue;
+
+        void update_samples();
 };
 
 #endif /* DPM_TFBS_SAMPLER_HH */

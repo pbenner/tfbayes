@@ -443,3 +443,11 @@ dpm_tfbs_pmcmc_t::_stop_server() {
                 remove(_socket_file.c_str());
         }
 }
+
+void
+dpm_tfbs_pmcmc_t::update_samples()
+{
+        population_mcmc_t::update_samples();
+
+        cerr << "Computing median partition..." << endl;
+}
