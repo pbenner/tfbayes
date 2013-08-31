@@ -119,6 +119,12 @@ population_mcmc_t::update_samples()
                         _samples->map_partition = _population[i]->samples().map_partition;
                 }
         }
+        // copy partitions
+        for (size_t i = 0; i < _population[0]->samples().partitions.size(); i++) {
+                for (size_t j = 0; j < _size; j++) {
+                        _samples->partitions.push_back(_population[j]->samples().partitions[i]);
+                }
+        }
 }
 
 typedef struct {
