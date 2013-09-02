@@ -1416,6 +1416,29 @@ median_tree_rand(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lamb
         return median_tree_rand(ntree_list, weights, n, lambda, verbose);
 }
 
+ntree_t
+mean_same_topology(const std::list<ntree_t>& ntree_list,
+                   bool verbose)
+{
+        size_t n = ntree_list.size();
+        // check that the list is not empty
+        assert(n > 0);
+        // initialize iterator and first mean
+        list<ntree_t>::const_iterator it = ntree_list.begin();
+        ntree_t mean(*it); it++;
+
+        for (size_t i = 2; it != ntree_list.end(); it++, i++) {
+                if (verbose && i % 100 == 0) {
+                        cerr << progress_t(i/(double)n);
+                }
+                mean.scale(i-1);
+                mean = geodesic_t(mean, *it)(0.5);
+                mean.scale(2.0/(double)i);
+        }
+
+        return mean;
+}
+
 // consensus trees
 ////////////////////////////////////////////////////////////////////////////////
 

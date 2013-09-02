@@ -466,6 +466,9 @@ ntree_t median_tree_rand(const std::list<ntree_t>& ntree_list, const std::vector
                          size_t n = 100, const lambda_t& lambda = default_lambda_t(),
                          bool verbose = false);
 
+ntree_t mean_same_topology(const std::list<ntree_t>& ntree_list,
+                           bool verbose = false);
+
 // consensus trees
 ////////////////////////////////////////////////////////////////////////////////
 

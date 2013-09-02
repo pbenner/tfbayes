@@ -30,13 +30,14 @@
 #include <tfbayes/phylotree/phylotree-parser.hh>
 #include <tfbayes/phylotree/treespace.hh>
 #include <tfbayes/exception/exception.h>
+#include <tfbayes/utility/progress.hh>
 
 #include <boost/unordered/unordered_map.hpp>
 
 #define alphabet_size 5
 typedef float code_t;
 
-typedef boost::unordered_map<topology_t, size_t> topology_map_t;
+typedef boost::unordered_map<topology_t, std::list<ntree_t> > topology_map_t;
 
 using namespace std;
 
@@ -151,28 +152,6 @@ list<ntree_t> randomize_ntree_list(const list<ntree_t>& ntree_list)
         return list<ntree_t>(tmp.begin(), tmp.end());
 }
 
-void simple_mean(list<ntree_t>& result, const list<ntree_t>& ntree_list, const topology_t& topology)
-{
-        ntree_t mean;
-        size_t n = 1;
-
-        for (list<ntree_t>::const_iterator it = ntree_list.begin();
-             it != ntree_list.end(); it++) {
-                if (it->topology() == topology) {
-                        if (n == 1) {
-                                mean = *it;
-                        }
-                        else {
-                                mean.scale(n-1);
-                                mean = geodesic_t(mean, *it)(0.5);
-                                mean.scale(2.0/(double)n);
-                        }
-                        n++;
-                }
-        }
-        result.push_back(mean);
-}
-
 struct topology_counts_t {
         topology_counts_t(const topology_t& topology, const size_t n)
                 : topology(topology), n(n) { }
@@ -193,16 +172,19 @@ void simple_mean(list<ntree_t>& result, const list<ntree_t>& ntree_list)
         // construct a set of topologies
         for (list<ntree_t>::const_iterator it = ntree_list.begin();
              it != ntree_list.end(); it++) {
-                map[it->topology()]++;
+                map[it->topology()].push_back(*it);
         }
         for (topology_map_t::const_iterator it = map.begin();
              it != map.end(); it++) {
-                counts.push_back(topology_counts_t(it->first, it->second));
+                counts.push_back(topology_counts_t(it->first, it->second.size()));
         }
         sort(counts.begin(), counts.end(), by_counts());
         // for each topology compute the mean
         for (size_t i = 0; i < counts.size(); i++) {
-                simple_mean(result, ntree_list, counts[i].topology);
+                if (options.verbose) {
+                        cerr << progress_t(i/(double)counts.size());
+                }
+                result.push_back(mean_same_topology(map[counts[i].topology]));
         }
 }
 
