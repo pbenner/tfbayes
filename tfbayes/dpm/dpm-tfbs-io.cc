@@ -20,6 +20,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <tfbayes/dpm/dpm-tfbs-io.hh>
+#include <tfbayes/dpm/dpm-tfbs-median.hh>
 
 using namespace std;
 
@@ -111,6 +112,7 @@ void dpm_tfbs_save_result(ostream& file, dpm_tfbs_pmcmc_t& sampler)
              << samples.map_partition
              << endl;
         file << "median_partition = "
-             << samples.median_partition
+             << dpm_tfbs_median(samples.partitions, sampler.data().sizes(),
+                                sampler.options().tfbs_length)
              << endl;
 }

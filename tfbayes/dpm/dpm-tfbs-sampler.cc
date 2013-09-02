@@ -383,6 +383,7 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
         const alignment_set_t<short>& alignment_set,
         size_t n)
         : population_mcmc_t(n),
+          _options(&options),
           _data(phylogenetic_data, options.tfbs_length),
           _gdpm(n, NULL),
           _socket_file(options.socket_file),
@@ -416,6 +417,21 @@ dpm_tfbs_pmcmc_t::~dpm_tfbs_pmcmc_t() {
         _stop_server();
 }
 
+const tfbs_options_t&
+dpm_tfbs_pmcmc_t::options() const {
+        return *_options;
+}
+
+const data_tfbs_t&
+dpm_tfbs_pmcmc_t::data() const {
+        return _data;
+}
+
+const std::vector<dpm_tfbs_t*>&
+dpm_tfbs_pmcmc_t::gdpm() const {
+        return _gdpm;
+}
+
 void
 dpm_tfbs_pmcmc_t::optimize() {
         for (size_t i = 0; i < _size; i++) {
@@ -442,12 +458,4 @@ dpm_tfbs_pmcmc_t::_stop_server() {
                 delete(_server);
                 remove(_socket_file.c_str());
         }
-}
-
-void
-dpm_tfbs_pmcmc_t::update_samples()
-{
-        population_mcmc_t::update_samples();
-
-        cerr << "Computing median partition..." << endl;
 }

@@ -166,7 +166,7 @@ void _dpm_tfbs_save(const char* filename)
 }
 
 unsigned int _dpm_tfbs_num_clusters() {
-        return _sampler->_gdpm[0]->state().size();
+        return _sampler->gdpm()[0]->state().size();
 }
 
 matrix_t* _dpm_tfbs_get_posterior() {
@@ -201,13 +201,13 @@ matrix_t* _dpm_tfbs_get_posterior() {
 
 matrix_t* _dpm_tfbs_cluster_assignments() {
         matrix_t* result;
-        size_t n = _sampler->_data.size();
+        size_t n = _sampler->data().size();
         size_t m = 0;
 
         // compute maximum length
         for (size_t i = 0; i < n; i++) {
-                if (m < _sampler->_data.size(i)) {
-                        m = _sampler->_data.size(i);
+                if (m < _sampler->data().size(i)) {
+                        m = _sampler->data().size(i);
                 }
         }
 
@@ -220,10 +220,10 @@ matrix_t* _dpm_tfbs_cluster_assignments() {
                 }
         }
         // copy samples
-        for (data_tfbs_t::const_iterator it = _sampler->_data.begin();
-             it != _sampler->_data.end(); it++) {
+        for (data_tfbs_t::const_iterator it = _sampler->data().begin();
+             it != _sampler->data().end(); it++) {
                 const index_i& index = **it;
-                result->mat[index[0]][index[1]] = _sampler->_gdpm[0]->state()[index];
+                result->mat[index[0]][index[1]] = _sampler->gdpm()[0]->state()[index];
         }
         return result;
 }
@@ -253,7 +253,7 @@ vector_t* _dpm_tfbs_hist_switches() {
 }
 
 void _dpm_tfbs_print() {
-        cout << _sampler->_gdpm[0] << endl;
+        cout << _sampler->gdpm()[0] << endl;
 }
 
 void _dpm_tfbs_sample(unsigned int n, unsigned int burnin) {

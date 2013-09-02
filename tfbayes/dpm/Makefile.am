@@ -56,6 +56,8 @@ libtfbayes_dpm_la_SOURCES =		\
 	dpm-tfbs-interface.cc		\
 	dpm-tfbs-io.cc			\
 	dpm-tfbs-io.hh			\
+	dpm-tfbs-median.cc              \
+	dpm-tfbs-median.hh              \
 	dpm-tfbs-repl.cc		\
 	dpm-tfbs-repl.hh		\
 	dpm-tfbs-options.hh		\

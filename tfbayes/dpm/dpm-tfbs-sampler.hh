@@ -89,14 +89,20 @@ public:
                 size_t n);
         virtual ~dpm_tfbs_pmcmc_t();
 
-        data_tfbs_t _data;
-        std::vector<dpm_tfbs_t*> _gdpm;
+        const tfbs_options_t& options() const;
+        const data_tfbs_t& data() const;
+        const std::vector<dpm_tfbs_t*>& gdpm() const;
 
         void optimize();
 
 protected:
         void _start_server();
         void _stop_server();
+
+        const tfbs_options_t* _options;
+
+        data_tfbs_t _data;
+        std::vector<dpm_tfbs_t*> _gdpm;
 
         std::string _socket_file;
         boost::asio::io_service _ios;
@@ -105,8 +111,6 @@ protected:
 
         std::vector<save_queue_t<command_t*>* > _command_queue;
         save_queue_t<std::string> _output_queue;
-
-        void update_samples();
 };
 
 #endif /* DPM_TFBS_SAMPLER_HH */
