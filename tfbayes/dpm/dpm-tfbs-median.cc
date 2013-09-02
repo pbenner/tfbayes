@@ -38,12 +38,25 @@ init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data
         }
 }
 
+static size_t
+distance(const dpm_partition_t& pi_a, const dpm_partition_t& pi_b,
+         const vector<size_t>& sizes, size_t tfbs_length)
+{
+        size_t d = 0;
+
+        sequence_data_t<cluster_tag_t> a(sizes, -1);
+        sequence_data_t<cluster_tag_t> b(sizes, -1);
+
+        init_data(pi_a, a, tfbs_length);
+        init_data(pi_b, b, tfbs_length);
+
+}
+
 dpm_partition_t
 dpm_tfbs_median(const vector<dpm_partition_t>& partitions,
                 const vector<size_t>& sizes, size_t tfbs_length)
 {
 
-        sequence_data_t<cluster_tag_t>(sizes, -1);
 
         return dpm_partition_t();
 }
