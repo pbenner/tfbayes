@@ -15,7 +15,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <list>
+#include <set>
 
 #include <tfbayes/dpm/dpm-tfbs-median.hh>
 #include <tfbayes/dpm/data.hh>
@@ -42,25 +42,21 @@ init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data
 }
 
 static size_t
-distance(const list<seq_index_t>& indices,
+distance(const set<seq_index_t>& indices,
          const sequence_data_t<cluster_tag_t>& a,
-         const sequence_data_t<cluster_tag_t>& b,
-         sequence_data_t<short>& checked)
+         const sequence_data_t<cluster_tag_t>& b)
 {
         size_t d = 0;
 
-        for (list<seq_index_t>::const_iterator it = indices.begin();
+        for (set<seq_index_t>::const_iterator it = indices.begin();
              it != indices.end(); it++) {
-                // make sure we don't count positions twice
-                if (checked[*it]) continue;
-                for (list<seq_index_t>::const_iterator is = indices.begin();
+                for (set<seq_index_t>::const_iterator is = it;
                      is != indices.end(); is++) {
                         if ((a[*it] == a[*is] && b[*it] != b[*is]) ||
                             (a[*it] != a[*is] && b[*it] == b[*is])) {
                                 d += 1;
                         }
                 }
-                checked[*it] = true;
         }
         return d;
 }
@@ -69,11 +65,9 @@ static size_t
 distance(const dpm_partition_t& pi_a, const dpm_partition_t& pi_b,
          const vector<size_t>& sizes, size_t tfbs_length)
 {
-        size_t d = 0;
-
+        set<seq_index_t> indices;
         sequence_data_t<cluster_tag_t> a(sizes, 0);
         sequence_data_t<cluster_tag_t> b(sizes, 0);
-        sequence_data_t<short> checked(sizes, false);
 
         init_data(pi_a, a, tfbs_length);
         init_data(pi_b, b, tfbs_length);
@@ -81,30 +75,26 @@ distance(const dpm_partition_t& pi_a, const dpm_partition_t& pi_b,
         // go through subsets of partition a
         for (dpm_partition_t::const_iterator it = pi_a.begin();
              it != pi_a.end(); it++) {
-                list<seq_index_t> indices;
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
                         const seq_index_t& tmp = *static_cast<const seq_index_t*>(*is);
                         for (size_t i = 0; i < tfbs_length; i++) {
-                                indices.push_back(seq_index_t(tmp[0], tmp[1]+i));
+                                indices.insert(seq_index_t(tmp[0], tmp[1]+i));
                         }
                 }
-                d += distance(indices, a, b, checked);
         }
         // go through subsets of partition b
         for (dpm_partition_t::const_iterator it = pi_b.begin();
              it != pi_b.end(); it++) {
-                list<seq_index_t> indices;
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
                         const seq_index_t& tmp = *static_cast<const seq_index_t*>(*is);
                         for (size_t i = 0; i < tfbs_length; i++) {
-                                indices.push_back(seq_index_t(tmp[0], tmp[1]+i));
+                                indices.insert(seq_index_t(tmp[0], tmp[1]+i));
                         }
                 }
-                d += distance(indices, a, b, checked);
         }
-        return d;
+        return distance(indices, a, b);
 }
 
 const dpm_partition_t&
@@ -112,32 +102,36 @@ dpm_tfbs_median(const vector<dpm_partition_t>& partitions,
                 const vector<size_t>& sizes, size_t tfbs_length,
                 bool verbose)
 {
+        // number of partitions
         const size_t n = partitions.size();
+
+        // matrix of distances between every pair of partitions
         vector<vector<size_t> > distances(n, vector<size_t>(n, 0));
+        vector<size_t> sums(n, 0);
 
-        cerr << "number of partitions: " << n << endl;
-        cerr << "tfbs length: " << tfbs_length << endl;
+        // save value and position of minimum distances
+        size_t min = HUGE_VAL, argmin = HUGE_VAL;
 
-        for (size_t i = 0; i < n; i++) {
-                for (size_t j = 0; j < n; j++) {
-                        if (verbose) {
-                                cerr << progress_t((i*n+j+1)/(double)(n*n));
-                        }
-                        if (i == j) continue;
-                        distances[i][j] = distance(partitions[i], partitions[j], sizes, tfbs_length);
-                }
+        if (verbose) {
+                cerr << "Computing median partition: " << endl;
         }
         for (size_t i = 0; i < n; i++) {
                 for (size_t j = i+1; j < n; j++) {
-                        if (distances[i][j] == distances[j][i]) {
-                                cerr << "Symmetric entry: " << distances[i][j] << endl;
+                        if (verbose) {
+                                cerr << progress_t((i*n+j+1)/(double)(n*n));
                         }
-                        else {
-                                cerr << "ENTRY NOT SYMMETRIC!!!!: "
-                                     <<  distances[i][j] << " vs. " << distances[j][i] << endl;
-                        }
+                        distances[i][j] = distance(partitions[i], partitions[j], sizes, tfbs_length);
+                        distances[j][i] = distances[i][j];
                 }
         }
-
-        return partitions[0];
+        for (size_t i = 0; i < n; i++) {
+                for (size_t j = 0; j < n; j++) {
+                        sums[i] += distances[i][j];
+                }
+                if (sums[i] < min) {
+                        min = sums[i];
+                        argmin = i;
+                }
+        }
+        return partitions[argmin];
 }

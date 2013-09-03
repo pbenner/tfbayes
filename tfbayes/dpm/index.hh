@@ -40,6 +40,7 @@ public:
         virtual bool operator==(const index_i& index) const = 0;
         virtual index_i& operator=(const index_i& index) = 0;
         virtual void operator++(int i) = 0;
+        virtual bool operator<(const index_i& index) const = 0;
         virtual size_t hash() const = 0;
 };
 
@@ -71,6 +72,9 @@ public:
         }
         virtual __inline__ void operator++(int i) {
                 _x0++;
+        }
+        virtual __inline__ bool operator<(const index_i& index) const {
+                return _x0 < index[0];
         }
         virtual size_t hash() const {
                 boost::hash<size_t> hasher;
@@ -115,6 +119,9 @@ public:
         }
         virtual __inline__ void operator++(int i) {
                 _x[1]++;
+        }
+        virtual __inline__ bool operator<(const index_i& seq_index) const {
+                return _x[0] < seq_index[0] || (_x[0] == seq_index[0] && _x[1] < seq_index[1]);
         }
         virtual size_t hash() const {
                 size_t seed = 0; 
