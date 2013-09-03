@@ -113,6 +113,7 @@ void dpm_tfbs_save_result(ostream& file, dpm_tfbs_pmcmc_t& sampler)
              << endl;
         file << "median_partition = "
              << dpm_tfbs_median(samples.partitions, sampler.data().sizes(),
-                                sampler.options().tfbs_length)
+                                sampler.options().tfbs_length,
+                                true)
              << endl;
 }

@@ -383,7 +383,7 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
         const alignment_set_t<short>& alignment_set,
         size_t n)
         : population_mcmc_t(n),
-          _options(&options),
+          _options(new tfbs_options_t(options)),
           _data(phylogenetic_data, options.tfbs_length),
           _gdpm(n, NULL),
           _socket_file(options.socket_file),
@@ -414,6 +414,7 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
 }
 
 dpm_tfbs_pmcmc_t::~dpm_tfbs_pmcmc_t() {
+        delete(_options);
         _stop_server();
 }
 

@@ -19,6 +19,7 @@
 
 #include <tfbayes/dpm/dpm-tfbs-median.hh>
 #include <tfbayes/dpm/data.hh>
+#include <tfbayes/utility/progress.hh>
 
 using namespace std;
 
@@ -41,7 +42,7 @@ init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data
 }
 
 static size_t
-distance(const list<seq_index_t> indices,
+distance(const list<seq_index_t>& indices,
          const sequence_data_t<cluster_tag_t>& a,
          const sequence_data_t<cluster_tag_t>& b,
          sequence_data_t<short>& checked)
@@ -52,7 +53,7 @@ distance(const list<seq_index_t> indices,
              it != indices.end(); it++) {
                 // make sure we don't count positions twice
                 if (checked[*it]) continue;
-                for (list<seq_index_t>::const_iterator is = it;
+                for (list<seq_index_t>::const_iterator is = indices.begin();
                      is != indices.end(); is++) {
                         if ((a[*it] == a[*is] && b[*it] != b[*is]) ||
                             (a[*it] != a[*is] && b[*it] == b[*is])) {
@@ -72,7 +73,7 @@ distance(const dpm_partition_t& pi_a, const dpm_partition_t& pi_b,
 
         sequence_data_t<cluster_tag_t> a(sizes, 0);
         sequence_data_t<cluster_tag_t> b(sizes, 0);
-        sequence_data_t<short> checked(sizes, 0);
+        sequence_data_t<short> checked(sizes, false);
 
         init_data(pi_a, a, tfbs_length);
         init_data(pi_b, b, tfbs_length);
@@ -108,9 +109,35 @@ distance(const dpm_partition_t& pi_a, const dpm_partition_t& pi_b,
 
 const dpm_partition_t&
 dpm_tfbs_median(const vector<dpm_partition_t>& partitions,
-                const vector<size_t>& sizes, size_t tfbs_length)
+                const vector<size_t>& sizes, size_t tfbs_length,
+                bool verbose)
 {
+        const size_t n = partitions.size();
+        vector<vector<size_t> > distances(n, vector<size_t>(n, 0));
 
+        cerr << "number of partitions: " << n << endl;
+        cerr << "tfbs length: " << tfbs_length << endl;
+
+        for (size_t i = 0; i < n; i++) {
+                for (size_t j = 0; j < n; j++) {
+                        if (verbose) {
+                                cerr << progress_t((i*n+j+1)/(double)(n*n));
+                        }
+                        if (i == j) continue;
+                        distances[i][j] = distance(partitions[i], partitions[j], sizes, tfbs_length);
+                }
+        }
+        for (size_t i = 0; i < n; i++) {
+                for (size_t j = i+1; j < n; j++) {
+                        if (distances[i][j] == distances[j][i]) {
+                                cerr << "Symmetric entry: " << distances[i][j] << endl;
+                        }
+                        else {
+                                cerr << "ENTRY NOT SYMMETRIC!!!!: "
+                                     <<  distances[i][j] << " vs. " << distances[j][i] << endl;
+                        }
+                }
+        }
 
         return partitions[0];
 }
