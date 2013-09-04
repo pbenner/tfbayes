@@ -55,6 +55,10 @@ public:
         pt_node_t* clone() const;
         virtual void destroy();
 
+        // convert a normal node to a root (and delete the old node)
+        pt_root_t* convert_to_root(pt_leaf_t* outgroup = NULL,
+                                   // if root is not null then copy ids from this tree
+                                   const pt_root_t* tree = NULL);
         bool leaf() const;
         bool root() const;
 
@@ -111,10 +115,6 @@ public:
                   pt_node_t* right,
                   pt_leaf_t* outgroup = NULL,
                   const std::string name = "",
-                  // if root is not null then copy ids from this tree
-                  const pt_root_t* tree = NULL);
-        // convert a normal node to a root (and delete the old node)
-        pt_root_t(pt_node_t* node, pt_leaf_t* outgroup = NULL,
                   // if root is not null then copy ids from this tree
                   const pt_root_t* tree = NULL);
         pt_root_t(const pt_root_t& root);

@@ -83,6 +83,15 @@ pt_node_t::destroy()
         delete(this);
 }
 
+pt_root_t*
+pt_node_t::convert_to_root(pt_leaf_t* outgroup,
+                           const pt_root_t* tree)
+{
+        pt_root_t* pt_root = new pt_root_t(left, right, outgroup, name, tree);
+        delete(this);
+        return pt_root;
+}
+
 bool
 pt_node_t::leaf() const
 {
@@ -120,7 +129,7 @@ pt_node_t::create_mappings(leaf_map_t& leaf_map, leaves_t& leaves,
         }
         nodes[id] = this;
 
-        left-> create_mappings(leaf_map, leaves, node_map, nodes);
+        left ->create_mappings(leaf_map, leaves, node_map, nodes);
         right->create_mappings(leaf_map, leaves, node_map, nodes);
 }
 
@@ -225,7 +234,7 @@ pt_leaf_t::create_mappings(leaf_map_t& leaf_map, leaves_t& leaves,
                 node_map[name] = this;
         }
         leaves[id] = this;
-        nodes[id] = this;
+        nodes [id] = this;
 }
 
 void
@@ -275,14 +284,6 @@ pt_root_t::pt_root_t(pt_node_t* left,
         leaves = leaves_t(n_leaves, (pt_leaf_t*)NULL);
         nodes  = nodes_t (n_nodes,  (pt_node_t*)NULL);
         create_mappings();
-}
-
-pt_root_t::pt_root_t(pt_node_t* node,
-                     pt_leaf_t* outgroup,
-                     const pt_root_t* tree)
-{
-        new (this) pt_root_t(node->left, node->right, outgroup, node->name, tree);
-        delete(node);
 }
 
 pt_root_t::pt_root_t(const pt_root_t& root)
