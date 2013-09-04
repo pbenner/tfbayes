@@ -17,11 +17,18 @@
 
 #include <set>
 
+#include <boost/unordered/unordered_set.hpp>
+
 #include <tfbayes/dpm/dpm-tfbs-median.hh>
 #include <tfbayes/dpm/data.hh>
 #include <tfbayes/utility/progress.hh>
 
 using namespace std;
+
+size_t hash_value(const seq_index_t& seq_index)
+{
+        return seq_index.hash();
+}
 
 static void
 init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data,
@@ -42,15 +49,15 @@ init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data
 }
 
 static size_t
-distance(const set<seq_index_t>& indices,
+distance(const boost::unordered_set<seq_index_t>& indices,
          const sequence_data_t<cluster_tag_t>& a,
          const sequence_data_t<cluster_tag_t>& b)
 {
         size_t d = 0;
 
-        for (set<seq_index_t>::const_iterator it = indices.begin();
+        for (boost::unordered_set<seq_index_t>::const_iterator it = indices.begin();
              it != indices.end(); it++) {
-                for (set<seq_index_t>::const_iterator is = it;
+                for (boost::unordered_set<seq_index_t>::const_iterator is = it;
                      is != indices.end(); is++) {
                         if ((a[*it] == a[*is] && b[*it] != b[*is]) ||
                             (a[*it] != a[*is] && b[*it] == b[*is])) {
@@ -65,7 +72,7 @@ static size_t
 distance(const dpm_partition_t& pi_a, const dpm_partition_t& pi_b,
          const vector<size_t>& sizes, size_t tfbs_length)
 {
-        set<seq_index_t> indices;
+        boost::unordered_set<seq_index_t> indices;
         sequence_data_t<cluster_tag_t> a(sizes, 0);
         sequence_data_t<cluster_tag_t> b(sizes, 0);
 
@@ -110,15 +117,15 @@ dpm_tfbs_median(const vector<dpm_partition_t>& partitions,
         vector<size_t> sums(n, 0);
 
         // save value and position of minimum distances
-        size_t min = HUGE_VAL, argmin = HUGE_VAL;
+        size_t min = SIZE_MAX, argmin = SIZE_MAX;
 
         if (verbose) {
                 cerr << "Computing median partition: " << endl;
         }
-        for (size_t i = 0; i < n; i++) {
-                for (size_t j = i+1; j < n; j++) {
+        for (size_t i = 0, k = 0; i < n; i++) {
+                for (size_t j = i+1; j < n; j++, k++) {
                         if (verbose) {
-                                cerr << progress_t((i*n+j+1)/(double)(n*n));
+                                cerr << progress_t(2.0*(k+1)/(double)(n*n-n));
                         }
                         distances[i][j] = distance(partitions[i], partitions[j], sizes, tfbs_length);
                         distances[j][i] = distances[i][j];
