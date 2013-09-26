@@ -48,7 +48,6 @@ libtfbayes_dpm_la_SOURCES =		\
 	dpm-gaussian-interface.cc	\
 	dpm-gaussian.cc			\
 	dpm-gaussian.hh			\
-	dpm-graph.hh			\
 	dpm-tfbs.cc			\
 	dpm-tfbs.hh			\
 	dpm-tfbs-command.cc		\

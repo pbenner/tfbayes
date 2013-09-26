@@ -106,11 +106,6 @@ population_mcmc_t::update_samples()
                         _samples->probabilities[i][j] = sum/(double)_size;
                 }
         }
-        // graph updates
-        for (size_t i = 0; i < _size; i++) {
-                _samples->graph.insert(_population[i]->samples().graph);
-                _population[i]->samples().graph.cleanup();
-        }
         // find the map partition
         _samples->map_value = -HUGE_VAL;
         for (size_t i = 0; i < _size; i++) {

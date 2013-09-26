@@ -28,7 +28,6 @@ dist_bin_SCRIPTS = \
 	tfbayes-bed \
 	tfbayes-expectation \
 	tfbayes-cluster \
-	tfbayes-graph \
 	tfbayes-generate \
 	tfbayes-motifformat \
 	tfbayes-fasta-to-maf \

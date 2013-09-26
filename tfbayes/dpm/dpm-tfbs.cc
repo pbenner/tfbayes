@@ -47,8 +47,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
           _lambda_log(log(options.lambda)),
           _lambda_inv_log(log(1-options.lambda)),
           // length of tfbs
-          _tfbs_length(options.tfbs_length),
-          _construct_graph(options.construct_graph)
+          _tfbs_length(options.tfbs_length)
 {
         ////////////////////////////////////////////////////////////////////////////////
         // check that the alignment data matches the phylogenetic data
@@ -183,8 +182,7 @@ dpm_tfbs_t::dpm_tfbs_t(const dpm_tfbs_t& dpm)
           // samples
           _samples(dpm._samples),
           // process prios
-          _process_prior(dpm._process_prior->clone()),
-          _construct_graph(dpm._construct_graph)
+          _process_prior(dpm._process_prior->clone())
 { }
 
 dpm_tfbs_t::~dpm_tfbs_t() {
@@ -351,26 +349,6 @@ dpm_tfbs_t::posterior() const {
 }
 
 void
-dpm_tfbs_t::update_graph(sequence_data_t<short> tfbs_start_positions)
-{
-        // loop through all clusters
-        for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
-                const cluster_t& cluster = **it;
-                if (cluster.cluster_tag() != _state.bg_cluster_tag) {
-                        // loop through cluster elements
-                        for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
-                                cl_iterator iu = is; iu++;
-                                while (iu != cluster.end()) {
-                                        // record edge
-                                        _samples.graph[edge_t(is->index(), iu->index())]++;
-                                        iu++;
-                                }
-                        }
-                }
-        }
-}
-
-void
 dpm_tfbs_t::update_map()
 {
         double posterior_value = posterior();
@@ -407,14 +385,6 @@ dpm_tfbs_t::update_samples(size_t sampling_steps)
                         const double value = ((double)sampling_steps*tmp+1.0)/((double)sampling_steps+1.0);
                         _samples.probabilities[sequence][position] = value;
                 }
-        }
-        // construct a graph of all positions that were
-        // clustered together
-        if (_construct_graph) {
-                if (sampling_steps % 100 == 0) {
-                        _samples.graph.cleanup(1);
-                }
-                update_graph(_state.tfbs_start_positions);
         }
         // update map partition and value
         update_map();

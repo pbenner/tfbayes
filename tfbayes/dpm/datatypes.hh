@@ -54,12 +54,10 @@ typedef struct {
         std::vector<std::vector<size_t> > components;
 } sampling_history_t;
 
-#include <tfbayes/dpm/dpm-graph.hh>
 #include <tfbayes/dpm/dpm-partition.hh>
 
 typedef struct {
         std::vector<std::vector<double> > probabilities;
-        dpm_graph_t graph;
         // maximum posterior sample and value, i.e.
         // the maximal value that was ever reached during
         // sampling

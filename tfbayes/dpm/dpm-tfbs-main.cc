@@ -45,7 +45,6 @@ typedef struct _options_t {
         double alpha;
         double discount;
         double lambda;
-        bool construct_graph;
         const char* process_prior;
         const char* background_model;
         double background_alpha;
@@ -60,7 +59,6 @@ typedef struct _options_t {
                   alpha(0.05),
                   discount(0.0),
                   lambda(0.01),
-                  construct_graph(false),
                   process_prior("pitman-yor process"),
                   background_model("independence-dirichlet-gamma"),
                   background_alpha(1),
@@ -85,7 +83,6 @@ operator<<(std::ostream& o, const _options_t& options) {
           << "-> background_alpha    = " << options.background_alpha    << endl
           << "-> background_context  = " << options.background_context  << endl
           << "-> background_weights  = " << options.background_weights  << endl
-          << "-> construct_graph     = " << options.construct_graph     << endl
           << "-> population_size     = " << options.population_size     << endl
           << "-> save                = " << options.save                << endl;
         return o;
@@ -102,7 +99,6 @@ void print_usage(char *pname, FILE *fp)
                       "Options:\n"
                       "   --alpha=ALPHA             - alpha parameter for the dirichlet process\n"
                       "   --lambda=LAMBDA           - lambda mixture weight\n"
-                      "   --construct-graph         - construct a graph from all samples\n"
                       "   --tfbs-length=TFBS_LENGTH - length of the tfbs\n"
                       "   --population-size=N       - number of parallel samplers\n"
                       "\n"
@@ -172,7 +168,6 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options.lambda              = options.lambda;
         tfbs_options.discount            = options.discount;
         tfbs_options.tfbs_length         = options.tfbs_length;
-        tfbs_options.construct_graph     = options.construct_graph;
         tfbs_options.process_prior       = options.process_prior;
         tfbs_options.background_model    = options.background_model;
         tfbs_options.background_context  = options.background_context;
@@ -216,7 +211,6 @@ int main(int argc, char *argv[])
 		static struct option long_options[] = {
                         { "alpha",           1, 0, 'a' },
                         { "lambda",          1, 0, 'l' },
-                        { "construct-graph", 0, 0, 'g' },
                         { "context",         1, 0, 'c' },
                         { "samples",         1, 0, 's' },
                         { "tfbs-length",     1, 0, 't' },
@@ -248,9 +242,6 @@ int main(int argc, char *argv[])
                         break;
                 case 'c':
                         options.background_context = atoi(optarg);
-                        break;
-                case 'g':
-                        options.construct_graph = true;
                         break;
                 case 'e':
                         options.save = string(optarg);

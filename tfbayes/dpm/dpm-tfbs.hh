@@ -61,7 +61,6 @@ public:
         void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[], const double temp);
         void   mixture_weights(const std::vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[], const double temp = 1.0, const bool include_background = true);
         void   update_map();
-        void   update_graph(sequence_data_t<short> tfbs_start_positions);
         void   update_samples(size_t sampling_steps);
         void   record_partition();
         double likelihood() const;
@@ -105,9 +104,6 @@ protected:
 
         // process priors
         dpm_tfbs_prior_t* _process_prior;
-
-        // whether or not to construct a graph from the samples
-        bool _construct_graph;
 };
 
 #endif /* DPM_TFBS_HH */

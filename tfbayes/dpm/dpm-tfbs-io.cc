@@ -74,17 +74,13 @@ ostream& operator<< (ostream& o, const dpm_partition_t& partition)
 }
 
 static
-ostream& operator<< (ostream& o, const pair<dpm_graph_t,double>& tmp)
+ostream& operator<< (ostream& o, const std::vector<dpm_partition_t>& partitions)
 {
-        const dpm_graph_t graph(tmp.first);
-        const double sampling_steps = tmp.second;
-
-        for (dpm_graph_t::const_iterator it = graph.begin();
-             it != graph.end(); it++) {
-                o << *static_cast<const seq_index_t*>(&(*it).first.index1) << "-"
-                  << *static_cast<const seq_index_t*>(&(*it).first.index2) << "="
-                  << static_cast<double>((*it).second)/sampling_steps << " ";
+        for (std::vector<dpm_partition_t>::const_iterator it = partitions.begin();
+             it != partitions.end(); it++) {
+                o << *it << endl;
         }
+
         return o;
 }
 
@@ -92,7 +88,6 @@ void dpm_tfbs_save_result(ostream& file, dpm_tfbs_pmcmc_t& sampler)
 {
         const samples_t& samples          = sampler.samples();
         const sampling_history_t& history = sampler.sampling_history();
-        const double sampling_steps       = sampler.sampling_steps();
 
         file.setf(ios::showpoint);
 
@@ -105,13 +100,12 @@ void dpm_tfbs_save_result(ostream& file, dpm_tfbs_pmcmc_t& sampler)
              << history.likelihood;
         file << "posterior =" << endl
              << history.posterior;
-        file << "graph = "
-             << pair<dpm_graph_t,double>(samples.graph, sampling_steps)
-             << endl;
-        file << "map_partition = "
+        file << "partitions =" << endl
+             << samples.partitions;
+        file << "map_partition ="
              << samples.map_partition
              << endl;
-        file << "median_partition = "
+        file << "median_partition ="
              << dpm_tfbs_median(samples.partitions, sampler.data().sizes(),
                                 sampler.options().tfbs_length,
                                 true)

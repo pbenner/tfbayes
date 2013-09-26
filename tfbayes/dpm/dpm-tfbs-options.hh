@@ -33,7 +33,6 @@ typedef struct {
         double discount;
         double lambda;
         double initial_temperature;
-        bool construct_graph;
         bool median_partition;
         std::string process_prior;
         std::string background_model;

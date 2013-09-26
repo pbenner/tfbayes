@@ -29,7 +29,6 @@ default_sampler_config_ = {
     'discount'            : 0.0,
     'lambda'              : 0.01,
     'initial_temperature' : 10.0,
-    'construct_graph'     : False,
     'median_partition'    : True,
     'process_prior'       : "pitman-yor process",
     'background_model'    : "independence-dirichlet",
@@ -95,8 +94,6 @@ def parse_sampler_config(config_file, sampler_config):
         sampler_config['background_weights'] = config_parser.get('TFBS-Sampler', 'background-weights')
     if config_parser.has_option('TFBS-Sampler', 'tfbs-length'):
         sampler_config['tfbs_length'] = int(config_parser.get('TFBS-Sampler', 'tfbs-length'))
-    if config_parser.has_option('TFBS-Sampler', 'construct-graph'):
-        sampler_config['construct_graph'] = str2bool(config_parser.get('TFBS-Sampler', 'construct-graph'))
     if config_parser.has_option('TFBS-Sampler', 'median-partition'):
         sampler_config['median_partition'] = str2bool(config_parser.get('TFBS-Sampler', 'median-partition'))
     if config_parser.has_option('TFBS-Sampler', 'population-size'):
