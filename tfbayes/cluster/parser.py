@@ -63,14 +63,25 @@ def parse_partition_elements(subset_str):
             element = subset_str[start + 1: i].split(':')
             yield (int(element[0]), int(element[1]))
 
-def parse_partition(results_config):
+def parse_partition(partition_str):
     partition = []
-    for identifier, subset in parse_partition_subsets(results_config['map_partition']):
+    for identifier, subset in parse_partition_subsets(partition_str):
         dpm_subset = dpm_subset_t()
         dpm_subset.identifier = identifier
         dpm_subset.subset     = list(parse_partition_elements(subset))
         partition.append(dpm_subset)
     return partition
+
+# parse partition list
+# ------------------------------------------------------------------------------
+
+def parse_partition_list(partition_list_str):
+    partition_list = dpm_partition_list_new()
+    for partition_str in partition_list_str.split('\n'):
+        partition = parse_partition(partition_str)
+        dpm_partition_list_add_partition(partition_list, partition)
+        dpm_partition_free(partition)
+    return partition_list
 
 # sort cluster
 # ------------------------------------------------------------------------------
@@ -117,7 +128,7 @@ def generate_cluster_list(sequences, sampler_config, results_config):
     """Loop through the partition and for each subset generate a motif."""
     cluster_list = []
     # parse the map partition
-    partition    = parse_partition(results_config)
+    partition    = parse_partition(results_config['map_partition'])
     for idx, dpm_subset in enumerate(partition):
         cluster_list.append(generate_cluster(sequences, dpm_subset, idx, sampler_config))
     return sort_cluster_list(cluster_list)

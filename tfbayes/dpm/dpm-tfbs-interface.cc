@@ -290,5 +290,22 @@ void _dpm_partition_free(dpm_partition_t* partition)
         delete(partition);
 }
 
+// handling lists of partitions to compute means and medians
+// -----------------------------------------------------------------------------
+
+vector<dpm_partition_t>* _dpm_partition_list_new()
+{
+        return new vector<dpm_partition_t>();
+}
+
+void _dpm_partition_list_add_partition(vector<dpm_partition_t>* partition_list, const dpm_partition_t* partition)
+{
+        partition_list->push_back(*partition);
+}
+
+void _dpm_partition_list_free(vector<dpm_partition_t>* partition_list)
+{
+        delete(partition_list);
+}
 
 __END_DECLS

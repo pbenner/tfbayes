@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# Copyright (C) 2011, 2012 Philipp Benner
+# Copyright (C) 2011-2013 Philipp Benner
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,10 +36,14 @@ def parse_results_config(config_file, results_config):
         results_config['posterior'] = read_matrix(config_parser, 'Result', 'posterior', float)
     if config_parser.has_option('Result', 'switches'):
         results_config['switches'] = read_matrix(config_parser, 'Result', 'switches', float)
-    if config_parser.has_option('Result', 'graph'):
-        results_config['graph'] = config_parser.get('Result', 'graph')
     if config_parser.has_option('Result', 'map_partition'):
         results_config['map_partition'] = config_parser.get('Result', 'map_partition')
+    if config_parser.has_option('Result', 'mean_partition'):
+        results_config['mean_partition'] = config_parser.get('Result', 'mean_partition')
+    if config_parser.has_option('Result', 'median_partition'):
+        results_config['median_partition'] = config_parser.get('Result', 'median_partition')
+    if config_parser.has_option('Result', 'partitions'):
+        results_config['partitions'] = config_parser.get('Result', 'partitions')
 
 # save results config
 # ------------------------------------------------------------------------------
@@ -51,7 +55,9 @@ def save_results_config(config_file, results_config):
     write_matrix(config_parser, 'Result', 'likelihood', results_config['likelihood'])
     write_matrix(config_parser, 'Result', 'posterior',  results_config['posterior'])
     write_matrix(config_parser, 'Result', 'switches',   results_config['switches'])
-    config_parser.set('Result', 'graph', results_config['graph'])
-    config_parser.set('Result', 'map_partition', results_config['map_partition'])
+    config_parser.set('Result', 'map_partition',    results_config['map_partition'])
+    config_parser.set('Result', 'mean_partition',   results_config['mean_partition'])
+    config_parser.set('Result', 'median_partition', results_config['median_partition'])
+    config_parser.set('Result', 'partitions',       results_config['partitions'])
     with open(config_file, 'wb') as config_fp:
         config_parser.write(config_fp)

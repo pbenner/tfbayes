@@ -27,6 +27,9 @@ _lib = load_library('tfbayes-dpm', 0)
 class PARTITION(Structure):
      _fields_ = []
 
+class PARTITION_LIST(Structure):
+     _fields_ = []
+
 class OPTIONS(Structure):
      _fields_ = [("tfbs_length",         c_ulong),
                  ("alpha",               c_double),
@@ -97,6 +100,15 @@ _lib._dpm_partition_add_index.argtypes = [POINTER(PARTITION), c_int, c_int]
 
 _lib._dpm_partition_free.restype  = None
 _lib._dpm_partition_free.argtypes = [POINTER(PARTITION)]
+
+_lib._dpm_partition_list_new.restype  = POINTER(PARTITION_LIST)
+_lib._dpm_partition_list_new.argtypes = []
+
+_lib._dpm_partition_list_add_partition.restype  = None
+_lib._dpm_partition_list_add_partition.argtypes = [POINTER(PARTITION_LIST), POINTER(PARTITION)]
+
+_lib._dpm_partition_list_free.restype  = None
+_lib._dpm_partition_list_free.argtypes = [POINTER(PARTITION_LIST)]
 
 # convert datatypes
 # ------------------------------------------------------------------------------

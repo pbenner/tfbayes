@@ -104,10 +104,23 @@ distance(const dpm_partition_t& pi_a, const dpm_partition_t& pi_b,
         return distance(indices, a, b);
 }
 
+static
+double mean_loss(double d)
+{
+        return d*d;
+}
+
+static
+double median_loss(double d)
+{
+        return d;
+}
+
+static
 const dpm_partition_t&
-dpm_tfbs_median(const vector<dpm_partition_t>& partitions,
-                const vector<size_t>& sizes, size_t tfbs_length,
-                bool verbose)
+dpm_tfbs_estimate(const vector<dpm_partition_t>& partitions,
+                  const vector<size_t>& sizes, size_t tfbs_length,
+                  bool verbose, double (*loss)(double))
 {
         // number of partitions
         const size_t n = partitions.size();
@@ -119,9 +132,6 @@ dpm_tfbs_median(const vector<dpm_partition_t>& partitions,
         // save value and position of minimum distances
         size_t min = SIZE_MAX, argmin = SIZE_MAX;
 
-        if (verbose) {
-                cerr << "Computing median partition: " << endl;
-        }
         for (size_t i = 0, k = 0; i < n; i++) {
                 for (size_t j = i+1; j < n; j++, k++) {
                         if (verbose) {
@@ -133,7 +143,7 @@ dpm_tfbs_median(const vector<dpm_partition_t>& partitions,
         }
         for (size_t i = 0; i < n; i++) {
                 for (size_t j = 0; j < n; j++) {
-                        sums[i] += distances[i][j];
+                        sums[i] += (*loss)(distances[i][j]);
                 }
                 if (sums[i] < min) {
                         min = sums[i];
@@ -141,4 +151,26 @@ dpm_tfbs_median(const vector<dpm_partition_t>& partitions,
                 }
         }
         return partitions[argmin];
+}
+
+const dpm_partition_t&
+dpm_tfbs_mean(const vector<dpm_partition_t>& partitions,
+              const vector<size_t>& sizes, size_t tfbs_length,
+              bool verbose)
+{
+        if (verbose) {
+                cerr << "Computing mean partition: " << endl;
+        }
+        return dpm_tfbs_estimate(partitions, sizes, tfbs_length, verbose, &mean_loss);
+}
+
+const dpm_partition_t&
+dpm_tfbs_median(const vector<dpm_partition_t>& partitions,
+                const vector<size_t>& sizes, size_t tfbs_length,
+                bool verbose)
+{
+        if (verbose) {
+                cerr << "Computing median partition: " << endl;
+        }
+        return dpm_tfbs_estimate(partitions, sizes, tfbs_length, verbose, &median_loss);
 }

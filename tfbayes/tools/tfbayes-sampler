@@ -69,7 +69,9 @@ def usage():
 def resume(config_file):
     results_config = {}
     parse_results_config(config_file, results_config)
-    partition = parse_partition(results_config)
+    # TODO: it should be possible to resume from some other partition
+    # (not only the map estimate)
+    partition = parse_partition(results_config['map_partition'])
     return partition
 
 def sample():

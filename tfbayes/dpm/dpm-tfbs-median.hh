@@ -27,6 +27,11 @@
 #include <tfbayes/dpm/datatypes.hh>
 
 const dpm_partition_t&
+dpm_tfbs_mean(const std::vector<dpm_partition_t>& partitions,
+              const std::vector<size_t>& sizes, size_t tfbs_length,
+              bool verbose = false);
+
+const dpm_partition_t&
 dpm_tfbs_median(const std::vector<dpm_partition_t>& partitions,
                 const std::vector<size_t>& sizes, size_t tfbs_length,
                 bool verbose = false);
