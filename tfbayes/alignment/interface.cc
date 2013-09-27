@@ -27,7 +27,7 @@
 #include <string>
 #include <cstring>
 
-#include <tfbayes/interface/common.hh>
+#include <tfbayes/interface/datatypes.hh>
 #include <tfbayes/phylotree/interface.hh>
 #include <tfbayes/phylotree/utility.hh>
 

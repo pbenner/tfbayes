@@ -24,7 +24,7 @@
 #include <fstream>
 
 #include <tfbayes/alignment/alignment.hh>
-#include <tfbayes/interface/common.hh>
+#include <tfbayes/interface/datatypes.hh>
 #include <tfbayes/dpm/init.hh>
 #include <tfbayes/dpm/dpm-tfbs.hh>
 #include <tfbayes/dpm/dpm-tfbs-io.hh>
@@ -33,7 +33,7 @@
 #include <tfbayes/dpm/dpm-partition.hh>
 #include <tfbayes/dpm/utility.hh>
 #include <tfbayes/exception/exception.h>
-#include <tfbayes/utility/linalg.h>
+#include <tfbayes/utility/linalg.hh>
 
 using namespace std;
 

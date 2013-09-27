@@ -8,7 +8,7 @@ otherinclude_HEADERS = \
 	abysmal-stack.hh \
 	clonable.hh \
 	distribution.hh \
-	linalg.h \
+	linalg.hh \
 	logarithmetic.h \
 	permutation.hh \
 	polynomial.hh \

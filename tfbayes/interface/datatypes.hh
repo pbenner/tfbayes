@@ -31,18 +31,7 @@
 #include <vector>
 #include <cstddef>
 
-namespace std {
-        template <typename T>
-        class matrix : public vector<vector<T> > {
-        public:
-                matrix()
-                        : vector<vector<T> >()
-                        {}
-                matrix(size_t rows, size_t columns)
-                        : vector<vector<T> >(rows, vector<double>(columns, 0.0))
-                        {}
-        };
-}
+#include <tfbayes/utility/linalg.hh>
 
 __BEGIN_DECLS
 
@@ -62,8 +51,6 @@ __END_DECLS
 
 // vector interface
 ////////////////////////////////////////////////////////////////////////////////
-
-#include <tfbayes/utility/linalg.h>
 
 __BEGIN_DECLS
 

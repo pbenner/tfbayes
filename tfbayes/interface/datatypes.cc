@@ -16,7 +16,7 @@
  */
 
 #include <iostream>
-#include <tfbayes/interface/common.hh>
+#include <tfbayes/interface/datatypes.hh>
 
 using namespace std;
 

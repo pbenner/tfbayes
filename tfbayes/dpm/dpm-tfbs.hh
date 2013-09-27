@@ -28,7 +28,7 @@
 #include <tfbayes/dpm/dpm-tfbs-options.hh>
 #include <tfbayes/dpm/dpm-tfbs-prior.hh>
 #include <tfbayes/dpm/dpm-tfbs-state.hh>
-#include <tfbayes/utility/linalg.h>
+#include <tfbayes/utility/linalg.hh>
 
 class dpm_tfbs_t : public mixture_model_t {
 public:

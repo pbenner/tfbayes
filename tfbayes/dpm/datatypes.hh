@@ -27,14 +27,8 @@
 #include <string>
 
 #include <tfbayes/utility/clonable.hh>
-#include <tfbayes/utility/linalg.h>
+#include <tfbayes/utility/linalg.hh>
 #include <tfbayes/dpm/index.hh>
-
-namespace std {
-        template <typename T>
-        class matrix : public vector<vector<T> >
-        { };
-}
 
 // cluster structures
 ////////////////////////////////////////////////////////////////////////////////

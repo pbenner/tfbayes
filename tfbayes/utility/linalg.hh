@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef LINALG_H
-#define LINALG_H
+#ifndef LINALG_HH
+#define LINALG_HH
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -26,17 +26,24 @@
 
 #include <gsl/gsl_matrix.h>
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+// c++ matrix
+////////////////////////////////////////////////////////////////////////////////
 
-__BEGIN_DECLS
+namespace std {
+        template <typename T>
+        class matrix : public vector<vector<T> > {
+        public:
+                matrix()
+                        : vector<vector<T> >()
+                        {}
+                matrix(size_t rows, size_t columns)
+                        : vector<vector<T> >(rows, vector<double>(columns, 0.0))
+                        {}
+        };
+}
+
+// c vector/matrix
+////////////////////////////////////////////////////////////////////////////////
 
 typedef struct {
         size_t size;
@@ -141,6 +148,4 @@ matrix_t * from_gsl_matrix(const gsl_matrix * matrix)
         return m;
 }
 
-__END_DECLS
-
-#endif /* LINALG_H */
+#endif /* LINALG_HH */

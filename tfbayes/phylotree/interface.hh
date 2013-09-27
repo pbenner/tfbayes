@@ -29,7 +29,7 @@
 #include <tfbayes/phylotree/posterior.hh>
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/exception/exception.h>
-#include <tfbayes/utility/linalg.h>
+#include <tfbayes/utility/linalg.hh>
 
 #define alphabet_size 5
 //typedef unsigned short code_t;
