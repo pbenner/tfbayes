@@ -19,7 +19,7 @@
 
 #include <boost/unordered/unordered_set.hpp>
 
-#include <tfbayes/dpm/dpm-tfbs-median.hh>
+#include <tfbayes/dpm/dpm-tfbs-mean.hh>
 #include <tfbayes/dpm/data.hh>
 #include <tfbayes/utility/progress.hh>
 

@@ -28,6 +28,7 @@
 #include <tfbayes/dpm/init.hh>
 #include <tfbayes/dpm/dpm-tfbs.hh>
 #include <tfbayes/dpm/dpm-tfbs-io.hh>
+#include <tfbayes/dpm/dpm-tfbs-mean.hh>
 #include <tfbayes/dpm/dpm-tfbs-sampler.hh>
 #include <tfbayes/dpm/dpm-partition.hh>
 #include <tfbayes/dpm/utility.hh>
@@ -45,7 +46,6 @@ typedef struct {
         double discount;
         double lambda;
         double initial_temperature;
-        bool median_partition;
         const char* process_prior;
         const char* background_model;
         matrix_t* background_alpha;
@@ -77,7 +77,6 @@ operator<<(std::ostream& o, const options_t& options) {
           << "-> background model    = " << options.background_model    << endl
           << "-> background context  = " << options.background_context  << endl
           << "-> background weights  = " << options.background_weights  << endl
-          << "-> median partition    = " << options.median_partition     << endl
           << "-> population_size     = " << options.population_size     << endl
           << "-> socket_file         = " << options.socket_file         << endl;
         return o;
@@ -132,7 +131,6 @@ void _dpm_tfbs_init(const char* phylogenetic_input, const char* alignment_input)
         tfbs_options.discount            = _options.discount;
         tfbs_options.lambda              = _options.lambda;
         tfbs_options.initial_temperature = _options.initial_temperature;
-        tfbs_options.median_partition    = _options.median_partition;
         tfbs_options.tfbs_length         = _options.tfbs_length;
         tfbs_options.process_prior       = _options.process_prior;
         tfbs_options.background_model    = _options.background_model;
@@ -306,6 +304,26 @@ void _dpm_partition_list_add_partition(vector<dpm_partition_t>* partition_list, 
 void _dpm_partition_list_free(vector<dpm_partition_t>* partition_list)
 {
         delete(partition_list);
+}
+
+
+// compute means and medians
+// -----------------------------------------------------------------------------
+
+dpm_partition_t* _dpm_mean(vector<dpm_partition_t>* partition_list)
+{
+        const dpm_partition_t& result = dpm_tfbs_mean(*partition_list, _phylogenetic_data.sizes(),
+                                                      _options.tfbs_length, true);
+
+        return new dpm_partition_t(result);
+}
+
+dpm_partition_t* _dpm_median(vector<dpm_partition_t>* partition_list)
+{
+        const dpm_partition_t& result = dpm_tfbs_median(*partition_list, _phylogenetic_data.sizes(),
+                                                        _options.tfbs_length, true);
+
+        return new dpm_partition_t(result);
 }
 
 __END_DECLS

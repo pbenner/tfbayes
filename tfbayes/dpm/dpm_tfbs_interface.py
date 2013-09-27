@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Philipp Benner
+# Copyright (C) 2011-2013 Philipp Benner
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@ class OPTIONS(Structure):
                  ("discount",            c_double),
                  ("lambda_",             c_double),
                  ("initial_temperature", c_double),
-                 ("median_partition",    c_bool),
                  ("process_prior",       c_char_p),
                  ("background_model",    c_char_p),
                  ("background_alpha",    POINTER(MATRIX)),
@@ -139,7 +138,6 @@ def dpm_init(options, phylogenetic_input, alignment_input, partition=None):
      c_options.contents.discount            = options['discount']
      c_options.contents.lambda_             = options['lambda']
      c_options.contents.initial_temperature = options['initial_temperature']
-     c_options.contents.median_partition    = options['median_partition']
      c_options.contents.process_prior       = options['process_prior']
      c_options.contents.background_model    = options['background_model']
      c_options.contents.background_context  = options['background_context']
