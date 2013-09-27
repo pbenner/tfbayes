@@ -51,9 +51,9 @@ typedef struct {
         matrix<double>* background_alpha;
         size_t background_context;
         string* background_weights;
-        vector_t*  baseline_weights;
-        matrix_t** baseline_priors;
-        const char** baseline_tags;
+        vector<double>*  baseline_weights;
+        matrix<double>** baseline_priors;
+        string** baseline_tags;
         size_t baseline_n;
         dpm_partition_t* partition;
         size_t population_size;
@@ -103,17 +103,9 @@ void _dpm_tfbs_init(const char* phylogenetic_input, const char* alignment_input)
 
         // baseline priors, names, and weights
         for (size_t k = 0; k < _options.baseline_n; k++) {
-                tfbs_options.baseline_weights.push_back(_options.baseline_weights->vec[k]);
-                tfbs_options.baseline_priors.push_back(matrix<double>());
-                for (size_t i = 0; i < _options.baseline_priors[k]->rows; i++) {
-                        tfbs_options.baseline_priors[k].push_back(
-                                vector<double>(_options.baseline_priors[k]->columns, 0));
-                        for (size_t j = 0; j < _options.baseline_priors[k]->columns; j++) {
-                                tfbs_options.baseline_priors[k][i][j] = 
-                                        _options.baseline_priors[k]->mat[i][j];
-                        }
-                }
-                tfbs_options.baseline_tags.push_back(_options.baseline_tags[k]);
+                tfbs_options.baseline_weights.push_back((*_options.baseline_weights)[k]);
+                tfbs_options.baseline_priors .push_back((*_options.baseline_priors )[k]);
+                tfbs_options.baseline_tags   .push_back((*_options.baseline_tags   )[k]);
         }
 
         // tfbs options

@@ -71,17 +71,16 @@ class CXX_VECTOR(Structure):
      def __new__(cdx, arg1):
           _lib._cxx_vector_alloc.restype  = POINTER(CXX_VECTOR)
           _lib._cxx_vector_alloc.argtypes = [c_ulong]
-          if   type(arg1) == int:
-               result = _lib._cxx_vector_alloc(arg1).contents
+          if   type(arg1) == int or type(arg1) == long:
+               return _lib._cxx_vector_alloc(arg1).contents
           elif type(arg1) == list:
-               result = _lib._cxx_vector_alloc(len(arg1)).contents
+               return _lib._cxx_vector_alloc(len(arg1)).contents
           else:
                raise ValueError("Invalid argument")
-          result.__init__(arg1)
-          return result
      def __init__(self, arg1):
-          for (i,d) in enumerate(arg1):
-               self[i] = d
+          if type(arg1) == list:
+               for (i,d) in enumerate(arg1):
+                    self[i] = d
      def __del__(self):
           _lib._cxx_vector_free.restype  = None
           _lib._cxx_vector_free.argtypes = [POINTER(CXX_VECTOR)]
@@ -104,19 +103,17 @@ class CXX_MATRIX(Structure):
           if arg2 is None:
                matrix = arg1
                if len(matrix) == 0:
-                    result = _lib._cxx_matrix_alloc(0, 0).contents
-               else:
-                    rows    = len(matrix)
-                    columns = len(matrix[0])
-                    result  = _lib._cxx_matrix_alloc(rows, columns).contents
-                    result.__init__(matrix)
+                    return _lib._cxx_matrix_alloc(0, 0).contents
+               rows    = len(matrix)
+               columns = len(matrix[0])
+               return _lib._cxx_matrix_alloc(rows, columns).contents
           else:
-               result = _lib._cxx_matrix_alloc(arg1, arg2).contents
-          return result
-     def __init__(self, matrix):
-          for (i, column) in enumerate(matrix):
-               for (j, d) in enumerate(column):
-                    self[i,j] = d
+               return _lib._cxx_matrix_alloc(arg1, arg2).contents
+     def __init__(self, arg1, arg2 = None):
+          if arg2 is None:
+               for (i, column) in enumerate(arg1):
+                    for (j, d) in enumerate(column):
+                         self[i,j] = d
      def __del__(self):
           _lib._cxx_matrix_free.restype  = None
           _lib._cxx_matrix_free.argtypes = [POINTER(CXX_MATRIX)]
