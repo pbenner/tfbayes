@@ -40,14 +40,14 @@ class OPTIONS(Structure):
                  ("background_model",    POINTER(CXX_STRING)),
                  ("background_alpha",    POINTER(CXX_MATRIX)),
                  ("background_context",  c_ulong),
-                 ("background_weights",  c_char_p),
+                 ("background_weights",  POINTER(CXX_STRING)),
                  ("baseline_weights",    POINTER(VECTOR)),
                  ("baseline_priors",     POINTER(POINTER(MATRIX))),
                  ("baseline_tags",       POINTER(c_char_p)),
                  ("baseline_n",          c_ulong),
                  ("partition",           POINTER(PARTITION)),
                  ("population_size",     c_ulong),
-                 ("socket_file",         c_char_p)]
+                 ("socket_file",         POINTER(CXX_STRING))]
      def __new__(cls, options, partition):
           c_options =  _lib._dpm_tfbs_options().contents
           c_options.__init__(options, partition)
@@ -60,10 +60,10 @@ class OPTIONS(Structure):
           self.process_prior       = pointer(CXX_STRING(options['process_prior']))
           self.background_model    = pointer(CXX_STRING(options['background_model']))
           self.background_context  = options['background_context']
-          self.background_weights  = options['background_weights']
+          self.background_weights  = pointer(CXX_STRING(options['background_weights']))
           self.tfbs_length         = options['tfbs_length']
           self.population_size     = options['population_size']
-          self.socket_file         = options['socket_file']
+          self.socket_file         = pointer(CXX_STRING(options['socket_file']))
           self.partition           = generate_c_partition(partition) if partition else None
           self.background_alpha    = pointer(CXX_MATRIX(map(list, zip(*options['background_alpha']))))
 
@@ -127,6 +127,11 @@ _lib._dpm_partition_list_add_partition.argtypes = [POINTER(PARTITION_LIST), POIN
 _lib._dpm_partition_list_free.restype  = None
 _lib._dpm_partition_list_free.argtypes = [POINTER(PARTITION_LIST)]
 
+# global variables
+# ------------------------------------------------------------------------------
+
+c_options = None
+
 # convert datatypes
 # ------------------------------------------------------------------------------
 
@@ -142,6 +147,7 @@ def generate_c_partition(partition):
 # ------------------------------------------------------------------------------
 
 def dpm_init(options, phylogenetic_input, alignment_input, partition=None):
+     global c_options
      # do some sanity checks
      if not len(options['baseline_priors']) == len(options['baseline_weights']):
           raise IOError('Length mismatch between baseline priors and weights.')
@@ -151,13 +157,7 @@ def dpm_init(options, phylogenetic_input, alignment_input, partition=None):
           raise IOError('Length baseline priors specified.')
 
      # initialize simple c_options
-     print "creating options..."
      c_options = pointer(OPTIONS(options, partition))
-     print "creating options... done."
-
-     # copy background alpha pseudo counts
-     #c_options.contents.background_alpha    = _lib._alloc_matrix(len(options['background_alpha'][0]), len(options['background_alpha']))
-     #copy_matrix_to_c(map(list, zip(*options['background_alpha'])), c_options.contents.background_alpha)
 
      baseline_size                          = len(options['baseline_priors'])
      c_options.contents.baseline_n          = c_ulong(baseline_size)

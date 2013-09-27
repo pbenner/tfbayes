@@ -138,10 +138,11 @@ class CXX_STRING(Structure):
           _lib._cxx_string_alloc.restype  = POINTER(CXX_STRING)
           _lib._cxx_string_alloc.argtypes = [c_char_p]
           result = _lib._cxx_string_alloc(str).contents
+          result.__init__(str)
           return result
      def __init__(self, str):
           pass
      def __del__(self):
-          _lib._cxx_string_alloc.restype  = None
-          _lib._cxx_string_alloc.argtypes = [POINTER(CXX_STRING)]
+          _lib._cxx_string_free.restype  = None
+          _lib._cxx_string_free.argtypes = [POINTER(CXX_STRING)]
           _lib._cxx_string_free(self)

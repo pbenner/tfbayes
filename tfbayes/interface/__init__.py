@@ -18,7 +18,6 @@
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-
 from ctypes    import *
 
 from datatypes   import CXX_STRING, CXX_VECTOR, CXX_MATRIX, VECTOR, MATRIX

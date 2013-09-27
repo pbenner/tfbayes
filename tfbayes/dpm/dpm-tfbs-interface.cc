@@ -50,14 +50,14 @@ typedef struct {
         string* background_model;
         matrix<double>* background_alpha;
         size_t background_context;
-        const char* background_weights;
+        string* background_weights;
         vector_t*  baseline_weights;
         matrix_t** baseline_priors;
         const char** baseline_tags;
         size_t baseline_n;
         dpm_partition_t* partition;
         size_t population_size;
-        const char* socket_file;
+        string* socket_file;
 } options_t;
 
 static options_t _options;
@@ -76,9 +76,9 @@ operator<<(std::ostream& o, const options_t& options) {
           << "-> process prior       = " << *options.process_prior      << endl
           << "-> background model    = " << *options.background_model   << endl
           << "-> background context  = " << options.background_context  << endl
-          << "-> background weights  = " << options.background_weights  << endl
+          << "-> background weights  = " << *options.background_weights << endl
           << "-> population_size     = " << options.population_size     << endl
-          << "-> socket_file         = " << options.socket_file         << endl;
+          << "-> socket_file         = " << *options.socket_file        << endl;
         return o;
 }
 
@@ -126,8 +126,8 @@ void _dpm_tfbs_init(const char* phylogenetic_input, const char* alignment_input)
         tfbs_options.background_alpha    = *_options.background_alpha;
         tfbs_options.background_model    = *_options.background_model;
         tfbs_options.background_context  = _options.background_context;
-        tfbs_options.background_weights  = _options.background_weights;
-        tfbs_options.socket_file         = _options.socket_file;
+        tfbs_options.background_weights  = *_options.background_weights;
+        tfbs_options.socket_file         = *_options.socket_file;
 
         if (_options.partition) {
                 tfbs_options.partition   = *_options.partition;
