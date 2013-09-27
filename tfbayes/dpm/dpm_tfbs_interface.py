@@ -152,21 +152,6 @@ def dpm_init(options, phylogenetic_input, alignment_input, partition=None):
 
      # initialize simple c_options
      c_options = pointer(OPTIONS(options, partition))
-     print "alpha:"
-     print c_options.contents.tfbs_length
-     # c_options                              = _lib._dpm_tfbs_options()
-     # c_options.contents.alpha               = options['alpha']
-     # c_options.contents.discount            = options['discount']
-     # c_options.contents.lambda_             = options['lambda']
-     # c_options.contents.initial_temperature = options['initial_temperature']
-     # c_options.contents.process_prior       = options['process_prior']
-     # c_options.contents.background_model    = options['background_model']
-     # c_options.contents.background_context  = options['background_context']
-     # c_options.contents.background_weights  = options['background_weights']
-     # c_options.contents.tfbs_length         = options['tfbs_length']
-     # c_options.contents.population_size     = options['population_size']
-     # c_options.contents.socket_file         = options['socket_file']
-     # c_options.contents.partition           = generate_c_partition(partition) if partition else None
 
      # copy background alpha pseudo counts
      c_options.contents.background_alpha    = _lib._alloc_matrix(len(options['background_alpha'][0]), len(options['background_alpha']))

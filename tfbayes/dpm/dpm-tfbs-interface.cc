@@ -108,6 +108,8 @@ void _dpm_tfbs_init(const char* phylogenetic_input, const char* alignment_input)
                 for (size_t j = 0; j < _options.background_alpha->columns; j++) {
                         tfbs_options.background_alpha[i][j] = 
                                 _options.background_alpha->mat[i][j];
+                        cout << tfbs_options.background_alpha[i][j]
+                             << endl;
                 }
         }
 
