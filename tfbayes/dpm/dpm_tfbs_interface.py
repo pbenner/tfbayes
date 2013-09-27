@@ -42,7 +42,7 @@ class OPTIONS(Structure):
                  ("background_context",  c_ulong),
                  ("background_weights",  POINTER(CXX_STRING)),
                  ("baseline_weights",    POINTER(CXX_VECTOR)),
-                 ("baseline_priors",     POINTER(POINTER(MATRIX))),
+                 ("baseline_priors",     POINTER(POINTER(CXX_MATRIX))),
                  ("baseline_tags",       POINTER(POINTER(CXX_STRING))),
                  ("baseline_n",          c_ulong),
                  ("partition",           POINTER(PARTITION)),
@@ -71,13 +71,14 @@ class OPTIONS(Structure):
           for idx, name in enumerate(options['baseline_tags']):
                self.baseline_tags[idx] = pointer(CXX_STRING(name))
           # copy baseline priors and weights
-          self.c_baseline_prior    = (self.baseline_n*POINTER(CXX_MATRIX))()
+          self.baseline_priors     = (self.baseline_n*POINTER(CXX_MATRIX))()
           self.baseline_weights    = pointer(CXX_VECTOR(self.baseline_n))
           for idx, (name, prior) in enumerate(options['baseline_priors'].iteritems()):
+               print self.baseline_priors[idx]
                # first the prior
-               self.baseline_priors[idx]  = pointer(CXX_MATRIX(prior))
+               self.baseline_priors[idx] = pointer(CXX_MATRIX(prior))
                # and now its weight
-               self.baseline_weights[idx] = options['baseline_weights'][name]
+               self.baseline_weights.contents[idx] = options['baseline_weights'][name]
 
 
 # function prototypes
