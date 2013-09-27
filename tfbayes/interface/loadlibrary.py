@@ -42,42 +42,4 @@ def load_library(name, major_version):
     if not lib:
         raise OSError('Could not find %s library.' % name)
 
-    # these functions exist in every tfbayes library
-    # lib._alloc_vector.restype  = POINTER(VECTOR)
-    # lib._alloc_vector.argtypes = [c_ulong]
-    # lib._alloc_matrix.restype  = POINTER(MATRIX)
-    # lib._alloc_matrix.argtypes = [c_ulong, c_ulong]
-    # lib._free_vector.restype   = None
-    # lib._free_vector.argtypes  = [POINTER(VECTOR)]
-    # lib._free_matrix.restype   = None
-    # lib._free_matrix.argtypes  = [POINTER(MATRIX)]
-    # lib._free.restype          = None
-    # lib._free.argtypes         = [POINTER(None)]
-
     return lib
-
-# convert datatypes
-# ------------------------------------------------------------------------------
-
-def copy_vector_to_c(v, c_v):
-     for i in range(0, c_v.contents.size):
-          c_v.contents.vec[i] = v[i]
-
-def copy_matrix_to_c(m, c_m):
-     for i in range(0, c_m.contents.rows):
-          for j in range(0, c_m.contents.columns):
-               c_m.contents.mat[i][j] = m[i][j]
-
-def get_vector(c_v):
-     v = []
-     for i in range(0, c_v.contents.size):
-          v.append(c_v.contents.vec[i])
-     return v
-
-def get_matrix(c_m):
-     m = []
-     for i in range(0, c_m.contents.rows):
-          m.append([])
-          for j in range(0, c_m.contents.columns):
-               m[i].append(c_m.contents.mat[i][j])
-     return m
