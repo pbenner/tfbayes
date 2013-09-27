@@ -48,6 +48,24 @@ class OPTIONS(Structure):
                  ("partition",           POINTER(PARTITION)),
                  ("population_size",     c_ulong),
                  ("socket_file",         c_char_p)]
+     def __new__(cls, options, partition):
+          c_options =  _lib._dpm_tfbs_options().contents
+          c_options.__init__(options, partition)
+          return c_options
+     def __init__(self, options, partition):
+          self.alpha               = options['alpha']
+          self.discount            = options['discount']
+          self.lambda_             = options['lambda']
+          self.initial_temperature = options['initial_temperature']
+          self.process_prior       = options['process_prior']
+          self.background_model    = options['background_model']
+          self.background_context  = options['background_context']
+          self.background_weights  = options['background_weights']
+          self.tfbs_length         = options['tfbs_length']
+          self.population_size     = options['population_size']
+          self.socket_file         = options['socket_file']
+          self.partition           = generate_c_partition(partition) if partition else None
+
 
 # function prototypes
 # ------------------------------------------------------------------------------
@@ -133,19 +151,22 @@ def dpm_init(options, phylogenetic_input, alignment_input, partition=None):
           raise IOError('Length baseline priors specified.')
 
      # initialize simple c_options
-     c_options                              = _lib._dpm_tfbs_options()
-     c_options.contents.alpha               = options['alpha']
-     c_options.contents.discount            = options['discount']
-     c_options.contents.lambda_             = options['lambda']
-     c_options.contents.initial_temperature = options['initial_temperature']
-     c_options.contents.process_prior       = options['process_prior']
-     c_options.contents.background_model    = options['background_model']
-     c_options.contents.background_context  = options['background_context']
-     c_options.contents.background_weights  = options['background_weights']
-     c_options.contents.tfbs_length         = options['tfbs_length']
-     c_options.contents.population_size     = options['population_size']
-     c_options.contents.socket_file         = options['socket_file']
-     c_options.contents.partition           = generate_c_partition(partition) if partition else None
+     c_options = pointer(OPTIONS(options, partition))
+     print "alpha:"
+     print c_options.contents.tfbs_length
+     # c_options                              = _lib._dpm_tfbs_options()
+     # c_options.contents.alpha               = options['alpha']
+     # c_options.contents.discount            = options['discount']
+     # c_options.contents.lambda_             = options['lambda']
+     # c_options.contents.initial_temperature = options['initial_temperature']
+     # c_options.contents.process_prior       = options['process_prior']
+     # c_options.contents.background_model    = options['background_model']
+     # c_options.contents.background_context  = options['background_context']
+     # c_options.contents.background_weights  = options['background_weights']
+     # c_options.contents.tfbs_length         = options['tfbs_length']
+     # c_options.contents.population_size     = options['population_size']
+     # c_options.contents.socket_file         = options['socket_file']
+     # c_options.contents.partition           = generate_c_partition(partition) if partition else None
 
      # copy background alpha pseudo counts
      c_options.contents.background_alpha    = _lib._alloc_matrix(len(options['background_alpha'][0]), len(options['background_alpha']))

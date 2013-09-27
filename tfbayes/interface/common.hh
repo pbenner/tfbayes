@@ -25,6 +25,41 @@
 # define __END_DECLS /* empty */
 #endif
 
+// c++ vector/matrix interface
+////////////////////////////////////////////////////////////////////////////////
+
+#include <vector>
+#include <cstddef>
+
+namespace std {
+        template <typename T>
+        class matrix : public vector<vector<T> > {
+        public:
+                matrix()
+                        : vector<vector<T> >()
+                        {}
+                matrix(size_t rows, size_t columns)
+                        : vector<vector<T> >(rows, vector<double>(columns, 0.0))
+                        {}
+        };
+}
+
+__BEGIN_DECLS
+
+std::vector<double>* _cxx_vector_alloc(unsigned long size);
+std::matrix<double>* _cxx_matrix_alloc(unsigned long rows, unsigned long columns);
+
+double _cxx_vector_read(std::vector<double>* vector, unsigned long pos);
+double _cxx_matrix_read(std::matrix<double>* matrix, unsigned long row, unsigned long column);
+
+void _cxx_vector_write(std::vector<double>* vector, unsigned long pos, double d);
+void _cxx_matrix_write(std::matrix<double>* matrix, unsigned long row, unsigned long column, double d);
+
+void _cxx_vector_free(std::vector<double>* vector);
+void _cxx_matrix_free(std::matrix<double>* matrix);
+
+__END_DECLS
+
 // vector interface
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -32,8 +67,8 @@
 
 __BEGIN_DECLS
 
-vector_t * _alloc_vector(size_t size);
-matrix_t * _alloc_matrix(size_t rows, size_t columns);
+vector_t * _alloc_vector(unsigned long size);
+matrix_t * _alloc_matrix(unsigned long rows, unsigned long columns);
 void _free_vector(vector_t *v);
 void _free_matrix(matrix_t *m);
 void _free(void *ptr);

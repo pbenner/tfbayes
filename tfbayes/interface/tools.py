@@ -43,16 +43,16 @@ def load_library(name, major_version):
         raise OSError('Could not find %s library.' % name)
 
     # these functions exist in every tfbayes library
-    lib._alloc_vector.restype  = POINTER(VECTOR)
-    lib._alloc_vector.argtypes = [c_ulong]
-    lib._alloc_matrix.restype  = POINTER(MATRIX)
-    lib._alloc_matrix.argtypes = [c_ulong, c_ulong]
-    lib._free_vector.restype   = None
-    lib._free_vector.argtypes  = [POINTER(VECTOR)]
-    lib._free_matrix.restype   = None
-    lib._free_matrix.argtypes  = [POINTER(MATRIX)]
-    lib._free.restype          = None
-    lib._free.argtypes         = [POINTER(None)]
+    # lib._alloc_vector.restype  = POINTER(VECTOR)
+    # lib._alloc_vector.argtypes = [c_ulong]
+    # lib._alloc_matrix.restype  = POINTER(MATRIX)
+    # lib._alloc_matrix.argtypes = [c_ulong, c_ulong]
+    # lib._free_vector.restype   = None
+    # lib._free_vector.argtypes  = [POINTER(VECTOR)]
+    # lib._free_matrix.restype   = None
+    # lib._free_matrix.argtypes  = [POINTER(MATRIX)]
+    # lib._free.restype          = None
+    # lib._free.argtypes         = [POINTER(None)]
 
     return lib
 
