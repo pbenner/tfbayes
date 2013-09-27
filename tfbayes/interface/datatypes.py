@@ -59,76 +59,89 @@ def get_matrix(c_m):
 # load library
 # ------------------------------------------------------------------------------
 
-from loadlibrary import *
+from tfbayes.interface.loadlibrary import *
 
 _lib = load_library('tfbayes-interface', 0)
 
 # c++ vector/matrix class
 # ------------------------------------------------------------------------------
 
-class CXX_VECTOR(c_void_p):
+class CXX_VECTOR(Structure):
      length = 0
-     def __init__(self, arg1):
-          _lib._cxx_vector_alloc.restype  = c_void_p
+     def __new__(cdx, arg1):
+          _lib._cxx_vector_alloc.restype  = POINTER(CXX_VECTOR)
           _lib._cxx_vector_alloc.argtypes = [c_ulong]
           if   type(arg1) == int:
-               self.value  = _lib._cxx_vector_alloc(arg1)
-               self.length = arg1
+               result = _lib._cxx_vector_alloc(arg1).contents
           elif type(arg1) == list:
-               self.value  = _lib._cxx_vector_alloc(len(arg1))
-               self.length = len(arg1)
-               for (i,d) in enumerate(arg1):
-                    self[i] = d
+               result = _lib._cxx_vector_alloc(len(arg1)).contents
           else:
                raise ValueError("Invalid argument")
+          result.__init__(arg1)
+          return result
+     def __init__(self, arg1):
+          for (i,d) in enumerate(arg1):
+               self[i] = d
      def __del__(self):
           _lib._cxx_vector_free.restype  = None
-          _lib._cxx_vector_free.argtypes = [CXX_VECTOR]
+          _lib._cxx_vector_free.argtypes = [POINTER(CXX_VECTOR)]
           _lib._cxx_vector_free(self)
      def __getitem__(self, i):
           _lib._cxx_vector_read.restype  = c_double
-          _lib._cxx_vector_read.argtypes = [CXX_VECTOR, c_ulong]
+          _lib._cxx_vector_read.argtypes = [POINTER(CXX_VECTOR), c_ulong]
           return _lib._cxx_vector_read(self, i)
      def __setitem__(self, i, d):
           _lib._cxx_vector_write.restype  = None
-          _lib._cxx_vector_write.argtypes = [CXX_VECTOR, c_ulong, c_double]
+          _lib._cxx_vector_write.argtypes = [POINTER(CXX_VECTOR), c_ulong, c_double]
           return _lib._cxx_vector_write(self, i, d)
      def export(self):
           return [ self[i] for i in range(self.length) ]
 
-class CXX_MATRIX(c_void_p):
-     rows    = 0
-     columns = 0
-     def __init__(self, arg1, arg2 = None):
-          _lib._cxx_matrix_alloc.restype  = c_void_p
+class CXX_MATRIX(Structure):
+     def __new__(cdx, arg1, arg2 = None):
+          _lib._cxx_matrix_alloc.restype  = POINTER(CXX_MATRIX)
           _lib._cxx_matrix_alloc.argtypes = [c_ulong, c_ulong]
           if arg2 is None:
                matrix = arg1
                if len(matrix) == 0:
-                    self.value   = _lib._cxx_matrix_alloc(0, 0)
+                    result = _lib._cxx_matrix_alloc(0, 0).contents
                else:
-                    self.rows    = len(matrix)
-                    self.columns = len(matrix[0])
-                    self.value   = _lib._cxx_matrix_alloc(self.rows, self.columns)
-                    # initialize matrix
-                    for (i, column) in enumerate(matrix):
-                         for (j, d) in enumerate(column):
-                              self[i,j] = d
+                    rows    = len(matrix)
+                    columns = len(matrix[0])
+                    result  = _lib._cxx_matrix_alloc(rows, columns).contents
+                    result.__init__(matrix)
           else:
-               self.rows    = arg1
-               self.columns = arg2
-               self.value     = _lib._cxx_matrix_alloc(self.rows, self.columns)
+               result = _lib._cxx_matrix_alloc(arg1, arg2).contents
+          return result
+     def __init__(self, matrix):
+          for (i, column) in enumerate(matrix):
+               for (j, d) in enumerate(column):
+                    self[i,j] = d
      def __del__(self):
           _lib._cxx_matrix_free.restype  = None
-          _lib._cxx_matrix_free.argtypes = [CXX_MATRIX]
+          _lib._cxx_matrix_free.argtypes = [POINTER(CXX_MATRIX)]
           _lib._cxx_matrix_free(self)
      def __getitem__(self, (i, j)):
           _lib._cxx_matrix_read.restype  = c_double
-          _lib._cxx_matrix_read.argtypes = [CXX_MATRIX, c_ulong, c_ulong]
+          _lib._cxx_matrix_read.argtypes = [POINTER(CXX_MATRIX), c_ulong, c_ulong]
           return _lib._cxx_matrix_read(self, i, j)
      def __setitem__(self, (i, j), d):
           _lib._cxx_matrix_write.restype  = None
-          _lib._cxx_matrix_write.argtypes = [CXX_MATRIX, c_ulong, c_ulong, c_double]
+          _lib._cxx_matrix_write.argtypes = [POINTER(CXX_MATRIX), c_ulong, c_ulong, c_double]
           return _lib._cxx_matrix_write(self, i, j, d)
-     def export(self):
-          return [ [ self[i,j] for j in range(self.columns) ] for i in range(self.rows) ]
+
+# c++ strings
+# ------------------------------------------------------------------------------
+
+class CXX_STRING(Structure):
+     def __new__(cdx, str):
+          _lib._cxx_string_alloc.restype  = POINTER(CXX_STRING)
+          _lib._cxx_string_alloc.argtypes = [c_char_p]
+          result = _lib._cxx_string_alloc(str).contents
+          return result
+     def __init__(self, str):
+          pass
+     def __del__(self):
+          _lib._cxx_string_alloc.restype  = None
+          _lib._cxx_string_alloc.argtypes = [POINTER(CXX_STRING)]
+          _lib._cxx_string_free(self)

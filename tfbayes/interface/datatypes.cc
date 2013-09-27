@@ -22,17 +22,37 @@ using namespace std;
 
 __BEGIN_DECLS
 
+// c++ strings
+////////////////////////////////////////////////////////////////////////////////
+
+string* _cxx_string_alloc(const char* str)
+{
+        return new string(str);
+}
+
+void _cxx_string_free(string* ptr)
+{
+        delete(ptr);
+}
+
 // c++ vector/matrix interface
 ////////////////////////////////////////////////////////////////////////////////
 
 vector<double>* _cxx_vector_alloc(unsigned long size)
 {
-        return new vector<double>(size, 0.0);
+        vector<double>* ptr = new vector<double>(size, 0.0);
+        cout << "alloc vector: " << ptr << endl;
+        cout << "alloc vector: " << size << endl;
+        return ptr;
 }
 
 matrix<double>* _cxx_matrix_alloc(unsigned long rows, unsigned long columns)
 {
-        return new matrix<double>(rows, columns);
+        matrix<double>* ptr = new matrix<double>(rows, columns);
+        cout << "alloc matrix: " << ptr << endl;
+        cout << "alloc matrix: " << rows << endl;
+        cout << "alloc matrix: " << columns << endl;
+        return ptr;
 }
 
 double _cxx_vector_read(vector<double>* vector, unsigned long pos)
@@ -57,11 +77,13 @@ void _cxx_matrix_write(matrix<double>* matrix, unsigned long row, unsigned long 
 
 void _cxx_vector_free(std::vector<double>* vector)
 {
+        cout << "freeing vector" << vector << endl;
         delete(vector);
 }
 
 void _cxx_matrix_free(std::matrix<double>* matrix)
 {
+        cout << "freeing matrix" << matrix << endl;
         delete(matrix);
 }
 

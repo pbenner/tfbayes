@@ -25,6 +25,18 @@
 # define __END_DECLS /* empty */
 #endif
 
+// c++ strings
+////////////////////////////////////////////////////////////////////////////////
+
+#include <string>
+
+__BEGIN_DECLS
+
+std::string* _cxx_string_alloc(const char* str);
+void _cxx_string_free(std::string* ptr);
+
+__END_DECLS
+
 // c++ vector/matrix interface
 ////////////////////////////////////////////////////////////////////////////////
 

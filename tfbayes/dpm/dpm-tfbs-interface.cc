@@ -46,9 +46,9 @@ typedef struct {
         double discount;
         double lambda;
         double initial_temperature;
-        const char* process_prior;
-        const char* background_model;
-        matrix_t* background_alpha;
+        string* process_prior;
+        string* background_model;
+        matrix<double>* background_alpha;
         size_t background_context;
         const char* background_weights;
         vector_t*  baseline_weights;
@@ -73,8 +73,8 @@ operator<<(std::ostream& o, const options_t& options) {
           << "-> lambda              = " << options.lambda              << endl
           << "-> initial temperature = " << options.initial_temperature << endl
           << "-> tfbs_length         = " << options.tfbs_length         << endl
-          << "-> process prior       = " << options.process_prior       << endl
-          << "-> background model    = " << options.background_model    << endl
+          << "-> process prior       = " << *options.process_prior      << endl
+          << "-> background model    = " << *options.background_model   << endl
           << "-> background context  = " << options.background_context  << endl
           << "-> background weights  = " << options.background_weights  << endl
           << "-> population_size     = " << options.population_size     << endl
@@ -101,18 +101,6 @@ void _dpm_tfbs_init(const char* phylogenetic_input, const char* alignment_input)
         _phylogenetic_data = data_tfbs_t::read_fasta(phylogenetic_input);
         _alignment_set = alignment_set_t<short>(alignment_input);
 
-        // background alpha
-        for (size_t i = 0; i < _options.background_alpha->rows; i++) {
-                tfbs_options.background_alpha.push_back(
-                        vector<double>(_options.background_alpha->columns, 0));
-                for (size_t j = 0; j < _options.background_alpha->columns; j++) {
-                        tfbs_options.background_alpha[i][j] = 
-                                _options.background_alpha->mat[i][j];
-                        cout << tfbs_options.background_alpha[i][j]
-                             << endl;
-                }
-        }
-
         // baseline priors, names, and weights
         for (size_t k = 0; k < _options.baseline_n; k++) {
                 tfbs_options.baseline_weights.push_back(_options.baseline_weights->vec[k]);
@@ -134,8 +122,9 @@ void _dpm_tfbs_init(const char* phylogenetic_input, const char* alignment_input)
         tfbs_options.lambda              = _options.lambda;
         tfbs_options.initial_temperature = _options.initial_temperature;
         tfbs_options.tfbs_length         = _options.tfbs_length;
-        tfbs_options.process_prior       = _options.process_prior;
-        tfbs_options.background_model    = _options.background_model;
+        tfbs_options.process_prior       = *_options.process_prior;
+        tfbs_options.background_alpha    = *_options.background_alpha;
+        tfbs_options.background_model    = *_options.background_model;
         tfbs_options.background_context  = _options.background_context;
         tfbs_options.background_weights  = _options.background_weights;
         tfbs_options.socket_file         = _options.socket_file;

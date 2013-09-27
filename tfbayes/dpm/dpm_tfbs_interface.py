@@ -36,9 +36,9 @@ class OPTIONS(Structure):
                  ("discount",            c_double),
                  ("lambda_",             c_double),
                  ("initial_temperature", c_double),
-                 ("process_prior",       c_char_p),
-                 ("background_model",    c_char_p),
-                 ("background_alpha",    POINTER(MATRIX)),
+                 ("process_prior",       POINTER(CXX_STRING)),
+                 ("background_model",    POINTER(CXX_STRING)),
+                 ("background_alpha",    POINTER(CXX_MATRIX)),
                  ("background_context",  c_ulong),
                  ("background_weights",  c_char_p),
                  ("baseline_weights",    POINTER(VECTOR)),
@@ -57,15 +57,15 @@ class OPTIONS(Structure):
           self.discount            = options['discount']
           self.lambda_             = options['lambda']
           self.initial_temperature = options['initial_temperature']
-          self.process_prior       = options['process_prior']
-          self.background_model    = options['background_model']
+          self.process_prior       = pointer(CXX_STRING(options['process_prior']))
+          self.background_model    = pointer(CXX_STRING(options['background_model']))
           self.background_context  = options['background_context']
           self.background_weights  = options['background_weights']
           self.tfbs_length         = options['tfbs_length']
           self.population_size     = options['population_size']
           self.socket_file         = options['socket_file']
           self.partition           = generate_c_partition(partition) if partition else None
-
+          self.background_alpha    = pointer(CXX_MATRIX(map(list, zip(*options['background_alpha']))))
 
 # function prototypes
 # ------------------------------------------------------------------------------
@@ -151,11 +151,13 @@ def dpm_init(options, phylogenetic_input, alignment_input, partition=None):
           raise IOError('Length baseline priors specified.')
 
      # initialize simple c_options
+     print "creating options..."
      c_options = pointer(OPTIONS(options, partition))
+     print "creating options... done."
 
      # copy background alpha pseudo counts
-     c_options.contents.background_alpha    = _lib._alloc_matrix(len(options['background_alpha'][0]), len(options['background_alpha']))
-     copy_matrix_to_c(map(list, zip(*options['background_alpha'])), c_options.contents.background_alpha)
+     #c_options.contents.background_alpha    = _lib._alloc_matrix(len(options['background_alpha'][0]), len(options['background_alpha']))
+     #copy_matrix_to_c(map(list, zip(*options['background_alpha'])), c_options.contents.background_alpha)
 
      baseline_size                          = len(options['baseline_priors'])
      c_options.contents.baseline_n          = c_ulong(baseline_size)

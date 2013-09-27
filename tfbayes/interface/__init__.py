@@ -21,6 +21,6 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 from ctypes    import *
 
-from datatypes   import CXX_VECTOR, CXX_MATRIX, VECTOR, MATRIX
+from datatypes   import CXX_STRING, CXX_VECTOR, CXX_MATRIX, VECTOR, MATRIX
 from datatypes   import copy_vector_to_c, copy_matrix_to_c, get_vector, get_matrix
 from loadlibrary import *
