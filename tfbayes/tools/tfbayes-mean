@@ -1,0 +1,107 @@
+#! /usr/bin/env python
+
+# Copyright (C) 2011, 2012 Philipp Benner
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# imports
+# ------------------------------------------------------------------------------
+
+import sys
+import getopt
+import os
+
+# local imports
+# ------------------------------------------------------------------------------
+
+from tfbayes.config                 import *
+from tfbayes.cluster                import parse_partition
+from tfbayes.dpm.dpm_tfbs_interface import *
+
+# global options
+# ------------------------------------------------------------------------------
+
+sampler_config = default_sampler_config()
+
+options = {
+    'resume'              : None,
+    'verbose'             : False
+    }
+
+# usage
+# ------------------------------------------------------------------------------
+
+def usage():
+    """Print usage."""
+    print
+    print "tfbayes-mean [option]... COMMAND SAMPLER_CONFIG"
+    print
+    print "This program computes the mean or median partition from a set"
+    print "of posterior samples."
+    print
+    print "Commands:"
+    print "       mean                        - compute mean partition"
+    print "       median                      - compute median parititon"
+    print
+    print "Options:"
+    print "   -h, --help                      - print help"
+    print "   -v, --verbose                   - be verbose"
+    print
+
+# sample
+# ------------------------------------------------------------------------------
+
+def compute_mean(command):
+    # get posterior samples from results config
+    results_config = {}
+    parse_results_config(sampler_config['save'], results_config)
+    partition_list = parse_partition_list(results_config['partitions'])
+    if command == "mean":
+        result = 
+        # mean
+    if command == "median":
+        # median
+# main
+# ------------------------------------------------------------------------------
+
+def main():
+    global options
+    global sampler_config
+    try:
+        longopts   = ["help",
+                      "verbose"]
+        opts, tail = getopt.getopt(sys.argv[1:], "vh", longopts)
+    except getopt.GetoptError:
+        usage()
+        return 2
+    output = None
+    if len(tail) != 2:
+        usage()
+        return 1
+    # option default options from config file
+    parse_sampler_config(tail[0], sampler_config)
+    # override those options with command line arguments
+    for o, a in opts:
+        if o in ("-v", "--verbose"):
+            sys.stderr.write("Verbose mode turned on.\n")
+            options["verbose"] = True
+        if o in ("-h", "--help"):
+            usage()
+            return 0
+    compute_mean(tail[1])
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
