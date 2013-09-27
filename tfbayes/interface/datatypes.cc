@@ -27,7 +27,9 @@ __BEGIN_DECLS
 
 vector<double>* _cxx_vector_alloc(unsigned long size)
 {
-        return new vector<double>(size, 0.0);
+        vector<double>* result = new vector<double>(size, 0.0);
+        cout << "vector alloc: " << result << endl;
+        return result;
 }
 
 matrix<double>* _cxx_matrix_alloc(unsigned long rows, unsigned long columns)
