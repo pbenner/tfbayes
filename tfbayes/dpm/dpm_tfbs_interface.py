@@ -42,18 +42,18 @@ class OPTIONS(Structure):
                  ("discount",            c_double),
                  ("lambda_",             c_double),
                  ("initial_temperature", c_double),
-                 ("process_prior",       POINTER(CXX_STRING)),
-                 ("background_model",    POINTER(CXX_STRING)),
-                 ("background_alpha",    POINTER(CXX_MATRIX)),
+                 ("process_prior",       CXX_STRING),
+                 ("background_model",    CXX_STRING),
+                 ("background_alpha",    CXX_MATRIX),
                  ("background_context",  c_size_t),
-                 ("background_weights",  POINTER(CXX_STRING)),
-                 ("baseline_weights",    POINTER(CXX_VECTOR)),
-                 ("baseline_priors",     POINTER(POINTER(CXX_MATRIX))),
-                 ("baseline_tags",       POINTER(POINTER(CXX_STRING))),
+                 ("background_weights",  CXX_STRING),
+                 ("baseline_weights",    CXX_VECTOR),
+                 ("baseline_priors",     POINTER(CXX_MATRIX)),
+                 ("baseline_tags",       POINTER(CXX_STRING)),
                  ("baseline_n",          c_size_t),
                  ("partition",           POINTER(PARTITION)),
                  ("population_size",     c_size_t),
-                 ("socket_file",         POINTER(CXX_STRING))]
+                 ("socket_file",         CXX_STRING)]
      def __new__(cls, options, partition):
           return _lib._dpm_tfbs_options().contents
      def __init__(self, options, partition):
@@ -61,28 +61,28 @@ class OPTIONS(Structure):
           self.discount            = options['discount']
           self.lambda_             = options['lambda']
           self.initial_temperature = options['initial_temperature']
-          self.process_prior       = pointer(CXX_STRING(options['process_prior']))
-          self.background_model    = pointer(CXX_STRING(options['background_model']))
+          self.process_prior       = CXX_STRING(options['process_prior'])
+          self.background_model    = CXX_STRING(options['background_model'])
           self.background_context  = options['background_context']
-          self.background_weights  = pointer(CXX_STRING(options['background_weights']))
+          self.background_weights  = CXX_STRING(options['background_weights'])
           self.tfbs_length         = options['tfbs_length']
           self.population_size     = options['population_size']
-          self.socket_file         = pointer(CXX_STRING(options['socket_file']))
+          self.socket_file         = CXX_STRING(options['socket_file'])
           self.partition           = generate_c_partition(partition) if partition else None
-          self.background_alpha    = pointer(CXX_MATRIX(transpose(options['background_alpha'])))
+          self.background_alpha    = CXX_MATRIX(transpose(options['background_alpha']))
           # copy baseline
           self.baseline_n          = len(options['baseline_priors'])
-          self.baseline_tags       = (self.baseline_n*POINTER(CXX_STRING))()
+          self.baseline_tags       = (self.baseline_n*CXX_STRING)()
           for idx, name in enumerate(options['baseline_tags']):
-               self.baseline_tags[idx] = pointer(CXX_STRING(name))
+               self.baseline_tags[idx] = CXX_STRING(name)
           # copy baseline priors and weights
-          self.baseline_priors     = (self.baseline_n*POINTER(CXX_MATRIX))()
-          self.baseline_weights    = pointer(CXX_VECTOR(self.baseline_n))
+          self.baseline_priors     = (self.baseline_n*CXX_MATRIX)()
+          self.baseline_weights    = CXX_VECTOR(self.baseline_n)
           for idx, (name, prior) in enumerate(options['baseline_priors'].iteritems()):
                # first the prior
-               self.baseline_priors[idx] = pointer(CXX_MATRIX(transpose(prior)))
+               self.baseline_priors[idx] = CXX_MATRIX(transpose(prior))
                # and now its weight
-               self.baseline_weights.contents[idx] = options['baseline_weights'][name]
+               self.baseline_weights[idx] = options['baseline_weights'][name]
 
 # function prototypes
 # ------------------------------------------------------------------------------
@@ -144,11 +144,6 @@ _lib._dpm_partition_list_add_partition.argtypes = [POINTER(PARTITION_LIST), POIN
 _lib._dpm_partition_list_free.restype  = None
 _lib._dpm_partition_list_free.argtypes = [POINTER(PARTITION_LIST)]
 
-# global variables
-# ------------------------------------------------------------------------------
-
-c_options = None
-
 # convert datatypes
 # ------------------------------------------------------------------------------
 
@@ -164,7 +159,6 @@ def generate_c_partition(partition):
 # ------------------------------------------------------------------------------
 
 def dpm_init(options, phylogenetic_input, alignment_input, partition=None):
-     global c_options
      # do some sanity checks
      if not len(options['baseline_priors']) == len(options['baseline_weights']):
           raise IOError('Length mismatch between baseline priors and weights.')

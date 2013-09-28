@@ -28,13 +28,11 @@ __BEGIN_DECLS
 string* _cxx_string_alloc(const char* str)
 {
         string* ptr = new string(str);
-        cout << "allocating string at " << ptr << endl;
         return ptr;
 }
 
 void _cxx_string_free(string* ptr)
 {
-        cout << "freeing string at " << ptr << endl;
         delete(ptr);
 }
 
@@ -49,17 +47,12 @@ const char* _cxx_string_getstr(string* ptr)
 vector<double>* _cxx_vector_alloc(size_t size)
 {
         vector<double>* ptr = new vector<double>(size, 0.0);
-        cout << "alloc vector: " << ptr << endl;
-        cout << "alloc vector: " << size << endl;
         return ptr;
 }
 
 matrix<double>* _cxx_matrix_alloc(size_t rows, size_t columns)
 {
         matrix<double>* ptr = new matrix<double>(rows, columns);
-        cout << "alloc matrix: " << ptr << endl;
-        cout << "alloc matrix: " << rows << endl;
-        cout << "alloc matrix: " << columns << endl;
         return ptr;
 }
 
@@ -85,13 +78,11 @@ void _cxx_matrix_write(matrix<double>* matrix, size_t row, size_t column, double
 
 void _cxx_vector_free(std::vector<double>* vector)
 {
-        cout << "freeing vector" << vector << endl;
         delete(vector);
 }
 
 void _cxx_matrix_free(std::matrix<double>* matrix)
 {
-        cout << "freeing matrix" << matrix << endl;
         delete(matrix);
 }
 

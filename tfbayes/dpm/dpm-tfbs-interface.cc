@@ -102,20 +102,11 @@ void _dpm_tfbs_init(const char* phylogenetic_input, const char* alignment_input)
         _alignment_set = alignment_set_t<short>(alignment_input);
 
         // baseline priors, names, and weights
-        cout << "hello" << endl;
-        cout << "baseline_n: " << _options.baseline_n << endl;
         for (size_t k = 0; k < _options.baseline_n; k++) {
-                cout << "test 1" << endl;
-                cout << "test 1:" << _options.baseline_weights << endl;
-                cout << "test 1:" << (*_options.baseline_weights)[k] << endl;
                 tfbs_options.baseline_weights.push_back((*_options.baseline_weights)[k]);
-                cout << "test 2" << endl;
                 tfbs_options.baseline_priors .push_back((*_options.baseline_priors )[k]);
-                cout << "test 3" << endl;
                 tfbs_options.baseline_tags   .push_back((*_options.baseline_tags   )[k]);
-                cout << "test 4" << endl;
         }
-        cout << "world" << endl;
 
         // tfbs options
         tfbs_options.alpha               = _options.alpha;
