@@ -96,7 +96,7 @@ void _dpm_tfbs_save(const char* filename)
         }
 }
 
-unsigned int _dpm_tfbs_num_clusters() {
+size_t _dpm_tfbs_num_clusters() {
         return _sampler->gdpm()[0]->state().size();
 }
 
@@ -187,8 +187,8 @@ void _dpm_tfbs_print() {
         cout << _sampler->gdpm()[0] << endl;
 }
 
-void _dpm_tfbs_sample(unsigned int n, unsigned int burnin) {
-        _sampler->sample((size_t)n, (size_t)burnin);
+void _dpm_tfbs_sample(size_t n, size_t burnin) {
+        _sampler->sample(n, burnin);
 }
 
 void _dpm_tfbs_optimize() {

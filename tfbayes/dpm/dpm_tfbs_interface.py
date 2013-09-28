@@ -93,7 +93,7 @@ _lib._dpm_tfbs_options.argtypes = []
 _lib._dpm_tfbs_init.restype  = None
 _lib._dpm_tfbs_init.argtypes = [c_char_p, c_char_p]
 
-_lib._dpm_tfbs_num_clusters.restype  = c_uint
+_lib._dpm_tfbs_num_clusters.restype  = c_size_t
 _lib._dpm_tfbs_num_clusters.argtypes = []
 
 _lib._dpm_tfbs_cluster_assignments.restype  = POINTER(MATRIX)
@@ -109,7 +109,7 @@ _lib._dpm_tfbs_print.restype  = None
 _lib._dpm_tfbs_print.argtypes = []
 
 _lib._dpm_tfbs_sample.restype  = None
-_lib._dpm_tfbs_sample.argtypes = [c_uint, c_uint]
+_lib._dpm_tfbs_sample.argtypes = [c_size_t, c_size_t]
 
 _lib._dpm_tfbs_optimize.restype  = None
 _lib._dpm_tfbs_optimize.argtypes = []
