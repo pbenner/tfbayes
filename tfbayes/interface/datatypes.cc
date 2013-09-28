@@ -56,6 +56,26 @@ matrix<double>* _cxx_matrix_alloc(size_t rows, size_t columns)
         return ptr;
 }
 
+size_t _cxx_vector_size(vector<double>* vector)
+{
+        return vector->size();
+}
+
+size_t _cxx_matrix_rows(matrix<double>* matrix)
+{
+        return matrix->size();
+}
+
+size_t _cxx_matrix_columns(matrix<double>* matrix)
+{
+        if (matrix->size() == 0) {
+                return 0;
+        }
+        else {
+                return matrix->operator[](0).size();
+        }
+}
+
 double _cxx_vector_read(vector<double>* vector, size_t pos)
 {
         return vector->operator[](pos);

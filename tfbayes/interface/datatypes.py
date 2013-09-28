@@ -87,12 +87,17 @@ class CXX_VECTOR(c_void_p):
           _lib._cxx_vector_write.restype  = None
           _lib._cxx_vector_write.argtypes = [c_void_p, c_size_t, c_double]
           return _lib._cxx_vector_write(self.value, i, d)
+     def __str__(self):
+          return str(self.export())
      def free(self):
           _lib._cxx_vector_free.restype  = None
           _lib._cxx_vector_free.argtypes = [c_void_p]
           _lib._cxx_vector_free(self.value)
      def export(self):
-          return [ self[i] for i in range(self.length) ]
+          _lib._cxx_vector_size.restype  = c_size_t
+          _lib._cxx_vector_size.argtypes = [c_void_p]
+          size = _lib._cxx_vector_size(self.value)
+          return [ self[i] for i in range(size) ]
 
 class CXX_MATRIX(c_void_p):
      def __init__(self, arg1, arg2 = None):
@@ -112,17 +117,27 @@ class CXX_MATRIX(c_void_p):
           else:
                self.value = _lib._cxx_matrix_alloc(arg1, arg2)
      def __getitem__(self, (i, j)):
-          _lib._cxx_matrix_read.restype  = c_double
-          _lib._cxx_matrix_read.argtypes = [self.value, c_size_t, c_size_t]
+          _lib._cxx_matrix_read.restype   = c_double
+          _lib._cxx_matrix_read.argtypes  = [c_void_p, c_size_t, c_size_t]
           return _lib._cxx_matrix_read(self.value, i, j)
      def __setitem__(self, (i, j), d):
           _lib._cxx_matrix_write.restype  = None
           _lib._cxx_matrix_write.argtypes = [c_void_p, c_size_t, c_size_t, c_double]
           return _lib._cxx_matrix_write(self.value, i, j, d)
+     def __str__(self):
+          return str(self.export())
      def free(self):
           _lib._cxx_matrix_free.restype  = None
           _lib._cxx_matrix_free.argtypes = [c_void_p]
           _lib._cxx_matrix_free(self.value)
+     def export(self):
+          _lib._cxx_matrix_rows.restype     = c_size_t
+          _lib._cxx_matrix_rows.argtypes    = [c_void_p]
+          _lib._cxx_matrix_columns.restype  = c_size_t
+          _lib._cxx_matrix_columns.argtypes = [c_void_p]
+          rows    = _lib._cxx_matrix_rows   (self.value)
+          columns = _lib._cxx_matrix_columns(self.value)
+          return [ [ self[i,j] for j in range(columns) ] for i in range(rows) ]
 
 # c++ strings
 # ------------------------------------------------------------------------------
