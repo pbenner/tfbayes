@@ -142,18 +142,19 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
         ////////////////////////////////////////////////////////////////////////////////
         // use a map partition from a previous sampling run to
         // initialize the state
-        for (dpm_partition_t::const_iterator it = options.partition->begin(); it != options.partition->end(); it++) {
-                const dpm_subset_t& subset(*it);
-                cluster_t& cluster = _state.get_free_cluster(subset.dpm_subset_tag());
+        if (options.partition) {
+                for (dpm_partition_t::const_iterator it = options.partition->begin(); it != options.partition->end(); it++) {
+                        const dpm_subset_t& subset(*it);
+                        cluster_t& cluster = _state.get_free_cluster(subset.dpm_subset_tag());
 
-                for (dpm_subset_t::const_iterator is = subset.begin(); is != subset.end(); is++) {
-                        assert(valid_for_sampling(**is));
-                        assert(_state[**is] == _state.bg_cluster_tag);
-                        _state.remove(**is, _state.bg_cluster_tag);
-                        _state.add(**is, cluster.cluster_tag());
+                        for (dpm_subset_t::const_iterator is = subset.begin(); is != subset.end(); is++) {
+                                assert(valid_for_sampling(**is));
+                                assert(_state[**is] == _state.bg_cluster_tag);
+                                _state.remove(**is, _state.bg_cluster_tag);
+                                _state.add(**is, cluster.cluster_tag());
+                        }
                 }
         }
-
         ////////////////////////////////////////////////////////////////////////////////
         //test();
         //test_background();
