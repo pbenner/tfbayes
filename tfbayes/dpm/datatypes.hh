@@ -42,16 +42,16 @@ typedef enum {
 } cluster_event_t;
 
 typedef struct {
-        std::vector<std::vector<double> > switches;
-        std::vector<std::vector<double> > likelihood;
-        std::vector<std::vector<double> > posterior;
-        std::vector<std::vector<size_t> > components;
+        std::matrix<double> switches;
+        std::matrix<double> likelihood;
+        std::matrix<double> posterior;
+        std::matrix<size_t> components;
 } sampling_history_t;
 
 #include <tfbayes/dpm/dpm-partition.hh>
 
 typedef struct {
-        std::vector<std::vector<double> > probabilities;
+        std::matrix<double> probabilities;
         // maximum posterior sample and value, i.e.
         // the maximal value that was ever reached during
         // sampling

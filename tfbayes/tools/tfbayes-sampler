@@ -87,6 +87,8 @@ def sample():
                  sampler_config['phylogenetic_data'],
                  sampler_config['alignment_data'])
     dpm_sample(samples, burnin)
+    print "dpm_switches:"
+    print dpm_hist_switches()
     dpm_save(sampler_config['save'])
     dpm_free()
 

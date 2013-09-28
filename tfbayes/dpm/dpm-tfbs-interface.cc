@@ -177,6 +177,7 @@ vector_t* _dpm_tfbs_hist_switches() {
         vector_t* result = alloc_vector(size);
 
         for (size_t i = 0; i < size; i++) {
+                cout << "switches: " << switches[i] << endl;
                 result->vec[i] = switches[i];
         }
 

@@ -76,9 +76,9 @@ population_mcmc_t::update_sampling_history()
         }
         _sampling_history = new sampling_history_t();
         for (size_t i = 0; i < _size; i++) {
-                _sampling_history->switches.push_back(_population[i]->sampling_history().switches[0]);
+                _sampling_history->switches  .push_back(_population[i]->sampling_history().switches  [0]);
                 _sampling_history->likelihood.push_back(_population[i]->sampling_history().likelihood[0]);
-                _sampling_history->posterior.push_back(_population[i]->sampling_history().posterior[0]);
+                _sampling_history->posterior .push_back(_population[i]->sampling_history().posterior [0]);
                 _sampling_history->components.push_back(_population[i]->sampling_history().components[0]);
         }
 }
