@@ -21,6 +21,12 @@ from ..interface import *
 
 _lib = load_library('tfbayes-dpm', 0)
 
+# utilities
+# ------------------------------------------------------------------------------
+
+def transpose(matrix):
+     return map(list, zip(*matrix))
+
 # structures
 # ------------------------------------------------------------------------------
 
@@ -31,7 +37,7 @@ class PARTITION_LIST(Structure):
      _fields_ = []
 
 class OPTIONS(Structure):
-     _fields_ = [("tfbs_length",         c_ulong),
+     _fields_ = [("tfbs_length",         c_size_t),
                  ("alpha",               c_double),
                  ("discount",            c_double),
                  ("lambda_",             c_double),
@@ -39,18 +45,17 @@ class OPTIONS(Structure):
                  ("process_prior",       POINTER(CXX_STRING)),
                  ("background_model",    POINTER(CXX_STRING)),
                  ("background_alpha",    POINTER(CXX_MATRIX)),
-                 ("background_context",  c_ulong),
+                 ("background_context",  c_size_t),
                  ("background_weights",  POINTER(CXX_STRING)),
                  ("baseline_weights",    POINTER(CXX_VECTOR)),
                  ("baseline_priors",     POINTER(POINTER(CXX_MATRIX))),
                  ("baseline_tags",       POINTER(POINTER(CXX_STRING))),
-                 ("baseline_n",          c_ulong),
+                 ("baseline_n",          c_size_t),
                  ("partition",           POINTER(PARTITION)),
-                 ("population_size",     c_ulong),
+                 ("population_size",     c_size_t),
                  ("socket_file",         POINTER(CXX_STRING))]
      def __new__(cls, options, partition):
-          c_options =  _lib._dpm_tfbs_options().contents
-          return c_options
+          return _lib._dpm_tfbs_options().contents
      def __init__(self, options, partition):
           self.alpha               = options['alpha']
           self.discount            = options['discount']
@@ -64,7 +69,7 @@ class OPTIONS(Structure):
           self.population_size     = options['population_size']
           self.socket_file         = pointer(CXX_STRING(options['socket_file']))
           self.partition           = generate_c_partition(partition) if partition else None
-          self.background_alpha    = pointer(CXX_MATRIX(map(list, zip(*options['background_alpha']))))
+          self.background_alpha    = pointer(CXX_MATRIX(transpose(options['background_alpha'])))
           # copy baseline
           self.baseline_n          = len(options['baseline_priors'])
           self.baseline_tags       = (self.baseline_n*POINTER(CXX_STRING))()
@@ -74,21 +79,19 @@ class OPTIONS(Structure):
           self.baseline_priors     = (self.baseline_n*POINTER(CXX_MATRIX))()
           self.baseline_weights    = pointer(CXX_VECTOR(self.baseline_n))
           for idx, (name, prior) in enumerate(options['baseline_priors'].iteritems()):
-               print self.baseline_priors[idx]
                # first the prior
-               self.baseline_priors[idx] = pointer(CXX_MATRIX(prior))
+               self.baseline_priors[idx] = pointer(CXX_MATRIX(transpose(prior)))
                # and now its weight
                self.baseline_weights.contents[idx] = options['baseline_weights'][name]
-
 
 # function prototypes
 # ------------------------------------------------------------------------------
 
-_lib._dpm_tfbs_options.restype       = POINTER(OPTIONS)
-_lib._dpm_tfbs_options.argtypes      = []
+_lib._dpm_tfbs_options.restype  = POINTER(OPTIONS)
+_lib._dpm_tfbs_options.argtypes = []
 
-_lib._dpm_tfbs_init.restype          = None
-_lib._dpm_tfbs_init.argtypes         = [c_char_p, c_char_p]
+_lib._dpm_tfbs_init.restype  = None
+_lib._dpm_tfbs_init.argtypes = [c_char_p, c_char_p]
 
 _lib._dpm_tfbs_num_clusters.restype  = c_uint
 _lib._dpm_tfbs_num_clusters.argtypes = []
@@ -102,20 +105,20 @@ _lib._dpm_tfbs_hist_likelihood.argtypes = []
 _lib._dpm_tfbs_hist_switches.restype  = POINTER(VECTOR)
 _lib._dpm_tfbs_hist_switches.argtypes = []
 
-_lib._dpm_tfbs_print.restype    = None
-_lib._dpm_tfbs_print.argtypes   = []
+_lib._dpm_tfbs_print.restype  = None
+_lib._dpm_tfbs_print.argtypes = []
 
-_lib._dpm_tfbs_sample.restype   = None
-_lib._dpm_tfbs_sample.argtypes  = [c_uint, c_uint]
+_lib._dpm_tfbs_sample.restype  = None
+_lib._dpm_tfbs_sample.argtypes = [c_uint, c_uint]
 
-_lib._dpm_tfbs_optimize.restype   = None
-_lib._dpm_tfbs_optimize.argtypes  = []
+_lib._dpm_tfbs_optimize.restype  = None
+_lib._dpm_tfbs_optimize.argtypes = []
 
-_lib._dpm_tfbs_save.restype     = None
-_lib._dpm_tfbs_save.argtypes    = [c_char_p]
+_lib._dpm_tfbs_save.restype  = None
+_lib._dpm_tfbs_save.argtypes = [c_char_p]
 
-_lib._dpm_tfbs_free.restype     = None
-_lib._dpm_tfbs_free.argtypes    = []
+_lib._dpm_tfbs_free.restype  = None
+_lib._dpm_tfbs_free.argtypes = []
 
 _lib._dpm_tfbs_get_posterior.restype  = POINTER(MATRIX)
 _lib._dpm_tfbs_get_posterior.argtypes = []
@@ -175,13 +178,6 @@ def dpm_init(options, phylogenetic_input, alignment_input, partition=None):
 
      # call the library
      _lib._dpm_tfbs_init(phylogenetic_input, alignment_input)
-
-     # free everything
-     _lib._free_vector(c_options.contents.baseline_weights)
-     for i in range(baseline_size):
-          _lib._free_matrix(c_baseline_priors[i])
-     if c_options.contents.partition:
-          _lib._dpm_partition_free(c_options.contents.partition)
 
 def dpm_print():
      _lib._dpm_tfbs_print()

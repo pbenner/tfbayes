@@ -27,18 +27,26 @@ __BEGIN_DECLS
 
 string* _cxx_string_alloc(const char* str)
 {
-        return new string(str);
+        string* ptr = new string(str);
+        cout << "allocating string at " << ptr << endl;
+        return ptr;
 }
 
 void _cxx_string_free(string* ptr)
 {
+        cout << "freeing string at " << ptr << endl;
         delete(ptr);
+}
+
+const char* _cxx_string_getstr(string* ptr)
+{
+        return ptr->c_str();
 }
 
 // c++ vector/matrix interface
 ////////////////////////////////////////////////////////////////////////////////
 
-vector<double>* _cxx_vector_alloc(unsigned long size)
+vector<double>* _cxx_vector_alloc(size_t size)
 {
         vector<double>* ptr = new vector<double>(size, 0.0);
         cout << "alloc vector: " << ptr << endl;
@@ -46,7 +54,7 @@ vector<double>* _cxx_vector_alloc(unsigned long size)
         return ptr;
 }
 
-matrix<double>* _cxx_matrix_alloc(unsigned long rows, unsigned long columns)
+matrix<double>* _cxx_matrix_alloc(size_t rows, size_t columns)
 {
         matrix<double>* ptr = new matrix<double>(rows, columns);
         cout << "alloc matrix: " << ptr << endl;
@@ -55,22 +63,22 @@ matrix<double>* _cxx_matrix_alloc(unsigned long rows, unsigned long columns)
         return ptr;
 }
 
-double _cxx_vector_read(vector<double>* vector, unsigned long pos)
+double _cxx_vector_read(vector<double>* vector, size_t pos)
 {
         return vector->operator[](pos);
 }
 
-double _cxx_matrix_read(matrix<double>* matrix, unsigned long row, unsigned long column)
+double _cxx_matrix_read(matrix<double>* matrix, size_t row, size_t column)
 {
         return matrix->operator[](row)[column];
 }
 
-void _cxx_vector_write(vector<double>* vector, unsigned long pos, double d)
+void _cxx_vector_write(vector<double>* vector, size_t pos, double d)
 {
         vector->operator[](pos) = d;
 }
 
-void _cxx_matrix_write(matrix<double>* matrix, unsigned long row, unsigned long column, double d)
+void _cxx_matrix_write(matrix<double>* matrix, size_t row, size_t column, double d)
 {
         matrix->operator[](row)[column] = d;
 }
@@ -90,10 +98,10 @@ void _cxx_matrix_free(std::matrix<double>* matrix)
 // vector interface
 ////////////////////////////////////////////////////////////////////////////////
 
-vector_t * _alloc_vector(unsigned long size) {
+vector_t * _alloc_vector(size_t size) {
         return alloc_vector(size);
 }
-matrix_t * _alloc_matrix(unsigned long rows, unsigned long columns) {
+matrix_t * _alloc_matrix(size_t rows, size_t columns) {
         return alloc_matrix(rows, columns);
 }
 void _free_vector(vector_t *v) { free_vector(v); }
