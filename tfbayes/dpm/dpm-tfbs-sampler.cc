@@ -386,7 +386,7 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
           _options(new tfbs_options_t(options)),
           _data(phylogenetic_data, options.tfbs_length),
           _gdpm(n, NULL),
-          _socket_file(options.socket_file),
+          _socket_file(*options.socket_file),
           _server(NULL),
           _bt(NULL) {
 

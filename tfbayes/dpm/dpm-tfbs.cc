@@ -35,7 +35,7 @@ using namespace std;
 
 dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, const alignment_set_t<short>& alignment_set)
         : // baseline
-          _baseline_weights(options.baseline_weights),
+          _baseline_weights(*options.baseline_weights),
           // phylogenetic information
           _data(data),
           // coded nucleotide sequences
@@ -65,34 +65,35 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
 
         ////////////////////////////////////////////////////////////////////////////////
         // add background model to the state
-        if (options.background_model == "independence-dirichlet" || options.background_model == "") {
+        if (*options.background_model == "independence-dirichlet" || *options.background_model == "") {
                 /* every position in the background is fully
                  * independet, this give more flexibility to the
                  * prior pseudocounts */
-                independence_background_t* bg = new independence_background_t(options.background_alpha, _data, _state.cluster_assignments());
+                independence_background_t* bg = new independence_background_t(*options.background_alpha, _data, _state.cluster_assignments());
                 _state.bg_cluster_tag = _state.add_cluster(bg);
                 bg->set_bg_cluster_tag(_state.bg_cluster_tag);
         }
-        else if (options.background_model == "independence-dirichlet-gamma" || options.background_model == "") {
+        else if (*options.background_model == "independence-dirichlet-gamma") {
                 /* every position in the background is fully
                  * independet, where the Dirichlet pseudocounts
                  * are integrated out */
+                cerr << "TODO: variable gamma prior parameters" << endl;
                 independence_background_t* bg = new independence_background_t(2.0, 2.0, _data, _state.cluster_assignments());
                 _state.bg_cluster_tag = _state.add_cluster(bg);
                 bg->set_bg_cluster_tag(_state.bg_cluster_tag);
         }
-        else if (options.background_model == "dirichlet") {
+        else if (*options.background_model == "dirichlet") {
                 /* single dirichlet-compound distribution for all
                  * nucleotides in the background */
-                product_dirichlet_t* bg = new product_dirichlet_t(options.background_alpha, _data);
+                product_dirichlet_t* bg = new product_dirichlet_t(*options.background_alpha, _data);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
         }
-        else if (options.background_model == "uniform") {
+        else if (*options.background_model == "uniform") {
                 /* all sequences have the same probability (no phylogeny!) */
                 uniform_background_t* bg = new uniform_background_t(_data, _alignment_set);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
         }
-        else if (options.background_model == "markov chain mixture") {
+        else if (*options.background_model == "markov chain mixture") {
                 assert(options.background_context >= 0);
                 markov_chain_mixture_t* bg = new markov_chain_mixture_t(data_tfbs_t::alphabet_size, options, _data, _state.cluster_assignments(), 0);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
@@ -101,18 +102,15 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
                 cerr << "Unknown background model." << endl;
                 exit(EXIT_FAILURE);
         }
-        // add model components for the baseline measure
-        assert(options.baseline_priors.size() == options.baseline_tags.size());
-        assert(options.baseline_priors.size() == options.baseline_weights.size());
         // baseline weights are already initialized
-        for (size_t i = 0; i < options.baseline_priors.size(); i++) {
-                assert(options.baseline_priors[i].size() == options.tfbs_length);
+        for (size_t i = 0; i < options.baseline_n; i++) {
+                assert((*options.baseline_priors)[i].size() == options.tfbs_length);
                 for (size_t j = 0; j < options.tfbs_length; j++) {
-                        assert(options.baseline_priors[i][j].size() == data_tfbs_t::alphabet_size);
+                        assert((*options.baseline_priors)[i][j].size() == data_tfbs_t::alphabet_size);
                 }
-                product_dirichlet_t* dirichlet = new product_dirichlet_t(options.baseline_priors[i], _data);
-                _state.add_baseline_model(dirichlet, options.baseline_tags[i]);
-                _baseline_tags.push_back(options.baseline_tags[i]);
+                product_dirichlet_t* dirichlet = new product_dirichlet_t((*options.baseline_priors)[i], _data);
+                _state.add_baseline_model(dirichlet, (*options.baseline_tags)[i]);
+                _baseline_tags.push_back((*options.baseline_tags)[i]);
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -127,13 +125,13 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
 
         ////////////////////////////////////////////////////////////////////////////////
         // set the process prior
-        if (options.process_prior == "pitman-yor process" || options.process_prior == "") {
+        if (*options.process_prior == "pitman-yor process" || *options.process_prior == "") {
                 _process_prior = new pitman_yor_prior(options.alpha, options.discount, _state.bg_cluster_tag);
         }
-        else if (options.process_prior == "uniform process") {
+        else if (*options.process_prior == "uniform process") {
                 _process_prior = new uniform_prior(options.alpha);
         }
-        else if (options.process_prior == "poppe process") {
+        else if (*options.process_prior == "poppe process") {
                 _process_prior = new poppe_prior();
         }
         else {
@@ -144,7 +142,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
         ////////////////////////////////////////////////////////////////////////////////
         // use a map partition from a previous sampling run to
         // initialize the state
-        for (dpm_partition_t::const_iterator it = options.partition.begin(); it != options.partition.end(); it++) {
+        for (dpm_partition_t::const_iterator it = options.partition->begin(); it != options.partition->end(); it++) {
                 const dpm_subset_t& subset(*it);
                 cluster_t& cluster = _state.get_free_cluster(subset.dpm_subset_tag());
 

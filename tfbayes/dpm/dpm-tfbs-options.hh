@@ -33,16 +33,18 @@ typedef struct {
         double discount;
         double lambda;
         double initial_temperature;
-        std::string process_prior;
-        std::string background_model;
-        std::matrix<double> background_alpha;
+        std::string* process_prior;
+        std::string* background_model;
+        std::matrix<double>* background_alpha;
         size_t background_context;
-        std::string background_weights;
-        std::vector<double> baseline_weights;
-        std::vector<std::matrix<double> > baseline_priors;
-        std::vector<std::string> baseline_tags;
-        dpm_partition_t partition;
-        std::string socket_file;
+        std::string* background_weights;
+        std::vector<double>*  baseline_weights;
+        std::matrix<double>** baseline_priors;
+        std::string** baseline_tags;
+        size_t baseline_n;
+        dpm_partition_t* partition;
+        size_t population_size;
+        std::string* socket_file;
 } tfbs_options_t;
 
 #endif /* DPM_TFBS_OPTIONS_HH */

@@ -40,33 +40,13 @@ using namespace std;
 // options and global variables
 // -----------------------------------------------------------------------------
 
-typedef struct {
-        size_t tfbs_length;
-        double alpha;
-        double discount;
-        double lambda;
-        double initial_temperature;
-        string* process_prior;
-        string* background_model;
-        matrix<double>* background_alpha;
-        size_t background_context;
-        string* background_weights;
-        vector<double>*  baseline_weights;
-        matrix<double>** baseline_priors;
-        string** baseline_tags;
-        size_t baseline_n;
-        dpm_partition_t* partition;
-        size_t population_size;
-        string* socket_file;
-} options_t;
-
-static options_t _options;
+static tfbs_options_t _options;
 static dpm_tfbs_pmcmc_t* _sampler;
 static sequence_data_t<data_tfbs_t::code_t> _phylogenetic_data;
 static alignment_set_t<short> _alignment_set;
 
 ostream&
-operator<<(std::ostream& o, const options_t& options) {
+operator<<(std::ostream& o, const tfbs_options_t& options) {
         o << "Options:"              << endl
           << "-> alpha               = " << options.alpha               << endl
           << "-> discount            = " << options.discount            << endl
@@ -87,45 +67,18 @@ __BEGIN_DECLS
 // python interface
 // -----------------------------------------------------------------------------
 
-options_t* _dpm_tfbs_options()
+tfbs_options_t* _dpm_tfbs_options()
 {
         return &_options;
 }
 
 void _dpm_tfbs_init(const char* phylogenetic_input, const char* alignment_input)
 {
-        tfbs_options_t tfbs_options;
-
         __dpm_init__();
 
         _phylogenetic_data = data_tfbs_t::read_fasta(phylogenetic_input);
-        _alignment_set = alignment_set_t<short>(alignment_input);
-
-        // baseline priors, names, and weights
-        for (size_t k = 0; k < _options.baseline_n; k++) {
-                tfbs_options.baseline_weights.push_back((*_options.baseline_weights)[k]);
-                tfbs_options.baseline_priors .push_back((*_options.baseline_priors )[k]);
-                tfbs_options.baseline_tags   .push_back((*_options.baseline_tags   )[k]);
-        }
-
-        // tfbs options
-        tfbs_options.alpha               = _options.alpha;
-        tfbs_options.discount            = _options.discount;
-        tfbs_options.lambda              = _options.lambda;
-        tfbs_options.initial_temperature = _options.initial_temperature;
-        tfbs_options.tfbs_length         = _options.tfbs_length;
-        tfbs_options.process_prior       = *_options.process_prior;
-        tfbs_options.background_alpha    = *_options.background_alpha;
-        tfbs_options.background_model    = *_options.background_model;
-        tfbs_options.background_context  = _options.background_context;
-        tfbs_options.background_weights  = *_options.background_weights;
-        tfbs_options.socket_file         = *_options.socket_file;
-
-        if (_options.partition) {
-                tfbs_options.partition   = *_options.partition;
-        }
-
-        _sampler = new dpm_tfbs_pmcmc_t(tfbs_options, _phylogenetic_data, _alignment_set, _options.population_size);
+        _alignment_set     = alignment_set_t<short>(alignment_input);
+        _sampler           = new dpm_tfbs_pmcmc_t(_options, _phylogenetic_data, _alignment_set, _options.population_size);
 
         cout << _options << endl;
 }

@@ -657,10 +657,10 @@ markov_chain_mixture_t::markov_chain_mixture_t(
         _counts = (double*)malloc(_length*sizeof(double));
         _counts_sum = (double*)malloc(_length/_alphabet_size*sizeof(double));
         _parents = (int*)malloc(_length*sizeof(int));
-        if (options.background_weights == "entropy") {
+        if (*options.background_weights == "entropy") {
                 _weights = new entropy_weights_t(_alphabet_size, _max_context, _length);
         }
-        else if (options.background_weights == "decay") {
+        else if (*options.background_weights == "decay") {
                 _weights = new decay_weights_t(_max_context);
         }
         else {
@@ -677,7 +677,7 @@ markov_chain_mixture_t::markov_chain_mixture_t(
         }
         /* init counts */
         for (size_t i = 0; i < _length; i++) {
-                _alpha[i]  = options.background_alpha[0][0];
+                _alpha[i]  = (*options.background_alpha)[0][0];
                 _counts[i] = 0.0;
                 _counts_sum[i/_alphabet_size] += _alpha[i] + _counts[i];
         }

@@ -153,14 +153,14 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         alignment_set_t<short> alignment_set = alignment_set_t<short>(fasta_alignment_file);
 
         // background alpha
-        tfbs_options.background_alpha.push_back(vector<double>(data_tfbs_t::alphabet_size, options.background_alpha));
+        tfbs_options.background_alpha = new matrix<double>();
+        tfbs_options.background_alpha->push_back(vector<double>(data_tfbs_t::alphabet_size, options.background_alpha));
 
-        // baseline
-        vector<double> baseline_weights(1,1);
-        vector<matrix<double> > baseline_priors;
-        baseline_priors.push_back(matrix<double>());
+        // baseline prior
+        tfbs_options.baseline_priors    = new matrix<double>*[1];
+        tfbs_options.baseline_priors[0] = new matrix<double>();
         for (size_t i = 0; i < options.tfbs_length; i++) {
-                baseline_priors[0].push_back(vector<double>(data_tfbs_t::alphabet_size, 1.0));
+                tfbs_options.baseline_priors[0]->push_back(vector<double>(data_tfbs_t::alphabet_size, 1.0));
         }
 
         // tfbs options
@@ -168,13 +168,14 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options.lambda              = options.lambda;
         tfbs_options.discount            = options.discount;
         tfbs_options.tfbs_length         = options.tfbs_length;
-        tfbs_options.process_prior       = options.process_prior;
-        tfbs_options.background_model    = options.background_model;
+        tfbs_options.process_prior       = new string(options.process_prior);
+        tfbs_options.background_model    = new string(options.background_model);
         tfbs_options.background_context  = options.background_context;
-        tfbs_options.background_weights  = options.background_weights;
-        tfbs_options.baseline_weights    = baseline_weights;
-        tfbs_options.baseline_priors     = baseline_priors;
-        tfbs_options.baseline_tags.push_back("baseline_default");
+        tfbs_options.background_weights  = new string(options.background_weights);
+        tfbs_options.baseline_n          = 1;
+        tfbs_options.baseline_weights    = new vector<double>(1,1);
+        tfbs_options.baseline_tags       = new string*[1];
+        tfbs_options.baseline_tags[0]    = new string("baseline_default");
 
         // create data, dpm, and sampler objects
         dpm_tfbs_pmcmc_t pmcmc(tfbs_options, phylogenetic_data, alignment_set, options.population_size);
