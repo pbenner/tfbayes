@@ -259,7 +259,7 @@ dpm_tfbs_sampler_t::_metropolis_sample(const double temp) {
 // Main
 ////////////////////////////////////////////////////////////////////////////////
 
-bool
+size_t
 dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         // temperature for simulated annealing
         double temp = 1.0;

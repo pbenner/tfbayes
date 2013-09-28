@@ -171,17 +171,10 @@ vector_t* _dpm_tfbs_hist_likelihood() {
         return result;
 }
 
-vector_t* _dpm_tfbs_hist_switches() {
-        const vector<double>& switches = _sampler->sampling_history().switches[0];
-        size_t size = switches.size();
-        vector_t* result = alloc_vector(size);
+matrix<double>* _dpm_tfbs_hist_switches() {
+        const matrix<double>& switches = _sampler->sampling_history().switches;
 
-        for (size_t i = 0; i < size; i++) {
-                cout << "switches: " << switches[i] << endl;
-                result->vec[i] = switches[i];
-        }
-
-        return result;
+        return new matrix<double>(switches);
 }
 
 void _dpm_tfbs_print() {

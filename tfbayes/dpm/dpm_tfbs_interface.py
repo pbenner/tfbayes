@@ -102,7 +102,7 @@ _lib._dpm_tfbs_cluster_assignments.argtypes = []
 _lib._dpm_tfbs_hist_likelihood.restype  = POINTER(VECTOR)
 _lib._dpm_tfbs_hist_likelihood.argtypes = []
 
-_lib._dpm_tfbs_hist_switches.restype  = POINTER(VECTOR)
+_lib._dpm_tfbs_hist_switches.restype  = CXX_MATRIX
 _lib._dpm_tfbs_hist_switches.argtypes = []
 
 _lib._dpm_tfbs_print.restype  = None
@@ -193,8 +193,8 @@ def dpm_hist_likelihood():
 
 def dpm_hist_switches():
      result   = _lib._dpm_tfbs_hist_switches()
-     switches = get_vector(result)
-     _lib._free_vector(result)
+     switches = result.export()
+     result.free()
      return switches
 
 def dpm_sample(n, burnin):

@@ -118,7 +118,7 @@ gibbs_sampler_t::_gibbs_sample() {
         return sum;
 }
 
-bool
+size_t
 gibbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         return _gibbs_sample();
 }
@@ -154,9 +154,9 @@ gibbs_sampler_t::sample(size_t n, size_t burnin) {
                 sum      = _sample(i, burnin, true);
                 switches = _indexer.elements() > 0 ? sum/(double)_indexer.elements() : 0;
                 _sampling_history.likelihood[0].push_back(_dpm.likelihood());
-                _sampling_history.posterior[0].push_back(_dpm.posterior());
+                _sampling_history.posterior [0].push_back(_dpm.posterior());
                 _sampling_history.components[0].push_back(_dpm.mixture_components());
-                _sampling_history.switches[0].push_back(switches);
+                _sampling_history.switches  [0].push_back(switches);
         }
         // sample `n' times
         for (size_t i = 0; i < n; i++) {
@@ -171,9 +171,9 @@ gibbs_sampler_t::sample(size_t n, size_t burnin) {
                 sum      = _sample(i, n, false);
                 switches = _indexer.elements() > 0 ? sum/(double)_indexer.elements() : 0;
                 _sampling_history.likelihood[0].push_back(_dpm.likelihood());
-                _sampling_history.posterior[0].push_back(_dpm.posterior());
+                _sampling_history.posterior [0].push_back(_dpm.posterior());
                 _sampling_history.components[0].push_back(_dpm.mixture_components());
-                _sampling_history.switches[0].push_back(switches);
+                _sampling_history.switches  [0].push_back(switches);
                 _dpm.update_samples(_sampling_steps);
                 _sampling_steps++;
         }
