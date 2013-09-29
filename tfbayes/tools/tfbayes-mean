@@ -74,10 +74,9 @@ def compute_mean(command):
              sampler_config['alignment_data'])
     # compute mean or median
     if command == "mean":
-        result = 
-        # mean
+        result = dpm_mean(partition_list)
     if command == "median":
-        # median
+        result = dpm_median(partition_list)
     # free sampler
     dpm_free()
 

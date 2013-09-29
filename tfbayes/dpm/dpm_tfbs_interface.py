@@ -55,10 +55,14 @@ class PARTITION(c_void_p):
           _lib._dpm_partition_free(self)
 
 class PARTITION_LIST(c_void_p):
-     def __init__(self):
+     def __init__(self, partition_list = None):
           _lib._dpm_partition_list_new.restype  = c_void_p
           _lib._dpm_partition_list_new.argtypes = []
           self.value = _lib._dpm_partition_list_new()
+          if partition_list == None:
+               return
+          for partition in partition_list:
+               self.add_partition(partition)
      def add_partition(self, partition):
           _lib._dpm_partition_list_add_partition.restype  = None
           _lib._dpm_partition_list_add_partition.argtypes = [PARTITION_LIST, PARTITION]
@@ -67,6 +71,14 @@ class PARTITION_LIST(c_void_p):
           _lib._dpm_partition_list_free.restype  = None
           _lib._dpm_partition_list_free.argtypes = [PARTITION_LIST]
           _lib._dpm_partition_list_free(self)
+     def mean(self):
+          _lib._dpm_mean.restype  = PARTITION
+          _lib._dpm_mean.argtypes = [PARTITION_LIST]
+          _lib._dpm_mean(self)
+     def median(self):
+          _lib._dpm_median.restype  = PARTITION
+          _lib._dpm_median.argtypes = [PARTITION_LIST]
+          _lib._dpm_median(self)
 
 # options
 # ------------------------------------------------------------------------------
@@ -214,3 +226,7 @@ def dpm_free():
 
 def dpm_get_posterior():
      return get_matrix(_lib._dpm_tfbs_get_posterior())
+
+def dpm_mean(partition_list):
+     l = PARTITION_LIST(partition_list)
+     p = l.mean()
