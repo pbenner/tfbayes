@@ -99,7 +99,7 @@ _lib._dpm_tfbs_num_clusters.argtypes = []
 _lib._dpm_tfbs_cluster_assignments.restype  = POINTER(MATRIX)
 _lib._dpm_tfbs_cluster_assignments.argtypes = []
 
-_lib._dpm_tfbs_hist_likelihood.restype  = POINTER(VECTOR)
+_lib._dpm_tfbs_hist_likelihood.restype  = CXX_MATRIX
 _lib._dpm_tfbs_hist_likelihood.argtypes = []
 
 _lib._dpm_tfbs_hist_switches.restype  = CXX_MATRIX
@@ -187,8 +187,8 @@ def dpm_cluster_assignments():
 
 def dpm_hist_likelihood():
      result     = _lib._dpm_tfbs_hist_likelihood()
-     likelihood = get_vector(result)
-     _lib._free_vector(result)
+     likelihood = result.export()
+     result.free()
      return likelihood
 
 def dpm_hist_switches():

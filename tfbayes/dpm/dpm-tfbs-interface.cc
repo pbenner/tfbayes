@@ -102,7 +102,7 @@ size_t _dpm_tfbs_num_clusters() {
 
 matrix_t* _dpm_tfbs_get_posterior() {
         matrix_t* result;
-        const vector<vector<double> >& probabilities = _sampler->samples().probabilities;
+        const matrix<double>& probabilities = _sampler->samples().probabilities;
         size_t n = probabilities.size();
         size_t m = 0;
 
@@ -159,21 +159,13 @@ matrix_t* _dpm_tfbs_cluster_assignments() {
         return result;
 }
 
-vector_t* _dpm_tfbs_hist_likelihood() {
-        const vector<double>& likelihood = _sampler->sampling_history().likelihood[0];
-        size_t size = likelihood.size();
-        vector_t* result = alloc_vector(size);
-
-        for (size_t i = 0; i < size; i++) {
-                result->vec[i] = likelihood[i];
-        }
-
-        return result;
+matrix<double>* _dpm_tfbs_hist_likelihood() {
+        const matrix<double>& likelihood = _sampler->sampling_history().likelihood;
+        return new matrix<double>(likelihood);
 }
 
 matrix<double>* _dpm_tfbs_hist_switches() {
         const matrix<double>& switches = _sampler->sampling_history().switches;
-
         return new matrix<double>(switches);
 }
 
