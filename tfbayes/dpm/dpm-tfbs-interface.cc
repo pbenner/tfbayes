@@ -231,20 +231,16 @@ void _dpm_partition_list_free(vector<dpm_partition_t>* partition_list)
 // compute means and medians
 // -----------------------------------------------------------------------------
 
-dpm_partition_t* _dpm_mean(vector<dpm_partition_t>* partition_list)
+size_t _dpm_mean(vector<dpm_partition_t>* partition_list)
 {
-        const dpm_partition_t& result = dpm_tfbs_mean(*partition_list, _phylogenetic_data.sizes(),
-                                                      _options.tfbs_length, true);
-
-        return new dpm_partition_t(result);
+        return dpm_tfbs_mean(*partition_list, _phylogenetic_data.sizes(),
+                             _options.tfbs_length, true);
 }
 
-dpm_partition_t* _dpm_median(vector<dpm_partition_t>* partition_list)
+size_t _dpm_median(vector<dpm_partition_t>* partition_list)
 {
-        const dpm_partition_t& result = dpm_tfbs_median(*partition_list, _phylogenetic_data.sizes(),
-                                                        _options.tfbs_length, true);
-
-        return new dpm_partition_t(result);
+        return dpm_tfbs_median(*partition_list, _phylogenetic_data.sizes(),
+                               _options.tfbs_length, true);
 }
 
 __END_DECLS

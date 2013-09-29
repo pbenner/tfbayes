@@ -72,13 +72,13 @@ class PARTITION_LIST(c_void_p):
           _lib._dpm_partition_list_free.argtypes = [PARTITION_LIST]
           _lib._dpm_partition_list_free(self)
      def mean(self):
-          _lib._dpm_mean.restype  = PARTITION
+          _lib._dpm_mean.restype  = c_size_t
           _lib._dpm_mean.argtypes = [PARTITION_LIST]
-          _lib._dpm_mean(self)
+          return _lib._dpm_mean(self)
      def median(self):
-          _lib._dpm_median.restype  = PARTITION
+          _lib._dpm_median.restype  = c_size_t
           _lib._dpm_median.argtypes = [PARTITION_LIST]
-          _lib._dpm_median(self)
+          return _lib._dpm_median(self)
 
 # options
 # ------------------------------------------------------------------------------
@@ -229,4 +229,10 @@ def dpm_get_posterior():
 
 def dpm_mean(partition_list):
      l = PARTITION_LIST(partition_list)
-     p = l.mean()
+     i = l.mean()
+     return partition_list[i]
+
+def dpm_median(partition_list):
+     l = PARTITION_LIST(partition_list)
+     i = l.median()
+     return partition_list[i]

@@ -55,9 +55,13 @@ def save_results_config(config_file, results_config):
     write_matrix(config_parser, 'Result', 'likelihood', results_config['likelihood'])
     write_matrix(config_parser, 'Result', 'posterior',  results_config['posterior'])
     write_matrix(config_parser, 'Result', 'switches',   results_config['switches'])
-    config_parser.set('Result', 'map_partition',    results_config['map_partition'])
-    config_parser.set('Result', 'mean_partition',   results_config['mean_partition'])
-    config_parser.set('Result', 'median_partition', results_config['median_partition'])
-    config_parser.set('Result', 'partitions',       results_config['partitions'])
+    if results_config.has_key('map_partition'):
+        config_parser.set('Result', 'map_partition',    results_config['map_partition'])
+    if results_config.has_key('mean_partition'):
+        config_parser.set('Result', 'mean_partition',   results_config['mean_partition'])
+    if results_config.has_key('median_partition'):
+        config_parser.set('Result', 'median_partition', results_config['median_partition'])
+    if results_config.has_key('partitions'):
+        config_parser.set('Result', 'partitions',       results_config['partitions'])
     with open(config_file, 'wb') as config_fp:
         config_parser.write(config_fp)

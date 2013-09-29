@@ -116,8 +116,7 @@ double median_loss(double d)
         return d;
 }
 
-static
-const dpm_partition_t&
+static size_t
 dpm_tfbs_estimate(const vector<dpm_partition_t>& partitions,
                   const vector<size_t>& sizes, size_t tfbs_length,
                   bool verbose, double (*loss)(double))
@@ -150,10 +149,10 @@ dpm_tfbs_estimate(const vector<dpm_partition_t>& partitions,
                         argmin = i;
                 }
         }
-        return partitions[argmin];
+        return argmin;
 }
 
-const dpm_partition_t&
+size_t
 dpm_tfbs_mean(const vector<dpm_partition_t>& partitions,
               const vector<size_t>& sizes, size_t tfbs_length,
               bool verbose)
@@ -164,7 +163,7 @@ dpm_tfbs_mean(const vector<dpm_partition_t>& partitions,
         return dpm_tfbs_estimate(partitions, sizes, tfbs_length, verbose, &mean_loss);
 }
 
-const dpm_partition_t&
+size_t
 dpm_tfbs_median(const vector<dpm_partition_t>& partitions,
                 const vector<size_t>& sizes, size_t tfbs_length,
                 bool verbose)
