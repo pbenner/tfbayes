@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# Copyright (C) 2011, 2012 Philipp Benner
+# Copyright (C) 2011-2013 Philipp Benner
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -68,11 +68,19 @@ def compute_mean(command):
     results_config = {}
     parse_results_config(sampler_config['save'], results_config)
     partition_list = parse_partition_list(results_config['partitions'])
+    # init sampler
+    dpm_init(sampler_config,
+             sampler_config['phylogenetic_data'],
+             sampler_config['alignment_data'])
+    # compute mean or median
     if command == "mean":
         result = 
         # mean
     if command == "median":
         # median
+    # free sampler
+    dpm_free()
+
 # main
 # ------------------------------------------------------------------------------
 

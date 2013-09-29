@@ -228,7 +228,6 @@ void _dpm_partition_list_free(vector<dpm_partition_t>* partition_list)
         delete(partition_list);
 }
 
-
 // compute means and medians
 // -----------------------------------------------------------------------------
 
