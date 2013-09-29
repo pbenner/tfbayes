@@ -112,7 +112,6 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
                 _state.add_baseline_model(dirichlet, (*options.baseline_tags)[i]);
                 _baseline_tags.push_back((*options.baseline_tags)[i]);
         }
-
         ////////////////////////////////////////////////////////////////////////////////
         // assign all elements to the background
         for (da_iterator it = _data.begin();
@@ -122,7 +121,6 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
                 range_t range(**it, 1);
                 _state[_state.bg_cluster_tag].add_observations(range);
         }
-
         ////////////////////////////////////////////////////////////////////////////////
         // set the process prior
         if (*options.process_prior == "pitman-yor process" || *options.process_prior == "") {
@@ -138,21 +136,19 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
                 cerr << "Unknown prior process." << endl;
                 exit(EXIT_FAILURE);
         }
-
         ////////////////////////////////////////////////////////////////////////////////
         // use a map partition from a previous sampling run to
         // initialize the state
-        if (options.partition) {
-                for (dpm_partition_t::const_iterator it = options.partition->begin(); it != options.partition->end(); it++) {
-                        const dpm_subset_t& subset(*it);
-                        cluster_t& cluster = _state.get_free_cluster(subset.dpm_subset_tag());
+        assert(options.partition);
+        for (dpm_partition_t::const_iterator it = options.partition->begin(); it != options.partition->end(); it++) {
+                const dpm_subset_t& subset(*it);
+                cluster_t& cluster = _state.get_free_cluster(subset.dpm_subset_tag());
 
-                        for (dpm_subset_t::const_iterator is = subset.begin(); is != subset.end(); is++) {
-                                assert(valid_for_sampling(**is));
-                                assert(_state[**is] == _state.bg_cluster_tag);
-                                _state.remove(**is, _state.bg_cluster_tag);
-                                _state.add(**is, cluster.cluster_tag());
-                        }
+                for (dpm_subset_t::const_iterator is = subset.begin(); is != subset.end(); is++) {
+                        assert(valid_for_sampling(**is));
+                        assert(_state[**is] == _state.bg_cluster_tag);
+                        _state.remove(**is, _state.bg_cluster_tag);
+                        _state.add(**is, cluster.cluster_tag());
                 }
         }
         ////////////////////////////////////////////////////////////////////////////////

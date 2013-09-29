@@ -27,14 +27,49 @@ _lib = load_library('tfbayes-dpm', 0)
 def transpose(matrix):
      return map(list, zip(*matrix))
 
-# structures
+# partitions
 # ------------------------------------------------------------------------------
 
-class PARTITION(Structure):
-     _fields_ = []
+class PARTITION(c_void_p):
+     def __init__(self, partition = None):
+          _lib._dpm_partition_new.restype  = c_void_p
+          _lib._dpm_partition_new.argtypes = []
+          self.value = _lib._dpm_partition_new()
+          if partition == None:
+               return
+          for dpm_subset in partition:
+               self.add_component(dpm_subset.identifier)
+               for index in dpm_subset.subset:
+                    self.add_index(index[0], index[1])
+     def add_component(self, subset_tag):
+          _lib._dpm_partition_add_component.restype  = None
+          _lib._dpm_partition_add_component.argtypes = [PARTITION, c_char_p]
+          _lib._dpm_partition_add_component(self, subset_tag)
+     def add_index(self, sequence, position):
+          _lib._dpm_partition_add_index.restype  = None
+          _lib._dpm_partition_add_index.argtypes = [PARTITION, c_int, c_int]
+          _lib._dpm_partition_add_index(self, sequence, position)
+     def free(self):
+          _lib._dpm_partition_free.restype  = None
+          _lib._dpm_partition_free.argtypes = [PARTITION]
+          _lib._dpm_partition_free(self)
 
-class PARTITION_LIST(Structure):
-     _fields_ = []
+class PARTITION_LIST(c_void_p):
+     def __init__(self):
+          _lib._dpm_partition_list_new.restype  = c_void_p
+          _lib._dpm_partition_list_new.argtypes = []
+          self.value = _lib._dpm_partition_list_new()
+     def add_partition(self, partition):
+          _lib._dpm_partition_list_add_partition.restype  = None
+          _lib._dpm_partition_list_add_partition.argtypes = [PARTITION_LIST, PARTITION]
+          _lib._dpm_partition_list_add_partition(self, partition)
+     def free(self):
+          _lib._dpm_partition_list_free.restype  = None
+          _lib._dpm_partition_list_free.argtypes = [PARTITION_LIST]
+          _lib._dpm_partition_list_free(self)
+
+# options
+# ------------------------------------------------------------------------------
 
 class OPTIONS(Structure):
      _fields_ = [("tfbs_length",         c_size_t),
@@ -51,7 +86,7 @@ class OPTIONS(Structure):
                  ("baseline_priors",     POINTER(CXX_MATRIX)),
                  ("baseline_tags",       POINTER(CXX_STRING)),
                  ("baseline_n",          c_size_t),
-                 ("partition",           POINTER(PARTITION)),
+                 ("partition",           PARTITION),
                  ("population_size",     c_size_t),
                  ("socket_file",         CXX_STRING)]
      def __new__(cls, options, partition):
@@ -68,7 +103,7 @@ class OPTIONS(Structure):
           self.tfbs_length         = options['tfbs_length']
           self.population_size     = options['population_size']
           self.socket_file         = CXX_STRING(options['socket_file'])
-          self.partition           = generate_c_partition(partition) if partition else None
+          self.partition           = PARTITION(partition)
           self.background_alpha    = CXX_MATRIX(transpose(options['background_alpha']))
           # copy baseline
           self.baseline_n          = len(options['baseline_priors'])
@@ -122,38 +157,6 @@ _lib._dpm_tfbs_free.argtypes = []
 
 _lib._dpm_tfbs_get_posterior.restype  = POINTER(MATRIX)
 _lib._dpm_tfbs_get_posterior.argtypes = []
-
-_lib._dpm_partition_new.restype  = POINTER(PARTITION)
-_lib._dpm_partition_new.argtypes = []
-
-_lib._dpm_partition_add_component.restype  = None
-_lib._dpm_partition_add_component.argtypes = [POINTER(PARTITION), c_char_p]
-
-_lib._dpm_partition_add_index.restype  = None
-_lib._dpm_partition_add_index.argtypes = [POINTER(PARTITION), c_int, c_int]
-
-_lib._dpm_partition_free.restype  = None
-_lib._dpm_partition_free.argtypes = [POINTER(PARTITION)]
-
-_lib._dpm_partition_list_new.restype  = POINTER(PARTITION_LIST)
-_lib._dpm_partition_list_new.argtypes = []
-
-_lib._dpm_partition_list_add_partition.restype  = None
-_lib._dpm_partition_list_add_partition.argtypes = [POINTER(PARTITION_LIST), POINTER(PARTITION)]
-
-_lib._dpm_partition_list_free.restype  = None
-_lib._dpm_partition_list_free.argtypes = [POINTER(PARTITION_LIST)]
-
-# convert datatypes
-# ------------------------------------------------------------------------------
-
-def generate_c_partition(partition):
-     c_partition = _lib._dpm_partition_new()
-     for dpm_subset in partition:
-          _lib._dpm_partition_add_component(c_partition, dpm_subset.identifier)
-          for index in dpm_subset.subset:
-               _lib._dpm_partition_add_index(c_partition, index[0], index[1])
-     return c_partition
 
 # functions that interface with the library
 # ------------------------------------------------------------------------------
