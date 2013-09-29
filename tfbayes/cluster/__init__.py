@@ -19,4 +19,4 @@ from fileio      import load_cluster, load_cluster_list, save_cluster, save_clus
 from plot        import *
 from information import *
 from tools       import *
-from parser      import generate_cluster_list, parse_partition
+from parser      import generate_cluster_list, parse_partition, parse_partition_list

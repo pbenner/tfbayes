@@ -76,11 +76,12 @@ def parse_partition(partition_str):
 # ------------------------------------------------------------------------------
 
 def parse_partition_list(partition_list_str):
-    partition_list = dpm_partition_list_new()
+    partition_list = []
     for partition_str in partition_list_str.split('\n'):
         partition = parse_partition(partition_str)
-        dpm_partition_list_add_partition(partition_list, partition)
-        dpm_partition_free(partition)
+        # there might be empty lines, filter them out...
+        if partition:
+            partition_list.append(partition)
     return partition_list
 
 # sort cluster

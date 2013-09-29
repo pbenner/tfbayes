@@ -62,7 +62,7 @@ class PARTITION_LIST(c_void_p):
           if partition_list == None:
                return
           for partition in partition_list:
-               self.add_partition(partition)
+               self.add_partition(PARTITION(partition))
      def add_partition(self, partition):
           _lib._dpm_partition_list_add_partition.restype  = None
           _lib._dpm_partition_list_add_partition.argtypes = [PARTITION_LIST, PARTITION]
