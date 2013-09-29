@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,7 +64,6 @@ ostream& operator<< (ostream& o, const dpm_partition_t& partition)
                         if (is != it->begin()) {
                                 o << ", ";
                         }
-
                         o << *static_cast<const seq_index_t*>(*is);
                 }
                 o << "}";
@@ -77,7 +76,7 @@ ostream& operator<< (ostream& o, const std::vector<dpm_partition_t>& partitions)
 {
         for (std::vector<dpm_partition_t>::const_iterator it = partitions.begin();
              it != partitions.end(); it++) {
-                o << *it << endl;
+                o << "\t" << *it << endl;
         }
 
         return o;
@@ -101,7 +100,7 @@ void dpm_tfbs_save_result(ostream& file, dpm_tfbs_pmcmc_t& sampler)
              << history.posterior;
         file << "partitions =" << endl
              << samples.partitions;
-        file << "map_partition ="
+        file << "map_partition = "
              << samples.map_partition
              << endl;
 }
