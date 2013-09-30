@@ -104,9 +104,9 @@ void dpm_tfbs_save_result(ostream& file, dpm_tfbs_pmcmc_t& sampler)
              << history.likelihood;
         file << "posterior =" << endl
              << history.posterior;
-        file << "partitions =" << endl
-             << samples.partitions;
         file << "map_partition = "
              << samples.map_partition
              << endl;
+        file << "partitions =" << endl
+             << samples.partitions;
 }
