@@ -50,6 +50,20 @@ ostream& operator<< (ostream& o, const vector<vector<size_t> >& m)
 }
 
 static
+ostream& operator<< (ostream& o, const dpm_subset_t& dpm_subset)
+{
+        for (dpm_subset_t::const_iterator is = dpm_subset.begin();
+             is != dpm_subset.end(); is++)
+        {
+                if (is != dpm_subset.begin()) {
+                        o << ", ";
+                }
+                o << *static_cast<const seq_index_t*>(*is);
+        }
+        return o;
+}
+
+static
 ostream& operator<< (ostream& o, const dpm_partition_t& partition)
 {
         for (dpm_partition_t::const_iterator it = partition.begin();
@@ -57,16 +71,8 @@ ostream& operator<< (ostream& o, const dpm_partition_t& partition)
                 if (it != partition.begin()) {
                         o << ", ";
                 }
-                o << it->dpm_subset_tag() << ":{";
-
-                for (dpm_subset_t::const_iterator is = it->begin(); is != it->end(); is++)
-                {
-                        if (is != it->begin()) {
-                                o << ", ";
-                        }
-                        o << *static_cast<const seq_index_t*>(*is);
-                }
-                o << "}";
+                o << it->dpm_subset_tag() << ":{"
+                  << *it << "}";
         }
         return o;
 }

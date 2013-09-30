@@ -28,6 +28,23 @@ class dpm_subset_t():
     # or prior the subset represents
     identifier = None
     subset     = None
+    def __str__(self):
+        result = "%s:{" % self.identifier
+        for i, index in enumerate(self.subset):
+            result += str(index)
+            if not i is len(self.subset)-1:
+                result += ", "
+        result += "}"
+        return result
+
+class dpm_partition_t(list):
+    def __str__(self):
+        result = ""
+        for i, dpm_subset in enumerate(self):
+            result += str(dpm_subset)
+            if not i is len(self)-1:
+                result += ", "
+        return result
 
 def parse_partition_identifier(partition_str, end):
     # start is the position of '{', we want the identifier
@@ -60,11 +77,11 @@ def parse_partition_elements(subset_str):
             stack.append(i)
         elif c == ')' and stack:
             start = stack.pop()
-            element = subset_str[start + 1: i].split(':')
+            element = subset_str[start + 1: i].split(',')
             yield (int(element[0]), int(element[1]))
 
 def parse_partition(partition_str):
-    partition = []
+    partition = dpm_partition_t()
     for identifier, subset in parse_partition_subsets(partition_str):
         dpm_subset = dpm_subset_t()
         dpm_subset.identifier = identifier

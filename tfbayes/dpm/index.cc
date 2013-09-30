@@ -30,7 +30,7 @@ operator<< (std::ostream& o, const index_t& index) {
 
 std::ostream&
 operator<< (std::ostream& o, const seq_index_t& index) {
-        o << "(" << index._x[0] << ":" << index._x[1] << ")";
+        o << "(" << index._x[0] << ", " << index._x[1] << ")";
 
         return o;
 }
