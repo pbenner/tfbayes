@@ -51,7 +51,7 @@ def parse_partition_identifier(partition_str, end):
     # before this bracket
     start = 0
     if not partition_str[end-1] == ':':
-        raise ValueError('Invalid MAP partition.')
+        raise IOError('Invalid MAP partition.')
     for i in range(end-1,-1,-1):
         if (partition_str[i] == ' ' or partition_str[i] == ','):
             start = i+1

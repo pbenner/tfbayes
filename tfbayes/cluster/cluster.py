@@ -63,7 +63,7 @@ class cluster_t():
         self.cluster_type = cluster_type
         self.n            = 4
         if not len(counts) == self.n:
-            raise ValueError('Counts matrix has invalid dimension.')
+            raise IOError('Counts matrix has invalid dimension.')
         self.m          = len(counts[0])
     def posterior_counts(self):
         counts = [ [ self.counts[i][j] + self.alpha[i][j] for j in range(self.m) ] for i in range(self.n) ]

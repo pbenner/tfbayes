@@ -167,7 +167,7 @@ def scan_sequences_files(cluster, sequences_files):
     elif options['format'] == 'fasta':
         scan_fasta_files(cluster, sequences_files)
     else:
-        raise ValueError("Unknown sequences format.")
+        raise IOError("Unknown sequences format.")
 
 # main
 # ------------------------------------------------------------------------------
@@ -251,4 +251,8 @@ def __main__():
         phylotree.pt_destroy(options['phylotree'])
 
 if __name__ == "__main__":
-    sys.exit(__main__())
+    try:
+        sys.exit(__main__())
+    except IOError, e:
+        sys.stderr.write('%s\n' % e)
+        sys.exit(1)

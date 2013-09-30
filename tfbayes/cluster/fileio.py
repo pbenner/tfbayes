@@ -68,7 +68,7 @@ def print_counts(counts, counts_gaps):
 def parse_pwm_line(line):
     m = re.match('([ACGTacgt]):', line[0])
     if not m:
-        raise ValueError("Parsing of PWM failed!")
+        raise IOError("Parsing of PWM failed!")
     nucleotide = m.group(1)
     entry      = map(float, line[1:])
     return nucleotide, entry
@@ -88,7 +88,7 @@ def parse_pwm(pwm_string):
 def parse_counts_line(line):
     m = re.match('([ACGTacgt-]):', line[0])
     if not m:
-        raise ValueError("Parsing of COUNTS failed!")
+        raise IOError("Parsing of COUNTS failed!")
     nucleotide = m.group(1)
     entry      = map(float, line[1:])
     return nucleotide, entry

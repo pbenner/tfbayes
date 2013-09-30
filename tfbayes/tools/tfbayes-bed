@@ -143,4 +143,8 @@ def __main__():
     return 0
 
 if __name__ == "__main__":
-    sys.exit(__main__())
+    try:
+        sys.exit(__main__())
+    except IOError, e:
+        sys.stderr.write('%s\n' % e)
+        sys.exit(1)
