@@ -64,8 +64,8 @@ def normalize_dict(d):
 def generate_baseline(sampler_config):
     length = sampler_config['tfbs_length']
     sampler_config['baseline_tags'] = ['baseline-default']
-    sampler_config['baseline_priors'  ]['baseline-default'] = [ [ 1.0 for j in range(length) ] for i in range(5) ]
-    sampler_config['baseline_weights' ]['baseline-default'] = 1.0
+    sampler_config['baseline_priors' ]['baseline-default'] = [ [ 1.0 for j in range(length) ] for i in range(5) ]
+    sampler_config['baseline_weights']['baseline-default'] = 1.0
 
 def parse_sampler_config(config_file, sampler_config):
     config_parser = ConfigParser.RawConfigParser()

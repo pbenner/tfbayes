@@ -103,7 +103,7 @@ class CXX_MATRIX(c_void_p):
      def __init__(self, arg1, arg2 = None):
           _lib._cxx_matrix_alloc.restype  = c_void_p
           _lib._cxx_matrix_alloc.argtypes = [c_size_t, c_size_t]
-          if arg2 is None:
+          if arg2 == None:
                if len(arg1) == 0:
                     self.value = _lib._cxx_matrix_alloc(0, 0)
                     return

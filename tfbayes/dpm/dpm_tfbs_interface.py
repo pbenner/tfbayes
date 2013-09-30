@@ -228,11 +228,13 @@ def dpm_get_posterior():
      return get_matrix(_lib._dpm_tfbs_get_posterior())
 
 def dpm_mean(partition_list):
-     l = PARTITION_LIST(partition_list)
-     i = l.mean()
+     c_partition_list = PARTITION_LIST(partition_list)
+     i = c_partition_list.mean()
+     c_partition_list.free()
      return partition_list[i]
 
 def dpm_median(partition_list):
-     l = PARTITION_LIST(partition_list)
-     i = l.median()
+     c_partition_list = PARTITION_LIST(partition_list)
+     i = c_partition_list.median()
+     c_partition_list.free()
      return partition_list[i]
