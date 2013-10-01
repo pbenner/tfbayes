@@ -32,8 +32,6 @@ class sampler_t : public clonable {
 public:
         virtual void sample(size_t n, size_t burnin) = 0;
         virtual const sampling_history_t& sampling_history() const = 0;
-        virtual samples_t& samples() = 0;
-        virtual size_t sampling_steps() const = 0;
         virtual std::string name() const { return std::string(); }
 protected:
 };
@@ -51,8 +49,6 @@ public:
 
         void sample(size_t n, size_t burnin);
         const sampling_history_t& sampling_history() const;
-        samples_t& samples();
-        size_t sampling_steps() const;
         std::string name() const;
 
 protected:
@@ -60,6 +56,7 @@ protected:
         virtual size_t _sample(size_t i, size_t n, bool is_burnin);
         virtual bool   _gibbs_sample(const index_i& index);
         virtual size_t _gibbs_sample();
+        virtual void   _update_sampling_history(size_t switches);
         // the mixture model
         mixture_model_t& _dpm;
         std::string _name;

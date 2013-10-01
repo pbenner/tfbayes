@@ -146,13 +146,9 @@ dpm_gaussian_t::posterior() const {
         return 0;
 }
 
-void
-dpm_gaussian_t::update_samples(size_t sampling_steps) {
-}
-
-samples_t&
-dpm_gaussian_t::samples() {
-        return _samples;
+dpm_partition_t
+dpm_gaussian_t::partition() const {
+        return dpm_partition_t();
 }
 
 const mixture_state_t&

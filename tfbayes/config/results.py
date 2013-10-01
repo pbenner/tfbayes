@@ -34,6 +34,8 @@ def parse_results_config(config_file, results_config):
         results_config['likelihood'] = read_matrix(config_parser, 'Result', 'likelihood', float)
     if config_parser.has_option('Result', 'posterior'):
         results_config['posterior'] = read_matrix(config_parser, 'Result', 'posterior', float)
+    if config_parser.has_option('Result', 'temperature'):
+        results_config['temperature'] = read_matrix(config_parser, 'Result', 'temperature', float)
     if config_parser.has_option('Result', 'switches'):
         results_config['switches'] = read_matrix(config_parser, 'Result', 'switches', float)
     if config_parser.has_option('Result', 'map_partition'):
@@ -51,17 +53,18 @@ def parse_results_config(config_file, results_config):
 def save_results_config(config_file, results_config):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.add_section('Result')
-    write_matrix(config_parser, 'Result', 'components', results_config['components'])
-    write_matrix(config_parser, 'Result', 'likelihood', results_config['likelihood'])
-    write_matrix(config_parser, 'Result', 'posterior',  results_config['posterior'])
-    write_matrix(config_parser, 'Result', 'switches',   results_config['switches'])
+    write_matrix(config_parser, 'Result', 'components',  results_config['components'])
+    write_matrix(config_parser, 'Result', 'likelihood',  results_config['likelihood'])
+    write_matrix(config_parser, 'Result', 'posterior',   results_config['posterior'])
+    write_matrix(config_parser, 'Result', 'switches',    results_config['switches'])
+    write_matrix(config_parser, 'Result', 'temperature', results_config['temperature'])
+    if results_config.has_key('partitions'):
+        config_parser.set('Result', 'partitions',       results_config['partitions'])
     if results_config.has_key('map_partition'):
         config_parser.set('Result', 'map_partition',    results_config['map_partition'])
     if results_config.has_key('mean_partition'):
         config_parser.set('Result', 'mean_partition',   results_config['mean_partition'])
     if results_config.has_key('median_partition'):
         config_parser.set('Result', 'median_partition', results_config['median_partition'])
-    if results_config.has_key('partitions'):
-        config_parser.set('Result', 'partitions',       results_config['partitions'])
     with open(config_file, 'wb') as config_fp:
         config_parser.write(config_fp)

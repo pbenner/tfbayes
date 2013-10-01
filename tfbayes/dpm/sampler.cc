@@ -1,4 +1,4 @@
-/* Copyright (C) 2011, 2012 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,18 +40,15 @@ gibbs_sampler_t::gibbs_sampler_t(mixture_model_t& dpm,
           _name(name),
           _state(state),
           _indexer(indexer),
-          _sampling_steps(0),
           _sampling_history(*new sampling_history_t())
 {
         // for sampling statistics
-        _sampling_history.switches.push_back(vector<double>());
-        _sampling_history.likelihood.push_back(vector<double>());
-        _sampling_history.posterior.push_back(vector<double>());
-        _sampling_history.components.push_back(vector<size_t>());
-        _sampling_history.switches[0].push_back(0);
-        _sampling_history.likelihood[0].push_back(_dpm.likelihood());
-        _sampling_history.posterior[0].push_back(_dpm.posterior());
-        _sampling_history.components[0].push_back(1);
+        _sampling_history.switches.   push_back(vector<double>());
+        _sampling_history.likelihood. push_back(vector<double>());
+        _sampling_history.posterior.  push_back(vector<double>());
+        _sampling_history.components. push_back(vector<size_t>());
+        _sampling_history.temperature.push_back(vector<double>());
+        _sampling_history.partitions. push_back(vector<dpm_partition_t>());
 }
 
 gibbs_sampler_t::gibbs_sampler_t(const gibbs_sampler_t& sampler)
@@ -59,7 +56,6 @@ gibbs_sampler_t::gibbs_sampler_t(const gibbs_sampler_t& sampler)
           _name(sampler._name),
           _state(sampler._state),
           _indexer(sampler._indexer),
-          _sampling_steps(0),
           _sampling_history(*new sampling_history_t(sampler._sampling_history))
 {
 }
@@ -128,20 +124,19 @@ gibbs_sampler_t::sampling_history() const {
         return _sampling_history;
 }
 
-samples_t&
-gibbs_sampler_t::samples() {
-        return _dpm.samples();
-}
-
-size_t
-gibbs_sampler_t::sampling_steps() const {
-        return _sampling_steps;
+void
+gibbs_sampler_t::_update_sampling_history(size_t switches)
+{
+        _sampling_history.switches  [0].push_back(switches);
+        _sampling_history.likelihood[0].push_back(_dpm.likelihood());
+        _sampling_history.posterior [0].push_back(_dpm.posterior());
+        _sampling_history.components[0].push_back(_dpm.mixture_components());
+        _sampling_history.partitions[0].push_back(_dpm.partition());
 }
 
 void
 gibbs_sampler_t::sample(size_t n, size_t burnin) {
-        double sum;
-        double switches;
+        // temperature for simulated annealing
         // burn in sampling
         for (size_t i = 0; i < burnin; i++) {
                 flockfile(stdout);
@@ -151,12 +146,7 @@ gibbs_sampler_t::sample(size_t n, size_t burnin) {
                      << endl;
                 fflush(stdout);
                 funlockfile(stdout);
-                sum      = _sample(i, burnin, true);
-                switches = _indexer.elements() > 0 ? sum/(double)_indexer.elements() : 0;
-                _sampling_history.likelihood[0].push_back(_dpm.likelihood());
-                _sampling_history.posterior [0].push_back(_dpm.posterior());
-                _sampling_history.components[0].push_back(_dpm.mixture_components());
-                _sampling_history.switches  [0].push_back(switches);
+                _update_sampling_history(_sample(i, burnin, true));
         }
         // sample `n' times
         for (size_t i = 0; i < n; i++) {
@@ -168,14 +158,7 @@ gibbs_sampler_t::sample(size_t n, size_t burnin) {
                      << endl;
                 fflush(stdout);
                 funlockfile(stdout);
-                sum      = _sample(i, n, false);
-                switches = _indexer.elements() > 0 ? sum/(double)_indexer.elements() : 0;
-                _sampling_history.likelihood[0].push_back(_dpm.likelihood());
-                _sampling_history.posterior [0].push_back(_dpm.posterior());
-                _sampling_history.components[0].push_back(_dpm.mixture_components());
-                _sampling_history.switches  [0].push_back(switches);
-                _dpm.update_samples(_sampling_steps);
-                _sampling_steps++;
+                _update_sampling_history(_sample(i, n, false));
         }
 }
 

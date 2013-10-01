@@ -167,9 +167,6 @@ _lib._dpm_tfbs_save.argtypes = [c_char_p]
 _lib._dpm_tfbs_free.restype  = None
 _lib._dpm_tfbs_free.argtypes = []
 
-_lib._dpm_tfbs_get_posterior.restype  = POINTER(MATRIX)
-_lib._dpm_tfbs_get_posterior.argtypes = []
-
 # functions that interface with the library
 # ------------------------------------------------------------------------------
 
@@ -223,9 +220,6 @@ def dpm_save(filename):
 
 def dpm_free():
      _lib._dpm_tfbs_free()
-
-def dpm_get_posterior():
-     return get_matrix(_lib._dpm_tfbs_get_posterior())
 
 def dpm_mean(partition_list):
      c_partition_list = PARTITION_LIST(partition_list)

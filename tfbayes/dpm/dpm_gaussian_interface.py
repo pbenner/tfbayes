@@ -66,9 +66,6 @@ _lib._dpm_gaussian_sample.argtypes  = [c_uint, c_uint]
 _lib._dpm_gaussian_free.restype     = None
 _lib._dpm_gaussian_free.argtypes    = []
 
-_lib._dpm_gaussian_get_posterior.restype  = POINTER(MATRIX)
-_lib._dpm_gaussian_get_posterior.argtypes = []
-
 #
 # ------------------------------------------------------------------------------
 
@@ -152,6 +149,3 @@ def dpm_sample(n, burnin):
 
 def dpm_free():
      _lib._dpm_gaussian_free()
-
-def dpm_get_posterior():
-     return get_matrix(_lib._dpm_gaussian_get_posterior())

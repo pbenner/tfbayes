@@ -64,9 +64,6 @@ public:
                 }
         }
 
-        // return the current state as a mixture partition
-        dpm_partition_t dpm_partition() const;
-
         // access to cluster assignments, the data type might be
         // different in child classes, so make this virtual
         virtual sequence_data_t<cluster_tag_t>& cluster_assignments() {

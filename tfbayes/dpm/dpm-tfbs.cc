@@ -57,13 +57,6 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
         }
 
         ////////////////////////////////////////////////////////////////////////////////
-        // initialize samples
-        for (size_t i = 0; i < data.size(); i++) {
-                _samples.probabilities.push_back(vector<double>(data.size(i), 0.0));
-        }
-        _samples.map_value = -HUGE_VAL;
-
-        ////////////////////////////////////////////////////////////////////////////////
         // add background model to the state
         if (*options.background_model == "independence-dirichlet" || *options.background_model == "") {
                 /* every position in the background is fully
@@ -174,8 +167,6 @@ dpm_tfbs_t::dpm_tfbs_t(const dpm_tfbs_t& dpm)
           _lambda_inv_log(dpm._lambda_inv_log),
           // length of tfbs
           _tfbs_length(dpm._tfbs_length),
-          // samples
-          _samples(dpm._samples),
           // process prios
           _process_prior(dpm._process_prior->clone())
 { }
@@ -343,53 +334,23 @@ dpm_tfbs_t::posterior() const {
         return result;
 }
 
-void
-dpm_tfbs_t::update_map()
+dpm_partition_t
+dpm_tfbs_t::partition() const
 {
-        double posterior_value = posterior();
+        dpm_partition_t dpm_partition;
 
-        if (_samples.map_value < posterior_value) {
-                _samples.map_partition = _state.dpm_partition();
-                _samples.map_value     = posterior_value;
-        }
-}
-
-void
-dpm_tfbs_t::record_partition()
-{
-        _samples.partitions.push_back(_state.dpm_partition());
-}
-
-void
-dpm_tfbs_t::update_samples(size_t sampling_steps)
-{
-        // record for every position the average number of times it
-        // belonged to the background model
-        for (da_iterator it = _data.begin();
-             it != _data.end(); it++) {
-                const index_i& index  = **it;
-                const size_t sequence = index[0];
-                const size_t position = index[1];
-                if (_state[index] == _state.bg_cluster_tag) {
-                        const double tmp   = _samples.probabilities[sequence][position];
-                        const double value = ((double)sampling_steps*tmp)/((double)sampling_steps+1.0);
-                        _samples.probabilities[sequence][position] = value;
-                }
-                else {
-                        const double tmp   = _samples.probabilities[sequence][position];
-                        const double value = ((double)sampling_steps*tmp+1.0)/((double)sampling_steps+1.0);
-                        _samples.probabilities[sequence][position] = value;
+        // loop through all clusters
+        for (dpm_tfbs_state_t::const_iterator it = state().begin(); it != state().end(); it++) {
+                const cluster_t& cluster = **it;
+                if (cluster.cluster_tag() != state().bg_cluster_tag) {
+                        dpm_partition.add_component(cluster.baseline_tag());
+                        // loop through cluster elements
+                        for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
+                                dpm_partition.back().insert(is->index());
+                        }
                 }
         }
-        // update map partition and value
-        update_map();
-        // record current partition
-        record_partition();
-}
-
-samples_t&
-dpm_tfbs_t::samples() {
-        return _samples;
+        return dpm_partition;
 }
 
 dpm_tfbs_state_t&

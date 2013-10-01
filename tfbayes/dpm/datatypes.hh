@@ -41,24 +41,15 @@ typedef enum {
         cluster_event_add_word, cluster_event_remove_word
 } cluster_event_t;
 
+#include <tfbayes/dpm/dpm-partition.hh>
+
 typedef struct {
         std::matrix<double> switches;
         std::matrix<double> likelihood;
         std::matrix<double> posterior;
         std::matrix<size_t> components;
+        std::matrix<double> temperature;
+        std::matrix<dpm_partition_t> partitions;
 } sampling_history_t;
-
-#include <tfbayes/dpm/dpm-partition.hh>
-
-typedef struct {
-        std::matrix<double> probabilities;
-        // maximum posterior sample and value, i.e.
-        // the maximal value that was ever reached during
-        // sampling
-        dpm_partition_t map_partition;
-        double          map_value;
-        // partition samples
-        std::vector<dpm_partition_t> partitions;
-} samples_t;
 
 #endif /* DATATYPES_HH */

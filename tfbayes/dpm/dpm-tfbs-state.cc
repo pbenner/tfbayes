@@ -192,7 +192,6 @@ dpm_tfbs_state_t::move_right(cluster_t& cluster)
                         add(index, cluster.cluster_tag());
                 }
         }
-
         return true;
 }
 
@@ -212,23 +211,4 @@ dpm_tfbs_state_t::proposal(cluster_t& cluster, stringstream& ss)
                 }
         }
         return false;
-}
-
-dpm_partition_t
-dpm_tfbs_state_t::dpm_partition() const
-{
-        dpm_partition_t dpm_partition;
-
-        // loop through all clusters
-        for (const_iterator it = this->begin(); it != this->end(); it++) {
-                const cluster_t& cluster = **it;
-                if (cluster.cluster_tag() != bg_cluster_tag) {
-                        dpm_partition.add_component(cluster.baseline_tag());
-                        // loop through cluster elements
-                        for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
-                                dpm_partition.back().insert(is->index());
-                        }
-                }
-        }
-        return dpm_partition;
 }

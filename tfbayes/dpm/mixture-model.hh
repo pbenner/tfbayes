@@ -26,6 +26,7 @@
 #include <gsl/gsl_matrix.h>
 
 #include <mixture-state.hh>
+#include <dpm-partition.hh>
 
 class mixture_model_t {
 public:
@@ -37,13 +38,12 @@ public:
         virtual size_t baseline_components() const = 0;
         // compute cumulative mixture weights on log scale (not normalized!)
         virtual void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[]) = 0;
-        virtual void   update_samples(size_t sampling_steps) = 0;
         virtual double likelihood() const = 0;
         // compute the posterior value of the current cluster
         // assignment (usually not normalized)
         virtual double posterior() const = 0;
+        virtual dpm_partition_t partition() const = 0;
         virtual bool   valid_for_sampling(const index_i& index) const = 0;
-        virtual samples_t& samples() = 0;
         virtual mixture_state_t& state() = 0;
         virtual const mixture_state_t& state() const = 0;
 };

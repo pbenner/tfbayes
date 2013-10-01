@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,7 @@ using namespace std;
 population_mcmc_t::population_mcmc_t(size_t n)
         : _population(n, NULL),
           _size(n),
-          _sampling_history(new sampling_history_t()),
-          _samples(NULL)
+          _sampling_history(new sampling_history_t())
 {
         assert(n >= 1);
 }
@@ -42,8 +41,7 @@ population_mcmc_t::population_mcmc_t(size_t n)
 population_mcmc_t::population_mcmc_t(const population_mcmc_t& pmcmc)
         : _population(pmcmc._size, NULL),
           _size(pmcmc._size),
-          _sampling_history(new sampling_history_t()),
-          _samples(NULL)
+          _sampling_history(new sampling_history_t())
 {
         for (size_t i = 0; i < _size; i++) {
                 _population[i] = (sampler_t*)pmcmc._population[i]->clone();
@@ -57,9 +55,6 @@ population_mcmc_t::~population_mcmc_t()
         }
         if (_sampling_history != NULL) {
                 delete(_sampling_history);
-        }
-        if (_samples != NULL) {
-                delete(_samples);
         }
 }
 
@@ -76,49 +71,12 @@ population_mcmc_t::update_sampling_history()
         }
         _sampling_history = new sampling_history_t();
         for (size_t i = 0; i < _size; i++) {
-                _sampling_history->switches  .push_back(_population[i]->sampling_history().switches  [0]);
-                _sampling_history->likelihood.push_back(_population[i]->sampling_history().likelihood[0]);
-                _sampling_history->posterior .push_back(_population[i]->sampling_history().posterior [0]);
-                _sampling_history->components.push_back(_population[i]->sampling_history().components[0]);
-        }
-}
-
-void
-population_mcmc_t::update_samples()
-{
-        if (_samples != NULL) {
-                delete(_samples);
-        }
-        // allocate memory
-        _samples = new samples_t();
-        for (size_t i = 0; i < _population[0]->samples().probabilities.size(); i++) {
-                _samples->probabilities.push_back(vector<double>(_population[0]->samples().probabilities[i].size(), 0));
-        }
-        // loop through samples
-        for (size_t i = 0; i < _population[0]->samples().probabilities.size(); i++) {
-                for (size_t j = 0; j < _population[0]->samples().probabilities[i].size(); j++) {
-                        // average over population
-                        double sum = 0;
-                        for (size_t k = 0; k < _size; k++) {
-                                sum += _population[k]->samples().probabilities[i][j];
-                        }
-                        // save average
-                        _samples->probabilities[i][j] = sum/(double)_size;
-                }
-        }
-        // find the map partition
-        _samples->map_value = -HUGE_VAL;
-        for (size_t i = 0; i < _size; i++) {
-                if (_samples->map_value < _population[i]->samples().map_value) {
-                        _samples->map_value     = _population[i]->samples().map_value;
-                        _samples->map_partition = _population[i]->samples().map_partition;
-                }
-        }
-        // copy partitions
-        for (size_t i = 0; i < _population[0]->samples().partitions.size(); i++) {
-                for (size_t j = 0; j < _size; j++) {
-                        _samples->partitions.push_back(_population[j]->samples().partitions[i]);
-                }
+                _sampling_history->switches   .push_back(_population[i]->sampling_history().switches   [0]);
+                _sampling_history->likelihood .push_back(_population[i]->sampling_history().likelihood [0]);
+                _sampling_history->posterior  .push_back(_population[i]->sampling_history().posterior  [0]);
+                _sampling_history->components .push_back(_population[i]->sampling_history().components [0]);
+                _sampling_history->temperature.push_back(_population[i]->sampling_history().temperature[0]);
+                _sampling_history->partitions .push_back(_population[i]->sampling_history().partitions [0]);
         }
 }
 
@@ -171,7 +129,6 @@ population_mcmc_t::sample(size_t n, size_t burnin)
                 }
         }
         update_sampling_history();
-        update_samples();
 }
 
 const sampling_history_t&
@@ -179,17 +136,7 @@ population_mcmc_t::sampling_history() const {
         return *_sampling_history;
 }
 
-samples_t&
-population_mcmc_t::samples() {
-        return *_samples;
-}
-
 size_t
 population_mcmc_t::size() const {
         return _size;
-}
-
-size_t
-population_mcmc_t::sampling_steps() const {
-        return _population[0]->sampling_steps();
 }

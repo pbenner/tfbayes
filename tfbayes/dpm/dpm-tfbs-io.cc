@@ -78,19 +78,22 @@ ostream& operator<< (ostream& o, const dpm_partition_t& partition)
 }
 
 static
-ostream& operator<< (ostream& o, const std::vector<dpm_partition_t>& partitions)
+ostream& operator<< (ostream& o, const matrix<dpm_partition_t>& partitions)
 {
-        for (std::vector<dpm_partition_t>::const_iterator it = partitions.begin();
-             it != partitions.end(); it++) {
-                o << "\t" << *it << endl;
+        if (partitions.size() == 0) {
+                return o;
         }
-
+        for (size_t j = 0; j < partitions[0].size(); j++) {
+                for (size_t i = 0; i < partitions.size(); i++) {
+                        assert(partitions[i].size() == partitions[0].size());
+                        o << "\t" << partitions[i][j] << endl;
+                }
+        }
         return o;
 }
 
 void dpm_tfbs_save_result(ostream& file, dpm_tfbs_pmcmc_t& sampler)
 {
-        const samples_t& samples          = sampler.samples();
         const sampling_history_t& history = sampler.sampling_history();
 
         file.setf(ios::showpoint);
@@ -104,9 +107,8 @@ void dpm_tfbs_save_result(ostream& file, dpm_tfbs_pmcmc_t& sampler)
              << history.likelihood;
         file << "posterior =" << endl
              << history.posterior;
-        file << "map_partition = "
-             << samples.map_partition
-             << endl;
+        file << "temperature =" << endl
+             << history.temperature;
         file << "partitions =" << endl
-             << samples.partitions;
+             << history.partitions;
 }

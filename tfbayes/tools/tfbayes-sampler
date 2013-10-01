@@ -93,7 +93,7 @@ def sample():
 # main
 # ------------------------------------------------------------------------------
 
-def main():
+def __main__():
     global options
     global sampler_config
     try:

@@ -1,4 +1,4 @@
-/* Copyright (C) 2011, 2012 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -262,24 +262,25 @@ dpm_tfbs_sampler_t::_metropolis_sample(const double temp) {
 size_t
 dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         // temperature for simulated annealing
-        double temp = 1.0;
+        double temperature = 1.0;
         if (is_burnin) {
                 // geometric decline of the temperature
-                temp = _t0*pow((1.0/_t0), (double)i/n);
-                flockfile(stdout);
-                cout << _name << ": "
-                     << "temperature is " << temp << endl;
-                fflush(stdout);
-                funlockfile(stdout);
+                temperature = _t0*pow((1.0/_t0), (double)i/n);
         }
-
+        flockfile(stdout);
+        cout << _name << ": "
+             << "temperature is " << temperature << endl;
+        fflush(stdout);
+        funlockfile(stdout);
+        // save temperature
+        _sampling_history.temperature[0].push_back(temperature);
         // call the standard hybrid sampler that first produces a
         // Gibbs sample and afterwards make a Metropolis-Hastings step
-        size_t s = _gibbs_sample(temp, false);
-        _metropolis_sample(temp);
+        size_t s = _gibbs_sample(temperature, false);
+        _metropolis_sample(temperature);
         // do a Gibbs block sampling step, i.e. go through all
         // clusters and try to merge them
-        _block_sample(temp, false);
+        _block_sample(temperature, false);
         // we are done with sampling here, now process commands
         flockfile(stdout);
         cout << _name << ": "
@@ -361,10 +362,6 @@ dpm_tfbs_sampler_t::optimize() {
         for (cl_iterator it = _state.begin(); it != _state.end(); it++) {
                 optimize(**it);
         }
-        // gibbs optimization
-        _gibbs_sample(1.0, true);
-        // save partition
-        _dpm.update_samples(_sampling_steps);
         // output resulting posterior value
         flockfile(stdout);
         cout << _name << ": "
@@ -409,7 +406,6 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
                                                         _output_queue,
                                                         phylogenetic_data);
         }
-        update_samples();
         _start_server();
 }
 
@@ -438,7 +434,6 @@ dpm_tfbs_pmcmc_t::optimize() {
         for (size_t i = 0; i < _size; i++) {
                 static_cast<dpm_tfbs_sampler_t *>(_population[i])->optimize();
         }
-        update_samples();
 }
 
 void

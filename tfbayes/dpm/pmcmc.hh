@@ -45,18 +45,14 @@ public:
         size_t size() const;
 
         const sampling_history_t& sampling_history() const;
-        samples_t& samples();
-        size_t sampling_steps() const;
 
 protected:
         std::vector<sampler_t*> _population;
         const size_t _size;
         sampling_history_t* _sampling_history;
-        samples_t* _samples;
 
         // protected methods
         ////////////////////////////////////////////////////////////////////////
-        virtual void update_samples();
         virtual void update_sampling_history();
 };
 
