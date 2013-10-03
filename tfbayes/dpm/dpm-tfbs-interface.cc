@@ -177,12 +177,6 @@ __END_DECLS
 
 using namespace boost::python;
 
-void raise_IndexError()
-{
-        PyErr_SetString(PyExc_IndexError, "Index out of range");
-        throw error_already_set();
-}
-
 size_t index_i_getitem(index_i& index, size_t i)
 {
         return index[i];
@@ -190,30 +184,6 @@ size_t index_i_getitem(index_i& index, size_t i)
 
 void index_i_setitem(index_i& index, size_t i, size_t d)
 {
-        index[i] = d;
-}
-
-size_t index_t_getitem(index_t& index, size_t i)
-{
-        if (i != 0) raise_IndexError();
-        return index[0];
-}
-
-void index_t_setitem(index_t& index, size_t i, size_t d)
-{
-        if (i != 0) raise_IndexError();
-        index[0] = d;
-}
-
-size_t seq_index_t_getitem(seq_index_t& index, size_t i)
-{
-        if (i > 1) raise_IndexError();
-        return index[i];
-}
-
-void seq_index_t_setitem(seq_index_t& index, size_t i, size_t d)
-{
-        if (i > 1) raise_IndexError();
         index[i] = d;
 }
 
@@ -233,13 +203,13 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
                 ;
         class_<index_t, bases<index_i> >("index_t")
                 .def(init<size_t>())
-                .def("__getitem__", index_t_getitem)
-                .def("__setitem__", index_t_setitem)
+                .def("__getitem__", index_i_getitem)
+                .def("__setitem__", index_i_setitem)
                 ;
-        class_<seq_index_t>("seq_index_t")
+        class_<seq_index_t, bases<index_i> >("seq_index_t")
                 .def(init<size_t, size_t>())
-                .def("__getitem__", seq_index_t_getitem)
-                .def("__setitem__", seq_index_t_setitem)
+                .def("__getitem__", index_i_getitem)
+                .def("__setitem__", index_i_setitem)
                 ;
         class_<dpm_subset_t>("dpm_subset_t", init<dpm_subset_tag_t>())
                 .def("insert", &dpm_subset_t::insert)
