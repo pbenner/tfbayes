@@ -8,6 +8,14 @@ noinst_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug
 # mcm_test_LDADD   = libtfbayes-dpm.la
 # mcm_test_LDADD  += -lm $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 
+pkgpython_LTLIBRARIES = dpm-tfbs-interface.la
+
+dpm_tfbs_interface_la_CPPFLAGS = $(PYTHON_CPPFLAGS)
+dpm_tfbs_interface_la_SOURCES  = \
+	dpm-tfbs-interface.cc
+dpm_tfbs_interface_la_LIBADD   = $(LIB_BOOST_PYTHON)
+dpm_tfbs_interface_la_LDFLAGS  = -avoid-version -module
+
 dpm_gaussian_debug_SOURCES = dpm-gaussian-main.cc
 dpm_gaussian_debug_LDADD   = $(top_builddir)/tfbayes/exception/libtfbayes-exception.la
 dpm_gaussian_debug_LDADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
@@ -45,14 +53,12 @@ libtfbayes_dpm_la_SOURCES =		\
 	data-tfbs.hh			\
 	data-gaussian.cc		\
 	data-gaussian.hh		\
-	dpm-gaussian-interface.cc	\
 	dpm-gaussian.cc			\
 	dpm-gaussian.hh			\
 	dpm-tfbs.cc			\
 	dpm-tfbs.hh			\
 	dpm-tfbs-command.cc		\
 	dpm-tfbs-command.hh		\
-	dpm-tfbs-interface.cc		\
 	dpm-tfbs-io.cc			\
 	dpm-tfbs-io.hh			\
 	dpm-tfbs-mean.cc                \
@@ -87,7 +93,7 @@ libtfbayes_dpm_la_SOURCES =		\
 	statistics.hh			\
 	utility.hh
 libtfbayes_dpm_la_LIBADD  = $(top_builddir)/tfbayes/exception/libtfbayes-exception.la
-libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/interface/libtfbayes-interface.la
+#libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/interface/libtfbayes-interface.la
 libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fastarithmetics/libtfbayes-fastarithmetics.la
 libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
 libtfbayes_dpm_la_LIBADD += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)

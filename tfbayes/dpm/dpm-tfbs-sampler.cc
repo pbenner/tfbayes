@@ -106,7 +106,7 @@ dpm_tfbs_sampler_t::_gibbs_sample(const double temp, const bool optimize) {
         // the indexer needs to be constant since it is shared between
         // processes, so to shuffle the indices we first need to
         // obtain a copy
-        vector<index_i*> indices(_indexer.sampling_begin(), _indexer.sampling_end());
+        vector<index_i*> indices(_indexer->sampling_begin(), _indexer->sampling_end());
         random_shuffle(indices.begin(), indices.end());
         // now sample
         for (vector<index_i*>::iterator it = indices.begin();

@@ -25,12 +25,15 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>
 
+#include <clonable.hh>
 #include <mixture-state.hh>
 #include <dpm-partition.hh>
 
-class mixture_model_t {
+class mixture_model_t : public clonable {
 public:
         virtual ~mixture_model_t() {}
+
+        mixture_model_t* clone() const = 0;
 
         // methods
         ////////////////////////////////////////////////////////////////////////

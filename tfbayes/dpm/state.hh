@@ -33,6 +33,8 @@ public:
 
         virtual ~state_t() {}
 
+        state_t* clone() const = 0;
+
         virtual void print(std::ostream& o) const = 0;
 };
 
@@ -40,6 +42,8 @@ class gibbs_state_t : public state_t {
 public:
         gibbs_state_t(const data_t<cluster_tag_t>& cluster_assignments)
                 : state_t(cluster_assignments) {}
+
+        gibbs_state_t* clone() const = 0;
 
         virtual void add(const index_i& index, cluster_tag_t tag) = 0;
         virtual void remove(const index_i& index, cluster_tag_t tag) = 0;

@@ -163,3 +163,19 @@ dpm_partition_t* _dpm_median(dpm_tfbs_pmcmc_t* sampler)
 }
 
 __END_DECLS
+
+// python interface
+// -----------------------------------------------------------------------------
+
+#include <locale>
+#include <cctype>
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+
+BOOST_PYTHON_MODULE(dpm_tfbs)
+{
+        class_<sampling_history_t>("sampling_history_t")
+                ;
+}

@@ -38,7 +38,8 @@ public:
                       const data_gaussian_t& data);
         ~dpm_gaussian_t();
 
-        dpm_gaussian_t* clone() const;
+//        virtual mixture_model_t* clone() const;
+        virtual dpm_gaussian_t* clone() const;
 
         // operators
         ////////////////////////////////////////////////////////////////////////
