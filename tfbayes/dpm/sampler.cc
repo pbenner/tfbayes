@@ -36,19 +36,17 @@ gibbs_sampler_t::gibbs_sampler_t(mixture_model_t& dpm,
                            gibbs_state_t& state,
                            const indexer_t& indexer,
                            const string name)
-        : _dpm(dpm),
+        : _dpm(&dpm),
           _name(name),
-          _state(state),
-          _indexer(indexer),
-          _sampling_history(*new sampling_history_t())
+          _state(&state),
+          _indexer(&indexer)
 {
         // for sampling statistics
         _sampling_history.switches.   push_back(vector<double>());
         _sampling_history.likelihood. push_back(vector<double>());
         _sampling_history.posterior.  push_back(vector<double>());
-        _sampling_history.components. push_back(vector<size_t>());
+        _sampling_history.components. push_back(vector<double>());
         _sampling_history.temperature.push_back(vector<double>());
-        _sampling_history.partitions. push_back(vector<dpm_partition_t>());
 }
 
 gibbs_sampler_t::gibbs_sampler_t(const gibbs_sampler_t& sampler)
@@ -131,7 +129,7 @@ gibbs_sampler_t::_update_sampling_history(size_t switches)
         _sampling_history.likelihood[0].push_back(_dpm.likelihood());
         _sampling_history.posterior [0].push_back(_dpm.posterior());
         _sampling_history.components[0].push_back(_dpm.mixture_components());
-        _sampling_history.partitions[0].push_back(_dpm.partition());
+        _sampling_history.partitions   .push_back(_dpm.partition());
 }
 
 void

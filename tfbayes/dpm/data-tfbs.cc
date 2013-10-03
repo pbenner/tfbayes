@@ -54,15 +54,15 @@ data_tfbs_t::valid_sampling_index(const index_i& index, size_t tfbs_length) cons
         return true;
 }
 
-data_tfbs_t::data_tfbs_t(const sequence_data_t<code_t>& sequences, size_t tfbs_length)
-        : sequence_data_t<code_t>(sequences),
-          _n_sequences(sequences.size()),
+data_tfbs_t::data_tfbs_t(const string& phylogenetic_input, size_t tfbs_length)
+        : sequence_data_t<code_t>(read_fasta(phylogenetic_input)),
+          _n_sequences(size()),
           _elements(0)
 {
         // loop over sequences
-        for(size_t i = 0; i < sequences.size(); i++) {
+        for(size_t i = 0; i < _n_sequences; i++) {
                 // loop over elements in a sequence
-                for(size_t j = 0; j < sequences[i].size(); j++) {
+                for(size_t j = 0; j < operator[](i).size(); j++) {
                         // generate an index of this position
                         seq_index_t index(i,j);
                         // if there is a nucleotide at this position
@@ -135,7 +135,7 @@ data_tfbs_t::is_blank(const index_i& index) const
 #include <tfbayes/utility/strtools.hh>
 
 sequence_data_t<data_tfbs_t::code_t>
-data_tfbs_t::read_fasta(const char* file_name)
+data_tfbs_t::read_fasta(const string& file_name)
 {
         sequence_data_t<data_tfbs_t::code_t> sequences;
 

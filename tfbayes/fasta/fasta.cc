@@ -26,8 +26,8 @@
 
 using namespace std;
 
-FastaParser::FastaParser(const char* file_name)
-        : file(file_name)
+FastaParser::FastaParser(const string& file_name)
+        : file(file_name.c_str())
 {
         string _line;
 

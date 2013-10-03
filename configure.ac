@@ -117,10 +117,15 @@ AC_CHECK_LIB(boost_regex-gcc-mt, main, LIB_BOOST_REGEX="-lboost_regex-gcc-mt",
 	[AC_CHECK_LIB(boost_regex-mt, main, LIB_BOOST_REGEX="-lboost_regex-mt",
 		[AC_CHECK_LIB(boost_regex, main, LIB_BOOST_REGEX="-lboost_regex",
 			[AC_MSG_ERROR([this library is required])])])])
+AC_CHECK_LIB(boost_python-gcc-mt, main, LIB_BOOST_PYTHON="-lboost_python-gcc-mt",
+	[AC_CHECK_LIB(boost_python-mt, main, LIB_BOOST_PYTHON="-lboost_python-mt",
+		[AC_CHECK_LIB(boost_python, main, LIB_BOOST_PYTHON="-lboost_python",
+			[AC_MSG_ERROR([this library is required])])])])
 
 AC_SUBST(LIB_BOOST_SYSTEM)
 AC_SUBST(LIB_BOOST_THREAD)
 AC_SUBST(LIB_BOOST_REGEX)
+AC_SUBST(LIB_BOOST_PYTHON)
 
 dnl ,---------------------------- 
 dnl | GETOPT_LONG
@@ -306,16 +311,19 @@ AX_CXXFLAGS_GCC_OPTION([-Wtrampolines])
 AX_CXXFLAGS_GCC_OPTION([-fno-nested-functions])
 AX_CXXFLAGS_GCC_OPTION([-fomit-frame-pointer])
 dnl no runtime type information
-AX_CXXFLAGS_GCC_OPTION([-fno-rtti])
+AX_CXXFLAGS_GCC_OPTION([-fno-rtti], CXXFLAGS_NORTTI)
 dnl turn link time optimization on (works only on some systems so far)
 #AX_CXXFLAGS_GCC_OPTION([-flto])
 AX_CXXFLAGS_GCC_OPTION([-DBOOST_NO_TYPEID])
+
+AC_SUBST(CXXFLAGS_NORTTI)
 
 dnl ,---------------------------- 
 dnl | PYTHON
 dnl `----------------------------
 
 AM_PATH_PYTHON(2.5)
+AC_PYTHON_DEVEL
 
 dnl ,---------------------------- 
 dnl | CYGWIN

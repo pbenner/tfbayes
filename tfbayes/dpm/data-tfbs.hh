@@ -51,7 +51,7 @@ public:
         // constructors
         ////////////////////////////////////////////////////////////////////////
 
-         data_tfbs_t(const sequence_data_t<code_t>& sequences, size_t tfbs_length);
+         data_tfbs_t(const std::string& phylogenetic_input, size_t tfbs_length);
          data_tfbs_t(const data_tfbs_t& data);
         ~data_tfbs_t();
 
@@ -81,7 +81,7 @@ public:
         void shuffle();
         bool valid_sampling_index(const index_i& index, size_t tfbs_length) const;
 
-        static sequence_data_t<data_tfbs_t::code_t> read_fasta(const char* file_name);
+        static sequence_data_t<data_tfbs_t::code_t> read_fasta(const std::string& file_name);
 
 private:
         // all nucleotide positions in a vector (used for the gibbs sampler)

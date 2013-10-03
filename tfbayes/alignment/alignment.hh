@@ -62,7 +62,7 @@ public:
                         this->operator[](leaf->id) = nucleotide_sequence_t<CODE_TYPE>(length, init);
                 }
         }
-        alignment_t(const char* filename, const pt_root_t* tree)
+        alignment_t(const std::string& filename, const pt_root_t* tree)
                 : alignment_ancestor_t(tree->n_leaves, nucleotide_sequence_t<CODE_TYPE>()) {
 
                 FastaParser parser(filename);
@@ -280,12 +280,12 @@ public:
         // Constructors
         ////////////////////////////////////////////////////////////////////////
         alignment_set_t() { };
-        alignment_set_t(const char* filename) {
+        alignment_set_t(const std::string& filename) {
                 read_fasta(filename);
         }
 
 private:
-        taxon_map_t get_species_from_fasta(const char* filename) {
+        taxon_map_t get_species_from_fasta(const std::string& filename) {
                 /* this automatically parses the fasta file format */
                 FastaParser parser(filename);
                 std::set<std::string> species;
@@ -303,7 +303,7 @@ private:
                 return taxon_map;
         }
 
-        void read_fasta(const char* filename) {
+        void read_fasta(const std::string& filename) {
                 /* first check what species are available */
                 taxon_map_t taxon_map = get_species_from_fasta(filename);
 

@@ -21,6 +21,10 @@ from ..interface import *
 
 _lib = load_library('tfbayes-dpm', 0)
 
+_lib._dpm_init.restype  = None
+_lib._dpm_init.argtypes = []
+_lib._dpm_init()
+
 # utilities
 # ------------------------------------------------------------------------------
 
@@ -80,11 +84,37 @@ class PARTITION_LIST(c_void_p):
           _lib._dpm_median.argtypes = [PARTITION_LIST]
           return _lib._dpm_median(self)
 
+# sampling results
+# ------------------------------------------------------------------------------
+
+class RESULTS(Structure):
+     _fields_ = [("components",          CXX_MATRIX),
+                 ("switches",            CXX_MATRIX),
+                 ("likelihood",          CXX_MATRIX),
+                 ("posterior",           CXX_MATRIX),
+                 ("temperature",         CXX_MATRIX),
+                 ("partitions",          PARTITION_LIST)]
+     def __init__(self, results):
+          if results.has_key('components'):
+               self.components  = CXX_MATRIX(results['components'])
+          if results.has_key('switches'):
+               self.switches    = CXX_MATRIX(results['switches'])
+          if results.has_key('likelihood'):
+               self.likelihood  = CXX_MATRIX(results['likelihood'])
+          if results.has_key('posterior'):
+               self.posterior   = CXX_MATRIX(results['posterior'])
+          if results.has_key('temperature'):
+               self.temperature = CXX_MATRIX(results['temperature'])
+          if results.has_key('partitions'):
+               self.partitions  = PARTITION_LIST(results['partitions'])
+
 # options
 # ------------------------------------------------------------------------------
 
 class OPTIONS(Structure):
-     _fields_ = [("tfbs_length",         c_size_t),
+     _fields_ = [("phylogenetic_file",   CXX_STRING),
+                 ("alignment_file",      CXX_STRING),
+                 ("tfbs_length",         c_size_t),
                  ("alpha",               c_double),
                  ("discount",            c_double),
                  ("lambda_",             c_double),
@@ -98,12 +128,9 @@ class OPTIONS(Structure):
                  ("baseline_priors",     POINTER(CXX_MATRIX)),
                  ("baseline_tags",       POINTER(CXX_STRING)),
                  ("baseline_n",          c_size_t),
-                 ("partition",           PARTITION),
                  ("population_size",     c_size_t),
                  ("socket_file",         CXX_STRING)]
-     def __new__(cls, options, partition):
-          return _lib._dpm_tfbs_options().contents
-     def __init__(self, options, partition):
+     def __init__(self, options):
           self.alpha               = options['alpha']
           self.discount            = options['discount']
           self.lambda_             = options['lambda']
@@ -115,7 +142,6 @@ class OPTIONS(Structure):
           self.tfbs_length         = options['tfbs_length']
           self.population_size     = options['population_size']
           self.socket_file         = CXX_STRING(options['socket_file'])
-          self.partition           = PARTITION(partition)
           self.background_alpha    = CXX_MATRIX(transpose(options['background_alpha']))
           # copy baseline
           self.baseline_n          = len(options['baseline_priors'])
@@ -131,95 +157,43 @@ class OPTIONS(Structure):
                # and now its weight
                self.baseline_weights[idx] = options['baseline_weights'][name]
 
-# function prototypes
+# interface with the dpm tfbs sampler
 # ------------------------------------------------------------------------------
 
-_lib._dpm_tfbs_options.restype  = POINTER(OPTIONS)
-_lib._dpm_tfbs_options.argtypes = []
+class DPM_TFBS(c_void_p):
+     def __init__(self, options, results={}):
+          # do some sanity checks
+          if not len(options['baseline_priors']) == len(options['baseline_weights']):
+               raise IOError('Length mismatch between baseline priors and weights.')
+          if not len(options['baseline_priors']) == len(options['baseline_tags']):
+               raise IOError('Length mismatch between baseline priors and names.')
+          if len(options['baseline_priors']) == 0:
+               raise IOError('Length baseline priors specified.')
 
-_lib._dpm_tfbs_init.restype  = None
-_lib._dpm_tfbs_init.argtypes = [c_char_p, c_char_p]
+          # initialize simple c_options
+          c_options = pointer(OPTIONS(options))
+          c_results = pointer(RESULTS(results))
 
-_lib._dpm_tfbs_num_clusters.restype  = c_size_t
-_lib._dpm_tfbs_num_clusters.argtypes = []
-
-_lib._dpm_tfbs_cluster_assignments.restype  = POINTER(MATRIX)
-_lib._dpm_tfbs_cluster_assignments.argtypes = []
-
-_lib._dpm_tfbs_hist_likelihood.restype  = CXX_MATRIX
-_lib._dpm_tfbs_hist_likelihood.argtypes = []
-
-_lib._dpm_tfbs_hist_switches.restype  = CXX_MATRIX
-_lib._dpm_tfbs_hist_switches.argtypes = []
-
-_lib._dpm_tfbs_print.restype  = None
-_lib._dpm_tfbs_print.argtypes = []
-
-_lib._dpm_tfbs_sample.restype  = None
-_lib._dpm_tfbs_sample.argtypes = [c_size_t, c_size_t]
-
-_lib._dpm_tfbs_optimize.restype  = None
-_lib._dpm_tfbs_optimize.argtypes = []
-
-_lib._dpm_tfbs_save.restype  = None
-_lib._dpm_tfbs_save.argtypes = [c_char_p]
-
-_lib._dpm_tfbs_free.restype  = None
-_lib._dpm_tfbs_free.argtypes = []
-
-# functions that interface with the library
-# ------------------------------------------------------------------------------
-
-def dpm_init(options, phylogenetic_input, alignment_input, partition=None):
-     # do some sanity checks
-     if not len(options['baseline_priors']) == len(options['baseline_weights']):
-          raise IOError('Length mismatch between baseline priors and weights.')
-     if not len(options['baseline_priors']) == len(options['baseline_tags']):
-          raise IOError('Length mismatch between baseline priors and names.')
-     if len(options['baseline_priors']) == 0:
-          raise IOError('Length baseline priors specified.')
-
-     # initialize simple c_options
-     c_options = pointer(OPTIONS(options, partition))
-
-     # call the library
-     _lib._dpm_tfbs_init(phylogenetic_input, alignment_input)
-
-def dpm_print():
-     _lib._dpm_tfbs_print()
-
-def dpm_num_clusters():
-     return _lib._dpm_tfbs_num_clusters()
-
-def dpm_cluster_assignments():
-     result  = _lib._dpm_tfbs_cluster_assignments()
-     cluster = get_matrix(result)
-     _lib._free_matrix(result)
-     return cluster
-
-def dpm_hist_likelihood():
-     result     = _lib._dpm_tfbs_hist_likelihood()
-     likelihood = result.export()
-     result.free()
-     return likelihood
-
-def dpm_hist_switches():
-     result   = _lib._dpm_tfbs_hist_switches()
-     switches = result.export()
-     result.free()
-     return switches
-
-def dpm_sample(n, burnin):
-     _lib._dpm_tfbs_sample(n, burnin)
-
-def dpm_optimize():
-     _lib._dpm_tfbs_optimize()
-
-def dpm_save(filename):
-     _lib._dpm_tfbs_save(filename)
-
-def dpm_free():
-     _lib._dpm_tfbs_free()
+          # call the library
+          _lib._dpm_tfbs_init.restype  = c_void_p
+          _lib._dpm_tfbs_init.argtypes = [pointer(OPTIONS), pointer(RESULTS)]
+          self.value = _lib._dpm_tfbs_init(c_options, c_results)
+     def dpm_sample(self, n, burnin):
+          _lib._dpm_tfbs_sample.restype  = None
+          _lib._dpm_tfbs_sample.argtypes = [DPM_TFBS, c_size_t, c_size_t]
+          _lib._dpm_tfbs_sample(self.value, n, burnin)
+     def dpm_save(self, filename):
+          _lib._dpm_tfbs_save.restype  = None
+          _lib._dpm_tfbs_save.argtypes = [DPM_TFBS, c_char_p]
+          _lib._dpm_tfbs_save(self.value, filename)
+     def results(self):
+          _lib._dpm_tfbs_results.restype  = pointer(RESULTS)
+          _lib._dpm_tfbs_results.argtypes = [DPM_TFBS]
+          return _lib._dpm_tfbs_results(self.value)
+     def dpm_free(self):
+          _lib._dpm_tfbs_free.restype  = None
+          _lib._dpm_tfbs_free.argtypes = [DPM_TFBS]
+          _lib._dpm_tfbs_free(self.value)
 
 def dpm_mean(partition_list):
      c_partition_list = PARTITION_LIST(partition_list)

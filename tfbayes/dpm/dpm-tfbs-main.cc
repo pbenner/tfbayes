@@ -149,8 +149,6 @@ static
 void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_file)
 {
         tfbs_options_t tfbs_options;
-        sequence_data_t<data_tfbs_t::code_t> phylogenetic_data(data_tfbs_t::read_fasta(phylogenetic_data_file));
-        alignment_set_t<short> alignment_set = alignment_set_t<short>(fasta_alignment_file);
 
         // background alpha
         tfbs_options.background_alpha = new matrix<double>();
@@ -164,6 +162,8 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         }
 
         // tfbs options
+        tfbs_options.phylogenetic_file   = new string(phylogenetic_data_file);
+        tfbs_options.alignment_file      = new string(fasta_alignment_file);
         tfbs_options.alpha               = options.alpha;
         tfbs_options.lambda              = options.lambda;
         tfbs_options.discount            = options.discount;
@@ -178,7 +178,7 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options.baseline_tags[0]    = new string("baseline_default");
 
         // create data, dpm, and sampler objects
-        dpm_tfbs_pmcmc_t pmcmc(tfbs_options, phylogenetic_data, alignment_set, options.population_size);
+        dpm_tfbs_pmcmc_t pmcmc(tfbs_options);
 
         // execute the sampler
         pmcmc.sample(options.samples, options.burnin);

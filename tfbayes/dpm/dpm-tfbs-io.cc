@@ -24,20 +24,7 @@
 using namespace std;
 
 static
-ostream& operator<< (ostream& o, const vector<vector<double> >& m)
-{
-        for (size_t i = 0; i < m.size(); i++) {
-                o << "\t";
-                for (size_t j = 0; j < m[i].size(); j++) {
-                        o << m[i][j] << " ";
-                }
-                o << endl;
-        }
-        return o;
-}
-
-static
-ostream& operator<< (ostream& o, const vector<vector<size_t> >& m)
+ostream& operator<< (ostream& o, const matrix<double>& m)
 {
         for (size_t i = 0; i < m.size(); i++) {
                 o << "\t";
@@ -78,16 +65,13 @@ ostream& operator<< (ostream& o, const dpm_partition_t& partition)
 }
 
 static
-ostream& operator<< (ostream& o, const matrix<dpm_partition_t>& partitions)
+ostream& operator<< (ostream& o, const vector<dpm_partition_t>& partitions)
 {
         if (partitions.size() == 0) {
                 return o;
         }
-        for (size_t j = 0; j < partitions[0].size(); j++) {
-                for (size_t i = 0; i < partitions.size(); i++) {
-                        assert(partitions[i].size() == partitions[0].size());
-                        o << "\t" << partitions[i][j] << endl;
-                }
+        for (size_t i = 0; i < partitions.size(); i++) {
+                o << "\t" << partitions[i] << endl;
         }
         return o;
 }

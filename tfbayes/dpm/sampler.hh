@@ -58,15 +58,15 @@ protected:
         virtual size_t _gibbs_sample();
         virtual void   _update_sampling_history(size_t switches);
         // the mixture model
-        mixture_model_t& _dpm;
+        mixture_model_t* _dpm;
         std::string _name;
 
-        gibbs_state_t& _state;
-        const indexer_t& _indexer;
+        gibbs_state_t* _state;
+        const indexer_t* _indexer;
 
         // gibbs sampler history
         size_t _sampling_steps;
-        sampling_history_t& _sampling_history;
+        sampling_history_t _sampling_history;
 };
 
 #endif /* SAMPLER_HH */

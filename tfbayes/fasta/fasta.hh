@@ -30,7 +30,7 @@
 
 class FastaParser {
 public:
-        FastaParser(const char* file_name);
+        FastaParser(const std::string& file_name);
 
         std::string read_sequence();
         const std::vector<std::string>& description();

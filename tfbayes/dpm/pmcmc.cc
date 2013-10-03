@@ -78,6 +78,13 @@ population_mcmc_t::update_sampling_history()
                 _sampling_history->temperature.push_back(_population[i]->sampling_history().temperature[0]);
                 _sampling_history->partitions .push_back(_population[i]->sampling_history().partitions [0]);
         }
+        for (size_t j = 0; j < _population[0]->sampling_history().partitions.size(); j++) {
+                for (size_t i = 0; i < _size; i++) {
+                        assert(j < _population[i]->sampling_history().partitions.size());
+                        _sampling_history->partitions.push_back(
+                                _population[i]->sampling_history().partitions[j]);
+                }
+        }
 }
 
 typedef struct {

@@ -23,7 +23,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <stddef.h>
-
+#include <vector>
 #include <gsl/gsl_matrix.h>
 
 // c++ matrix
@@ -39,6 +39,9 @@ namespace std {
                 matrix(size_t rows, size_t columns)
                         : vector<vector<T> >(rows, vector<double>(columns, 0.0))
                         {}
+                template <typename InputIterator>
+                matrix (InputIterator first, InputIterator last)
+                        : vector<vector<T> >(first, last) { }
         };
 }
 

@@ -376,18 +376,17 @@ dpm_tfbs_sampler_t::optimize() {
 
 dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
         const tfbs_options_t& options,
-        const sequence_data_t<data_tfbs_t::code_t>& phylogenetic_data,
-        const alignment_set_t<short>& alignment_set,
-        size_t n)
-        : population_mcmc_t(n),
-          _options(new tfbs_options_t(options)),
-          _data(phylogenetic_data, options.tfbs_length),
-          _gdpm(n, NULL),
+        const sampling_history_t& history)
+        : population_mcmc_t(options.population_size),
+          _options(&options),
+          _data(*options.phylogenetic_file, options.tfbs_length),
+          _alignment_set(*options.alignment_file),
+          _gdpm(options.population_size, NULL),
           _socket_file(*options.socket_file),
           _server(NULL),
-          _bt(NULL) {
-
-        const dpm_tfbs_t dpm_tfbs(options, _data, alignment_set);
+          _bt(NULL)
+{
+        const dpm_tfbs_t dpm_tfbs(options, _data, _alignment_set);
 
         for (size_t i = 0; i < _size; i++) {
                 std::stringstream ss; ss << "Sampler " << i+1;
@@ -404,7 +403,7 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
                                                         ss.str(),
                                                         *command_queue,
                                                         _output_queue,
-                                                        phylogenetic_data);
+                                                        _data);
         }
         _start_server();
 }
@@ -429,11 +428,19 @@ dpm_tfbs_pmcmc_t::gdpm() const {
         return _gdpm;
 }
 
-void
-dpm_tfbs_pmcmc_t::optimize() {
-        for (size_t i = 0; i < _size; i++) {
-                static_cast<dpm_tfbs_sampler_t *>(_population[i])->optimize();
-        }
+dpm_partition_t
+dpm_tfbs_pmcmc_t::map() const {
+        return dpm_partition_t();
+}
+
+dpm_partition_t
+dpm_tfbs_pmcmc_t::mean() const {
+        return dpm_partition_t();
+}
+
+dpm_partition_t
+dpm_tfbs_pmcmc_t::median() const {
+        return dpm_partition_t();
 }
 
 void

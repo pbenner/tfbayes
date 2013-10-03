@@ -72,8 +72,8 @@ def parse_sampler_config(config_file, sampler_config):
     config_parser.read(config_file)
     if not config_parser.has_section('TFBS-Sampler'):
         raise IOError("Invalid configuration file.")
-    sampler_config['alignment_data']    = config_parser.get('TFBS-Sampler', 'alignment-data')
-    sampler_config['phylogenetic_data'] = config_parser.get('TFBS-Sampler', 'phylogenetic-data')
+    sampler_config['alignment_file']    = config_parser.get('TFBS-Sampler', 'alignment-file')
+    sampler_config['phylogenetic_file'] = config_parser.get('TFBS-Sampler', 'phylogenetic-file')
     if config_parser.has_option('TFBS-Sampler', 'alpha'):
         sampler_config['alpha'] = float(config_parser.get('TFBS-Sampler', 'alpha'))
     if config_parser.has_option('TFBS-Sampler', 'discount'):

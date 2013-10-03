@@ -84,16 +84,17 @@ class dpm_tfbs_pmcmc_t : public population_mcmc_t {
 public:
         dpm_tfbs_pmcmc_t(
                 const tfbs_options_t& options,
-                const sequence_data_t<data_tfbs_t::code_t>& phylogenetic_data,
-                const alignment_set_t<short>& alignment_set,
-                size_t n);
+                const sampling_history_t& history = sampling_history_t());
         virtual ~dpm_tfbs_pmcmc_t();
 
         const tfbs_options_t& options() const;
         const data_tfbs_t& data() const;
         const std::vector<dpm_tfbs_t*>& gdpm() const;
 
-        void optimize();
+        // compute point estimates
+        dpm_partition_t map() const;
+        dpm_partition_t mean() const;
+        dpm_partition_t median() const;
 
 protected:
         void _start_server();
@@ -102,6 +103,7 @@ protected:
         const tfbs_options_t* _options;
 
         data_tfbs_t _data;
+        alignment_set_t<short> _alignment_set;
         std::vector<dpm_tfbs_t*> _gdpm;
 
         std::string _socket_file;

@@ -33,7 +33,8 @@
 
 using namespace std;
 
-dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, const alignment_set_t<short>& alignment_set)
+dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, const alignment_set_t<short>& alignment_set,
+        const dpm_partition_t& partition)
         : // baseline
           _baseline_weights(*options.baseline_weights),
           // phylogenetic information
@@ -132,8 +133,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
         ////////////////////////////////////////////////////////////////////////////////
         // use a map partition from a previous sampling run to
         // initialize the state
-        assert(options.partition);
-        for (dpm_partition_t::const_iterator it = options.partition->begin(); it != options.partition->end(); it++) {
+        for (dpm_partition_t::const_iterator it = partition.begin(); it != partition.end(); it++) {
                 const dpm_subset_t& subset(*it);
                 cluster_t& cluster = _state.get_free_cluster(subset.dpm_subset_tag());
 

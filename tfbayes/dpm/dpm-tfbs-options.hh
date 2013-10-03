@@ -28,6 +28,8 @@
 #include <tfbayes/dpm/dpm-partition.hh>
 
 typedef struct {
+        std::string* phylogenetic_file;
+        std::string* alignment_file;
         size_t tfbs_length;
         double alpha;
         double discount;
@@ -42,7 +44,6 @@ typedef struct {
         std::matrix<double>** baseline_priors;
         std::string** baseline_tags;
         size_t baseline_n;
-        dpm_partition_t* partition;
         size_t population_size;
         std::string* socket_file;
 } tfbs_options_t;

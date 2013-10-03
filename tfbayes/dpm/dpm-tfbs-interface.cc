@@ -40,11 +40,6 @@ using namespace std;
 // options and global variables
 // -----------------------------------------------------------------------------
 
-static tfbs_options_t _options;
-static dpm_tfbs_pmcmc_t* _sampler;
-static sequence_data_t<data_tfbs_t::code_t> _phylogenetic_data;
-static alignment_set_t<short> _alignment_set;
-
 ostream&
 operator<<(std::ostream& o, const tfbs_options_t& options) {
         o << "Options:"              << endl
@@ -67,92 +62,43 @@ __BEGIN_DECLS
 // python interface
 // -----------------------------------------------------------------------------
 
-tfbs_options_t* _dpm_tfbs_options()
-{
-        return &_options;
-}
-
-void _dpm_tfbs_init(const char* phylogenetic_input, const char* alignment_input)
+void _dpm_init()
 {
         __dpm_init__();
-
-        _phylogenetic_data = data_tfbs_t::read_fasta(phylogenetic_input);
-        _alignment_set     = alignment_set_t<short>(alignment_input);
-        _sampler           = new dpm_tfbs_pmcmc_t(_options, _phylogenetic_data, _alignment_set, _options.population_size);
-
-        cout << _options << endl;
 }
 
-void _dpm_tfbs_save(const char* filename)
+dpm_tfbs_pmcmc_t* _dpm_tfbs_init(const tfbs_options_t* options, const sampling_history_t* history)
+{
+        // print options
+        cout << options << endl;
+        // return new sampler
+        return new dpm_tfbs_pmcmc_t(*options, *history);
+}
+
+void _dpm_tfbs_save(dpm_tfbs_pmcmc_t* sampler, const char* filename)
 {
         if (filename == NULL) {
-                dpm_tfbs_save_result(cout, *_sampler);
+                dpm_tfbs_save_result(cout, *sampler);
         }
         else {
                 ofstream file;
                 file.open(filename);
-                dpm_tfbs_save_result(file, *_sampler);
+                dpm_tfbs_save_result(file, *sampler);
                 file.close();
         }
 }
 
-size_t _dpm_tfbs_num_clusters() {
-        return _sampler->gdpm()[0]->state().size();
+const sampling_history_t* _dpm_tfbs_results(dpm_tfbs_pmcmc_t* sampler)
+{
+        return &sampler->sampling_history();
 }
 
-matrix_t* _dpm_tfbs_cluster_assignments() {
-        matrix_t* result;
-        size_t n = _sampler->data().size();
-        size_t m = 0;
-
-        // compute maximum length
-        for (size_t i = 0; i < n; i++) {
-                if (m < _sampler->data().size(i)) {
-                        m = _sampler->data().size(i);
-                }
-        }
-
-        // allocate matrix
-        result = alloc_matrix(n, m);
-        // default initialization to -1
-        for (size_t i = 0; i < n; i++) {
-                for (size_t j = 0; j < m; j++) {
-                        result->mat[i][j] = -1;
-                }
-        }
-        // copy samples
-        for (data_tfbs_t::const_iterator it = _sampler->data().begin();
-             it != _sampler->data().end(); it++) {
-                const index_i& index = **it;
-                result->mat[index[0]][index[1]] = _sampler->gdpm()[0]->state()[index];
-        }
-        return result;
+void _dpm_tfbs_sample(dpm_tfbs_pmcmc_t* sampler, size_t n, size_t burnin) {
+        sampler->sample(n, burnin);
 }
 
-matrix<double>* _dpm_tfbs_hist_likelihood() {
-        const matrix<double>& likelihood = _sampler->sampling_history().likelihood;
-        return new matrix<double>(likelihood);
-}
-
-matrix<double>* _dpm_tfbs_hist_switches() {
-        const matrix<double>& switches = _sampler->sampling_history().switches;
-        return new matrix<double>(switches);
-}
-
-void _dpm_tfbs_print() {
-        cout << _sampler->gdpm()[0] << endl;
-}
-
-void _dpm_tfbs_sample(size_t n, size_t burnin) {
-        _sampler->sample(n, burnin);
-}
-
-void _dpm_tfbs_optimize() {
-        _sampler->optimize();
-}
-
-void _dpm_tfbs_free() {
-        delete(_sampler);
+void _dpm_tfbs_free(dpm_tfbs_pmcmc_t* sampler) {
+        delete(sampler);
 }
 
 // handling partitions to resume a previous sampling state
@@ -198,19 +144,22 @@ void _dpm_partition_list_free(vector<dpm_partition_t>* partition_list)
         delete(partition_list);
 }
 
-// compute means and medians
+// compute point estimates
 // -----------------------------------------------------------------------------
 
-size_t _dpm_mean(vector<dpm_partition_t>* partition_list)
+dpm_partition_t* _dpm_map(dpm_tfbs_pmcmc_t* sampler)
 {
-        return dpm_tfbs_mean(*partition_list, _phylogenetic_data.sizes(),
-                             _options.tfbs_length, true);
+        return new dpm_partition_t(sampler->map());
 }
 
-size_t _dpm_median(vector<dpm_partition_t>* partition_list)
+dpm_partition_t* _dpm_mean(dpm_tfbs_pmcmc_t* sampler)
 {
-        return dpm_tfbs_median(*partition_list, _phylogenetic_data.sizes(),
-                               _options.tfbs_length, true);
+        return new dpm_partition_t(sampler->mean());
+}
+
+dpm_partition_t* _dpm_median(dpm_tfbs_pmcmc_t* sampler)
+{
+        return new dpm_partition_t(sampler->median());
 }
 
 __END_DECLS

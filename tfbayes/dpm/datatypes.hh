@@ -43,13 +43,31 @@ typedef enum {
 
 #include <tfbayes/dpm/dpm-partition.hh>
 
-typedef struct {
-        std::matrix<double> switches;
-        std::matrix<double> likelihood;
-        std::matrix<double> posterior;
-        std::matrix<size_t> components;
-        std::matrix<double> temperature;
-        std::matrix<dpm_partition_t> partitions;
-} sampling_history_t;
+class sampling_history_t {
+public:
+        sampling_history_t() {
+                switches    = new matrix<double>();
+                likelihood  = new matrix<double>();
+                posterior   = new matrix<double>();
+                components  = new matrix<double>();
+                temperature = new matrix<double>();
+                partitions  = new vector<dpm_partition_t>();
+        }
+        ~sampling_history_t() {
+                delete(switches);
+                delete(likelihood);
+                delete(posterior);
+                delete(components);
+                delete(temperature);
+                delete(partitions);
+        }
+
+        std::matrix<double>* switches;
+        std::matrix<double>* likelihood;
+        std::matrix<double>* posterior;
+        std::matrix<double>* components;
+        std::matrix<double>* temperature;
+        std::vector<dpm_partition_t> partitions;
+};
 
 #endif /* DATATYPES_HH */
