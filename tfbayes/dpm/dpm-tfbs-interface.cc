@@ -171,11 +171,84 @@ __END_DECLS
 #include <cctype>
 
 #include <boost/python.hpp>
+#include <boost/python/def.hpp>
+#include <boost/python/iterator.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 using namespace boost::python;
 
-BOOST_PYTHON_MODULE(dpm_tfbs)
+void raise_IndexError()
+{
+        PyErr_SetString(PyExc_IndexError, "Index out of range");
+        throw error_already_set();
+}
+
+size_t index_i_getitem(index_i& index, size_t i)
+{
+        return index[i];
+}
+
+void index_i_setitem(index_i& index, size_t i, size_t d)
+{
+        index[i] = d;
+}
+
+size_t index_t_getitem(index_t& index, size_t i)
+{
+        if (i != 0) raise_IndexError();
+        return index[0];
+}
+
+void index_t_setitem(index_t& index, size_t i, size_t d)
+{
+        if (i != 0) raise_IndexError();
+        index[0] = d;
+}
+
+size_t seq_index_t_getitem(seq_index_t& index, size_t i)
+{
+        if (i > 1) raise_IndexError();
+        return index[i];
+}
+
+void seq_index_t_setitem(seq_index_t& index, size_t i, size_t d)
+{
+        if (i > 1) raise_IndexError();
+        index[i] = d;
+}
+
+BOOST_PYTHON_MODULE(dpm_tfbs_interface)
 {
         class_<sampling_history_t>("sampling_history_t")
+                .def_readwrite("switches",    &sampling_history_t::switches)
+                .def_readwrite("likelihood",  &sampling_history_t::likelihood)
+                .def_readwrite("posterior",   &sampling_history_t::posterior)
+                .def_readwrite("components",  &sampling_history_t::components)
+                .def_readwrite("temperature", &sampling_history_t::temperature)
+                .def_readwrite("partitions",  &sampling_history_t::partitions)
+                ;
+        class_<index_i, index_i*, boost::noncopyable>("index_i", no_init)
+                .def("__getitem__", index_i_getitem)
+                .def("__setitem__", index_i_setitem)
+                ;
+        class_<index_t, bases<index_i> >("index_t")
+                .def(init<size_t>())
+                .def("__getitem__", index_t_getitem)
+                .def("__setitem__", index_t_setitem)
+                ;
+        class_<seq_index_t>("seq_index_t")
+                .def(init<size_t, size_t>())
+                .def("__getitem__", seq_index_t_getitem)
+                .def("__setitem__", seq_index_t_setitem)
+                ;
+        class_<dpm_subset_t>("dpm_subset_t", init<dpm_subset_tag_t>())
+                .def("insert", &dpm_subset_t::insert)
+                .def("__iter__", boost::python::iterator<dpm_subset_t>())
+                .def("dpm_subset_tag", &dpm_subset_t::dpm_subset_tag)
+                ;
+        class_<dpm_partition_t>("dpm_partition_t")
+                .def(vector_indexing_suite<dpm_partition_t>())
+                .def("__iter__", boost::python::iterator<dpm_partition_t>())
+                .def("add_component", &dpm_partition_t::add_component)
                 ;
 }

@@ -1,6 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/include
+AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
 noinst_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug
 
@@ -8,12 +9,14 @@ noinst_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug
 # mcm_test_LDADD   = libtfbayes-dpm.la
 # mcm_test_LDADD  += -lm $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 
-pkgpython_LTLIBRARIES = dpm-tfbs-interface.la
+pkgpython_LTLIBRARIES = dpm_tfbs_interface.la
 
-dpm_tfbs_interface_la_CPPFLAGS = $(PYTHON_CPPFLAGS)
+dpm_tfbs_interface_la_CPPFLAGS = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS)
+dpm_tfbs_interface_la_CXXFLAGS =
 dpm_tfbs_interface_la_SOURCES  = \
 	dpm-tfbs-interface.cc
-dpm_tfbs_interface_la_LIBADD   = $(LIB_BOOST_PYTHON)
+dpm_tfbs_interface_la_LIBADD   = libtfbayes-dpm.la
+dpm_tfbs_interface_la_LIBADD  += $(LIB_BOOST_PYTHON)
 dpm_tfbs_interface_la_LDFLAGS  = -avoid-version -module
 
 dpm_gaussian_debug_SOURCES = dpm-gaussian-main.cc

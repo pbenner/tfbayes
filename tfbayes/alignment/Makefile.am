@@ -1,6 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
-INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/include
+AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
 ## install headers
 otherincludedir = $(includedir)/tfbayes/alignment

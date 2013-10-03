@@ -85,11 +85,13 @@ public:
         dpm_partition_t()
                 : std::vector<dpm_subset_t>()
                 {}
+        template <typename InputIterator>
+        dpm_partition_t (InputIterator first, InputIterator last)
+                : std::vector<dpm_subset_t>(first, last) { }
 
         void add_component(const dpm_subset_tag_t& dpm_subset_tag) {
                 this->push_back(dpm_subset_t(dpm_subset_tag));
         }
-        
 };
 
 #endif /* DPM_PARTITION_HH */

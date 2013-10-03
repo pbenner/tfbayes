@@ -1,6 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/include
+AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
 ## Berkeley DB for the human genome data
 lib_LTLIBRARIES  = libtfbayes-fasta.la
