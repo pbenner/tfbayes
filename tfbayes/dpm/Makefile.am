@@ -58,6 +58,7 @@ libtfbayes_dpm_la_SOURCES =		\
 	data-gaussian.hh		\
 	dpm-gaussian.cc			\
 	dpm-gaussian.hh			\
+	dpm-sampling-history.hh		\
 	dpm-tfbs.cc			\
 	dpm-tfbs.hh			\
 	dpm-tfbs-command.cc		\
@@ -69,6 +70,7 @@ libtfbayes_dpm_la_SOURCES =		\
 	dpm-tfbs-repl.cc		\
 	dpm-tfbs-repl.hh		\
 	dpm-tfbs-options.hh		\
+	dpm-tfbs-options.cc		\
 	dpm-tfbs-prior.cc		\
 	dpm-tfbs-prior.hh		\
 	dpm-tfbs-sampler.cc		\

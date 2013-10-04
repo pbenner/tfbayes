@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <tfbayes/dpm/datatypes.hh>
+#include <tfbayes/dpm/dpm-partition.hh>
 
 size_t
 dpm_tfbs_mean(const std::vector<dpm_partition_t>& partitions,

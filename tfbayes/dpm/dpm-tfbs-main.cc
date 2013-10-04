@@ -31,6 +31,7 @@
 #include <tfbayes/dpm/dpm-tfbs.hh>
 #include <tfbayes/dpm/dpm-tfbs-io.hh>
 #include <tfbayes/dpm/dpm-tfbs-sampler.hh>
+#include <tfbayes/dpm/dpm-sampling-history.hh>
 #include <tfbayes/dpm/utility.hh>
 #include <tfbayes/exception/exception.h>
 #include <tfbayes/fasta/fasta.hh>

@@ -15,30 +15,24 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DATATYPES_HH
-#define DATATYPES_HH
+#ifndef SAMPLING_HISTORY_HH
+#define SAMPLING_HISTORY_HH
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <iostream>
-#include <vector>
-#include <string>
-
-#include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/linalg.hh>
-#include <tfbayes/dpm/index.hh>
+#include <tfbayes/dpm/dpm-partition.hh>
 
-// cluster structures
-////////////////////////////////////////////////////////////////////////////////
+class sampling_history_t {
+public:
+        std::matrix<double> switches;
+        std::matrix<double> likelihood;
+        std::matrix<double> posterior;
+        std::matrix<double> components;
+        std::matrix<double> temperature;
+        std::vector<dpm_partition_t> partitions;
+};
 
-typedef ssize_t cluster_tag_t;
-typedef std::string baseline_tag_t;
-
-typedef enum {
-        cluster_event_empty, cluster_event_nonempty,
-        cluster_event_add_word, cluster_event_remove_word
-} cluster_event_t;
-
-#endif /* DATATYPES_HH */
+#endif /* SAMPLING_HISTORY_HH */

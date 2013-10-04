@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,10 +25,12 @@
 #include <list>
 #include <string>
 #include <vector>
+#include <ostream>
 
 #include <tfbayes/dpm/dpm-partition.hh>
 
 typedef std::list<std::matrix<double> > baseline_priors_t;
+typedef std::list<std::string> baseline_tags_t;
 
 typedef struct {
         std::string phylogenetic_file;
@@ -50,5 +52,7 @@ typedef struct {
         size_t population_size;
         std::string socket_file;
 } tfbs_options_t;
+
+std::ostream& operator<<(std::ostream& o, const tfbs_options_t& options);
 
 #endif /* DPM_TFBS_OPTIONS_HH */

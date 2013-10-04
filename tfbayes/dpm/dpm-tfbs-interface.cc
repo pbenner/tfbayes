@@ -37,26 +37,6 @@
 
 using namespace std;
 
-// options and global variables
-// -----------------------------------------------------------------------------
-
-ostream&
-operator<<(std::ostream& o, const tfbs_options_t& options) {
-        o << "Options:"              << endl
-          << "-> alpha               = " << options.alpha               << endl
-          << "-> discount            = " << options.discount            << endl
-          << "-> lambda              = " << options.lambda              << endl
-          << "-> initial temperature = " << options.initial_temperature << endl
-          << "-> tfbs_length         = " << options.tfbs_length         << endl
-          << "-> process prior       = " << options.process_prior      << endl
-          << "-> background model    = " << options.background_model   << endl
-          << "-> background context  = " << options.background_context  << endl
-          << "-> background weights  = " << options.background_weights << endl
-          << "-> population_size     = " << options.population_size     << endl
-          << "-> socket_file         = " << options.socket_file        << endl;
-        return o;
-}
-
 __BEGIN_DECLS
 
 // python interface
@@ -223,5 +203,9 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
         class_<baseline_priors_t>("baseline_priors_t")
                 .def("__iter__", boost::python::iterator<baseline_priors_t>())
                 .def("append", &baseline_priors_t::push_back)
+                ;
+        class_<baseline_tags_t>("baseline_tags_t")
+                .def("__iter__", boost::python::iterator<baseline_tags_t>())
+                .def("append", &baseline_tags_t::push_back)
                 ;
 }

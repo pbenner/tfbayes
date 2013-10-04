@@ -23,6 +23,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <tfbayes/dpm/datatypes.hh>
+#include <tfbayes/dpm/dpm-sampling-history.hh>
 #include <tfbayes/dpm/indexer.hh>
 #include <tfbayes/dpm/mixture-model.hh>
 #include <tfbayes/dpm/state.hh>
