@@ -59,7 +59,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
 
         ////////////////////////////////////////////////////////////////////////////////
         // add background model to the state
-        if (*options.background_model == "independence-dirichlet" || *options.background_model == "") {
+        if (options.background_model == "independence-dirichlet" || options.background_model == "") {
                 /* every position in the background is fully
                  * independet, this give more flexibility to the
                  * prior pseudocounts */
@@ -67,7 +67,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
                 _state.bg_cluster_tag = _state.add_cluster(bg);
                 bg->set_bg_cluster_tag(_state.bg_cluster_tag);
         }
-        else if (*options.background_model == "independence-dirichlet-gamma") {
+        else if (options.background_model == "independence-dirichlet-gamma") {
                 /* every position in the background is fully
                  * independet, where the Dirichlet pseudocounts
                  * are integrated out */
@@ -76,18 +76,18 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
                 _state.bg_cluster_tag = _state.add_cluster(bg);
                 bg->set_bg_cluster_tag(_state.bg_cluster_tag);
         }
-        else if (*options.background_model == "dirichlet") {
+        else if (options.background_model == "dirichlet") {
                 /* single dirichlet-compound distribution for all
                  * nucleotides in the background */
                 product_dirichlet_t* bg = new product_dirichlet_t(*options.background_alpha, _data);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
         }
-        else if (*options.background_model == "uniform") {
+        else if (options.background_model == "uniform") {
                 /* all sequences have the same probability (no phylogeny!) */
                 uniform_background_t* bg = new uniform_background_t(_data, _alignment_set);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
         }
-        else if (*options.background_model == "markov chain mixture") {
+        else if (options.background_model == "markov chain mixture") {
                 assert(options.background_context >= 0);
                 markov_chain_mixture_t* bg = new markov_chain_mixture_t(data_tfbs_t::alphabet_size, options, _data, _state.cluster_assignments(), 0);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
@@ -117,13 +117,13 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
         }
         ////////////////////////////////////////////////////////////////////////////////
         // set the process prior
-        if (*options.process_prior == "pitman-yor process" || *options.process_prior == "") {
+        if (options.process_prior == "pitman-yor process" || options.process_prior == "") {
                 _process_prior = new pitman_yor_prior(options.alpha, options.discount, _state.bg_cluster_tag);
         }
-        else if (*options.process_prior == "uniform process") {
+        else if (options.process_prior == "uniform process") {
                 _process_prior = new uniform_prior(options.alpha);
         }
-        else if (*options.process_prior == "poppe process") {
+        else if (options.process_prior == "poppe process") {
                 _process_prior = new poppe_prior();
         }
         else {

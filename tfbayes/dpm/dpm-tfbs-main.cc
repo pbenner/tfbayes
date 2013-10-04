@@ -162,16 +162,16 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         }
 
         // tfbs options
-        tfbs_options.phylogenetic_file   = new string(phylogenetic_data_file);
-        tfbs_options.alignment_file      = new string(fasta_alignment_file);
+        tfbs_options.phylogenetic_file   = phylogenetic_data_file;
+        tfbs_options.alignment_file      = fasta_alignment_file;
         tfbs_options.alpha               = options.alpha;
         tfbs_options.lambda              = options.lambda;
         tfbs_options.discount            = options.discount;
         tfbs_options.tfbs_length         = options.tfbs_length;
-        tfbs_options.process_prior       = new string(options.process_prior);
-        tfbs_options.background_model    = new string(options.background_model);
+        tfbs_options.process_prior       = options.process_prior;
+        tfbs_options.background_model    = options.background_model;
         tfbs_options.background_context  = options.background_context;
-        tfbs_options.background_weights  = new string(options.background_weights);
+        tfbs_options.background_weights  = options.background_weights;
         tfbs_options.baseline_n          = 1;
         tfbs_options.baseline_weights    = new vector<double>(1,1);
         tfbs_options.baseline_tags       = new string*[1];

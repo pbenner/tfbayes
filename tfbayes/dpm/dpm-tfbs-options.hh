@@ -22,30 +22,33 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <list>
 #include <string>
 #include <vector>
 
 #include <tfbayes/dpm/dpm-partition.hh>
 
+typedef std::list<std::matrix<double> > baseline_priors_t;
+
 typedef struct {
-        std::string* phylogenetic_file;
-        std::string* alignment_file;
+        std::string phylogenetic_file;
+        std::string alignment_file;
         size_t tfbs_length;
         double alpha;
         double discount;
         double lambda;
         double initial_temperature;
-        std::string* process_prior;
-        std::string* background_model;
+        std::string process_prior;
+        std::string background_model;
         std::matrix<double>* background_alpha;
         size_t background_context;
-        std::string* background_weights;
+        std::string background_weights;
         std::vector<double>*  baseline_weights;
         std::matrix<double>** baseline_priors;
         std::string** baseline_tags;
         size_t baseline_n;
         size_t population_size;
-        std::string* socket_file;
+        std::string socket_file;
 } tfbs_options_t;
 
 #endif /* DPM_TFBS_OPTIONS_HH */

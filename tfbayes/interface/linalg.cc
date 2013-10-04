@@ -111,7 +111,6 @@ BOOST_PYTHON_MODULE(linalg)
                 .def(init<size_t, double>())
                 .def("export", vector_to_list)
                 ;
-
         class_<std::matrix<double> >("matrix")
                 .def(vector_indexing_suite<std::matrix<double> >() )
                 .def("__init__", make_constructor(matrix_from_list))
@@ -119,4 +118,6 @@ BOOST_PYTHON_MODULE(linalg)
                 .def("__setitem__", matrix_setitem)
                 .def("export", matrix_to_list)
                 ;
+        class_<std::matrix<double> >("matrix")
+                .def(vector_indexing_suite<std::matrix<double> >() )
 }

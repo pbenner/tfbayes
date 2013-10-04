@@ -48,12 +48,12 @@ operator<<(std::ostream& o, const tfbs_options_t& options) {
           << "-> lambda              = " << options.lambda              << endl
           << "-> initial temperature = " << options.initial_temperature << endl
           << "-> tfbs_length         = " << options.tfbs_length         << endl
-          << "-> process prior       = " << *options.process_prior      << endl
-          << "-> background model    = " << *options.background_model   << endl
+          << "-> process prior       = " << options.process_prior      << endl
+          << "-> background model    = " << options.background_model   << endl
           << "-> background context  = " << options.background_context  << endl
-          << "-> background weights  = " << *options.background_weights << endl
+          << "-> background weights  = " << options.background_weights << endl
           << "-> population_size     = " << options.population_size     << endl
-          << "-> socket_file         = " << *options.socket_file        << endl;
+          << "-> socket_file         = " << options.socket_file        << endl;
         return o;
 }
 
@@ -212,13 +212,16 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
                 .def("__setitem__", index_i_setitem)
                 ;
         class_<dpm_subset_t>("dpm_subset_t", init<dpm_subset_tag_t>())
-                .def("insert", &dpm_subset_t::insert)
                 .def("__iter__", boost::python::iterator<dpm_subset_t>())
+                .def("insert", &dpm_subset_t::insert)
                 .def("dpm_subset_tag", &dpm_subset_t::dpm_subset_tag)
                 ;
         class_<dpm_partition_t>("dpm_partition_t")
                 .def(vector_indexing_suite<dpm_partition_t>())
-                .def("__iter__", boost::python::iterator<dpm_partition_t>())
                 .def("add_component", &dpm_partition_t::add_component)
+                ;
+        class_<baseline_priors_t>("baseline_priors_t")
+                .def("__iter__", boost::python::iterator<baseline_priors_t>())
+                .def("append", &baseline_priors_t::push_back)
                 ;
 }
