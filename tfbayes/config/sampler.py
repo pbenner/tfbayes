@@ -105,7 +105,7 @@ def parse_sampler_config(config_file, sampler_config):
     if config_parser.has_option('TFBS-Sampler', 'baseline-priors'):
         sampler_config['baseline_priors']  = {}
         sampler_config['baseline_weights'] = {}
-        sampler_config['baseline_tags']   = read_vector(config_parser, 'TFBS-Sampler', 'baseline-priors', str)
+        sampler_config['baseline_tags']    = read_vector(config_parser, 'TFBS-Sampler', 'baseline-priors', str)
         for prior_name in sampler_config['baseline_tags']:
             sampler_config['baseline_priors'][prior_name] = read_matrix(config_parser, 'TFBS-Sampler', prior_name, float)
             if config_parser.has_option('TFBS-Sampler', '%s_weight' % prior_name):

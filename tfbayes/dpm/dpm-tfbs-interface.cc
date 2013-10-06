@@ -149,6 +149,7 @@ __END_DECLS
 
 #include <locale>
 #include <cctype>
+#include <sstream>
 
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
@@ -167,6 +168,14 @@ void index_i_setitem(index_i& index, size_t i, size_t d)
         index[i] = d;
 }
 
+template<typename T>
+std::string to_string(const T& t)
+{
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+}
+
 BOOST_PYTHON_MODULE(dpm_tfbs_interface)
 {
         class_<sampling_history_t>("sampling_history_t")
@@ -183,13 +192,11 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
                 ;
         class_<index_t, bases<index_i> >("index_t")
                 .def(init<size_t>())
-                .def("__getitem__", index_i_getitem)
-                .def("__setitem__", index_i_setitem)
+                .def("__str__", to_string<index_t>)
                 ;
         class_<seq_index_t, bases<index_i> >("seq_index_t")
                 .def(init<size_t, size_t>())
-                .def("__getitem__", index_i_getitem)
-                .def("__setitem__", index_i_setitem)
+                .def("__str__", to_string<seq_index_t>)
                 ;
         class_<dpm_subset_t>("dpm_subset_t", init<dpm_subset_tag_t>())
                 .def("__iter__", boost::python::iterator<dpm_subset_t>())

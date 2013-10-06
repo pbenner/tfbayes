@@ -152,14 +152,12 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options_t tfbs_options;
 
         // background alpha
-        tfbs_options.background_alpha = new matrix<double>();
-        tfbs_options.background_alpha->push_back(vector<double>(data_tfbs_t::alphabet_size, options.background_alpha));
+        tfbs_options.background_alpha.push_back(vector<double>(data_tfbs_t::alphabet_size, options.background_alpha));
 
         // baseline prior
-        tfbs_options.baseline_priors    = new matrix<double>*[1];
-        tfbs_options.baseline_priors[0] = new matrix<double>();
+        tfbs_options.baseline_priors.push_back(matrix<double>());
         for (size_t i = 0; i < options.tfbs_length; i++) {
-                tfbs_options.baseline_priors[0]->push_back(vector<double>(data_tfbs_t::alphabet_size, 1.0));
+                tfbs_options.baseline_priors.begin()->push_back(vector<double>(data_tfbs_t::alphabet_size, 1.0));
         }
 
         // tfbs options
@@ -173,10 +171,8 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options.background_model    = options.background_model;
         tfbs_options.background_context  = options.background_context;
         tfbs_options.background_weights  = options.background_weights;
-        tfbs_options.baseline_n          = 1;
-        tfbs_options.baseline_weights    = new vector<double>(1,1);
-        tfbs_options.baseline_tags       = new string*[1];
-        tfbs_options.baseline_tags[0]    = new string("baseline_default");
+        tfbs_options.baseline_weights    = vector<double>(1,1);
+        tfbs_options.baseline_tags.push_back("baseline_default");
 
         // create data, dpm, and sampler objects
         dpm_tfbs_pmcmc_t pmcmc(tfbs_options);

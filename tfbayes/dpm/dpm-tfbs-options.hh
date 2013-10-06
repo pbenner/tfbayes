@@ -42,13 +42,12 @@ typedef struct {
         double initial_temperature;
         std::string process_prior;
         std::string background_model;
-        std::matrix<double>* background_alpha;
+        std::matrix<double> background_alpha;
         size_t background_context;
         std::string background_weights;
-        std::vector<double>*  baseline_weights;
-        std::matrix<double>** baseline_priors;
-        std::string** baseline_tags;
-        size_t baseline_n;
+        std::vector<double>  baseline_weights;
+        baseline_priors_t baseline_priors;
+        baseline_tags_t baseline_tags;
         size_t population_size;
         std::string socket_file;
 } tfbs_options_t;

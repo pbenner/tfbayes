@@ -677,7 +677,7 @@ markov_chain_mixture_t::markov_chain_mixture_t(
         }
         /* init counts */
         for (size_t i = 0; i < _length; i++) {
-                _alpha[i]  = (*options.background_alpha)[0][0];
+                _alpha[i]  = options.background_alpha[0][0];
                 _counts[i] = 0.0;
                 _counts_sum[i/_alphabet_size] += _alpha[i] + _counts[i];
         }

@@ -36,7 +36,7 @@ using namespace std;
 dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, const alignment_set_t<short>& alignment_set,
         const dpm_partition_t& partition)
         : // baseline
-          _baseline_weights(*options.baseline_weights),
+          _baseline_weights(options.baseline_weights),
           // phylogenetic information
           _data(data),
           // coded nucleotide sequences
@@ -63,7 +63,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
                 /* every position in the background is fully
                  * independet, this give more flexibility to the
                  * prior pseudocounts */
-                independence_background_t* bg = new independence_background_t(*options.background_alpha, _data, _state.cluster_assignments());
+                independence_background_t* bg = new independence_background_t(options.background_alpha, _data, _state.cluster_assignments());
                 _state.bg_cluster_tag = _state.add_cluster(bg);
                 bg->set_bg_cluster_tag(_state.bg_cluster_tag);
         }
@@ -79,7 +79,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
         else if (options.background_model == "dirichlet") {
                 /* single dirichlet-compound distribution for all
                  * nucleotides in the background */
-                product_dirichlet_t* bg = new product_dirichlet_t(*options.background_alpha, _data);
+                product_dirichlet_t* bg = new product_dirichlet_t(options.background_alpha, _data);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
         }
         else if (options.background_model == "uniform") {
@@ -97,14 +97,17 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
                 exit(EXIT_FAILURE);
         }
         // baseline weights are already initialized
-        for (size_t i = 0; i < options.baseline_n; i++) {
-                assert((*options.baseline_priors)[i].size() == options.tfbs_length);
+        baseline_priors_t::const_iterator it = options.baseline_priors.begin();
+        baseline_tags_t  ::const_iterator is = options.baseline_tags  .begin();
+        for (it != options.baseline_priors.end();
+             is != options.baseline_tags  .end(); it++, is++) {
+                assert(it->size() == options.tfbs_length);
                 for (size_t j = 0; j < options.tfbs_length; j++) {
-                        assert((*options.baseline_priors)[i][j].size() == data_tfbs_t::alphabet_size);
+                        assert((*it)[j].size() == data_tfbs_t::alphabet_size);
                 }
-                product_dirichlet_t* dirichlet = new product_dirichlet_t((*options.baseline_priors)[i], _data);
-                _state.add_baseline_model(dirichlet, (*options.baseline_tags)[i]);
-                _baseline_tags.push_back((*options.baseline_tags)[i]);
+                product_dirichlet_t* dirichlet = new product_dirichlet_t(*it, _data);
+                _state.add_baseline_model(dirichlet, *is);
+                _baseline_tags.push_back(*is);
         }
         ////////////////////////////////////////////////////////////////////////////////
         // assign all elements to the background
