@@ -75,20 +75,14 @@ def resume(config_file):
     return partition
 
 def sample():
-    samples = sampler_config['samples'][0]
-    burnin  = sampler_config['samples'][1]
-    if options['resume']:
-        partition = resume(options['resume'])
-        dpm_init(sampler_config,
-                 sampler_config['phylogenetic_data'],
-                 sampler_config['alignment_data'], partition)
-    else:
-        dpm_init(sampler_config,
-                 sampler_config['phylogenetic_data'],
-                 sampler_config['alignment_data'])
+    # initialize library
+    dpm_init()
+    # run sampler
+    samples = sampler_config.samples[0]
+    burnin  = sampler_config.samples[1]
     dpm_sample(samples, burnin)
-    dpm_save(sampler_config['save'])
-    dpm_free()
+    dpm_save(sampler_config.save)
+    #dpm_free()
 
 # main
 # ------------------------------------------------------------------------------

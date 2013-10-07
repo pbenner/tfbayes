@@ -61,15 +61,15 @@ std::string to_string(const T& t)
 BOOST_PYTHON_MODULE(dpm_tfbs_interface)
 {
         // init dpm library
-        def("__dpm_init__", __dpm_init__);
+        def("dpm_init", __dpm_init__);
         // class definitions
         class_<sampling_history_t>("sampling_history_t")
-                .def_readwrite("switches",    &sampling_history_t::switches)
-                .def_readwrite("likelihood",  &sampling_history_t::likelihood)
-                .def_readwrite("posterior",   &sampling_history_t::posterior)
-                .def_readwrite("components",  &sampling_history_t::components)
-                .def_readwrite("temperature", &sampling_history_t::temperature)
-                .def_readwrite("partitions",  &sampling_history_t::partitions)
+                .def_readwrite("switches",            &sampling_history_t::switches)
+                .def_readwrite("likelihood",          &sampling_history_t::likelihood)
+                .def_readwrite("posterior",           &sampling_history_t::posterior)
+                .def_readwrite("components",          &sampling_history_t::components)
+                .def_readwrite("temperature",         &sampling_history_t::temperature)
+                .def_readwrite("partitions",          &sampling_history_t::partitions)
                 ;
         class_<tfbs_options_t>("tfbs_options_t")
                 .def_readwrite("phylogenetif_file",   &tfbs_options_t::phylogenetic_file)
@@ -77,7 +77,7 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
                 .def_readwrite("tfbs_length",         &tfbs_options_t::tfbs_length)
                 .def_readwrite("alpha",               &tfbs_options_t::alpha)
                 .def_readwrite("discount",            &tfbs_options_t::discount)
-                .def_readwrite("lambda",              &tfbs_options_t::lambda)
+                .def_readwrite("_lambda_",            &tfbs_options_t::lambda)
                 .def_readwrite("initial_temperature", &tfbs_options_t::initial_temperature)
                 .def_readwrite("process_prior",       &tfbs_options_t::process_prior)
                 .def_readwrite("background_model",    &tfbs_options_t::background_model)

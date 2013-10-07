@@ -17,6 +17,8 @@
 
 #include <locale>
 #include <cctype>
+#include <list>
+#include <string>
 
 #include <boost/python/module.hpp>
 #include <boost/python/tuple.hpp>
@@ -40,6 +42,16 @@ void raise_IndexError()
 // vector class
 // -----------------------------------------------------------------------------
 
+std::vector<double>* vector_from_list(list& ns)
+{
+        std::vector<double>* v = new std::vector<double>(len(ns), 0);
+
+        for (ssize_t i = 0; i < len(ns); i++) {
+                (*v)[i] = extract<double>(ns[i]);
+        }
+        return v;
+}
+
 list vector_to_list(std::vector<double>& v)
 {
         object get_iter = iterator<std::vector<double> >();
@@ -50,6 +62,20 @@ list vector_to_list(std::vector<double>& v)
 
 // matrix class
 // -----------------------------------------------------------------------------
+
+std::matrix<double>* matrix_from_list(list& ns)
+{
+        std::matrix<double>* m = new std::matrix<double>();
+
+        for (ssize_t i = 0; i < len(ns); i++) {
+                list l = extract<list>(ns[i]);
+                m->push_back(std::vector<double>(len(l), 0.0));
+                for (ssize_t j = 0; j < len(l); j++) {
+                        (*m)[i][j] = extract<double>(l[j]);
+                }
+        }
+        return m;
+}
 
 list matrix_to_list(std::matrix<double>& m)
 {
@@ -134,11 +160,12 @@ BOOST_PYTHON_MODULE(linalg)
 {
         class_<std::vector<double> >("vector")
                 .def(vector_indexing_suite<std::vector<double> >() )
-                .def(init<size_t, double>())
+                .def("__init__", make_constructor(vector_from_list))
                 .def("export", vector_to_list)
                 ;
         class_<std::matrix<double> >("matrix")
                 .def(vector_indexing_suite<std::matrix<double> >() )
+                .def("__init__", make_constructor(matrix_from_list))
                 .def("__getitem__", matrix_getitem)
                 .def("__setitem__", matrix_setitem)
                 .def("export", matrix_to_list)
@@ -146,5 +173,7 @@ BOOST_PYTHON_MODULE(linalg)
       iterable_converter()
               .from_python<std::vector<double> >()
               .from_python<std::matrix<double> >()
+              .from_python<std::list<std::string> >()
+              .from_python<std::list<std::matrix<double > > >()
               ;
 }
