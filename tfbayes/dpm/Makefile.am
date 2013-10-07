@@ -35,7 +35,7 @@ dpm_tfbs_debug_LDADD  += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $
 pkgpythondir = $(pyexecdir)/tfbayes/dpm
 
 ## compile python files
-pkgpython_PYTHON = __init__.py dpm_gaussian_interface.py dpm_tfbs_interface.py
+pkgpython_PYTHON = __init__.py dpm_gaussian_interface.py
 
 ## scripts
 dist_bin_SCRIPTS = \
