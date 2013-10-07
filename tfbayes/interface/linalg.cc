@@ -103,6 +103,21 @@ void matrix_setitem(std::matrix<double>& m, tuple index, double d)
         m[i][j] = d;
 }
 
+std::matrix<double>* test(PyObject* _ns)
+{
+        list& ns(_ns);
+        std::matrix<double>* m = new std::matrix<double>();
+
+        for (ssize_t i = 0; i < len(ns); i++) {
+                list l = extract<list>(ns[i]);
+                m->push_back(std::vector<double>(len(l), 0.0));
+                for (ssize_t j = 0; j < len(l); j++) {
+                        (*m)[i][j] = extract<double>(l[j]);
+                }
+        }
+        return m;
+}
+
 BOOST_PYTHON_MODULE(linalg)
 {
         class_<std::vector<double> >("vector")
@@ -120,4 +135,7 @@ BOOST_PYTHON_MODULE(linalg)
                 ;
         class_<std::matrix<double> >("matrix")
                 .def(vector_indexing_suite<std::matrix<double> >() )
+                ;
+//        implicitly_convertible<list,std::vector<double> >();
+        converter::registry::insert(&test, type_id<std::matrix<double> >());
 }
