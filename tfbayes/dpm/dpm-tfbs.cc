@@ -99,7 +99,8 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
         // baseline weights are already initialized
         baseline_priors_t::const_iterator it = options.baseline_priors.begin();
         baseline_tags_t  ::const_iterator is = options.baseline_tags  .begin();
-        for (it != options.baseline_priors.end();
+        for (;
+             it != options.baseline_priors.end() &&
              is != options.baseline_tags  .end(); it++, is++) {
                 assert(it->size() == options.tfbs_length);
                 for (size_t j = 0; j < options.tfbs_length; j++) {

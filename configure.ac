@@ -117,15 +117,10 @@ AC_CHECK_LIB(boost_regex-gcc-mt, main, LIB_BOOST_REGEX="-lboost_regex-gcc-mt",
 	[AC_CHECK_LIB(boost_regex-mt, main, LIB_BOOST_REGEX="-lboost_regex-mt",
 		[AC_CHECK_LIB(boost_regex, main, LIB_BOOST_REGEX="-lboost_regex",
 			[AC_MSG_ERROR([this library is required])])])])
-AC_CHECK_LIB(boost_python-gcc-mt, main, LIB_BOOST_PYTHON="-lboost_python-gcc-mt",
-	[AC_CHECK_LIB(boost_python-mt, main, LIB_BOOST_PYTHON="-lboost_python-mt",
-		[AC_CHECK_LIB(boost_python, main, LIB_BOOST_PYTHON="-lboost_python",
-			[AC_MSG_ERROR([this library is required])])])])
 
 AC_SUBST(LIB_BOOST_SYSTEM)
 AC_SUBST(LIB_BOOST_THREAD)
 AC_SUBST(LIB_BOOST_REGEX)
-AC_SUBST(LIB_BOOST_PYTHON)
 
 dnl ,---------------------------- 
 dnl | GETOPT_LONG
@@ -324,6 +319,16 @@ dnl `----------------------------
 
 AM_PATH_PYTHON(2.5)
 AC_PYTHON_DEVEL
+
+AC_CHECK_LIB(boost_python-gcc-mt, main, LIB_BOOST_PYTHON="-lboost_python-gcc-mt",
+	[AC_CHECK_LIB(boost_python-mt, main, LIB_BOOST_PYTHON="-lboost_python-mt",
+		[AC_CHECK_LIB(boost_python, main, LIB_BOOST_PYTHON="-lboost_python",
+			[AC_MSG_ERROR([this library is required])]
+			[$PYTHON_LDFLAGS])],
+			[$PYTHON_LDFLAGS])],
+			[$PYTHON_LDFLAGS])
+
+AC_SUBST(LIB_BOOST_PYTHON)
 
 dnl ,---------------------------- 
 dnl | CYGWIN
