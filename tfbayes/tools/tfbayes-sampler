@@ -34,6 +34,7 @@ from tfbayes.dpm.dpm_tfbs_interface import *
 # ------------------------------------------------------------------------------
 
 sampler_config = default_sampler_config()
+results_config = default_results_config()
 
 options = {
     'resume'              : None,
@@ -77,6 +78,9 @@ def resume(config_file):
 def sample():
     # initialize library
     dpm_init()
+    # load results file
+    if options['resume']:
+        tfbs_history = 
     # run sampler
     samples = sampler_config.samples[0]
     burnin  = sampler_config.samples[1]
@@ -116,17 +120,17 @@ def __main__():
             usage()
             return 0
         if o == "--population-size":
-            sampler_config['population_size'] = int(a)
+            sampler_config.population_size = int(a)
         if o in ("-s", "--save"):
-            sampler_config['save'] = a
+            sampler_config.save = a
         if o == "--resume":
             options['resume'] = a
         if o == "--samples":
             tmp = map(int, a.split(":"))
             if len(tmp) == 2:
-                sampler_config["samples"] = tuple(tmp)
+                sampler_config.samples = tuple(tmp)
             elif len(tmp) == 1:
-                sampler_config["samples"] = (tmp[0], 0)
+                sampler_config.samples = (tmp[0], 0)
             else:
                 usage()
                 return 1
