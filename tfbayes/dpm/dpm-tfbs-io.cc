@@ -15,10 +15,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifdef HAVE_CONFIG_H
-#include <tfbayes/config.h>
-#endif /* HAVE_CONFIG_H */
-
 #include <tfbayes/dpm/dpm-tfbs-io.hh>
 
 using namespace std;
@@ -32,46 +28,6 @@ ostream& operator<< (ostream& o, const matrix<double>& m)
                         o << m[i][j] << " ";
                 }
                 o << endl;
-        }
-        return o;
-}
-
-static
-ostream& operator<< (ostream& o, const dpm_subset_t& dpm_subset)
-{
-        for (dpm_subset_t::const_iterator is = dpm_subset.begin();
-             is != dpm_subset.end(); is++)
-        {
-                if (is != dpm_subset.begin()) {
-                        o << ", ";
-                }
-                o << *static_cast<const seq_index_t*>(*is);
-        }
-        return o;
-}
-
-static
-ostream& operator<< (ostream& o, const dpm_partition_t& partition)
-{
-        for (dpm_partition_t::const_iterator it = partition.begin();
-             it != partition.end(); it++) {
-                if (it != partition.begin()) {
-                        o << ", ";
-                }
-                o << it->dpm_subset_tag() << ":{"
-                  << *it << "}";
-        }
-        return o;
-}
-
-static
-ostream& operator<< (ostream& o, const vector<dpm_partition_t>& partitions)
-{
-        if (partitions.size() == 0) {
-                return o;
-        }
-        for (size_t i = 0; i < partitions.size(); i++) {
-                o << "\t" << partitions[i] << endl;
         }
         return o;
 }

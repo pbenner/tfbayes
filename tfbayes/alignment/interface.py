@@ -14,6 +14,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from ctypes      import *
+
 from ..interface import *
 from ..uipac     import *
 
@@ -22,7 +24,8 @@ from ..          import phylotree
 # load interface
 # ------------------------------------------------------------------------------
 
-_lib = load_library('tfbayes-alignment', 0)
+#_lib = load_library('tfbayes-alignment', 0)
+_lib = None
 
 # structures
 # ------------------------------------------------------------------------------
@@ -34,20 +37,20 @@ class ALIGNMENT(Structure):
 # function prototypes
 # ------------------------------------------------------------------------------
 
-_lib.alignment_new.restype  = POINTER(ALIGNMENT)
-_lib.alignment_new.argtypes = [c_ulong, POINTER(phylotree.PT_ROOT)]
+# _lib.alignment_new.restype  = POINTER(ALIGNMENT)
+# _lib.alignment_new.argtypes = [c_ulong, POINTER(phylotree.PT_ROOT)]
 
-_lib.alignment_set.restype  = None
-_lib.alignment_set.argtypes = [POINTER(ALIGNMENT), c_char_p, POINTER(VECTOR)]
+# _lib.alignment_set.restype  = None
+# _lib.alignment_set.argtypes = [POINTER(ALIGNMENT), c_char_p, POINTER(VECTOR)]
 
-_lib.alignment_marginal_likelihood.restype  = POINTER(VECTOR)
-_lib.alignment_marginal_likelihood.argtypes = [POINTER(phylotree.PT_ROOT), POINTER(ALIGNMENT), POINTER(VECTOR)]
+# _lib.alignment_marginal_likelihood.restype  = POINTER(VECTOR)
+# _lib.alignment_marginal_likelihood.argtypes = [POINTER(phylotree.PT_ROOT), POINTER(ALIGNMENT), POINTER(VECTOR)]
 
-_lib.alignment_scan.restype  = POINTER(VECTOR)
-_lib.alignment_scan.argtypes = [POINTER(phylotree.PT_ROOT), POINTER(ALIGNMENT), POINTER(MATRIX)]
+# _lib.alignment_scan.restype  = POINTER(VECTOR)
+# _lib.alignment_scan.argtypes = [POINTER(phylotree.PT_ROOT), POINTER(ALIGNMENT), POINTER(MATRIX)]
 
-_lib.alignment_free.restype  = None
-_lib.alignment_free.argtypes = [POINTER(ALIGNMENT)]
+# _lib.alignment_free.restype  = None
+# _lib.alignment_free.argtypes = [POINTER(ALIGNMENT)]
 
 # alignment data type
 # ------------------------------------------------------------------------------

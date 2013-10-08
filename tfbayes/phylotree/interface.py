@@ -14,12 +14,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from ctypes      import *
+
 from ..interface import *
 
 # load interface
 # ------------------------------------------------------------------------------
 
-_lib = load_library('tfbayes-phylotree', 0)
+#_lib = load_library('tfbayes-phylotree', 0)
+_lib = None
 
 # structures
 # ------------------------------------------------------------------------------
@@ -38,35 +41,35 @@ class ALIGNMENT(Structure):
 # function prototypes
 # ------------------------------------------------------------------------------
 
-_lib.pt_parse_file.restype  = POINTER(PT_ROOT)
-_lib.pt_parse_file.argtypes = [c_char_p]
+# _lib.pt_parse_file.restype  = POINTER(PT_ROOT)
+# _lib.pt_parse_file.argtypes = [c_char_p]
 
-_lib.pt_clone.restype  = POINTER(PT_ROOT)
-_lib.pt_clone.argtypes = [POINTER(PT_ROOT)]
+# _lib.pt_clone.restype  = POINTER(PT_ROOT)
+# _lib.pt_clone.argtypes = [POINTER(PT_ROOT)]
 
-_lib.pt_destroy.restype  = None
-_lib.pt_destroy.argtypes = [POINTER(PT_ROOT)]
+# _lib.pt_destroy.restype  = None
+# _lib.pt_destroy.argtypes = [POINTER(PT_ROOT)]
 
-_lib.pt_print.restype  = c_char_p
-_lib.pt_print.argtypes = [POINTER(PT_ROOT)]
+# _lib.pt_print.restype  = c_char_p
+# _lib.pt_print.argtypes = [POINTER(PT_ROOT)]
 
-_lib.pt_index.restype  = c_long
-_lib.pt_index.argtypes = [POINTER(PT_ROOT), c_char_p]
+# _lib.pt_index.restype  = c_long
+# _lib.pt_index.argtypes = [POINTER(PT_ROOT), c_char_p]
 
-_lib.pt_num_leaves.restype  = c_ulong
-_lib.pt_num_leaves.argtypes = [POINTER(PT_ROOT)]
+# _lib.pt_num_leaves.restype  = c_ulong
+# _lib.pt_num_leaves.argtypes = [POINTER(PT_ROOT)]
 
-_lib.pt_leaf_name.restype  = c_char_p
-_lib.pt_leaf_name.argtypes = [POINTER(PT_ROOT), c_ulong]
+# _lib.pt_leaf_name.restype  = c_char_p
+# _lib.pt_leaf_name.argtypes = [POINTER(PT_ROOT), c_ulong]
 
-_lib.pt_expectation.restype  = POINTER(VECTOR)
-_lib.pt_expectation.argtypes = [POINTER(PT_ROOT), POINTER(VECTOR), POINTER(VECTOR)]
+# _lib.pt_expectation.restype  = POINTER(VECTOR)
+# _lib.pt_expectation.argtypes = [POINTER(PT_ROOT), POINTER(VECTOR), POINTER(VECTOR)]
 
-_lib.pt_approximate.restype  = POINTER(VECTOR)
-_lib.pt_approximate.argtypes = [POINTER(PT_ROOT), POINTER(VECTOR)]
+# _lib.pt_approximate.restype  = POINTER(VECTOR)
+# _lib.pt_approximate.argtypes = [POINTER(PT_ROOT), POINTER(VECTOR)]
 
-_lib.pt_dkl_optimize.restype  = POINTER(VECTOR)
-_lib.pt_dkl_optimize.argtypes = [POINTER(PT_ROOT), POINTER(VECTOR)]
+# _lib.pt_dkl_optimize.restype  = POINTER(VECTOR)
+# _lib.pt_dkl_optimize.argtypes = [POINTER(PT_ROOT), POINTER(VECTOR)]
 
 #
 # ------------------------------------------------------------------------------

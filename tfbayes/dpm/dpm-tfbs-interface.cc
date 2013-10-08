@@ -96,20 +96,31 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
                 ;
         class_<index_t, bases<index_i> >("index_t")
                 .def(init<size_t>())
-                .def("__str__", to_string<index_t>)
+                .def("__str__",  to_string<index_t>)
+                .def("__repr__", to_string<index_t>)
                 ;
         class_<seq_index_t, bases<index_i> >("seq_index_t")
                 .def(init<size_t, size_t>())
-                .def("__str__", to_string<seq_index_t>)
+                .def("__str__",  to_string<seq_index_t>)
+                .def("__repr__", to_string<seq_index_t>)
                 ;
         class_<dpm_subset_t>("dpm_subset_t", init<dpm_subset_tag_t>())
                 .def("__iter__", boost::python::iterator<dpm_subset_t>())
                 .def("insert", &dpm_subset_t::insert)
                 .def("dpm_subset_tag", &dpm_subset_t::dpm_subset_tag)
+                .def("__str__",  to_string<dpm_subset_t>)
+                .def("__repr__", to_string<dpm_subset_t>)
                 ;
         class_<dpm_partition_t>("dpm_partition_t")
                 .def(vector_indexing_suite<dpm_partition_t>())
                 .def("add_component", &dpm_partition_t::add_component)
+                .def("__str__",  to_string<dpm_partition_t>)
+                .def("__repr__", to_string<dpm_partition_t>)
+                ;
+        class_<dpm_partition_list_t>("dpm_partition_list_t")
+                .def(vector_indexing_suite<dpm_partition_list_t>())
+                .def("__str__",  to_string<dpm_partition_list_t>)
+                .def("__repr__", to_string<dpm_partition_list_t>)
                 ;
         class_<baseline_priors_t>("baseline_priors_t")
                 .def("__iter__", boost::python::iterator<baseline_priors_t>())

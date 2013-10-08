@@ -27,12 +27,12 @@
 
 class sampling_history_t {
 public:
-        std::matrix<double> switches;
-        std::matrix<double> likelihood;
-        std::matrix<double> posterior;
-        std::matrix<double> components;
-        std::matrix<double> temperature;
-        std::vector<dpm_partition_t> partitions;
+        std::matrix<double>  switches;
+        std::matrix<double>  likelihood;
+        std::matrix<double>  posterior;
+        std::matrix<double>  components;
+        std::matrix<double>  temperature;
+        dpm_partition_list_t partitions;
 };
 
 #endif /* SAMPLING_HISTORY_HH */

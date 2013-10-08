@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# Copyright (C) 2011, 2012 Philipp Benner
+# Copyright (C) 2011-2013 Philipp Benner
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,33 +18,12 @@
 
 import re
 
-from cluster import cluster_t
+from tfbayes.cluster   import cluster_t
+from tfbayes.interface import *
+from tfbayes.dpm.dpm_tfbs_interface import *
 
 # parse results partition
 # ------------------------------------------------------------------------------
-
-class dpm_subset_t():
-    # the identifier gives the cluster type, i.e. which component model
-    # or prior the subset represents
-    identifier = None
-    subset     = None
-    def __str__(self):
-        result = "%s:{" % self.identifier
-        for i, index in enumerate(self.subset):
-            result += str(index)
-            if not i is len(self.subset)-1:
-                result += ", "
-        result += "}"
-        return result
-
-class dpm_partition_t(list):
-    def __str__(self):
-        result = ""
-        for i, dpm_subset in enumerate(self):
-            result += str(dpm_subset)
-            if not i is len(self)-1:
-                result += ", "
-        return result
 
 def parse_partition_identifier(partition_str, end):
     # start is the position of '{', we want the identifier
@@ -78,14 +57,14 @@ def parse_partition_elements(subset_str):
         elif c == ')' and stack:
             start = stack.pop()
             element = subset_str[start + 1: i].split(',')
-            yield (int(element[0]), int(element[1]))
+            yield seq_index_t(int(element[0]), int(element[1]))
 
 def parse_partition(partition_str):
     partition = dpm_partition_t()
     for identifier, subset in parse_partition_subsets(partition_str):
-        dpm_subset = dpm_subset_t()
-        dpm_subset.identifier = identifier
-        dpm_subset.subset     = list(parse_partition_elements(subset))
+        dpm_subset = dpm_subset_t(identifier)
+        for element in parse_partition_elements(subset):
+            dpm_subset.insert(element)
         partition.append(dpm_subset)
     return partition
 
@@ -93,10 +72,11 @@ def parse_partition(partition_str):
 # ------------------------------------------------------------------------------
 
 def parse_partition_list(partition_list_str):
-    partition_list = []
+    partition_list = dpm_partition_list_t()
     for partition_str in partition_list_str.split('\n'):
         partition = parse_partition(partition_str)
         # there might be empty lines, filter them out...
+        print str(partition)
         if partition:
             partition_list.append(partition)
     return partition_list

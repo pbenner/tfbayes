@@ -156,7 +156,7 @@ struct iterable_converter
 // register classes
 // -----------------------------------------------------------------------------
 
-BOOST_PYTHON_MODULE(linalg)
+BOOST_PYTHON_MODULE(datatypes)
 {
         class_<std::vector<double> >("vector")
                 .def(vector_indexing_suite<std::vector<double> >() )

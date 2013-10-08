@@ -20,6 +20,7 @@ import ConfigParser
 
 from tools import *
 
+from tfbayes.cluster   import parse_partition_list
 from tfbayes.interface import *
 from tfbayes.dpm.dpm_tfbs_interface import *
 
@@ -55,7 +56,7 @@ def parse_results_config(config_file, results_config):
     if config_parser.has_option('Result', 'median_partition'):
         results_config.median_partition = config_parser.get('Result', 'median_partition')
     if config_parser.has_option('Result', 'partitions'):
-        results_config.partitions = config_parser.get('Result', 'partitions')
+        results_config.partitions = parse_partition_list(config_parser.get('Result', 'partitions'))
 
 # save results config
 # ------------------------------------------------------------------------------

@@ -78,9 +78,6 @@ def resume(config_file):
 def sample():
     # initialize library
     dpm_init()
-    # load results file
-    if options['resume']:
-        tfbs_history = 
     # run sampler
     samples = sampler_config.samples[0]
     burnin  = sampler_config.samples[1]
@@ -94,6 +91,7 @@ def sample():
 def __main__():
     global options
     global sampler_config
+    global results_config
     try:
         longopts   = ["help",
                       "verbose",
@@ -125,6 +123,7 @@ def __main__():
             sampler_config.save = a
         if o == "--resume":
             options['resume'] = a
+            parse_results_config(a, results_config)
         if o == "--samples":
             tmp = map(int, a.split(":"))
             if len(tmp) == 2:

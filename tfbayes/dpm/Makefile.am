@@ -78,6 +78,7 @@ libtfbayes_dpm_la_SOURCES =		\
 	dpm-tfbs-state.cc		\
 	dpm-tfbs-state.hh		\
 	dpm-tfbs-test.cc		\
+	dpm-partition.cc		\
 	dpm-partition.hh		\
 	index.cc			\
 	index.hh			\
@@ -98,7 +99,6 @@ libtfbayes_dpm_la_SOURCES =		\
 	statistics.hh			\
 	utility.hh
 libtfbayes_dpm_la_LIBADD  = $(top_builddir)/tfbayes/exception/libtfbayes-exception.la
-#libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/interface/libtfbayes-interface.la
 libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fastarithmetics/libtfbayes-fastarithmetics.la
 libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
 libtfbayes_dpm_la_LIBADD += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)

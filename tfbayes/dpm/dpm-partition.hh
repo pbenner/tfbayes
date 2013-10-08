@@ -94,4 +94,10 @@ public:
         }
 };
 
+typedef std::vector<dpm_partition_t> dpm_partition_list_t;
+
+std::ostream& operator<< (std::ostream& o, const dpm_subset_t& dpm_subset);
+std::ostream& operator<< (std::ostream& o, const dpm_partition_t& partition);
+std::ostream& operator<< (std::ostream& o, const dpm_partition_list_t& partitions);
+
 #endif /* DPM_PARTITION_HH */
