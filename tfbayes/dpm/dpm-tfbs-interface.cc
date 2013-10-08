@@ -73,7 +73,7 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
                 .def_readwrite("partitions",          &sampling_history_t::partitions)
                 ;
         class_<tfbs_options_t>("tfbs_options_t")
-                .def_readwrite("phylogenetif_file",   &tfbs_options_t::phylogenetic_file)
+                .def_readwrite("phylogenetic_file",   &tfbs_options_t::phylogenetic_file)
                 .def_readwrite("alignment_file",      &tfbs_options_t::alignment_file)
                 .def_readwrite("tfbs_length",         &tfbs_options_t::tfbs_length)
                 .def_readwrite("alpha",               &tfbs_options_t::alpha)

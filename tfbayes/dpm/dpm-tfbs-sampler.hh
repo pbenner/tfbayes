@@ -101,7 +101,7 @@ protected:
         void _start_server();
         void _stop_server();
 
-        const tfbs_options_t* _options;
+        const tfbs_options_t _options;
 
         data_tfbs_t _data;
         alignment_set_t<short> _alignment_set;

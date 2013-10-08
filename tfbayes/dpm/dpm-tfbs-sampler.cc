@@ -378,7 +378,7 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
         const tfbs_options_t& options,
         const sampling_history_t& history)
         : population_mcmc_t(options.population_size),
-          _options(&options),
+          _options(options),
           _data(options.phylogenetic_file, options.tfbs_length),
           _alignment_set(options.alignment_file),
           _gdpm(options.population_size, NULL),
@@ -409,13 +409,12 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
 }
 
 dpm_tfbs_pmcmc_t::~dpm_tfbs_pmcmc_t() {
-        delete(_options);
         _stop_server();
 }
 
 const tfbs_options_t&
 dpm_tfbs_pmcmc_t::options() const {
-        return *_options;
+        return _options;
 }
 
 const data_tfbs_t&

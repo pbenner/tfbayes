@@ -1,23 +1,13 @@
 ## Process this file with automake to produce Makefile.in
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/include
-AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
+#AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
 noinst_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug
 
 # mcm_test_SOURCES = mcm-test.cc
 # mcm_test_LDADD   = libtfbayes-dpm.la
 # mcm_test_LDADD  += -lm $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
-
-pkgpython_LTLIBRARIES = dpm_tfbs_interface.la
-
-dpm_tfbs_interface_la_CPPFLAGS = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS)
-dpm_tfbs_interface_la_CXXFLAGS =
-dpm_tfbs_interface_la_SOURCES  = \
-	dpm-tfbs-interface.cc
-dpm_tfbs_interface_la_LIBADD   = libtfbayes-dpm.la
-dpm_tfbs_interface_la_LIBADD  += $(LIB_BOOST_PYTHON)
-dpm_tfbs_interface_la_LDFLAGS  = -avoid-version -module
 
 dpm_gaussian_debug_SOURCES = dpm-gaussian-main.cc
 dpm_gaussian_debug_LDADD   = $(top_builddir)/tfbayes/exception/libtfbayes-exception.la
@@ -30,17 +20,6 @@ dpm_tfbs_debug_LDADD   = $(top_builddir)/tfbayes/exception/libtfbayes-exception.
 dpm_tfbs_debug_LDADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
 dpm_tfbs_debug_LDADD  += libtfbayes-dpm.la
 dpm_tfbs_debug_LDADD  += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
-
-## set python package name
-pkgpythondir = $(pyexecdir)/tfbayes/dpm
-
-## compile python files
-pkgpython_PYTHON = __init__.py dpm_gaussian_interface.py
-
-## scripts
-dist_bin_SCRIPTS = \
-	dpm-gaussian-demo \
-	dpm-tfbs-demo
 
 ## dpm library
 lib_LTLIBRARIES  = libtfbayes-dpm.la
@@ -101,6 +80,28 @@ libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fastarithmetics/libtfbayes-f
 libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
 libtfbayes_dpm_la_LIBADD += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 libtfbayes_dpm_la_LDFLAGS = -no-undefined -version-info 0:0:0
+
+## set python package name
+pkgpythondir = $(pyexecdir)/tfbayes/dpm
+
+## compile python files
+pkgpython_PYTHON = __init__.py dpm_gaussian_interface.py
+
+## scripts
+dist_bin_SCRIPTS = \
+	dpm-gaussian-demo \
+	dpm-tfbs-demo
+
+## python libraries
+pkgpython_LTLIBRARIES = dpm_tfbs_interface.la
+
+dpm_tfbs_interface_la_CPPFLAGS = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS)
+dpm_tfbs_interface_la_CXXFLAGS =
+dpm_tfbs_interface_la_SOURCES  = \
+	dpm-tfbs-interface.cc
+dpm_tfbs_interface_la_LIBADD   = libtfbayes-dpm.la
+dpm_tfbs_interface_la_LIBADD  += $(LIB_BOOST_PYTHON)
+dpm_tfbs_interface_la_LDFLAGS  = -avoid-version -module
 
 ## extra dist
 EXTRA_DIST = dpm-tfbs-demo-1.cfg dpm-tfbs-demo-1.fa.in dpm-tfbs-demo-2.cfg dpm-tfbs-demo-2.fa.in

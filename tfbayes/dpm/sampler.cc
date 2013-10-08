@@ -140,7 +140,7 @@ gibbs_sampler_t::sample(size_t n, size_t burnin) {
                 flockfile(stdout);
                 cout << _name << ": "
                      << "Burn in... [" << i+1 << "]"
-                     << "[ Cluster: " << _state << "]"
+                     << "[ Cluster: " << *_state << "]"
                      << endl;
                 fflush(stdout);
                 funlockfile(stdout);
@@ -152,7 +152,7 @@ gibbs_sampler_t::sample(size_t n, size_t burnin) {
                 flockfile(stdout);
                 cout << _name << ": "
                      << "Sampling... [" << i+1 << "]"
-                     << "[ Cluster: " << _state << "]"
+                     << "[ Cluster: " << *_state << "]"
                      << endl;
                 fflush(stdout);
                 funlockfile(stdout);

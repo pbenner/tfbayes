@@ -29,15 +29,15 @@ from tfbayes.dpm.dpm_tfbs_interface import *
 
 def default_sampler_config():
     sampler_config = tfbs_options_t()
-    sampler_config.alignment_data      = ""
-    sampler_config.phylogenetic_data   = ""
+    sampler_config.alignment_file      = ""
+    sampler_config.phylogenetic_file   = ""
     sampler_config.alpha               = 0.05
     sampler_config.discount            = 0.0
     sampler_config._lambda_            = 0.01
     sampler_config.initial_temperature = 10.0
     sampler_config.process_prior       = 'pitman-yor process'
     sampler_config.background_model    = 'independence-dirichlet'
-    sampler_config.background_alpha    = [[1],[1],[1],[1],[5]]
+    sampler_config.background_alpha    = [[1, 1, 1, 1, 5]]
     sampler_config.background_context  = 2
     sampler_config.background_weights  = 'decay'
     sampler_config.population_size     = 1
@@ -55,6 +55,9 @@ def default_sampler_config():
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
+
+def tr(m):
+    return map(list, zip(*m))
 
 def normalize_weights(v):
     s = sum(v)
@@ -87,7 +90,7 @@ def parse_sampler_config(config_file, sampler_config):
     if config_parser.has_option('TFBS-Sampler', 'background-model'):
         sampler_config.background_model = config_parser.get('TFBS-Sampler', 'background-model').strip()
     if config_parser.has_option('TFBS-Sampler', 'background-alpha'):
-        sampler_config.background_alpha = read_matrix(config_parser, 'TFBS-Sampler', 'background-alpha', float)
+        sampler_config.background_alpha = tr(read_matrix(config_parser, 'TFBS-Sampler', 'background-alpha', float))
     if config_parser.has_option('TFBS-Sampler', 'background-context'):
         sampler_config.background_context = config_parser.get('TFBS-Sampler', 'background-context')
     if config_parser.has_option('TFBS-Sampler', 'background-weights'):
@@ -107,7 +110,7 @@ def parse_sampler_config(config_file, sampler_config):
         sampler_config.baseline_weights = []
         sampler_config.baseline_tags    = read_vector(config_parser, 'TFBS-Sampler', 'baseline-priors', str)
         for prior_name in sampler_config.baseline_tags:
-            sampler_config.baseline_priors.append(read_matrix(config_parser, 'TFBS-Sampler', prior_name, float))
+            sampler_config.baseline_priors.append(tr(read_matrix(config_parser, 'TFBS-Sampler', prior_name, float)))
             if config_parser.has_option('TFBS-Sampler', '%s_weight' % prior_name):
                 sampler_config.baseline_weights.append(config_parser.get('TFBS-Sampler', '%s_weight' % prior_name))
             else:
