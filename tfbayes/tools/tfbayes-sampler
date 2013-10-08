@@ -67,22 +67,15 @@ def usage():
 # sample
 # ------------------------------------------------------------------------------
 
-def resume(config_file):
-    results_config = {}
-    parse_results_config(config_file, results_config)
-    # TODO: it should be possible to resume from some other partition
-    # (not only the map estimate)
-    partition = parse_partition(results_config['map_partition'])
-    return partition
-
 def sample():
     # initialize library
     dpm_init()
     # run sampler
     samples = sampler_config.samples[0]
     burnin  = sampler_config.samples[1]
-    dpm_sample(samples, burnin)
-    dpm_save(sampler_config.save)
+    sampler = dpm_tfbs_pmcmc_t(sampler_config)
+    sampler.sample(samples, burnin)
+    sampler.save(sampler_config.save)
     #dpm_free()
 
 # main

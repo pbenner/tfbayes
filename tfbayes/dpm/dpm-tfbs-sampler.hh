@@ -95,6 +95,7 @@ public:
         dpm_partition_t map() const;
         dpm_partition_t mean() const;
         dpm_partition_t median() const;
+        void save(const std::string& filename) const;
 
 protected:
         void _start_server();
@@ -114,5 +115,7 @@ protected:
         std::vector<save_queue_t<command_t*>* > _command_queue;
         save_queue_t<std::string> _output_queue;
 };
+
+std::ostream& operator<< (std::ostream& o, const dpm_tfbs_pmcmc_t& pmcmc);
 
 #endif /* DPM_TFBS_SAMPLER_HH */

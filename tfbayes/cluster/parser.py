@@ -76,7 +76,6 @@ def parse_partition_list(partition_list_str):
     for partition_str in partition_list_str.split('\n'):
         partition = parse_partition(partition_str)
         # there might be empty lines, filter them out...
-        print str(partition)
         if partition:
             partition_list.append(partition)
     return partition_list

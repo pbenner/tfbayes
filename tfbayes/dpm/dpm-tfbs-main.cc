@@ -29,7 +29,6 @@
 
 #include <tfbayes/dpm/init.hh>
 #include <tfbayes/dpm/dpm-tfbs.hh>
-#include <tfbayes/dpm/dpm-tfbs-io.hh>
 #include <tfbayes/dpm/dpm-tfbs-sampler.hh>
 #include <tfbayes/dpm/dpm-sampling-history.hh>
 #include <tfbayes/dpm/utility.hh>
@@ -181,15 +180,7 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         pmcmc.sample(options.samples, options.burnin);
 
         // save result
-        if (options.save == "") {
-                dpm_tfbs_save_result(cout, pmcmc);
-        }
-        else {
-                ofstream file;
-                file.open(options.save.c_str());
-                dpm_tfbs_save_result(file, pmcmc);
-                file.close();
-        }
+        pmcmc.save(options.save);
 }
 
 int main(int argc, char *argv[])

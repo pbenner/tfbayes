@@ -63,8 +63,6 @@ libtfbayes_dpm_la_SOURCES =		\
 	dpm-tfbs.hh			\
 	dpm-tfbs-command.cc		\
 	dpm-tfbs-command.hh		\
-	dpm-tfbs-io.cc			\
-	dpm-tfbs-io.hh			\
 	dpm-tfbs-mean.cc                \
 	dpm-tfbs-mean.hh                \
 	dpm-tfbs-repl.cc		\

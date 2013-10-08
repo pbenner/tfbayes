@@ -462,3 +462,56 @@ dpm_tfbs_pmcmc_t::_stop_server() {
                 remove(_socket_file.c_str());
         }
 }
+
+#include <fstream>
+
+void
+dpm_tfbs_pmcmc_t::save(const string& filename) const
+{
+        if (filename == "") {
+                cout << *this;
+        }
+        else {
+                ofstream file;
+                file.open(filename.c_str());
+                file << *this;
+                file.close();
+        }
+}
+
+static
+ostream& operator<< (ostream& o, const matrix<double>& m)
+{
+        for (size_t i = 0; i < m.size(); i++) {
+                o << "\t";
+                for (size_t j = 0; j < m[i].size(); j++) {
+                        o << m[i][j] << " ";
+                }
+                o << endl;
+        }
+        return o;
+}
+
+
+ostream& operator<< (ostream& o, const dpm_tfbs_pmcmc_t& pmcmc)
+{
+        const sampling_history_t& history = pmcmc.sampling_history();
+
+        o.setf(ios::showpoint);
+
+        o << "[Result]" << endl;
+        o << "components =" << endl
+          << history.components;
+        o << "switches =" << endl
+          << history.switches;
+        o << "likelihood =" << endl
+          << history.likelihood;
+        o << "posterior =" << endl
+          << history.posterior;
+        o << "temperature =" << endl
+          << history.temperature;
+        o << "partitions =" << endl
+          << history.partitions;
+
+        return o;
+}

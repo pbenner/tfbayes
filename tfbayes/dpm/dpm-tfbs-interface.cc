@@ -31,6 +31,7 @@
 #include <tfbayes/dpm/dpm-partition.hh>
 #include <tfbayes/dpm/dpm-sampling-history.hh>
 #include <tfbayes/dpm/dpm-tfbs-options.hh>
+#include <tfbayes/dpm/dpm-tfbs-sampler.hh>
 
 using namespace boost::python;
 
@@ -129,5 +130,11 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
         class_<baseline_tags_t>("baseline_tags_t")
                 .def("__iter__", boost::python::iterator<baseline_tags_t>())
                 .def("append", &baseline_tags_t::push_back)
+                ;
+        class_<dpm_tfbs_pmcmc_t, boost::noncopyable>("dpm_tfbs_pmcmc_t", no_init)
+                .def(init<tfbs_options_t>())
+                .def(init<tfbs_options_t, sampling_history_t>())
+                .def("sample", &dpm_tfbs_pmcmc_t::sample)
+                .def("save", &dpm_tfbs_pmcmc_t::save)
                 ;
 }
