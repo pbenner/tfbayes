@@ -67,7 +67,7 @@ public:
         __inline__ const cluster_t& operator[](cluster_tag_t c)      const { return *clusters[c]; }
         __inline__   cluster_tag_t  operator[](const index_i& index) const { return  cluster_assignments()[index]; }
 
-        mixture_state_t& operator=(const mixture_state_t& mixture_state);
+        virtual mixture_state_t& operator=(const mixture_state_t& mixture_state);
 
         // methods
         ////////////////////////////////////////////////////////////////////////

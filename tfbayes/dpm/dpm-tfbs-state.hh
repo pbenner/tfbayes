@@ -38,11 +38,17 @@ public:
          dpm_tfbs_state_t(const dpm_tfbs_state_t& state);
         ~dpm_tfbs_state_t();
 
+        friend void swap(dpm_tfbs_state_t& first, dpm_tfbs_state_t& second);
+
         virtual dpm_tfbs_state_t* clone() const;
 
         // auxiliary types
         ////////////////////////////////////////////////////////////////////////
         typedef cluster_t::const_iterator cl_iterator;
+
+        // operators
+        ////////////////////////////////////////////////////////////////////////
+        virtual dpm_tfbs_state_t& operator=(const mixture_state_t& state);
 
         // methods
         ////////////////////////////////////////////////////////////////////////

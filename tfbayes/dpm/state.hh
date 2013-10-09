@@ -31,6 +31,11 @@ public:
         gibbs_state_t(const data_t<cluster_tag_t>& cluster_assignments)
                 : mixture_state_t(cluster_assignments) {}
 
+        friend void swap(gibbs_state_t& first, gibbs_state_t& second) {
+                swap(static_cast<mixture_state_t&>(first),
+                     static_cast<mixture_state_t&>(second));
+        }
+
         gibbs_state_t* clone() const = 0;
 
         virtual void add(const index_i& index, cluster_tag_t tag) = 0;

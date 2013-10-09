@@ -70,9 +70,32 @@ dpm_tfbs_state_t::dpm_tfbs_state_t(const dpm_tfbs_state_t& state)
           bg_cluster_tag(state.bg_cluster_tag)
 { }
 
+void swap(dpm_tfbs_state_t& first, dpm_tfbs_state_t& second)
+{
+        swap(static_cast<gibbs_state_t&>(first),
+             static_cast<gibbs_state_t&>(second));
+        swap(first.tfbs_start_positions,   second.tfbs_start_positions);
+        swap(first.num_tfbs,               second.num_tfbs);
+        swap(first.cluster_assignments_p,  second.cluster_assignments_p);
+        swap(first.tfbs_start_positions_p, second.tfbs_start_positions_p);
+        swap(first.cluster_p,              second.cluster_p);
+        swap(first.cluster_bg_p,           second.cluster_bg_p);
+        swap(first._data,                  second._data);
+        swap(first.tfbs_length,            second.tfbs_length);
+        swap(first.bg_cluster_tag,         second.bg_cluster_tag);
+}
+
 dpm_tfbs_state_t*
 dpm_tfbs_state_t::clone() const {
         return new dpm_tfbs_state_t(*this);
+}
+
+dpm_tfbs_state_t&
+dpm_tfbs_state_t::operator=(const mixture_state_t& state)
+{
+        dpm_tfbs_state_t tmp(static_cast<const dpm_tfbs_state_t&>(state));
+        swap(*this, tmp);
+        return *this;
 }
 
 bool
