@@ -27,5 +27,6 @@
 extern gsl_rng* _r;
 
 void __dpm_init__();
+void __dpm_free__();
 
 #endif /* INIT_HH */

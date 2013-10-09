@@ -41,7 +41,7 @@ dpm_tfbs_state_t::dpm_tfbs_state_t(
           tfbs_start_positions_p(sizes, 0),
           cluster_p(NULL),
           cluster_bg_p(NULL),
-          _data(data),
+          _data(&data),
           tfbs_length(tfbs_length),
           bg_cluster_tag(bg_cluster_tag)
 { }
@@ -54,6 +54,21 @@ dpm_tfbs_state_t::~dpm_tfbs_state_t() {
                 delete(cluster_bg_p);
         }
 }
+
+dpm_tfbs_state_t::dpm_tfbs_state_t(const dpm_tfbs_state_t& state)
+        : gibbs_state_t(state),
+          tfbs_start_positions(state.tfbs_start_positions),
+          num_tfbs(state.num_tfbs),
+          // auxiliary variables
+          num_tfbs_p(0),
+          cluster_assignments_p(state.tfbs_start_positions.sizes(), -1),
+          tfbs_start_positions_p(state.tfbs_start_positions.sizes(), 0),
+          cluster_p(NULL),
+          cluster_bg_p(NULL),
+          _data(state._data),
+          tfbs_length(state.tfbs_length),
+          bg_cluster_tag(state.bg_cluster_tag)
+{ }
 
 dpm_tfbs_state_t*
 dpm_tfbs_state_t::clone() const {
@@ -129,19 +144,19 @@ dpm_tfbs_state_t::save(cluster_tag_t cluster_tag) {
         if (cluster_bg_p != NULL) {
                 delete(cluster_bg_p);
         }
-        num_tfbs_p = num_tfbs;
+        num_tfbs_p             = num_tfbs;
         cluster_assignments_p  = cluster_assignments();
         tfbs_start_positions_p = tfbs_start_positions;
-        cluster_p    = new cluster_t(operator[](cluster_tag));
+        cluster_p    = new cluster_t(operator[](   cluster_tag));
         cluster_bg_p = new cluster_t(operator[](bg_cluster_tag));
 }
 
 void
 dpm_tfbs_state_t::restore() {
-        num_tfbs = num_tfbs_p;
+        num_tfbs              = num_tfbs_p;
         cluster_assignments() = cluster_assignments_p;
         tfbs_start_positions  = tfbs_start_positions_p;
-        operator[](cluster_p->cluster_tag())    = *cluster_p;
+        operator[](cluster_p   ->cluster_tag()) = *cluster_p;
         operator[](cluster_bg_p->cluster_tag()) = *cluster_bg_p;
 }
 
@@ -183,7 +198,7 @@ dpm_tfbs_state_t::move_right(cluster_t& cluster)
                 const range_t range(*is);
                 const size_t sequence = range.index()[0];
                 const size_t position = range.index()[1];
-                const size_t sequence_length = _data.size(sequence);
+                const size_t sequence_length = _data->size(sequence);
                 const seq_index_t index(sequence, position+1);
                 remove(range.index(), cluster.cluster_tag());
                 add(range.index(), bg_cluster_tag);

@@ -73,10 +73,11 @@ def sample():
     # run sampler
     samples = sampler_config.samples[0]
     burnin  = sampler_config.samples[1]
-    sampler = dpm_tfbs_pmcmc_t(sampler_config)
+    sampler = dpm_tfbs_pmcmc_t(sampler_config, results_config)
     sampler.sample(samples, burnin)
     sampler.save(sampler_config.save)
-    #dpm_free()
+    # free library
+    dpm_free()
 
 # main
 # ------------------------------------------------------------------------------
@@ -115,7 +116,6 @@ def __main__():
         if o in ("-s", "--save"):
             sampler_config.save = a
         if o == "--resume":
-            options['resume'] = a
             parse_results_config(a, results_config)
         if o == "--samples":
             tmp = map(int, a.split(":"))

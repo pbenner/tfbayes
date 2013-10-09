@@ -32,16 +32,14 @@ using namespace std;
 
 population_mcmc_t::population_mcmc_t(size_t n)
         : _population(n, NULL),
-          _size(n),
-          _sampling_history(new sampling_history_t())
+          _size(n)
 {
         assert(n >= 1);
 }
 
 population_mcmc_t::population_mcmc_t(const population_mcmc_t& pmcmc)
         : _population(pmcmc._size, NULL),
-          _size(pmcmc._size),
-          _sampling_history(new sampling_history_t())
+          _size(pmcmc._size)
 {
         for (size_t i = 0; i < _size; i++) {
                 _population[i] = (sampler_t*)pmcmc._population[i]->clone();
@@ -53,9 +51,6 @@ population_mcmc_t::~population_mcmc_t()
         for (size_t i = 0; i < _size; i++) {
                 delete(_population[i]);
         }
-        if (_sampling_history != NULL) {
-                delete(_sampling_history);
-        }
 }
 
 population_mcmc_t*
@@ -66,22 +61,20 @@ population_mcmc_t::clone() const {
 void
 population_mcmc_t::update_sampling_history()
 {
-        if (_sampling_history != NULL) {
-                delete(_sampling_history);
-        }
-        _sampling_history = new sampling_history_t();
+        // reset sampling history
+        _sampling_history = sampling_history_t();
+        // get sampling histories from population
         for (size_t i = 0; i < _size; i++) {
-                _sampling_history->switches   .push_back(_population[i]->sampling_history().switches   [0]);
-                _sampling_history->likelihood .push_back(_population[i]->sampling_history().likelihood [0]);
-                _sampling_history->posterior  .push_back(_population[i]->sampling_history().posterior  [0]);
-                _sampling_history->components .push_back(_population[i]->sampling_history().components [0]);
-                _sampling_history->temperature.push_back(_population[i]->sampling_history().temperature[0]);
-                _sampling_history->partitions .push_back(_population[i]->sampling_history().partitions [0]);
+                _sampling_history.switches   .push_back(_population[i]->sampling_history().switches   [0]);
+                _sampling_history.likelihood .push_back(_population[i]->sampling_history().likelihood [0]);
+                _sampling_history.posterior  .push_back(_population[i]->sampling_history().posterior  [0]);
+                _sampling_history.components .push_back(_population[i]->sampling_history().components [0]);
+                _sampling_history.temperature.push_back(_population[i]->sampling_history().temperature[0]);
         }
         for (size_t j = 0; j < _population[0]->sampling_history().partitions.size(); j++) {
                 for (size_t i = 0; i < _size; i++) {
                         assert(j < _population[i]->sampling_history().partitions.size());
-                        _sampling_history->partitions.push_back(
+                        _sampling_history.partitions.push_back(
                                 _population[i]->sampling_history().partitions[j]);
                 }
         }
@@ -140,7 +133,7 @@ population_mcmc_t::sample(size_t n, size_t burnin)
 
 const sampling_history_t&
 population_mcmc_t::sampling_history() const {
-        return *_sampling_history;
+        return _sampling_history;
 }
 
 size_t

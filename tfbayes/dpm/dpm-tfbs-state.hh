@@ -35,6 +35,7 @@ public:
                           size_t tfbs_length,
                           cluster_tag_t bg_cluster_tag,
                           const data_tfbs_t& data);
+         dpm_tfbs_state_t(const dpm_tfbs_state_t& state);
         ~dpm_tfbs_state_t();
 
         virtual dpm_tfbs_state_t* clone() const;
@@ -45,10 +46,10 @@ public:
 
         // methods
         ////////////////////////////////////////////////////////////////////////
-        void add(const index_i& index, cluster_tag_t tag);
+        void add   (const index_i& index, cluster_tag_t tag);
         void remove(const index_i& index, cluster_tag_t tag);
 
-        bool move_left(cluster_t& cluster);
+        bool move_left (cluster_t& cluster);
         bool move_right(cluster_t& cluster);
 
         bool proposal(cluster_t& cluster, std::stringstream& ss);
@@ -89,10 +90,10 @@ public:
         cluster_t* cluster_p;
         cluster_t* cluster_bg_p;
 
-        const data_tfbs_t& _data;
+        const data_tfbs_t* _data;
 
         // constants
-        const size_t tfbs_length;
+        size_t tfbs_length;
         // the bg_cluster_tag is determined after the state is
         // initialize, so this can't be a constant
         cluster_tag_t bg_cluster_tag;

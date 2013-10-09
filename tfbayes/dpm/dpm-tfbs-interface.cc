@@ -63,6 +63,7 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
 {
         // init dpm library
         def("dpm_init", __dpm_init__);
+        def("dpm_free", __dpm_free__);
         // class definitions
         class_<sampling_history_t>("sampling_history_t")
                 .def_readwrite("switches",            &sampling_history_t::switches)

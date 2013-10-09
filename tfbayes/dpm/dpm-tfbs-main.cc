@@ -60,7 +60,7 @@ typedef struct _options_t {
                   discount(0.0),
                   lambda(0.01),
                   process_prior("pitman-yor process"),
-                  background_model("independence-dirichlet-gamma"),
+                  background_model("independence-dirichlet"),
                   background_alpha(1),
                   background_context(2),
                   background_weights("entropy"),
@@ -94,7 +94,7 @@ static
 void print_usage(char *pname, FILE *fp)
 {
 	(void)fprintf(fp,
-                      "\nUsage: %s [OPTION]... FASTA_ALIGNMENT PHYLOGENETIC_DATA\n\n", pname);
+                      "\nUsage: %s [OPTION]... PHYLOGENETIC_DATA FASTA_ALIGNMENT\n\n", pname);
 	(void)fprintf(fp,
                       "Options:\n"
                       "   --alpha=ALPHA             - alpha parameter for the dirichlet process\n"
@@ -166,12 +166,14 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options.lambda              = options.lambda;
         tfbs_options.discount            = options.discount;
         tfbs_options.tfbs_length         = options.tfbs_length;
+        tfbs_options.population_size     = options.population_size;
         tfbs_options.process_prior       = options.process_prior;
         tfbs_options.background_model    = options.background_model;
         tfbs_options.background_context  = options.background_context;
         tfbs_options.background_weights  = options.background_weights;
         tfbs_options.baseline_weights    = vector<double>(1,1);
         tfbs_options.baseline_tags.push_back("baseline_default");
+        tfbs_options.initial_temperature = 1.0;
 
         // create data, dpm, and sampler objects
         dpm_tfbs_pmcmc_t pmcmc(tfbs_options);

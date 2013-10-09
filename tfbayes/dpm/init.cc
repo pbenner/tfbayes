@@ -40,3 +40,7 @@ void __dpm_init__() {
         _r = gsl_rng_alloc (gsl_rng_default);
         gsl_rng_set(_r, seed);
 }
+
+void __dpm_free__() {
+        gsl_rng_free (_r);
+}

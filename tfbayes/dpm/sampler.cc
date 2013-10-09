@@ -33,9 +33,9 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 gibbs_sampler_t::gibbs_sampler_t(mixture_model_t& dpm,
-                           gibbs_state_t& state,
-                           const indexer_t& indexer,
-                           const string name)
+                                 gibbs_state_t& state,
+                                 const indexer_t& indexer,
+                                 const string name)
         : _dpm(&dpm),
           _name(name),
           _state(&state),

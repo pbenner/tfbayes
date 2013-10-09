@@ -49,7 +49,7 @@ public:
 protected:
         std::vector<sampler_t*> _population;
         const size_t _size;
-        sampling_history_t* _sampling_history;
+        sampling_history_t _sampling_history;
 
         // protected methods
         ////////////////////////////////////////////////////////////////////////

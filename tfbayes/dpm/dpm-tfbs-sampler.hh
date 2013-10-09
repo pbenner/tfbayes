@@ -49,7 +49,7 @@ public:
 
         // phylogenetic and alignment data for diagnostics
         ////////////////////////////////////////////////////////////////////////
-        const sequence_data_t<data_tfbs_t::code_t> phylogenetic_data;
+        const sequence_data_t<data_tfbs_t::code_t>* phylogenetic_data;
 
         // auxiliary types
         ////////////////////////////////////////////////////////////////////////
@@ -66,10 +66,10 @@ protected:
         bool _metropolis_sample(const double temp);
         bool _metropolis_sample(cluster_t& cluster, const double temp);
 
-        save_queue_t<command_t*>& _command_queue;
-        save_queue_t<std::string>& _output_queue;
-        dpm_tfbs_state_t& _state;
-        dpm_tfbs_t& _dpm;
+        save_queue_t<command_t*>* _command_queue;
+        save_queue_t<std::string>* _output_queue;
+        dpm_tfbs_state_t* _state;
+        dpm_tfbs_t* _dpm;
 
         // initial temperature for simulated annealing
         const double _t0;
