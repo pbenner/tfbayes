@@ -170,7 +170,7 @@ BOOST_PYTHON_MODULE(datatypes)
                 .def("__setitem__", matrix_setitem)
                 .def("export", matrix_to_list)
                 ;
-      iterable_converter()
+        iterable_converter()
               .from_python<std::vector<double> >()
               .from_python<std::matrix<double> >()
               .from_python<std::list<std::string> >()
