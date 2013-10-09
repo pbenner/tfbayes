@@ -49,6 +49,7 @@ public:
         virtual bool   valid_for_sampling(const index_i& index) const = 0;
         virtual mixture_state_t& state() = 0;
         virtual const mixture_state_t& state() const = 0;
+        virtual mixture_model_t& operator=(const mixture_model_t& mixture_model) = 0;
 };
 
 #endif /* MIXTURE_MODEL_HH */

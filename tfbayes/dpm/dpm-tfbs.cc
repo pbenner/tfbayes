@@ -38,11 +38,11 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
         : // baseline
           _baseline_weights(options.baseline_weights),
           // phylogenetic information
-          _data(data),
+          _data(&data),
           // coded nucleotide sequences
-          _alignment_set(alignment_set),
+          _alignment_set(&alignment_set),
           // cluster manager
-          _state(data.sizes(), options.tfbs_length, 0, _data),
+          _state(data.sizes(), options.tfbs_length, 0, data),
           // mixture weight for the dirichlet process
           _lambda(options.lambda),
           _lambda_log(log(options.lambda)),
@@ -63,7 +63,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
                 /* every position in the background is fully
                  * independet, this give more flexibility to the
                  * prior pseudocounts */
-                independence_background_t* bg = new independence_background_t(options.background_alpha, _data, _state.cluster_assignments());
+                independence_background_t* bg = new independence_background_t(options.background_alpha, data, _state.cluster_assignments());
                 _state.bg_cluster_tag = _state.add_cluster(bg);
                 bg->set_bg_cluster_tag(_state.bg_cluster_tag);
         }
@@ -72,24 +72,24 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
                  * independet, where the Dirichlet pseudocounts
                  * are integrated out */
                 cerr << "TODO: variable gamma prior parameters" << endl;
-                independence_background_t* bg = new independence_background_t(2.0, 2.0, _data, _state.cluster_assignments());
+                independence_background_t* bg = new independence_background_t(2.0, 2.0, data, _state.cluster_assignments());
                 _state.bg_cluster_tag = _state.add_cluster(bg);
                 bg->set_bg_cluster_tag(_state.bg_cluster_tag);
         }
         else if (options.background_model == "dirichlet") {
                 /* single dirichlet-compound distribution for all
                  * nucleotides in the background */
-                product_dirichlet_t* bg = new product_dirichlet_t(options.background_alpha, _data);
+                product_dirichlet_t* bg = new product_dirichlet_t(options.background_alpha, data);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
         }
         else if (options.background_model == "uniform") {
                 /* all sequences have the same probability (no phylogeny!) */
-                uniform_background_t* bg = new uniform_background_t(_data, _alignment_set);
+                uniform_background_t* bg = new uniform_background_t(data, alignment_set);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
         }
         else if (options.background_model == "markov chain mixture") {
                 assert(options.background_context >= 0);
-                markov_chain_mixture_t* bg = new markov_chain_mixture_t(data_tfbs_t::alphabet_size, options, _data, _state.cluster_assignments(), 0);
+                markov_chain_mixture_t* bg = new markov_chain_mixture_t(data_tfbs_t::alphabet_size, options, data, _state.cluster_assignments(), 0);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
         }
         else {
@@ -106,14 +106,14 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
                 for (size_t j = 0; j < options.tfbs_length; j++) {
                         assert((*it)[j].size() == data_tfbs_t::alphabet_size);
                 }
-                product_dirichlet_t* dirichlet = new product_dirichlet_t(*it, _data);
+                product_dirichlet_t* dirichlet = new product_dirichlet_t(*it, data);
                 _state.add_baseline_model(dirichlet, *is);
                 _baseline_tags.push_back(*is);
         }
         ////////////////////////////////////////////////////////////////////////////////
         // assign all elements to the background
-        for (da_iterator it = _data.begin();
-             it != _data.end(); it++) {
+        for (da_iterator it = data.begin();
+             it != data.end(); it++) {
                 // cannot use _state.add() here because we need to add
                 // sites of length one to the background
                 range_t range(**it, 1);
@@ -182,6 +182,29 @@ dpm_tfbs_t::~dpm_tfbs_t() {
 dpm_tfbs_t*
 dpm_tfbs_t::clone() const {
         return new dpm_tfbs_t(*this);
+}
+
+void
+swap(dpm_tfbs_t& first, dpm_tfbs_t& second)
+{
+        swap(first._baseline_weights, second._baseline_weights);
+        swap(first._baseline_tags,    second._baseline_tags);
+        swap(first._data,             second._data);
+        swap(first._alignment_set,    second._alignment_set);
+        swap(first._state,            second._state);
+        swap(first._lambda,           second._lambda);
+        swap(first._lambda_log,       second._lambda_log);
+        swap(first._lambda_inv_log,   second._lambda_inv_log);
+        swap(first._tfbs_length,      second._tfbs_length);
+        swap(first._process_prior,    second._process_prior);
+}
+
+dpm_tfbs_t&
+dpm_tfbs_t::operator=(const mixture_model_t& mixture_model)
+{
+        dpm_tfbs_t tmp(static_cast<const dpm_tfbs_t&>(mixture_model));
+        swap(*this, tmp);
+        return *this;
 }
 
 bool
@@ -365,6 +388,16 @@ dpm_tfbs_t::state() {
 const dpm_tfbs_state_t&
 dpm_tfbs_t::state() const {
         return _state;
+}
+
+const data_tfbs_t&
+dpm_tfbs_t::data() const {
+        return *_data;
+}
+
+const alignment_set_t<short>&
+dpm_tfbs_t::alignment_set() const {
+        return *_alignment_set;
 }
 
 // misc methods

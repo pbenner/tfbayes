@@ -38,25 +38,65 @@ dpm_gaussian_t::dpm_gaussian_t(
         gsl_vector* mu_0,
         const data_gaussian_t& data)
         : gibbs_state_t(data_t<cluster_tag_t>(data.elements(), -1)),
-          _data(data),
+          _data(&data),
           // strength parameter for the dirichlet process
           alpha(alpha)
 {
         _baseline_tag = "baseline";
         gibbs_state_t::add_baseline_model(new bivariate_normal_t(Sigma, Sigma_0, mu_0, data), _baseline_tag);
         cluster_tag_t cluster_tag = gibbs_state_t::get_free_cluster(_baseline_tag).cluster_tag();
-        for (data_gaussian_t::const_iterator it = _data.begin();
-             it != _data.end(); it++) {
+        for (data_gaussian_t::const_iterator it = _data->begin();
+             it != _data->end(); it++) {
                 gibbs_state_t::operator[](cluster_tag).add_observations(range_t(**it,1));
         }
+}
+
+dpm_gaussian_t::dpm_gaussian_t(const dpm_gaussian_t& dpm)
+        : gibbs_state_t(dpm),
+          _baseline_tag(dpm._baseline_tag),
+          cov          (gsl_matrix_alloc(dpm.cov->size1, dpm.cov->size2)),
+          cov_inv      (gsl_matrix_alloc(dpm.cov_inv->size1, dpm.cov_inv->size2)),
+          mu_0         (gsl_vector_alloc(dpm.mu_0->size)),
+          cov_0        (gsl_matrix_alloc(dpm.cov_0->size1, dpm.cov_0->size2)),
+          cov_inv_0    (gsl_matrix_alloc(dpm.cov_inv_0->size1, dpm.cov_inv_0->size2)),
+          _data        (dpm._data),
+          alpha        (dpm.alpha)
+{
+        gsl_matrix_memcpy(cov, dpm.cov);
+        gsl_matrix_memcpy(cov_inv, dpm.cov_inv);
+        gsl_vector_memcpy(mu_0, dpm.mu_0);
+        gsl_matrix_memcpy(cov_0, dpm.cov_0);
+        gsl_matrix_memcpy(cov_inv_0, dpm.cov_inv_0);
 }
 
 dpm_gaussian_t::~dpm_gaussian_t() {
 }
 
+void swap(dpm_gaussian_t& first, dpm_gaussian_t& second)
+{
+        swap(static_cast<gibbs_state_t&>(first),
+             static_cast<gibbs_state_t&>(second));
+        swap(first._baseline_tag, second._baseline_tag);
+        swap(first.cov,           second.cov);
+        swap(first.cov_inv,       second.cov_inv);
+        swap(first.mu_0,          second.mu_0);
+        swap(first.cov_0,         second.cov_0);
+        swap(first.cov_inv_0,     second.cov_inv_0);
+        swap(first._data,         second._data);
+        swap(first.alpha,         second.alpha);
+}
+
 dpm_gaussian_t*
 dpm_gaussian_t::clone() const {
         return new dpm_gaussian_t(*this);
+}
+
+dpm_gaussian_t&
+dpm_gaussian_t::operator=(const mixture_model_t& mixture_model)
+{
+        dpm_gaussian_t tmp(static_cast<const dpm_gaussian_t&>(mixture_model));
+        swap(*this, tmp);
+        return *this;
 }
 
 bool
@@ -88,7 +128,7 @@ dpm_gaussian_t::mixture_weights(const index_i& index, double log_weights[], clus
 {
         size_t components = mixture_components();
         double sum        = -HUGE_VAL;
-        double N          = _data.elements() - 1;
+        double N          = _data->elements() - 1;
         range_t range(index, 1);
 
         cluster_tag_t i = 0;

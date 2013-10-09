@@ -36,14 +36,18 @@ public:
                       gsl_matrix* _Sigma_0,
                       gsl_vector* _mu_0,
                       const data_gaussian_t& data);
+         dpm_gaussian_t(const dpm_gaussian_t& dpm);
         ~dpm_gaussian_t();
 
-//        virtual mixture_model_t* clone() const;
         virtual dpm_gaussian_t* clone() const;
+
+        friend void swap(dpm_gaussian_t& first, dpm_gaussian_t& second);
 
         // operators
         ////////////////////////////////////////////////////////////////////////
         friend std::ostream& operator<<(std::ostream& o, const dpm_gaussian_t& dpm);
+
+        virtual dpm_gaussian_t& operator=(const mixture_model_t& mixture_model);
 
         // methods
         ////////////////////////////////////////////////////////////////////////
@@ -61,14 +65,6 @@ public:
         const mixture_state_t& state() const;
               mixture_state_t& state();
 
-        void print(std::ostream& o) const {
-                o << "(" << gibbs_state_t::size() << "): ";
-                for (mixture_state_t::const_iterator it = gibbs_state_t::begin();
-                     it != gibbs_state_t::end(); it++) {
-                        o << **it << " ";
-                }
-        }
-
 private:
         baseline_tag_t _baseline_tag;
 
@@ -82,10 +78,10 @@ private:
         gsl_matrix* cov_inv_0;
 
         // data and clusters
-        const data_gaussian_t& _data;
+        const data_gaussian_t* _data;
 
         // parameters
-        const double alpha;
+        double alpha;
 };
 
 #endif /* DPM_GAUSSIAN_HH */

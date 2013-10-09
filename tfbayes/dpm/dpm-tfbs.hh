@@ -41,6 +41,8 @@ public:
 
         virtual dpm_tfbs_t* clone() const;
 
+        friend void swap(dpm_tfbs_t& first, dpm_tfbs_t& second);
+
         // auxiliary types
         ////////////////////////////////////////////////////////////////////////
         typedef mixture_state_t::const_iterator cm_iterator;
@@ -50,6 +52,17 @@ public:
         // operators
         ////////////////////////////////////////////////////////////////////////
         friend std::ostream& operator<<(std::ostream& o, const dpm_tfbs_t& dpm);
+
+        virtual dpm_tfbs_t& operator=(const mixture_model_t& mixture_model);
+
+        // access methods
+        ////////////////////////////////////////////////////////////////////////
+        const dpm_tfbs_state_t& state() const;
+              dpm_tfbs_state_t& state();
+
+        const data_tfbs_t& data() const;
+
+        const alignment_set_t<short>& alignment_set() const;
 
         // methods
         ////////////////////////////////////////////////////////////////////////
@@ -65,9 +78,6 @@ public:
         double likelihood() const;
         double posterior() const;
         bool   valid_for_sampling(const index_i& index) const;
-
-        const dpm_tfbs_state_t& state() const;
-              dpm_tfbs_state_t& state();
 
         // test methods
         ////////////////////////////////////////////////////////////////////////
@@ -86,15 +96,15 @@ protected:
         std::vector<baseline_tag_t> _baseline_tags;
 
         // data and clusters
-        const data_tfbs_t& _data;
-        const alignment_set_t<short>& _alignment_set;
+        const data_tfbs_t* _data;
+        const alignment_set_t<short>* _alignment_set;
         dpm_tfbs_state_t _state;
 
         // parameters
-        const double _lambda;
-        const double _lambda_log;
-        const double _lambda_inv_log;
-        const size_t _tfbs_length;
+        double _lambda;
+        double _lambda_log;
+        double _lambda_inv_log;
+        size_t _tfbs_length;
 
         // process priors
         dpm_tfbs_prior_t* _process_prior;
