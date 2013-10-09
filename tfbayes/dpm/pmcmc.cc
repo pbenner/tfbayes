@@ -58,6 +58,22 @@ population_mcmc_t::clone() const {
         return new population_mcmc_t(*this);
 }
 
+population_mcmc_t&
+population_mcmc_t::operator=(const sampler_t& sampler)
+{
+        population_mcmc_t tmp(static_cast<const population_mcmc_t&>(sampler));
+        swap(*this, tmp);
+        return *this;
+}
+
+void
+swap(population_mcmc_t& first, population_mcmc_t& second) {
+        swap(static_cast<sampler_t&>(first), static_cast<sampler_t&>(second));
+        swap(first._population,       second._population);
+        swap(first._size,             second._size);
+        swap(first._sampling_history, second._sampling_history);
+}
+
 void
 population_mcmc_t::update_sampling_history()
 {

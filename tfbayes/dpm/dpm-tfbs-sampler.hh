@@ -47,7 +47,7 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-        dpm_tfbs_sampler_t& operator=(const dpm_tfbs_sampler_t& sampler);        
+        virtual dpm_tfbs_sampler_t& operator=(const sampler_t& sampler);
 
         // after sampling this function locally optimizes the current state
         ////////////////////////////////////////////////////////////////////////

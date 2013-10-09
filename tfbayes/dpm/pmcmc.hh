@@ -34,10 +34,14 @@ public:
 
         population_mcmc_t* clone() const;
 
+        friend void swap(population_mcmc_t& first, population_mcmc_t& second);
+
         // operators
         ////////////////////////////////////////////////////////////////////////
         virtual       sampler_t& operator[](size_t i)       { return *_population[i]; }
         virtual const sampler_t& operator[](size_t i) const { return *_population[i]; }
+
+        virtual population_mcmc_t& operator=(const sampler_t& sampler);
 
         // methods
         ////////////////////////////////////////////////////////////////////////
@@ -48,7 +52,7 @@ public:
 
 protected:
         std::vector<sampler_t*> _population;
-        const size_t _size;
+        size_t _size;
         sampling_history_t _sampling_history;
 
         // protected methods

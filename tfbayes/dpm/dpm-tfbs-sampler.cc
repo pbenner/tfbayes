@@ -71,10 +71,10 @@ dpm_tfbs_sampler_t::clone() const {
 }
 
 dpm_tfbs_sampler_t&
-dpm_tfbs_sampler_t::operator=(const dpm_tfbs_sampler_t& sampler)
+dpm_tfbs_sampler_t::operator=(const sampler_t& sampler)
 {
-        dpm_tfbs_sampler_t tmp(sampler);
-        swap(tmp, *this);
+        dpm_tfbs_sampler_t tmp(static_cast<const dpm_tfbs_sampler_t&>(sampler));
+        swap(*this, tmp);
         return *this;
 }
 

@@ -87,9 +87,9 @@ gibbs_sampler_t::clone() const {
 }
 
 gibbs_sampler_t&
-gibbs_sampler_t::operator=(const gibbs_sampler_t& gibbs_sampler)
+gibbs_sampler_t::operator=(const sampler_t& sampler)
 {
-        gibbs_sampler_t tmp(gibbs_sampler);
+        gibbs_sampler_t tmp(static_cast<const gibbs_sampler_t&>(sampler));
         swap(*this, tmp);
         return *this;
 }
