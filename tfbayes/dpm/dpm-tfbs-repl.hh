@@ -96,7 +96,7 @@ private:
         boost::asio::io_service& _ios;
         boost::asio::local::stream_protocol::acceptor _acceptor;
 
-        std::vector<save_queue_t<command_t*>* >& _command_queue;
+        std::vector<save_queue_t<command_t*>* > _command_queue;
         save_queue_t<std::string>& _output_queue;
 };
 

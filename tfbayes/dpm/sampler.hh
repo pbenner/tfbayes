@@ -39,6 +39,8 @@ protected:
 
 class gibbs_sampler_t : public sampler_t {
 public:
+         gibbs_sampler_t(const indexer_t& indexer,
+                         const std::string name = "");
          gibbs_sampler_t(mixture_model_t& dpm,
                          gibbs_state_t& state,
                          const indexer_t& indexer,

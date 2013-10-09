@@ -33,30 +33,42 @@ class dpm_tfbs_sampler_t : public gibbs_sampler_t {
 public:
         dpm_tfbs_sampler_t(
                 const tfbs_options_t& options,
-                dpm_tfbs_t& dpm,
-                dpm_tfbs_state_t& state,
+                const dpm_tfbs_t& dpm,
                 const indexer_t& indexer,
                 const std::string name,
-                save_queue_t<command_t*>& command_queue,
-                save_queue_t<std::string>& output_queue,
-                const sequence_data_t<data_tfbs_t::code_t>& phylogenetic_data);
+                const sequence_data_t<data_tfbs_t::code_t>& phylogenetic_data,
+                save_queue_t<std::string>& output_queue
+                );
+         dpm_tfbs_sampler_t(const dpm_tfbs_sampler_t& sampler);
 
         ~dpm_tfbs_sampler_t();
 
+        dpm_tfbs_sampler_t* clone() const;
+
+        // operators
+        ////////////////////////////////////////////////////////////////////////
+        dpm_tfbs_sampler_t& operator=(const dpm_tfbs_sampler_t& sampler);        
+
         // after sampling this function locally optimizes the current state
+        ////////////////////////////////////////////////////////////////////////
         bool optimize(cluster_t& cluster);
         void optimize();
 
-        dpm_tfbs_sampler_t* clone() const;
-
-        // phylogenetic and alignment data for diagnostics
+        // access methods
         ////////////////////////////////////////////////////////////////////////
-        const sequence_data_t<data_tfbs_t::code_t>* phylogenetic_data;
+              save_queue_t<command_t*>& command_queue();
+        const save_queue_t<command_t*>& command_queue() const;
+              dpm_tfbs_t& dpm();
+        const dpm_tfbs_t& dpm() const;
 
         // auxiliary types
         ////////////////////////////////////////////////////////////////////////
         typedef mixture_state_t::const_iterator cm_iterator;
         typedef mixture_state_t::iterator cl_iterator;
+
+        // phylogenetic and alignment data for diagnostics
+        ////////////////////////////////////////////////////////////////////////
+        const sequence_data_t<data_tfbs_t::code_t>* phylogenetic_data;
 
 protected:
         size_t _sample(size_t i, size_t n, bool is_burnin);
@@ -68,10 +80,8 @@ protected:
         bool _metropolis_sample(const double temp);
         bool _metropolis_sample(cluster_t& cluster, const double temp);
 
-        save_queue_t<command_t*>* _command_queue;
+        save_queue_t<command_t*> _command_queue;
         save_queue_t<std::string>* _output_queue;
-        dpm_tfbs_state_t* _state;
-        dpm_tfbs_t* _dpm;
 
         // initial temperature for simulated annealing
         const double _t0;
@@ -87,13 +97,23 @@ public:
         dpm_tfbs_pmcmc_t(
                 const tfbs_options_t& options,
                 const sampling_history_t& history = sampling_history_t());
+
         virtual ~dpm_tfbs_pmcmc_t();
 
+        // operators
+        ////////////////////////////////////////////////////////////////////////
+        virtual       dpm_tfbs_sampler_t& operator[](size_t i)
+                { return *static_cast<      dpm_tfbs_sampler_t*>(_population[i]); }
+        virtual const dpm_tfbs_sampler_t& operator[](size_t i) const
+                { return *static_cast<const dpm_tfbs_sampler_t*>(_population[i]); }
+
+        // access methods
+        ////////////////////////////////////////////////////////////////////////
         const tfbs_options_t& options() const;
         const data_tfbs_t& data() const;
-        const std::vector<dpm_tfbs_t*>& gdpm() const;
 
         // compute point estimates
+        ////////////////////////////////////////////////////////////////////////
         dpm_partition_t map() const;
         dpm_partition_t mean() const;
         dpm_partition_t median() const;
@@ -107,14 +127,12 @@ protected:
 
         data_tfbs_t _data;
         alignment_set_t<short> _alignment_set;
-        std::vector<dpm_tfbs_t*> _gdpm;
 
         std::string _socket_file;
         boost::asio::io_service _ios;
         server_t* _server;
         boost::thread* _bt;
 
-        std::vector<save_queue_t<command_t*>* > _command_queue;
         save_queue_t<std::string> _output_queue;
 };
 

@@ -36,8 +36,8 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-              sampler_t& operator[](size_t i)       { return *_population[i]; }
-        const sampler_t& operator[](size_t i) const { return *_population[i]; }
+        virtual       sampler_t& operator[](size_t i)       { return *_population[i]; }
+        virtual const sampler_t& operator[](size_t i) const { return *_population[i]; }
 
         // methods
         ////////////////////////////////////////////////////////////////////////

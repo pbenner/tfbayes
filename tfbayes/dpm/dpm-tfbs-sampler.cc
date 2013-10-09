@@ -31,32 +31,69 @@ using namespace boost::asio::local;
 
 dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
         const tfbs_options_t& options,
-        dpm_tfbs_t& dpm,
-        dpm_tfbs_state_t& state,
+        const dpm_tfbs_t& dpm_tfbs,
         const indexer_t& indexer,
         const string name,
-        save_queue_t<command_t*>& command_queue,
-        save_queue_t<string>& output_queue,
-        const sequence_data_t<data_tfbs_t::code_t>& phylogenetic_data)
-        : gibbs_sampler_t(dpm, state, indexer, name),
-          phylogenetic_data(&phylogenetic_data),
-          _command_queue(&command_queue),
-          _output_queue(&output_queue),
-          _state(&state),
-          _dpm(&dpm),
-          _t0(options.initial_temperature)
+        const sequence_data_t<data_tfbs_t::code_t>& phylogenetic_data,
+        save_queue_t<string>& output_queue)
+        :
+        gibbs_sampler_t  (indexer, name),
+        phylogenetic_data(&phylogenetic_data),
+        _output_queue    (&output_queue),
+        _t0              (options.initial_temperature)
 {
         assert(options.initial_temperature >= 1.0);
+
+        gibbs_sampler_t::_dpm   = dpm_tfbs.clone();
+        gibbs_sampler_t::_state = &dpm().state();
 }
+
+dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(const dpm_tfbs_sampler_t& sampler)
+        : gibbs_sampler_t  (sampler),
+          phylogenetic_data(sampler.phylogenetic_data),
+          _output_queue    (sampler._output_queue),
+          _t0              (sampler._t0)
+{ }
 
 dpm_tfbs_sampler_t::~dpm_tfbs_sampler_t()
 {
-        delete(_command_queue);
 }
 
 dpm_tfbs_sampler_t*
 dpm_tfbs_sampler_t::clone() const {
         return new dpm_tfbs_sampler_t(*this);
+}
+
+dpm_tfbs_sampler_t&
+dpm_tfbs_sampler_t::operator=(const dpm_tfbs_sampler_t& sampler)
+{
+        dpm_tfbs_sampler_t tmp(sampler);
+        swap(tmp, *this);
+        return *this;
+}
+
+save_queue_t<command_t*>&
+dpm_tfbs_sampler_t::command_queue()
+{
+        return _command_queue;
+}
+
+const save_queue_t<command_t*>&
+dpm_tfbs_sampler_t::command_queue() const
+{
+        return _command_queue;
+}
+
+dpm_tfbs_t&
+dpm_tfbs_sampler_t::dpm()
+{
+        return *static_cast<dpm_tfbs_t*>(_dpm);
+}
+
+const dpm_tfbs_t&
+dpm_tfbs_sampler_t::dpm() const
+{
+        return *static_cast<const dpm_tfbs_t*>(_dpm);
 }
 
 // Gibbs samples
@@ -66,17 +103,17 @@ bool
 dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp, const bool optimize) {
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
-        if (!_dpm->valid_for_sampling(index)) {
+        if (!dpm().valid_for_sampling(index)) {
                 return false;
         }
         ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
-        cluster_tag_t old_cluster_tag = (*_state)[index];
+        cluster_tag_t old_cluster_tag = dpm().state()[index];
         _state->remove(index, old_cluster_tag);
-        size_t components = _dpm->mixture_components() + _dpm->baseline_components();
+        size_t components = dpm().mixture_components() + dpm().baseline_components();
         double log_weights[components];
         cluster_tag_t cluster_tags[components];
-        _dpm->mixture_weights(index, log_weights, cluster_tags, temp);
+        dpm().mixture_weights(index, log_weights, cluster_tags, temp);
 
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
@@ -100,7 +137,7 @@ dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp, const
         }
 
         ////////////////////////////////////////////////////////////////////////
-        _state->add(index, new_cluster_tag);
+        dpm().state().add(index, new_cluster_tag);
 
         return old_cluster_tag != new_cluster_tag;
 }
@@ -145,14 +182,14 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp, const b
         {
                 const range_t& range = *it;
 
-                _state->remove(range.index(), old_cluster_tag);
+                dpm().state().remove(range.index(), old_cluster_tag);
         }
         ////////////////////////////////////////////////////////////////////////
         // obtian the mixture probabilities
-        size_t components = _dpm->mixture_components() + _dpm->baseline_components();
+        size_t components = dpm().mixture_components() + dpm().baseline_components();
         double log_weights[components];
         cluster_tag_t cluster_tags[components];
-        _dpm->mixture_weights(range_set, log_weights, cluster_tags, temp, false);
+        dpm().mixture_weights(range_set, log_weights, cluster_tags, temp, false);
 
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
@@ -184,7 +221,7 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp, const b
         {
                 const range_t& range = *it;
 
-                _state->add(range.index(), new_cluster_tag);
+                dpm().state().add(range.index(), new_cluster_tag);
         }
 }
 
@@ -195,9 +232,9 @@ dpm_tfbs_sampler_t::_block_sample(const double temp, const bool optimize)
         // loop through the list of clusters, we need to be a bit more
         // careful here!
         vector<cluster_tag_t> used_clusters;
-        for (cm_iterator it = _state->begin(); it != _state->end(); it++) {
+        for (cm_iterator it = dpm().state().begin(); it != dpm().state().end(); it++) {
                 cluster_t& cluster = **it;
-                if (cluster.cluster_tag() != _state->bg_cluster_tag) {
+                if (cluster.cluster_tag() != dpm().state().bg_cluster_tag) {
                         used_clusters.push_back(cluster.cluster_tag());
                 }
         }
@@ -217,20 +254,20 @@ dpm_tfbs_sampler_t::_block_sample(const double temp, const bool optimize)
 
 bool
 dpm_tfbs_sampler_t::_metropolis_sample(cluster_t& cluster, const double temp) {
-        double posterior_ref = _dpm->posterior();
+        double posterior_ref = dpm().posterior();
         double posterior_tmp;
         stringstream ss;
         size_t size = cluster.size();
 
-        if (_state->proposal(cluster, ss)) {
-                posterior_tmp = _dpm->posterior();
+        if (dpm().state().proposal(cluster, ss)) {
+                posterior_tmp = dpm().posterior();
 
                 const double r = (double)rand()/RAND_MAX;
                 /* posterior value is on log scale! */
                 if (r <= min(exp((posterior_tmp - posterior_ref)/temp), 1.0)) {
                         goto accepted;
                 }
-                _state->restore();
+                dpm().state().restore();
         }
         return false;
 
@@ -254,7 +291,7 @@ accepted:
 
 bool
 dpm_tfbs_sampler_t::_metropolis_sample(const double temp) {
-        for (cl_iterator it = _state->begin(); it != _state->end(); it++) {
+        for (cl_iterator it = dpm().state().begin(); it != dpm().state().end(); it++) {
                 _metropolis_sample(**it, temp);
         }
 
@@ -293,11 +330,11 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
              << endl;
         fflush(stdout);
         funlockfile(stdout);
-        while (!_command_queue->empty()) {
+        while (!_command_queue.empty()) {
                 stringstream ss;
-                command_t* command = _command_queue->front();
-                ss << command->operator()(*_state, *this);
-                _command_queue->pop();
+                command_t* command = _command_queue.front();
+                ss << command->operator()(dpm().state(), *this);
+                _command_queue.pop();
                 delete(command);
                 _output_queue->push(ss.str());
         }
@@ -309,28 +346,28 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
 
 bool
 dpm_tfbs_sampler_t::optimize(cluster_t& cluster) {
-        double posterior_ref = _dpm->posterior();
+        double posterior_ref = dpm().posterior();
         double posterior_left;
         double posterior_right;
         stringstream ss;
         size_t size = cluster.size();
 
-        _state->save(cluster.cluster_tag());
-        _state->move_left(cluster);
-        posterior_left = _dpm->posterior();
-        _state->restore();
+        dpm().state().save(cluster.cluster_tag());
+        dpm().state().move_left(cluster);
+        posterior_left = dpm().posterior();
+        dpm().state().restore();
 
-        _state->save(cluster.cluster_tag());
-        _state->move_right(cluster);
-        posterior_right = _dpm->posterior();
-        _state->restore();
+        dpm().state().save(cluster.cluster_tag());
+        dpm().state().move_right(cluster);
+        posterior_right = dpm().posterior();
+        dpm().state().restore();
 
         if (posterior_left > posterior_ref && posterior_left > posterior_right) {
-                _state->move_left(cluster);
+                dpm().state().move_left(cluster);
                 ss << "moved to the left";
         }
         else if (posterior_right > posterior_ref && posterior_right > posterior_left) {
-                _state->move_right(cluster);
+                dpm().state().move_right(cluster);
                 ss << "moved to the right";
         }
         else {
@@ -359,18 +396,18 @@ dpm_tfbs_sampler_t::optimize() {
         // print old posterior value
         flockfile(stdout);
         cout << _name << ": "
-             << "old posterior value: " << _dpm->posterior()
+             << "old posterior value: " << dpm().posterior()
              << endl;
         fflush(stdout);
         funlockfile(stdout);
         // block optimization
-        for (cl_iterator it = _state->begin(); it != _state->end(); it++) {
+        for (cl_iterator it = dpm().state().begin(); it != dpm().state().end(); it++) {
                 optimize(**it);
         }
         // output resulting posterior value
         flockfile(stdout);
         cout << _name << ": "
-             << "new posterior value: " << _dpm->posterior()
+             << "new posterior value: " << dpm().posterior()
              << endl;
         fflush(stdout);
         funlockfile(stdout);
@@ -386,7 +423,6 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
           _options(options),
           _data(options.phylogenetic_file, options.tfbs_length),
           _alignment_set(options.alignment_file),
-          _gdpm(options.population_size, NULL),
           _socket_file(options.socket_file),
           _server(NULL),
           _bt(NULL)
@@ -395,20 +431,12 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
 
         for (size_t i = 0; i < _size; i++) {
                 std::stringstream ss; ss << "Sampler " << i+1;
-                save_queue_t<command_t*>* command_queue = new save_queue_t<command_t*>();
-                _command_queue.push_back(command_queue);
-                // clone dpm_tfbs instead of constructing a new one
-                // for every sampler; this prevents that any
-                // preprocessing is done several times
-                _gdpm[i]       = dpm_tfbs.clone();
                 _population[i] = new dpm_tfbs_sampler_t(options,
-                                                        *_gdpm[i],
-                                                        _gdpm[i]->state(),
+                                                        dpm_tfbs,
                                                         _data,
                                                         ss.str(),
-                                                        *command_queue,
-                                                        _output_queue,
-                                                        _data);
+                                                        _data,
+                                                        _output_queue);
         }
         _start_server();
 }
@@ -425,11 +453,6 @@ dpm_tfbs_pmcmc_t::options() const {
 const data_tfbs_t&
 dpm_tfbs_pmcmc_t::data() const {
         return _data;
-}
-
-const std::vector<dpm_tfbs_t*>&
-dpm_tfbs_pmcmc_t::gdpm() const {
-        return _gdpm;
 }
 
 dpm_partition_t
@@ -449,9 +472,13 @@ dpm_tfbs_pmcmc_t::median() const {
 
 void
 dpm_tfbs_pmcmc_t::_start_server() {
+        vector<save_queue_t<command_t*>* > command_queue;
+        for (size_t i = 0; i < _size; i++) {
+                command_queue.push_back(&operator[](i).command_queue());
+        }
         if (_socket_file != "" && _server == NULL) {
                 remove(_socket_file.c_str());
-                _server = new server_t(_ios, _socket_file, _command_queue, _output_queue);
+                _server = new server_t(_ios, _socket_file, command_queue, _output_queue);
                 _bt     = new boost::thread(boost::bind(&io_service::run, &_ios));
         }
 }

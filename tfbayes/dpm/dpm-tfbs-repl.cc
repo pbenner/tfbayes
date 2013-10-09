@@ -32,7 +32,7 @@ using namespace boost::asio::local;
 
 repl_t::repl_t(vector<char>& data,
                vector<save_queue_t<command_t*>* >& command_queue,
-               save_queue_t<string>&output_queue)
+               save_queue_t<string>& output_queue)
         : _data(data),
           _command_queue(command_queue),
           _output_queue(output_queue) {

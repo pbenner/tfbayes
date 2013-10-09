@@ -147,16 +147,22 @@ public:
         range_t(const index_i& index, size_t length) 
                 : _index(index.clone()), _length(length) {
         }
-        range_t(const range_t& range) {
-                operator=(range);
-        }
+        range_t(const range_t& range) :
+                _index (range.index().clone()),
+                _length(range.length())
+                { }
         ~range_t() {
                 delete(_index);
         }
         range_t& operator=(const range_t& range) {
-                _index  = range.index().clone();
-                _length = range.length();
+                range_t tmp(range);
+                swap(*this, tmp);
                 return *this;
+        }
+        friend void swap(range_t& first, range_t& second) {
+                using std::swap;
+                swap(first._index,  second._index );
+                swap(first._length, second._length);
         }
         bool operator==(const range_t& range) const {
                 return range.index() == *_index && range.length() == _length;

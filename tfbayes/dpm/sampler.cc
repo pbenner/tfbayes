@@ -32,6 +32,19 @@ using namespace std;
 // Gibbs Sampler
 ////////////////////////////////////////////////////////////////////////////////
 
+gibbs_sampler_t::gibbs_sampler_t(const indexer_t& indexer,
+                                 const string name)
+        : _name(name),
+          _indexer(&indexer)
+{
+        // for sampling statistics
+        _sampling_history.switches.   push_back(vector<double>());
+        _sampling_history.likelihood. push_back(vector<double>());
+        _sampling_history.posterior.  push_back(vector<double>());
+        _sampling_history.components. push_back(vector<double>());
+        _sampling_history.temperature.push_back(vector<double>());
+}
+
 gibbs_sampler_t::gibbs_sampler_t(mixture_model_t& dpm,
                                  gibbs_state_t& state,
                                  const indexer_t& indexer,
