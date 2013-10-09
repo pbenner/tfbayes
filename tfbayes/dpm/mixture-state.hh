@@ -26,6 +26,7 @@
 #include <map>
 #include <vector>
 
+#include <tfbayes/dpm/clonable.hh>
 #include <tfbayes/dpm/cluster.hh>
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/dpm/datatypes.hh>
@@ -36,11 +37,15 @@
 // The cluster manager has a list of clusters and keeps track which of
 // them are used. If needed it allocates more free clusters.
 
-class mixture_state_t : public Observer<cluster_event_t> {
+class mixture_state_t : public Observer<cluster_event_t>, public clonable {
 public:
          mixture_state_t(const data_t<cluster_tag_t>& cluster_assignments);
          mixture_state_t(const mixture_state_t& cm);
         ~mixture_state_t();
+
+        mixture_state_t* clone() const;
+
+        friend void swap(mixture_state_t& first, mixture_state_t& second);
 
         // iterators
         ////////////////////////////////////////////////////////////////////////
@@ -61,6 +66,8 @@ public:
         __inline__       cluster_t& operator[](cluster_tag_t c)            { return *clusters[c]; }
         __inline__ const cluster_t& operator[](cluster_tag_t c)      const { return *clusters[c]; }
         __inline__   cluster_tag_t  operator[](const index_i& index) const { return  cluster_assignments()[index]; }
+
+        mixture_state_t& operator=(const mixture_state_t& mixture_state);
 
         // methods
         ////////////////////////////////////////////////////////////////////////

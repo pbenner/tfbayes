@@ -26,20 +26,10 @@
 
 #include <tfbayes/dpm/mixture-state.hh>
 
-class state_t : public mixture_state_t, public clonable {
-public:
-        state_t(const data_t<cluster_tag_t>& cluster_assignments)
-                : mixture_state_t(cluster_assignments) {}
-
-        virtual ~state_t() {}
-
-        state_t* clone() const = 0;
-};
-
-class gibbs_state_t : public state_t {
+class gibbs_state_t : public mixture_state_t {
 public:
         gibbs_state_t(const data_t<cluster_tag_t>& cluster_assignments)
-                : state_t(cluster_assignments) {}
+                : mixture_state_t(cluster_assignments) {}
 
         gibbs_state_t* clone() const = 0;
 

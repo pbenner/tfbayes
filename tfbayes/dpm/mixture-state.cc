@@ -73,6 +73,31 @@ mixture_state_t::mixture_state_t(const mixture_state_t& cm)
         }
 }
 
+mixture_state_t*
+mixture_state_t::clone() const
+{
+        return new mixture_state_t(*this);
+}
+
+void swap(mixture_state_t& first, mixture_state_t& second)
+{
+        swap(first.clusters,             second.clusters);
+        swap(first.used_clusters,        second.used_clusters);
+        swap(first.free_clusters,        second.free_clusters);
+        swap(first.used_clusters_size,   second.used_clusters_size);
+        swap(first.free_clusters_size,   second.free_clusters_size);
+        swap(first.baseline_models,      second.baseline_models);
+        swap(first._cluster_assignments, second._cluster_assignments);
+}
+
+mixture_state_t&
+mixture_state_t::operator=(const mixture_state_t& mixture_state)
+{
+        mixture_state_t tmp(mixture_state);
+        swap(*this, tmp);
+        return *this;
+}
+
 // add a cluster with specific model which will
 // not be destructible (for other components of the mixture model)
 // and not included in the baseline measures
