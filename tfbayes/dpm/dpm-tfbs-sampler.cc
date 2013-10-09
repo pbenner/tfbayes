@@ -49,6 +49,11 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
         assert(options.initial_temperature >= 1.0);
 }
 
+dpm_tfbs_sampler_t::~dpm_tfbs_sampler_t()
+{
+        delete(_command_queue);
+}
+
 dpm_tfbs_sampler_t*
 dpm_tfbs_sampler_t::clone() const {
         return new dpm_tfbs_sampler_t(*this);
@@ -461,8 +466,6 @@ dpm_tfbs_pmcmc_t::_stop_server() {
                 remove(_socket_file.c_str());
         }
 }
-
-#include <fstream>
 
 void
 dpm_tfbs_pmcmc_t::save(const string& filename) const

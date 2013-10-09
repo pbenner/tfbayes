@@ -172,22 +172,15 @@ class sequence_data_t : public data_t<T>
 {
 public:
         sequence_data_t() : _data() {
-                std::cout << "creating sequence data at " << this << std::endl;
         }
         sequence_data_t(const std::vector<size_t> n, const T init) : _data() {
-                std::cout << "creating sequence data at " << this << std::endl;
                 for (size_t i = 0; i < n.size(); i++) {
                         _data.push_back(std::vector<T>(n[i], init));
                 }
         }
-        sequence_data_t(const sequence_data_t& sequence_data) : _data(sequence_data._data) {
-                std::cout << "copying sequence data at " << this << std::endl;
-        }
         sequence_data_t(const std::vector<std::vector<T> >& data) : _data(data) {
-                std::cout << "copying sequence data at " << this << std::endl;
         }
         virtual ~sequence_data_t() {
-                std::cout << "deleting sequence data at " << this << std::endl;
         }
 
         virtual sequence_data_t* clone() const {

@@ -60,7 +60,6 @@ gibbs_sampler_t::gibbs_sampler_t(const gibbs_sampler_t& sampler)
 
 gibbs_sampler_t::~gibbs_sampler_t()
 {
-        delete(_state);
         delete(_dpm);
 }
 

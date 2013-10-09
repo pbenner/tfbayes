@@ -273,5 +273,7 @@ int main(int argc, char *argv[])
 
         run_dpm(phylogenetic_data_file, fasta_alignment_file);
 
+        __dpm_free__();
+
         return 0;
 }

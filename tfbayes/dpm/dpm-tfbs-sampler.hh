@@ -41,6 +41,8 @@ public:
                 save_queue_t<std::string>& output_queue,
                 const sequence_data_t<data_tfbs_t::code_t>& phylogenetic_data);
 
+        ~dpm_tfbs_sampler_t();
+
         // after sampling this function locally optimizes the current state
         bool optimize(cluster_t& cluster);
         void optimize();
