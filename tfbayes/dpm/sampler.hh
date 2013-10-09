@@ -1,4 +1,4 @@
-/* Copyright (C) 2011, 2012 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,28 +31,51 @@
 
 class sampler_t : public clonable {
 public:
+        sampler_t(const std::string& name = "")
+                : _name(name) { }
+        sampler_t(const sampler_t& sampler)
+                : _name(sampler._name) { }
+
+        friend void swap(sampler_t& first, sampler_t& second) {
+                std::swap(first._name, second._name);
+        }
+
         virtual void sample(size_t n, size_t burnin) = 0;
         virtual const sampling_history_t& sampling_history() const = 0;
-        virtual std::string name() const { return std::string(); }
+        virtual const std::string& name() const { return _name; }
+        virtual       std::string& name()       { return _name; }
 protected:
+        std::string _name;
 };
 
 class gibbs_sampler_t : public sampler_t {
 public:
-         gibbs_sampler_t(const indexer_t& indexer,
-                         const std::string name = "");
+         gibbs_sampler_t(const indexer_t& indexer);
          gibbs_sampler_t(mixture_model_t& dpm,
-                         gibbs_state_t& state,
                          const indexer_t& indexer,
                          const std::string name = "");
          gibbs_sampler_t(const gibbs_sampler_t& sampler);
         ~gibbs_sampler_t();
 
+        friend void swap(gibbs_sampler_t& first, gibbs_sampler_t& second);
+
         gibbs_sampler_t* clone() const;
 
+        // operators
+        ////////////////////////////////////////////////////////////////////////
+        gibbs_sampler_t& operator=(const gibbs_sampler_t& gibbs_sampler);
+
+        // methods
+        ////////////////////////////////////////////////////////////////////////
         void sample(size_t n, size_t burnin);
-        const sampling_history_t& sampling_history() const;
-        std::string name() const;
+
+        // access methods
+        ////////////////////////////////////////////////////////////////////////
+        virtual const sampling_history_t& sampling_history() const;
+        virtual const mixture_model_t& dpm() const;
+        virtual       mixture_model_t& dpm();
+        virtual const gibbs_state_t& state() const;
+        virtual       gibbs_state_t& state();
 
 protected:
         // private methods
@@ -62,13 +85,10 @@ protected:
         virtual void   _update_sampling_history(size_t switches);
         // the mixture model
         mixture_model_t* _dpm;
-        std::string _name;
 
-        gibbs_state_t* _state;
         const indexer_t* _indexer;
 
         // gibbs sampler history
-        size_t _sampling_steps;
         sampling_history_t _sampling_history;
 };
 

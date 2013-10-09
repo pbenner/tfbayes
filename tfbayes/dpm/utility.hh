@@ -32,6 +32,15 @@ template<typename D>
 class save_queue_t
 {
 public:
+        save_queue_t& operator=(const save_queue_t& save_queue) {
+                save_queue_t tmp(save_queue);
+                swap(*this, tmp);
+        }
+
+        friend void swap(save_queue_t& first, save_queue_t& second) {
+                std::swap(first._queue, second._queue);
+        }
+
         void push(const D& data) {
                 boost::mutex::scoped_lock lock(_mutex);
                 _queue.push(data);
@@ -56,7 +65,7 @@ public:
                 boost::mutex::scoped_lock lock(_mutex);
                 _queue.pop();
         }
-private:
+protected:
         std::queue<D> _queue;
         mutable boost::mutex _mutex;
 };

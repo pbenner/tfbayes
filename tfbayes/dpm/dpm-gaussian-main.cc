@@ -47,7 +47,7 @@ void sample(
 
         data_gaussian_t* _data    = new data_gaussian_t(cluster, (size_t)samples, Sigma, _pi->vec);
         dpm_gaussian_t*  _gdpm    = new dpm_gaussian_t(alpha, Sigma, Sigma_0, mu_0, *_data);
-        gibbs_sampler_t* _sampler = new gibbs_sampler_t(*_gdpm, *_gdpm, *_data);
+        gibbs_sampler_t* _sampler = new gibbs_sampler_t(*_gdpm, *_data);
 
         gsl_matrix_free(Sigma);
         gsl_matrix_free(Sigma_0);

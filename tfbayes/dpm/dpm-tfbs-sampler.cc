@@ -32,20 +32,17 @@ using namespace boost::asio::local;
 dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
         const tfbs_options_t& options,
         const dpm_tfbs_t& dpm_tfbs,
-        const indexer_t& indexer,
-        const string name,
-        const sequence_data_t<data_tfbs_t::code_t>& phylogenetic_data,
+        const data_tfbs_t& data,
         save_queue_t<string>& output_queue)
         :
-        gibbs_sampler_t  (indexer, name),
-        phylogenetic_data(&phylogenetic_data),
+        gibbs_sampler_t  (data),
+        phylogenetic_data(&data),
         _output_queue    (&output_queue),
         _t0              (options.initial_temperature)
 {
         assert(options.initial_temperature >= 1.0);
 
-        gibbs_sampler_t::_dpm   = dpm_tfbs.clone();
-        gibbs_sampler_t::_state = &dpm().state();
+        gibbs_sampler_t::_dpm = dpm_tfbs.clone();
 }
 
 dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(const dpm_tfbs_sampler_t& sampler)
@@ -57,6 +54,15 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(const dpm_tfbs_sampler_t& sampler)
 
 dpm_tfbs_sampler_t::~dpm_tfbs_sampler_t()
 {
+}
+
+void
+swap(dpm_tfbs_sampler_t& first, dpm_tfbs_sampler_t& second) {
+        swap(static_cast<gibbs_sampler_t&>(first), static_cast<gibbs_sampler_t&>(second));
+        swap(first.phylogenetic_data, second.phylogenetic_data);
+        swap(first._command_queue,    second._command_queue);
+        swap(first._output_queue,     second._output_queue);
+        swap(first._t0,               second._t0);
 }
 
 dpm_tfbs_sampler_t*
@@ -109,7 +115,7 @@ dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp, const
         ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
         cluster_tag_t old_cluster_tag = dpm().state()[index];
-        _state->remove(index, old_cluster_tag);
+        state().remove(index, old_cluster_tag);
         size_t components = dpm().mixture_components() + dpm().baseline_components();
         double log_weights[components];
         cluster_tag_t cluster_tags[components];
@@ -205,11 +211,11 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp, const b
         ////////////////////////////////////////////////////////////////////////
         // print some information to stdout
         flockfile(stdout);
-        if (_state[new_cluster_tag].size() != 0) {
+        if (state()[new_cluster_tag].size() != 0) {
                 cout << _name << ": "
                      << "cluster " << old_cluster_tag
                      << " merged into cluster " << new_cluster_tag
-                     << " (" << _state[new_cluster_tag].size()
+                     << " (" << state()[new_cluster_tag].size()
                      << "+" << range_set.size() << ")." << endl;
         }
         fflush(stdout);
@@ -242,7 +248,7 @@ dpm_tfbs_sampler_t::_block_sample(const double temp, const bool optimize)
         // go through the list of used clusters and if they are still
         // used then generate a block sample
         for (vector<cluster_tag_t>::const_iterator it = used_clusters.begin(); it != used_clusters.end(); it++) {
-                cluster_t& cluster = (*_state)[*it];
+                cluster_t& cluster = state()[*it];
                 if (cluster.size() != 0) {
                         _block_sample(cluster, temp, optimize);
                 }
@@ -428,15 +434,12 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
           _bt(NULL)
 {
         const dpm_tfbs_t dpm_tfbs(options, _data, _alignment_set);
+        const dpm_tfbs_sampler_t sampler(options, dpm_tfbs, _data, _output_queue);
 
         for (size_t i = 0; i < _size; i++) {
                 std::stringstream ss; ss << "Sampler " << i+1;
-                _population[i] = new dpm_tfbs_sampler_t(options,
-                                                        dpm_tfbs,
-                                                        _data,
-                                                        ss.str(),
-                                                        _data,
-                                                        _output_queue);
+                _population[i] = sampler.clone();
+                operator[](i).name() = ss.str();
         }
         _start_server();
 }

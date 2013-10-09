@@ -34,9 +34,7 @@ public:
         dpm_tfbs_sampler_t(
                 const tfbs_options_t& options,
                 const dpm_tfbs_t& dpm,
-                const indexer_t& indexer,
-                const std::string name,
-                const sequence_data_t<data_tfbs_t::code_t>& phylogenetic_data,
+                const data_tfbs_t& data,
                 save_queue_t<std::string>& output_queue
                 );
          dpm_tfbs_sampler_t(const dpm_tfbs_sampler_t& sampler);
@@ -44,6 +42,8 @@ public:
         ~dpm_tfbs_sampler_t();
 
         dpm_tfbs_sampler_t* clone() const;
+
+        friend void swap(dpm_tfbs_sampler_t& first, dpm_tfbs_sampler_t& second);
 
         // operators
         ////////////////////////////////////////////////////////////////////////
@@ -56,10 +56,10 @@ public:
 
         // access methods
         ////////////////////////////////////////////////////////////////////////
-              save_queue_t<command_t*>& command_queue();
         const save_queue_t<command_t*>& command_queue() const;
-              dpm_tfbs_t& dpm();
+              save_queue_t<command_t*>& command_queue();
         const dpm_tfbs_t& dpm() const;
+              dpm_tfbs_t& dpm();
 
         // auxiliary types
         ////////////////////////////////////////////////////////////////////////
@@ -84,7 +84,7 @@ protected:
         save_queue_t<std::string>* _output_queue;
 
         // initial temperature for simulated annealing
-        const double _t0;
+        double _t0;
 };
 
 #include <pmcmc.hh>
