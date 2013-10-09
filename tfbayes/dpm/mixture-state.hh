@@ -93,4 +93,6 @@ protected:
         data_t<cluster_tag_t>* _cluster_assignments;
 };
 
+std::ostream& operator<< (std::ostream& o, const mixture_state_t& state);
+
 #endif /* MIXTURE_STATE_HH */

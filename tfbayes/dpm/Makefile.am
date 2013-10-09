@@ -71,7 +71,6 @@ libtfbayes_dpm_la_SOURCES =		\
 	pmcmc.hh			\
 	sampler.cc			\
 	sampler.hh			\
-	state.cc			\
 	state.hh			\
 	statistics.hh			\
 	utility.hh

@@ -58,13 +58,6 @@ public:
 
         bool valid_tfbs_position(const index_i& index) const;
 
-        void print(std::ostream& o) const {
-                o << "(" << size() << "): ";
-                for (const_iterator it = begin(); it != end(); it++) {
-                        o << **it << " ";
-                }
-        }
-
         // access to cluster assignments, the data type might be
         // different in child classes, so make this virtual
         virtual sequence_data_t<cluster_tag_t>& cluster_assignments() {
