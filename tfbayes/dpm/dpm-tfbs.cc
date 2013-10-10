@@ -22,11 +22,6 @@
 #include <sstream>
 #include <string.h>
 
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_linalg.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_blas.h>
-
 #include <tfbayes/dpm/dpm-tfbs.hh>
 #include <tfbayes/dpm/statistics.hh>
 #include <tfbayes/utility/logarithmetic.h>

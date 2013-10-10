@@ -25,6 +25,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 #include <tfbayes/dpm/index.hh>
 #include <tfbayes/dpm/datatypes.hh>
@@ -148,8 +149,17 @@ public:
                 return new data_t(*this);
         }
 
+        friend void swap(data_t<T>& first, data_t<T>& second) {
+                std::swap(first._data, second._data);
+        }
+
         friend std::ostream& operator<< <> (std::ostream& o, const data_t<T>& sd);
 
+        virtual data_t& operator=(const data_t& data) {
+                data_t<T> tmp(data);
+                swap(*this, tmp);
+                return *this;
+        }
         virtual const_iterator_t<T> operator[](const range_t& range) const {
                 return const_iterator_t<T>(*this, range.index(), range.length());
         }
@@ -187,10 +197,19 @@ public:
                 return new sequence_data_t(*this);
         }
 
+        friend void swap(sequence_data_t<T>& first, sequence_data_t<T>& second) {
+                std::swap(first._data, second._data);
+        }
+
         friend std::ostream& operator<< <> (std::ostream& o, const sequence_data_t<T>& sd);
 
         virtual void push_back(const std::vector<T>& sequence) {
                 _data.push_back(sequence);
+        }
+        virtual sequence_data_t& operator=(const data_t<T>& data) {
+                sequence_data_t<T> tmp(static_cast<const sequence_data_t<T>&>(data));
+                swap(*this, tmp);
+                return *this;
         }
         virtual const_iterator_t<T> operator[](const range_t& range) const {
                 return const_iterator_t<T>(*this, range.index(), range.length());

@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@
 
 /* data_tfbs_t is the container for the data that provides some basic
  * operations like indexing and iteration */
-class data_tfbs_t : public indexer_t, public sequence_data_t<__CODE_TYPE__> {
+class data_tfbs_t : public sequence_data_t<__CODE_TYPE__>, public indexer_t {
 public:
         // typedefs
         ////////////////////////////////////////////////////////////////////////
@@ -55,6 +55,22 @@ public:
          data_tfbs_t(const data_tfbs_t& data);
         ~data_tfbs_t();
 
+        friend void swap(data_tfbs_t& first, data_tfbs_t& second) {
+                swap(static_cast<sequence_data_t<__CODE_TYPE__>&>(first),
+                     static_cast<sequence_data_t<__CODE_TYPE__>&>(second));
+                std::swap(first.indices,          second.indices);
+                std::swap(first.sampling_indices, second.sampling_indices);
+                std::swap(first._n_sequences,     second._n_sequences);
+                std::swap(first._elements,        second._elements);
+        }
+
+        // operators
+        ////////////////////////////////////////////////////////////////////////
+        virtual data_tfbs_t& operator=(const data_t<__CODE_TYPE__>& data) {
+                data_tfbs_t tmp(static_cast<const data_tfbs_t&>(data));
+                swap(*this, tmp);
+                return *this;
+        }
         // iterators
         ////////////////////////////////////////////////////////////////////////
 
