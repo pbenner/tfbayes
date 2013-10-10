@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,11 +24,12 @@
 
 #include <vector>
 
+#include <tfbayes/dpm/sampling-history.hh>
 #include <tfbayes/dpm/sampler.hh>
 
 class population_mcmc_t : public sampler_t {
 public:
-        population_mcmc_t(size_t n);
+        population_mcmc_t(size_t n, const sampling_history_t& history);
         population_mcmc_t(const population_mcmc_t& pmcmc);
         virtual ~population_mcmc_t();
 

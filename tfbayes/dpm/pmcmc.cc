@@ -30,7 +30,7 @@
 
 using namespace std;
 
-population_mcmc_t::population_mcmc_t(size_t n)
+population_mcmc_t::population_mcmc_t(size_t n, const sampling_history_t& history)
         : _population(n, NULL),
           _size(n)
 {

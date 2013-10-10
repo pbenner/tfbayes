@@ -425,7 +425,7 @@ dpm_tfbs_sampler_t::optimize() {
 dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
         const tfbs_options_t& options,
         const sampling_history_t& history)
-        : population_mcmc_t(options.population_size),
+        : population_mcmc_t(options.population_size, history),
           _options(options),
           _data(options.phylogenetic_file, options.tfbs_length),
           _alignment_set(options.alignment_file),
@@ -437,8 +437,9 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
         const dpm_tfbs_sampler_t sampler(options, dpm_tfbs, _data, _output_queue);
 
         for (size_t i = 0; i < _size; i++) {
-                std::stringstream ss; ss << "Sampler " << i+1;
                 _population[i] = sampler.clone();
+                std::stringstream ss;
+                ss << "Sampler " << i+1;
                 operator[](i).name() = ss.str();
         }
         _start_server();
