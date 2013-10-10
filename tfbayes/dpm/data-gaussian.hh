@@ -31,12 +31,31 @@
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/dpm/indexer.hh>
 
-class data_gaussian_t : public indexer_t, public data_t<std::vector<double> > {
+class data_gaussian_t : public data_t<std::vector<double> >, public indexer_t {
 public:
          data_gaussian_t(size_t cluster, size_t samples, gsl_matrix* Sigma, const double* pi);
          data_gaussian_t(const data_gaussian_t& data);
         ~data_gaussian_t();
 
+        friend void swap(data_gaussian_t& first, data_gaussian_t& second) {
+                swap(static_cast<data_t<std::vector<double> >&>(first),
+                     static_cast<data_t<std::vector<double> >&>(second));
+                std::swap(first.indices,          second.indices);
+                std::swap(first.sampling_indices, second.sampling_indices);
+                std::swap(first._elements,        second._elements);
+                std::swap(first._length,          second._length);
+                std::swap(first._cluster,         second._cluster);
+                std::swap(first._mu,              second._mu);
+                std::swap(first. _original_cluster_assignments,
+                          second._original_cluster_assignments);
+        }
+        // operators
+        ////////////////////////////////////////////////////////////////////////
+        virtual data_gaussian_t& operator=(const data_t<std::vector<double> >& data) {
+                data_gaussian_t tmp(static_cast<const data_gaussian_t&>(data));
+                swap(*this, tmp);
+                return *this;
+        }
         // iterators
         ////////////////////////////////////////////////////////////////////////
         iterator begin() { return indices.begin(); }
@@ -62,9 +81,9 @@ private:
         std::vector<index_i*> indices;
         std::vector<index_i*> sampling_indices;
 
-        const size_t _elements;
-        const size_t _length;
-        const size_t _cluster;
+        size_t _elements;
+        size_t _length;
+        size_t _cluster;
 
         // means for generating samples
         gsl_matrix* _mu;
