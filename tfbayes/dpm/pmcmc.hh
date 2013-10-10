@@ -24,12 +24,12 @@
 
 #include <vector>
 
-#include <tfbayes/dpm/sampling-history.hh>
+#include <tfbayes/dpm/dpm-sampling-history.hh>
 #include <tfbayes/dpm/sampler.hh>
 
 class population_mcmc_t : public sampler_t {
 public:
-        population_mcmc_t(size_t n, const sampling_history_t& history);
+        population_mcmc_t(size_t n, const sampling_history_t& history = sampling_history_t());
         population_mcmc_t(const population_mcmc_t& pmcmc);
         virtual ~population_mcmc_t();
 
@@ -50,6 +50,7 @@ public:
         size_t size() const;
 
         const sampling_history_t& sampling_history() const;
+              sampling_history_t& sampling_history();
 
 protected:
         std::vector<sampler_t*> _population;

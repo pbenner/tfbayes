@@ -32,22 +32,11 @@ using namespace std;
 // Gibbs Sampler
 ////////////////////////////////////////////////////////////////////////////////
 
-gibbs_sampler_t::gibbs_sampler_t(const indexer_t& indexer)
-        : _indexer(&indexer)
-{
-        // for sampling statistics
-        _sampling_history.switches.   push_back(vector<double>());
-        _sampling_history.likelihood. push_back(vector<double>());
-        _sampling_history.posterior.  push_back(vector<double>());
-        _sampling_history.components. push_back(vector<double>());
-        _sampling_history.temperature.push_back(vector<double>());
-}
-
-gibbs_sampler_t::gibbs_sampler_t(mixture_model_t& dpm,
+gibbs_sampler_t::gibbs_sampler_t(const mixture_model_t& dpm,
                                  const indexer_t& indexer,
                                  const string name)
         : sampler_t(name),
-          _dpm(&dpm),
+          _dpm(dpm.clone()),
           _indexer(&indexer)
 {
         // for sampling statistics
@@ -145,6 +134,11 @@ gibbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
 
 const sampling_history_t&
 gibbs_sampler_t::sampling_history() const {
+        return _sampling_history;
+}
+
+sampling_history_t&
+gibbs_sampler_t::sampling_history() {
         return _sampling_history;
 }
 

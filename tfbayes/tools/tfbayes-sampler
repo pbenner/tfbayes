@@ -116,6 +116,7 @@ def __main__():
         if o in ("-s", "--save"):
             sampler_config.save = a
         if o == "--resume":
+            sys.stderr.write("Resuming from file `%s'.\n" % a)
             parse_results_config(a, results_config)
         if o == "--samples":
             tmp = map(int, a.split(":"))

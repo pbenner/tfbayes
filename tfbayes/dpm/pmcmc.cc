@@ -32,9 +32,33 @@ using namespace std;
 
 population_mcmc_t::population_mcmc_t(size_t n, const sampling_history_t& history)
         : _population(n, NULL),
-          _size(n)
+          _size(n),
+          _sampling_history(history)
 {
         assert(n >= 1);
+
+        if (_sampling_history.switches.size() == 0) {
+                _sampling_history.switches = matrix<double>(n, 0);
+        }
+        if (_sampling_history.likelihood.size() == 0) {
+                _sampling_history.likelihood = matrix<double>(n, 0);
+        }
+        if (_sampling_history.posterior.size() == 0) {
+                _sampling_history.posterior = matrix<double>(n, 0);
+        }
+        if (_sampling_history.components.size() == 0) {
+                _sampling_history.components = matrix<double>(n, 0);
+        }
+        if (_sampling_history.temperature.size() == 0) {
+                _sampling_history.temperature = matrix<double>(n, 0);
+        }
+
+        assert(_sampling_history.switches   .size() == n);
+        assert(_sampling_history.likelihood .size() == n);
+        assert(_sampling_history.posterior  .size() == n);
+        assert(_sampling_history.components .size() == n);
+        assert(_sampling_history.temperature.size() == n);
+        assert(_sampling_history.temperature.size() == n);
 }
 
 population_mcmc_t::population_mcmc_t(const population_mcmc_t& pmcmc)
@@ -77,15 +101,28 @@ swap(population_mcmc_t& first, population_mcmc_t& second) {
 void
 population_mcmc_t::update_sampling_history()
 {
-        // reset sampling history
-        _sampling_history = sampling_history_t();
         // get sampling histories from population
         for (size_t i = 0; i < _size; i++) {
-                _sampling_history.switches   .push_back(_population[i]->sampling_history().switches   [0]);
-                _sampling_history.likelihood .push_back(_population[i]->sampling_history().likelihood [0]);
-                _sampling_history.posterior  .push_back(_population[i]->sampling_history().posterior  [0]);
-                _sampling_history.components .push_back(_population[i]->sampling_history().components [0]);
-                _sampling_history.temperature.push_back(_population[i]->sampling_history().temperature[0]);
+                _sampling_history.switches[i].insert(
+                        _sampling_history.switches[i].end(),
+                        _population[i]->sampling_history().switches[0].begin(),
+                        _population[i]->sampling_history().switches[0].end());
+                _sampling_history.likelihood[i].insert(
+                        _sampling_history.likelihood[i].end(),
+                        _population[i]->sampling_history().likelihood[0].begin(),
+                        _population[i]->sampling_history().likelihood[0].end());
+                _sampling_history.posterior[i].insert(
+                        _sampling_history.posterior[i].end(),
+                        _population[i]->sampling_history().posterior[0].begin(),
+                        _population[i]->sampling_history().posterior[0].end());
+                _sampling_history.components[i].insert(
+                        _sampling_history.components[i].end(),
+                        _population[i]->sampling_history().components[0].begin(),
+                        _population[i]->sampling_history().components[0].end());
+                _sampling_history.temperature[i].insert(
+                        _sampling_history.temperature[i].end(),
+                        _population[i]->sampling_history().temperature[0].begin(),
+                        _population[i]->sampling_history().temperature[0].end());
         }
         for (size_t j = 0; j < _population[0]->sampling_history().partitions.size(); j++) {
                 for (size_t i = 0; i < _size; i++) {
@@ -93,6 +130,10 @@ population_mcmc_t::update_sampling_history()
                         _sampling_history.partitions.push_back(
                                 _population[i]->sampling_history().partitions[j]);
                 }
+        }
+        // reset sampling history
+        for (size_t i = 0; i < _size; i++) {
+                _population[i]->sampling_history() = sampling_history_t();
         }
 }
 
@@ -149,6 +190,11 @@ population_mcmc_t::sample(size_t n, size_t burnin)
 
 const sampling_history_t&
 population_mcmc_t::sampling_history() const {
+        return _sampling_history;
+}
+
+sampling_history_t&
+population_mcmc_t::sampling_history() {
         return _sampling_history;
 }
 

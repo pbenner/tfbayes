@@ -35,14 +35,12 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
         const data_tfbs_t& data,
         save_queue_t<string>& output_queue)
         :
-        gibbs_sampler_t  (data),
+        gibbs_sampler_t  (dpm_tfbs, data),
         phylogenetic_data(&data),
         _output_queue    (&output_queue),
         _t0              (options.initial_temperature)
 {
         assert(options.initial_temperature >= 1.0);
-
-        gibbs_sampler_t::_dpm = dpm_tfbs.clone();
 }
 
 dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(const dpm_tfbs_sampler_t& sampler)
@@ -434,10 +432,25 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
           _bt(NULL)
 {
         const dpm_tfbs_t dpm_tfbs(options, _data, _alignment_set);
-        const dpm_tfbs_sampler_t sampler(options, dpm_tfbs, _data, _output_queue);
 
         for (size_t i = 0; i < _size; i++) {
-                _population[i] = sampler.clone();
+                if (history.partitions.size() == 0) {
+                        dpm_tfbs_t dpm_tfbs(options, _data, _alignment_set);
+                }
+                else
+                if (history.partitions.size() % _size == 0){
+                        const dpm_partition_t& partition = history.partitions
+                                [history.partitions.size()-i+1];
+                        dpm_tfbs_t dpm_tfbs(options, _data, _alignment_set,
+                                            partition);
+                }
+                else {
+                        cerr << "Cannot resume from previous sampling run: Number of" << endl
+                             << "partitions does not match."
+                             << endl;
+                        exit(EXIT_FAILURE);
+                }
+                _population[i] = new dpm_tfbs_sampler_t(options, dpm_tfbs, _data, _output_queue);
                 std::stringstream ss;
                 ss << "Sampler " << i+1;
                 operator[](i).name() = ss.str();

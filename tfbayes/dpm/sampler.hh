@@ -44,6 +44,7 @@ public:
 
         virtual void sample(size_t n, size_t burnin) = 0;
         virtual const sampling_history_t& sampling_history() const = 0;
+        virtual       sampling_history_t& sampling_history() = 0;
         virtual const std::string& name() const { return _name; }
         virtual       std::string& name()       { return _name; }
 protected:
@@ -52,8 +53,7 @@ protected:
 
 class gibbs_sampler_t : public sampler_t {
 public:
-         gibbs_sampler_t(const indexer_t& indexer);
-         gibbs_sampler_t(mixture_model_t& dpm,
+         gibbs_sampler_t(const mixture_model_t& dpm,
                          const indexer_t& indexer,
                          const std::string name = "");
          gibbs_sampler_t(const gibbs_sampler_t& sampler);
@@ -74,6 +74,7 @@ public:
         // access methods
         ////////////////////////////////////////////////////////////////////////
         virtual const sampling_history_t& sampling_history() const;
+        virtual       sampling_history_t& sampling_history();
         virtual const mixture_model_t& dpm() const;
         virtual       mixture_model_t& dpm();
         virtual const gibbs_state_t& state() const;
