@@ -140,7 +140,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
                         assert(valid_for_sampling(**is));
                         assert(_state[**is] == _state.bg_cluster_tag);
                         _state.remove(**is, _state.bg_cluster_tag);
-                        _state.add(**is, cluster.cluster_tag());
+                        _state.add   (**is, cluster.cluster_tag());
                 }
         }
         ////////////////////////////////////////////////////////////////////////////////

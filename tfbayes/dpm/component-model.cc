@@ -390,7 +390,7 @@ product_dirichlet_t::product_dirichlet_t(const product_dirichlet_t& distribution
         : component_model_t(distribution),
           alpha (distribution.alpha),
           counts(distribution.counts),
-          _data(distribution._data),
+          _data (distribution._data),
           _size1(distribution._size1),
           _size2(distribution._size2)
 {
