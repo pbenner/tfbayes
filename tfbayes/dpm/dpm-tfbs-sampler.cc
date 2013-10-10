@@ -431,18 +431,18 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
           _server(NULL),
           _bt(NULL)
 {
-        const dpm_tfbs_t dpm_tfbs(options, _data, _alignment_set);
-
         for (size_t i = 0; i < _size; i++) {
                 if (history.partitions.size() == 0) {
                         dpm_tfbs_t dpm_tfbs(options, _data, _alignment_set);
+                        _population[i] = new dpm_tfbs_sampler_t(options, dpm_tfbs, _data, _output_queue);
                 }
                 else
-                if (history.partitions.size() % _size == 0){
+                if (history.partitions.size() % _size == 0) {
                         const dpm_partition_t& partition = history.partitions
-                                [history.partitions.size()-i+1];
+                                [history.partitions.size()-_size+i];
                         dpm_tfbs_t dpm_tfbs(options, _data, _alignment_set,
                                             partition);
+                        _population[i] = new dpm_tfbs_sampler_t(options, dpm_tfbs, _data, _output_queue);
                 }
                 else {
                         cerr << "Cannot resume from previous sampling run: Number of" << endl
@@ -450,7 +450,6 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
                              << endl;
                         exit(EXIT_FAILURE);
                 }
-                _population[i] = new dpm_tfbs_sampler_t(options, dpm_tfbs, _data, _output_queue);
                 std::stringstream ss;
                 ss << "Sampler " << i+1;
                 operator[](i).name() = ss.str();
