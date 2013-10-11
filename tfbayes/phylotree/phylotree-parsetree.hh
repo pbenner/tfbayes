@@ -50,7 +50,7 @@ public:
         void destroy();
 
         std::list<pt_root_t*> convert(size_t drop, size_t skip) const;
-        pt_node_t*  convert(const pt_root_t* sample_tree = NULL) const;
+        pt_node_t* convert(optional<const pt_root_t&> sample_tree = optional<const pt_root_t&>()) const;
 
         void * const data;
         const nodetype_t type;

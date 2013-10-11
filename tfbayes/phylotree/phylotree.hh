@@ -29,7 +29,10 @@
 #include <ostream>
 #include <vector>
 
+#include <boost/optional.hpp>
 #include <boost/unordered_map.hpp>
+
+using boost::optional;
 
 #include <tfbayes/utility/clonable.hh>
 
@@ -50,7 +53,7 @@ public:
                   pt_node_t* right = NULL,
                   const std::string& name = "",
                   id_t id = -1);
-        pt_node_t(const pt_node_t& node);
+        explicit pt_node_t(const pt_node_t& node);
         virtual ~pt_node_t();
 
         pt_node_t* clone() const;
@@ -59,12 +62,27 @@ public:
 
         virtual pt_node_t& operator=(const pt_node_t& pt_node);
 
-        // convert a normal node to a root (and delete the old node)
-        pt_root_t& convert_to_root(pt_leaf_t& outgroup = NULL,
-                                   // if root is not null then copy ids from this tree
-                                   const pt_root_t& tree = NULL);
         bool leaf() const;
         bool root() const;
+
+        const pt_node_t& left () const {
+                return *_left;
+        }
+              pt_node_t& left () {
+                return *_left;
+        }
+        const pt_node_t& right() const {
+                return *_right;
+        }
+              pt_node_t& right() {
+                return *_right;
+        }
+        const pt_node_t& ancestor() const {
+                return *_ancestor;
+        }
+              pt_node_t& ancestor() {
+                return *_ancestor;
+        }
 
         double mutation_probability() const;
         /* scale distances in the tree by a constant factor */
@@ -76,12 +94,6 @@ public:
 
         /* distance to ancestor */
         double d;
-        /* left child */
-        pt_node_t* left;
-        /* right child */
-        pt_node_t* right;
-        /* link to ancestor */
-        pt_node_t* ancestor;
         /* name of the node */
         std::string name;
         /* number of leaves in this tree */
@@ -95,46 +107,70 @@ protected:
                                      node_map_t& node_map, nodes_t& nodes);
 
         virtual void set_id(id_t& leaf_id, id_t& node_id);
-        virtual void set_id(const pt_root_t* tree, id_t& node_id);
+        virtual void set_id(const pt_root_t& tree, id_t& node_id);
+
+        /* left child */
+        pt_node_t* _left;
+        /* right child */
+        pt_node_t* _right;
+        /* link to ancestor */
+        pt_node_t* _ancestor;
 };
 
 class pt_leaf_t : public pt_node_t {
 public:
+        pt_leaf_t();
         pt_leaf_t(double d, const std::string name = "");
         pt_leaf_t(const pt_leaf_t& leaf);
 
         pt_leaf_t* clone() const;
+
+        using pt_node_t::operator=;
 
         virtual void create_mappings(leaf_map_t& leaf_map, leaves_t& leaves,
                                      node_map_t& node_map, nodes_t& nodes);
 
 protected:
         virtual void set_id(id_t& leaf_id, id_t& node_id);
-        virtual void set_id(const pt_root_t* tree, id_t& node_id);
+        virtual void set_id(const pt_root_t& tree, id_t& node_id);
 };
 
 class pt_root_t : public pt_node_t {
 public:
-        pt_root_t(pt_node_t& left,
-                  pt_node_t& right,
-                  pt_leaf_t& outgroup = NULL,
+        pt_root_t(pt_node_t* left,
+                  pt_node_t* right,
+                  pt_leaf_t* outgroup = NULL,
                   const std::string name = "",
                   // if root is not null then copy ids from this tree
-                  const pt_root_t& tree = NULL);
-        pt_root_t(const pt_root_t& root);
-
-        virtual void destroy();
+                  optional<const pt_root_t&> tree = optional<const pt_root_t&>());
+        // convert a normal node to a root (and delete the old node)
+        pt_root_t(pt_node_t& node,
+                  pt_leaf_t* outgroup = NULL,
+                  // if root is not null then copy ids from this tree
+                  optional<const pt_root_t&> tree = optional<const pt_root_t&>());
+        explicit pt_root_t(const pt_root_t& root);
+        virtual ~pt_root_t();
 
         pt_root_t* clone() const;
 
+        friend void swap(pt_root_t& first, pt_root_t&second);
+
+        pt_root_t& operator=(const pt_root_t& pt_root);
+
         id_t get_node_id(const std::string& taxon) const;
         id_t get_leaf_id(const std::string& taxon) const;
-        bool has_outgroup() const;
 
-              pt_leaf_t& operator()(const std::string& taxon);
-        const pt_leaf_t& operator()(const std::string& taxon) const;
-              pt_leaf_t& operator()(id_t id);
-        const pt_leaf_t& operator()(id_t id) const;
+        optional<const pt_leaf_t&> outgroup() const {
+                return *_outgroup;
+        }
+        optional<      pt_leaf_t&> outgroup() {
+                return *_outgroup;
+        }
+
+        optional<      pt_leaf_t&> operator()(const std::string& taxon);
+        optional<const pt_leaf_t&> operator()(const std::string& taxon) const;
+        optional<      pt_leaf_t&> operator()(id_t id);
+        optional<const pt_leaf_t&> operator()(id_t id) const;
 
         // leaf or node name -> leaf or node
         leaf_map_t leaf_map;
@@ -143,20 +179,20 @@ public:
         leaves_t leaves;
         nodes_t nodes;
 
-        pt_leaf_t* outgroup;
-
 protected:
         virtual void create_mappings(leaf_map_t& leaf_map, leaves_t& leaves,
                                      node_map_t& node_map, nodes_t& nodes);
         virtual void create_mappings();
 
         virtual void set_id(id_t& leaf_id, id_t& node_id);
-        virtual void set_id(const pt_root_t* tree, id_t& node_id);
+        virtual void set_id(const pt_root_t& tree, id_t& node_id);
+
+        pt_leaf_t* _outgroup;
 };
 
 class newick_format {
 public:
-        newick_format(const pt_root_t* tree);
+        newick_format(const pt_root_t& tree);
         std::ostream& operator()(std::ostream& o) const;
 protected:
         const pt_root_t* tree;

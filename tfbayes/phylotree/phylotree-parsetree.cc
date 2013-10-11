@@ -64,7 +64,7 @@ pt_parsetree_t::convert(size_t drop, size_t skip) const
         list<pt_root_t*> tree_list;
         const pt_parsetree_t* pt = this;
         // this is used as the sample tree, initialize with NULL!
-        pt_root_t* tree = NULL;
+        optional<pt_root_t&> tree;
 
         // find the number of trees in the list
         for (size_t i = 0; pt != NULL; i++) {
@@ -87,8 +87,8 @@ pt_parsetree_t::convert(size_t drop, size_t skip) const
                         // convert the tree on the right which is a
                         // phylogenetic tree
                         if (n-i >= drop && i % skip == 0) {
-                                tree = static_cast<pt_root_t*>(pt->children[1]->convert(tree));
-                                tree_list.push_front(tree);
+                                tree = *static_cast<pt_root_t*>(pt->children[1]->convert(*tree));
+                                tree_list.push_front(&*tree);
                         }
                         // on the left is the tree list
                         assert(children[0]->type == TREE_LIST_N);
@@ -98,8 +98,8 @@ pt_parsetree_t::convert(size_t drop, size_t skip) const
                         assert(pt->children[0]->type == TREE_N);
                         // we only have the phylogenetic tree
                         if (n-i >= drop && i % skip == 0) {
-                                tree = static_cast<pt_root_t*>(pt->children[0]->convert(tree));
-                                tree_list.push_front(tree);
+                                tree = *static_cast<pt_root_t*>(pt->children[0]->convert(*tree));
+                                tree_list.push_front(&*tree);
                         }
                         // end loop
                         pt = NULL;
@@ -110,8 +110,10 @@ pt_parsetree_t::convert(size_t drop, size_t skip) const
 }
 
 pt_node_t*
-pt_parsetree_t::convert(const pt_root_t* sample_tree) const
+pt_parsetree_t::convert(optional<const pt_root_t&> sample_tree) const
 {
+        pt_node_t* child_left;
+        pt_node_t* child_right;
         pt_leaf_t* outgroup = NULL;
         pt_node_t* node = NULL;
 
@@ -122,9 +124,9 @@ pt_parsetree_t::convert(const pt_root_t* sample_tree) const
                         return children[0]->convert(sample_tree);
                 }
                 else {
-                        node = new pt_node_t(0.0,
-                                             children[0]->convert(sample_tree),
-                                             children[1]->convert(sample_tree));
+                        child_left  = children[0]->convert(sample_tree);
+                        child_right = children[1]->convert(sample_tree);
+                        node = new pt_node_t(0.0, child_left, child_right);
                 }
                 break;
         case NODE_N:
@@ -149,7 +151,7 @@ pt_parsetree_t::convert(const pt_root_t* sample_tree) const
                 assert(children[0]->n_children == 2);
                 outgroup = static_cast<pt_leaf_t*>(children[1]->convert(sample_tree));
                 node     = children[0]->convert(sample_tree);
-                node     = node->convert_to_root(outgroup, sample_tree);
+                node     = new pt_root_t(*node, outgroup, sample_tree);
                 break;
         case TREE_LIST_N:
                 // this shouldn't happen

@@ -240,7 +240,7 @@ public:
         ntree_t(const nedge_set_t& nedge_set,
                 const std::vector<double>& leaf_d,
                 const std::vector<std::string> leaf_names = std::vector<std::string>());
-        ntree_t(const pt_root_t* tree);
+        ntree_t(const pt_root_t& tree);
 
         // methods
         pt_root_t* export_tree() const;

@@ -25,6 +25,6 @@
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/incomplete-expression.hh>
 
-incomplete_expression_t pt_simplify(pt_root_t* node);
+incomplete_expression_t pt_simplify(const pt_root_t& node);
 
 #endif /* PHYLOTREE_SIMPLIFY_HH */

@@ -477,7 +477,7 @@ nedge_root_t::convert() const
         pt_leaf_t* outgroup = new pt_leaf_t(leaf_d(0), leaf_names(0));
 
         // construct tree
-        return new pt_root_t(tree, outgroup);
+        return new pt_root_t(*tree, outgroup);
 }
 
 // ntree_t
@@ -486,26 +486,26 @@ nedge_root_t::convert() const
 static set<size_t>
 parse_pt_node_t(
         size_t n,
-        const pt_node_t* node,
+        const pt_node_t& node,
         nedge_set_t& nedge_set,
         vector<double>& leaf_d,
         vector<string>& leaf_names)
 {
         set<size_t> s;
 
-        if (node->leaf()) {
-                s.insert(node->id);
-                leaf_d    [node->id] = node->d;
-                leaf_names[node->id] = node->name;
+        if (node.leaf()) {
+                s.insert(node.id);
+                leaf_d    [node.id] = node.d;
+                leaf_names[node.id] = node.name;
         }
         else {
-                set<size_t> s1 = parse_pt_node_t(n, node->left,  nedge_set, leaf_d, leaf_names);
-                set<size_t> s2 = parse_pt_node_t(n, node->right, nedge_set, leaf_d, leaf_names);
+                set<size_t> s1 = parse_pt_node_t(n, node.left (), nedge_set, leaf_d, leaf_names);
+                set<size_t> s2 = parse_pt_node_t(n, node.right(), nedge_set, leaf_d, leaf_names);
                 set_union(s1.begin(), s1.end(), s2.begin(), s2.end(), inserter(s, s.begin()));
                 // insert node only if edge length is greater zero
-                if (node->d > 0.0) {
+                if (node.d > 0.0) {
                         nsplit_ptr_t nsplit_ptr(new nsplit_t(n, s));
-                        nedge_set.push_back(nedge_t(nsplit_ptr, node->d));
+                        nedge_set.push_back(nedge_t(nsplit_ptr, node.d));
                 }
         }
         return s;
@@ -513,18 +513,18 @@ parse_pt_node_t(
 
 static void
 parse_pt_node_t(
-        const pt_root_t* node,
+        const pt_root_t& node,
         nedge_set_t& nedge_set,
         vector<double>& leaf_d,
         vector<string>& leaf_names)
 {
-        assert(node->has_outgroup());
+        assert(node.outgroup());
         // add outgroup
-        leaf_d    [node->outgroup->id] = node->outgroup->d;
-        leaf_names[node->outgroup->id] = node->outgroup->name;
+        leaf_d    [node.outgroup()->id] = node.outgroup()->d;
+        leaf_names[node.outgroup()->id] = node.outgroup()->name;
         // recursive calls
-        parse_pt_node_t(node->n_leaves-1, node->left,  nedge_set, leaf_d, leaf_names);
-        parse_pt_node_t(node->n_leaves-1, node->right, nedge_set, leaf_d, leaf_names);
+        parse_pt_node_t(node.n_leaves-1, node.left (),  nedge_set, leaf_d, leaf_names);
+        parse_pt_node_t(node.n_leaves-1, node.right(), nedge_set, leaf_d, leaf_names);
 }
 
 ntree_t::ntree_t(const nedge_set_t& nedge_set,
@@ -545,11 +545,11 @@ ntree_t::ntree_t(const nedge_set_t& nedge_set,
         assert(n()+1 == leaf_names.size());
 }
 
-ntree_t::ntree_t(const pt_root_t* tree)
+ntree_t::ntree_t(const pt_root_t& tree)
 {
         nedge_set_t nedge_set;
-        vector<double> leaf_d(tree->n_leaves, 0);
-        vector<string> leaf_names(tree->n_leaves, "");
+        vector<double> leaf_d(tree.n_leaves, 0);
+        vector<string> leaf_names(tree.n_leaves, "");
 
         // parse the tree
         parse_pt_node_t(tree, nedge_set, leaf_d, leaf_names);

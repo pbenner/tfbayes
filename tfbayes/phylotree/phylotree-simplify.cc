@@ -25,17 +25,17 @@
 
 using namespace std;
 
-incomplete_expression_t pt_simplify_leaf(pt_leaf_t* node) {
+incomplete_expression_t pt_simplify_leaf(const pt_leaf_t& node) {
         incomplete_expression_t expression;
         incomplete_nodeterm_t term;
-        term.incomplete().insert(node);
+        term.incomplete().insert(&node);
         expression += term;
 
         return expression;
 }
 
 incomplete_expression_t pt_simplify_root(
-        pt_node_t* node,
+        const pt_node_t& node,
         const incomplete_expression_t& expression_left,
         const incomplete_expression_t& expression_right) {
         incomplete_expression_t expression1 = expression_left*expression_right;
@@ -49,7 +49,7 @@ incomplete_expression_t pt_simplify_root(
 }
 
 incomplete_expression_t pt_simplify_node(
-        pt_node_t* node,
+        const pt_node_t& node,
         const incomplete_expression_t& expression_left,
         const incomplete_expression_t& expression_right) {
         incomplete_expression_t expression1 = expression_left*expression_right;
@@ -61,22 +61,22 @@ incomplete_expression_t pt_simplify_node(
                         expression2 += term;
                 }
                 else {
-                        expression2 += (1.0-node->mutation_probability())*term;
-                        expression2 +=      node->mutation_probability() *term.complete();
+                        expression2 += (1.0-node.mutation_probability())*term;
+                        expression2 +=      node.mutation_probability() *term.complete();
                 }
         }
         return expression2;
 }
 
-incomplete_expression_t pt_simplify_rec(pt_node_t* node) {
-        if (node->leaf()) {
-                return pt_simplify_leaf(static_cast<pt_leaf_t*>(node));
+incomplete_expression_t pt_simplify_rec(const pt_node_t& node) {
+        if (node.leaf()) {
+                return pt_simplify_leaf(static_cast<const pt_leaf_t&>(node));
         }
         else {
-                const incomplete_expression_t expression_left  = pt_simplify_rec(node->left);
-                const incomplete_expression_t expression_right = pt_simplify_rec(node->right);
+                const incomplete_expression_t expression_left  = pt_simplify_rec(node.left ());
+                const incomplete_expression_t expression_right = pt_simplify_rec(node.right());
 
-                if (node->root()) {
+                if (node.root()) {
                         return pt_simplify_root(node, expression_left, expression_right);
                 }
                 else {
@@ -85,6 +85,6 @@ incomplete_expression_t pt_simplify_rec(pt_node_t* node) {
         }
 }
 
-incomplete_expression_t pt_simplify(pt_root_t* node) {
+incomplete_expression_t pt_simplify(const pt_root_t& node) {
         return pt_simplify_rec(node);
 }
