@@ -25,11 +25,11 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 pt_node_t::pt_node_t(double d,
-                     pt_node_t* left,
-                     pt_node_t* right,
+                     pt_node_t& left,
+                     pt_node_t& right,
                      const string& name,
                      id_t id)
-        : d(d), left(left), right(right), ancestor(NULL),
+        : d(d), left(&left), right(&right), ancestor(NULL),
           name(name), id(id)
 {
         assert ((left == NULL && right == NULL) ||
@@ -50,20 +50,29 @@ pt_node_t::pt_node_t(double d,
 }
 
 pt_node_t::pt_node_t(const pt_node_t& node)
-        : d(node.d),
-          left(NULL), right(NULL),
-          ancestor(NULL),
-          name(node.name),
-          n_leaves(node.n_leaves),
-          n_nodes(node.n_nodes),
-          id(node.id)
+        : d        (node.d),
+          left     (NULL),
+          right    (NULL),
+          ancestor (NULL),
+          name     (node.name),
+          n_leaves (node.n_leaves),
+          n_nodes  (node.n_nodes),
+          id       (node.id)
 {
-        
         if (!node.leaf()) {
                 left  = node.left ->clone();
                 right = node.right->clone();
                 left ->ancestor = this;
                 right->ancestor = this;
+        }
+}
+
+void
+pt_node_t::~pt_node_t()
+{
+        if (!leaf()) {
+                left ->destroy();
+                right->destroy();
         }
 }
 
@@ -73,23 +82,32 @@ pt_node_t::clone() const
         return new pt_node_t(*this);
 }
 
-void
-pt_node_t::destroy()
+void swap(pt_node_t& first, pt_node_t&second)
 {
-        if (!leaf()) {
-                left ->destroy();
-                right->destroy();
-        }
-        delete(this);
+        std::swap(first.d,        second.d);
+        std::swap(first.left,     second.left);
+        std::swap(first.right,    second.right);
+        std::swap(first.ancestor, second.ancestor);
+        std::swap(first.name,     second.name);
+        std::swap(first.n_leaves, second.n_leaves);
+        std::swap(first.n_nodes,  second.n_nodes);
+        std::swap(first.id,       second.id);
 }
 
-pt_root_t*
-pt_node_t::convert_to_root(pt_leaf_t* outgroup,
-                           const pt_root_t* tree)
+pt_node_t& operator=(const pt_node_t& pt_node)
+{
+        pt_node_t tmp(pt_node);
+        swap(*this, pt_node);
+        return *this;
+}
+
+pt_root_t&
+pt_node_t::convert_to_root(pt_leaf_t& outgroup,
+                           const pt_root_t& tree)
 {
         pt_root_t* pt_root = new pt_root_t(left, right, outgroup, name, tree);
         delete(this);
-        return pt_root;
+        return *pt_root;
 }
 
 bool
@@ -142,7 +160,7 @@ pt_node_t::set_id(pt_node_t::id_t& leaf_id, pt_node_t::id_t& node_id)
 }
 
 void
-pt_node_t::set_id(const pt_root_t* tree, pt_node_t::id_t& node_id)
+pt_node_t::set_id(const pt_root_t& tree, pt_node_t::id_t& node_id)
 {
         id = node_id++;
         left ->set_id(tree, node_id);
@@ -247,18 +265,18 @@ void
 pt_leaf_t::set_id(const pt_root_t* tree, pt_node_t::id_t& node_id)
 {
         assert(name != "");
-        id = tree->get_leaf_id(name);
+        id = tree.get_leaf_id(name);
         assert(id != -1);
 }
 
 // pt_root_t
 ////////////////////////////////////////////////////////////////////////////////
 
-pt_root_t::pt_root_t(pt_node_t* left,
-                     pt_node_t* right,
-                     pt_leaf_t* outgroup,
+pt_root_t::pt_root_t(pt_node_t& left,
+                     pt_node_t& right,
+                     pt_leaf_t& outgroup,
                      const std::string name,
-                     const pt_root_t* tree)
+                     const pt_root_t& tree)
         : pt_node_t(-HUGE_VAL, left, right, name),
           outgroup(outgroup)
 {
@@ -400,13 +418,13 @@ pt_root_t::set_id(pt_node_t::id_t& leaf_id, pt_node_t::id_t& node_id)
 }
 
 void
-pt_root_t::set_id(const pt_root_t* tree, id_t& node_id)
+pt_root_t::set_id(const pt_root_t& tree, id_t& node_id)
 {
         // check for the outgroup and if it is available make sure
         // that it gets the first id
         if (has_outgroup()) {
                 assert(outgroup->name != "");
-                outgroup->id = tree->get_leaf_id(outgroup->name);
+                outgroup->id = tree.get_leaf_id(outgroup->name);
                 assert(outgroup->id != -1);
         }
         pt_node_t::set_id(tree, node_id);
@@ -518,14 +536,14 @@ print_newick(ostream& o, const pt_node_t* node, size_t nesting)
 }
 
 static std::ostream&
-print_newick(std::ostream& o, const pt_node_t* node)
+print_newick(std::ostream& o, const pt_node_t& node)
 {
         return print_newick(o, node, 0);
 }
 
 
-newick_format::newick_format(const pt_root_t* tree)
-        : tree(tree)
+newick_format::newick_format(const pt_root_t& tree)
+        : tree(&tree)
 { }
 
 std::ostream&
@@ -534,7 +552,7 @@ newick_format::operator()(std::ostream& o) const
         return print_newick(o, tree);
 }
 
-ostream& operator<< (ostream& o, const pt_node_t* node)
+ostream& operator<< (ostream& o, const pt_node_t& node)
 {
         print_phylotree(o, node, 0);
         return o;

@@ -38,9 +38,9 @@ __BEGIN_DECLS
 // library interface
 ////////////////////////////////////////////////////////////////////////////////
 
-pt_root_t* pt_parse_file(const char* file_name)
+pt_root_t* pt_parse_file(const std::string& filename)
 {
-        FILE* yyin = fopen(file_name, "r");
+        FILE* yyin = fopen(filename.c_str(), "r");
         if (yyin == NULL) {
                 std_err(PERR, "Could not open phylogenetic tree");
         }
@@ -163,3 +163,30 @@ void pt_free(pt_root_t* pt_root)
 }
 
 __END_DECLS
+
+// library interface
+////////////////////////////////////////////////////////////////////////////////
+
+#include <Python.h>
+
+#include <locale>
+#include <cctype>
+#include <sstream>
+
+#include <boost/python.hpp>
+#include <boost/python/def.hpp>
+#include <boost/python/iterator.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
+using namespace boost::python;
+
+BOOST_PYTHON_MODULE(dpm_tfbs_interface)
+{
+        class_<pt_node_t>("pt_node_t")
+                ;
+        class_<pt_root_t, bases<pt_node_t> >("pt_root_t", no_init)
+                ;
+        class_<pt_leaf_t, bases<pt_node_t> >("pt_leaf_t", no_init)
+                .def("__init__", make_constructor(pt_parse_file))
+                ;
+}

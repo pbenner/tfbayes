@@ -51,14 +51,18 @@ public:
                   const std::string& name = "",
                   id_t id = -1);
         pt_node_t(const pt_node_t& node);
+        virtual ~pt_node_t();
 
         pt_node_t* clone() const;
-        virtual void destroy();
+
+        friend void swap(pt_node_t& first, pt_node_t&second);
+
+        virtual pt_node_t& operator=(const pt_node_t& pt_node);
 
         // convert a normal node to a root (and delete the old node)
-        pt_root_t* convert_to_root(pt_leaf_t* outgroup = NULL,
+        pt_root_t& convert_to_root(pt_leaf_t& outgroup = NULL,
                                    // if root is not null then copy ids from this tree
-                                   const pt_root_t* tree = NULL);
+                                   const pt_root_t& tree = NULL);
         bool leaf() const;
         bool root() const;
 
@@ -79,7 +83,7 @@ public:
         /* link to ancestor */
         pt_node_t* ancestor;
         /* name of the node */
-        const std::string name;
+        std::string name;
         /* number of leaves in this tree */
         ssize_t n_leaves;
         ssize_t n_nodes;
@@ -111,12 +115,12 @@ protected:
 
 class pt_root_t : public pt_node_t {
 public:
-        pt_root_t(pt_node_t* left,
-                  pt_node_t* right,
-                  pt_leaf_t* outgroup = NULL,
+        pt_root_t(pt_node_t& left,
+                  pt_node_t& right,
+                  pt_leaf_t& outgroup = NULL,
                   const std::string name = "",
                   // if root is not null then copy ids from this tree
-                  const pt_root_t* tree = NULL);
+                  const pt_root_t& tree = NULL);
         pt_root_t(const pt_root_t& root);
 
         virtual void destroy();
@@ -127,10 +131,10 @@ public:
         id_t get_leaf_id(const std::string& taxon) const;
         bool has_outgroup() const;
 
-              pt_leaf_t* operator()(const std::string& taxon);
-        const pt_leaf_t* operator()(const std::string& taxon) const;
-              pt_leaf_t* operator()(id_t id);
-        const pt_leaf_t* operator()(id_t id) const;
+              pt_leaf_t& operator()(const std::string& taxon);
+        const pt_leaf_t& operator()(const std::string& taxon) const;
+              pt_leaf_t& operator()(id_t id);
+        const pt_leaf_t& operator()(id_t id) const;
 
         // leaf or node name -> leaf or node
         leaf_map_t leaf_map;
