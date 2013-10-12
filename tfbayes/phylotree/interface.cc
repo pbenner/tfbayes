@@ -38,31 +38,6 @@ __BEGIN_DECLS
 // library interface
 ////////////////////////////////////////////////////////////////////////////////
 
-pt_root_t* pt_parse_file(const std::string& filename)
-{
-        FILE* yyin = fopen(filename.c_str(), "r");
-        if (yyin == NULL) {
-                std_err(PERR, "Could not open phylogenetic tree");
-        }
-
-        list<pt_root_t*> tree_list = parse_tree_list(yyin);
-        assert(tree_list.size() == 1);
-        pt_root_t* pt_root = tree_list.front();
-        fclose(yyin);
-
-        return pt_root;
-}
-
-pt_node_t* pt_clone(pt_node_t* pt_node)
-{
-        return pt_node->clone();
-}
-
-void pt_destroy(pt_node_t* pt_node)
-{
-        pt_node->destroy();
-}
-
 char* pt_print(pt_root_t* pt_root)
 {
         std::ostringstream stream;
@@ -97,7 +72,7 @@ vector_t* pt_expectation(pt_root_t* pt_root, vector_t* observations, vector_t* p
         // convert observations to an std array
         vector<code_t> tmp(observations->vec, observations->vec+observations->size);
         // compute the polynomial
-        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(pt_root, tmp);
+        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(*pt_root, tmp);
 
         exponent_t<code_t, alphabet_size> alpha;
         for (size_t i = 0; i < alphabet_size; i++) {
@@ -120,7 +95,7 @@ vector_t* pt_approximate(pt_root_t* pt_root, vector_t* observations)
         // convert observations to an std array
         vector<code_t> tmp(observations->vec, observations->vec+observations->size);
         // compute the polynomial
-        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(pt_root, tmp);
+        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(*pt_root, tmp);
 
         polynomial_t<code_t, alphabet_size> variational
                 = dkl_approximate<code_t, alphabet_size>(poly);
@@ -138,7 +113,7 @@ vector_t* pt_dkl_optimize(pt_root_t* pt_root, vector_t* observations)
         // convert observations to an std array
         vector<code_t> tmp(observations->vec, observations->vec+observations->size);
         // compute the polynomial
-        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(pt_root, tmp);
+        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(*pt_root, tmp);
 
         exponent_t<code_t, alphabet_size> alpha;
         alpha[0] = 1;
@@ -159,7 +134,7 @@ vector_t* pt_dkl_optimize(pt_root_t* pt_root, vector_t* observations)
 
 void pt_free(pt_root_t* pt_root)
 {
-        pt_root->destroy();
+        delete(pt_root);
 }
 
 __END_DECLS
@@ -187,6 +162,5 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
         class_<pt_root_t, bases<pt_node_t> >("pt_root_t", no_init)
                 ;
         class_<pt_leaf_t, bases<pt_node_t> >("pt_leaf_t", no_init)
-                .def("__init__", make_constructor(pt_parse_file))
                 ;
 }

@@ -455,7 +455,7 @@ nedge_root_t::clone() const
         return new nedge_root_t(*this);
 }
 
-pt_root_t*
+pt_root_t
 nedge_root_t::convert() const
 {
         boost::tuple<pt_node_t*, nsplit_t::part_t> result =
@@ -477,7 +477,7 @@ nedge_root_t::convert() const
         pt_leaf_t* outgroup = new pt_leaf_t(leaf_d(0), leaf_names(0));
 
         // construct tree
-        return new pt_root_t(*tree, outgroup);
+        return pt_root_t(*tree, outgroup);
 }
 
 // ntree_t
@@ -572,10 +572,10 @@ ntree_t::find_edge(const nsplit_t& nsplit) const
         return _null_nedge;
 }
 
-pt_root_t*
+pt_root_t
 ntree_t::export_tree() const {
         nedge_root_t* nedge_root = new nedge_root_t(nedge_set(), leaf_d(), leaf_names());
-        pt_root_t* pt_root = nedge_root->convert();
+        pt_root_t pt_root = nedge_root->convert();
         nedge_root->destroy();
         return pt_root;
 }

@@ -53,34 +53,34 @@ public:
                   _taxon_map(taxon_map) {
                 check_lengths();
         }
-        alignment_t(const size_t length, CODE_TYPE init, const pt_root_t* tree)
-                : alignment_ancestor_t(tree->n_leaves, nucleotide_sequence_t<CODE_TYPE>()),
-                  _n_species(tree->n_leaves), _length(length) {
-                for (pt_node_t::leaves_t::const_iterator it = tree->leaves.begin(); it != tree->leaves.end(); it++) {
-                        pt_leaf_t* leaf = *it;
-                        _taxon_map[leaf->name]     = leaf->id;
-                        this->operator[](leaf->id) = nucleotide_sequence_t<CODE_TYPE>(length, init);
+        alignment_t(const size_t length, CODE_TYPE init, const pt_root_t& tree)
+                : alignment_ancestor_t(tree.n_leaves, nucleotide_sequence_t<CODE_TYPE>()),
+                  _n_species(tree.n_leaves), _length(length) {
+                for (pt_node_t::leaves_t::const_iterator it = tree.leaves.begin(); it != tree.leaves.end(); it++) {
+                        const pt_leaf_t& leaf = **it;
+                        _taxon_map[leaf.name]     = leaf.id;
+                        this->operator[](leaf.id) = nucleotide_sequence_t<CODE_TYPE>(length, init);
                 }
         }
-        alignment_t(const std::string& filename, const pt_root_t* tree)
-                : alignment_ancestor_t(tree->n_leaves, nucleotide_sequence_t<CODE_TYPE>()) {
+        alignment_t(const std::string& filename, const pt_root_t& tree)
+                : alignment_ancestor_t(tree.n_leaves, nucleotide_sequence_t<CODE_TYPE>()) {
 
                 FastaParser parser(filename);
                 std::string sequence;
 
                 // we have as many sequences in this alignment as
                 // there are leaves in the tree
-                _n_species = tree->n_leaves;
+                _n_species = tree.n_leaves;
                 // fill taxon map seperately since some species might
                 // not be present in the alignment
-                for (pt_node_t::leaves_t::const_iterator it = tree->leaves.begin();
-                     it != tree->leaves.end(); it++) {
+                for (pt_node_t::leaves_t::const_iterator it = tree.leaves.begin();
+                     it != tree.leaves.end(); it++) {
                         _taxon_map[(*it)->name] = (*it)->id;
                 }
                 // parse fasta file
                 while ((sequence = parser.read_sequence()) != "") {
                         std::string taxon  = token(parser.description()[0], '.')[0];
-                        pt_node_t::id_t id = tree->get_leaf_id(taxon);
+                        pt_node_t::id_t id = tree.get_leaf_id(taxon);
                         if (id != -1) {
                                 // there might be multiple entries for
                                 // each species, join all entries into

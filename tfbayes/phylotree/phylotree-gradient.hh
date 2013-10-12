@@ -85,20 +85,20 @@ private:
          ******************************************************************************/
 
         partial_t gradient_leaf(
-                const pt_leaf_t* leaf,
+                const pt_leaf_t& leaf,
                 const std::vector<CODE_TYPE>& observations) {
                 partial_t partial;
-                partial[observations[leaf->id]] += 1.0;
+                partial[observations[leaf.id]] += 1.0;
                 return partial;
         }
         partial_t gradient_node(
-                const pt_node_t* node,
+                const pt_node_t& node,
                 partial_t& partial_left,
                 partial_t& partial_right,
                 const std::vector<CODE_TYPE>& observations) {
 
-                double  pm_left  = 1.0-exp(-node->left ->d);
-                double  pm_right = 1.0-exp(-node->right->d);
+                double  pm_left  = 1.0-exp(-node.left ().d);
+                double  pm_right = 1.0-exp(-node.right().d);
                 double  pn_left  = 1.0-pm_left;
                 double  pn_right = 1.0-pm_right;
 
@@ -130,12 +130,12 @@ private:
                         const polynomial_t<CODE_TYPE, ALPHABET_SIZE> deri_sum_right = poly_sum(partial_right.derivatives[which]);
                         /* Gradient of sigma
                          */
-                        if (node->left == which) {
+                        if (&node.left() == which) {
                                 partial.derivatives[which][ALPHABET_SIZE] +=
                                         (dpn_left*partial_left [ALPHABET_SIZE]  + dpm_left *poly_sum_left)*
                                         (pn_right*partial_right[ALPHABET_SIZE]  +  pm_right*poly_sum_right);
                         }
-                        else if (node->right == which) {
+                        else if (&node.right() == which) {
                                 partial.derivatives[which][ALPHABET_SIZE] +=
                                         ( pn_left *partial_left [ALPHABET_SIZE] +  pm_left *poly_sum_left)*
                                         (dpn_right*partial_right[ALPHABET_SIZE] + dpm_right*poly_sum_right);
@@ -150,7 +150,7 @@ private:
                         }
                         /* Gradient of phi
                          */
-                        if (node->left == which) {
+                        if (&node.left() == which) {
                                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
                                         partial.derivatives[which][i] += dpn_left*pn_right*partial_left[ALPHABET_SIZE]*partial_right[i];
                                         partial.derivatives[which][i] += dpm_left*pn_right*poly_sum_left              *partial_right[i];
@@ -159,7 +159,7 @@ private:
                                         partial.derivatives[which][i] += dpn_left*pn_right*partial_left[i]            *partial_right[i];
                                 }
                         }
-                        else if (node->right == which) {
+                        else if (&node.right() == which) {
                                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
                                         partial.derivatives[which][i] +=  pn_left*dpn_right*partial_left[i]            *partial_right[ALPHABET_SIZE];
                                         partial.derivatives[which][i] +=  pn_left*dpm_right*partial_left[i]            *poly_sum_right;
@@ -191,14 +191,14 @@ private:
         }
 
         partial_t gradient_rec(
-                const pt_node_t* node,
+                const pt_node_t& node,
                 const std::vector<CODE_TYPE>& observations) {
-                if (node->leaf()) {
-                        return gradient_leaf(static_cast<const pt_leaf_t*>(node), observations);
+                if (node.leaf()) {
+                        return gradient_leaf(static_cast<const pt_leaf_t&>(node), observations);
                 }
                 else {
-                        partial_t partial_left  = gradient_rec(node->left,  observations);
-                        partial_t partial_right = gradient_rec(node->right, observations);
+                        partial_t partial_left  = gradient_rec(node.left (), observations);
+                        partial_t partial_right = gradient_rec(node.right(), observations);
 
                         return gradient_node(node, partial_left, partial_right, observations);
                 }

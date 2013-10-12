@@ -69,10 +69,9 @@ void test1()
         cout << ntree
              << endl;
         // print exported tree
-        pt_root_t* tree = ntree.export_tree();
+        pt_root_t tree = ntree.export_tree();
         cout << "exporting tree:" << endl
              << tree              << endl;
-        tree->destroy();
 }
 
 void test2()
@@ -152,10 +151,9 @@ void test2()
         leaf_names.push_back("leaf 9");
         ntree_t ntree(nedge_set, leaf_d, leaf_names);
         // print tree
-        pt_root_t* tree = ntree.export_tree();
+        pt_root_t tree = ntree.export_tree();
         cout << "exporting tree:" << endl
              << tree              << endl;
-        tree->destroy();
 }
 
 void test3()
@@ -334,22 +332,19 @@ void test5()
         ntree_t nt1(nedge_set1, leaf_d, leaf_names);
         ntree_t nt2(nedge_set2, leaf_d, leaf_names);
         // print tree
-        pt_root_t* t1 = nt1.export_tree();
-        pt_root_t* t2 = nt2.export_tree();
+        pt_root_t t1 = nt1.export_tree();
+        pt_root_t t2 = nt2.export_tree();
         cout << "exporting tree:" << endl;
         cout << "exporting tree:" << endl
              << t1                << endl;
         cout << "exporting tree:" << endl
              << t2                << endl;
-        t1->destroy();
-        t2->destroy();
 
         geodesic_t geodesic(nt1, nt2);
         cout << "geodesic length: " << geodesic.length() << endl;
-        pt_root_t* t3 = geodesic(1.0).export_tree();
+        pt_root_t t3 = geodesic(1.0).export_tree();
         cout << "exporting tree:" << endl
              << t3                << endl;
-        t3->destroy();
 }
 
 void test6()
@@ -418,24 +413,21 @@ void test6()
         ntree_t nt1(nedge_set1, leaf_d, leaf_names);
         ntree_t nt2(nedge_set2, leaf_d, leaf_names);
         // print tree
-        pt_root_t* t1 = nt1.export_tree();
-        pt_root_t* t2 = nt2.export_tree();
+        pt_root_t t1 = nt1.export_tree();
+        pt_root_t t2 = nt2.export_tree();
         cout << "exporting tree:" << endl
              << t1                << endl;
         cout << "exporting tree:" << endl
              << t2                << endl;
-        t1->destroy();
-        t2->destroy();
 
         cout << nt1 << endl;
         cout << nt2 << endl;
 
         geodesic_t geodesic(nt1, nt2);
         cout << "geodesic length: " << geodesic.length() << endl;
-        pt_root_t* t3 = geodesic(1.0).export_tree();
+        pt_root_t t3 = geodesic(1.0).export_tree();
         cout << "exporting tree:" << endl
              << t3                << endl;
-        t3->destroy();
 }
 
 void test7()
@@ -494,23 +486,20 @@ void test7()
         ntree_t nt1(nedge_set1, leaf_d, leaf_names);
         ntree_t nt2(nedge_set2, leaf_d, leaf_names);
         // print tree
-        pt_root_t* t1 = nt1.export_tree();
-        pt_root_t* t2 = nt2.export_tree();
+        pt_root_t t1 = nt1.export_tree();
+        pt_root_t t2 = nt2.export_tree();
         cout << "exporting tree:" << endl
              << t1                << endl;
         cout << "exporting tree:" << endl
              << t2                << endl;
-        t1->destroy();
-        t2->destroy();
 
         geodesic_t geodesic(nt1, nt2);
         cout << "npath list:" << endl
              << geodesic.npath_list();
         cout << "geodesic length: " << geodesic.length() << endl;
-        pt_root_t* t3 = geodesic(1.0).export_tree();
+        pt_root_t t3 = geodesic(1.0).export_tree();
         cout << "exporting tree:" << endl
              << t3                << endl;
-        t3->destroy();
 }
 
 void test8()
@@ -686,15 +675,13 @@ void test10()
         ntree_t nt1(nedge_set1, leaf_d, leaf_names);
         ntree_t nt2(nedge_set2, leaf_d, leaf_names);
 
-        pt_root_t* t1 = nt1.export_tree();
+        pt_root_t t1 = nt1.export_tree();
         cout << "exporting tree:" << endl
              << t1                << endl;
-        t1->destroy();
 
-        pt_root_t* t2 = nt2.export_tree();
+        pt_root_t t2 = nt2.export_tree();
         cout << "exporting tree:" << endl
              << t2                << endl;
-        t2->destroy();
 }
 
 void test11()
@@ -796,10 +783,9 @@ void test11()
         cout << "tree:" << endl
              << nt      << endl;
 
-        pt_root_t* tree = nt.export_tree();
+        pt_root_t tree = nt.export_tree();
         cout << "exporting tree:" << endl
              << tree              << endl;
-        tree->destroy();
 }
 
 void test12()
@@ -851,10 +837,9 @@ void test12()
         cout << "tree:" << endl
              << nt      << endl;
 
-        pt_root_t* tree = nt.export_tree();
+        pt_root_t tree = nt.export_tree();
         cout << "exporting tree:" << endl
              << tree              << endl;
-        tree->destroy();
 }
 
 int

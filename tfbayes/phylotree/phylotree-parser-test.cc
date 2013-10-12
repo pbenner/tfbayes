@@ -57,14 +57,14 @@ int main(void) {
         init();
 
         // parse tree
-        list<pt_root_t*> tree_list = parse_tree_list();
+        list<pt_root_t> tree_list = parse_tree_list();
         assert(tree_list.size() == 1);
-        pt_root_t* pt_root = tree_list.front();
+        pt_root_t& pt_root = tree_list.front();
 
         // random observations
-        vector<code_t> observations(pt_root->n_leaves, 0);
-        for (pt_node_t::id_t i = 0; i < pt_root->n_leaves; i++) {
-                observations[i] = rand()%alphabet_size;
+        vector<code_t> observations(pt_root.n_leaves, 0);
+        for (pt_node_t::id_t i = 0; i < pt_root.n_leaves; i++) {
+                observations[i] = rand() % alphabet_size;
         }
 
         exponent_t<code_t, alphabet_size> alpha;
@@ -114,8 +114,6 @@ int main(void) {
                 sum += exp[i];
         }
         cout << "Sum: " << sum << endl;
-
-        pt_root->destroy();
 
         return 0.0;
 }

@@ -28,17 +28,13 @@ int
 main(void)
 {
         // parse trees from file
-        list<pt_root_t*> tree_list = parse_tree_list();
+        list<pt_root_t> tree_list = parse_tree_list();
         // assert that we have two trees
         assert(tree_list.size() == 2);
 
         // convert trees
         ntree_t ntree1(tree_list.front());
         ntree_t ntree2(tree_list.back ());
-
-        // destroy trees
-        tree_list.front()->destroy();
-        tree_list.back ()->destroy();
 
         // print trees
         cout << "tree 1: " << endl << ntree1 << endl;

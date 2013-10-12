@@ -116,7 +116,7 @@ template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_metropolis_hastings_t : public clonable
 {
 public:
-        pt_metropolis_hastings_t(const pt_root_t* tree,
+        pt_metropolis_hastings_t(const pt_root_t& tree,
                                  const alignment_t<CODE_TYPE>& alignment,
                                  const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
                                  double r, double lambda,
@@ -129,7 +129,7 @@ public:
                   gamma_distribution(r, lambda),
                   acceptance_rate(acceptance_rate),
                   step(0),
-                  tree(tree->clone()) {
+                  tree(tree) {
 
                 // initialize random generator
                 struct timeval tv;
@@ -154,7 +154,7 @@ public:
                   jumping_distributions(mh.jumping_distributions),
                   acceptance_rate(mh.acceptance_rate),
                   step(mh.step),
-                  tree(mh.tree->clone())
+                  tree(mh.tree)
                 {
 
                 // initialize random generator
@@ -183,13 +183,6 @@ public:
                 for (pt_node_t::id_t id = 0; id < tree->n_nodes; id++) {
                         delete(jumping_distributions[id]);
                 }
-                // free tree samples
-                for (std::list<pt_root_t*>::const_iterator it = samples.begin();
-                     it != samples.end(); it++) {
-                        (*it)->destroy();
-                }
-                // free tree
-                tree->destroy();
         }
 
         virtual pt_metropolis_hastings_t* clone() const {
@@ -250,8 +243,8 @@ public:
                         // propose new topology
                         which = gsl_ran_bernoulli(rng, 0.5);
                         switch (which) {
-                        case 0: node->move_a(); break;
-                        case 1: node->move_b(); break;
+                        case 0: node.move_a(); break;
+                        case 1: node.move_b(); break;
                         default: break;
                         }
                 }
@@ -283,19 +276,19 @@ public:
                         node->d = d_old;
                         // if topology changed then switch it back
                         switch (which) {
-                        case 0: node->move_a(); break;
-                        case 1: node->move_b(); break;
+                        case 0: node.move_a(); break;
+                        case 1: node.move_b(); break;
                         default: break;
                         }
                         print_debug("rejected: %f\n", d_new);
-                        update_acceptance(node->id, false);
+                        update_acceptance(node.id, false);
                         return log_posterior_ref;
                 }
         }
         virtual void generate_sample() {
                 double log_posterior_ref = log_posterior();
                 // loop over nodes
-                for (pt_node_t::nodes_t::iterator it = tree->nodes.begin();
+                for (pt_node_t::nodes_t::iterator it = tree.nodes.begin();
                      it != tree->nodes.end(); it++) {
                         // skip the root
                         if ((*it)->root()) {
@@ -334,7 +327,7 @@ public:
 
         std::vector<double> acceptance;
         std::vector<double> log_posterior_history;
-        std::list<pt_root_t*> samples;
+        std::list<pt_root_t> samples;
 protected:
         const alignment_t<CODE_TYPE>& alignment;
         exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha;
@@ -347,7 +340,7 @@ protected:
         gsl_rng * rng;
         size_t step;
 
-        pt_root_t* tree;
+        pt_root_t tree;
 };
 
 #include <assert.h>
@@ -443,7 +436,7 @@ public:
                 update_history();
         }
         void delete_samples() {
-                for (typename std::list<pt_root_t*>::const_iterator is = samples.begin();
+                for (typename std::list<pt_root_t>::const_iterator is = samples.begin();
                      is != samples.end(); is++) {
                         (*is)->destroy();
                 }
@@ -478,7 +471,7 @@ public:
                 }
         }
 
-        std::list<pt_root_t*> samples;
+        std::list<pt_root_t> samples;
         std::list<std::vector<double> > log_posterior_history;
 private:
         std::vector<pt_sampler_t*> population;

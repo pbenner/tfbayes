@@ -31,17 +31,17 @@ using namespace std;
 typedef short code_t;
 
 int main(void) {
-        pt_leaf_t n9(9.0, "n9");
-        pt_leaf_t n8(8.0, "n8");
-        pt_leaf_t n7(7.0, "n7");
-        pt_leaf_t n6(6.0, "n6");
-        pt_node_t n5(5.0, &n8, &n9);
-        pt_node_t n4(4.0, &n6, &n7);
-        pt_leaf_t n3(3.0, "n3");
-        pt_node_t n2(2.0, &n4, &n5);
-        pt_root_t n1(&n2, &n3);
+        pt_leaf_t* n9 = new pt_leaf_t(9.0, "n9");
+        pt_leaf_t* n8 = new pt_leaf_t(8.0, "n8");
+        pt_leaf_t* n7 = new pt_leaf_t(7.0, "n7");
+        pt_leaf_t* n6 = new pt_leaf_t(6.0, "n6");
+        pt_node_t* n5 = new pt_node_t(5.0, n8, n9);
+        pt_node_t* n4 = new pt_node_t(4.0, n6, n7);
+        pt_leaf_t* n3 = new pt_leaf_t(3.0, "n3");
+        pt_node_t* n2 = new pt_node_t(2.0, n4, n5);
+        pt_root_t n1(n2, n3);
         vector<code_t> observations(n1.n_leaves, 0);
-        cout << &n1 << endl;
+        cout << n1 << endl;
         observations[n1("n9" )->id] = 3;
         observations[n1("n8" )->id] = 2;
         observations[n1("n7" )->id] = 1;
@@ -49,20 +49,20 @@ int main(void) {
         observations[n1("n3" )->id] = 0;
 
         leafset_t leafset1;
-        leafset1.insert(&n3);
-        leafset1.insert(&n6);
-        leafset1.insert(&n7);
-        leafset1.insert(&n8);
-        leafset1.insert(&n9);
+        leafset1.insert(n3);
+        leafset1.insert(n6);
+        leafset1.insert(n7);
+        leafset1.insert(n8);
+        leafset1.insert(n9);
 
         leafset_t leafset2;
-        leafset2.insert(&n3);
-        leafset2.insert(&n6);
+        leafset2.insert(n3);
+        leafset2.insert(n6);
 
         leafset_t leafset3;
-        leafset3.insert(&n7);
-        leafset3.insert(&n8);
-        leafset3.insert(&n9);
+        leafset3.insert(n7);
+        leafset3.insert(n8);
+        leafset3.insert(n9);
 
         polynomial_t<code_t, alphabet_size> result1;
         polynomial_t<code_t, alphabet_size> result2;

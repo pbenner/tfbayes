@@ -217,7 +217,7 @@ void insert_observations(alignment_t<code_t>& alignment, size_t i, const vector<
         }
 }
 
-void generate_tfbs_alignment(const pt_root_t* pt_root, gsl_rng * r)
+void generate_tfbs_alignment(const pt_root_t& pt_root, gsl_rng * r)
 {
         dirichlet_process_t dirichlet_process(options.d, options.alpha, r);
         vector<double> stationary;
@@ -249,7 +249,7 @@ void generate_tfbs_alignment(const pt_root_t* pt_root, gsl_rng * r)
         print_alignment(alignment);
 }
 
-void generate_simple_alignment(const pt_root_t* pt_root, gsl_rng * r)
+void generate_simple_alignment(const pt_root_t& pt_root, gsl_rng * r)
 {
         // alignment
         alignment_t<code_t> alignment(options.n, -1, pt_root);
@@ -278,15 +278,15 @@ void init() {
         srand(seed);
 }
 
-pt_root_t* parse_tree_file(const char* file_tree)
+pt_root_t parse_tree_file(const char* file_tree)
 {
         FILE* yyin = fopen(file_tree, "r");
         if (yyin == NULL) {
                 std_err(PERR, "Could not open phylogenetic tree");
         }
-        list<pt_root_t*> tree_list = parse_tree_list(yyin);
+        list<pt_root_t> tree_list = parse_tree_list(yyin);
         assert(tree_list.size() == 1);
-        pt_root_t* pt_root = tree_list.front();
+        pt_root_t pt_root = tree_list.front();
         fclose(yyin);
 
         return pt_root;
@@ -302,7 +302,7 @@ void generate_alignment(const string& model, const char* treefile)
         gsl_rng * r = gsl_rng_alloc(T);
 
         // parse tree
-        pt_root_t* pt_root = parse_tree_file(treefile);
+        pt_root_t pt_root = parse_tree_file(treefile);
 
         // switch command
         if (model == "simple") {
@@ -317,7 +317,6 @@ void generate_alignment(const string& model, const char* treefile)
         }
 
         // clean up
-        pt_root->destroy();
         gsl_rng_free (r);
 }
 

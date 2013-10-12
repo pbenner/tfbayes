@@ -130,14 +130,12 @@ void print_version(FILE *fp)
 
 list<ntree_t> parse_tree_file()
 {
-        list<pt_root_t*>  tree_list = parse_tree_list(NULL, options.drop, options.k);
-        list<ntree_t   > ntree_list;
+        list<pt_root_t>  tree_list = parse_tree_list(NULL, options.drop, options.k);
+        list<ntree_t  > ntree_list;
         // convert trees
-        for (list<pt_root_t*>::const_iterator it = tree_list.begin();
+        for (list<pt_root_t>::const_iterator it = tree_list.begin();
              it != tree_list.end(); it++) {
-                pt_root_t* pt_root = *it;
-                ntree_list.push_back(pt_root);
-                pt_root->destroy();
+                ntree_list.push_back(*it);
         }
 
         return ntree_list;
@@ -232,12 +230,11 @@ void mean(const string& command)
         }
         /* print resulting tree */
         for (list<ntree_t>::iterator it = result_list.begin(); it != result_list.end(); it++) {
-                pt_root_t* tmp = it->export_tree();
+                pt_root_t tmp = it->export_tree();
                 if (options.verbose) {
                         cerr << *it << endl;
                 }
                 cout << newick_format(tmp) << endl;
-                tmp->destroy();
         }
 
         /* Frechet variance */

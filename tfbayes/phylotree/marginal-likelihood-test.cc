@@ -33,16 +33,16 @@ typedef float code_t;
 
 void test_tree1(const exponent_t<code_t, alphabet_size> alpha) {
         cout << "Test 1:" << endl;
-        pt_leaf_t n2(1.0, "n2");
-        pt_leaf_t n3(2.0, "n3");
-        pt_root_t n1(&n2, &n3);
+        pt_leaf_t* n2 = new pt_leaf_t(1.0, "n2");
+        pt_leaf_t* n3 = new pt_leaf_t(2.0, "n3");
+        pt_root_t n1(n2, n3);
         vector<code_t> observations(n1.n_leaves, 0);
         observations[n1("n2")->id] = 1;
         observations[n1("n3")->id] = 2;
 
-        incomplete_expression_t incomplete_expression = pt_simplify(&n1);
+        incomplete_expression_t incomplete_expression = pt_simplify(n1);
         polynomial_t<code_t, alphabet_size> polynomial = pt_expand<code_t, alphabet_size>(incomplete_expression, observations);
-        //double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, alpha);
+        //double result = pt_marginal_likelihood<code_t, alphabet_size>(n1, alpha);
         double result = pt_marginal_likelihood<code_t, alphabet_size>(polynomial, alpha);
         cout << result << endl
              << "-3.0468 (correct value)"
@@ -51,14 +51,14 @@ void test_tree1(const exponent_t<code_t, alphabet_size> alpha) {
 
 void test_tree2(const exponent_t<code_t, alphabet_size> alpha) {
         cout << "Test 2:" << endl;
-        pt_leaf_t n2(1.0, "n2");
-        pt_leaf_t n3(2.0, "n3");
-        pt_root_t n1(&n2, &n3);
+        pt_leaf_t* n2 = new pt_leaf_t(1.0, "n2");
+        pt_leaf_t* n3 = new pt_leaf_t(2.0, "n3");
+        pt_root_t n1(n2, n3);
         vector<code_t> observations(n1.n_leaves, 0);
         observations[n1("n2")->id] = 1;
         observations[n1("n3")->id] = 1;
 
-        double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, observations, alpha);
+        double result = pt_marginal_likelihood<code_t, alphabet_size>(n1, observations, alpha);
         cout << result << endl
              << "-2.23056 (correct value)"
              << endl << endl;
@@ -66,17 +66,17 @@ void test_tree2(const exponent_t<code_t, alphabet_size> alpha) {
 
 void test_tree3(const exponent_t<code_t, alphabet_size> alpha) {
         cout << "Test 3:" << endl;
-        pt_leaf_t n5(2.0, "n5");
-        pt_leaf_t n4(1.0, "n4");
-        pt_leaf_t n3(1.0, "n3");
-        pt_node_t n2(0.5, &n4, &n5);
-        pt_root_t n1(&n2, &n3);
+        pt_leaf_t* n5 = new pt_leaf_t(2.0, "n5");
+        pt_leaf_t* n4 = new pt_leaf_t(1.0, "n4");
+        pt_leaf_t* n3 = new pt_leaf_t(1.0, "n3");
+        pt_node_t* n2 = new pt_node_t(0.5, n4, n5);
+        pt_root_t n1(n2, n3);
         vector<code_t> observations(n1.n_leaves, 0);
         observations[n1("n5")->id] = 1;
         observations[n1("n4")->id] = 1;
         observations[n1("n3")->id] = 2;
 
-        double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, observations, alpha);
+        double result = pt_marginal_likelihood<code_t, alphabet_size>(n1, observations, alpha);
         cout << result << endl
              << "-4.11845 (correct value)"
              << endl << endl;
@@ -84,20 +84,20 @@ void test_tree3(const exponent_t<code_t, alphabet_size> alpha) {
 
 void test_tree4(const exponent_t<code_t, alphabet_size> alpha) {
         cout << "Test 4:" << endl;
-        pt_leaf_t n7(2.0, "n7");
-        pt_leaf_t n6(1.0, "n6");
-        pt_leaf_t n5(2.0, "n5");
-        pt_leaf_t n4(1.0, "n4");
-        pt_node_t n3(0.5, &n6, &n7);
-        pt_node_t n2(0.5, &n4, &n5);
-        pt_root_t n1(&n2, &n3);
+        pt_leaf_t* n7 = new pt_leaf_t(2.0, "n7");
+        pt_leaf_t* n6 = new pt_leaf_t(1.0, "n6");
+        pt_leaf_t* n5 = new pt_leaf_t(2.0, "n5");
+        pt_leaf_t* n4 = new pt_leaf_t(1.0, "n4");
+        pt_node_t* n3 = new pt_node_t(0.5, n6, n7);
+        pt_node_t* n2 = new pt_node_t(0.5, n4, n5);
+        pt_root_t n1(n2, n3);
         vector<code_t> observations(n1.n_leaves, 0);
         observations[n1("n7")->id] = 1;
         observations[n1("n6")->id] = 1;
         observations[n1("n5")->id] = 1;
         observations[n1("n4")->id] = 1;
 
-        double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, observations, alpha);
+        double result = pt_marginal_likelihood<code_t, alphabet_size>(n1, observations, alpha);
         cout << result << endl
              << "-3.41318 (correct value)"
              << endl << endl;
@@ -105,20 +105,20 @@ void test_tree4(const exponent_t<code_t, alphabet_size> alpha) {
 
 void test_tree5(const exponent_t<code_t, alphabet_size> alpha) {
         cout << "Test 5:" << endl;
-        pt_leaf_t n7(2.0, "n7");
-        pt_leaf_t n6(1.0, "n6");
-        pt_leaf_t n5(2.0, "n5");
-        pt_leaf_t n4(1.0, "n4");
-        pt_node_t n3(0.5, &n6, &n7);
-        pt_node_t n2(0.5, &n4, &n5);
-        pt_root_t n1(&n2, &n3);
+        pt_leaf_t* n7 = new pt_leaf_t(2.0, "n7");
+        pt_leaf_t* n6 = new pt_leaf_t(1.0, "n6");
+        pt_leaf_t* n5 = new pt_leaf_t(2.0, "n5");
+        pt_leaf_t* n4 = new pt_leaf_t(1.0, "n4");
+        pt_node_t* n3 = new pt_node_t(0.5, n6, n7);
+        pt_node_t* n2 = new pt_node_t(0.5, n4, n5);
+        pt_root_t n1(n2, n3);
         vector<code_t> observations(n1.n_leaves, 0);
         observations[n1("n7")->id] = 1;
         observations[n1("n6")->id] = 1;
         observations[n1("n5")->id] = 2;
         observations[n1("n4")->id] = 3;
 
-        double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, observations, alpha);
+        double result = pt_marginal_likelihood<code_t, alphabet_size>(n1, observations, alpha);
         cout << result << endl
              << "-6.05774 (correct value)"
              << endl << endl;
@@ -126,15 +126,15 @@ void test_tree5(const exponent_t<code_t, alphabet_size> alpha) {
 
 void test_tree6(const exponent_t<code_t, alphabet_size> alpha) {
         cout << "Test 6:" << endl;
-        pt_leaf_t n9(9.0, "n9");
-        pt_leaf_t n8(8.0, "n8");
-        pt_leaf_t n7(7.0, "n7");
-        pt_leaf_t n6(6.0, "n6");
-        pt_node_t n5(5.0, &n8, &n9);
-        pt_node_t n4(4.0, &n6, &n7);
-        pt_leaf_t n3(3.0, "n3");
-        pt_node_t n2(2.0, &n4, &n5);
-        pt_root_t n1(&n2, &n3);
+        pt_leaf_t* n9 = new pt_leaf_t(9.0, "n9");
+        pt_leaf_t* n8 = new pt_leaf_t(8.0, "n8");
+        pt_leaf_t* n7 = new pt_leaf_t(7.0, "n7");
+        pt_leaf_t* n6 = new pt_leaf_t(6.0, "n6");
+        pt_node_t* n5 = new pt_node_t(5.0, n8, n9);
+        pt_node_t* n4 = new pt_node_t(4.0, n6, n7);
+        pt_leaf_t* n3 = new pt_leaf_t(3.0, "n3");
+        pt_node_t* n2 = new pt_node_t(2.0, n4, n5);
+        pt_root_t n1(n2, n3);
         vector<code_t> observations(n1.n_leaves, 0);
         observations[n1("n9")->id] = 3;
         observations[n1("n8")->id] = 2;
@@ -142,7 +142,7 @@ void test_tree6(const exponent_t<code_t, alphabet_size> alpha) {
         observations[n1("n6")->id] = 0;
         observations[n1("n3")->id] = 0;
 
-        double result = pt_marginal_likelihood<code_t, alphabet_size>(&n1, observations, alpha);
+        double result = pt_marginal_likelihood<code_t, alphabet_size>(n1, observations, alpha);
         cout << result << endl
              << "-8.1197 (correct value)"
              << endl << endl;

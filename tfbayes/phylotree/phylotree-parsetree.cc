@@ -15,9 +15,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <cstdio>
 #include <iostream>
 #include <cassert>
 #include <cstdlib>
+
+#include <boost/format.hpp>
 
 #include <tfbayes/phylotree/phylotree-parser.h>
 #include <tfbayes/phylotree/phylotree-parser.hh>
@@ -57,14 +60,12 @@ pt_parsetree_t::destroy() {
         delete(this);
 }
 
-list<pt_root_t*>
+list<pt_root_t>
 pt_parsetree_t::convert(size_t drop, size_t skip) const
 {
         size_t n = 0;
-        list<pt_root_t*> tree_list;
+        list<pt_root_t> tree_list;
         const pt_parsetree_t* pt = this;
-        // this is used as the sample tree, initialize with NULL!
-        optional<pt_root_t&> tree;
 
         // find the number of trees in the list
         for (size_t i = 0; pt != NULL; i++) {
@@ -87,8 +88,7 @@ pt_parsetree_t::convert(size_t drop, size_t skip) const
                         // convert the tree on the right which is a
                         // phylogenetic tree
                         if (n-i >= drop && i % skip == 0) {
-                                tree = *static_cast<pt_root_t*>(pt->children[1]->convert(*tree));
-                                tree_list.push_front(&*tree);
+                                tree_list.push_front(pt->children[1]->convert(tree_list));
                         }
                         // on the left is the tree list
                         assert(children[0]->type == TREE_LIST_N);
@@ -98,34 +98,52 @@ pt_parsetree_t::convert(size_t drop, size_t skip) const
                         assert(pt->children[0]->type == TREE_N);
                         // we only have the phylogenetic tree
                         if (n-i >= drop && i % skip == 0) {
-                                tree = *static_cast<pt_root_t*>(pt->children[0]->convert(*tree));
-                                tree_list.push_front(&*tree);
+                                tree_list.push_front(pt->children[0]->convert(tree_list));
                         }
                         // end loop
                         pt = NULL;
                 }
         }
-
         return tree_list;
 }
 
+pt_root_t
+pt_parsetree_t::convert(const list<pt_root_t>& tree_list) const
+{
+        assert(type == TREE_N);
+
+        assert(n_children == 2);
+        assert(children[0]->type == NODE_LIST_N);
+        assert(children[1]->type == LEAF_N);
+        // make sure that there are at least three childs
+        // attached to the root (including outgroup)
+        assert(children[0]->n_children == 2);
+        pt_leaf_t* outgroup = static_cast<pt_leaf_t*>(children[1]->convert());
+        pt_node_t* node     =                         children[0]->convert();
+        if (tree_list.begin() != tree_list.end()) {
+                return pt_root_t(*node, outgroup, *tree_list.begin());
+        }
+        else {
+                return pt_root_t(*node, outgroup);
+        }
+}
+
 pt_node_t*
-pt_parsetree_t::convert(optional<const pt_root_t&> sample_tree) const
+pt_parsetree_t::convert() const
 {
         pt_node_t* child_left;
         pt_node_t* child_right;
-        pt_leaf_t* outgroup = NULL;
         pt_node_t* node = NULL;
 
         switch (type)
         {
         case NODE_LIST_N:
                 if (n_children == 1) {
-                        return children[0]->convert(sample_tree);
+                        return children[0]->convert();
                 }
                 else {
-                        child_left  = children[0]->convert(sample_tree);
-                        child_right = children[1]->convert(sample_tree);
+                        child_left  = children[0]->convert();
+                        child_right = children[1]->convert();
                         node = new pt_node_t(0.0, child_left, child_right);
                 }
                 break;
@@ -133,7 +151,7 @@ pt_parsetree_t::convert(optional<const pt_root_t&> sample_tree) const
                 assert(n_children == 2);
                 assert(children[0]->type == NODE_LIST_N);
                 assert(children[1]->type == DISTANCE_N);
-                node    = children[0]->convert(sample_tree);
+                node    = children[0]->convert();
                 node->d = *(double *)children[1]->data;
                 break;
         case LEAF_N:
@@ -143,18 +161,9 @@ pt_parsetree_t::convert(optional<const pt_root_t&> sample_tree) const
                                       (char   *)children[0]->data);
                 break;
         case TREE_N:
-                assert(n_children == 2);
-                assert(children[0]->type == NODE_LIST_N);
-                assert(children[1]->type == LEAF_N);
-                // make sure that there are at least three childs
-                // attached to the root (including outgroup)
-                assert(children[0]->n_children == 2);
-                outgroup = static_cast<pt_leaf_t*>(children[1]->convert(sample_tree));
-                node     = children[0]->convert(sample_tree);
-                node     = new pt_root_t(*node, outgroup, sample_tree);
-                break;
         case TREE_LIST_N:
                 // this shouldn't happen
+                assert(type != TREE_N);
                 assert(type != TREE_LIST_N);
                 break;
         default:
@@ -229,9 +238,9 @@ int yylex_init   (yyscan_t* scanner);
 int yylex_destroy(yyscan_t  scanner);
 void yylex_set_input(yyscan_t scanner, FILE* file);
 
-list<pt_root_t*> parse_tree_list(FILE * file, size_t drop, size_t skip)
+list<pt_root_t> parse_tree_list(FILE * file, size_t drop, size_t skip)
 {
-        list<pt_root_t*> tree_list;
+        list<pt_root_t> tree_list;
         context_t context;
 
         // initialize lexer
@@ -256,6 +265,21 @@ list<pt_root_t*> parse_tree_list(FILE * file, size_t drop, size_t skip)
         // free AST
         context.pt_parsetree->destroy();
  
+        return tree_list;
+}
+
+list<pt_root_t> parse_tree_list(const string& filename, size_t drop, size_t skip)
+{
+        FILE* yyin = fopen(filename.c_str(), "r");
+        if (yyin == NULL) {
+                cerr << boost::format("Could not open tree file `%s'.") % filename
+                     << endl;
+                exit(EXIT_FAILURE);
+        }
+
+        list<pt_root_t> tree_list = parse_tree_list(yyin, drop, skip);
+        fclose(yyin);
+
         return tree_list;
 }
 

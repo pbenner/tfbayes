@@ -102,6 +102,9 @@ public:
         /* identifier */
         id_t id;
 
+        friend class pt_root_t;
+        friend class pt_leaf_t;
+
 protected:
         virtual void create_mappings(leaf_map_t& leaf_map, leaves_t& leaves,
                                      node_map_t& node_map, nodes_t& nodes);
@@ -148,7 +151,7 @@ public:
                   pt_leaf_t* outgroup = NULL,
                   // if root is not null then copy ids from this tree
                   optional<const pt_root_t&> tree = optional<const pt_root_t&>());
-        explicit pt_root_t(const pt_root_t& root);
+        pt_root_t(const pt_root_t& root);
         virtual ~pt_root_t();
 
         pt_root_t* clone() const;
@@ -161,10 +164,10 @@ public:
         id_t get_leaf_id(const std::string& taxon) const;
 
         optional<const pt_leaf_t&> outgroup() const {
-                return *_outgroup;
+                return _outgroup ? *_outgroup : optional<const pt_leaf_t&>();
         }
         optional<      pt_leaf_t&> outgroup() {
-                return *_outgroup;
+                return _outgroup ? *_outgroup : optional<      pt_leaf_t&>();
         }
 
         optional<      pt_leaf_t&> operator()(const std::string& taxon);
@@ -198,7 +201,7 @@ protected:
         const pt_root_t* tree;
 };
 
-std::ostream& operator<< (std::ostream& o, const pt_node_t* node);
+std::ostream& operator<< (std::ostream& o, const pt_node_t& node);
 std::ostream& operator<< (std::ostream& o, const newick_format& nf);
 
 #endif /* PHYLOTREE_HH */

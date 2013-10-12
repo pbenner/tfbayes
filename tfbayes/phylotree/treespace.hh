@@ -210,7 +210,7 @@ public:
         // import convert function so that it is not hidden by our own
         // definition
         using nedge_node_t::convert;
-        virtual pt_root_t* convert() const;
+        virtual pt_root_t convert() const;
 
         const std::vector<double>& leaf_d() const {
                 return _leaf_d;
@@ -243,7 +243,7 @@ public:
         ntree_t(const pt_root_t& tree);
 
         // methods
-        pt_root_t* export_tree() const;
+        pt_root_t export_tree() const;
         size_t n() const;
         const nedge_t& find_edge(const nsplit_t& nsplit) const;
         const nedge_set_t& nedge_set() const;

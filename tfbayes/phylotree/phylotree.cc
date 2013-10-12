@@ -282,19 +282,19 @@ pt_root_t::pt_root_t(pt_node_t* left,
         // the outgroup
         if (outgroup) {
                 n_leaves++; n_nodes++;
-                this->outgroup()->ancestor() = *this;
-        }
-        // set leaf/node ids
-        if (tree) {
-                id_t leaf_id = 0;
-                id_t node_id = n_leaves;
-                set_id(leaf_id, node_id);
+                this->outgroup()->_ancestor = this;
         }
         // copy leaf ids from second tree
-        else {
+        if (tree) {
                 assert (n_leaves == tree->n_leaves);
                 id_t node_id = n_leaves;
                 set_id(*tree, node_id);
+        }
+        // set leaf/node ids
+        else {
+                id_t leaf_id = 0;
+                id_t node_id = n_leaves;
+                set_id(leaf_id, node_id);
         }
 
         leaves = leaves_t(n_leaves, (pt_leaf_t*)NULL);
@@ -320,8 +320,8 @@ pt_root_t::pt_root_t(const pt_root_t& root)
           _outgroup(NULL)
 {
         if (root.outgroup()) {
-                *this->outgroup() = *root.outgroup()->clone();
-                 this->outgroup()->ancestor() = *this;
+                this->_outgroup = root.outgroup()->clone();
+                this-> outgroup()->_ancestor = this;
         }
         // recreate all mappings since we clone all nodes
         create_mappings();

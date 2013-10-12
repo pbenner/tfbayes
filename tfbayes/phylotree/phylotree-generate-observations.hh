@@ -29,49 +29,50 @@
 #include <tfbayes/phylotree/statistics.hh>
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-void pt_generate_observations(const pt_node_t* node,
+void pt_generate_observations(const pt_node_t& node,
                               const std::vector<double>& stationary,
                               const CODE_TYPE parent_nucleotide,
                               std::vector<CODE_TYPE>& observations)
 {
         double r = (double)rand()/RAND_MAX;
         CODE_TYPE nucleotide;
-        if (r <= node->mutation_probability()) {
+        if (r <= node.mutation_probability()) {
                 nucleotide = categorial_sample<CODE_TYPE, ALPHABET_SIZE>(stationary);
         }
         else {
                 nucleotide = parent_nucleotide;
         }
-        if (node->leaf()) {
+        if (node.leaf()) {
                 /* save nucleotide in our observations */
-                observations[node->id] = nucleotide;
+                observations[node.id] = nucleotide;
         }
         /* traverse the treee */
-        if (node->left) {
-                pt_generate_observations<CODE_TYPE, ALPHABET_SIZE>(node->left,  stationary, nucleotide, observations);
-        }
-        if (node->right) {
-                pt_generate_observations<CODE_TYPE, ALPHABET_SIZE>(node->right, stationary, nucleotide, observations);
+        else {
+                pt_generate_observations<CODE_TYPE, ALPHABET_SIZE>(
+                        node.left (), stationary, nucleotide, observations);
+                pt_generate_observations<CODE_TYPE, ALPHABET_SIZE>(
+                        node.right(), stationary, nucleotide, observations);
         }
 }
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 std::vector<CODE_TYPE>
-pt_generate_observations(const pt_root_t* tree, const std::vector<double>& stationary)
+pt_generate_observations(const pt_root_t& tree, const std::vector<double>& stationary)
 {
-        std::vector<CODE_TYPE> observations(tree->n_leaves, -1);
+        std::vector<CODE_TYPE> observations(tree.n_leaves, -1);
         CODE_TYPE nucleotide = categorial_sample<CODE_TYPE, ALPHABET_SIZE>(stationary);
 
         /* check for an outgroup */
-        if (tree->has_outgroup()) {
-                pt_generate_observations<CODE_TYPE, ALPHABET_SIZE>(tree->outgroup, stationary, nucleotide, observations);
+        if (tree.outgroup()) {
+                pt_generate_observations<CODE_TYPE, ALPHABET_SIZE>(
+                        static_cast<const pt_leaf_t&>(*tree.outgroup()), stationary, nucleotide, observations);
         }
         /* traverse the treee */
-        if (tree->left) {
-                pt_generate_observations<CODE_TYPE, ALPHABET_SIZE>(tree->left,  stationary, nucleotide, observations);
-        }
-        if (tree->right) {
-                pt_generate_observations<CODE_TYPE, ALPHABET_SIZE>(tree->right, stationary, nucleotide, observations);
+        if (!tree.leaf()) {
+                pt_generate_observations<CODE_TYPE, ALPHABET_SIZE>(
+                        tree.left (), stationary, nucleotide, observations);
+                pt_generate_observations<CODE_TYPE, ALPHABET_SIZE>(
+                        tree.right(), stationary, nucleotide, observations);
         }
         return observations;
 }

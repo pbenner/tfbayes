@@ -32,7 +32,7 @@ using namespace std;
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 double pt_marginal_likelihood(
-        const pt_root_t* const node,
+        const pt_root_t& node,
         const std::vector<CODE_TYPE>& observations,
         const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
 {
