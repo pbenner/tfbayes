@@ -35,7 +35,7 @@
 #include <tfbayes/utility/polynomial.hh>
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-class pt_gradient_t : public boost::unordered_map<const pt_node_t&, polynomial_t<CODE_TYPE, ALPHABET_SIZE> > {
+class pt_gradient_t : public boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> > {
 public:
         pt_gradient_t(const pt_root_t& root, const std::vector<CODE_TYPE>& observations)
                 : boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> >() { 

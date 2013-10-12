@@ -82,7 +82,7 @@ size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent) {
 typedef struct _options_t {
         size_t dimension;
         phylotree_hmm_t<code_t, alphabet_size>::priors_t priors;
-        phylotree_hmm_t<code_t, alphabet_size>::matrix_t transition;
+        phylotree_hmm_t<code_t, alphabet_size>::matrix<double> transition;
         bool verbose;
         _options_t()
                 : dimension(2),
@@ -99,8 +99,8 @@ typedef struct _options_t {
                 priors.push_back(alpha_0);
                 priors.push_back(alpha_1);
 
-                transition.push_back(phylotree_hmm_t<code_t, alphabet_size>::vector_t(2, 0.0));
-                transition.push_back(phylotree_hmm_t<code_t, alphabet_size>::vector_t(2, 0.0));
+                transition.push_back(phylotree_hmm_t<code_t, alphabet_size>::vector<double>(2, 0.0));
+                transition.push_back(phylotree_hmm_t<code_t, alphabet_size>::vector<double>(2, 0.0));
 
                 transition[0][0] = 0.95; // 0 -> 0
                 transition[0][1] = 0.05; // 0 -> 1
@@ -158,13 +158,13 @@ void print_version(FILE *fp)
 extern FILE *yyin;
 
 static
-pt_root_t* parse_tree_file(const char* file_tree)
+pt_root_t parse_tree_file(const char* file_tree)
 {
         FILE* yyin = fopen(file_tree, "r");
         if (yyin == NULL) {
                 std_err(PERR, "Could not open phylogenetic tree");
         }
-        list<pt_root_t*> tree_list = parse_tree_list(yyin);
+        list<pt_root_t> tree_list = parse_tree_list(yyin);
         fclose(yyin);
         assert(tree_list.size() == 1);
 
@@ -177,13 +177,13 @@ void run_hmm(const char* file_tree, const char* file_alignment)
         size_t dimension = options.dimension;
 
         /* phylogenetic tree */
-        pt_root_t* pt_root = parse_tree_file(file_tree);
+        pt_root_t pt_root = parse_tree_file(file_tree);
 
         /* alignment */
         alignment_t<code_t> alignment(file_alignment, pt_root);
 
         /* uniform distribution on the initial state */
-        phylotree_hmm_t<code_t, alphabet_size>::vector_t px_0(dimension, 1.0/(double)dimension);
+        phylotree_hmm_t<code_t, alphabet_size>::vector<double> px_0(dimension, 1.0/(double)dimension);
 
         phylotree_hmm_t<code_t, alphabet_size> hmm(px_0, options.transition, options.priors);
         hmm.run(pt_root, alignment);
@@ -195,8 +195,6 @@ void run_hmm(const char* file_tree, const char* file_alignment)
                      << hmm[i][1]
                      << endl;
         }
-        /* free phylogenetic tree */
-        pt_root->destroy();
 }
 
 void init_options(const string& alpha, const string& transition)
@@ -235,10 +233,10 @@ void init_options(const string& alpha, const string& transition)
                 }
         }
         if (transition != "") {
-                options.transition = phylotree_hmm_t<code_t, alphabet_size>::matrix_t();
+                options.transition = phylotree_hmm_t<code_t, alphabet_size>::matrix<double>();
                 for (size_t i = 0; i < options.dimension; i++) {
                         options.transition.push_back(
-                                phylotree_hmm_t<code_t, alphabet_size>::vector_t(options.dimension, 0.0));
+                                phylotree_hmm_t<code_t, alphabet_size>::vector<double>(options.dimension, 0.0));
                 }
                 tmp = token(strip(transition), ';');
                 for (size_t i = 0; i < tmp.size(); i++) {

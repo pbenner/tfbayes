@@ -290,7 +290,7 @@ public:
                                 continue;
                         }
                         // otherwise sample
-                        log_posterior_ref = sample_branch(*it, log_posterior_ref);
+                        log_posterior_ref = sample_branch(**it, log_posterior_ref);
                 }
                 update_samples();
                 log_posterior_history.push_back(log_posterior_ref);

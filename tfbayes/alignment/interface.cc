@@ -43,7 +43,7 @@ alignment_t<code_t>* alignment_new(size_t length, pt_root_t* pt_root)
         // that are not later initialized otherwise will be ignored by
         // the phylogenetic model; i.e. if a species is not part of
         // the multiple alignment it will be fully ignored
-        return new alignment_t<code_t>(length, -1, pt_root);
+        return new alignment_t<code_t>(length, -1, *pt_root);
 }
 
 void alignment_set(alignment_t<code_t>* alignment, const char* taxon, vector_t* record)
@@ -67,7 +67,7 @@ vector_t* alignment_marginal_likelihood(const pt_root_t* tree, alignment_t<code_
         /* go through the alignment and compute the marginal
          * likelihood for each position */
         for (alignment_t<code_t>::iterator it = alignment->begin(); it != alignment->end(); it++) {
-                result->vec[it.position()] = pt_marginal_likelihood<code_t, alphabet_size>(tree, *it, alpha);
+                result->vec[it.position()] = pt_marginal_likelihood<code_t, alphabet_size>(*tree, *it, alpha);
         }
         return result;
 }
@@ -95,7 +95,7 @@ vector_t* alignment_scan(const pt_root_t* tree, alignment_t<code_t>* alignment, 
                         continue;
                 }
                 for (alignment_t<code_t>::iterator is(it); is.position() < it.position() + counts.size(); is++) {
-                        result->vec[it.position()] += pt_marginal_likelihood<code_t, alphabet_size>(tree, *is, counts[is.position()-it.position()]);
+                        result->vec[it.position()] += pt_marginal_likelihood<code_t, alphabet_size>(*tree, *is, counts[is.position()-it.position()]);
                 }
         }
         return result;
