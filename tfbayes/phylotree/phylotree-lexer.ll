@@ -21,6 +21,7 @@
 %option bison-bridge
 %option bison-locations
 %option yylineno
+%option nounput
 
 %{
 #include <stdio.h>

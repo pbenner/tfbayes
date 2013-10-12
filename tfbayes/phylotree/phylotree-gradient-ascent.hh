@@ -38,7 +38,7 @@ template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_gradient_ascent_t
 {
 public:
-        pt_gradient_ascent_t(pt_root_t* tree,
+        pt_gradient_ascent_t(pt_root_t& tree,
                              alignment_t<CODE_TYPE>& alignment,
                              const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
                              double r, double lambda,
@@ -106,13 +106,13 @@ public:
                         else {
                                 step = -node_epsilon[*is];
                         }
-                        (*is)->d   = std::max(0.0, (*is)->d+step);
-                        total     += fabs(step);
-                        if (sum_prev[*is]*sum[*is] > 0) {
-                                node_epsilon[*is] *= 1.0+eta;
+                        (*is)->d  = std::max(0.0, (*is)->d+step);
+                        total    += fabs(step);
+                        if (sum_prev[&**is]*sum[&**is] > 0) {
+                                node_epsilon[&**is] *= 1.0+eta;
                         }
-                        if (sum_prev[*is]*sum[*is] < 0) {
-                                node_epsilon[*is] *= 1.0-eta;
+                        if (sum_prev[&**is]*sum[&**is] < 0) {
+                                node_epsilon[&**is] *= 1.0-eta;
                         }
                 }
                 sum_prev = sum;
@@ -120,9 +120,9 @@ public:
                 return total;
         }
         void run(size_t max, double stop = 0.0, bool print = true) {
-                pt_node_t::nodes_t nodes = tree->nodes;
-                for (pt_node_t::nodes_t::const_iterator is = tree->nodes.begin();
-                     is != tree->nodes.end(); is++) {
+                pt_node_t::nodes_t nodes = tree.nodes;
+                for (pt_node_t::nodes_t::const_iterator is = tree.nodes.begin();
+                     is != tree.nodes.end(); is++) {
                         node_epsilon[*is] = epsilon;
                 }
                 for (size_t i = 0; i < max; i++) {
@@ -138,8 +138,8 @@ public:
         }
 
 private:
-        pt_root_t* tree;
-        alignment_t<CODE_TYPE>& alignment;
+        pt_root_t tree;
+        alignment_t<CODE_TYPE> alignment;
         exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha;
         gamma_distribution_t gamma_distribution;
         double epsilon;

@@ -77,7 +77,7 @@ ostream& operator<< (ostream& o, const posterior_values& pv)
 ostream& operator<< (ostream& o, const pt_pmcmc_hastings_t<code_t, alphabet_size>& mh)
 {
         // print trees
-        for (std::list<pt_root_t*>::const_iterator it = mh.samples.begin();
+        for (std::list<pt_root_t>::const_iterator it = mh.samples.begin();
              it != mh.samples.end(); it++) {
                 o << newick_format(*it) << endl;
         }
@@ -200,15 +200,15 @@ void print_version(FILE *fp)
                       "FOR A PARTICULAR PURPOSE.\n\n");
 }
 
-pt_root_t* parse_tree_file(const char* file_tree)
+pt_root_t parse_tree_file(const char* file_tree)
 {
         FILE* yyin = fopen(file_tree, "r");
         if (yyin == NULL) {
                 std_err(PERR, "Could not open phylogenetic tree");
         }
-        list<pt_root_t*> tree_list = parse_tree_list(yyin);
+        list<pt_root_t> tree_list = parse_tree_list(yyin);
         assert(tree_list.size() == 1);
-        pt_root_t* pt_root = tree_list.front();
+        pt_root_t pt_root = tree_list.front();
         fclose(yyin);
 
         return pt_root;
@@ -219,7 +219,7 @@ void run_optimization(const string& method, const char* file_tree, const char* f
         init();
 
         /* phylogenetic tree */
-        pt_root_t* pt_root = parse_tree_file(file_tree);
+        pt_root_t pt_root = parse_tree_file(file_tree);
 
         /* pseudo counts */
         exponent_t<code_t, alphabet_size> alpha;
@@ -261,7 +261,6 @@ void run_optimization(const string& method, const char* file_tree, const char* f
                      << endl;
                 exit(EXIT_FAILURE);
         }
-        pt_root->destroy();
 }
 
 int main(int argc, char *argv[])
