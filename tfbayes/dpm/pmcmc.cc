@@ -62,7 +62,8 @@ population_mcmc_t::population_mcmc_t(size_t n, const sampling_history_t& history
 }
 
 population_mcmc_t::population_mcmc_t(const population_mcmc_t& pmcmc)
-        : _population(pmcmc._size, NULL),
+        : sampler_t(pmcmc), 
+          _population(pmcmc._size, NULL),
           _size(pmcmc._size)
 {
         for (size_t i = 0; i < _size; i++) {

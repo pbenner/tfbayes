@@ -457,8 +457,43 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
         _start_server();
 }
 
+dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(const dpm_tfbs_pmcmc_t& sampler)
+        : population_mcmc_t(sampler),
+          _data(sampler._data)
+{
+        cerr << "Cannot copy dpm_tfbs_pmcmc_t!"
+             << endl;
+        exit(EXIT_FAILURE);
+}
+
 dpm_tfbs_pmcmc_t::~dpm_tfbs_pmcmc_t() {
         _stop_server();
+}
+
+dpm_tfbs_pmcmc_t*
+dpm_tfbs_pmcmc_t::clone() const {
+        return new dpm_tfbs_pmcmc_t(*this);
+}
+
+void
+swap(dpm_tfbs_pmcmc_t& first, dpm_tfbs_pmcmc_t& second) {
+        swap(static_cast<population_mcmc_t&>(first),
+             static_cast<population_mcmc_t&>(second));
+        swap(first._options,       second._options);
+        swap(first._data,          second._data);
+        swap(first._alignment_set, second._alignment_set);
+        swap(first._socket_file,   second._socket_file);
+        swap(first._server,        second._server);
+        swap(first._bt,            second._bt);
+        swap(first._output_queue,  second._output_queue);
+}
+
+dpm_tfbs_pmcmc_t&
+dpm_tfbs_pmcmc_t::operator=(const sampler_t& sampler)
+{
+        dpm_tfbs_pmcmc_t tmp(static_cast<const dpm_tfbs_pmcmc_t&>(sampler));
+        swap(*this, tmp);
+        return *this;
 }
 
 const tfbs_options_t&

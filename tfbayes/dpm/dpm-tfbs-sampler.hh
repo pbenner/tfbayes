@@ -97,8 +97,13 @@ public:
         dpm_tfbs_pmcmc_t(
                 const tfbs_options_t& options,
                 const sampling_history_t& history = sampling_history_t());
+        dpm_tfbs_pmcmc_t(const dpm_tfbs_pmcmc_t& sampler);
 
         virtual ~dpm_tfbs_pmcmc_t();
+
+        dpm_tfbs_pmcmc_t* clone() const;
+
+        friend void swap(dpm_tfbs_pmcmc_t& first, dpm_tfbs_pmcmc_t& second);
 
         // operators
         ////////////////////////////////////////////////////////////////////////
@@ -106,6 +111,8 @@ public:
                 { return *static_cast<      dpm_tfbs_sampler_t*>(_population[i]); }
         virtual const dpm_tfbs_sampler_t& operator[](size_t i) const
                 { return *static_cast<const dpm_tfbs_sampler_t*>(_population[i]); }
+
+        dpm_tfbs_pmcmc_t& operator=(const sampler_t& sampler);
 
         // access methods
         ////////////////////////////////////////////////////////////////////////
@@ -123,7 +130,7 @@ protected:
         void _start_server();
         void _stop_server();
 
-        const tfbs_options_t _options;
+        tfbs_options_t _options;
 
         data_tfbs_t _data;
         alignment_set_t<short> _alignment_set;
