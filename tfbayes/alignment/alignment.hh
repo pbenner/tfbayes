@@ -97,19 +97,27 @@ public:
                 check_lengths();
         }
         alignment_t(const alignment_t& alignment)
-                : alignment_ancestor_t() {
-                operator=(alignment);
+        : alignment_ancestor_t(alignment),
+          _n_species (alignment._n_species),
+          _length    (alignment._length),
+          _taxon_map (alignment._taxon_map) {
         }
         virtual ~alignment_t() {
+        }
+
+        friend void swap(alignment_t& first, alignment_t&second) {
+                std::swap(static_cast<alignment_ancestor_t&>(first),
+                          static_cast<alignment_ancestor_t&>(second));
+                std::swap(first._length,    second._length);
+                std::swap(first._n_species, second._n_species);
+                std::swap(first._taxon_map, second._taxon_map);
         }
 
         // Operators
         ////////////////////////////////////////////////////////////////////////
         alignment_t& operator=(const alignment_t& alignment) {
-                alignment_ancestor_t::operator=(alignment);
-                _length    = alignment._length;
-                _n_species = alignment._n_species;
-                _taxon_map = alignment._taxon_map;
+                alignment_t tmp(alignment);
+                swap(*this, tmp);
                 return *this;
         }
         using alignment_ancestor_t::operator[];
