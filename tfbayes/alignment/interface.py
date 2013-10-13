@@ -16,10 +16,10 @@
 
 from ctypes      import *
 
-from ..interface import *
-from ..uipac     import *
+# from ..interface import *
+# from ..uipac     import *
 
-from ..          import phylotree
+# from ..          import phylotree
 
 # load interface
 # ------------------------------------------------------------------------------

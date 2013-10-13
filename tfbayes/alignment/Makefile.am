@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/include
-AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
+#AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
 ## install headers
 otherincludedir = $(includedir)/tfbayes/alignment
@@ -14,21 +14,24 @@ alignment_hmm_test_LDADD   = -lm
 alignment_hmm_test_LDADD  += $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
 alignment_hmm_test_LDADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
 
-## library
-lib_LTLIBRARIES = libtfbayes-alignment.la
+## python interface
+pkgpython_LTLIBRARIES = interface.la
 
-libtfbayes_alignment_la_SOURCES = \
+interface_la_CPPFLAGS = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS)
+interface_la_CXXFLAGS = 
+interface_la_SOURCES  = \
 	interface.cc
-libtfbayes_alignment_la_LIBADD  = -lm
-libtfbayes_alignment_la_LIBADD += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
-libtfbayes_alignment_la_LIBADD += $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
-libtfbayes_alignment_la_LDFLAGS = -no-undefined -version-info 0:0:0
+interface_la_LIBADD   = $(LIB_BOOST_PYTHON)
+interface_la_LIBADD  += -lm
+interface_la_LIBADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
+interface_la_LIBADD  += $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
+interface_la_LDFLAGS  = -avoid-version -module
 
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/alignment
 
 ## compile python files
-pkgpython_PYTHON = __init__.py interface.py tools.py
+pkgpython_PYTHON = __init__.py tools.py
 
 ## clean python files
 clean-local:

@@ -27,6 +27,7 @@
 #include <string>
 #include <cstring>
 
+#include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/interface.hh>
 #include <tfbayes/phylotree/utility.hh>
 
@@ -107,3 +108,55 @@ void alignment_free(alignment_t<code_t>* alignment)
 }
 
 __END_DECLS
+
+// library interface
+////////////////////////////////////////////////////////////////////////////////
+
+#include <Python.h>
+
+#include <locale>
+#include <cctype>
+#include <sstream>
+
+#include <boost/python.hpp>
+#include <boost/python/def.hpp>
+#include <boost/python/iterator.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
+using namespace boost::python;
+
+void raise_IndexError()
+{
+        PyErr_SetString(PyExc_IndexError, "Index out of range");
+        throw error_already_set();
+}
+
+double alignment_getitem(alignment_t<code_t>& a, tuple index)
+{
+        size_t i = extract<size_t>(index[0]);
+        size_t j = extract<size_t>(index[1]);
+        if (i >= a   .length()) raise_IndexError();
+        if (j >= a[i].size  ()) raise_IndexError();
+        return a[i][j];
+}
+
+void alignment_setitem(alignment_t<code_t>& a, tuple index, double d)
+{
+        size_t i = extract<size_t>(index[0]);
+        size_t j = extract<size_t>(index[1]);
+        if (i >= a   .length()) raise_IndexError();
+        if (j >= a[i].size  ()) raise_IndexError();
+        a[i][j] = d;
+}
+
+BOOST_PYTHON_MODULE(interface)
+{
+        class_<alignment_t<code_t> >("alignment_t", no_init)
+                .def(init<size_t, code_t, pt_root_t>())
+                .def(init<string, pt_root_t>())
+                .def("__getitem__", alignment_getitem)
+                .def("__setitem__", alignment_setitem)
+                .def("scan",                &alignment_t<code_t>::scan<alphabet_size>)
+                .def("marginal_likelihood", &alignment_t<code_t>::marginal_likelihood<alphabet_size>)
+                ;
+}

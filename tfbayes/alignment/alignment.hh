@@ -239,18 +239,38 @@ public:
         template<size_t ALPHABET_SIZE>
         std::vector<double> scan(const pt_root_t& tree, std::matrix<double>& counts) {
                 std::vector<double> result(length(), 0);
-                for (alignment_t<CODE_TYPE>::iterator it = begin(); it != end(); it++) {
+                vector<exponent_t<CODE_TYPE, ALPHABET_SIZE> > exponents;
+
+                for (size_t j = 0; j < counts.size(); j++) {
+                        exponent_t<CODE_TYPE, ALPHABET_SIZE> tmp
+                                (counts[j].begin(), counts[j].end());
+                        exponents.push_back(tmp);
+                }
+
+                for (iterator it = begin(); it != end(); it++) {
                         result[it.position()] = 0;
                         if (it.position() + counts.size() > length()) {
                                 // do not exit the loop here so that every
                                 // position is initialized
                                 continue;
                         }
-                        for (alignment_t<CODE_TYPE>::iterator is(it);
-                             is.position() < it.position() + counts.size(); is++) {
+                        for (iterator is(it); is.position() < it.position() + counts.size(); is++) {
                                 result[it.position()] += pt_marginal_likelihood<CODE_TYPE, ALPHABET_SIZE>(
-                                        tree, *is, counts[is.position()-it.position()]);
+                                        tree, *is, exponents[is.position()-it.position()]);
                         }
+                }
+                return result;
+        }
+        template<size_t ALPHABET_SIZE>
+        std::vector<double> marginal_likelihood(const pt_root_t& tree, const std::vector<double>& prior) {
+                exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha(prior.begin(), prior.end());
+                vector<double> result(length(), 0);
+
+                /* go through the alignment and compute the marginal
+                 * likelihood for each position */
+                for (iterator it = begin(); it != end(); it++) {
+                        result[it.position()] = pt_marginal_likelihood<CODE_TYPE, ALPHABET_SIZE>
+                                (tree, *it, alpha);
                 }
                 return result;
         }

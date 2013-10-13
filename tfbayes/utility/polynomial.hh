@@ -36,6 +36,14 @@ public:
                         operator[](i) = 0;
                 }
         }
+        template <typename InputIterator>
+        exponent_t(InputIterator first, InputIterator last)
+                : boost::array<T, S>() {
+                for (size_t i = 0; i < S; i++) {
+                        assert(first + i < last);
+                        operator[](i) = *(first+i);
+                }
+        }
 
         exponent_t<T, S>& operator*=(const exponent_t<T, S>& exponent) {
                 for (size_t i = 0; i < S; i++) {

@@ -38,8 +38,8 @@ template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 class pt_gradient_ascent_t
 {
 public:
-        pt_gradient_ascent_t(pt_root_t& tree,
-                             alignment_t<CODE_TYPE>& alignment,
+        pt_gradient_ascent_t(const pt_root_t& tree,
+                             const alignment_t<CODE_TYPE>& alignment,
                              const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
                              double r, double lambda,
                              double epsilon = 0.001, double eta = 0.1)
