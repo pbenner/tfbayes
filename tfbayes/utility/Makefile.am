@@ -14,4 +14,5 @@ otherinclude_HEADERS = \
 	permutation.hh \
 	polynomial.hh \
 	progress.hh \
+	statistics.hh \
 	strtools.hh

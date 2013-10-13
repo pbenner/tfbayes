@@ -25,7 +25,7 @@
 
 #include <tfbayes/dpm/sampler.hh>
 #include <tfbayes/dpm/state.hh>
-#include <tfbayes/dpm/statistics.hh>
+#include <tfbayes/utility/statistics.hh>
 
 using namespace std;
 

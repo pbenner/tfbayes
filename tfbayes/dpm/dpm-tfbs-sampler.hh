@@ -25,7 +25,7 @@
 #include <tfbayes/dpm/dpm-tfbs.hh>
 #include <tfbayes/dpm/dpm-tfbs-state.hh>
 #include <tfbayes/dpm/sampler.hh>
-#include <tfbayes/dpm/utility.hh>
+#include <tfbayes/dpm/save-queue.hh>
 
 class command_t;
 

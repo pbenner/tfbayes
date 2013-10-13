@@ -23,7 +23,7 @@
 #include <string.h>
 
 #include <tfbayes/dpm/dpm-tfbs.hh>
-#include <tfbayes/dpm/statistics.hh>
+#include <tfbayes/utility/statistics.hh>
 #include <tfbayes/utility/logarithmetic.h>
 
 using namespace std;

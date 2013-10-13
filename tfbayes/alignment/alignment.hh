@@ -33,8 +33,10 @@
 
 #include <tfbayes/fasta/fasta.hh>
 #include <tfbayes/phylotree/phylotree.hh>
+#include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/uipac/code.hh>
 #include <tfbayes/uipac/nucleotide-sequence.hh>
+#include <tfbayes/utility/linalg.hh>
 #include <tfbayes/utility/strtools.hh>
 
 template <typename CODE_TYPE>
@@ -233,6 +235,24 @@ public:
                         return it->second;
                 }
                 return -1;
+        }
+        template<size_t ALPHABET_SIZE>
+        std::vector<double> scan(const pt_root_t& tree, std::matrix<double>& counts) {
+                std::vector<double> result(length(), 0);
+                for (alignment_t<CODE_TYPE>::iterator it = begin(); it != end(); it++) {
+                        result[it.position()] = 0;
+                        if (it.position() + counts.size() > length()) {
+                                // do not exit the loop here so that every
+                                // position is initialized
+                                continue;
+                        }
+                        for (alignment_t<CODE_TYPE>::iterator is(it);
+                             is.position() < it.position() + counts.size(); is++) {
+                                result[it.position()] += pt_marginal_likelihood<CODE_TYPE, ALPHABET_SIZE>(
+                                        tree, *is, counts[is.position()-it.position()]);
+                        }
+                }
+                return result;
         }
 
 protected:

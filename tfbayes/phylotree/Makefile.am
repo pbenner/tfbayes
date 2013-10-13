@@ -79,7 +79,6 @@ libtfbayes_phylotree_la_SOURCES = \
 	incomplete-expression.cc \
 	incomplete-expression.hh \
 	marginal-likelihood.hh \
-	statistics.hh \
 	utility.cc \
 	utility.hh \
 	treespace.cc \
@@ -108,7 +107,6 @@ otherinclude_HEADERS = \
 	posterior.hh \
 	incomplete-expression.hh \
 	marginal-likelihood.hh \
-	statistics.hh \
 	utility.hh \
 	treespace.hh
 

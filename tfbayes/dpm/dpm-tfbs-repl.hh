@@ -36,8 +36,8 @@
 #include <boost/thread.hpp>
 
 #include <tfbayes/dpm/data-tfbs.hh>
-#include <tfbayes/dpm/utility.hh>
 #include <tfbayes/dpm/dpm-tfbs-command.hh>
+#include <tfbayes/dpm/save-queue.hh>
 
 class repl_t {
 public:

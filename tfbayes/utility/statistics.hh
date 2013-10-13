@@ -120,4 +120,52 @@ std::vector<double> dirichlet_sample(const std::vector<double>& _alpha, gsl_rng*
         return _theta;
 }
 
+static inline
+size_t select_component(size_t k, double log_weights[])
+{
+        /* log_weights are cumulative */
+
+        const double r = (double)rand()/RAND_MAX;
+
+        if (r == 0.0) {
+                return 0;
+        }
+
+        const double log_r = log(r) + log_weights[k-1];
+        for (size_t i = 0; i < k-1; i++) {
+                if (log_r <= log_weights[i]) {
+                        return i;
+                }
+        }
+        return k-1;
+}
+
+static inline
+size_t select_max_component(size_t k, double log_weights[])
+{
+        /* log_weights are cumulative, so we need to normalize by log_weights[k-1] */
+
+        /* resulting cluster number */
+        size_t result = 0;
+        /* difference between two successive log weights */
+        double diff   = 0.0;
+        /* we need to store the last value because zero is not
+         * represented in the log weights array */
+        double last   = 0.0;
+
+        for (size_t i = 0; i < k; i++) {
+                /* if the increase for this cluster is higher than any
+                 * before */
+                if (diff < exp(log_weights[i] - log_weights[k-1]) - last) {
+                        /* store the new increase in probability */
+                        diff   = exp(log_weights[i] - log_weights[k-1]) - last;
+                        /* and the cluster number */
+                        result = i;
+                }
+                /* also save the value of the last weight */
+                last = exp(log_weights[i] - log_weights[k-1]);
+        }
+        return result;
+}
+
 #endif /* STATISTICS_HH */

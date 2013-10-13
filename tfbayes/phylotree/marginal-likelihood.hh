@@ -24,7 +24,7 @@
 
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/phylotree-polynomial.hh>
-#include <tfbayes/phylotree/statistics.hh>
+#include <tfbayes/utility/statistics.hh>
 #include <tfbayes/utility/logarithmetic.h>
 #include <tfbayes/utility/polynomial.hh>
 

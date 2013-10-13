@@ -26,7 +26,7 @@
 #include <cstdlib>
 
 #include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/statistics.hh>
+#include <tfbayes/utility/statistics.hh>
 
 template <typename CODE_TYPE, size_t ALPHABET_SIZE>
 void pt_generate_observations(const pt_node_t& node,

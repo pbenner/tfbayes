@@ -20,7 +20,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <tfbayes/dpm/dpm-tfbs-sampler.hh>
-#include <tfbayes/dpm/statistics.hh>
+#include <tfbayes/utility/statistics.hh>
 
 using namespace std;
 using namespace boost::asio;

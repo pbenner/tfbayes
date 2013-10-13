@@ -71,9 +71,8 @@ libtfbayes_dpm_la_SOURCES =		\
 	pmcmc.hh			\
 	sampler.cc			\
 	sampler.hh			\
-	state.hh			\
-	statistics.hh			\
-	utility.hh
+	save-queue.hh                   \
+	state.hh
 libtfbayes_dpm_la_LIBADD  = $(top_builddir)/tfbayes/exception/libtfbayes-exception.la
 libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fastarithmetics/libtfbayes-fastarithmetics.la
 libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
