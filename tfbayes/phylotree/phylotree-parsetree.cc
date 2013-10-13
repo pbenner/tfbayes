@@ -268,11 +268,14 @@ list<pt_root_t> parse_tree_list(FILE * file, size_t drop, size_t skip)
         return tree_list;
 }
 
+#include <cerrno>
+#include <cstring>
+
 list<pt_root_t> parse_tree_list(const string& filename, size_t drop, size_t skip)
 {
         FILE* yyin = fopen(filename.c_str(), "r");
         if (yyin == NULL) {
-                cerr << boost::format("Could not open tree file `%s'.") % filename
+                cerr << boost::format("Could not open tree file `%s': %s") % filename % strerror(errno)
                      << endl;
                 exit(EXIT_FAILURE);
         }

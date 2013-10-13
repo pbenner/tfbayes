@@ -1,4 +1,4 @@
-/* Copyright (C) 2012 Philipp Benner
+/* Copyright (C) 2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,24 +15,22 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef INTERFACE_HH
-#define INTERFACE_HH
+
+#ifndef INTERFACE_UTILITY_HH
+#define INTERFACE_UTILITY_HH
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/phylotree-parser.hh>
-#include <tfbayes/phylotree/phylotree-polynomial.hh>
-#include <tfbayes/phylotree/phylotree-approximation.hh>
-#include <tfbayes/phylotree/posterior.hh>
-#include <tfbayes/alignment/alignment.hh>
-#include <tfbayes/exception/exception.h>
-#include <tfbayes/utility/linalg.hh>
+#include <Python.h>
 
-#define alphabet_size 5
-//typedef unsigned short code_t;
-typedef double code_t;
+template<typename T>
+std::string to_string(const T& t)
+{
+        std::stringstream ss;
+        ss << t;
+        return ss.str();
+}
 
-#endif /* INTERFACE_HH */
+#endif /* INTERFACE_UTILITY_HH */

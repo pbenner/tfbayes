@@ -132,7 +132,7 @@ public:
 
         // Iterator
         ////////////////////////////////////////////////////////////////////////
-        class iterator
+        class iterator : public std::iterator<std::bidirectional_iterator_tag, const std::vector<CODE_TYPE> >
         {
         public:
                 iterator(size_t position,

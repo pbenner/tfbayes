@@ -22,6 +22,38 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <limits>
+
+class alphabet_t {
+public:
+        typedef unsigned char code_type;
+
+        virtual code_type   code(code_type letter) const = 0;
+        virtual code_type decode(code_type code  ) const = 0;
+        virtual bool element(code_type letter) const = 0;
+        virtual size_t size() const = 0;
+};
+
+class nucleotide_alphabet_t : public alphabet_t {
+public:
+        code_type code(code_type letter) const {
+                return _code[letter];
+        }
+        code_type decode(code_type code) const {
+                return _decode[code];
+        }
+        bool element(code_type letter) const {
+                return _code[letter] != 255;
+        }
+        size_t size() const {
+                return 5;
+        }
+protected:
+        static const code_type   _code[];
+        static const code_type _decode[];
+};
+
+
 bool is_nucleotide(const char S);
 
 template <typename CODE_TYPE>

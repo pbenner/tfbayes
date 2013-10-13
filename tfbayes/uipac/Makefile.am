@@ -1,7 +1,12 @@
 ## Process this file with automake to produce Makefile.in
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/include
-AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
+#AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
+
+noinst_PROGRAMS = code-test
+
+code_test_SOURCES = code-test.cc
+code_test_LDADD   = libtfbayes-uipac.la
 
 ## library
 lib_LTLIBRARIES = libtfbayes-uipac.la

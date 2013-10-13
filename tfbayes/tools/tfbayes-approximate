@@ -123,9 +123,7 @@ class ComputationThread(threading.Thread):
         self.queue_in  = queue_in
         self.queue_out = queue_out
         self.mutex     = mutex
-        self.phylotree = pt_clone(options['phylotree'])
-    def __del__(self):
-        pt_destroy(self.phylotree)
+        self.phylotree = options['phylotree']
     def run(self):
         while True:
             job = self.queue_in.get()
@@ -227,7 +225,7 @@ def __main__():
                 usage()
                 return 1
     # tail
-    options['phylotree'] = pt_parse_file(tail[0])
+    options['phylotree'] = pt_root_t(tail[0])
     options['leafmap']   = pt_create_map(options['phylotree'])
     # call main with files as argument
     if options['format'] == 'fasta':

@@ -29,15 +29,10 @@
 #include <boost/python/implicit.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
+#include <tfbayes/interface/exceptions.hh>
 #include <tfbayes/utility/linalg.hh>
 
 using namespace boost::python;
-
-void raise_IndexError()
-{
-        PyErr_SetString(PyExc_IndexError, "Index out of range");
-        throw error_already_set();
-}
 
 // vector class
 // -----------------------------------------------------------------------------

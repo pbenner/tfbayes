@@ -120,6 +120,7 @@ interface_la_CXXFLAGS =
 interface_la_SOURCES  = \
 	interface.cc
 interface_la_LIBADD   = $(LIB_BOOST_PYTHON)
+interface_la_LIBADD  += libtfbayes-phylotree.la
 interface_la_LDFLAGS  = -avoid-version -module
 
 ## set python package name
