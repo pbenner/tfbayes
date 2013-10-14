@@ -3,15 +3,17 @@
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/include
 #AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
-noinst_PROGRAMS = code-test
+noinst_PROGRAMS = alphabet-test
 
-code_test_SOURCES = code-test.cc
-code_test_LDADD   = libtfbayes-uipac.la
+alphabet_test_SOURCES = alphabet-test.cc
+alphabet_test_LDADD   = libtfbayes-uipac.la
 
 ## library
 lib_LTLIBRARIES = libtfbayes-uipac.la
 
 libtfbayes_uipac_la_SOURCES = \
+	alphabet.cc
+	alphabet.hh
 	code.cc \
 	code.hh \
 	nucleotide-sequence.hh

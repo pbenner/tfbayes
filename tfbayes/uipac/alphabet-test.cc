@@ -1,4 +1,4 @@
-/* Copyright (C) 2011, 2012 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef CODE_HH
-#define CODE_HH
 
-#ifdef HAVE_CONFIG_H
-#include <tfbayes/config.h>
-#endif /* HAVE_CONFIG_H */
+#include <iostream>
 
-bool is_nucleotide(const char S);
+#include <tfbayes/uipac/alphabet.hh>
+
+using namespace std;
 
 template <typename CODE_TYPE>
 CODE_TYPE code_nucleotide(char a)
@@ -42,35 +40,37 @@ CODE_TYPE code_nucleotide(char a)
                 return 2;
         case '-':
                 return 4;
-        case 'N':
-        case 'n':
-                return -1;
-        default:
-                break;
         }
         return -1;
 }
 
-template <typename CODE_TYPE>
-char decode_nucleotide(CODE_TYPE a)
+void
+generate_nucleotide_code()
 {
-        switch (a) {
-        case 1:
-                return 'A';
-        case 3:
-                return 'C';
-        case 0:
-                return 'G';
-        case 2:
-                return 'T';
-        case 4:
-                return '-';
-        case -1:
-                return 'N';
-        default:
-                break;
+        for (alphabet_code_t i = 0; i < 126; i++) {
+                cout << (int)code_nucleotide<alphabet_code_t>(i) << ", ";
         }
-        return 'X';
+        cout << "-1" << endl;
 }
 
-#endif /* CODE_HH */
+void
+test_nucleotide_code()
+{
+        nucleotide_alphabet_t a;
+
+        for (alphabet_code_t i = 0; i < 126; i++) {
+                cout << i << " is coded as " << (int)a.code(i) << " and decoded as " << a.decode(a.code(i));
+                if (a.element(i)) {
+                        cout << " (is element)";
+                }
+                cout << endl;
+        }
+}
+
+int
+main(void)
+{
+        test_nucleotide_code();
+
+        return 0;
+}
