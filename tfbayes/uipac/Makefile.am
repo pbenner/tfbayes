@@ -24,6 +24,17 @@ otherinclude_HEADERS = \
 	code.hh \
 	nucleotide-sequence.hh
 
+## python interface
+pkgpython_LTLIBRARIES = interface.la
+
+interface_la_CPPFLAGS = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS)
+interface_la_CXXFLAGS = 
+interface_la_SOURCES  = \
+	interface.cc
+interface_la_LIBADD   = $(LIB_BOOST_PYTHON)
+interface_la_LIBADD  += libtfbayes-uipac.la
+interface_la_LDFLAGS  = -avoid-version -module
+
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/uipac
 
