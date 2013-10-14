@@ -56,7 +56,8 @@ generate_nucleotide_code()
 void
 test_nucleotide_code()
 {
-        nucleotide_alphabet_t a;
+        alphabet_t b = nucleotide_alphabet_t();
+        alphabet_t a = b;
 
         for (alphabet_code_t i = 0; i < 126; i++) {
                 cout << i << " is coded as " << (int)a.code(i) << " and decoded as " << a.decode(a.code(i));

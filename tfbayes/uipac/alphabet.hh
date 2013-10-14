@@ -28,14 +28,6 @@ typedef char alphabet_code_t;
 
 class alphabet_t {
 public:
-        virtual alphabet_code_t   code(alphabet_code_t letter) const = 0;
-        virtual alphabet_code_t decode(alphabet_code_t code  ) const = 0;
-        virtual bool element(alphabet_code_t letter) const = 0;
-        virtual size_t size() const = 0;
-};
-
-class nucleotide_alphabet_t : public alphabet_t {
-public:
         alphabet_code_t code(alphabet_code_t letter) const {
                 return _code[static_cast<size_t>(letter)];
         }
@@ -46,9 +38,30 @@ public:
                 return _code[static_cast<size_t>(letter)] >= 0;
         }
         size_t size() const {
-                return 5;
+                return _size;
         }
 protected:
+        // a derived class may use this constructor to
+        // initialize the codebooks
+        alphabet_t(const alphabet_code_t* code,
+                   const alphabet_code_t* decode,
+                   size_t size)
+                : _code(code), _decode(decode), _size(size)
+                { }
+        // codebook pointer
+        const alphabet_code_t*   _code;
+        const alphabet_code_t* _decode;
+        // the size of the alphabet
+        size_t _size;
+};
+
+class nucleotide_alphabet_t : public alphabet_t {
+public:
+        nucleotide_alphabet_t() 
+                : alphabet_t(_code, _decode, 5)
+                { }
+protected:
+        // codebooks specific to this class
         static const alphabet_code_t   _code[];
         static const alphabet_code_t _decode[];
 };

@@ -37,7 +37,7 @@ using namespace boost::python;
 
 BOOST_PYTHON_MODULE(interface)
 {
-        class_<alphabet_t, boost::noncopyable>("alphabet_t", no_init)
+        class_<alphabet_t>("alphabet_t", no_init)
                 .def("code",    &alphabet_t::code)
                 .def("decode",  &alphabet_t::decode)
                 .def("element", &alphabet_t::element)
