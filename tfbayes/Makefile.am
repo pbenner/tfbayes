@@ -8,8 +8,8 @@ SUBDIRS += dpm
 SUBDIRS += config
 SUBDIRS += cluster
 SUBDIRS += phylotree
-SUBDIRS += alignment
 SUBDIRS += uipac
+SUBDIRS += alignment
 SUBDIRS += utility
 SUBDIRS += tools
 

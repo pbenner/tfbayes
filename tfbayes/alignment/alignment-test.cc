@@ -17,6 +17,8 @@
 
 #include <iostream>
 
+#include <tfbayes/phylotree/phylotree-parsetree.hh>
+#include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/alignment/sequence.hh>
 
 using namespace std;
@@ -24,9 +26,10 @@ using namespace std;
 int
 main(void)
 {
-        sequence_t<> sequence("ACTGCTAGCTAGCGTACGACGTATGNT-N");
+        pt_root_t tree = parse_tree_list("alignment-test.nh").front();
+        alignment_t<> alignment("alignment-test.fa", tree);
 
-        cout << sequence << endl;
+        cout << print_alignment_pretty(alignment) << endl;
 
         return 0;
 }

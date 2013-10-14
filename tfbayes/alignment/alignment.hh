@@ -34,12 +34,13 @@
 #include <tfbayes/fasta/fasta.hh>
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
+#include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/uipac/code.hh>
 #include <tfbayes/uipac/nucleotide-sequence.hh>
 #include <tfbayes/utility/linalg.hh>
 #include <tfbayes/utility/strtools.hh>
 
-template <typename CODE_TYPE>
+template <typename CODE_TYPE = alphabet_code_t>
 class alignment_t : std::vector<nucleotide_sequence_t<CODE_TYPE> > {
 public:
         // Typedefs
@@ -396,36 +397,46 @@ template <typename CODE_TYPE>
 class print_alignment_t {
 public:
         print_alignment_t(const alignment_t<CODE_TYPE>& alignment)
-        : _alignment(&alignment)
+                : _alignment(alignment)
                 { }
 
-        virtual const alignment_t<CODE_TYPE>& alignment() const {
-                return *_alignment;
+        virtual const alignment_t<CODE_TYPE>& operator()() const {
+                return _alignment;
         }
 protected:
-        const alignment_t<CODE_TYPE>* _alignment;
+        const alignment_t<CODE_TYPE>& _alignment;
 };
 
 template <typename CODE_TYPE>
-class print_alignment_pretty : public print_alignment_t<CODE_TYPE> {
+class print_alignment_pretty_t : public print_alignment_t<CODE_TYPE> {
 public:
-        print_alignment_pretty(const alignment_t<CODE_TYPE>& alignment)
+        print_alignment_pretty_t(const alignment_t<CODE_TYPE>& alignment)
                 : print_alignment_t<CODE_TYPE>(alignment)
                 { }
 };
-
 template <typename CODE_TYPE>
-class print_alignment_fasta : public print_alignment_t<CODE_TYPE> {
-public:
-        print_alignment_fasta(const alignment_t<CODE_TYPE>& alignment)
-                : print_alignment_t<CODE_TYPE>(alignment)
-                { }
-};
-
-template <typename CODE_TYPE>
-std::ostream& operator<< (std::ostream& o, const print_alignment_pretty<CODE_TYPE>& alignment_container)
+print_alignment_pretty_t<CODE_TYPE> print_alignment_pretty(alignment_t<CODE_TYPE> alignment)
 {
-        const alignment_t<CODE_TYPE>& alignment(alignment_container.alignment());
+        return print_alignment_pretty_t<CODE_TYPE>(alignment);
+}
+
+template <typename CODE_TYPE>
+class print_alignment_fasta_t : public print_alignment_t<CODE_TYPE> {
+public:
+        print_alignment_fasta_t(const alignment_t<CODE_TYPE>& alignment)
+                : print_alignment_t<CODE_TYPE>(alignment)
+                { }
+};
+template <typename CODE_TYPE>
+print_alignment_fasta_t<CODE_TYPE> print_alignment_fasta(alignment_t<CODE_TYPE> alignment)
+{
+        return print_alignment_fasta_t<CODE_TYPE>(alignment);
+}
+
+template <typename CODE_TYPE>
+std::ostream& operator<< (std::ostream& o, const print_alignment_pretty_t<CODE_TYPE>& alignment_container)
+{
+        const alignment_t<CODE_TYPE>& alignment(alignment_container());
 
         for (typename alignment_t<CODE_TYPE>::taxon_map_t::const_iterator it = alignment.taxon_map().begin();
              it != alignment.taxon_map().end(); it++) {
@@ -442,9 +453,9 @@ std::ostream& operator<< (std::ostream& o, const print_alignment_pretty<CODE_TYP
 }
 
 template <typename CODE_TYPE>
-std::ostream& operator<< (std::ostream& o, const print_alignment_fasta<CODE_TYPE>&  alignment_container)
+std::ostream& operator<< (std::ostream& o, const print_alignment_fasta_t<CODE_TYPE>&  alignment_container)
 {
-        const alignment_t<CODE_TYPE>& alignment(alignment_container.alignment());
+        const alignment_t<CODE_TYPE>& alignment(alignment_container());
 
         for (typename alignment_t<CODE_TYPE>::taxon_map_t::const_iterator it = alignment.taxon_map().begin();
              it != alignment.taxon_map().end(); it++) {
