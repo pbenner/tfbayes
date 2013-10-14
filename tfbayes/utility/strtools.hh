@@ -46,4 +46,17 @@ std::vector<std::string> token(const std::string& str, char t) {
         return tokens;
 }
 
+/* introduce a new line every n characters */
+static __inline__
+std::string split_string(const std::string& str, size_t n)
+{
+        std::string result(str);
+        for (std::string::iterator it = result.begin()+n;
+             it < result.end(); it+=n) {
+                it = result.insert(it, '\n');
+                it++;
+        }
+        return result;
+}
+
 #endif /* STRTOOLS_HH */

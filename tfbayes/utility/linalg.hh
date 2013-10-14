@@ -1,4 +1,4 @@
-/* Copyright (C) 2010 Philipp Benner
+/* Copyright (C) 2010-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,11 +37,30 @@ namespace std {
                         : vector<vector<T> >()
                         {}
                 matrix(size_t rows, size_t columns)
-                        : vector<vector<T> >(rows, vector<double>(columns, 0.0))
+                        : vector<vector<T> >(rows, vector<T>(columns, 0.0))
+                        {}
+                matrix(size_t rows, size_t columns, T init)
+                        : vector<vector<T> >(rows, vector<T>(columns, init))
                         {}
                 template <typename InputIterator>
                 matrix (InputIterator first, InputIterator last)
                         : vector<vector<T> >(first, last) { }
+                std::matrix<T> transpose(T init = 0.0) {
+                        std::matrix<T> m(columns(), rows(), init);
+                        for (size_t i = 0; i < columns(); i++) {
+                                for (size_t j = 0; j < rows(); j++) {
+                                        m[i][j] = (*this)[j][i]; 
+                                }
+                        }
+                        return m;
+                }
+                size_t rows() const {
+                        return matrix<T>::size();
+                }
+                size_t columns() const {
+                        return rows() == 0 ? 0 : operator[](0).size();
+                }
+                using vector<vector<T> >::operator[];
         };
 }
 

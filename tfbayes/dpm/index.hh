@@ -22,12 +22,12 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <stddef.h>
-
-#include <clonable.hh>
+#include <cstddef>
 #include <iostream>
 
 #include <boost/functional/hash.hpp> 
+
+#include <tfbayes/dpm/clonable.hh>
 
 // index_t and range_t
 ////////////////////////////////////////////////////////////////////////////////

@@ -33,39 +33,46 @@
 #include <tfbayes/phylotree/interface.hh>
 #include <tfbayes/phylotree/utility.hh>
 #include <tfbayes/interface/exceptions.hh>
+#include <tfbayes/interface/utility.hh>
 
 using namespace boost::python;
 
 // library interface
 // -----------------------------------------------------------------------------
 
-char alignment_getitem(alignment_t<code_t>& a, tuple index)
+char alignment_getitem(alignment_t<>& a, tuple index)
 {
         size_t i = extract<size_t>(index[0]);
         size_t j = extract<size_t>(index[1]);
-        if (i >= a   .length()) raise_IndexError();
-        if (j >= a[i].size  ()) raise_IndexError();
-        return a[i][j];
+        if (i >= a.n_species()) raise_IndexError();
+        if (j >= a.length   ()) raise_IndexError();
+        return a[alignment_index_t(i,j)];
 }
 
-void alignment_setitem(alignment_t<code_t>& a, tuple index, double d)
+void alignment_setitem(alignment_t<>& a, tuple index, alphabet_code_t d)
 {
         size_t i = extract<size_t>(index[0]);
         size_t j = extract<size_t>(index[1]);
-        if (i >= a   .length()) raise_IndexError();
-        if (j >= a[i].size  ()) raise_IndexError();
-        a[i][j] = d;
+        if (i >= a.n_species()) raise_IndexError();
+        if (j >= a.length   ()) raise_IndexError();
+        a[alignment_index_t(i,j)] = d;
+}
+
+string alignment_str(alignment_t<>& a)
+{
+        return to_string(print_alignment_pretty(a));
 }
 
 BOOST_PYTHON_MODULE(interface)
 {
-        class_<alignment_t<code_t> >("alignment_t", no_init)
-                .def(init<size_t, code_t, pt_root_t>())
+        class_<alignment_t<> >("alignment_t", no_init)
+                .def(init<size_t, pt_root_t, code_t>())
                 .def(init<string, pt_root_t>())
-                .def("__iter__",    boost::python::iterator<alignment_t<code_t> >())
+                .def("__iter__",    boost::python::iterator<alignment_t<> >())
                 .def("__getitem__", alignment_getitem)
                 .def("__setitem__", alignment_setitem)
-                .def("scan",                &alignment_t<code_t>::scan<alphabet_size>)
-                .def("marginal_likelihood", &alignment_t<code_t>::marginal_likelihood<alphabet_size>)
+                .def("__str__",     alignment_str)
+                .def("scan",                &alignment_t<>::scan<alphabet_size>)
+                .def("marginal_likelihood", &alignment_t<>::marginal_likelihood<alphabet_size>)
                 ;
 }

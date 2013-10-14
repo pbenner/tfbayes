@@ -11,6 +11,7 @@ noinst_PROGRAMS = alignment-test alignment-hmm-test
 
 alignment_hmm_test_SOURCES = alignment-hmm-test.cc
 alignment_hmm_test_LDADD   = -lm
+alignment_hmm_test_LDADD  += $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
 alignment_hmm_test_LDADD  += $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
 alignment_hmm_test_LDADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
 
@@ -30,6 +31,7 @@ interface_la_LIBADD   = $(LIB_BOOST_PYTHON)
 interface_la_LIBADD  += -lm
 interface_la_LIBADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
 interface_la_LIBADD  += $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
+interface_la_LIBADD  += $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
 interface_la_LDFLAGS  = -avoid-version -module
 
 ## set python package name

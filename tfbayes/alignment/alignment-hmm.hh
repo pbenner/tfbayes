@@ -84,7 +84,7 @@ protected:
                 }
                 forward.push_back(px_0);
 
-                for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
+                for (typename alignment_t<CODE_TYPE>::const_iterator it = alignment.begin(); it != alignment.end(); it++) {
                         vector<double> likelihood_k(dim, 0.0); // p(z_k | x_k)
                         vector<double> prediction_k(dim, 0.0); // p(x_k | z_1:k-1)
                         vector<double> forward_k(dim, 0.0);

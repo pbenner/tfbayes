@@ -27,9 +27,11 @@ int
 main(void)
 {
         pt_root_t tree = parse_tree_list("alignment-test.nh").front();
-        alignment_t<> alignment("alignment-test.fa", tree);
+//        alignment_t<> alignment("alignment-test.fa", tree);
+        alignment_t<> alignment("../../data/alignments/ucsc-hg19-multiz46-U25123.fa", tree);
 
         cout << print_alignment_pretty(alignment) << endl;
+        cout << print_alignment_fasta (alignment) << endl;
 
         return 0;
 }

@@ -39,41 +39,46 @@
 #include <tfbayes/uipac/nucleotide-sequence.hh>
 #include <tfbayes/utility/linalg.hh>
 #include <tfbayes/utility/strtools.hh>
+#include <tfbayes/alignment/sequence.hh>
+#include <tfbayes/dpm/index.hh>
+
+typedef seq_index_t alignment_index_t;
 
 template <typename CODE_TYPE = alphabet_code_t>
-class alignment_t : std::vector<nucleotide_sequence_t<CODE_TYPE> > {
+class alignment_t : std::matrix<CODE_TYPE> {
 public:
+        using std::matrix<CODE_TYPE>::begin;
+        using std::matrix<CODE_TYPE>::end;
         // Typedefs
         ////////////////////////////////////////////////////////////////////////
-        typedef std::vector<nucleotide_sequence_t<CODE_TYPE> > alignment_ancestor_t;
         typedef boost::unordered_map<std::string, pt_node_t::id_t> taxon_map_t;
+        typedef typename std::matrix<CODE_TYPE>::iterator iterator;
+        typedef typename std::matrix<CODE_TYPE>::const_iterator const_iterator;
 
         // Constructors
         ////////////////////////////////////////////////////////////////////////
-        alignment_t(const alignment_ancestor_t sequences, const taxon_map_t& taxon_map)
-                : alignment_ancestor_t(sequences),
-                  _n_species(sequences.size()),
-                  _taxon_map(taxon_map) {
-                check_lengths();
+        alignment_t(const std::matrix<CODE_TYPE> sequences, const taxon_map_t& taxon_map)
+                : std::matrix<CODE_TYPE>(sequences),
+                  _n_species (taxon_map.size()),
+                  _length    (sequences.size()),
+                  _taxon_map (taxon_map) {
         }
-        alignment_t(const size_t length, CODE_TYPE init, const pt_root_t& tree)
-                : alignment_ancestor_t(tree.n_leaves, nucleotide_sequence_t<CODE_TYPE>()),
-                  _n_species(tree.n_leaves), _length(length) {
-                for (pt_node_t::leaves_t::const_iterator it = tree.leaves.begin(); it != tree.leaves.end(); it++) {
-                        const pt_leaf_t& leaf = **it;
-                        _taxon_map[leaf.name]     = leaf.id;
-                        this->operator[](leaf.id) = nucleotide_sequence_t<CODE_TYPE>(length, init);
-                }
+        alignment_t(const size_t length, const pt_root_t& tree, CODE_TYPE init)
+                : std::matrix<CODE_TYPE>(tree.n_leaves, length, init),
+                  _n_species (tree.n_leaves),
+                  _length    (length) {
         }
         alignment_t(const std::string& filename, const pt_root_t& tree)
-                : alignment_ancestor_t(tree.n_leaves, nucleotide_sequence_t<CODE_TYPE>()) {
-
+                : std::matrix<CODE_TYPE>(),
+                  // we have as many sequences in this alignment as
+                  // there are leaves in the tree
+                  _n_species (tree.n_leaves),
+                  _length    (0)
+                {
                 FastaParser parser(filename);
-                std::string sequence;
+                std::string str;
+                std::matrix<CODE_TYPE> tmp(n_species(), 0);
 
-                // we have as many sequences in this alignment as
-                // there are leaves in the tree
-                _n_species = tree.n_leaves;
                 // fill taxon map seperately since some species might
                 // not be present in the alignment
                 for (pt_node_t::leaves_t::const_iterator it = tree.leaves.begin();
@@ -81,36 +86,50 @@ public:
                         _taxon_map[(*it)->name] = (*it)->id;
                 }
                 // parse fasta file
-                while ((sequence = parser.read_sequence()) != "") {
+                while ((str = parser.read_sequence()) != "") {
                         std::string taxon  = token(parser.description()[0], '.')[0];
                         pt_node_t::id_t id = tree.get_leaf_id(taxon);
                         if (id != -1) {
+                                sequence_t<CODE_TYPE> sequence(str);
                                 // there might be multiple entries for
                                 // each species, join all entries into
                                 // a single sequence
-                                operator[](id) = nucleotide_sequence_t<CODE_TYPE>(operator[](id), sequence);
+                                tmp[id].insert(tmp[id].end(), sequence.begin(), sequence.end());
+                                // update length if necessary
+                                if (tmp[id].size() > length()) {
+                                        _length = tmp[id].size();
+                                }
                         }
                         else {
-                                std::cerr << "Warning: taxon `"
-                                          << taxon
-                                          << "' not found in the phylogenetic tree."
+                                std::cerr << boost::format("Warning: taxon `%s' not found in the phylogenetic tree.") % taxon
                                           << std::endl;
                         }
                 }
-                check_lengths();
+                // check that all lengths are consistent
+                for (taxon_map_t::const_iterator it = taxon_map().begin();
+                     it != taxon_map().end(); it++) {
+                        if (tmp[it->second].size() != length()) {
+                                std::cerr << boost::format("Error: taxon `%s' has inconsistent sequence length: ") % it->first
+                                          << boost::format("%d instead of %d") % tmp[it->second].size() % length()
+                                          << std::endl;
+                                exit(EXIT_FAILURE);
+                        }
+                }
+                // assign contents of tmp to this object
+                std::matrix<CODE_TYPE>::operator=(tmp.transpose());
         }
         alignment_t(const alignment_t& alignment)
-        : alignment_ancestor_t(alignment),
-          _n_species (alignment._n_species),
-          _length    (alignment._length),
-          _taxon_map (alignment._taxon_map) {
+                : std::matrix<CODE_TYPE>(alignment),
+                  _n_species (alignment._n_species),
+                  _length    (alignment._length),
+                  _taxon_map (alignment._taxon_map) {
         }
         virtual ~alignment_t() {
         }
 
         friend void swap(alignment_t& first, alignment_t&second) {
-                std::swap(static_cast<alignment_ancestor_t&>(first),
-                          static_cast<alignment_ancestor_t&>(second));
+                std::swap(static_cast<std::matrix<CODE_TYPE>&>(first),
+                          static_cast<std::matrix<CODE_TYPE>&>(second));
                 std::swap(first._length,    second._length);
                 std::swap(first._n_species, second._n_species);
                 std::swap(first._taxon_map, second._taxon_map);
@@ -123,102 +142,21 @@ public:
                 swap(*this, tmp);
                 return *this;
         }
-        using alignment_ancestor_t::operator[];
-        const nucleotide_sequence_t<CODE_TYPE>& operator[](const std::string& taxon) const {
-                return operator[](taxon_map(taxon));
+        const CODE_TYPE& operator[](const alignment_index_t& index) const {
+                return std::matrix<CODE_TYPE>::operator[](index[1])[index[0]];
         }
-        nucleotide_sequence_t<CODE_TYPE>& operator[](const std::string& taxon) {
-                return operator[](taxon_map(taxon));
+              CODE_TYPE& operator[](const alignment_index_t& index) {
+                return std::matrix<CODE_TYPE>::operator[](index[1])[index[0]];
+        }
+        sequence_t<CODE_TYPE> operator[](const std::string& taxon) const {
+                sequence_t<CODE_TYPE> sequence(length());
+                pt_node_t::id_t id = taxon_map(taxon);
+                for (const_iterator it = begin(); it != end() && id != -1; it++) {
+                        sequence[it-begin()] = (*it)[id];
+                }
+                return sequence;
         }
 
-        // Iterator
-        ////////////////////////////////////////////////////////////////////////
-        class iterator : public std::iterator<std::bidirectional_iterator_tag, const std::vector<CODE_TYPE> >
-        {
-        public:
-                iterator(size_t position,
-                         size_t length,
-                         size_t n_species,
-                         const alignment_ancestor_t& alignment,
-                         const taxon_map_t& taxon_map)
-                        : _position(position),
-                          _length(length),
-                          _n_species(n_species),
-                          _alignment(alignment),
-                          _observations(n_species, 0) {
-                        fill_observations();
-                }
-                iterator(const iterator& it)
-                        : _position(0),
-                          _length(it._length),
-                          _n_species(it._n_species),
-                          _alignment(it._alignment),
-                          _observations(it._observations)
-                {
-                        operator=(it);
-                }
-                iterator& operator=(const iterator& it)
-                {
-                        _position     = it._position;
-                        _observations = it._observations;
-
-                        return *this;
-                }
-                const size_t& position() const {
-                        return _position;
-                }
-                bool operator==(const iterator& it) const {
-                        return position() == it.position();
-                }
-                bool operator!=(const iterator& it) const {
-                        return position() != it.position();
-                }
-                iterator& operator++(int _) {
-                        if (_position < _length) {
-                                _position++;
-                                fill_observations();
-                        }
-                        return *this;
-                }
-                iterator& operator--(int _) {
-                        if (_position > 0) {
-                                _position--;
-                                fill_observations();
-                        }
-                        return *this;
-                }
-                const std::vector<CODE_TYPE>& operator*() const {
-                        return _observations;
-                }
-                const std::vector<CODE_TYPE>* operator->() const {
-                        return &operator*();
-                }
-        protected:
-                void fill_observations() {
-                        if (position() < _length) {
-                                for (size_t i = 0; i < _n_species; i++) {
-                                        if (_alignment[i].size() > 0) {
-                                                _observations[i] = _alignment[i][position()];
-                                        }
-                                        else {
-                                                _observations[i] = code_nucleotide<CODE_TYPE>('-');
-                                        }
-                                }
-                        }
-                }
-
-                size_t _position;
-                const size_t _length;
-                const size_t _n_species;
-                const alignment_ancestor_t& _alignment;
-                std::vector<CODE_TYPE> _observations;
-        };
-        virtual iterator begin() const {
-                return iterator(0, _length, _n_species, *this, _taxon_map);
-        }
-        virtual iterator end() const {
-                return iterator(_length, _length, _n_species, *this, _taxon_map);
-        }
         // Methods
         ////////////////////////////////////////////////////////////////////////
         const size_t& n_species() const {
@@ -249,15 +187,15 @@ public:
                 }
 
                 for (iterator it = begin(); it != end(); it++) {
-                        result[it.position()] = 0;
-                        if (it.position() + counts.size() > length()) {
+                        result[it - begin()] = 0;
+                        if (it - begin() + counts.size() > length()) {
                                 // do not exit the loop here so that every
                                 // position is initialized
                                 continue;
                         }
-                        for (iterator is(it); is.position() < it.position() + counts.size(); is++) {
-                                result[it.position()] += pt_marginal_likelihood<CODE_TYPE, ALPHABET_SIZE>(
-                                        tree, *is, exponents[is.position()-it.position()]);
+                        for (iterator is(it); is < it + counts.size(); is++) {
+                                result[it - begin()] += pt_marginal_likelihood<CODE_TYPE, ALPHABET_SIZE>(
+                                        tree, *is, exponents[is-it]);
                         }
                 }
                 return result;
@@ -265,17 +203,16 @@ public:
         template<size_t ALPHABET_SIZE>
         std::vector<double> marginal_likelihood(const pt_root_t& tree, const std::vector<double>& prior) {
                 exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha(prior.begin(), prior.end());
-                vector<double> result(length(), 0);
+                vector<double> result;
 
                 /* go through the alignment and compute the marginal
                  * likelihood for each position */
                 for (iterator it = begin(); it != end(); it++) {
-                        result[it.position()] = pt_marginal_likelihood<CODE_TYPE, ALPHABET_SIZE>
-                                (tree, *it, alpha);
+                        result.push_back(pt_marginal_likelihood<CODE_TYPE, ALPHABET_SIZE>
+                                         (tree, *it, alpha));
                 }
                 return result;
         }
-
 protected:
         // number of species
         size_t _n_species;
@@ -283,39 +220,6 @@ protected:
         size_t _length;
         // map taxon name to nodes in the phylogenetic tree
         taxon_map_t _taxon_map;
-
-        // private methods
-        void check_lengths() {
-                // find a sequence that has length greater than zero
-                // to set the length of this alignment
-                _length = 0;
-                for (typename alignment_ancestor_t::const_iterator it = alignment_ancestor_t::begin();
-                     it != alignment_ancestor_t::end(); it++) {
-                        if (it->size() > 0) {
-                                _length = it->size();
-                                break;
-                        }
-                }
-                // check that every sequence has either length zero or
-                // length equal to the length of this alignment
-                for (taxon_map_t::const_iterator it = _taxon_map.begin();
-                     it != _taxon_map.end(); it++) {
-                        if (operator[](it->second).size() == 0) {
-                                std::cerr << "Warning: nucleotide sequence for taxon `"
-                                          << it->first
-                                          << "' has length zero."
-                                          << std::endl;
-                        }
-                        if(operator[](it->second).size() != 0 &&
-                           operator[](it->second).size() != _length) {
-                                std::cerr << "Warning: nucleotide sequence for taxon `"
-                                          << it->first
-                                          << "' has invalid length."
-                                          << std::endl;
-                                exit(EXIT_FAILURE);
-                        }
-                }
-        }
 };
 
 
@@ -440,14 +344,10 @@ std::ostream& operator<< (std::ostream& o, const print_alignment_pretty_t<CODE_T
 
         for (typename alignment_t<CODE_TYPE>::taxon_map_t::const_iterator it = alignment.taxon_map().begin();
              it != alignment.taxon_map().end(); it++) {
-                size_t i = it->second;
 
-                o << boost::format("%10s: ") % it->first;
-                for (size_t j = 0; j < alignment.length(); j++) {
-                        o << decode_nucleotide(alignment[i][j]);
-                }
-                o << std::endl;
-
+                o << boost::format("%10s: ") % it->first
+                  << alignment[it->first]
+                  << std::endl;
         }
         return o;
 }
@@ -459,17 +359,11 @@ std::ostream& operator<< (std::ostream& o, const print_alignment_fasta_t<CODE_TY
 
         for (typename alignment_t<CODE_TYPE>::taxon_map_t::const_iterator it = alignment.taxon_map().begin();
              it != alignment.taxon_map().end(); it++) {
-                size_t i = it->second;
-
-                o << boost::format(">%s") % it->first;
-                for (size_t j = 0; j < alignment.length(); j++) {
-                        if (j % 80 == 0) {
-                                o << std::endl;
-                        }
-                        o << decode_nucleotide(alignment[i][j]);
-                }
-                o << std::endl;
-
+                std::stringstream ss;
+                ss << alignment[it->first];
+                o << boost::format(">%s\n") % it->first
+                  << split_string(ss.str(), 80)
+                  << std::endl;
         }
         return o;
 }
