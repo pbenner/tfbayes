@@ -46,7 +46,12 @@ char alignment_getitem(alignment_t<>& a, tuple index)
         size_t j = extract<size_t>(index[1]);
         if (i >= a.n_species()) raise_IndexError();
         if (j >= a.length   ()) raise_IndexError();
-        return a[alignment_index_t(i,j)];
+        if (a[alignment_index_t(i,j)] == a.alphabet().code('N')) {
+                return 'N';
+        }
+        else {
+                return a.alphabet().decode(a[alignment_index_t(i,j)]);
+        }
 }
 
 void alignment_setitem(alignment_t<>& a, tuple index, alphabet_code_t d)
@@ -55,7 +60,7 @@ void alignment_setitem(alignment_t<>& a, tuple index, alphabet_code_t d)
         size_t j = extract<size_t>(index[1]);
         if (i >= a.n_species()) raise_IndexError();
         if (j >= a.length   ()) raise_IndexError();
-        a[alignment_index_t(i,j)] = d;
+        a[alignment_index_t(i,j)] = a.alphabet().code(d);
 }
 
 string alignment_str(alignment_t<>& a)
@@ -66,7 +71,6 @@ string alignment_str(alignment_t<>& a)
 BOOST_PYTHON_MODULE(interface)
 {
         class_<alignment_t<> >("alignment_t", no_init)
-                .def(init<size_t, pt_root_t, code_t>())
                 .def(init<string, pt_root_t>())
                 .def("__iter__",    boost::python::iterator<alignment_t<> >())
                 .def("__getitem__", alignment_getitem)

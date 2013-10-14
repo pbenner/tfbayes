@@ -31,12 +31,16 @@
 class FastaParser {
 public:
         FastaParser(const std::string& file_name);
+        FastaParser(const std::istream& stream);
 
         std::string read_sequence();
         const std::vector<std::string>& description();
 
 protected:
+        void init_parser();
+
         std::ifstream file;
+        std::istream& stream;
         std::string prev_line;
         std::vector<std::string> _description;
 };

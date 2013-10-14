@@ -26,22 +26,34 @@
 
 using namespace std;
 
-FastaParser::FastaParser(const string& file_name)
-        : file(file_name.c_str())
+FastaParser::FastaParser(const string& filename)
+        : file(filename.c_str()),
+          stream(file)
 {
-        string _line;
-
         if (!file.good())
         {
                 cerr << "Could not open `"
-                     << file_name
+                     << filename
                      << "'."
                      << endl;
         }
+        init_parser();
+}
 
-        while (file) {
-                getline(file, _line);
-                string line = strip(_line);
+FastaParser::FastaParser(const istream& stream)
+        : stream(file)
+{
+        init_parser();
+}
+
+void
+FastaParser::init_parser()
+{
+        string tmp;
+
+        while (stream) {
+                getline(stream, tmp);
+                string line = strip(tmp);
                 if (line == "" || line[0] == '>') {
                         prev_line = line;
                         break;
@@ -62,10 +74,10 @@ FastaParser::description()
 string
 FastaParser::read_sequence()
 {
-        string _line;
+        string tmp;
         string sequence;
 
-        if (prev_line == "" || !file) {
+        if (prev_line == "" || !stream) {
                 return "";
         }
         if (prev_line[0] != '>') {
@@ -76,9 +88,9 @@ FastaParser::read_sequence()
         _description = token(prev_line, '|');
 
         while (true) {
-                getline(file, _line);
-                string line = strip(_line);
-                if (line == "" || _line[0] == '>' || !file) {
+                getline(stream, tmp);
+                string line = strip(tmp);
+                if (line == "" || tmp[0] == '>' || !stream) {
                         prev_line = line;
                         break;
                 }

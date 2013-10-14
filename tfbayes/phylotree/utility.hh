@@ -26,6 +26,13 @@
 
 #include <tfbayes/phylotree/incomplete-expression.hh>
 
+std::ostream& operator<< (std::ostream& o, const exponent_t<char, 4>& exponent);
+std::ostream& operator<< (std::ostream& o, const polynomial_term_t<char, 4>& term);
+std::ostream& operator<< (std::ostream& o, const polynomial_t<char, 4>& polynomial);
+std::ostream& operator<< (std::ostream& o, const exponent_t<char, 5>& exponent);
+std::ostream& operator<< (std::ostream& o, const polynomial_term_t<char, 5>& term);
+std::ostream& operator<< (std::ostream& o, const polynomial_t<char, 5>& polynomial);
+
 std::ostream& operator<< (std::ostream& o, const exponent_t<short, 4>& exponent);
 std::ostream& operator<< (std::ostream& o, const polynomial_term_t<short, 4>& term);
 std::ostream& operator<< (std::ostream& o, const polynomial_t<short, 4>& polynomial);
@@ -46,6 +53,12 @@ std::ostream& operator<< (std::ostream& o, const polynomial_t<double, 4>& polyno
 std::ostream& operator<< (std::ostream& o, const exponent_t<double, 5>& exponent);
 std::ostream& operator<< (std::ostream& o, const polynomial_term_t<double, 5>& term);
 std::ostream& operator<< (std::ostream& o, const polynomial_t<double, 5>& polynomial);
+
+size_t hash_value(const exponent_t<char, 2>& exponent);
+size_t hash_value(const exponent_t<char, 3>& exponent);
+size_t hash_value(const exponent_t<char, 4>& exponent);
+size_t hash_value(const exponent_t<char, 5>& exponent);
+size_t hash_value(const exponent_t<char, 10>& exponent);
 
 size_t hash_value(const exponent_t<short, 2>& exponent);
 size_t hash_value(const exponent_t<short, 3>& exponent);

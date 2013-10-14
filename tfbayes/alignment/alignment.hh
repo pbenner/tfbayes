@@ -57,23 +57,22 @@ public:
 
         // Constructors
         ////////////////////////////////////////////////////////////////////////
-        alignment_t(const std::matrix<CODE_TYPE> sequences, const taxon_map_t& taxon_map)
+        alignment_t(const std::matrix<CODE_TYPE> sequences, const taxon_map_t& taxon_map,
+                    alphabet_t alphabet = nucleotide_alphabet_t())
                 : std::matrix<CODE_TYPE>(sequences),
                   _n_species (taxon_map.size()),
                   _length    (sequences.size()),
-                  _taxon_map (taxon_map) {
+                  _taxon_map (taxon_map),
+                  _alphabet(alphabet) {
         }
-        alignment_t(const size_t length, const pt_root_t& tree, CODE_TYPE init)
-                : std::matrix<CODE_TYPE>(tree.n_leaves, length, init),
-                  _n_species (tree.n_leaves),
-                  _length    (length) {
-        }
-        alignment_t(const std::string& filename, const pt_root_t& tree)
+        alignment_t(const std::string& filename, const pt_root_t& tree,
+                    alphabet_t alphabet = nucleotide_alphabet_t())
                 : std::matrix<CODE_TYPE>(),
                   // we have as many sequences in this alignment as
                   // there are leaves in the tree
                   _n_species (tree.n_leaves),
-                  _length    (0)
+                  _length    (0),
+                  _alphabet(alphabet)
                 {
                 FastaParser parser(filename);
                 std::string str;
@@ -90,7 +89,7 @@ public:
                         std::string taxon  = token(parser.description()[0], '.')[0];
                         pt_node_t::id_t id = tree.get_leaf_id(taxon);
                         if (id != -1) {
-                                sequence_t<CODE_TYPE> sequence(str);
+                                sequence_t<CODE_TYPE> sequence(str, alphabet);
                                 // there might be multiple entries for
                                 // each species, join all entries into
                                 // a single sequence
@@ -108,6 +107,13 @@ public:
                 // check that all lengths are consistent
                 for (taxon_map_t::const_iterator it = taxon_map().begin();
                      it != taxon_map().end(); it++) {
+                        if (tmp[it->second].size() == 0) {
+                                std::cerr << boost::format("Error: taxon `%s' has sequence length zero") % it->first
+                                          << std::endl;
+                                // fill with missing data
+                                tmp[it->second] = sequence_t<CODE_TYPE>(length(), alphabet);
+                        }
+                        else
                         if (tmp[it->second].size() != length()) {
                                 std::cerr << boost::format("Error: taxon `%s' has inconsistent sequence length: ") % it->first
                                           << boost::format("%d instead of %d") % tmp[it->second].size() % length()
@@ -122,7 +128,8 @@ public:
                 : std::matrix<CODE_TYPE>(alignment),
                   _n_species (alignment._n_species),
                   _length    (alignment._length),
-                  _taxon_map (alignment._taxon_map) {
+                  _taxon_map (alignment._taxon_map),
+                  _alphabet  (alignment._alphabet) {
         }
         virtual ~alignment_t() {
         }
@@ -133,6 +140,7 @@ public:
                 std::swap(first._length,    second._length);
                 std::swap(first._n_species, second._n_species);
                 std::swap(first._taxon_map, second._taxon_map);
+                std::swap(first._alphabet,  second._alphabet);
         }
 
         // Operators
@@ -149,7 +157,7 @@ public:
                 return std::matrix<CODE_TYPE>::operator[](index[1])[index[0]];
         }
         sequence_t<CODE_TYPE> operator[](const std::string& taxon) const {
-                sequence_t<CODE_TYPE> sequence(length());
+                sequence_t<CODE_TYPE> sequence(length(), alphabet());
                 pt_node_t::id_t id = taxon_map(taxon);
                 for (const_iterator it = begin(); it != end() && id != -1; it++) {
                         sequence[it-begin()] = (*it)[id];
@@ -157,7 +165,7 @@ public:
                 return sequence;
         }
 
-        // Methods
+        // Access Methods
         ////////////////////////////////////////////////////////////////////////
         const size_t& n_species() const {
                 return _n_species;
@@ -175,6 +183,11 @@ public:
                 }
                 return -1;
         }
+        const alphabet_t& alphabet() const {
+                return _alphabet;
+        }
+        // Methods
+        ////////////////////////////////////////////////////////////////////////
         template<size_t ALPHABET_SIZE>
         std::vector<double> scan(const pt_root_t& tree, std::matrix<double>& counts) {
                 std::vector<double> result(length(), 0);
@@ -220,6 +233,8 @@ protected:
         size_t _length;
         // map taxon name to nodes in the phylogenetic tree
         taxon_map_t _taxon_map;
+        // alphabet (i.e. nucleotides or amino acids)
+        alphabet_t _alphabet;
 };
 
 
@@ -234,31 +249,8 @@ public:
         ////////////////////////////////////////////////////////////////////////
         alignment_set_t() { };
         alignment_set_t(const std::string& filename) {
-                read_fasta(filename);
-        }
-
-private:
-        taxon_map_t get_species_from_fasta(const std::string& filename) {
-                /* this automatically parses the fasta file format */
-                FastaParser parser(filename);
-                std::set<std::string> species;
-                taxon_map_t taxon_map;
-
-                while (parser.read_sequence() != "") {
-                        assert(parser.description().size()    > 0);
-                        assert(parser.description()[0].size() > 0);
-                        species.insert(parser.description()[0]);
-                }
-                std::vector<std::string> tmp(species.begin(), species.end());
-                for (size_t i = 0; i < tmp.size(); i++) {
-                        taxon_map[tmp[i]] = i;
-                }
-                return taxon_map;
-        }
-
-        void read_fasta(const std::string& filename) {
                 /* first check what species are available */
-                taxon_map_t taxon_map = get_species_from_fasta(filename);
+                taxon_map_t taxon_map = create_taxon_map(filename);
 
                 /* number of species */
                 size_t n = taxon_map.size();
@@ -284,7 +276,7 @@ private:
                         const std::string& name = parser.description()[0];
                         if (occurred[name]) {
                                 // push alignment
-                                this->push_back(alignment_t<CODE_TYPE>(sequences, taxon_map));
+                                push_back(alignment_t<CODE_TYPE>(sequences, taxon_map));
                                 // reset occurrences
                                 occurred = std::map<std::string, bool>();
                                 // start new alignment
@@ -293,7 +285,26 @@ private:
                         occurred[name] = true;
                         sequences[taxon_map[name]] = nucleotide_sequence_t<CODE_TYPE>(line);
                 }
-                this->push_back(alignment_t<CODE_TYPE>(sequences, taxon_map));
+                push_back(alignment_t<CODE_TYPE>(sequences, taxon_map));
+        }
+
+protected:
+        taxon_map_t create_taxon_map(const std::string& filename) {
+                /* this automatically parses the fasta file format */
+                FastaParser parser(filename);
+                std::set<std::string> species;
+                taxon_map_t taxon_map;
+
+                while (parser.read_sequence() != "") {
+                        assert(parser.description().size()    > 0);
+                        assert(parser.description()[0].size() > 0);
+                        species.insert(parser.description()[0]);
+                }
+                std::vector<std::string> tmp(species.begin(), species.end());
+                for (size_t i = 0; i < tmp.size(); i++) {
+                        taxon_map[tmp[i]] = i;
+                }
+                return taxon_map;
         }
 };
 
