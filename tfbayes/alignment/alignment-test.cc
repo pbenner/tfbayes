@@ -32,7 +32,7 @@ main(void)
         cout << print_alignment_pretty(alignment) << endl;
         cout << print_alignment_fasta (alignment) << endl;
 
-//        alignment_set_t<> alignment_set("alignment-test.fa", tree);
+        alignment_set_t<> alignment_set("alignment-test.fa", tree);
 
         return 0;
 }

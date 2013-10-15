@@ -30,7 +30,7 @@
 
 class FastaParser {
 public:
-        FastaParser(const std::string& file_name);
+        FastaParser(const std::string& filename);
         FastaParser(const std::istream& stream);
 
         std::string read_sequence();
