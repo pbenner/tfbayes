@@ -72,6 +72,16 @@ FastaParser::description() const
 }
 
 string
+FastaParser::taxon() const
+{
+        if (description().size() == 0)
+                return "";
+        else {
+                return token(description()[0], '.')[0];
+        }
+}
+
+string
 FastaParser::operator()()
 {
         string tmp;

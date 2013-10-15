@@ -26,16 +26,27 @@ using namespace std;
 int
 main(void)
 {
+        // alignment with phylogenetic tree
         pt_root_t tree = parse_tree_list("alignment-test.nh").front();
-        alignment_t<> alignment("alignment-test.fa", tree);
+        alignment_t<> alignment1("alignment-test.fa", tree);
 
-        cout << print_alignment_pretty(alignment) << endl;
-        cout << print_alignment_fasta (alignment) << endl;
+        cout << print_alignment_pretty(alignment1) << endl;
+        cout << print_alignment_fasta (alignment1) << endl;
 
-        alignment_set_t<> alignment_set("alignment-test.mfa", tree);
+        alignment_set_t<> alignment_set1("alignment-test.mfa", tree);
 
-        for (alignment_set_t<>::const_iterator it = alignment_set.begin();
-             it != alignment_set.end(); it++) {
+        for (alignment_set_t<>::const_iterator it = alignment_set1.begin();
+             it != alignment_set1.end(); it++) {
+                cout << print_alignment_pretty(*it) << endl;
+        }
+
+        // alignment with phylogenetic tree
+        alignment_t<> alignment2("alignment-test.fa");
+        cout << print_alignment_pretty(alignment2) << endl;
+
+        alignment_set_t<> alignment_set2("alignment-test.mfa");
+        for (alignment_set_t<>::const_iterator it = alignment_set2.begin();
+             it != alignment_set2.end(); it++) {
                 cout << print_alignment_pretty(*it) << endl;
         }
 

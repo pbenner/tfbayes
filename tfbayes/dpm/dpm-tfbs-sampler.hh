@@ -133,7 +133,7 @@ protected:
         tfbs_options_t _options;
 
         data_tfbs_t _data;
-        alignment_set_t<short> _alignment_set;
+        alignment_set_t<> _alignment_set;
 
         std::string _socket_file;
         boost::asio::io_service _ios;

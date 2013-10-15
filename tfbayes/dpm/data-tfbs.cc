@@ -160,7 +160,9 @@ data_tfbs_t::read_fasta(const string& file_name)
 
         /* the fasta parser returns a single line for each
          * sequence */
-        while ((line = parser.read_sequence()) != "") {
+        while (parser) {
+                line = parser();
+                if (line == "") continue;
                 /* store a single entry of the fasta file here */
                 std::vector<data_tfbs_t::code_t> sequence;
 

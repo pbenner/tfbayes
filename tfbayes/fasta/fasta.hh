@@ -39,6 +39,9 @@ public:
         operator bool() const;
         /* return the description of the sequence */
         const std::vector<std::string>& description() const;
+        /* return the part of the description which is by
+         * convention used as the taxon name */
+        std::string taxon() const;
 
 protected:
         void init_parser();

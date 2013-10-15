@@ -59,6 +59,16 @@ public:
                 boost::copy(
                         sequence | boost::adaptors::transformed(boost::bind(&alphabet_t::code, &alphabet, _1)), begin());
         }
+        sequence_t(const sequence_t<CODE_TYPE>& ns,
+                   const alphabet_t& alphabet = nucleotide_alphabet_t())
+                : std::vector<CODE_TYPE>(ns),
+                  alphabet(alphabet) {
+        }
+        sequence_t(const std::vector<CODE_TYPE>& ns,
+                   const alphabet_t& alphabet = nucleotide_alphabet_t())
+                : std::vector<CODE_TYPE>(ns),
+                  alphabet(alphabet) {
+        }
         sequence_t(const sequence_t<CODE_TYPE>& ns, const std::string& sequence,
                    const alphabet_t& alphabet = nucleotide_alphabet_t())
                 : std::vector<CODE_TYPE>(ns),
