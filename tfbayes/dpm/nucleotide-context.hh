@@ -22,6 +22,7 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <cmath>
 #include <vector>
 
 #include <tfbayes/dpm/data-tfbs.hh>
@@ -53,7 +54,8 @@ public:
                 size_t offset = 0;
 
                 for (size_t i = 0; i < context+1; i++) {
-                        offset += pow(alphabet_size, i);
+                        offset += std::pow(static_cast<double>(alphabet_size),
+                                           static_cast<double>(i));
                 }
 
                 return offset - 1;
@@ -67,7 +69,9 @@ protected:
                 size_t position = 0;
 
                 for (size_t i = 0; i < context; i++) {
-                        position += stack[i+stack.depth()-1-context]*pow(alphabet_size, i+1);
+                        position += stack[i+stack.depth()-1-context]
+                                *std::pow(static_cast<double>(alphabet_size),
+                                          static_cast<double>(i+1));
                 }
 
                 return position + stack.top();
