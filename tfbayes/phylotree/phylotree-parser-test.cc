@@ -67,12 +67,12 @@ int main(void) {
                 observations[i] = rand() % alphabet_size;
         }
 
-        exponent_t<code_t, alphabet_size> alpha;
+        exponent_t<alphabet_size, code_t> alpha;
         alpha[0] = 1;
         alpha[1] = 1;
         alpha[2] = 1;
         alpha[3] = 1;
-        exponent_t<double, alphabet_size> p;
+        exponent_t<alphabet_size, double> p;
         p[0] = 0.3;
         p[1] = 0.25;
         p[2] = 0.4;
@@ -88,19 +88,19 @@ int main(void) {
         //      << incomplete_expression    << endl;
 
         // MET("Expanding",
-        //     polynomial_t<code_t, alphabet_size> result1 = pt_expand<code_t, alphabet_size>(incomplete_expression, observations));
+        //     polynomial_t<alphabet_size, code_t> result1 = pt_expand<alphabet_size, code_t>(incomplete_expression, observations));
 
         // cout << "Expanded polynomial:" << endl
         //      << result1                << endl;
 
         MET("Direct computation",
-            polynomial_t<code_t, alphabet_size> result2 = pt_polynomial<code_t, alphabet_size>(pt_root, observations));
+            polynomial_t<alphabet_size, code_t> result2 = pt_polynomial<alphabet_size, code_t>(pt_root, observations));
 
         cout << "Direct polynomial:" << endl
              << result2              << endl;
 
-        cout //<< "Marginal result1: " << pt_marginal_likelihood<code_t, alphabet_size>(result1, alpha) << endl
-             << "Marginal result2: " << pt_marginal_likelihood<code_t, alphabet_size>(result2, alpha) << endl
+        cout //<< "Marginal result1: " << pt_marginal_likelihood<alphabet_size, code_t>(result1, alpha) << endl
+             << "Marginal result2: " << pt_marginal_likelihood<alphabet_size, code_t>(result2, alpha) << endl
              << endl;
 
         cout //<< "Eval result1: " << result1.eval(p) << endl
@@ -108,7 +108,7 @@ int main(void) {
              << endl;
 
         double sum = 0;
-        boost::array<double, alphabet_size> exp = pt_posterior_expectation<code_t, alphabet_size>(result2, alpha);
+        boost::array<double, alphabet_size> exp = pt_posterior_expectation<alphabet_size, code_t>(result2, alpha);
         for (code_t i = 0; i < alphabet_size; i++) {
                 cout << "Expectation " << i << ": " << exp[i] << endl;
                 sum += exp[i];

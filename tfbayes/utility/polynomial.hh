@@ -28,7 +28,7 @@
 #include <boost/array.hpp>
 #include <boost/unordered_map.hpp>
 
-template <typename T, size_t S>
+template <size_t S, typename T>
 class exponent_t : public boost::array<T, S> {
 public:
         exponent_t() {
@@ -45,13 +45,13 @@ public:
                 }
         }
 
-        exponent_t<T, S>& operator*=(const exponent_t<T, S>& exponent) {
+        exponent_t<S, T>& operator*=(const exponent_t<S, T>& exponent) {
                 for (size_t i = 0; i < S; i++) {
                         operator[](i) += exponent[i];
                 }
                 return *this;
         }
-        exponent_t<T, S>& operator/=(const exponent_t<T, S>& exponent) {
+        exponent_t<S, T>& operator/=(const exponent_t<S, T>& exponent) {
                 for (size_t i = 0; i < S; i++) {
                         operator[](i) -= exponent[i];
                 }
@@ -74,56 +74,56 @@ public:
         using boost::array<T, S>::operator[];
 };
 
-template <typename T, size_t S, typename C = double>
-class polynomial_term_t : public std::pair<exponent_t<T, S>, C> {
+template <size_t S, typename T, typename C = double>
+class polynomial_term_t : public std::pair<exponent_t<S, T>, C> {
 public:
         polynomial_term_t()
-                : std::pair<exponent_t<T, S>, C>(exponent_t<T, S>(), 0.0)
+                : std::pair<exponent_t<S, T>, C>(exponent_t<S, T>(), 0.0)
                 { }
         polynomial_term_t(const C& constant)
-                : std::pair<exponent_t<T, S>, C>(exponent_t<T, S>(), constant)
+                : std::pair<exponent_t<S, T>, C>(exponent_t<S, T>(), constant)
                 { }
-        polynomial_term_t(const std::pair<exponent_t<T, S>, C>& pair)
-                : std::pair<exponent_t<T, S>, C>(pair)
+        polynomial_term_t(const std::pair<exponent_t<S, T>, C>& pair)
+                : std::pair<exponent_t<S, T>, C>(pair)
                 { }
-        exponent_t<T, S>& exponent() {
-                return std::pair<exponent_t<T, S>, C>::first;
+        exponent_t<S, T>& exponent() {
+                return std::pair<exponent_t<S, T>, C>::first;
         }
-        const exponent_t<T, S>& exponent() const {
-                return std::pair<exponent_t<T, S>, C>::first;
+        const exponent_t<S, T>& exponent() const {
+                return std::pair<exponent_t<S, T>, C>::first;
         }
         C& coefficient() {
-                return std::pair<exponent_t<T, S>, C>::second;
+                return std::pair<exponent_t<S, T>, C>::second;
         }
         const C& coefficient() const {
-                return std::pair<exponent_t<T, S>, C>::second;
+                return std::pair<exponent_t<S, T>, C>::second;
         }
 
-        polynomial_term_t<T, S, C> operator-() const {
-                return std::pair<exponent_t<T, S>, C>(exponent(), -coefficient());
+        polynomial_term_t<S, T, C> operator-() const {
+                return std::pair<exponent_t<S, T>, C>(exponent(), -coefficient());
         }
-        polynomial_term_t<T, S, C>& operator+=(const polynomial_term_t<T, S, C>& term) {
+        polynomial_term_t<S, T, C>& operator+=(const polynomial_term_t<S, T, C>& term) {
                 coefficient() += term.coefficient();
                 return *this;
         }
-        polynomial_term_t<T, S, C>& operator-=(const polynomial_term_t<T, S, C>& term) {
+        polynomial_term_t<S, T, C>& operator-=(const polynomial_term_t<S, T, C>& term) {
                 coefficient() -= term.coefficient();
                 return *this;
         }
-        polynomial_term_t<T, S, C>& operator*=(const C& constant) {
+        polynomial_term_t<S, T, C>& operator*=(const C& constant) {
                 coefficient() *= constant;
                 return *this;
         }
-        polynomial_term_t<T, S, C>& operator/=(const C& constant) {
+        polynomial_term_t<S, T, C>& operator/=(const C& constant) {
                 coefficient() /= constant;
                 return *this;
         }
-        polynomial_term_t<T, S, C>& operator*=(const polynomial_term_t<T, S, C>& term) {
+        polynomial_term_t<S, T, C>& operator*=(const polynomial_term_t<S, T, C>& term) {
                 coefficient() *= term.coefficient();
                 exponent()    *= term.exponent();
                 return *this;
         }
-        polynomial_term_t<T, S, C>& operator/=(const polynomial_term_t<T, S, C>& term) {
+        polynomial_term_t<S, T, C>& operator/=(const polynomial_term_t<S, T, C>& term) {
                 coefficient() /= term.coefficient();
                 exponent()    /= term.exponent();
                 return *this;
@@ -140,82 +140,82 @@ public:
         }
 };
 
-template <typename T, size_t S, typename C>
-polynomial_term_t<T, S, C> operator+(const polynomial_term_t<T, S, C>& term1, const polynomial_term_t<T, S, C>& term2) {
-        polynomial_term_t<T, S, C> tmp(term1);
+template <size_t S, typename T, typename C>
+polynomial_term_t<S, T, C> operator+(const polynomial_term_t<S, T, C>& term1, const polynomial_term_t<S, T, C>& term2) {
+        polynomial_term_t<S, T, C> tmp(term1);
         tmp += term2;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_term_t<T, S, C> operator-(const polynomial_term_t<T, S, C>& term1, const polynomial_term_t<T, S, C>& term2) {
-        polynomial_term_t<T, S, C> tmp(term1);
+template <size_t S, typename T, typename C>
+polynomial_term_t<S, T, C> operator-(const polynomial_term_t<S, T, C>& term1, const polynomial_term_t<S, T, C>& term2) {
+        polynomial_term_t<S, T, C> tmp(term1);
         tmp -= term2;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_term_t<T, S, C> operator*(const polynomial_term_t<T, S, C>& term, const C& constant) {
-        polynomial_term_t<T, S, C> tmp(term);
+template <size_t S, typename T, typename C>
+polynomial_term_t<S, T, C> operator*(const polynomial_term_t<S, T, C>& term, const C& constant) {
+        polynomial_term_t<S, T, C> tmp(term);
         tmp *= constant;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_term_t<T, S, C> operator/(const polynomial_term_t<T, S, C>& term, const C& constant) {
-        polynomial_term_t<T, S, C> tmp(term);
+template <size_t S, typename T, typename C>
+polynomial_term_t<S, T, C> operator/(const polynomial_term_t<S, T, C>& term, const C& constant) {
+        polynomial_term_t<S, T, C> tmp(term);
         tmp /= constant;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_term_t<T, S, C> operator*(const C& constant, const polynomial_term_t<T, S, C>& term) {
-        polynomial_term_t<T, S, C> tmp(term);
+template <size_t S, typename T, typename C>
+polynomial_term_t<S, T, C> operator*(const C& constant, const polynomial_term_t<S, T, C>& term) {
+        polynomial_term_t<S, T, C> tmp(term);
         tmp *= constant;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_term_t<T, S, C> operator/(const C& constant, const polynomial_term_t<T, S, C>& term) {
-        polynomial_term_t<T, S, C> tmp(constant);
+template <size_t S, typename T, typename C>
+polynomial_term_t<S, T, C> operator/(const C& constant, const polynomial_term_t<S, T, C>& term) {
+        polynomial_term_t<S, T, C> tmp(constant);
         tmp /= term;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_term_t<T, S, C> operator*(const polynomial_term_t<T, S, C>& term1, const polynomial_term_t<T, S, C>& term2) {
-        polynomial_term_t<T, S, C> tmp(term1);
+template <size_t S, typename T, typename C>
+polynomial_term_t<S, T, C> operator*(const polynomial_term_t<S, T, C>& term1, const polynomial_term_t<S, T, C>& term2) {
+        polynomial_term_t<S, T, C> tmp(term1);
         tmp *= term2;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_term_t<T, S, C> operator/(const polynomial_term_t<T, S, C>& term1, const polynomial_term_t<T, S, C>& term2) {
-        polynomial_term_t<T, S, C> tmp(term1);
+template <size_t S, typename T, typename C>
+polynomial_term_t<S, T, C> operator/(const polynomial_term_t<S, T, C>& term1, const polynomial_term_t<S, T, C>& term2) {
+        polynomial_term_t<S, T, C> tmp(term1);
         tmp /= term2;
         return tmp;
 }
 
-template <typename T, size_t S, typename C = double>
-class polynomial_t : public boost::unordered_map<exponent_t<T, S>, C> {
+template <size_t S, typename T, typename C = double>
+class polynomial_t : public boost::unordered_map<exponent_t<S, T>, C> {
 public:
         polynomial_t()
-                : boost::unordered_map<exponent_t<T, S>, C>() {}
+                : boost::unordered_map<exponent_t<S, T>, C>() {}
         polynomial_t(const C& constant)
-                : boost::unordered_map<exponent_t<T, S>, C>() {
-                this->operator+=(polynomial_term_t<T, S, C>(constant));
+                : boost::unordered_map<exponent_t<S, T>, C>() {
+                this->operator+=(polynomial_term_t<S, T, C>(constant));
         }
-        polynomial_t(const exponent_t<T, S>& exponent)
-                : boost::unordered_map<exponent_t<T, S>, C>() {
-                this->operator+=(polynomial_term_t<T, S, C>(std::pair<exponent_t<T, S>, C>(exponent, 1.0)));
+        polynomial_t(const exponent_t<S, T>& exponent)
+                : boost::unordered_map<exponent_t<S, T>, C>() {
+                this->operator+=(polynomial_term_t<S, T, C>(std::pair<exponent_t<S, T>, C>(exponent, 1.0)));
         }
-        polynomial_t(const polynomial_term_t<T, S, C>& term)
-                : boost::unordered_map<exponent_t<T, S>, C>() {
+        polynomial_t(const polynomial_term_t<S, T, C>& term)
+                : boost::unordered_map<exponent_t<S, T>, C>() {
                 this->operator+=(term);
         }
 
-        polynomial_t<T, S, C>& operator+=(const C& constant) {
-                this->operator+=(polynomial_term_t<T, S, C>(constant));
+        polynomial_t<S, T, C>& operator+=(const C& constant) {
+                this->operator+=(polynomial_term_t<S, T, C>(constant));
                 return *this;
         }
-        polynomial_t<T, S, C>& operator-=(const C& constant) {
-                this->operator-=(polynomial_term_t<T, S, C>(constant));
+        polynomial_t<S, T, C>& operator-=(const C& constant) {
+                this->operator-=(polynomial_term_t<S, T, C>(constant));
                 return *this;
         }
-        polynomial_t<T, S, C>& operator+=(const polynomial_term_t<T, S, C>& term) {
+        polynomial_t<S, T, C>& operator+=(const polynomial_term_t<S, T, C>& term) {
                 if (term.coefficient() != 0.0) {
                         C& coefficient = operator[](term.exponent());
                         coefficient += term.coefficient();
@@ -225,7 +225,7 @@ public:
                 }
                 return *this;
         }
-        polynomial_t<T, S, C>& operator-=(const polynomial_term_t<T, S, C>& term) {
+        polynomial_t<S, T, C>& operator-=(const polynomial_term_t<S, T, C>& term) {
                 if (term.coefficient() != 0.0) {
                         C& coefficient = operator[](term.exponent());
                         coefficient -= term.coefficient();
@@ -235,20 +235,20 @@ public:
                 }
                 return *this;
         }
-        polynomial_t<T, S, C>& operator+=(const polynomial_t<T, S, C>& poly) {
+        polynomial_t<S, T, C>& operator+=(const polynomial_t<S, T, C>& poly) {
                 for (const_iterator it = poly.begin(); it != poly.end(); it++) {
                         operator+=(*it);
                 }
                 return *this;
         }
-        polynomial_t<T, S, C>& operator-=(const polynomial_t<T, S, C>& poly) {
+        polynomial_t<S, T, C>& operator-=(const polynomial_t<S, T, C>& poly) {
                 for (const_iterator it = poly.begin(); it != poly.end(); it++) {
                         operator-=(*it);
                 }
                 return *this;
         }
-        polynomial_t<T, S, C>& operator*=(const C& constant) {
-                polynomial_t<T, S, C> tmp;
+        polynomial_t<S, T, C>& operator*=(const C& constant) {
+                polynomial_t<S, T, C> tmp;
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         tmp += (*it) * constant;
                 }
@@ -256,8 +256,8 @@ public:
 
                 return *this;
         }
-        polynomial_t<T, S, C>& operator/=(const C& constant) {
-                polynomial_t<T, S, C> tmp;
+        polynomial_t<S, T, C>& operator/=(const C& constant) {
+                polynomial_t<S, T, C> tmp;
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         tmp += (*it) / constant;
                 }
@@ -265,8 +265,8 @@ public:
 
                 return *this;
         }
-        polynomial_t<T, S, C>& operator*=(const polynomial_term_t<T, S, C>& term) {
-                polynomial_t<T, S, C> tmp;
+        polynomial_t<S, T, C>& operator*=(const polynomial_term_t<S, T, C>& term) {
+                polynomial_t<S, T, C> tmp;
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         tmp += (*it) * term;
                 }
@@ -274,8 +274,8 @@ public:
 
                 return *this;
         }
-        polynomial_t<T, S, C>& operator/=(const polynomial_term_t<T, S, C>& term) {
-                polynomial_t<T, S, C> tmp;
+        polynomial_t<S, T, C>& operator/=(const polynomial_term_t<S, T, C>& term) {
+                polynomial_t<S, T, C> tmp;
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         tmp += (*it) / term;
                 }
@@ -283,11 +283,11 @@ public:
 
                 return *this;
         }
-        polynomial_t<T, S, C>& operator*=(const polynomial_t<T, S, C>& poly) {
-                polynomial_t<T, S, C> tmp;
+        polynomial_t<S, T, C>& operator*=(const polynomial_t<S, T, C>& poly) {
+                polynomial_t<S, T, C> tmp;
 
-                for (typename polynomial_t<T, S, C>::const_iterator it = this->begin(); it != this->end(); it++) {
-                        for (typename polynomial_t<T, S, C>::const_iterator is = poly.begin(); is != poly.end(); is++) {
+                for (typename polynomial_t<S, T, C>::const_iterator it = this->begin(); it != this->end(); it++) {
+                        for (typename polynomial_t<S, T, C>::const_iterator is = poly.begin(); is != poly.end(); is++) {
                                 tmp += (*it)*(*is);
                         }
                 }
@@ -310,156 +310,156 @@ public:
                 return result;
         }
         /* normalize coefficients so they add up to one */
-        polynomial_t<T, S, C> normalize(void) const {
-                polynomial_t<T, S, C> result;
+        polynomial_t<S, T, C> normalize(void) const {
+                polynomial_t<S, T, C> result;
                 double norm = 0;
 
                 /* compute normalization constant */
-                for (typename polynomial_t<T, S, C>::const_iterator it = this->begin(); it != this->end(); it++)
+                for (typename polynomial_t<S, T, C>::const_iterator it = this->begin(); it != this->end(); it++)
                 {
                         norm += it->coefficient();
                 }
-                for (typename polynomial_t<T, S, C>::const_iterator it = this->begin(); it != this->end(); it++)
+                for (typename polynomial_t<S, T, C>::const_iterator it = this->begin(); it != this->end(); it++)
                 {
                         result += (*it) / norm;
                 }
                 return result;
         }
 
-        using boost::unordered_map<exponent_t<T, S>, C>::operator[];
-        using boost::unordered_map<exponent_t<T, S>, C>::erase;
+        using boost::unordered_map<exponent_t<S, T>, C>::operator[];
+        using boost::unordered_map<exponent_t<S, T>, C>::erase;
 
         // Iterator
         ////////////////////////////////////////////////////////////////////////
-        class const_iterator : public boost::unordered_map<exponent_t<T, S>, C>::const_iterator
+        class const_iterator : public boost::unordered_map<exponent_t<S, T>, C>::const_iterator
         {
         public:
-                const_iterator(typename boost::unordered_map<exponent_t<T, S>, C>::const_iterator iterator)
-                        : boost::unordered_map<exponent_t<T, S>, C>::const_iterator(iterator)
+                const_iterator(typename boost::unordered_map<exponent_t<S, T>, C>::const_iterator iterator)
+                        : boost::unordered_map<exponent_t<S, T>, C>::const_iterator(iterator)
                         {}
 
-                const polynomial_term_t<T, S, C>* operator->() const
+                const polynomial_term_t<S, T, C>* operator->() const
                 {
-                        return (const polynomial_term_t<T, S, C>*)boost::unordered_map<exponent_t<T, S>, C>::const_iterator::operator->();
+                        return (const polynomial_term_t<S, T, C>*)boost::unordered_map<exponent_t<S, T>, C>::const_iterator::operator->();
                 }
-                const polynomial_term_t<T, S, C> operator*() const
+                const polynomial_term_t<S, T, C> operator*() const
                 {
                         return *operator->();
                 }
         };
         const_iterator begin() const {
-                return const_iterator(boost::unordered_map<exponent_t<T, S>, C>::begin());
+                return const_iterator(boost::unordered_map<exponent_t<S, T>, C>::begin());
         }
 };
 
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator+(const polynomial_t<T, S, C>& poly, const C& constant) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator+(const polynomial_t<S, T, C>& poly, const C& constant) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp += constant;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator-(const polynomial_t<T, S, C>& poly, const C& constant) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator-(const polynomial_t<S, T, C>& poly, const C& constant) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp -= constant;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator+(const C& constant, const polynomial_t<T, S, C>& poly) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator+(const C& constant, const polynomial_t<S, T, C>& poly) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp += constant;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator-(const C& constant, const polynomial_t<T, S, C>& poly) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator-(const C& constant, const polynomial_t<S, T, C>& poly) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp -= constant;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator*(const polynomial_t<T, S, C>& poly, const C& constant) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator*(const polynomial_t<S, T, C>& poly, const C& constant) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp *= constant;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator/(const polynomial_t<T, S, C>& poly, const C& constant) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator/(const polynomial_t<S, T, C>& poly, const C& constant) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp /= constant;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator*(const C& constant, const polynomial_t<T, S, C>& poly) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator*(const C& constant, const polynomial_t<S, T, C>& poly) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp *= constant;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator/(const C& constant, const polynomial_t<T, S, C>& poly) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator/(const C& constant, const polynomial_t<S, T, C>& poly) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp /= constant;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator+(const polynomial_t<T, S, C>& poly, const polynomial_term_t<T, S, C>& term) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator+(const polynomial_t<S, T, C>& poly, const polynomial_term_t<S, T, C>& term) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp += term;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator-(const polynomial_t<T, S, C>& poly, const polynomial_term_t<T, S, C>& term) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator-(const polynomial_t<S, T, C>& poly, const polynomial_term_t<S, T, C>& term) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp -= term;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator+(const polynomial_term_t<T, S, C>& term, const polynomial_t<T, S, C>& poly) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator+(const polynomial_term_t<S, T, C>& term, const polynomial_t<S, T, C>& poly) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp += term;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator-(const polynomial_term_t<T, S, C>& term, const polynomial_t<T, S, C>& poly) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator-(const polynomial_term_t<S, T, C>& term, const polynomial_t<S, T, C>& poly) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp -= term;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator*(const polynomial_t<T, S, C>& poly, const polynomial_term_t<T, S, C>& term) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator*(const polynomial_t<S, T, C>& poly, const polynomial_term_t<S, T, C>& term) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp *= term;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator/(const polynomial_t<T, S, C>& poly, const polynomial_term_t<T, S, C>& term) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator/(const polynomial_t<S, T, C>& poly, const polynomial_term_t<S, T, C>& term) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp /= term;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator*(const polynomial_term_t<T, S, C>& term, const polynomial_t<T, S, C>& poly) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator*(const polynomial_term_t<S, T, C>& term, const polynomial_t<S, T, C>& poly) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp *= term;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator/(const polynomial_term_t<T, S, C>& term, const polynomial_t<T, S, C>& poly) {
-        polynomial_t<T, S, C> tmp(poly);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator/(const polynomial_term_t<S, T, C>& term, const polynomial_t<S, T, C>& poly) {
+        polynomial_t<S, T, C> tmp(poly);
         tmp /= term;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator+(const polynomial_t<T, S, C>& poly1, const polynomial_t<T, S, C>& poly2) {
-        polynomial_t<T, S, C> tmp(poly1);
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator+(const polynomial_t<S, T, C>& poly1, const polynomial_t<S, T, C>& poly2) {
+        polynomial_t<S, T, C> tmp(poly1);
         tmp += poly2;
         return tmp;
 }
-template <typename T, size_t S, typename C>
-polynomial_t<T, S, C> operator*(const polynomial_t<T, S, C>& poly1, const polynomial_t<T, S, C>& poly2) {
+template <size_t S, typename T, typename C>
+polynomial_t<S, T, C> operator*(const polynomial_t<S, T, C>& poly1, const polynomial_t<S, T, C>& poly2) {
         if (poly1.size() == 0 || poly2.size() == 0) {
-                return polynomial_t<T, S, C>();
+                return polynomial_t<S, T, C>();
         }
-        polynomial_t<T, S, C> tmp(poly1);
+        polynomial_t<S, T, C> tmp(poly1);
         tmp *= poly2;
         return tmp;
 }

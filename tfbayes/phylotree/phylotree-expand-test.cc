@@ -64,23 +64,23 @@ int main(void) {
         leafset3.insert(n8);
         leafset3.insert(n9);
 
-        polynomial_t<code_t, alphabet_size> result1;
-        polynomial_t<code_t, alphabet_size> result2;
+        polynomial_t<alphabet_size, code_t> result1;
+        polynomial_t<alphabet_size, code_t> result2;
 
         /* phi(c; x_3, x_6, x_7, x_8, x_9, x_10) */
-        result1 += pt_expand_rec<code_t, alphabet_size>(leafset1.begin(), leafset1.end(), observations, 1);
+        result1 += pt_expand_rec<alphabet_size, code_t>(leafset1.begin(), leafset1.end(), observations, 1);
 
         /* phi(c; x_3, x_6, x_7, x_8, x_9, x_10) =
          *   phi(c  ; x_3, x_6) phi(c  ; x_7, x_8, x_9, x_10) +
          *   phi(c  ; x_3, x_6) phi(nil; x_7, x_8, x_9, x_10) +
          *   phi(nil; x_3, x_6) phi(c  ; x_7, x_8, x_9, x_10)
          */
-        result2 += pt_expand_rec<code_t, alphabet_size>(leafset2.begin(), leafset2.end(), observations, 1)*
-                   pt_expand_rec<code_t, alphabet_size>(leafset3.begin(), leafset3.end(), observations, 1);
-        result2 += pt_expand_rec<code_t, alphabet_size>(leafset2.begin(), leafset2.end(), observations, 1)*
-                   pt_expand_rec<code_t, alphabet_size>(leafset3.begin(), leafset3.end(), observations, alphabet_size);
-        result2 += pt_expand_rec<code_t, alphabet_size>(leafset2.begin(), leafset2.end(), observations, alphabet_size)*
-                   pt_expand_rec<code_t, alphabet_size>(leafset3.begin(), leafset3.end(), observations, 1);
+        result2 += pt_expand_rec<alphabet_size, code_t>(leafset2.begin(), leafset2.end(), observations, 1)*
+                   pt_expand_rec<alphabet_size, code_t>(leafset3.begin(), leafset3.end(), observations, 1);
+        result2 += pt_expand_rec<alphabet_size, code_t>(leafset2.begin(), leafset2.end(), observations, 1)*
+                   pt_expand_rec<alphabet_size, code_t>(leafset3.begin(), leafset3.end(), observations, alphabet_size);
+        result2 += pt_expand_rec<alphabet_size, code_t>(leafset2.begin(), leafset2.end(), observations, alphabet_size)*
+                   pt_expand_rec<alphabet_size, code_t>(leafset3.begin(), leafset3.end(), observations, 1);
 
         cout << result1 << endl;
         cout << result2 << endl;

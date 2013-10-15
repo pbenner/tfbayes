@@ -172,10 +172,10 @@ public:
         template<size_t ALPHABET_SIZE>
         std::vector<double> scan(const pt_root_t& tree, std::matrix<double>& counts) {
                 std::vector<double> result(length(), 0);
-                vector<exponent_t<CODE_TYPE, ALPHABET_SIZE> > exponents;
+                vector<exponent_t<ALPHABET_SIZE, CODE_TYPE> > exponents;
 
                 for (size_t j = 0; j < counts.size(); j++) {
-                        exponent_t<CODE_TYPE, ALPHABET_SIZE> tmp
+                        exponent_t<ALPHABET_SIZE, CODE_TYPE> tmp
                                 (counts[j].begin(), counts[j].end());
                         exponents.push_back(tmp);
                 }
@@ -188,7 +188,7 @@ public:
                                 continue;
                         }
                         for (iterator is(it); is < it + counts.size(); is++) {
-                                result[it - begin()] += pt_marginal_likelihood<CODE_TYPE, ALPHABET_SIZE>(
+                                result[it - begin()] += pt_marginal_likelihood<ALPHABET_SIZE, CODE_TYPE>(
                                         tree, *is, exponents[is-it]);
                         }
                 }
@@ -196,13 +196,13 @@ public:
         }
         template<size_t ALPHABET_SIZE>
         std::vector<double> marginal_likelihood(const pt_root_t& tree, const std::vector<double>& prior) {
-                exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha(prior.begin(), prior.end());
+                exponent_t<ALPHABET_SIZE, CODE_TYPE> alpha(prior.begin(), prior.end());
                 vector<double> result;
 
                 /* go through the alignment and compute the marginal
                  * likelihood for each position */
                 for (iterator it = begin(); it != end(); it++) {
-                        result.push_back(pt_marginal_likelihood<CODE_TYPE, ALPHABET_SIZE>
+                        result.push_back(pt_marginal_likelihood<ALPHABET_SIZE, CODE_TYPE>
                                          (tree, *it, alpha));
                 }
                 return result;

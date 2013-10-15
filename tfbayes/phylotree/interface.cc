@@ -70,15 +70,15 @@ vector_t* pt_expectation(pt_root_t* pt_root, vector_t* observations, vector_t* p
         // convert observations to an std array
         vector<code_t> tmp(observations->vec, observations->vec+observations->size);
         // compute the polynomial
-        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(*pt_root, tmp);
+        polynomial_t<alphabet_size, code_t> poly = pt_polynomial<alphabet_size, code_t>(*pt_root, tmp);
 
-        exponent_t<code_t, alphabet_size> alpha;
+        exponent_t<alphabet_size, code_t> alpha;
         for (size_t i = 0; i < alphabet_size; i++) {
                 alpha[i] = prior->vec[i];
         }
 
         boost::array<double, alphabet_size> expectation =
-                pt_posterior_expectation<code_t, alphabet_size>(poly, alpha);
+                pt_posterior_expectation<alphabet_size, code_t>(poly, alpha);
 
         for (size_t i = 0; i < alphabet_size; i++) {
                 result->vec[i] = expectation[i];
@@ -93,10 +93,10 @@ vector_t* pt_approximate(pt_root_t* pt_root, vector_t* observations)
         // convert observations to an std array
         vector<code_t> tmp(observations->vec, observations->vec+observations->size);
         // compute the polynomial
-        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(*pt_root, tmp);
+        polynomial_t<alphabet_size, code_t> poly = pt_polynomial<alphabet_size, code_t>(*pt_root, tmp);
 
-        polynomial_t<code_t, alphabet_size> variational
-                = dkl_approximate<code_t, alphabet_size>(poly);
+        polynomial_t<alphabet_size, code_t> variational
+                = dkl_approximate<alphabet_size, code_t>(poly);
 
         for (size_t i = 0; i < alphabet_size; i++) {
                 result->vec[i] = variational.begin()->exponent()[i];
@@ -111,16 +111,16 @@ vector_t* pt_dkl_optimize(pt_root_t* pt_root, vector_t* observations)
         // convert observations to an std array
         vector<code_t> tmp(observations->vec, observations->vec+observations->size);
         // compute the polynomial
-        polynomial_t<code_t, alphabet_size> poly = pt_polynomial<code_t, alphabet_size>(*pt_root, tmp);
+        polynomial_t<alphabet_size, code_t> poly = pt_polynomial<alphabet_size, code_t>(*pt_root, tmp);
 
-        exponent_t<code_t, alphabet_size> alpha;
+        exponent_t<alphabet_size, code_t> alpha;
         alpha[0] = 1;
         alpha[1] = 1;
         alpha[2] = 1;
         alpha[3] = 1;
         alpha[4] = 1;
 
-        polynomial_t<code_t, alphabet_size> variational
+        polynomial_t<alphabet_size, code_t> variational
                 = dkl_optimize(poly, alpha);
 
         for (size_t i = 0; i < alphabet_size; i++) {

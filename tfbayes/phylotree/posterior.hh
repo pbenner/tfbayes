@@ -27,16 +27,16 @@
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/utility/statistics.hh>
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 boost::array<double, ALPHABET_SIZE> pt_posterior_expectation(
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& polynomial,
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& polynomial,
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha)
 {
         double norm = -HUGE_VAL;
         boost::array<double, ALPHABET_SIZE> result;
 
         /* compute normalization constant */
-        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = polynomial.begin();
+        for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 norm = logadd(norm, log(it->coefficient()) + mbeta_log(it->exponent(), alpha));
         }
@@ -45,7 +45,7 @@ boost::array<double, ALPHABET_SIZE> pt_posterior_expectation(
                 result[i] = 0;
         }
         /* posterior expectation */
-        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = polynomial.begin();
+        for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 double sum = 0;
                 double tmp;
@@ -64,16 +64,16 @@ boost::array<double, ALPHABET_SIZE> pt_posterior_expectation(
         return result;
 }
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 boost::array<double, ALPHABET_SIZE> pt_posterior_expectation_prime(
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& polynomial,
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& polynomial,
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha)
 {
         double norm = -HUGE_VAL;
         boost::array<double, ALPHABET_SIZE> result;
 
         /* compute normalization constant */
-        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = polynomial.begin();
+        for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 norm = logadd(norm, log(it->coefficient()) +
                               mbeta_log(it->exponent(), alpha,               0, ALPHABET_SIZE/2) +
@@ -84,7 +84,7 @@ boost::array<double, ALPHABET_SIZE> pt_posterior_expectation_prime(
                 result[i] = 0;
         }
         /* posterior expectation */
-        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = polynomial.begin();
+        for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 double sum1 = 0;
                 double sum2 = 0;
@@ -110,13 +110,13 @@ boost::array<double, ALPHABET_SIZE> pt_posterior_expectation_prime(
         return result;
 }
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 double pt_posterior_density(
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& likelihood,
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& likelihood,
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha,
         const boost::array<double, ALPHABET_SIZE>& theta)
 {
-        exponent_t<CODE_TYPE, ALPHABET_SIZE> prior;
+        exponent_t<ALPHABET_SIZE, CODE_TYPE> prior;
 
         /* for the density we need to substract one from alpha */
         for (size_t i = 0; i < ALPHABET_SIZE; i++) {

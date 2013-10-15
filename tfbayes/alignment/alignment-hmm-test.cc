@@ -38,7 +38,7 @@ using namespace std;
 // Input/Output
 ////////////////////////////////////////////////////////////////////////////////
 
-ostream& operator<< (ostream& o, const exponent_t<code_t, alphabet_size>& exponent) {
+ostream& operator<< (ostream& o, const exponent_t<alphabet_size, code_t>& exponent) {
         if(exponent[0]) o << " Pa^" << exponent[0];
         if(exponent[1]) o << " Pc^" << exponent[1];
         if(exponent[2]) o << " Pg^" << exponent[2];
@@ -46,14 +46,14 @@ ostream& operator<< (ostream& o, const exponent_t<code_t, alphabet_size>& expone
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_term_t<code_t, alphabet_size>& term) {
+ostream& operator<< (ostream& o, const polynomial_term_t<alphabet_size, code_t>& term) {
         o << term.coefficient()
           << term.exponent();
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size>& polynomial) {
-        for (polynomial_t<code_t, alphabet_size>::const_iterator it = polynomial.begin();
+ostream& operator<< (ostream& o, const polynomial_t<alphabet_size, code_t>& polynomial) {
+        for (polynomial_t<alphabet_size, code_t>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 if (it != polynomial.begin()) {
                         o << " + " << *it;
@@ -66,7 +66,7 @@ ostream& operator<< (ostream& o, const polynomial_t<code_t, alphabet_size>& poly
         return o;
 }
 
-size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent) {
+size_t hash_value(const exponent_t<alphabet_size, code_t>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] << 0;
         seed += (size_t)exponent[1] << 2;
@@ -82,7 +82,7 @@ size_t hash_value(const exponent_t<code_t, alphabet_size>& exponent) {
 
 typedef struct _options_t {
         size_t dimension;
-        phylotree_hmm_t<code_t, alphabet_size>::priors_t priors;
+        phylotree_hmm_t<alphabet_size, code_t>::priors_t priors;
         matrix<double> transition;
         bool verbose;
         _options_t()
@@ -91,8 +91,8 @@ typedef struct _options_t {
                   transition(),
                   verbose(false) {
 
-                exponent_t<code_t, alphabet_size> alpha_0;
-                exponent_t<code_t, alphabet_size> alpha_1;
+                exponent_t<alphabet_size, code_t> alpha_0;
+                exponent_t<alphabet_size, code_t> alpha_1;
                 for (size_t i = 0; i < alphabet_size; i++) {
                         alpha_0[i] = 0.1;
                         alpha_1[i] = 1.0;
@@ -186,7 +186,7 @@ void run_hmm(const char* file_tree, const char* file_alignment)
         /* uniform distribution on the initial state */
         vector<double> px_0(dimension, 1.0/(double)dimension);
 
-        phylotree_hmm_t<code_t, alphabet_size> hmm(px_0, options.transition, options.priors);
+        phylotree_hmm_t<alphabet_size, code_t> hmm(px_0, options.transition, options.priors);
         hmm.run(pt_root, alignment);
 
         for (size_t i = 0; i < hmm.size(); i++) {
@@ -204,14 +204,14 @@ void init_options(const string& alpha, const string& transition)
         vector<string> tmp_;
 
         if (alpha != "") {
-                options.priors = phylotree_hmm_t<code_t, alphabet_size>::priors_t();
+                options.priors = phylotree_hmm_t<alphabet_size, code_t>::priors_t();
                 tmp = token(strip(alpha), ' ');
                 for (size_t i = 0; i < tmp.size(); i++) {
                         if (tmp[i] == "") {
                                 continue;
                         }
                         string str = tmp[i];
-                        exponent_t<code_t, alphabet_size> alpha;
+                        exponent_t<alphabet_size, code_t> alpha;
                         for (size_t i = 0; i < alphabet_size; i++) {
                                 alpha[i] = atof(str.c_str());
                         }

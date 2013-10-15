@@ -26,30 +26,30 @@
 #include <tfbayes/phylotree/phylotree-expand.hh>
 #include <tfbayes/utility/polynomial.hh>
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-class pt_simple_polynomial_t : public polynomial_t<CODE_TYPE, ALPHABET_SIZE> {
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
+class pt_simple_polynomial_t : public polynomial_t<ALPHABET_SIZE, CODE_TYPE> {
 public:
         pt_simple_polynomial_t(pt_root_t* root)
-                : polynomial_t<CODE_TYPE, ALPHABET_SIZE>() {
+                : polynomial_t<ALPHABET_SIZE, CODE_TYPE>() {
                 likelihood_py(root);
         }
 
-        pt_simple_polynomial_t(const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly)
-                : polynomial_t<CODE_TYPE, ALPHABET_SIZE>(poly) { }
+        pt_simple_polynomial_t(const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& poly)
+                : polynomial_t<ALPHABET_SIZE, CODE_TYPE>(poly) { }
 
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE>& likelihood_py(pt_root_t* root) {
+        polynomial_t<ALPHABET_SIZE, CODE_TYPE>& likelihood_py(pt_root_t* root) {
                 this->operator=(likelihood_rec(root)[ALPHABET_SIZE]);
                 return *this;
         }
 
 private:
-        typedef boost::array<polynomial_t<CODE_TYPE, ALPHABET_SIZE>, ALPHABET_SIZE+1> carry_t;
+        typedef boost::array<polynomial_t<ALPHABET_SIZE, CODE_TYPE>, ALPHABET_SIZE+1> carry_t;
 
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum(const carry_t& carry) {
-                polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum;
+        polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly_sum(const carry_t& carry) {
+                polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly_sum;
 
                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> term(1.0);
+                        polynomial_term_t<ALPHABET_SIZE, CODE_TYPE> term(1.0);
                         term.exponent()[i] = 1;
                         poly_sum += term*carry[i];
                 }
@@ -61,12 +61,12 @@ private:
         carry_t likelihood_leaf(pt_leaf_t* leaf) {
                 carry_t carry;
                 if (leaf->root()) {
-                        carry[ALPHABET_SIZE] = nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(leaf->x);
+                        carry[ALPHABET_SIZE] = nucleotide_probability<ALPHABET_SIZE, CODE_TYPE>(leaf->x);
                 }
                 else {
                         // i: nucleotide of ancestor
                         for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                                carry[i] = mutation_model<CODE_TYPE, ALPHABET_SIZE>(leaf, i);
+                                carry[i] = mutation_model<ALPHABET_SIZE, CODE_TYPE>(leaf, i);
                         }
                 }
                 return carry;
@@ -82,7 +82,7 @@ private:
                         // j: nucleotide of this node
                         for (size_t j = 0; j < ALPHABET_SIZE; j++) {
                                 node->x = j;
-                                carry[i] += carry_left[j]*carry_right[j]*mutation_model<CODE_TYPE, ALPHABET_SIZE>(node, i);
+                                carry[i] += carry_left[j]*carry_right[j]*mutation_model<ALPHABET_SIZE, CODE_TYPE>(node, i);
                         }
                         node->x = -1;
                 }
@@ -96,7 +96,7 @@ private:
 
                 // j: nucleotide of this node
                 for (size_t j = 0; j < ALPHABET_SIZE; j++) {
-                        carry[ALPHABET_SIZE] += carry_left[j]*carry_right[j]*nucleotide_probability<CODE_TYPE, ALPHABET_SIZE>(j);
+                        carry[ALPHABET_SIZE] += carry_left[j]*carry_right[j]*nucleotide_probability<ALPHABET_SIZE, CODE_TYPE>(j);
                 }
                 return carry;
         }

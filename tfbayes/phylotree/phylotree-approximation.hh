@@ -33,20 +33,20 @@
 #include <tfbayes/phylotree/phylotree-polynomial.hh>
 #include <tfbayes/phylotree/posterior.hh>
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 struct kl_divergence_data {
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational;
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& likelihood;
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha;
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& variational;
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& likelihood;
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha;
         boost::array<double, ALPHABET_SIZE>& theta;
 };
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 double
 dkl_f(double * x, size_t dim, void * params)
 {
-        struct kl_divergence_data<CODE_TYPE, ALPHABET_SIZE>* data =
-                (kl_divergence_data<CODE_TYPE, ALPHABET_SIZE> *)(params);
+        struct kl_divergence_data<ALPHABET_SIZE, CODE_TYPE>* data =
+                (kl_divergence_data<ALPHABET_SIZE, CODE_TYPE> *)(params);
 
         data->theta[ALPHABET_SIZE-1] = 1.0;
         for (size_t i = 0; i < ALPHABET_SIZE-1; i++) {
@@ -59,9 +59,9 @@ dkl_f(double * x, size_t dim, void * params)
                 return 0.0;
         }
         else {
-                double p = pt_posterior_density<CODE_TYPE, ALPHABET_SIZE>(
+                double p = pt_posterior_density<ALPHABET_SIZE, CODE_TYPE>(
                         data->likelihood, data->alpha, data->theta);
-                double q = pt_posterior_density<CODE_TYPE, ALPHABET_SIZE>(
+                double q = pt_posterior_density<ALPHABET_SIZE, CODE_TYPE>(
                         data->variational, data->alpha, data->theta);
 
                 return q*log(p);
@@ -69,16 +69,16 @@ dkl_f(double * x, size_t dim, void * params)
 }
 
 /* Compute the entropy of the variational distribution. */
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 double
 dkl_variational_entropy(
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& variational,
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha)
 {
         assert(variational.size() == 1);
 
         /* fetch the exponent of the variational distribution */
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& exponent = variational.begin()->exponent();
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& exponent = variational.begin()->exponent();
 
         double sum    = 0.0;
         double result = mbeta_log(exponent, alpha);
@@ -98,12 +98,12 @@ dkl_variational_entropy(
  * function uses numerical integration to solve the integral. The
  * entropy of q can be solved analytically.
  */
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 double
 dkl(
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& likelihood,
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& variational,
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& likelihood,
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha)
 {
         boost::array<double, ALPHABET_SIZE> theta;
         double xl[ALPHABET_SIZE-1];
@@ -120,9 +120,9 @@ dkl(
 
         /* generate the function that we want to integrate */
         double (*f)(double *, size_t, void *) =
-                dkl_f<CODE_TYPE, ALPHABET_SIZE>;
+                dkl_f<ALPHABET_SIZE, CODE_TYPE>;
 
-        struct kl_divergence_data<CODE_TYPE, ALPHABET_SIZE> data = {
+        struct kl_divergence_data<ALPHABET_SIZE, CODE_TYPE> data = {
                 variational, likelihood, alpha, theta
         };
 
@@ -147,7 +147,7 @@ dkl(
 
         /* add - Int Q Log Q dw                                                *
          ***********************************************************************/
-        result += dkl_variational_entropy<CODE_TYPE, ALPHABET_SIZE>(variational, alpha);
+        result += dkl_variational_entropy<ALPHABET_SIZE, CODE_TYPE>(variational, alpha);
 
         return -result;
 }
@@ -157,14 +157,14 @@ dkl(
  * actual minimum is assumed to be somewhere on this line close to
  * the approximated point.
  */
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
+polynomial_t<ALPHABET_SIZE, CODE_TYPE>
 dkl_line(
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& variational,
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha,
         const double lambda)
 {
-        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> term(*variational.begin());
+        polynomial_term_t<ALPHABET_SIZE, CODE_TYPE> term(*variational.begin());
 
         for (size_t i = 0; i < ALPHABET_SIZE; i++) {
                 term.exponent()[i] += alpha[i];
@@ -177,15 +177,15 @@ dkl_line(
 /* Perform a simple line search to find the actual minimum of the
  * Kullback-Leibler divergence.
  */
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
+polynomial_t<ALPHABET_SIZE, CODE_TYPE>
 dkl_line_search(
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& variational,
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& likelihood,
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& variational,
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& likelihood,
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha,
         const size_t n)
 {
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> result = dkl_line<CODE_TYPE, ALPHABET_SIZE>(variational, alpha, 1.0);
+        polynomial_t<ALPHABET_SIZE, CODE_TYPE> result = dkl_line<ALPHABET_SIZE, CODE_TYPE>(variational, alpha, 1.0);
         /* step size */
         double epsilon = 0.01;
         /* how much to scale the step size */
@@ -193,12 +193,12 @@ dkl_line_search(
         double eta2    = 0.50;
         /* position on the line */
         double lambda  = 1.0;
-        double kl = dkl<CODE_TYPE, ALPHABET_SIZE>(result, likelihood, alpha);
+        double kl = dkl<ALPHABET_SIZE, CODE_TYPE>(result, likelihood, alpha);
         double kl_new;
 
         for (size_t i = 0; i < n; i++) {
-                result = dkl_line<CODE_TYPE, ALPHABET_SIZE>(variational, alpha, lambda);
-                kl_new = dkl<CODE_TYPE, ALPHABET_SIZE>(result, likelihood, alpha);
+                result = dkl_line<ALPHABET_SIZE, CODE_TYPE>(variational, alpha, lambda);
+                kl_new = dkl<ALPHABET_SIZE, CODE_TYPE>(result, likelihood, alpha);
                 if (kl_new < kl) {
                         /* go faster */
                         epsilon *= eta1;
@@ -216,22 +216,22 @@ dkl_line_search(
         return result;
 }
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
+polynomial_t<ALPHABET_SIZE, CODE_TYPE>
 dkl_approximate(
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly)
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& poly)
 {
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> result;
-        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> result_term(1.0);
+        polynomial_t<ALPHABET_SIZE, CODE_TYPE> result;
+        polynomial_term_t<ALPHABET_SIZE, CODE_TYPE> result_term(1.0);
         double norm = 0;
 
         /* compute normalization constant */
-        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = poly.begin(); it != poly.end(); it++)
+        for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator it = poly.begin(); it != poly.end(); it++)
         {
                 norm += it->coefficient();
         }
         /* compute approximation */
-        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = poly.begin(); it != poly.end(); it++)
+        for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator it = poly.begin(); it != poly.end(); it++)
         {
                 /* loop over the alphabet */
                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
@@ -246,10 +246,10 @@ dkl_approximate(
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multiroots.h>
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 boost::array<double, ALPHABET_SIZE>
 dkl_optimize_params(
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& poly)
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& poly)
 {
         boost::array<double, ALPHABET_SIZE> result;
         double norm = -HUGE_VAL;
@@ -260,14 +260,14 @@ dkl_optimize_params(
         }
 
         /* compute normalization constant */
-        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = poly.begin(); it != poly.end(); it++)
+        for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator it = poly.begin(); it != poly.end(); it++)
         {
                 norm = logadd(norm, it->coefficient() + mbeta_log(it->exponent()));
         }
         /* for each member of the alphabet */
         for (size_t i = 0; i < ALPHABET_SIZE; i++) {
                 /* compute approximation */
-                for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = poly.begin(); it != poly.end(); it++)
+                for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator it = poly.begin(); it != poly.end(); it++)
                 {
                         /* pi Beta(alpha_i) */
                         double tmp1 = it->coefficient() + mbeta_log(it->exponent());
@@ -293,7 +293,7 @@ dkl_optimize_params(
 }
 
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 int
 dkl_optimize_f(
         const gsl_vector * xi,
@@ -331,21 +331,21 @@ dkl_optimize_f(
  * Kullback-Leibler divergence D(p||q) is minimized. This function
  * uses a simple root-finding algorithm to find the optimum.
  */
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
+polynomial_t<ALPHABET_SIZE, CODE_TYPE>
 dkl_optimize(
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& _poly,
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& _poly,
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha)
 {
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly = _poly.normalize();
+        polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly = _poly.normalize();
 
         /* integrate alpha into the polynomial */
         poly *= alpha;
 
         /* use the approximation as an initial value for optimizing
          * the Kullback-Leibler divergence */
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> variational =
-                dkl_approximate<CODE_TYPE, ALPHABET_SIZE>(poly);
+        polynomial_t<ALPHABET_SIZE, CODE_TYPE> variational =
+                dkl_approximate<ALPHABET_SIZE, CODE_TYPE>(poly);
 
         /* assert that this really is a variational distribution with
          * only one component */
@@ -372,7 +372,7 @@ dkl_optimize(
      
         gsl_multiroot_function f = {
                 /* the objective function */
-                dkl_optimize_f<CODE_TYPE, ALPHABET_SIZE>,
+                dkl_optimize_f<ALPHABET_SIZE, CODE_TYPE>,
                 /* dimensionality of the problem */
                 ALPHABET_SIZE,
                 /* parameters for the objective function */
@@ -395,7 +395,7 @@ dkl_optimize(
         while (status == GSL_CONTINUE && iter < 1000);
 
         /* copy the result to a polynomial */
-        exponent_t<CODE_TYPE, ALPHABET_SIZE> result;
+        exponent_t<ALPHABET_SIZE, CODE_TYPE> result;
 
         for (size_t i = 0; i < ALPHABET_SIZE; i++) {
                 result[i] = gsl_vector_get(x, i);

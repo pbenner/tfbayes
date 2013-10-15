@@ -112,13 +112,13 @@ private:
         gamma_distribution_t gamma_distribution;
 };
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 class pt_metropolis_hastings_t : public clonable
 {
 public:
         pt_metropolis_hastings_t(const pt_root_t& tree,
                                  const alignment_t<CODE_TYPE>& alignment,
-                                 const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
+                                 const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha,
                                  double r, double lambda,
                                  const jumping_distribution_t& jumping_distribution,
                                  double acceptance_rate = 0.7)
@@ -184,10 +184,10 @@ public:
                 return new pt_metropolis_hastings_t(*this);
         }
 
-        double log_posterior(const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& polynomial) {
+        double log_posterior(const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& polynomial) {
                 // loop over monomials
                 double result = -HUGE_VAL;
-                for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = polynomial.begin();
+                for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator ut = polynomial.begin();
                      ut != polynomial.end(); ut++) {
                         result = logadd(result, log(ut->coefficient()) + mbeta_log(ut->exponent(), alpha) - mbeta_log(alpha));
                 }
@@ -196,7 +196,7 @@ public:
         double log_posterior() {
                 double result = 0;
                 for (typename alignment_t<CODE_TYPE>::const_iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial = pt_polynomial<CODE_TYPE, ALPHABET_SIZE>(tree, *it);
+                        const polynomial_t<ALPHABET_SIZE, CODE_TYPE> polynomial = pt_polynomial<ALPHABET_SIZE, CODE_TYPE>(tree, *it);
                         result += log_posterior(polynomial);
                 }
                 return result;
@@ -325,7 +325,7 @@ public:
         std::list<pt_root_t> samples;
 protected:
         const alignment_t<CODE_TYPE>& alignment;
-        exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha;
+        exponent_t<ALPHABET_SIZE, CODE_TYPE> alpha;
 
         gamma_distribution_t gamma_distribution;
 
@@ -341,11 +341,11 @@ protected:
 #include <assert.h>
 #include <pthread.h>
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 class pt_pmcmc_hastings_t
 {
 public:
-        pt_pmcmc_hastings_t(size_t n, const pt_metropolis_hastings_t<CODE_TYPE, ALPHABET_SIZE>& mh) {
+        pt_pmcmc_hastings_t(size_t n, const pt_metropolis_hastings_t<ALPHABET_SIZE, CODE_TYPE>& mh) {
 
                 assert(n > 0);
 
@@ -371,7 +371,7 @@ public:
 
         // typedefs
         ////////////////////////////////////////////////////////////////////////////////
-        typedef pt_metropolis_hastings_t<CODE_TYPE, ALPHABET_SIZE> pt_sampler_t;
+        typedef pt_metropolis_hastings_t<ALPHABET_SIZE, CODE_TYPE> pt_sampler_t;
 
         typedef struct {
                 pt_sampler_t* sampler;

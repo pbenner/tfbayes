@@ -72,8 +72,8 @@ double expected_terms(size_t n)
         for (size_t i = 0; i < 1000; i++)
         {
                 random_init(pt_root);
-                pt_simple_polynomial_t<code_t, alphabet_size> poly(pt_root);
-//                pt_polynomial_t<code_t, alphabet_size> poly(pt_root);
+                pt_simple_polynomial_t<alphabet_size, code_t> poly(pt_root);
+//                pt_polynomial_t<alphabet_size, code_t> poly(pt_root);
                 result = (i*(double)result + (double)poly.size())/((double)i+1.0);
 
         }

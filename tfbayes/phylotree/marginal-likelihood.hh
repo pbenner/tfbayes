@@ -30,18 +30,18 @@
 
 using namespace std;
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 double pt_marginal_likelihood(
         const pt_root_t& node,
         const std::vector<CODE_TYPE>& observations,
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha)
 {
         double result = -HUGE_VAL;
         double mbeta_alpha = mbeta_log(alpha);
 
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial = pt_polynomial<CODE_TYPE, ALPHABET_SIZE>(node, observations);
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE> polynomial = pt_polynomial<ALPHABET_SIZE, CODE_TYPE>(node, observations);
 
-        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = polynomial.begin();
+        for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 result = logadd(result, log(it->coefficient()) + mbeta_log(it->exponent(), alpha) - mbeta_alpha);
         }
@@ -49,15 +49,15 @@ double pt_marginal_likelihood(
         return result;
 }
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 double pt_marginal_likelihood(
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& polynomial,
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& polynomial,
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha)
 {
         double result = -HUGE_VAL;
         double mbeta_alpha = mbeta_log(alpha);
 
-        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator it = polynomial.begin();
+        for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 result = logadd(result, log(it->coefficient()) + mbeta_log(it->exponent(), alpha) - mbeta_alpha);
         }

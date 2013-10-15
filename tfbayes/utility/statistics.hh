@@ -33,9 +33,9 @@
 
 using namespace std;
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 double mbeta_log(
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha)
 {
         double sum1 = 0;
         double sum2 = 0;
@@ -48,10 +48,10 @@ double mbeta_log(
         return sum2 - gsl_sf_lngamma(sum1);
 }
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 double mbeta_log(
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& exponent,
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha)
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& exponent,
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha)
 {
         double sum1 = 0;
         double sum2 = 0;
@@ -66,10 +66,10 @@ double mbeta_log(
         return sum2 - gsl_sf_lngamma(sum1);
 }
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 double mbeta_log(
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& exponent,
-        const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& exponent,
+        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha,
         const size_t from, const size_t to)
 {
         double sum1 = 0;
@@ -85,7 +85,7 @@ double mbeta_log(
         return sum2 - gsl_sf_lngamma(sum1);
 }
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 size_t categorial_sample(const std::vector<double>& p)
 {
         double r = (double)rand()/RAND_MAX;

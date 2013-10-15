@@ -34,13 +34,13 @@
  * value with an adaptive step-size similar to resilient
  * backpropagation (Rprop).
  */
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 class pt_gradient_ascent_t
 {
 public:
         pt_gradient_ascent_t(const pt_root_t& tree,
                              const alignment_t<CODE_TYPE>& alignment,
-                             const exponent_t<CODE_TYPE, ALPHABET_SIZE>& alpha,
+                             const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha,
                              double r, double lambda,
                              double epsilon = 0.001, double eta = 0.1)
                 : tree(tree), alignment(alignment), alpha(alpha), gamma_distribution(r, lambda),
@@ -55,10 +55,10 @@ public:
                 }
 
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE> polynomial = pt_polynomial<CODE_TYPE, ALPHABET_SIZE>(tree, *it);
+                        const polynomial_t<ALPHABET_SIZE, CODE_TYPE> polynomial = pt_polynomial<ALPHABET_SIZE, CODE_TYPE>(tree, *it);
                         // loop over monomials
                         double tmp = -HUGE_VAL;
-                        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = polynomial.begin();
+                        for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator ut = polynomial.begin();
                              ut != polynomial.end(); ut++) {
                                 tmp = logadd(tmp, log(ut->coefficient()) + mbeta_log(ut->exponent(), alpha) - mbeta_log(alpha));
                         }
@@ -77,11 +77,11 @@ public:
                 }
                 // loop through the alignment
                 for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        pt_gradient_t<CODE_TYPE, ALPHABET_SIZE> gradient(tree, *it);
+                        pt_gradient_t<ALPHABET_SIZE, CODE_TYPE> gradient(tree, *it);
 
                         double norm = 0.0;
                         // loop over monomials
-                        for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = gradient.normalization().begin();
+                        for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator ut = gradient.normalization().begin();
                              ut != gradient.normalization().end(); ut++) {
                                 norm += ut->coefficient()*exp(mbeta_log(ut->exponent(), alpha));
                         }
@@ -89,7 +89,7 @@ public:
                         for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
                                 double result = 0;
                                 // loop over monomials
-                                for (typename polynomial_t<CODE_TYPE, ALPHABET_SIZE>::const_iterator ut = gradient[*is].begin();
+                                for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator ut = gradient[*is].begin();
                                      ut != gradient[*is].end(); ut++) {
                                         result += ut->coefficient()*exp(mbeta_log(ut->exponent(), alpha));
                                 }
@@ -140,7 +140,7 @@ public:
 private:
         pt_root_t tree;
         alignment_t<CODE_TYPE> alignment;
-        exponent_t<CODE_TYPE, ALPHABET_SIZE> alpha;
+        exponent_t<ALPHABET_SIZE, CODE_TYPE> alpha;
         gamma_distribution_t gamma_distribution;
         double epsilon;
         double eta;

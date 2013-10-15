@@ -32,11 +32,11 @@
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/utility/linalg.hh>
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 class phylotree_hmm_t : public std::matrix<double>
 {
 public:
-        typedef std::vector<exponent_t<CODE_TYPE, ALPHABET_SIZE> > priors_t;
+        typedef std::vector<exponent_t<ALPHABET_SIZE, CODE_TYPE> > priors_t;
 
         using std::matrix<double>::operator=;
 

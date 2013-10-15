@@ -27,10 +27,10 @@
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/utility/polynomial.hh>
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 class pt_polynomial_class {
 public:
-        static polynomial_t<CODE_TYPE, ALPHABET_SIZE> likelihood(const pt_root_t& root, const std::vector<CODE_TYPE>& observations) {
+        static polynomial_t<ALPHABET_SIZE, CODE_TYPE> likelihood(const pt_root_t& root, const std::vector<CODE_TYPE>& observations) {
                 if (root.outgroup() && observations[root.outgroup()->id] != -1) {
                         return poly_sum(likelihood_rec(root, observations), *root.outgroup(), observations);
                 }
@@ -44,14 +44,14 @@ private:
          * typedefs
          ******************************************************************************/
 
-        typedef boost::array<polynomial_t<CODE_TYPE, ALPHABET_SIZE>, ALPHABET_SIZE+1> carry_t;
+        typedef boost::array<polynomial_t<ALPHABET_SIZE, CODE_TYPE>, ALPHABET_SIZE+1> carry_t;
 
         /******************************************************************************
          * Algorithm by PY and PB
          ******************************************************************************/
 
-        static polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum(const carry_t& carry) {
-                polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum;
+        static polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly_sum(const carry_t& carry) {
+                polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly_sum;
 
                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
                         poly_sum += nucleotide_probability(i)*carry[i];
@@ -60,9 +60,9 @@ private:
 
                 return poly_sum;
         }
-        static polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum(const carry_t& carry, const pt_leaf_t& outgroup,
+        static polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly_sum(const carry_t& carry, const pt_leaf_t& outgroup,
                                                                const std::vector<CODE_TYPE>& observations) {
-                polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum;
+                polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly_sum;
 
                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
                         poly_sum += mutation_model(outgroup, observations[outgroup.id], i)*carry[i];
@@ -94,8 +94,8 @@ private:
                 double pm_left  = 1.0-exp(-node.left ().d);
                 double pm_right = 1.0-exp(-node.right().d);
                 carry_t carry;
-                const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_left  = poly_sum(carry_left);
-                const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_right = poly_sum(carry_right);
+                const polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly_sum_left  = poly_sum(carry_left);
+                const polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly_sum_right = poly_sum(carry_right);
 
                 carry[ALPHABET_SIZE] +=
                         ((1.0-pm_left )*carry_left [ALPHABET_SIZE] + pm_left *poly_sum_left)*
@@ -121,14 +121,14 @@ private:
                         return likelihood_node(node, carry_left, carry_right, observations);
                 }
         }
-        static polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> nucleotide_probability(CODE_TYPE x) {
-                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> px(1.0);
+        static polynomial_term_t<ALPHABET_SIZE, CODE_TYPE> nucleotide_probability(CODE_TYPE x) {
+                polynomial_term_t<ALPHABET_SIZE, CODE_TYPE> px(1.0);
                 px.exponent()[x] = 1;
                 return px;
         }
-        static polynomial_t<CODE_TYPE, ALPHABET_SIZE> mutation_model(const pt_node_t& node, CODE_TYPE x, CODE_TYPE y) {
-                polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly;
-                polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> py = nucleotide_probability(y);
+        static polynomial_t<ALPHABET_SIZE, CODE_TYPE> mutation_model(const pt_node_t& node, CODE_TYPE x, CODE_TYPE y) {
+                polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly;
+                polynomial_term_t<ALPHABET_SIZE, CODE_TYPE> py = nucleotide_probability(y);
                 poly += node.mutation_probability()*py;
                 if (x == y) {
                         poly += (1.0-node.mutation_probability());
@@ -137,10 +137,10 @@ private:
         }
 };
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-polynomial_t<CODE_TYPE, ALPHABET_SIZE> pt_polynomial(const pt_root_t& root, const std::vector<CODE_TYPE>& observations)
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
+polynomial_t<ALPHABET_SIZE, CODE_TYPE> pt_polynomial(const pt_root_t& root, const std::vector<CODE_TYPE>& observations)
 {
-        return pt_polynomial_class<CODE_TYPE, ALPHABET_SIZE>::likelihood(root, observations);
+        return pt_polynomial_class<ALPHABET_SIZE, CODE_TYPE>::likelihood(root, observations);
 }
 
 #endif /* PHYLOTREE_POLYNOMIAL_HH */

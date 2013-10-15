@@ -34,11 +34,11 @@
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/polynomial.hh>
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
-class pt_gradient_t : public boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> > {
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
+class pt_gradient_t : public boost::unordered_map<const pt_node_t*, polynomial_t<ALPHABET_SIZE, CODE_TYPE> > {
 public:
         pt_gradient_t(const pt_root_t& root, const std::vector<CODE_TYPE>& observations)
-                : boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> >() { 
+                : boost::unordered_map<const pt_node_t*, polynomial_t<ALPHABET_SIZE, CODE_TYPE> >() { 
 
                 _nodes = root.nodes;
                 partial_t partial = gradient_rec(root, observations);
@@ -51,27 +51,27 @@ public:
                 }
         }
 
-        const polynomial_t<CODE_TYPE, ALPHABET_SIZE>& normalization() const {
+        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& normalization() const {
                 return _normalization;
         }
 
-        using boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> >::operator[];
-        using boost::unordered_map<const pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> >::find;
+        using boost::unordered_map<const pt_node_t*, polynomial_t<ALPHABET_SIZE, CODE_TYPE> >::operator[];
+        using boost::unordered_map<const pt_node_t*, polynomial_t<ALPHABET_SIZE, CODE_TYPE> >::find;
 
 private:
-        typedef boost::unordered_map<pt_node_t*, polynomial_t<CODE_TYPE, ALPHABET_SIZE> > derivatives_t;
-        typedef boost::array<polynomial_t<CODE_TYPE, ALPHABET_SIZE>, ALPHABET_SIZE+1> carry_t;
+        typedef boost::unordered_map<pt_node_t*, polynomial_t<ALPHABET_SIZE, CODE_TYPE> > derivatives_t;
+        typedef boost::array<polynomial_t<ALPHABET_SIZE, CODE_TYPE>, ALPHABET_SIZE+1> carry_t;
 
         class partial_t : public carry_t {
         public:
                 boost::unordered_map<const pt_node_t*, carry_t> derivatives;
         };
 
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum(const carry_t& carry) {
-                polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum;
+        polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly_sum(const carry_t& carry) {
+                polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly_sum;
 
                 for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                        polynomial_term_t<CODE_TYPE, ALPHABET_SIZE> term(1.0);
+                        polynomial_term_t<ALPHABET_SIZE, CODE_TYPE> term(1.0);
                         term.exponent()[i] = 1;
                         poly_sum += term*carry[i];
                 }
@@ -108,8 +108,8 @@ private:
                 double dpn_right = -pn_right;
 
                 partial_t partial;
-                const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_left  = poly_sum(partial_left);
-                const polynomial_t<CODE_TYPE, ALPHABET_SIZE> poly_sum_right = poly_sum(partial_right);
+                const polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly_sum_left  = poly_sum(partial_left);
+                const polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly_sum_right = poly_sum(partial_right);
 
                 partial[ALPHABET_SIZE] +=
                         (pn_left *partial_left [ALPHABET_SIZE] + pm_left *poly_sum_left)*
@@ -126,8 +126,8 @@ private:
                 for (pt_node_t::nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
                         const pt_node_t* which = *it;
 
-                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE> deri_sum_left  = poly_sum(partial_left .derivatives[which]);
-                        const polynomial_t<CODE_TYPE, ALPHABET_SIZE> deri_sum_right = poly_sum(partial_right.derivatives[which]);
+                        const polynomial_t<ALPHABET_SIZE, CODE_TYPE> deri_sum_left  = poly_sum(partial_left .derivatives[which]);
+                        const polynomial_t<ALPHABET_SIZE, CODE_TYPE> deri_sum_right = poly_sum(partial_right.derivatives[which]);
                         /* Gradient of sigma
                          */
                         if (&node.left() == which) {
@@ -205,7 +205,7 @@ private:
         }
 
         pt_node_t::nodes_t _nodes;
-        polynomial_t<CODE_TYPE, ALPHABET_SIZE> _normalization;
+        polynomial_t<ALPHABET_SIZE, CODE_TYPE> _normalization;
 };
 
 #endif /* PHYLOTREE_GRADIENT_HH */

@@ -25,7 +25,7 @@
 
 using namespace std;
 
-ostream& operator<< (ostream& o, const exponent_t<char, 4>& exponent) {
+ostream& operator<< (ostream& o, const exponent_t<4, char>& exponent) {
         if(exponent[0]) o << " Pa^" << exponent[0];
         if(exponent[1]) o << " Pc^" << exponent[1];
         if(exponent[2]) o << " Pg^" << exponent[2];
@@ -33,14 +33,14 @@ ostream& operator<< (ostream& o, const exponent_t<char, 4>& exponent) {
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_term_t<char, 4>& term) {
+ostream& operator<< (ostream& o, const polynomial_term_t<4, char>& term) {
         o << term.coefficient()
           << term.exponent();
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_t<char, 4>& polynomial) {
-        for (polynomial_t<char, 4>::const_iterator it = polynomial.begin();
+ostream& operator<< (ostream& o, const polynomial_t<4, char>& polynomial) {
+        for (polynomial_t<4, char>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 if (it != polynomial.begin()) {
                         o << " + " << *it;
@@ -52,7 +52,7 @@ ostream& operator<< (ostream& o, const polynomial_t<char, 4>& polynomial) {
 
         return o;
 }
-ostream& operator<< (ostream& o, const exponent_t<char, 5>& exponent) {
+ostream& operator<< (ostream& o, const exponent_t<5, char>& exponent) {
         if(exponent[0]) o << " Pa^" << exponent[0];
         if(exponent[1]) o << " Pc^" << exponent[1];
         if(exponent[2]) o << " Pg^" << exponent[2];
@@ -61,14 +61,14 @@ ostream& operator<< (ostream& o, const exponent_t<char, 5>& exponent) {
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_term_t<char, 5>& term) {
+ostream& operator<< (ostream& o, const polynomial_term_t<5, char>& term) {
         o << term.coefficient()
           << term.exponent();
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_t<char, 5>& polynomial) {
-        for (polynomial_t<char, 5>::const_iterator it = polynomial.begin();
+ostream& operator<< (ostream& o, const polynomial_t<5, char>& polynomial) {
+        for (polynomial_t<5, char>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 if (it != polynomial.begin()) {
                         o << " + " << *it;
@@ -83,7 +83,7 @@ ostream& operator<< (ostream& o, const polynomial_t<char, 5>& polynomial) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ostream& operator<< (ostream& o, const exponent_t<short, 4>& exponent) {
+ostream& operator<< (ostream& o, const exponent_t<4, short>& exponent) {
         if(exponent[0]) o << " Pa^" << exponent[0];
         if(exponent[1]) o << " Pc^" << exponent[1];
         if(exponent[2]) o << " Pg^" << exponent[2];
@@ -91,14 +91,14 @@ ostream& operator<< (ostream& o, const exponent_t<short, 4>& exponent) {
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_term_t<short, 4>& term) {
+ostream& operator<< (ostream& o, const polynomial_term_t<4, short>& term) {
         o << term.coefficient()
           << term.exponent();
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_t<short, 4>& polynomial) {
-        for (polynomial_t<short, 4>::const_iterator it = polynomial.begin();
+ostream& operator<< (ostream& o, const polynomial_t<4, short>& polynomial) {
+        for (polynomial_t<4, short>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 if (it != polynomial.begin()) {
                         o << " + " << *it;
@@ -110,7 +110,7 @@ ostream& operator<< (ostream& o, const polynomial_t<short, 4>& polynomial) {
 
         return o;
 }
-ostream& operator<< (ostream& o, const exponent_t<short, 5>& exponent) {
+ostream& operator<< (ostream& o, const exponent_t<5, short>& exponent) {
         if(exponent[0]) o << " Pa^" << exponent[0];
         if(exponent[1]) o << " Pc^" << exponent[1];
         if(exponent[2]) o << " Pg^" << exponent[2];
@@ -119,14 +119,14 @@ ostream& operator<< (ostream& o, const exponent_t<short, 5>& exponent) {
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_term_t<short, 5>& term) {
+ostream& operator<< (ostream& o, const polynomial_term_t<5, short>& term) {
         o << term.coefficient()
           << term.exponent();
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_t<short, 5>& polynomial) {
-        for (polynomial_t<short, 5>::const_iterator it = polynomial.begin();
+ostream& operator<< (ostream& o, const polynomial_t<5, short>& polynomial) {
+        for (polynomial_t<5, short>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 if (it != polynomial.begin()) {
                         o << " + " << *it;
@@ -141,7 +141,7 @@ ostream& operator<< (ostream& o, const polynomial_t<short, 5>& polynomial) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ostream& operator<< (ostream& o, const exponent_t<float, 4>& exponent) {
+ostream& operator<< (ostream& o, const exponent_t<4, float>& exponent) {
         if(exponent[0]) o << " Pa^" << exponent[0];
         if(exponent[1]) o << " Pc^" << exponent[1];
         if(exponent[2]) o << " Pg^" << exponent[2];
@@ -149,14 +149,14 @@ ostream& operator<< (ostream& o, const exponent_t<float, 4>& exponent) {
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_term_t<float, 4>& term) {
+ostream& operator<< (ostream& o, const polynomial_term_t<4, float>& term) {
         o << term.coefficient()
           << term.exponent();
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_t<float, 4>& polynomial) {
-        for (polynomial_t<float, 4>::const_iterator it = polynomial.begin();
+ostream& operator<< (ostream& o, const polynomial_t<4, float>& polynomial) {
+        for (polynomial_t<4, float>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 if (it != polynomial.begin()) {
                         o << " + " << *it;
@@ -168,7 +168,7 @@ ostream& operator<< (ostream& o, const polynomial_t<float, 4>& polynomial) {
 
         return o;
 }
-ostream& operator<< (ostream& o, const exponent_t<float, 5>& exponent) {
+ostream& operator<< (ostream& o, const exponent_t<5, float>& exponent) {
         if(exponent[0]) o << " Pa^" << exponent[0];
         if(exponent[1]) o << " Pc^" << exponent[1];
         if(exponent[2]) o << " Pg^" << exponent[2];
@@ -177,14 +177,14 @@ ostream& operator<< (ostream& o, const exponent_t<float, 5>& exponent) {
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_term_t<float, 5>& term) {
+ostream& operator<< (ostream& o, const polynomial_term_t<5, float>& term) {
         o << term.coefficient()
           << term.exponent();
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_t<float, 5>& polynomial) {
-        for (polynomial_t<float, 5>::const_iterator it = polynomial.begin();
+ostream& operator<< (ostream& o, const polynomial_t<5, float>& polynomial) {
+        for (polynomial_t<5, float>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 if (it != polynomial.begin()) {
                         o << " + " << *it;
@@ -199,7 +199,7 @@ ostream& operator<< (ostream& o, const polynomial_t<float, 5>& polynomial) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ostream& operator<< (ostream& o, const exponent_t<double, 4>& exponent) {
+ostream& operator<< (ostream& o, const exponent_t<4, double>& exponent) {
         if(exponent[0]) o << " Pa^" << exponent[0];
         if(exponent[1]) o << " Pc^" << exponent[1];
         if(exponent[2]) o << " Pg^" << exponent[2];
@@ -207,14 +207,14 @@ ostream& operator<< (ostream& o, const exponent_t<double, 4>& exponent) {
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_term_t<double, 4>& term) {
+ostream& operator<< (ostream& o, const polynomial_term_t<4, double>& term) {
         o << term.coefficient()
           << term.exponent();
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_t<double, 4>& polynomial) {
-        for (polynomial_t<double, 4>::const_iterator it = polynomial.begin();
+ostream& operator<< (ostream& o, const polynomial_t<4, double>& polynomial) {
+        for (polynomial_t<4, double>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 if (it != polynomial.begin()) {
                         o << " + " << *it;
@@ -226,7 +226,7 @@ ostream& operator<< (ostream& o, const polynomial_t<double, 4>& polynomial) {
 
         return o;
 }
-ostream& operator<< (ostream& o, const exponent_t<double, 5>& exponent) {
+ostream& operator<< (ostream& o, const exponent_t<5, double>& exponent) {
         if(exponent[0]) o << " Pa^" << exponent[0];
         if(exponent[1]) o << " Pc^" << exponent[1];
         if(exponent[2]) o << " Pg^" << exponent[2];
@@ -235,14 +235,14 @@ ostream& operator<< (ostream& o, const exponent_t<double, 5>& exponent) {
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_term_t<double, 5>& term) {
+ostream& operator<< (ostream& o, const polynomial_term_t<5, double>& term) {
         o << term.coefficient()
           << term.exponent();
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_t<double, 5>& polynomial) {
-        for (polynomial_t<double, 5>::const_iterator it = polynomial.begin();
+ostream& operator<< (ostream& o, const polynomial_t<5, double>& polynomial) {
+        for (polynomial_t<5, double>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 if (it != polynomial.begin()) {
                         o << " + " << *it;
@@ -257,7 +257,7 @@ ostream& operator<< (ostream& o, const polynomial_t<double, 5>& polynomial) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-size_t hash_value(const exponent_t<char, 2>& exponent) {
+size_t hash_value(const exponent_t<2, char>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
         seed += (size_t)exponent[1] <<  2;
@@ -265,7 +265,7 @@ size_t hash_value(const exponent_t<char, 2>& exponent) {
         return seed;
 }
 
-size_t hash_value(const exponent_t<char, 3>& exponent) {
+size_t hash_value(const exponent_t<3, char>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
         seed += (size_t)exponent[1] <<  2;
@@ -274,7 +274,7 @@ size_t hash_value(const exponent_t<char, 3>& exponent) {
         return seed;
 }
 
-size_t hash_value(const exponent_t<char, 4>& exponent) {
+size_t hash_value(const exponent_t<4, char>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
         seed += (size_t)exponent[1] <<  2;
@@ -285,7 +285,7 @@ size_t hash_value(const exponent_t<char, 4>& exponent) {
 }
 
 
-size_t hash_value(const exponent_t<char, 5>& exponent) {
+size_t hash_value(const exponent_t<5, char>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
         seed += (size_t)exponent[1] <<  2;
@@ -296,7 +296,7 @@ size_t hash_value(const exponent_t<char, 5>& exponent) {
         return seed;
 }
 
-size_t hash_value(const exponent_t<char, 10>& exponent) {
+size_t hash_value(const exponent_t<10, char>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
         seed += (size_t)exponent[1] <<  2;
@@ -312,7 +312,7 @@ size_t hash_value(const exponent_t<char, 10>& exponent) {
         return seed;
 }
 
-size_t hash_value(const exponent_t<short, 2>& exponent) {
+size_t hash_value(const exponent_t<2, short>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
         seed += (size_t)exponent[1] <<  2;
@@ -320,62 +320,7 @@ size_t hash_value(const exponent_t<short, 2>& exponent) {
         return seed;
 }
 
-size_t hash_value(const exponent_t<short, 3>& exponent) {
-        size_t seed = 0;
-        seed += (size_t)exponent[0] <<  0;
-        seed += (size_t)exponent[1] <<  2;
-        seed += (size_t)exponent[2] <<  4;
-
-        return seed;
-}
-
-size_t hash_value(const exponent_t<short, 4>& exponent) {
-        size_t seed = 0;
-        seed += (size_t)exponent[0] <<  0;
-        seed += (size_t)exponent[1] <<  2;
-        seed += (size_t)exponent[2] <<  4;
-        seed += (size_t)exponent[3] <<  6;
-
-        return seed;
-}
-
-
-size_t hash_value(const exponent_t<short, 5>& exponent) {
-        size_t seed = 0;
-        seed += (size_t)exponent[0] <<  0;
-        seed += (size_t)exponent[1] <<  2;
-        seed += (size_t)exponent[2] <<  4;
-        seed += (size_t)exponent[3] <<  6;
-        seed += (size_t)exponent[4] <<  8;
-
-        return seed;
-}
-
-size_t hash_value(const exponent_t<short, 10>& exponent) {
-        size_t seed = 0;
-        seed += (size_t)exponent[0] <<  0;
-        seed += (size_t)exponent[1] <<  2;
-        seed += (size_t)exponent[2] <<  4;
-        seed += (size_t)exponent[3] <<  6;
-        seed += (size_t)exponent[4] <<  8;
-        seed += (size_t)exponent[5] << 10;
-        seed += (size_t)exponent[6] << 12;
-        seed += (size_t)exponent[7] << 14;
-        seed += (size_t)exponent[8] << 16;
-        seed += (size_t)exponent[9] << 18;
-
-        return seed;
-}
-
-size_t hash_value(const exponent_t<float, 2>& exponent) {
-        size_t seed = 0;
-        seed += (size_t)exponent[0] <<  0;
-        seed += (size_t)exponent[1] <<  2;
-
-        return seed;
-}
-
-size_t hash_value(const exponent_t<float, 3>& exponent) {
+size_t hash_value(const exponent_t<3, short>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
         seed += (size_t)exponent[1] <<  2;
@@ -384,7 +329,7 @@ size_t hash_value(const exponent_t<float, 3>& exponent) {
         return seed;
 }
 
-size_t hash_value(const exponent_t<float, 4>& exponent) {
+size_t hash_value(const exponent_t<4, short>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
         seed += (size_t)exponent[1] <<  2;
@@ -394,7 +339,8 @@ size_t hash_value(const exponent_t<float, 4>& exponent) {
         return seed;
 }
 
-size_t hash_value(const exponent_t<float, 5>& exponent) {
+
+size_t hash_value(const exponent_t<5, short>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
         seed += (size_t)exponent[1] <<  2;
@@ -405,7 +351,7 @@ size_t hash_value(const exponent_t<float, 5>& exponent) {
         return seed;
 }
 
-size_t hash_value(const exponent_t<float, 10>& exponent) {
+size_t hash_value(const exponent_t<10, short>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
         seed += (size_t)exponent[1] <<  2;
@@ -421,7 +367,7 @@ size_t hash_value(const exponent_t<float, 10>& exponent) {
         return seed;
 }
 
-size_t hash_value(const exponent_t<double, 2>& exponent) {
+size_t hash_value(const exponent_t<2, float>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
         seed += (size_t)exponent[1] <<  2;
@@ -429,7 +375,7 @@ size_t hash_value(const exponent_t<double, 2>& exponent) {
         return seed;
 }
 
-size_t hash_value(const exponent_t<double, 3>& exponent) {
+size_t hash_value(const exponent_t<3, float>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
         seed += (size_t)exponent[1] <<  2;
@@ -438,7 +384,7 @@ size_t hash_value(const exponent_t<double, 3>& exponent) {
         return seed;
 }
 
-size_t hash_value(const exponent_t<double, 4>& exponent) {
+size_t hash_value(const exponent_t<4, float>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
         seed += (size_t)exponent[1] <<  2;
@@ -448,7 +394,7 @@ size_t hash_value(const exponent_t<double, 4>& exponent) {
         return seed;
 }
 
-size_t hash_value(const exponent_t<double, 5>& exponent) {
+size_t hash_value(const exponent_t<5, float>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
         seed += (size_t)exponent[1] <<  2;
@@ -459,7 +405,61 @@ size_t hash_value(const exponent_t<double, 5>& exponent) {
         return seed;
 }
 
-size_t hash_value(const exponent_t<double, 10>& exponent) {
+size_t hash_value(const exponent_t<10, float>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+        seed += (size_t)exponent[2] <<  4;
+        seed += (size_t)exponent[3] <<  6;
+        seed += (size_t)exponent[4] <<  8;
+        seed += (size_t)exponent[5] << 10;
+        seed += (size_t)exponent[6] << 12;
+        seed += (size_t)exponent[7] << 14;
+        seed += (size_t)exponent[8] << 16;
+        seed += (size_t)exponent[9] << 18;
+
+        return seed;
+}
+
+size_t hash_value(const exponent_t<2, double>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+
+        return seed;
+}
+
+size_t hash_value(const exponent_t<3, double>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+        seed += (size_t)exponent[2] <<  4;
+
+        return seed;
+}
+
+size_t hash_value(const exponent_t<4, double>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+        seed += (size_t)exponent[2] <<  4;
+        seed += (size_t)exponent[3] <<  6;
+
+        return seed;
+}
+
+size_t hash_value(const exponent_t<5, double>& exponent) {
+        size_t seed = 0;
+        seed += (size_t)exponent[0] <<  0;
+        seed += (size_t)exponent[1] <<  2;
+        seed += (size_t)exponent[2] <<  4;
+        seed += (size_t)exponent[3] <<  6;
+        seed += (size_t)exponent[4] <<  8;
+
+        return seed;
+}
+
+size_t hash_value(const exponent_t<10, double>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] <<  0;
         seed += (size_t)exponent[1] <<  2;

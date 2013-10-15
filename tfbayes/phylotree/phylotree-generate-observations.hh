@@ -38,7 +38,7 @@ void pt_generate_observations(const pt_node_t& node,
         double r = (double)rand()/RAND_MAX;
         CODE_TYPE nucleotide;
         if (r <= node.mutation_probability()) {
-                nucleotide = categorial_sample<CODE_TYPE, ALPHABET_SIZE>(stationary);
+                nucleotide = categorial_sample<ALPHABET_SIZE, CODE_TYPE>(stationary);
         }
         else {
                 nucleotide = parent_nucleotide;
@@ -61,7 +61,7 @@ std::vector<CODE_TYPE>
 pt_generate_observations(const pt_root_t& tree, const std::vector<double>& stationary)
 {
         std::vector<CODE_TYPE> observations(tree.n_leaves, -1);
-        CODE_TYPE nucleotide = categorial_sample<CODE_TYPE, ALPHABET_SIZE>(stationary);
+        CODE_TYPE nucleotide = categorial_sample<ALPHABET_SIZE, CODE_TYPE>(stationary);
 
         /* check for an outgroup */
         if (tree.outgroup()) {
