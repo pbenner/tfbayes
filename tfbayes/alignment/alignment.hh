@@ -203,13 +203,20 @@ protected:
                 FastaParser parser(filename);
 
                 std::matrix<CODE_TYPE> tmp(n_species(), 0);
-                std::string str;
+                std::string line;
 
-                while ((str = parser.read_sequence()) != "") {
+                while (parser) {
+                        line = parser();
+                        if (line == "") continue;
+                        if (parser.description().size() == 0) {
+                                std::cerr << "Warning: sequence without description found... skipping."
+                                          << std::endl;
+                                continue;
+                        }
                         std::string taxon  = token(parser.description()[0], '.')[0];
                         pt_node_t::id_t id = tree.get_leaf_id(taxon);
                         if (id != -1) {
-                                sequence_t<CODE_TYPE> sequence(str, alphabet());
+                                sequence_t<CODE_TYPE> sequence(line, alphabet());
                                 // there might be multiple entries for
                                 // each species, join all entries into
                                 // a single sequence
@@ -236,7 +243,7 @@ protected:
                 for (taxon_map_t::const_iterator it = taxon_map().begin();
                      it != taxon_map().end(); it++) {
                         if (tmp[it->second].size() == 0) {
-                                std::cerr << boost::format("Error: taxon `%s' has sequence length zero") % it->first
+                                std::cerr << boost::format("Warning: taxon `%s' has sequence length zero") % it->first
                                           << std::endl;
                                 // fill with missing data
                                 tmp[it->second] = sequence_t<CODE_TYPE>(length(), alphabet());
@@ -295,24 +302,31 @@ public:
                 std::string line;
 
                 /* remember which species already occured */
-                std::map<std::string, bool> occurred;
+                std::set<std::string> occurred;
 
                 /* current alignment */
                 std::matrix<CODE_TYPE> sequences(n, 0);
 
                 /* the fasta parser returns a single line for each
                  * sequence */
-                while ((line = parser.read_sequence()) != "") {
+                while (parser) {
+                        line = parser();
+                        if (line == "") continue;
+                        if (parser.description().size() == 0) {
+                                std::cerr << "Warning: sequence without description found... skipping."
+                                          << std::endl;
+                                continue;
+                        }
                         std::string name  = token(parser.description()[0], '.')[0];
-                        if (occurred[name]) {
+                        if (occurred.find(name) != occurred.end()) {
                                 // push alignment
                                 push_back(alignment_t<CODE_TYPE>(sequences, taxon_map, alphabet));
                                 // reset occurrences
-                                occurred = std::map<std::string, bool>();
+                                occurred.clear();
                                 // start new alignment
                                 sequences = std::matrix<CODE_TYPE>(n, 0);
                         }
-                        occurred[name] = true;
+                        occurred.insert(name);
                         sequences[taxon_map[name]] = nucleotide_sequence_t<CODE_TYPE>(line);
                 }
                 push_back(alignment_t<CODE_TYPE>(sequences, taxon_map, alphabet));

@@ -33,8 +33,12 @@ public:
         FastaParser(const std::string& filename);
         FastaParser(const std::istream& stream);
 
-        std::string read_sequence();
-        const std::vector<std::string>& description();
+        /* read the next sequence */
+        std::string operator()();
+        /* return true if not at end of file */
+        operator bool() const;
+        /* return the description of the sequence */
+        const std::vector<std::string>& description() const;
 
 protected:
         void init_parser();

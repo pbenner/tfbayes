@@ -66,13 +66,13 @@ FastaParser::init_parser()
 }
 
 const std::vector<std::string>&
-FastaParser::description()
+FastaParser::description() const
 {
         return _description;
 }
 
 string
-FastaParser::read_sequence()
+FastaParser::operator()()
 {
         string tmp;
         string sequence;
@@ -90,11 +90,19 @@ FastaParser::read_sequence()
         while (true) {
                 getline(stream, tmp);
                 string line = strip(tmp);
-                if (line == "" || tmp[0] == '>' || !stream) {
+                if (line == "" && stream) {
+                        continue;
+                }
+                if (tmp[0] == '>' || !stream) {
                         prev_line = line;
                         break;
                 }
                 sequence.append(line);
         }
         return sequence;
+}
+
+FastaParser::operator bool() const
+{
+        return stream;
 }
