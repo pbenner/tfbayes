@@ -521,7 +521,7 @@ string
 product_dirichlet_t::print_counts() const {
         stringstream ss;
         for (size_t k = 0; k < _size2; k++) {
-                ss << decode_nucleotide(k) << " ";
+                ss << nucleotide_alphabet_t().decode(k) << " ";
                 for (size_t j = 0; j < _size1; j++) {
                         ss.precision(8);
                         ss.width(10);
@@ -590,7 +590,7 @@ markov_chain_mixture_t::markov_chain_mixture_t(
         }
         /* compute context */
         for (size_t i = 0; i < _data.size(); i++) {
-                const nucleotide_sequence_t<double>& seq = (const nucleotide_sequence_t<double>&)_data[i];
+                const sequence_t<double>& seq = (const sequence_t<double>&)_data[i];
                 _context.push_back(seq_context_t(seq, _max_context, alphabet_size));
         }
 }

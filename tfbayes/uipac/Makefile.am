@@ -14,15 +14,7 @@ lib_LTLIBRARIES = libtfbayes-uipac.la
 libtfbayes_uipac_la_SOURCES = \
 	alphabet.cc
 	alphabet.hh
-	code.cc \
-	code.hh \
-	nucleotide-sequence.hh
 libtfbayes_uipac_la_LDFLAGS = -no-undefined -version-info 0:0:0
-
-otherincludedir = $(includedir)/tfbayes/uipac
-otherinclude_HEADERS = \
-	code.hh \
-	nucleotide-sequence.hh
 
 ## python interface
 pkgpython_LTLIBRARIES = interface.la

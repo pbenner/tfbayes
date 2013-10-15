@@ -31,7 +31,7 @@
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/phylotree-parser.hh>
 #include <tfbayes/phylotree/phylotree-generate-observations.hh>
-#include <tfbayes/uipac/code.hh>
+#include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/strtools.hh>
 #include <tfbayes/exception/exception.h>
 
@@ -182,7 +182,7 @@ protected:
 ostream& operator<<(ostream& o, const pattern_t& pattern)
 {
         for (size_t j = 0; j < pattern[0].size(); j++) {
-                o << format("%c: ") % decode_nucleotide(j);
+                o << format("%c: ") % nucleotide_alphabet_t().decode(j);
                 for (size_t i = 0; i < pattern.size(); i++) {
                         o << format("%5f ") % pattern[i][j];
                 }

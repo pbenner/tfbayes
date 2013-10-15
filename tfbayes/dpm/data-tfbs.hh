@@ -30,7 +30,6 @@
 
 #include <tfbayes/dpm/data.hh>
 #include <tfbayes/dpm/indexer.hh>
-#include <tfbayes/uipac/code.hh>
 
 #define __ALPHABET_SIZE__ 5
 #define __CODE_TYPE__ boost::array<double, __ALPHABET_SIZE__>

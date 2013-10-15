@@ -25,7 +25,7 @@
 #include <vector>
 
 #include <tfbayes/dpm/data-tfbs.hh>
-#include <tfbayes/uipac/nucleotide-sequence.hh>
+#include <tfbayes/alignment/sequence.hh>
 #include <tfbayes/utility/abysmal-stack.hh>
 
 /* this class stores the context of a single position in a
@@ -77,7 +77,7 @@ protected:
 class seq_context_t : public std::vector<context_t>
 {
 public:
-        seq_context_t(const nucleotide_sequence_t<double>& sequence,
+        seq_context_t(const sequence_t<double>& sequence,
                       size_t context, size_t alphabet_size) {
                 AbysmalStack<double> stack(context+1);
 

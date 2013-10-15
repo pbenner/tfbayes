@@ -35,8 +35,6 @@
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/uipac/alphabet.hh>
-#include <tfbayes/uipac/code.hh>
-#include <tfbayes/uipac/nucleotide-sequence.hh>
 #include <tfbayes/utility/linalg.hh>
 #include <tfbayes/utility/strtools.hh>
 #include <tfbayes/alignment/sequence.hh>
@@ -371,7 +369,7 @@ public:
                                 sequences = std::matrix<CODE_TYPE>(n, 0);
                         }
                         occurred.insert(parser.taxon());
-                        sequences[taxon_map[parser.taxon()]] = nucleotide_sequence_t<CODE_TYPE>(line);
+                        sequences[taxon_map[parser.taxon()]] = sequence_t<CODE_TYPE>(line);
                 }
                 push_back(alignment_t<CODE_TYPE>(sequences, taxon_map, alphabet));
         }
