@@ -40,6 +40,11 @@ using namespace boost::python;
 // library interface
 // -----------------------------------------------------------------------------
 
+sequence_t<> alignment_getsequence(alignment_t<>& a, string taxon)
+{
+        return a[taxon];
+}
+
 char alignment_getitem(alignment_t<>& a, tuple index)
 {
         size_t i = extract<size_t>(index[0]);
@@ -63,6 +68,11 @@ void alignment_setitem(alignment_t<>& a, tuple index, alphabet_code_t d)
         a[alignment_index_t(i,j)] = a.alphabet().code(d);
 }
 
+string sequence_str(sequence_t<>& s)
+{
+        return to_string(s);
+}
+
 string alignment_str(alignment_t<>& a)
 {
         return to_string(print_alignment_pretty(a));
@@ -70,9 +80,13 @@ string alignment_str(alignment_t<>& a)
 
 BOOST_PYTHON_MODULE(interface)
 {
+        class_<sequence_t<> >("sequence_t", no_init)
+                .def("__str__", sequence_str)
+                ;
         class_<alignment_t<> >("alignment_t", no_init)
                 .def(init<string, pt_root_t>())
                 .def("__iter__",    boost::python::iterator<alignment_t<> >())
+                .def("__getitem__", alignment_getsequence)
                 .def("__getitem__", alignment_getitem)
                 .def("__setitem__", alignment_setitem)
                 .def("__str__",     alignment_str)
