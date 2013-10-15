@@ -57,6 +57,17 @@ public:
 
         // Constructors
         ////////////////////////////////////////////////////////////////////////
+        alignment_t(size_t length,
+                    const pt_root_t& tree,
+                    CODE_TYPE init = -1,
+                    alphabet_t alphabet = nucleotide_alphabet_t())
+                : std::matrix<CODE_TYPE>(length, tree.n_leaves, init),
+                  _n_species (tree.n_leaves),
+                  _length    (length),
+                  _alphabet  (alphabet) {
+                // initialize taxon map from leaf names
+                init_taxon_map(tree);
+        }
         alignment_t(const std::matrix<CODE_TYPE> sequences,
                     const taxon_map_t& taxon_map,
                     alphabet_t alphabet = nucleotide_alphabet_t())

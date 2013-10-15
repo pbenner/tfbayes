@@ -34,7 +34,7 @@ class dpm_tfbs_t : public mixture_model_t {
 public:
          dpm_tfbs_t(const tfbs_options_t& options,
                     const data_tfbs_t& data,
-                    const alignment_set_t<short>& alignment_set,
+                    const alignment_set_t<>& alignment_set,
                     const dpm_partition_t& partition = dpm_partition_t());
          dpm_tfbs_t(const dpm_tfbs_t& dpm);
         ~dpm_tfbs_t();
@@ -62,7 +62,7 @@ public:
 
         const data_tfbs_t& data() const;
 
-        const alignment_set_t<short>& alignment_set() const;
+        const alignment_set_t<>& alignment_set() const;
 
         // methods
         ////////////////////////////////////////////////////////////////////////
@@ -97,7 +97,7 @@ protected:
 
         // data and clusters
         const data_tfbs_t* _data;
-        const alignment_set_t<short>* _alignment_set;
+        const alignment_set_t<>* _alignment_set;
         dpm_tfbs_state_t _state;
 
         // parameters

@@ -26,9 +26,10 @@
 #include <cstdlib>
 
 #include <tfbayes/phylotree/phylotree.hh>
+#include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/statistics.hh>
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 void pt_generate_observations(const pt_node_t& node,
                               const std::vector<double>& stationary,
                               const CODE_TYPE parent_nucleotide,
@@ -48,14 +49,14 @@ void pt_generate_observations(const pt_node_t& node,
         }
         /* traverse the treee */
         else {
-                pt_generate_observations<CODE_TYPE, ALPHABET_SIZE>(
+                pt_generate_observations<ALPHABET_SIZE, CODE_TYPE>(
                         node.left (), stationary, nucleotide, observations);
-                pt_generate_observations<CODE_TYPE, ALPHABET_SIZE>(
+                pt_generate_observations<ALPHABET_SIZE, CODE_TYPE>(
                         node.right(), stationary, nucleotide, observations);
         }
 }
 
-template <typename CODE_TYPE, size_t ALPHABET_SIZE>
+template <size_t ALPHABET_SIZE, typename CODE_TYPE>
 std::vector<CODE_TYPE>
 pt_generate_observations(const pt_root_t& tree, const std::vector<double>& stationary)
 {
@@ -64,14 +65,14 @@ pt_generate_observations(const pt_root_t& tree, const std::vector<double>& stati
 
         /* check for an outgroup */
         if (tree.outgroup()) {
-                pt_generate_observations<CODE_TYPE, ALPHABET_SIZE>(
+                pt_generate_observations<ALPHABET_SIZE, CODE_TYPE>(
                         static_cast<const pt_leaf_t&>(*tree.outgroup()), stationary, nucleotide, observations);
         }
         /* traverse the treee */
         if (!tree.leaf()) {
-                pt_generate_observations<CODE_TYPE, ALPHABET_SIZE>(
+                pt_generate_observations<ALPHABET_SIZE, CODE_TYPE>(
                         tree.left (), stationary, nucleotide, observations);
-                pt_generate_observations<CODE_TYPE, ALPHABET_SIZE>(
+                pt_generate_observations<ALPHABET_SIZE, CODE_TYPE>(
                         tree.right(), stationary, nucleotide, observations);
         }
         return observations;

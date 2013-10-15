@@ -76,6 +76,7 @@ libtfbayes_dpm_la_SOURCES =		\
 libtfbayes_dpm_la_LIBADD  = $(top_builddir)/tfbayes/exception/libtfbayes-exception.la
 libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fastarithmetics/libtfbayes-fastarithmetics.la
 libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
+libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
 libtfbayes_dpm_la_LIBADD += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 libtfbayes_dpm_la_LDFLAGS = -no-undefined -version-info 0:0:0
 

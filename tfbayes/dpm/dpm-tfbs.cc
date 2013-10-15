@@ -28,7 +28,7 @@
 
 using namespace std;
 
-dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, const alignment_set_t<short>& alignment_set,
+dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, const alignment_set_t<>& alignment_set,
         const dpm_partition_t& partition)
         : // baseline
           _baseline_weights(options.baseline_weights),
@@ -385,7 +385,7 @@ dpm_tfbs_t::data() const {
         return *_data;
 }
 
-const alignment_set_t<short>&
+const alignment_set_t<>&
 dpm_tfbs_t::alignment_set() const {
         return *_alignment_set;
 }

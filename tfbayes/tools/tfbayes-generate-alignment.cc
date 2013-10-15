@@ -36,7 +36,6 @@
 #include <tfbayes/exception/exception.h>
 
 #define alphabet_size 5
-typedef short code_t;
 
 using namespace std;
 using boost::format;
@@ -115,16 +114,13 @@ void print_version(FILE *fp)
 // Alignments
 ////////////////////////////////////////////////////////////////////////////////
 
-template ostream& operator<< <code_t>(ostream& o, const print_alignment_pretty<code_t>& alignment_container);
-template ostream& operator<< <code_t>(ostream& o, const print_alignment_fasta <code_t>& alignment_container);
-
-void print_alignment(const alignment_t<code_t>& alignment)
+void print_alignment(const alignment_t<>& alignment)
 {
         if (options.format == "pretty") {
-                cout << print_alignment_pretty<code_t>(alignment) << endl;
+                cout << print_alignment_pretty(alignment) << endl;
         }
         else if (options.format == "fasta") {
-                cout << print_alignment_fasta<code_t>(alignment) << endl;
+                cout << print_alignment_fasta(alignment) << endl;
         }
         else {
                 wrong_usage("Unknown output format.");
@@ -132,13 +128,13 @@ void print_alignment(const alignment_t<code_t>& alignment)
         }
 }
 
-class pattern_t : public vector<vector<double> > {
+class pattern_t : public matrix<double> {
 public:
         pattern_t()
-                : vector<vector<double> >(options.m, vector<double>(alphabet_size, 0.0))
+                : matrix<double>(options.m, alphabet_size, 0.0)
                 { }
         pattern_t(const vector<double>& pseudocounts, gsl_rng * r)
-                : vector<vector<double> >(options.m, vector<double>()) {
+                : matrix<double>(options.m, 0) {
                 // generate new pattern
                 for (size_t i = 0; i < options.m; i++) {
                         operator[](i) = dirichlet_sample<alphabet_size>(pseudocounts, r);
@@ -210,10 +206,10 @@ ostream& operator<<(ostream& o, const dirichlet_process_t& dirichlet_process)
         return o;
 }
 
-void insert_observations(alignment_t<code_t>& alignment, size_t i, const vector<code_t>& observations)
+void insert_observations(alignment_t<>& alignment, size_t i, const vector<alphabet_code_t>& observations)
 {
         for (size_t k = 0; k < observations.size(); k++) {
-                alignment[k][i] = observations[k];
+                alignment[alignment_index_t(i, k)] = observations[k];
         }
 }
 
@@ -221,9 +217,9 @@ void generate_tfbs_alignment(const pt_root_t& pt_root, gsl_rng * r)
 {
         dirichlet_process_t dirichlet_process(options.d, options.alpha, r);
         vector<double> stationary;
-        vector<code_t> observations;
+        vector<alphabet_code_t> observations;
         // alignment
-        alignment_t<code_t> alignment(options.n, -1, pt_root);
+        alignment_t<> alignment(options.n, pt_root);
 
         // generate
         for (size_t i = 0; i < options.n; i++) {
@@ -231,7 +227,7 @@ void generate_tfbs_alignment(const pt_root_t& pt_root, gsl_rng * r)
                 if ((double)rand()/RAND_MAX <= options.lambda) {
                         const pattern_t& pattern = dirichlet_process();
                         for (size_t j = 0; j < pattern.size() && i+j < options.n; j++) {
-                                observations = pt_generate_observations<code_t, alphabet_size>(pt_root, pattern[j]);
+                                observations = pt_generate_observations<alphabet_size, alphabet_code_t>(pt_root, pattern[j]);
                                 insert_observations(alignment, i+j, observations);
                         }
                         i += pattern.size() - 1;
@@ -239,7 +235,7 @@ void generate_tfbs_alignment(const pt_root_t& pt_root, gsl_rng * r)
                 // generate background
                 else {
                         stationary   = dirichlet_sample<alphabet_size>(options.beta, r);
-                        observations = pt_generate_observations<code_t, alphabet_size>(pt_root, stationary);
+                        observations = pt_generate_observations<alphabet_size, alphabet_code_t>(pt_root, stationary);
                         insert_observations(alignment, i, observations);
                 }
         }
@@ -252,15 +248,15 @@ void generate_tfbs_alignment(const pt_root_t& pt_root, gsl_rng * r)
 void generate_simple_alignment(const pt_root_t& pt_root, gsl_rng * r)
 {
         // alignment
-        alignment_t<code_t> alignment(options.n, -1, pt_root);
+        alignment_t<> alignment(options.n, pt_root);
 
         // generate
         for (size_t i = 0; i < options.n; i++) {
                 vector<double> stationary   = dirichlet_sample<alphabet_size>(options.alpha, r);
-                vector<code_t> observations = pt_generate_observations<code_t, alphabet_size>(pt_root, stationary);
+                vector<alphabet_code_t> observations = pt_generate_observations<alphabet_size, alphabet_code_t>(pt_root, stationary);
 
                 for (size_t k = 0; k < observations.size(); k++) {
-                        alignment[k][i] = observations[k];
+                        alignment[alignment_index_t(i, k)] = observations[k];
                 }
         }
         // print result
