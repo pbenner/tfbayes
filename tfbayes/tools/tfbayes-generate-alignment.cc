@@ -209,7 +209,7 @@ ostream& operator<<(ostream& o, const dirichlet_process_t& dirichlet_process)
 void insert_observations(alignment_t<>& alignment, size_t i, const vector<alphabet_code_t>& observations)
 {
         for (size_t k = 0; k < observations.size(); k++) {
-                alignment[alignment_index_t(i, k)] = observations[k];
+                alignment[alignment_index_t(k, i)] = observations[k];
         }
 }
 
@@ -252,12 +252,12 @@ void generate_simple_alignment(const pt_root_t& pt_root, gsl_rng * r)
 
         // generate
         for (size_t i = 0; i < options.n; i++) {
-                vector<double> stationary   = dirichlet_sample<alphabet_size>(options.alpha, r);
-                vector<alphabet_code_t> observations = pt_generate_observations<alphabet_size, alphabet_code_t>(pt_root, stationary);
+                vector<double         > stationary   =
+                        dirichlet_sample<alphabet_size>(options.alpha, r);
+                vector<alphabet_code_t> observations =
+                        pt_generate_observations<alphabet_size, alphabet_code_t>(pt_root, stationary);
 
-                for (size_t k = 0; k < observations.size(); k++) {
-                        alignment[alignment_index_t(i, k)] = observations[k];
-                }
+                alignment[i] = observations;
         }
         // print result
         print_alignment(alignment);

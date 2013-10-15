@@ -129,12 +129,16 @@ public:
                 swap(*this, tmp);
                 return *this;
         }
+        // use the access operator from base class to read/write columns
+        using std::matrix<CODE_TYPE>::operator[];
+        // define new access operators to access individual cells
         const CODE_TYPE& operator[](const alignment_index_t& index) const {
                 return std::matrix<CODE_TYPE>::operator[](index[1])[index[0]];
         }
               CODE_TYPE& operator[](const alignment_index_t& index) {
                 return std::matrix<CODE_TYPE>::operator[](index[1])[index[0]];
         }
+        // and to obtain full sequences for one species
         sequence_t<CODE_TYPE> operator[](const std::string& taxon) const {
                 sequence_t<CODE_TYPE> sequence(length(), alphabet());
                 pt_node_t::id_t id = taxon_map(taxon);
