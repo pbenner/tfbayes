@@ -62,9 +62,12 @@ public:
                     alphabet_t alphabet = nucleotide_alphabet_t())
                 : std::matrix<CODE_TYPE>(sequences),
                   _n_species (taxon_map.size()),
-                  _length    (sequences.size()),
+                  // the length is initialized later
+                  _length    (0),
                   _taxon_map (taxon_map),
                   _alphabet(alphabet) {
+                // check that all lengths are consistent
+                init_alignment(sequences);
         }
         alignment_t(const std::string& filename,
                     const pt_root_t& tree,
@@ -73,6 +76,7 @@ public:
                   // we have as many sequences in this alignment as
                   // there are leaves in the tree
                   _n_species (tree.n_leaves),
+                  // the length is initialized later
                   _length    (0),
                   _alphabet  (alphabet)
                 {
@@ -210,10 +214,6 @@ protected:
                                 // each species, join all entries into
                                 // a single sequence
                                 tmp[id].insert(tmp[id].end(), sequence.begin(), sequence.end());
-                                // update length if necessary
-                                if (tmp[id].size() > length()) {
-                                        _length = tmp[id].size();
-                                }
                         }
                         else {
                                 std::cerr << boost::format("Warning: taxon `%s' not found in the phylogenetic tree.") % taxon
@@ -222,7 +222,17 @@ protected:
                 }
                 return tmp;
         }
-        void init_alignment(std::matrix<CODE_TYPE>& tmp) {
+        void init_alignment(const std::matrix<CODE_TYPE>& sequences) {
+                std::matrix<CODE_TYPE> tmp(sequences);
+                // initialize length
+                for (typename std::matrix<CODE_TYPE>::const_iterator it = tmp.begin();
+                     it != tmp.end(); it++) {
+                        // update length if necessary
+                        if (it->size() > length()) {
+                                _length = it->size();
+                        }
+                }
+                // initialize data
                 for (taxon_map_t::const_iterator it = taxon_map().begin();
                      it != taxon_map().end(); it++) {
                         if (tmp[it->second].size() == 0) {
