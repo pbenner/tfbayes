@@ -341,20 +341,26 @@ nedge_node_t::nedge_node_t(const nedge_node_t& nedge_node)
         }
 }
 
+nedge_node_t::~nedge_node_t()
+{
+        for (map_t::iterator it = _nedge_set.begin();
+             it != _nedge_set.end(); it++) {
+                delete(it->second);
+        }
+}
+
 nedge_node_t*
 nedge_node_t::clone() const
 {
         return new nedge_node_t(*this);
 }
 
-void
-nedge_node_t::destroy()
+nedge_node_t&
+nedge_node_t::operator=(const nedge_node_t& nedge_node)
 {
-        for (map_t::iterator it = _nedge_set.begin();
-             it != _nedge_set.end(); it++) {
-                it->second->destroy();
-        }
-        delete(this);
+        nedge_node_t tmp(nedge_node);
+        swap(*this, tmp);
+        return *this;
 }
 
 bool
@@ -448,6 +454,14 @@ nedge_root_t::nedge_root_t(const nedge_root_t& nedge_root)
           _leaf_d(nedge_root._leaf_d),
           _leaf_names(nedge_root._leaf_names)
 { }
+
+nedge_root_t&
+nedge_root_t::operator=(const nedge_root_t& nedge_root)
+{
+        nedge_root_t tmp(nedge_root);
+        swap(*this, tmp);
+        return *this;
+}
 
 nedge_root_t*
 nedge_root_t::clone() const
@@ -574,10 +588,8 @@ ntree_t::find_edge(const nsplit_t& nsplit) const
 
 pt_root_t
 ntree_t::export_tree() const {
-        nedge_root_t* nedge_root = new nedge_root_t(nedge_set(), leaf_d(), leaf_names());
-        pt_root_t pt_root = nedge_root->convert();
-        nedge_root->destroy();
-        return pt_root;
+        nedge_root_t nedge_root = nedge_root_t(nedge_set(), leaf_d(), leaf_names());
+        return nedge_root.convert();
 }
 
 size_t

@@ -174,13 +174,18 @@ public:
         typedef boost::unordered_map<nedge_t, nedge_node_t*> map_t;
         typedef boost::tuple<pt_node_t*, nsplit_t::part_t> convert_t;
 
-         nedge_node_t();
-         nedge_node_t(const map_t& children);
-         nedge_node_t(const nedge_node_t& nedge_node);
-        ~nedge_node_t() { };
+        nedge_node_t();
+        nedge_node_t(const map_t& children);
+        nedge_node_t(const nedge_node_t& nedge_node);
+        virtual ~nedge_node_t();
 
         virtual nedge_node_t* clone() const;
-        virtual void destroy();
+
+        virtual nedge_node_t& operator=(const nedge_node_t& nedge_node);
+
+        friend void swap(nedge_node_t& first, nedge_node_t& second) {
+                std::swap(first._nedge_set, second._nedge_set);
+        }
 
         virtual bool empty() const;
         virtual void propagate(const nedge_t& e);
@@ -199,13 +204,22 @@ protected:
 
 class nedge_root_t : public nedge_node_t {
 public:
-         nedge_root_t(const nedge_set_t& nedge_set,
-                      const std::vector<double>& leaf_d,
-                      const std::vector<std::string>& leaf_names);
-         nedge_root_t(const nedge_root_t& nedge_root);
-        ~nedge_root_t() { };
+        nedge_root_t(const nedge_set_t& nedge_set,
+                     const std::vector<double>& leaf_d,
+                     const std::vector<std::string>& leaf_names);
+        nedge_root_t(const nedge_root_t& nedge_root);
+        virtual ~nedge_root_t() { };
 
         virtual nedge_root_t* clone() const;
+
+        virtual nedge_root_t& operator=(const nedge_root_t& nedge_root);
+
+        friend void swap(nedge_root_t& first, nedge_root_t& second) {
+                swap(static_cast<nedge_node_t&>(first),
+                     static_cast<nedge_node_t&>(second));
+                std::swap(first._leaf_d,     second._leaf_d);
+                std::swap(first._leaf_names, second._leaf_names);
+        }
 
         // import convert function so that it is not hidden by our own
         // definition
