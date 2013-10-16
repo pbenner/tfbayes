@@ -33,7 +33,6 @@
 #include <tfbayes/phylotree/phylotree-generate-observations.hh>
 #include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/strtools.hh>
-#include <tfbayes/exception/exception.h>
 
 #define alphabet_size 5
 
@@ -206,6 +205,7 @@ ostream& operator<<(ostream& o, const dirichlet_process_t& dirichlet_process)
         return o;
 }
 
+static
 void insert_observations(alignment_t<>& alignment, size_t i, const vector<alphabet_code_t>& observations)
 {
         for (size_t k = 0; k < observations.size(); k++) {
@@ -213,6 +213,7 @@ void insert_observations(alignment_t<>& alignment, size_t i, const vector<alphab
         }
 }
 
+static
 void generate_tfbs_alignment(const pt_root_t& pt_root, gsl_rng * r)
 {
         dirichlet_process_t dirichlet_process(options.d, options.alpha, r);
@@ -266,6 +267,7 @@ void generate_simple_alignment(const pt_root_t& pt_root, gsl_rng * r)
 // Main
 ////////////////////////////////////////////////////////////////////////////////
 
+static
 void init() {
         struct timeval tv;
         gettimeofday(&tv, NULL);
@@ -274,20 +276,16 @@ void init() {
         srand(seed);
 }
 
-pt_root_t parse_tree_file(const char* file_tree)
+static
+pt_root_t parse_tree_file(const string& filename)
 {
-        FILE* yyin = fopen(file_tree, "r");
-        if (yyin == NULL) {
-                std_err(PERR, "Could not open phylogenetic tree");
-        }
-        list<pt_root_t> tree_list = parse_tree_list(yyin);
+        list<pt_root_t> tree_list = parse_tree_list(filename);
         assert(tree_list.size() == 1);
-        pt_root_t pt_root = tree_list.front();
-        fclose(yyin);
 
-        return pt_root;
+        return tree_list.front();
 }
 
+static
 void generate_alignment(const string& model, const char* treefile)
 {
         init();

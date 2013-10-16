@@ -29,7 +29,6 @@
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/phylotree-parser.hh>
 #include <tfbayes/phylotree/treespace.hh>
-#include <tfbayes/exception/exception.h>
 #include <tfbayes/utility/progress.hh>
 
 #include <boost/unordered/unordered_map.hpp>

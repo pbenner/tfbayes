@@ -28,7 +28,6 @@
 
 #include <boost/unordered_map.hpp>
 
-#include <tfbayes/exception/exception.h>
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/phylotree-parser.hh>
 #include <tfbayes/phylotree/phylotree-polynomial.hh>

@@ -28,7 +28,6 @@
 #include <algorithm> /* std::min */
 
 #include <tfbayes/alignment/alignment.hh>
-#include <tfbayes/exception/exception.h>
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/distribution.hh>

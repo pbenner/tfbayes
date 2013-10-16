@@ -6,7 +6,6 @@ AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 ## Berkeley DB for the human genome data
 lib_LTLIBRARIES  = libtfbayes-fasta.la
 libtfbayes_fasta_la_SOURCES = fasta.cc fasta.hh
-libtfbayes_fasta_la_LIBADD  = ../exception/libtfbayes-exception.la
 libtfbayes_fasta_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
 otherincludedir = $(includedir)/tfbayes/fasta

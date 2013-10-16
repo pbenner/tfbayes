@@ -36,7 +36,6 @@
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/phylotree/posterior.hh>
 #include <tfbayes/phylotree/utility.hh>
-#include <tfbayes/exception/exception.h>
 
 using namespace std;
 
@@ -52,7 +51,6 @@ void init() {
 
 int main(void) {
 
-        MET_INIT;
         init();
 
         // parse tree
@@ -92,8 +90,7 @@ int main(void) {
         // cout << "Expanded polynomial:" << endl
         //      << result1                << endl;
 
-        MET("Direct computation",
-            polynomial_t<alphabet_size> result2 = pt_polynomial_t<alphabet_size>(pt_root, observations));
+        polynomial_t<alphabet_size> result2 = pt_polynomial_t<alphabet_size>(pt_root, observations);
 
         cout << "Direct polynomial:" << endl
              << result2              << endl;

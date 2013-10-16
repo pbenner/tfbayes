@@ -353,7 +353,6 @@ AC_CONFIG_FILES([
 	tfbayes/Makefile
 	tfbayes/alignment/Makefile
 	tfbayes/alignio/Makefile
-	tfbayes/exception/Makefile
 	tfbayes/fastarithmetics/Makefile
 	tfbayes/fasta/Makefile
 	tfbayes/config/Makefile

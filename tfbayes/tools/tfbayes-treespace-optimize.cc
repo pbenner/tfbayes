@@ -30,7 +30,6 @@
 #include <tfbayes/phylotree/phylotree-sampler.hh>
 #include <tfbayes/phylotree/phylotree-gradient.hh>
 #include <tfbayes/phylotree/phylotree-gradient-ascent.hh>
-#include <tfbayes/exception/exception.h>
 
 #define alphabet_size 5
 
@@ -199,18 +198,13 @@ void print_version(FILE *fp)
                       "FOR A PARTICULAR PURPOSE.\n\n");
 }
 
-pt_root_t parse_tree_file(const char* file_tree)
+static
+pt_root_t parse_tree_file(const string& filename)
 {
-        FILE* yyin = fopen(file_tree, "r");
-        if (yyin == NULL) {
-                std_err(PERR, "Could not open phylogenetic tree");
-        }
-        list<pt_root_t> tree_list = parse_tree_list(yyin);
+        list<pt_root_t> tree_list = parse_tree_list(filename);
         assert(tree_list.size() == 1);
-        pt_root_t pt_root = tree_list.front();
-        fclose(yyin);
 
-        return pt_root;
+        return tree_list.front();
 }
 
 void run_optimization(const string& method, const char* file_tree, const char* file_alignment)

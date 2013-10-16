@@ -24,7 +24,6 @@
 #include <string>
 
 #include <tfbayes/alignment/alignment-hmm.hh>
-#include <tfbayes/exception/exception.h>
 #include <tfbayes/utility/linalg.hh>
 #include <tfbayes/utility/strtools.hh>
 
@@ -159,14 +158,9 @@ void print_version(FILE *fp)
 extern FILE *yyin;
 
 static
-pt_root_t parse_tree_file(const char* file_tree)
+pt_root_t parse_tree_file(const string& filename)
 {
-        FILE* yyin = fopen(file_tree, "r");
-        if (yyin == NULL) {
-                std_err(PERR, "Could not open phylogenetic tree");
-        }
-        list<pt_root_t> tree_list = parse_tree_list(yyin);
-        fclose(yyin);
+        list<pt_root_t> tree_list = parse_tree_list(filename);
         assert(tree_list.size() == 1);
 
         return tree_list.front();

@@ -22,10 +22,9 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <math.h>
+#include <cmath>
 
 #include <tfbayes/alignment/alignment.hh>
-#include <tfbayes/exception/exception.h>
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/phylotree-parser.hh>
 #include <tfbayes/phylotree/phylotree-polynomial.hh>

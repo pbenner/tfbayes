@@ -97,7 +97,6 @@ public:
                                 sum[*is] += result/norm;
                         }
                 }
-                print_debug("log posterior: %f\n", log_posterior(nodes));
                 // apply result
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
                         double step;
