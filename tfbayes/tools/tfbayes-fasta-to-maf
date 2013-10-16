@@ -22,8 +22,7 @@
 import getopt
 import sys
 
-from Bio                    import AlignIO
-
+from tfbayes                import alignio
 from tfbayes.phylotree      import *
 from tfbayes.uipac.alphabet import DNA
 
@@ -55,12 +54,12 @@ def read_alignment(file_name):
     if options['verbose']:
         sys.stderr.write('Reading fasta file %s.\n' % file_name)
     # use biopython to parse the fasta file
-    return AlignIO.read(file_name, "fasta")
+    return alignio.read(file_name, "fasta")
 
 def write_alignment(file_name, alignment):
     if options['verbose']:
         sys.stderr.write('Writing maf file %s.\n' % file_name)
-    AlignIO.write(alignment, file_name, "maf")
+    alignio.write(alignment, file_name, "maf")
 
 # main
 # ------------------------------------------------------------------------------

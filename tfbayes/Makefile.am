@@ -1,6 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 SUBDIRS  = exception
+SUBDIRS += alignio
 SUBDIRS += interface
 SUBDIRS += fastarithmetics
 SUBDIRS += fasta

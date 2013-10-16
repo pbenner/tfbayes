@@ -27,9 +27,7 @@ import Queue
 import threading
 import thread
 
-from Bio                    import AlignIO
-from Bio.AlignIO            import MafIO
-
+from tfbayes                import alignio
 from tfbayes.phylotree      import *
 from tfbayes.uipac.alphabet import DNA
 
@@ -75,7 +73,7 @@ def get_alignment(chromosome, seq_start, seq_end):
         maf        = "%s.maf"      % chromosome
     seqname = "%s.%s" % (options['refseq'], chromosome)
 
-    idx = MafIO.MafIndex(mafindex, maf, seqname)
+    idx = alignio.MafIO.MafIndex(mafindex, maf, seqname)
 
     multiple_alignment = idx.get_spliced([seq_start],
                                          [seq_end],
@@ -88,7 +86,7 @@ def get_alignment(chromosome, seq_start, seq_end):
 
 def process_entry(chromosome, seq_start, seq_end, identifier):
     alignment = get_alignment(chromosome, seq_start, seq_end)
-    AlignIO.write(alignment, sys.stdout, options['output_format'])
+    alignio.write(alignment, sys.stdout, options['output_format'])
 
 def parse_bed(bed_file):
     fp = open(bed_file, 'r')

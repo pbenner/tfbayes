@@ -27,8 +27,7 @@ import Queue
 import threading
 import thread
 
-from Bio               import AlignIO
-
+from tfbayes           import alignio
 from tfbayes.phylotree import *
 from tfbayes.uipac     import *
 
@@ -117,9 +116,9 @@ def alignment_expectation(multiple_alignment, phylotree):
 def get_alignment(file_name):
     # use biopython to parse the alignment file
     if options['format'] == 'maf':
-        return AlignIO.parse(file_name, options['format'])
+        return alignio.parse(file_name, options['format'])
     else:
-        return AlignIO.read(file_name, options['format'])
+        return alignio.read(file_name, options['format'])
 
 # threading
 # ------------------------------------------------------------------------------

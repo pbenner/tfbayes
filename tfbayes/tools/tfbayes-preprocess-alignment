@@ -23,8 +23,7 @@ import getopt
 import re
 import sys
 
-from Bio                    import AlignIO
-
+from tfbayes                import alignio
 from tfbayes.uipac.alphabet import DNA
 
 # usage
@@ -114,9 +113,9 @@ def mask_gaps(multiple_alignment):
 def get_alignment(file_name):
     # use biopython to parse the alignment file
     if options['format'] == 'maf':
-        return AlignIO.parse(file_name, options['format'])
+        return alignio.parse(file_name, options['format'])
     else:
-        return AlignIO.read(file_name, options['format'])
+        return alignio.read(file_name, options['format'])
 
 
 # main
@@ -134,7 +133,7 @@ def main_fasta(input_file):
     alignment = get_alignment(input_file)
     alignment = main(alignment)
 
-    AlignIO.write(alignment, sys.stdout, "fasta")
+    alignio.write(alignment, sys.stdout, "fasta")
 
 def main_maf(input_file):
     alignment_list = get_alignment(input_file)
@@ -143,7 +142,7 @@ def main_maf(input_file):
     for alignment in alignment_list:
         result.append(main(alignment))
 
-    AlignIO.write(result, sys.stdout, "maf")
+    alignio.write(result, sys.stdout, "maf")
 
 # main
 # ------------------------------------------------------------------------------

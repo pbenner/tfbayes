@@ -22,8 +22,7 @@ import os
 import math
 import sys
 
-from Bio               import AlignIO
-
+from tfbayes           import alignio
 from tfbayes           import fasta
 from tfbayes           import config
 from tfbayes           import phylotree
@@ -137,7 +136,7 @@ def scan_maf_files(cluster, maf_files):
     hits = 0
     for maf_file in maf_files:
         print "Scanning `%s':" % maf_file
-        alignment_list = AlignIO.parse(maf_file, 'maf')
+        alignment_list = alignio.parse(maf_file, 'maf')
         for alignment in alignment_list:
             if options['phylotree']:
                 hits += scan_alignment_with_phylotree(cluster, alignment)
@@ -150,11 +149,11 @@ def scan_fasta_files(cluster, fasta_files):
     for fasta_file in fasta_files:
         print "Scanning `%s':" % fasta_file
         if options['phylotree']:
-            alignment_list = AlignIO.parse(fasta_file, 'fasta')
+            alignment_list = alignio.parse(fasta_file, 'fasta')
             for alignment in alignment_list:
                 hits += scan_alignment_with_phylotree(cluster, alignment)
         elif options['species']:
-            alignment_list = AlignIO.parse(fasta_file, 'fasta')
+            alignment_list = alignio.parse(fasta_file, 'fasta')
             for alignment in alignment_list:
                 hits += scan_alignment(cluster, alignment)
         else:
