@@ -26,94 +26,82 @@
 #include <tfbayes/phylotree/phylotree-expand.hh>
 #include <tfbayes/utility/polynomial.hh>
 
-template <size_t ALPHABET_SIZE, typename CODE_TYPE>
-class pt_simple_polynomial_t : public polynomial_t<ALPHABET_SIZE, CODE_TYPE> {
+template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
+class pt_simple_polynomial_t : public polynomial_t<AS, PC> {
 public:
-        pt_simple_polynomial_t(pt_root_t* root)
-                : polynomial_t<ALPHABET_SIZE, CODE_TYPE>() {
-                likelihood_py(root);
+        using polynomial_t<AS, PC>::operator=;
+
+        pt_simple_polynomial_t(const pt_root_t& root, const std::vector<AC>& observations)
+                : polynomial_t<AS, PC>() {
+                operator=(likelihood_rec(root, observations)[AS]);
         }
+protected:
+        typedef boost::array<polynomial_t<AS, PC>, AS+1> carry_t;
 
-        pt_simple_polynomial_t(const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& poly)
-                : polynomial_t<ALPHABET_SIZE, CODE_TYPE>(poly) { }
+        polynomial_t<AS, PC> poly_sum(const carry_t& carry) {
+                polynomial_t<AS, PC> poly_sum;
 
-        polynomial_t<ALPHABET_SIZE, CODE_TYPE>& likelihood_py(pt_root_t* root) {
-                this->operator=(likelihood_rec(root)[ALPHABET_SIZE]);
-                return *this;
-        }
-
-private:
-        typedef boost::array<polynomial_t<ALPHABET_SIZE, CODE_TYPE>, ALPHABET_SIZE+1> carry_t;
-
-        polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly_sum(const carry_t& carry) {
-                polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly_sum;
-
-                for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                        polynomial_term_t<ALPHABET_SIZE, CODE_TYPE> term(1.0);
+                for (size_t i = 0; i < AS; i++) {
+                        polynomial_term_t<AS, PC> term(1.0);
                         term.exponent()[i] = 1;
                         poly_sum += term*carry[i];
                 }
-                poly_sum += carry[ALPHABET_SIZE];
+                poly_sum += carry[AS];
 
                 return poly_sum;
         }
 
-        carry_t likelihood_leaf(pt_leaf_t* leaf) {
+        carry_t likelihood_leaf(const pt_leaf_t& leaf, const std::vector<AC>& observations) {
                 carry_t carry;
-                if (leaf->root()) {
-                        carry[ALPHABET_SIZE] = nucleotide_probability<ALPHABET_SIZE, CODE_TYPE>(leaf->x);
-                }
-                else {
-                        // i: nucleotide of ancestor
-                        for (size_t i = 0; i < ALPHABET_SIZE; i++) {
-                                carry[i] = mutation_model<ALPHABET_SIZE, CODE_TYPE>(leaf, i);
-                        }
+                // i: nucleotide of ancestor
+                for (size_t i = 0; i < AS; i++) {
+                        carry[i] = mutation_model<AS, AC, PC>(leaf, i, observations[leaf.id]);
                 }
                 return carry;
         }
         carry_t likelihood_node(
-                pt_node_t* node,
+                const pt_node_t& node,
                 const carry_t& carry_left,
-                const carry_t& carry_right) {
+                const carry_t& carry_right,
+                const std::vector<AC>& observations) {
                 carry_t carry;
 
                 // i: nucleotide of ancestor
-                for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+                for (size_t i = 0; i < AS; i++) {
                         // j: nucleotide of this node
-                        for (size_t j = 0; j < ALPHABET_SIZE; j++) {
-                                node->x = j;
-                                carry[i] += carry_left[j]*carry_right[j]*mutation_model<ALPHABET_SIZE, CODE_TYPE>(node, i);
+                        for (size_t j = 0; j < AS; j++) {
+                                carry[i] += carry_left[j]*carry_right[j]*mutation_model<AS, AC, PC>(node, i, j);
                         }
-                        node->x = -1;
                 }
                 return carry;
         }
         carry_t likelihood_root(
-                pt_node_t* node,
+                const pt_node_t& node,
                 const carry_t& carry_left,
-                const carry_t& carry_right) {
+                const carry_t& carry_right,
+                const std::vector<AC>& observations) {
                 carry_t carry;
 
                 // j: nucleotide of this node
-                for (size_t j = 0; j < ALPHABET_SIZE; j++) {
-                        carry[ALPHABET_SIZE] += carry_left[j]*carry_right[j]*nucleotide_probability<ALPHABET_SIZE, CODE_TYPE>(j);
+                for (size_t j = 0; j < AS; j++) {
+                        carry[AS] += carry_left[j]*carry_right[j]*nucleotide_probability<AS, AC, PC>(j);
                 }
                 return carry;
         }
 
-        carry_t likelihood_rec(pt_node_t* node) {
-                if (node->leaf()) {
-                        return likelihood_leaf(node);
+        carry_t likelihood_rec(const pt_node_t& node, const std::vector<AC>& observations) {
+                if (node.leaf()) {
+                        return likelihood_leaf(static_cast<const pt_leaf_t&>(node), observations);
                 }
                 else {
-                        const carry_t carry_left  = likelihood_rec(node->left);
-                        const carry_t carry_right = likelihood_rec(node->right);
+                        const carry_t carry_left  = likelihood_rec(node.left(),  observations);
+                        const carry_t carry_right = likelihood_rec(node.right(), observations);
 
-                        if (node->root()) {
-                                return likelihood_root(node, carry_left, carry_right);
+                        if (node.root()) {
+                                return likelihood_root(node, carry_left, carry_right, observations);
                         }
                         else {
-                                return likelihood_node(node, carry_left, carry_right);
+                                return likelihood_node(node, carry_left, carry_right, observations);
                         }
                 }
         }

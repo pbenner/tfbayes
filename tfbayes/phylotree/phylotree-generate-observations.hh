@@ -29,16 +29,21 @@
 #include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/statistics.hh>
 
-template <size_t ALPHABET_SIZE, typename CODE_TYPE>
+/* AS: ALPHABET SIZE
+ * AC: ALPHABET CODE TYPE
+ * PC: POLYNOMIAL CODE TYPE
+ */
+
+template <size_t AS, typename AC>
 void pt_generate_observations(const pt_node_t& node,
                               const std::vector<double>& stationary,
-                              const CODE_TYPE parent_nucleotide,
-                              std::vector<CODE_TYPE>& observations)
+                              const AC parent_nucleotide,
+                              std::vector<AC>& observations)
 {
         double r = (double)rand()/RAND_MAX;
-        CODE_TYPE nucleotide;
+        AC nucleotide;
         if (r <= node.mutation_probability()) {
-                nucleotide = categorial_sample<ALPHABET_SIZE, CODE_TYPE>(stationary);
+                nucleotide = categorial_sample<AS, AC>(stationary);
         }
         else {
                 nucleotide = parent_nucleotide;
@@ -49,30 +54,30 @@ void pt_generate_observations(const pt_node_t& node,
         }
         /* traverse the treee */
         else {
-                pt_generate_observations<ALPHABET_SIZE, CODE_TYPE>(
+                pt_generate_observations<AS, AC>(
                         node.left (), stationary, nucleotide, observations);
-                pt_generate_observations<ALPHABET_SIZE, CODE_TYPE>(
+                pt_generate_observations<AS, AC>(
                         node.right(), stationary, nucleotide, observations);
         }
 }
 
-template <size_t ALPHABET_SIZE, typename CODE_TYPE>
-std::vector<CODE_TYPE>
+template <size_t AS, typename AC>
+std::vector<AC>
 pt_generate_observations(const pt_root_t& tree, const std::vector<double>& stationary)
 {
-        std::vector<CODE_TYPE> observations(tree.n_leaves, -1);
-        CODE_TYPE nucleotide = categorial_sample<ALPHABET_SIZE, CODE_TYPE>(stationary);
+        std::vector<AC> observations(tree.n_leaves, -1);
+        AC nucleotide = categorial_sample<AS, AC>(stationary);
 
         /* check for an outgroup */
         if (tree.outgroup()) {
-                pt_generate_observations<ALPHABET_SIZE, CODE_TYPE>(
+                pt_generate_observations<AS, AC>(
                         static_cast<const pt_leaf_t&>(*tree.outgroup()), stationary, nucleotide, observations);
         }
         /* traverse the treee */
         if (!tree.leaf()) {
-                pt_generate_observations<ALPHABET_SIZE, CODE_TYPE>(
+                pt_generate_observations<AS, AC>(
                         tree.left (), stationary, nucleotide, observations);
-                pt_generate_observations<ALPHABET_SIZE, CODE_TYPE>(
+                pt_generate_observations<AS, AC>(
                         tree.right(), stationary, nucleotide, observations);
         }
         return observations;

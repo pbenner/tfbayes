@@ -42,12 +42,12 @@ polynomial_term_t<AS, PC> nucleotide_probability(AC x) {
 }
 
 template <size_t AS, typename AC, typename PC>
-polynomial_t<AS, PC> mutation_model(const pt_node_t* node, AC x, AC y) {
+polynomial_t<AS, PC> mutation_model(const pt_node_t& node, AC x, AC y) {
         polynomial_t<AS, PC> poly;
         polynomial_term_t<AS, PC> py = nucleotide_probability<AS, AC, PC>(y);
-        poly += node->mutation_probability()*py;
+        poly += node.mutation_probability()*py;
         if (x == y) {
-                poly += (1.0-node->mutation_probability());
+                poly += (1.0-node.mutation_probability());
         }
         return poly;
 }

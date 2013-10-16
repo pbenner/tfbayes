@@ -27,57 +27,48 @@
 #include <tfbayes/phylotree/phylotree-polynomial.hh>
 #include <tfbayes/phylotree/phylotree-simple-polynomial.hh>
 #include <tfbayes/phylotree/utility.hh>
+#include <tfbayes/uipac/alphabet.hh>
 
 using namespace std;
 
 #define alphabet_size 4
-typedef short code_t;
 
-class pt_test_t : public pt_root_t {
-public:
-        pt_test_t(size_t n)
-                : pt_root_t(-1) {
-
-                assert(n >= 1);
-
-                pt_node_t* pt_last = this;
-
-                for (size_t i = 1; i < n; i++) {
-                        pt_last->left  = new pt_node_t(-1, 1.0);
-                        pt_last->right = new pt_node_t(-1, 1.0);
-                        pt_last = pt_last->left;
-                }
-                pt_node_t::id_t i = set_id(this, 0)+1;
-                node_map = node_map_t(i, (pt_node_t*)NULL);
-                create_map(this);
-        }
-};
-
-void random_init(pt_node_t* pt_node)
+pt_root_t
+create_tree(size_t n)
 {
-        if (pt_node->leaf()) {
-                pt_node->x = rand()%alphabet_size;
+        assert(n >= 1);
+
+        pt_node_t* pt_last = new pt_leaf_t(1.0);
+
+        for (size_t i = 1; i < n; i++) {
+                pt_last = new pt_node_t(1.0, pt_last, new pt_leaf_t(1.0));
         }
-        else {
-                random_init(pt_node->left);
-                random_init(pt_node->right);
+        return pt_root_t(pt_last, new pt_leaf_t(1.0));
+}
+
+void random_init(std::vector<alphabet_code_t>& observations)
+{
+        for (size_t i = 0; i < observations.size(); i++) {
+                observations[i] = rand()%alphabet_size;
         }
 }
 
 double expected_terms(size_t n)
 {
-        pt_root_t* pt_root = new pt_test_t(n);
+        const pt_root_t tree = create_tree(n);
+        std::vector<alphabet_code_t> observations(tree.n_leaves);
         double result = 0;
 
-        for (size_t i = 0; i < 1000; i++)
-        {
-                random_init(pt_root);
-                pt_simple_polynomial_t<alphabet_size, code_t> poly(pt_root);
-//                pt_polynomial_t<alphabet_size, code_t> poly(pt_root);
+        for (size_t i = 0; i < 1000; i++) {
+                /* generate a new random sample */
+                random_init(observations);
+                /* compute the polynomial for this sample */
+                pt_simple_polynomial_t<alphabet_size> poly(tree, observations);
+//                pt_polynomial_t<alphabet_size> poly(tree);
+                /* record size of the polynomial */
                 result = (i*(double)result + (double)poly.size())/((double)i+1.0);
 
         }
-        pt_root->destroy();
 
         return result;
 }
