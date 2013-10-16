@@ -28,7 +28,7 @@
 #include <boost/array.hpp>
 #include <boost/unordered_map.hpp>
 
-template <size_t S, typename T>
+template <size_t S, typename T = short>
 class exponent_t : public boost::array<T, S> {
 public:
         exponent_t() {
@@ -74,7 +74,7 @@ public:
         using boost::array<T, S>::operator[];
 };
 
-template <size_t S, typename T, typename C = double>
+template <size_t S, typename T = short, typename C = double>
 class polynomial_term_t : public std::pair<exponent_t<S, T>, C> {
 public:
         polynomial_term_t()
@@ -189,7 +189,7 @@ polynomial_term_t<S, T, C> operator/(const polynomial_term_t<S, T, C>& term1, co
         return tmp;
 }
 
-template <size_t S, typename T, typename C = double>
+template <size_t S, typename T = short, typename C = double>
 class polynomial_t : public boost::unordered_map<exponent_t<S, T>, C> {
 public:
         polynomial_t()

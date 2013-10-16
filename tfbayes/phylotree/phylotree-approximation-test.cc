@@ -43,7 +43,6 @@
 using namespace std;
 
 #define alphabet_size 4
-typedef char code_t;
 
 void init() {
         struct timeval tv;
@@ -54,15 +53,15 @@ void init() {
 }
 
 boost::array<double, alphabet_size>
-pt_expectation(const polynomial_t<alphabet_size, code_t>& poly,
-               const exponent_t  <alphabet_size, code_t>& alpha)
+pt_expectation(const polynomial_t<alphabet_size>& poly,
+               const exponent_t  <alphabet_size>& alpha)
 {
         /* store the expectations in the array result */
         boost::array<double, alphabet_size> result;
 
         /* to increase the count by one the polynomial is multiplied
            with a term */
-        polynomial_term_t<alphabet_size, code_t> term(1.0);
+        polynomial_term_t<alphabet_size> term(1.0);
         double ml = pt_marginal_likelihood(poly, alpha);
 
         for (size_t i = 0; i < alphabet_size; i++) {
@@ -91,21 +90,21 @@ string print_expectation(const boost::array<double, alphabet_size>& expectation)
 }
 
 void test_line_search(
-        const polynomial_t<alphabet_size, code_t>& result,
-        const exponent_t<alphabet_size, code_t>& alpha)
+        const polynomial_t<alphabet_size>& result,
+        const exponent_t<alphabet_size>& alpha)
 {
-        polynomial_t<alphabet_size, code_t> approximation;
-        polynomial_t<alphabet_size, code_t> approximation_line;
+        polynomial_t<alphabet_size> approximation;
+        polynomial_t<alphabet_size> approximation_line;
 
-        approximation      = dkl_approximate<alphabet_size, code_t>(result);
-        approximation_line = dkl_line_search<alphabet_size, code_t>(approximation, result.normalize(), alpha, 100);
+        approximation      = dkl_approximate<alphabet_size>(result);
+        approximation_line = dkl_line_search<alphabet_size>(approximation, result.normalize(), alpha, 100);
 
         cout << "h[Pa_,Pc_,Pg_,Pt_]:= "
              << approximation_line
              << endl;
 
         cout << "kldivl = "
-             << dkl<alphabet_size, code_t>(approximation_line, result.normalize(), alpha)
+             << dkl<alphabet_size>(approximation_line, result.normalize(), alpha)
              << ";"
              << endl;
 
@@ -121,24 +120,24 @@ int main(void)
         pt_root_t& pt_root = tree_list.front();
 
         // random observations
-        vector<code_t> observations(pt_root.n_leaves, 0);
+        vector<alphabet_code_t> observations(pt_root.n_leaves, 0);
         for (pt_node_t::id_t i = 0; i < pt_root.n_leaves; i++) {
                 observations[i] = rand() % alphabet_size;
         }
 
-        exponent_t<alphabet_size, code_t> alpha;
+        exponent_t<alphabet_size> alpha;
         alpha[0] = 1;
         alpha[1] = 1;
         alpha[2] = 1;
         alpha[3] = 1;
 
-        polynomial_t<alphabet_size, code_t> result = pt_polynomial<alphabet_size, code_t>(pt_root, observations);
-        polynomial_t<alphabet_size, code_t> approximation;
-        polynomial_t<alphabet_size, code_t> variational;
+        polynomial_t<alphabet_size> result = pt_polynomial_t<alphabet_size>(pt_root, observations);
+        polynomial_t<alphabet_size> approximation;
+        polynomial_t<alphabet_size> variational;
 
         cout << "f[Pa_,Pc_,Pg_,Pt_]:= " << result.normalize() << endl;
 
-        approximation = dkl_approximate<alphabet_size, code_t>(result);
+        approximation = dkl_approximate<alphabet_size>(result);
 
         cout << "g[Pa_,Pc_,Pg_,Pt_]:= " << approximation << endl;
 
@@ -151,7 +150,7 @@ int main(void)
              << endl;
 
         cout << "kldiv = "
-             << dkl<alphabet_size, code_t>(approximation, result.normalize(), alpha)
+             << dkl<alphabet_size>(approximation, result.normalize(), alpha)
              << ";"
              << endl;
 
@@ -160,7 +159,7 @@ int main(void)
         variational = dkl_optimize(result, alpha);
 
         cout << "kldiv = "
-             << dkl<alphabet_size, code_t>(variational, result.normalize(), alpha)
+             << dkl<alphabet_size>(variational, result.normalize(), alpha)
              << ";"
              << endl;
 

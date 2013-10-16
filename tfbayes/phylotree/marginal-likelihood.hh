@@ -28,41 +28,38 @@
 #include <tfbayes/utility/logarithmetic.h>
 #include <tfbayes/utility/polynomial.hh>
 
-using namespace std;
+/* AS: ALPHABET SIZE
+ * AC: ALPHABET CODE TYPE
+ * PC: POLYNOMIAL CODE TYPE
+ */
 
-template <size_t ALPHABET_SIZE, typename CODE_TYPE>
+template <size_t AS, typename PC>
 double pt_marginal_likelihood(
-        const pt_root_t& node,
-        const std::vector<CODE_TYPE>& observations,
-        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha)
+        const polynomial_t<AS, PC>& polynomial,
+        const exponent_t<AS, PC>& alpha)
 {
         double result = -HUGE_VAL;
         double mbeta_alpha = mbeta_log(alpha);
 
-        const polynomial_t<ALPHABET_SIZE, CODE_TYPE> polynomial = pt_polynomial<ALPHABET_SIZE, CODE_TYPE>(node, observations);
-
-        for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator it = polynomial.begin();
+        for (typename polynomial_t<AS, PC>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
-                result = logadd(result, log(it->coefficient()) + mbeta_log(it->exponent(), alpha) - mbeta_alpha);
+                result = logadd(result, log(it->coefficient()) +
+                                mbeta_log(it->exponent(), alpha) - mbeta_alpha);
         }
 
         return result;
 }
 
-template <size_t ALPHABET_SIZE, typename CODE_TYPE>
+template <size_t AS, typename AC, typename PC>
 double pt_marginal_likelihood(
-        const polynomial_t<ALPHABET_SIZE, CODE_TYPE>& polynomial,
-        const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha)
+        const pt_root_t& node,
+        const std::vector<AC>& observations,
+        const exponent_t<AS, PC>& alpha)
 {
-        double result = -HUGE_VAL;
-        double mbeta_alpha = mbeta_log(alpha);
+        const polynomial_t<AS, PC> polynomial =
+                pt_polynomial_t<AS, AC, PC>(node, observations);
 
-        for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator it = polynomial.begin();
-             it != polynomial.end(); it++) {
-                result = logadd(result, log(it->coefficient()) + mbeta_log(it->exponent(), alpha) - mbeta_alpha);
-        }
-
-        return result;
+        return pt_marginal_likelihood<AS, PC>(polynomial, alpha);
 }
 
 #endif /* MARGINAL_LIKELIHOOD_HH */

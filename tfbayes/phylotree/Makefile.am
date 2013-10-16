@@ -10,7 +10,7 @@ BUILT_SOURCES = phylotree-parser.h
 AM_YFLAGS = -d
 AM_LFLAGS = -o$(LEX_OUTPUT_ROOT).c
 
-noinst_PROGRAMS = polynomial-test phylotree-test phylotree-expand-test phylotree-parser-test phylotree-approximation-test likelihood-test likelihood-prime-test marginal-likelihood-test treespace-test treespace-distance
+noinst_PROGRAMS = polynomial-test phylotree-test phylotree-parser-test phylotree-approximation-test likelihood-test likelihood-prime-test marginal-likelihood-test treespace-test treespace-distance
 
 polynomial_test_SOURCES = polynomial-test.cc
 polynomial_test_LDADD   = -lm
@@ -18,10 +18,6 @@ polynomial_test_LDADD   = -lm
 phylotree_test_SOURCES = phylotree-test.cc
 phylotree_test_LDADD   = -lm
 phylotree_test_LDADD  += libtfbayes-phylotree.la
-
-phylotree_expand_test_SOURCES = phylotree-expand-test.cc
-phylotree_expand_test_LDADD   = -lm
-phylotree_expand_test_LDADD  += libtfbayes-phylotree.la
 
 # phylotree_expected_terms_SOURCES = phylotree-expected-terms.cc
 # phylotree_expected_terms_LDADD   = -lm

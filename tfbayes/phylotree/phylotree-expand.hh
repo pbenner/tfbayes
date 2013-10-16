@@ -1,4 +1,4 @@
-/* Copyright (C) 2012 Philipp Benner
+/* Copyright (C) 2012-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,19 +26,25 @@
 
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/incomplete-expression.hh>
+#include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/polynomial.hh>
 
-template <size_t ALPHABET_SIZE, typename CODE_TYPE>
-polynomial_term_t<ALPHABET_SIZE, CODE_TYPE> nucleotide_probability(CODE_TYPE x) {
-        polynomial_term_t<ALPHABET_SIZE, CODE_TYPE> px(1.0);
+/* AS: ALPHABET SIZE
+ * AC: ALPHABET CODE TYPE
+ * PC: POLYNOMIAL CODE TYPE
+ */
+
+template <size_t AS, typename AC, typename PC>
+polynomial_term_t<AS, PC> nucleotide_probability(AC x) {
+        polynomial_term_t<AS, PC> px(1.0);
         px.exponent()[x] = 1;
         return px;
 }
 
-template <size_t ALPHABET_SIZE, typename CODE_TYPE>
-polynomial_t<ALPHABET_SIZE, CODE_TYPE> mutation_model(const pt_node_t* node, CODE_TYPE x, CODE_TYPE y) {
-        polynomial_t<ALPHABET_SIZE, CODE_TYPE> poly;
-        polynomial_term_t<ALPHABET_SIZE, CODE_TYPE> py = nucleotide_probability<ALPHABET_SIZE, CODE_TYPE>(y);
+template <size_t AS, typename AC, typename PC>
+polynomial_t<AS, PC> mutation_model(const pt_node_t* node, AC x, AC y) {
+        polynomial_t<AS, PC> poly;
+        polynomial_term_t<AS, PC> py = nucleotide_probability<AS, AC, PC>(y);
         poly += node->mutation_probability()*py;
         if (x == y) {
                 poly += (1.0-node->mutation_probability());
@@ -46,134 +52,146 @@ polynomial_t<ALPHABET_SIZE, CODE_TYPE> mutation_model(const pt_node_t* node, COD
         return poly;
 }
 
-/*
- * phi(y  ; x) = P(nM) : if x == y; 0 : otherwise
- * phi(nil; x) = P( M) P(x)
- *
- * phi(y  ; x_1, x_2, ..., x_n) = 1[x_n == y] P(nM) { phi(y  ; x_1, x_2, ..., x_{n-1})   +
- *                                                    phi(nil; x_1, x_2, ..., x_{n-1}) } +
- *                                P(M) P(x_n) phi(y  ; x_1, x_2, ..., x_{n-1})
- * phi(nil; x_1, x_2, ..., x_n) = P(M) P(x_n) phi(nil; x_1, x_2, ..., x_{n-1})
- */
-template <size_t ALPHABET_SIZE, typename CODE_TYPE>
-polynomial_t<ALPHABET_SIZE, CODE_TYPE> pt_expand_rec(
-        leafset_t::const_iterator it,
-        leafset_t::const_iterator end,
-        const std::vector<CODE_TYPE>& observations,
-        CODE_TYPE condition)
-{
-        polynomial_t<ALPHABET_SIZE, CODE_TYPE> result(0.0);
+template <size_t AS, typename AC = alphabet_code_t, typename PC = short>
+class pt_expand_t : public polynomial_t<AS, PC> {
+public:
+        using polynomial_t<AS, PC>::operator=;
 
-        if(it == end) {
-                if (condition == ALPHABET_SIZE) {
-                        result += 1.0;
+        pt_expand_t(
+                const incomplete_expression_t& expression,
+                const std::vector<AC>& observations) {
+
+                polynomial_t<AS, PC> result;
+                for (incomplete_expression_t::const_iterator it = expression.begin();
+                     it != expression.end(); it++) {
+                        result += pt_expand(*it, observations);
                 }
+                
+                operator=(result);
         }
-        else {
-                const CODE_TYPE x = observations[(*it)->id];
-                const double pm   = (*it)->mutation_probability();
-                const polynomial_term_t<ALPHABET_SIZE, CODE_TYPE> px =
-                        nucleotide_probability<ALPHABET_SIZE, CODE_TYPE>(x);
+        pt_expand_t(
+                const incomplete_nodeterm_t& nodeterm,
+                const std::vector<AC>& observations) {
 
-                polynomial_t<ALPHABET_SIZE, CODE_TYPE> tmp = pt_expand_rec<ALPHABET_SIZE, CODE_TYPE>(++it, end, observations, condition);
+                operator=(pt_expand(nodeterm, observations));
+        }
+private:
+        /*
+         * phi(y  ; x) = P(nM) : if x == y; 0 : otherwise
+         * phi(nil; x) = P( M) P(x)
+         *
+         * phi(y  ; x_1, x_2, ..., x_n) = 1[x_n == y] P(nM) { phi(y  ; x_1, x_2, ..., x_{n-1})   +
+         *                                                    phi(nil; x_1, x_2, ..., x_{n-1}) } +
+         *                                P(M) P(x_n) phi(y  ; x_1, x_2, ..., x_{n-1})
+         * phi(nil; x_1, x_2, ..., x_n) = P(M) P(x_n) phi(nil; x_1, x_2, ..., x_{n-1})
+         */
+        static
+        polynomial_t<AS, PC> pt_expand_rec(
+                leafset_t::const_iterator it,
+                leafset_t::const_iterator end,
+                const std::vector<AC>& observations,
+                AC condition) {
 
-                result += pm*px*tmp;
+                polynomial_t<AS, PC> result(0.0);
 
-                if (condition == x) {
-                        result += (1.0-pm)*tmp;
-                        result += (1.0-pm)*pt_expand_rec<ALPHABET_SIZE, CODE_TYPE>(it, end, observations, ALPHABET_SIZE);
+                if(it == end) {
+                        if (condition == AS) {
+                                result += 1.0;
+                        }
                 }
-        }
-        return result;
-}
-
-/*
- * phi(x_1, x_2, ..., x_n) = phi(nil; x_1, x_2, x_{n-1})
- *                         + sum_y p(y) phi(y; x_1, x_2, ..., x_{n-1})
- */
-template <size_t ALPHABET_SIZE, typename CODE_TYPE>
-polynomial_t<ALPHABET_SIZE, CODE_TYPE> pt_expand_rec(
-        leafset_t::const_iterator it,
-        leafset_t::const_iterator end,
-        const std::vector<CODE_TYPE>& observations)
-{
-        polynomial_t<ALPHABET_SIZE, CODE_TYPE> result(0.0);
-
-        for (size_t x = 0; x < ALPHABET_SIZE; x++) {
-                const polynomial_term_t<ALPHABET_SIZE, CODE_TYPE> px =
-                        nucleotide_probability<ALPHABET_SIZE, CODE_TYPE>(x);
-                result += px*pt_expand_rec<ALPHABET_SIZE, CODE_TYPE>(it, end, observations, x);
-        }
-        result += pt_expand_rec<ALPHABET_SIZE, CODE_TYPE>(it, end, observations, ALPHABET_SIZE);
-
-        return result;
-}
-
-template <size_t ALPHABET_SIZE, typename CODE_TYPE>
-polynomial_t<ALPHABET_SIZE, CODE_TYPE> pt_expand_rec(
-        polynomial_term_t<ALPHABET_SIZE, CODE_TYPE> term,
-        leafset_t::const_iterator it,
-        leafset_t::const_iterator end,
-        const std::vector<CODE_TYPE>& observations,
-        CODE_TYPE condition)
-{
-        polynomial_t<ALPHABET_SIZE, CODE_TYPE> result(0.0);
-        if(it == end) {
-                /* leaf */
-                if (condition != ALPHABET_SIZE) {
-                        term *= nucleotide_probability<ALPHABET_SIZE, CODE_TYPE>(condition);
+                else {
+                        const AC x = observations[(*it)->id];
+                        const double pm   = (*it)->mutation_probability();
+                        const polynomial_term_t<AS, PC> px =
+                                nucleotide_probability<AS, AC, PC>(x);
+                        
+                        polynomial_t<AS, PC> tmp = pt_expand_rec(++it, end, observations, condition);
+                        
+                        result += pm*px*tmp;
+                        
+                        if (condition == x) {
+                                result += (1.0-pm)*tmp;
+                                result += (1.0-pm)*pt_expand_rec(it, end, observations, AS);
+                        }
                 }
-                result += term;
+                return result;
         }
-        else {
-                const double pm   = (*it)->mutation_probability();
-                const CODE_TYPE x = observations[(*it)->id]; it++;
+        
+        /*
+         * phi(x_1, x_2, ..., x_n) = phi(nil; x_1, x_2, x_{n-1})
+         *                         + sum_y p(y) phi(y; x_1, x_2, ..., x_{n-1})
+         */
+        static
+        polynomial_t<AS, PC> pt_expand_rec(
+                leafset_t::const_iterator it,
+                leafset_t::const_iterator end,
+                const std::vector<AC>& observations) {
 
-                /* no mutation */
-                if (condition == ALPHABET_SIZE || condition == x) {
-                        result += pt_expand_rec((1.0-pm)*term, it, end, x);
+                polynomial_t<AS, PC> result(0.0);
+                        
+                for (size_t x = 0; x < AS; x++) {
+                        const polynomial_term_t<AS, PC> px =
+                                nucleotide_probability<AS, AC, PC>(x);
+                        result += px*pt_expand_rec(it, end, observations, x);
                 }
-                /* mutation */
-                term   *= nucleotide_probability<ALPHABET_SIZE, CODE_TYPE>(x);
-                result += pt_expand_rec(pm*term, it, end, condition);
+                result += pt_expand_rec(it, end, observations, AS);
+                
+                return result;
         }
-        return result;
-}
+        
+        static
+        polynomial_t<AS, PC> pt_expand_rec(
+                polynomial_term_t<AS, PC> term,
+                leafset_t::const_iterator it,
+                leafset_t::const_iterator end,
+                const std::vector<AC>& observations,
+                AC condition) {
 
-template <size_t ALPHABET_SIZE, typename CODE_TYPE>
-polynomial_t<ALPHABET_SIZE, CODE_TYPE> pt_expand(
-        const leafset_t& leafset,
-        const std::vector<CODE_TYPE>& observations)
-{
-        /* Algorithm 1 */
-//        return pt_expand_rec<ALPHABET_SIZE, CODE_TYPE>(1.0, leafset.begin(), leafset.end(), ALPHABET_SIZE);
-        /* Algorithm 2 */
-        return pt_expand_rec<ALPHABET_SIZE, CODE_TYPE>(leafset.begin(), leafset.end(), observations);
-}
-
-template <size_t ALPHABET_SIZE, typename CODE_TYPE>
-polynomial_t<ALPHABET_SIZE, CODE_TYPE> pt_expand(
-        const incomplete_nodeterm_t& nodeterm,
-        const std::vector<CODE_TYPE>& observations)
-{
-        polynomial_t<ALPHABET_SIZE, CODE_TYPE> result(1.0);
-        for (incomplete_nodeterm_t::const_iterator it = nodeterm.begin(); it != nodeterm.end(); it++) {
-                result *= pt_expand<ALPHABET_SIZE, CODE_TYPE>(*it, observations);
+                polynomial_t<AS, PC> result(0.0);
+                if(it == end) {
+                        /* leaf */
+                        if (condition != AS) {
+                                term *= nucleotide_probability<AS, AC, PC>(condition);
+                        }
+                        result += term;
+                }
+                else {
+                        const double pm   = (*it)->mutation_probability();
+                        const AC x = observations[(*it)->id]; it++;
+                        
+                        /* no mutation */
+                        if (condition == AS || condition == x) {
+                                result += pt_expand_rec((1.0-pm)*term, it, end, x);
+                        }
+                        /* mutation */
+                        term   *= nucleotide_probability<AS, AC, PC>(x);
+                        result += pt_expand_rec(pm*term, it, end, condition);
+                }
+                return result;
         }
-        return nodeterm.coefficient()*result;
-}
+        
+        static
+        polynomial_t<AS, PC> pt_expand(
+                const leafset_t& leafset,
+                const std::vector<AC>& observations) {
 
-template <size_t ALPHABET_SIZE, typename CODE_TYPE>
-polynomial_t<ALPHABET_SIZE, CODE_TYPE> pt_expand(
-        const incomplete_expression_t& expression,
-        const std::vector<CODE_TYPE>& observations)
-{
-        polynomial_t<ALPHABET_SIZE, CODE_TYPE> result;
-        for (incomplete_expression_t::const_iterator it = expression.begin(); it != expression.end(); it++) {
-                result += pt_expand<ALPHABET_SIZE, CODE_TYPE>(*it, observations);
+                /* Algorithm 1 */
+                // return pt_expand_rec(1.0, leafset.begin(), leafset.end(), AS);
+                /* Algorithm 2 */
+                return pt_expand_rec(leafset.begin(), leafset.end(), observations);
         }
+        static
+        polynomial_t<AS, PC> pt_expand(
+                const incomplete_nodeterm_t& nodeterm,
+                const std::vector<AC>& observations) {
 
-        return result;
-}
+                polynomial_t<AS, PC> result(1.0);
+                for (incomplete_nodeterm_t::const_iterator it = nodeterm.begin();
+                     it != nodeterm.end(); it++) {
+                        result *= pt_expand(*it, observations);
+                }
+                return nodeterm.coefficient()*result;
+        }
+};
 
 #endif /* PHYLOTREE_EXPAND_HH */

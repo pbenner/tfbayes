@@ -207,7 +207,7 @@ public:
         }
         template<size_t ALPHABET_SIZE>
         std::vector<double> marginal_likelihood(const pt_root_t& tree, const std::vector<double>& prior) {
-                exponent_t<ALPHABET_SIZE, CODE_TYPE> alpha(prior.begin(), prior.end());
+                exponent_t<ALPHABET_SIZE, double> alpha(prior.begin(), prior.end());
                 vector<double> result;
 
                 /* go through the alignment and compute the marginal
