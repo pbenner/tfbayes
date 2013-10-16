@@ -20,6 +20,7 @@
 #include <locale>
 #include <cctype>
 #include <sstream>
+#include <string>
 
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
@@ -28,7 +29,6 @@
 
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/interface.hh>
 #include <tfbayes/phylotree/utility.hh>
 #include <tfbayes/interface/exceptions.hh>
 #include <tfbayes/interface/utility.hh>
@@ -37,8 +37,6 @@ using namespace boost::python;
 
 // construct an alignment from an alignio python object
 // -----------------------------------------------------------------------------
-
-#include <string>
 
 alignment_t<>* alignment_from_alignio(object a, const pt_root_t& tree)
 {
@@ -124,14 +122,17 @@ BOOST_PYTHON_MODULE(interface)
                 .def("__str__", sequence_str)
                 ;
         class_<alignment_t<> >("alignment_t", no_init)
+                /* the ordering of constructors is important, since
+                 * alignment_from_alignio() is very general */
+                .def("__init__",             make_constructor(alignment_from_alignio))
+                /* this constructor needs to come last */
                 .def(init<string, pt_root_t>())
-                .def("__init__",    make_constructor(alignment_from_alignio))
-                .def("__iter__",    boost::python::iterator<alignment_t<> >())
-                .def("__getitem__", alignment_getsequence)
-                .def("__getitem__", alignment_getitem)
-                .def("__setitem__", alignment_setitem)
-                .def("__str__",     alignment_str)
-                .def("scan",                &alignment_t<>::scan<alphabet_size, double>)
-                .def("marginal_likelihood", &alignment_t<>::marginal_likelihood<alphabet_size, double>)
+                .def("__iter__",             boost::python::iterator<alignment_t<> >())
+                .def("__getitem__",          alignment_getsequence)
+                .def("__getitem__",          alignment_getitem)
+                .def("__setitem__",          alignment_setitem)
+                .def("__str__",              alignment_str)
+                .def("scan",                &alignment_t<>::scan<double>)
+                .def("marginal_likelihood", &alignment_t<>::marginal_likelihood<double>)
                 ;
 }

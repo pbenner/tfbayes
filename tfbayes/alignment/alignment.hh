@@ -210,6 +210,16 @@ public:
                 }
                 return result;
         }
+        template<typename PC>
+        std::vector<double> scan(const pt_root_t& tree, std::matrix<PC>& counts) {
+                switch (alphabet().size()) {
+                case 5: return scan<5, PC>(tree, counts); break;
+                default: 
+                        std::cerr << "scan(): Invalid alphabet size."
+                                  << std::endl;
+                        exit(EXIT_FAILURE);
+                }
+        }
         template<size_t AS, typename PC>
         std::vector<double> marginal_likelihood(const pt_root_t& tree, const std::vector<PC>& prior) {
                 exponent_t<AS, PC> alpha(prior.begin(), prior.end());
@@ -222,6 +232,16 @@ public:
                                          (tree, *it, alpha));
                 }
                 return result;
+        }
+        template<typename PC>
+        std::vector<double> marginal_likelihood(const pt_root_t& tree, const std::vector<PC>& prior) {
+                switch (alphabet().size()) {
+                case 5: return marginal_likelihood<5, PC>(tree, prior); break;
+                default: 
+                        std::cerr << "scan(): Invalid alphabet size."
+                                  << std::endl;
+                        exit(EXIT_FAILURE);
+                }
         }
 protected:
         // Methods for Initializations
