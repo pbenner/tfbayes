@@ -71,8 +71,8 @@ options = {
 def print_result(container):
     print '>%s' % os.path.basename(container['file_name'])
     for result in container['result']:
-        for i in range(5):
-            print '%11.8f' % result[i],
+        for value in result:
+            print '%11.8f' % value,
         print ";"
 
 # main logic comes here
@@ -82,26 +82,12 @@ def alignment_approximate(multiple_alignment, phylotree):
     """For every column in the alignment, approximate the likelihood
     given by the phylogenetic tree by a simple multinomial
     distribution with averaged count statistics."""
-    leafmap    = options['leafmap']
-    num_leaves = pt_num_leaves(phylotree)
 
-    # initialize leaves to '-'
-    #observations = [ DNA.code('-') ]*num_leaves
+    # convert alignment fron biopython object to native
+    # alignment type
+    alignment = alignment_t(multiple_alignment)
 
-    # initialize leaves to -1 meaning that all species that are not present in
-    # this alignment will be fully ignored by the phylogenetic model
-    observations = [ -1.0 ]*num_leaves
-
-    result = []
-    for i in range(len(multiple_alignment[0])):
-        # fill observations array
-        for alignment in multiple_alignment:
-            name = alignment.name.split(".")[0]
-            if leafmap.has_key(name):
-                observations[leafmap[name]] = DNA.code(alignment.seq[i])
-        # call phylotree library
-        result.append(pt_approximate(phylotree, observations))
-    return result
+    return alignment.approximate(phylotree)
 
 # parse alignment
 # ------------------------------------------------------------------------------
