@@ -91,7 +91,6 @@ libtfbayes_phylotree_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
 otherincludedir = $(includedir)/tfbayes/phylotree
 otherinclude_HEADERS = \
-	interface.hh \
 	leafset.hh \
 	phylotree.hh \
 	phylotree-approximation.hh \
@@ -128,7 +127,7 @@ interface_la_LDFLAGS  = -avoid-version -module
 pkgpythondir = $(pyexecdir)/tfbayes/phylotree
 
 ## compile python files
-pkgpython_PYTHON = __init__.py interface.py
+pkgpython_PYTHON = __init__.py
 
 ## clean python files
 clean-local:

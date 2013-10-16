@@ -66,7 +66,7 @@ public:
                 // initialize taxon map from leaf names
                 init_taxon_map(tree);
         }
-        alignment_t(const std::matrix<CODE_TYPE> sequences,
+        alignment_t(const std::matrix<CODE_TYPE>& sequences,
                     const taxon_map_t& taxon_map,
                     alphabet_t alphabet = nucleotide_alphabet_t())
                 : std::matrix<CODE_TYPE>(sequences),
@@ -75,6 +75,17 @@ public:
                   _length    (0),
                   _taxon_map (taxon_map),
                   _alphabet  (alphabet) {
+                // check that all lengths are consistent
+                init_alignment(sequences);
+        }
+        alignment_t(const std::matrix<CODE_TYPE>& sequences,
+                    const pt_root_t& tree,
+                    alphabet_t alphabet = nucleotide_alphabet_t())
+                : std::matrix<CODE_TYPE>(sequences),
+                  _n_species (tree.n_leaves),
+                  _length    (0),
+                  _alphabet  (alphabet) {
+                init_taxon_map(tree);
                 // check that all lengths are consistent
                 init_alignment(sequences);
         }

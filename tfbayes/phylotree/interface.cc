@@ -17,131 +17,6 @@
 
 #include <Python.h>
 
-#include <cstdio>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <cstring>
-
-#include <tfbayes/phylotree/interface.hh>
-#include <tfbayes/phylotree/utility.hh>
-#include <tfbayes/phylotree/phylotree-parser.h>
-
-using namespace std;
-
-__BEGIN_DECLS
-
-// library interface
-////////////////////////////////////////////////////////////////////////////////
-
-char* pt_print(pt_root_t* pt_root)
-{
-        std::ostringstream stream;
-        stream << pt_root;
-        std::string str = stream.str();
-        const char* chr = str.c_str();
-
-        char* result = (char*)malloc((strlen(chr)+1)*sizeof(char));
-        strcpy(result, chr);
-
-        return result;
-}
-
-const char* pt_leaf_name(pt_root_t* root, size_t leaf)
-{
-        return (*root)(leaf)->name.c_str();
-}
-
-size_t pt_num_leaves(pt_root_t* root)
-{
-        return root->n_leaves;
-}
-
-ssize_t pt_index(pt_root_t* root, const char* name)
-{
-        return (*root)(name)->id;
-}
-
-vector_t* pt_expectation(pt_root_t* pt_root, vector_t* observations, vector_t* prior)
-{
-        vector_t* result = alloc_vector(alphabet_size);
-        // convert observations to an std array
-        vector<code_t> tmp(observations->vec, observations->vec+observations->size);
-        // compute the polynomial
-        polynomial_t<alphabet_size, code_t> poly = pt_polynomial<alphabet_size, code_t>(*pt_root, tmp);
-
-        exponent_t<alphabet_size, code_t> alpha;
-        for (size_t i = 0; i < alphabet_size; i++) {
-                alpha[i] = prior->vec[i];
-        }
-
-        boost::array<double, alphabet_size> expectation =
-                pt_posterior_expectation<alphabet_size, code_t>(poly, alpha);
-
-        for (size_t i = 0; i < alphabet_size; i++) {
-                result->vec[i] = expectation[i];
-        }
-
-        return result;
-}
-
-vector_t* pt_approximate(pt_root_t* pt_root, vector_t* observations)
-{
-        vector_t* result = alloc_vector(alphabet_size);
-        // convert observations to an std array
-        vector<code_t> tmp(observations->vec, observations->vec+observations->size);
-        // compute the polynomial
-        polynomial_t<alphabet_size, code_t> poly = pt_polynomial<alphabet_size, code_t>(*pt_root, tmp);
-
-        polynomial_t<alphabet_size, code_t> variational
-                = dkl_approximate<alphabet_size, code_t>(poly);
-
-        for (size_t i = 0; i < alphabet_size; i++) {
-                result->vec[i] = variational.begin()->exponent()[i];
-        }
-
-        return result;
-}
-
-vector_t* pt_dkl_optimize(pt_root_t* pt_root, vector_t* observations)
-{
-        vector_t* result = alloc_vector(alphabet_size);
-        // convert observations to an std array
-        vector<code_t> tmp(observations->vec, observations->vec+observations->size);
-        // compute the polynomial
-        polynomial_t<alphabet_size, code_t> poly = pt_polynomial<alphabet_size, code_t>(*pt_root, tmp);
-
-        exponent_t<alphabet_size, code_t> alpha;
-        alpha[0] = 1;
-        alpha[1] = 1;
-        alpha[2] = 1;
-        alpha[3] = 1;
-        alpha[4] = 1;
-
-        polynomial_t<alphabet_size, code_t> variational
-                = dkl_optimize(poly, alpha);
-
-        for (size_t i = 0; i < alphabet_size; i++) {
-                result->vec[i] = variational.begin()->exponent()[i];
-        }
-
-        return result;
-}
-
-void pt_free(pt_root_t* pt_root)
-{
-        delete(pt_root);
-}
-
-__END_DECLS
-
-// library interface
-////////////////////////////////////////////////////////////////////////////////
-
-#include <Python.h>
-
 #include <locale>
 #include <cctype>
 #include <sstream>
@@ -152,6 +27,7 @@ __END_DECLS
 #include <boost/python/iterator.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
+#include <tfbayes/phylotree/phylotree-parser.h>
 #include <tfbayes/interface/exceptions.hh>
 #include <tfbayes/interface/utility.hh>
 
@@ -192,6 +68,8 @@ BOOST_PYTHON_MODULE(interface)
         class_<pt_leaf_t, bases<pt_node_t> >("pt_leaf_t", no_init)
                 ;
         class_<pt_root_t, bases<pt_node_t> >("pt_root_t", no_init)
-                .def("__init__", make_constructor(parse_tree_file))
+                .def("__init__",    make_constructor(parse_tree_file))
+                .def("get_node_id", &pt_root_t::get_node_id)
+                .def("get_leaf_id", &pt_root_t::get_leaf_id)
                 ;
 }

@@ -24,14 +24,58 @@
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/iterator.hpp>
+#include <boost/python/make_constructor.hpp>
 
 #include <tfbayes/alignment/alignment.hh>
+#include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/interface.hh>
 #include <tfbayes/phylotree/utility.hh>
 #include <tfbayes/interface/exceptions.hh>
 #include <tfbayes/interface/utility.hh>
 
 using namespace boost::python;
+
+// construct an alignment from an alignio python object
+// -----------------------------------------------------------------------------
+
+#include <string>
+
+alignment_t<>* alignment_from_alignio(object a, const pt_root_t& tree)
+{
+        string type = extract<string>(str(a.attr("__class__")));
+
+        /* check type of python object */
+        if (type != "<class 'Bio.Align.MultipleSeqAlignment'>") {
+                raise_TypeError("First argument is expected to be of type 'Bio.Align.MultipleSeqAlignment'.");
+        }
+
+        /* retrieve number of species in the alignment from the tree */
+        size_t n = tree.n_leaves;
+
+        /* start with an empty matrix */
+        std::matrix<alphabet_code_t> tmp(n, 0);
+
+        /* transfer alignment data */
+        for (ssize_t i = 0; i < len(a); i++) {
+                sequence_t<> s(extract<string>(str(a[i].attr("seq"))));
+                string descr = extract<string>(str(a[i].attr("name")));
+                /* the description shoud never be empty */
+                assert(descr != "");
+                /* extract the taxon from name */
+                string taxon = token(descr, '.')[0];
+                /* if taxon is an element of the phylogenetic tree,
+                 * insert it into the alignment */
+                pt_node_t::id_t id = tree.get_leaf_id(taxon);
+                if (id == -1) {
+                        std::cerr << boost::format("Warning: taxon `%s' not found in the phylogenetic tree.") % taxon
+                                  << std::endl;
+                        continue;
+                }
+                tmp[id] = s;
+        }
+
+        return new alignment_t<>(tmp, tree);
+}
 
 // library interface
 // -----------------------------------------------------------------------------
@@ -81,6 +125,7 @@ BOOST_PYTHON_MODULE(interface)
                 ;
         class_<alignment_t<> >("alignment_t", no_init)
                 .def(init<string, pt_root_t>())
+                .def("__init__",    make_constructor(alignment_from_alignio))
                 .def("__iter__",    boost::python::iterator<alignment_t<> >())
                 .def("__getitem__", alignment_getsequence)
                 .def("__getitem__", alignment_getitem)

@@ -49,4 +49,11 @@ void raise_IOError(boost::basic_format<char>& msg)
         raise_IOError(boost::str(msg));
 }
 
+static inline
+void raise_TypeError(const std::string& msg)
+{
+        PyErr_SetString(PyExc_TypeError, msg.c_str());
+        throw boost::python::error_already_set();
+}
+
 #endif /* INTERFACE_EXCEPTIONS_HH */
