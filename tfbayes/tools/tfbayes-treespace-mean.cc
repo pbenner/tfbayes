@@ -34,7 +34,6 @@
 #include <boost/unordered/unordered_map.hpp>
 
 #define alphabet_size 5
-typedef float code_t;
 
 typedef boost::unordered_map<topology_t, std::list<ntree_t> > topology_map_t;
 

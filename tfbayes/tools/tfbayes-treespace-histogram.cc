@@ -37,7 +37,6 @@
 using namespace std;
 
 #define alphabet_size 5
-typedef float code_t;
 
 typedef std::map<named_nsplit_t, std::vector<double> > split_map_t;
 typedef boost::unordered_map<topology_t, size_t> topology_map_t;
