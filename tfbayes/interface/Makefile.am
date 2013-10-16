@@ -19,7 +19,7 @@ datatypes_la_LDFLAGS  = -avoid-version -module
 pkgpythondir = $(pyexecdir)/tfbayes/interface
 
 ## compile python files
-pkgpython_PYTHON = __init__.py
+pkgpython_PYTHON = __init__.py sigint.py
 
 ## clean python files
 clean-local:
