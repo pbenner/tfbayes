@@ -33,7 +33,7 @@
  * PC: POLYNOMIAL CODE TYPE
  */
 
-template <size_t AS, typename AC = alphabet_code_t, typename PC = short>
+template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
 class pt_polynomial_t : public polynomial_t<AS, PC> {
 public:
         using polynomial_t<AS, PC>::operator=;

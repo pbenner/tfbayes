@@ -33,13 +33,12 @@
 #include <tfbayes/exception/exception.h>
 
 #define alphabet_size 5
-typedef float code_t;
 
 using namespace std;
 
 class posterior_values {
 public:
-        posterior_values(const pt_pmcmc_hastings_t<alphabet_size, code_t>& mh)
+        posterior_values(const pt_pmcmc_hastings_t<alphabet_size>& mh)
                 : mh(mh) { }
 
         std::ostream& operator()(std::ostream& o) const {
@@ -66,7 +65,7 @@ public:
                 return o;
         }
 protected:
-        const pt_pmcmc_hastings_t<alphabet_size, code_t>& mh;
+        const pt_pmcmc_hastings_t<alphabet_size>& mh;
 };
 
 ostream& operator<< (ostream& o, const posterior_values& pv)
@@ -74,7 +73,7 @@ ostream& operator<< (ostream& o, const posterior_values& pv)
         return pv(o);
 }
 
-ostream& operator<< (ostream& o, const pt_pmcmc_hastings_t<alphabet_size, code_t>& mh)
+ostream& operator<< (ostream& o, const pt_pmcmc_hastings_t<alphabet_size>& mh)
 {
         // print trees
         for (std::list<pt_root_t>::const_iterator it = mh.samples.begin();
@@ -85,7 +84,7 @@ ostream& operator<< (ostream& o, const pt_pmcmc_hastings_t<alphabet_size, code_t
         return o;
 }
 
-size_t hash_value(const exponent_t<alphabet_size, code_t>& exponent)
+size_t hash_value(const exponent_t<alphabet_size>& exponent)
 {
         size_t seed = 0;
         seed += (size_t)exponent[0] << 0;
@@ -222,24 +221,24 @@ void run_optimization(const string& method, const char* file_tree, const char* f
         pt_root_t pt_root = parse_tree_file(file_tree);
 
         /* pseudo counts */
-        exponent_t<alphabet_size, code_t> alpha;
+        exponent_t<alphabet_size> alpha;
         for (size_t i = 0; i < alphabet_size; i++) {
                 alpha[i] = options.alpha;
         }
 
         /* alignment */
-        alignment_t<code_t> alignment(file_alignment, pt_root);
+        alignment_t<> alignment(file_alignment, pt_root);
         assert(alignment.length() > 0);
 
         if (method == "gradient-ascent") {
-                pt_gradient_ascent_t<alphabet_size, code_t> pt_gradient_ascent(pt_root, alignment, alpha, options.r, options.lambda, options.epsilon);
+                pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(pt_root, alignment, alpha, options.r, options.lambda, options.epsilon);
                 pt_gradient_ascent.run(options.max_steps, options.min_change);
         }
         else if (method == "metropolis-hastings") {
                 normal_jump_t jump(options.sigma);
 //                gamma_jump_t jump(1.6, 0.4);
-                pt_metropolis_hastings_t<alphabet_size, code_t> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
-                pt_pmcmc_hastings_t<alphabet_size, code_t> pmcmc(options.jobs, pt_metropolis_hastings);
+                pt_metropolis_hastings_t<alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
+                pt_pmcmc_hastings_t<alphabet_size> pmcmc(options.jobs, pt_metropolis_hastings);
                 pmcmc.sample(options.max_steps, options.burnin);
                 /* print posterior values to separate file */
                 if (options.posterior != "") {

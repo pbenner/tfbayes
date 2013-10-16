@@ -131,7 +131,7 @@ BOOST_PYTHON_MODULE(interface)
                 .def("__getitem__", alignment_getitem)
                 .def("__setitem__", alignment_setitem)
                 .def("__str__",     alignment_str)
-                .def("scan",                &alignment_t<>::scan<alphabet_size>)
-                .def("marginal_likelihood", &alignment_t<>::marginal_likelihood<alphabet_size>)
+                .def("scan",                &alignment_t<>::scan<alphabet_size, double>)
+                .def("marginal_likelihood", &alignment_t<>::marginal_likelihood<alphabet_size, double>)
                 ;
 }

@@ -40,36 +40,41 @@
 #include <tfbayes/alignment/sequence.hh>
 #include <tfbayes/dpm/index.hh>
 
+/* AS: ALPHABET SIZE
+ * AC: ALPHABET CODE TYPE
+ * PC: POLYNOMIAL CODE TYPE
+ */
+
 typedef seq_index_t alignment_index_t;
 
-template <typename CODE_TYPE = alphabet_code_t>
-class alignment_t : std::matrix<CODE_TYPE> {
+template <typename AC = alphabet_code_t>
+class alignment_t : std::matrix<AC> {
 public:
-        using std::matrix<CODE_TYPE>::begin;
-        using std::matrix<CODE_TYPE>::end;
+        using std::matrix<AC>::begin;
+        using std::matrix<AC>::end;
         // Typedefs
         ////////////////////////////////////////////////////////////////////////
         typedef boost::unordered_map<std::string, pt_node_t::id_t> taxon_map_t;
-        typedef typename std::matrix<CODE_TYPE>::iterator iterator;
-        typedef typename std::matrix<CODE_TYPE>::const_iterator const_iterator;
+        typedef typename std::matrix<AC>::iterator iterator;
+        typedef typename std::matrix<AC>::const_iterator const_iterator;
 
         // Constructors
         ////////////////////////////////////////////////////////////////////////
         alignment_t(size_t length,
                     const pt_root_t& tree,
-                    CODE_TYPE init = -1,
+                    AC init = -1,
                     alphabet_t alphabet = nucleotide_alphabet_t())
-                : std::matrix<CODE_TYPE>(length, tree.n_leaves, init),
+                : std::matrix<AC>(length, tree.n_leaves, init),
                   _n_species (tree.n_leaves),
                   _length    (length),
                   _alphabet  (alphabet) {
                 // initialize taxon map from leaf names
                 init_taxon_map(tree);
         }
-        alignment_t(const std::matrix<CODE_TYPE>& sequences,
+        alignment_t(const std::matrix<AC>& sequences,
                     const taxon_map_t& taxon_map,
                     alphabet_t alphabet = nucleotide_alphabet_t())
-                : std::matrix<CODE_TYPE>(sequences),
+                : std::matrix<AC>(sequences),
                   _n_species (taxon_map.size()),
                   // the length is initialized later
                   _length    (0),
@@ -78,10 +83,10 @@ public:
                 // check that all lengths are consistent
                 init_alignment(sequences);
         }
-        alignment_t(const std::matrix<CODE_TYPE>& sequences,
+        alignment_t(const std::matrix<AC>& sequences,
                     const pt_root_t& tree,
                     alphabet_t alphabet = nucleotide_alphabet_t())
-                : std::matrix<CODE_TYPE>(sequences),
+                : std::matrix<AC>(sequences),
                   _n_species (tree.n_leaves),
                   _length    (0),
                   _alphabet  (alphabet) {
@@ -92,7 +97,7 @@ public:
         alignment_t(const std::string& filename,
                     boost::optional<const pt_root_t&> tree = boost::optional<const pt_root_t&>(),
                     alphabet_t alphabet = nucleotide_alphabet_t())
-                : std::matrix<CODE_TYPE>(),
+                : std::matrix<AC>(),
                   // we have as many sequences in this alignment as
                   // there are leaves in the tree
                   _n_species (0),
@@ -108,12 +113,12 @@ public:
                 // of species in the alignment
                 _n_species = _taxon_map.size();
                 // parse fasta file
-                std::matrix<CODE_TYPE> tmp = parse_fasta(filename);
+                std::matrix<AC> tmp = parse_fasta(filename);
                 // check that all lengths are consistent
                 init_alignment(tmp);
         }
         alignment_t(const alignment_t& alignment)
-                : std::matrix<CODE_TYPE>(alignment),
+                : std::matrix<AC>(alignment),
                   _n_species (alignment._n_species),
                   _length    (alignment._length),
                   _taxon_map (alignment._taxon_map),
@@ -123,8 +128,8 @@ public:
         }
 
         friend void swap(alignment_t& first, alignment_t&second) {
-                std::swap(static_cast<std::matrix<CODE_TYPE>&>(first),
-                          static_cast<std::matrix<CODE_TYPE>&>(second));
+                std::swap(static_cast<std::matrix<AC>&>(first),
+                          static_cast<std::matrix<AC>&>(second));
                 std::swap(first._length,    second._length);
                 std::swap(first._n_species, second._n_species);
                 std::swap(first._taxon_map, second._taxon_map);
@@ -139,17 +144,17 @@ public:
                 return *this;
         }
         // use the access operator from base class to read/write columns
-        using std::matrix<CODE_TYPE>::operator[];
+        using std::matrix<AC>::operator[];
         // define new access operators to access individual cells
-        const CODE_TYPE& operator[](const alignment_index_t& index) const {
-                return std::matrix<CODE_TYPE>::operator[](index[1])[index[0]];
+        const AC& operator[](const alignment_index_t& index) const {
+                return std::matrix<AC>::operator[](index[1])[index[0]];
         }
-              CODE_TYPE& operator[](const alignment_index_t& index) {
-                return std::matrix<CODE_TYPE>::operator[](index[1])[index[0]];
+              AC& operator[](const alignment_index_t& index) {
+                return std::matrix<AC>::operator[](index[1])[index[0]];
         }
         // and to obtain full sequences for one species
-        sequence_t<CODE_TYPE> operator[](const std::string& taxon) const {
-                sequence_t<CODE_TYPE> sequence(length(), alphabet());
+        sequence_t<AC> operator[](const std::string& taxon) const {
+                sequence_t<AC> sequence(length(), alphabet());
                 pt_node_t::id_t id = taxon_map(taxon);
                 for (const_iterator it = begin(); it != end() && id != -1; it++) {
                         sequence[it-begin()] = (*it)[id];
@@ -180,13 +185,13 @@ public:
         }
         // Methods
         ////////////////////////////////////////////////////////////////////////
-        template<size_t ALPHABET_SIZE>
-        std::vector<double> scan(const pt_root_t& tree, std::matrix<double>& counts) {
+        template<size_t AS, typename PC>
+        std::vector<double> scan(const pt_root_t& tree, std::matrix<PC>& counts) {
                 std::vector<double> result(length(), 0);
-                vector<exponent_t<ALPHABET_SIZE, CODE_TYPE> > exponents;
+                vector<exponent_t<AS, PC> > exponents;
 
                 for (size_t j = 0; j < counts.size(); j++) {
-                        exponent_t<ALPHABET_SIZE, CODE_TYPE> tmp
+                        exponent_t<AS, PC> tmp
                                 (counts[j].begin(), counts[j].end());
                         exponents.push_back(tmp);
                 }
@@ -199,21 +204,21 @@ public:
                                 continue;
                         }
                         for (iterator is(it); is < it + counts.size(); is++) {
-                                result[it - begin()] += pt_marginal_likelihood<ALPHABET_SIZE, CODE_TYPE>(
+                                result[it - begin()] += pt_marginal_likelihood<AS, AC, PC>(
                                         tree, *is, exponents[is-it]);
                         }
                 }
                 return result;
         }
-        template<size_t ALPHABET_SIZE>
-        std::vector<double> marginal_likelihood(const pt_root_t& tree, const std::vector<double>& prior) {
-                exponent_t<ALPHABET_SIZE, double> alpha(prior.begin(), prior.end());
+        template<size_t AS, typename PC>
+        std::vector<double> marginal_likelihood(const pt_root_t& tree, const std::vector<PC>& prior) {
+                exponent_t<AS, PC> alpha(prior.begin(), prior.end());
                 vector<double> result;
 
                 /* go through the alignment and compute the marginal
                  * likelihood for each position */
                 for (iterator it = begin(); it != end(); it++) {
-                        result.push_back(pt_marginal_likelihood<ALPHABET_SIZE, CODE_TYPE>
+                        result.push_back(pt_marginal_likelihood<AS, AC, PC>
                                          (tree, *it, alpha));
                 }
                 return result;
@@ -244,10 +249,10 @@ protected:
                         _taxon_map[tmp[i]] = i;
                 }
         }
-        std::matrix<CODE_TYPE> parse_fasta(const std::string& filename) {
+        std::matrix<AC> parse_fasta(const std::string& filename) {
                 FastaParser parser(filename);
 
-                std::matrix<CODE_TYPE> tmp(n_species(), 0);
+                std::matrix<AC> tmp(n_species(), 0);
                 std::string line;
 
                 while (parser) {
@@ -261,7 +266,7 @@ protected:
                         }
                         pt_node_t::id_t id = taxon_map(parser.taxon());
                         if (id != -1) {
-                                sequence_t<CODE_TYPE> sequence(line, alphabet());
+                                sequence_t<AC> sequence(line, alphabet());
                                 // multiple entries should be ignored!
                                 if (tmp[id].size() > 0) {
                                         std::cerr << boost::format("Warning: taxon `%s' appeared more than once in the alignment... "
@@ -279,10 +284,10 @@ protected:
                 }
                 return tmp;
         }
-        void init_alignment(const std::matrix<CODE_TYPE>& sequences) {
-                std::matrix<CODE_TYPE> tmp(sequences);
+        void init_alignment(const std::matrix<AC>& sequences) {
+                std::matrix<AC> tmp(sequences);
                 // initialize length
-                for (typename std::matrix<CODE_TYPE>::const_iterator it = tmp.begin();
+                for (typename std::matrix<AC>::const_iterator it = tmp.begin();
                      it != tmp.end(); it++) {
                         // update length if necessary
                         if (it->size() > length()) {
@@ -296,7 +301,7 @@ protected:
                                 std::cerr << boost::format("Warning: taxon `%s' has sequence length zero") % it->first
                                           << std::endl;
                                 // fill with missing data
-                                tmp[it->second] = sequence_t<CODE_TYPE>(length(), alphabet());
+                                tmp[it->second] = sequence_t<AC>(length(), alphabet());
                         }
                         else
                         if (tmp[it->second].size() != length()) {
@@ -307,7 +312,7 @@ protected:
                         }
                 }
                 // assign contents of tmp to this object
-                std::matrix<CODE_TYPE>::operator=(tmp.transpose());
+                std::matrix<AC>::operator=(tmp.transpose());
         }
         // Fields
         ////////////////////////////////////////////////////////////////////////
@@ -322,10 +327,10 @@ protected:
 };
 
 
-template <typename CODE_TYPE = alphabet_code_t>
-class alignment_set_t : public std::vector<alignment_t<CODE_TYPE> > {
+template <typename AC = alphabet_code_t>
+class alignment_set_t : public std::vector<alignment_t<AC> > {
 public:
-        using std::vector<alignment_t<CODE_TYPE> >::push_back;
+        using std::vector<alignment_t<AC> >::push_back;
 
         // Typedefs
         ////////////////////////////////////////////////////////////////////////
@@ -358,7 +363,7 @@ public:
                 std::set<std::string> occurred;
 
                 /* current alignment */
-                std::matrix<CODE_TYPE> sequences(n, 0);
+                std::matrix<AC> sequences(n, 0);
 
                 /* the fasta parser returns a single line for each
                  * sequence */
@@ -373,16 +378,16 @@ public:
                         }
                         if (occurred.find(parser.taxon()) != occurred.end()) {
                                 // push alignment
-                                push_back(alignment_t<CODE_TYPE>(sequences, taxon_map, alphabet));
+                                push_back(alignment_t<AC>(sequences, taxon_map, alphabet));
                                 // reset occurrences
                                 occurred.clear();
                                 // start new alignment
-                                sequences = std::matrix<CODE_TYPE>(n, 0);
+                                sequences = std::matrix<AC>(n, 0);
                         }
                         occurred.insert(parser.taxon());
-                        sequences[taxon_map[parser.taxon()]] = sequence_t<CODE_TYPE>(line);
+                        sequences[taxon_map[parser.taxon()]] = sequence_t<AC>(line);
                 }
-                push_back(alignment_t<CODE_TYPE>(sequences, taxon_map, alphabet));
+                push_back(alignment_t<AC>(sequences, taxon_map, alphabet));
         }
 
 protected:
@@ -418,52 +423,52 @@ protected:
         }
 };
 
-template <typename CODE_TYPE>
+template <typename AC>
 class print_alignment_t {
 public:
-        print_alignment_t(const alignment_t<CODE_TYPE>& alignment)
+        print_alignment_t(const alignment_t<AC>& alignment)
                 : _alignment(alignment)
                 { }
 
-        virtual const alignment_t<CODE_TYPE>& operator()() const {
+        virtual const alignment_t<AC>& operator()() const {
                 return _alignment;
         }
 protected:
-        const alignment_t<CODE_TYPE>& _alignment;
+        const alignment_t<AC>& _alignment;
 };
 
-template <typename CODE_TYPE>
-class print_alignment_pretty_t : public print_alignment_t<CODE_TYPE> {
+template <typename AC>
+class print_alignment_pretty_t : public print_alignment_t<AC> {
 public:
-        print_alignment_pretty_t(const alignment_t<CODE_TYPE>& alignment)
-                : print_alignment_t<CODE_TYPE>(alignment)
+        print_alignment_pretty_t(const alignment_t<AC>& alignment)
+                : print_alignment_t<AC>(alignment)
                 { }
 };
-template <typename CODE_TYPE>
-print_alignment_pretty_t<CODE_TYPE> print_alignment_pretty(alignment_t<CODE_TYPE> alignment)
+template <typename AC>
+print_alignment_pretty_t<AC> print_alignment_pretty(alignment_t<AC> alignment)
 {
-        return print_alignment_pretty_t<CODE_TYPE>(alignment);
+        return print_alignment_pretty_t<AC>(alignment);
 }
 
-template <typename CODE_TYPE>
-class print_alignment_fasta_t : public print_alignment_t<CODE_TYPE> {
+template <typename AC>
+class print_alignment_fasta_t : public print_alignment_t<AC> {
 public:
-        print_alignment_fasta_t(const alignment_t<CODE_TYPE>& alignment)
-                : print_alignment_t<CODE_TYPE>(alignment)
+        print_alignment_fasta_t(const alignment_t<AC>& alignment)
+                : print_alignment_t<AC>(alignment)
                 { }
 };
-template <typename CODE_TYPE>
-print_alignment_fasta_t<CODE_TYPE> print_alignment_fasta(alignment_t<CODE_TYPE> alignment)
+template <typename AC>
+print_alignment_fasta_t<AC> print_alignment_fasta(alignment_t<AC> alignment)
 {
-        return print_alignment_fasta_t<CODE_TYPE>(alignment);
+        return print_alignment_fasta_t<AC>(alignment);
 }
 
-template <typename CODE_TYPE>
-std::ostream& operator<< (std::ostream& o, const print_alignment_pretty_t<CODE_TYPE>& alignment_container)
+template <typename AC>
+std::ostream& operator<< (std::ostream& o, const print_alignment_pretty_t<AC>& alignment_container)
 {
-        const alignment_t<CODE_TYPE>& alignment(alignment_container());
+        const alignment_t<AC>& alignment(alignment_container());
 
-        for (typename alignment_t<CODE_TYPE>::taxon_map_t::const_iterator it = alignment.taxon_map().begin();
+        for (typename alignment_t<AC>::taxon_map_t::const_iterator it = alignment.taxon_map().begin();
              it != alignment.taxon_map().end(); it++) {
 
                 o << boost::format("%10s (%2d): ") % it->first % it->second
@@ -473,12 +478,12 @@ std::ostream& operator<< (std::ostream& o, const print_alignment_pretty_t<CODE_T
         return o;
 }
 
-template <typename CODE_TYPE>
-std::ostream& operator<< (std::ostream& o, const print_alignment_fasta_t<CODE_TYPE>&  alignment_container)
+template <typename AC>
+std::ostream& operator<< (std::ostream& o, const print_alignment_fasta_t<AC>&  alignment_container)
 {
-        const alignment_t<CODE_TYPE>& alignment(alignment_container());
+        const alignment_t<AC>& alignment(alignment_container());
 
-        for (typename alignment_t<CODE_TYPE>::taxon_map_t::const_iterator it = alignment.taxon_map().begin();
+        for (typename alignment_t<AC>::taxon_map_t::const_iterator it = alignment.taxon_map().begin();
              it != alignment.taxon_map().end(); it++) {
                 std::stringstream ss;
                 ss << alignment[it->first];

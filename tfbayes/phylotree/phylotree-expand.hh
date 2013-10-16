@@ -52,7 +52,7 @@ polynomial_t<AS, PC> mutation_model(const pt_node_t* node, AC x, AC y) {
         return poly;
 }
 
-template <size_t AS, typename AC = alphabet_code_t, typename PC = short>
+template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
 class pt_expand_t : public polynomial_t<AS, PC> {
 public:
         using polynomial_t<AS, PC>::operator=;

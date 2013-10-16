@@ -28,19 +28,20 @@
 #include <algorithm> /* std::min */
 
 #include <tfbayes/phylotree/phylotree-gradient.hh>
+#include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/statistics.hh>
 
 /* This is a gradient ascent method to compute the maximum posterior
  * value with an adaptive step-size similar to resilient
  * backpropagation (Rprop).
  */
-template <size_t ALPHABET_SIZE, typename CODE_TYPE>
+template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
 class pt_gradient_ascent_t
 {
 public:
         pt_gradient_ascent_t(const pt_root_t& tree,
-                             const alignment_t<CODE_TYPE>& alignment,
-                             const exponent_t<ALPHABET_SIZE, CODE_TYPE>& alpha,
+                             const alignment_t<AC>& alignment,
+                             const exponent_t<AS, PC>& alpha,
                              double r, double lambda,
                              double epsilon = 0.001, double eta = 0.1)
                 : tree(tree), alignment(alignment), alpha(alpha), gamma_distribution(r, lambda),
@@ -54,11 +55,11 @@ public:
                         result += log(gamma_distribution.pdf((*it)->d));
                 }
 
-                for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        const polynomial_t<ALPHABET_SIZE, CODE_TYPE> polynomial = pt_polynomial<ALPHABET_SIZE, CODE_TYPE>(tree, *it);
+                for (typename alignment_t<AC>::iterator it = alignment.begin(); it != alignment.end(); it++) {
+                        const polynomial_t<AS, PC> polynomial = pt_polynomial_t<AS, AC, PC>(tree, *it);
                         // loop over monomials
                         double tmp = -HUGE_VAL;
-                        for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator ut = polynomial.begin();
+                        for (typename polynomial_t<AS, PC>::const_iterator ut = polynomial.begin();
                              ut != polynomial.end(); ut++) {
                                 tmp = logadd(tmp, log(ut->coefficient()) + mbeta_log(ut->exponent(), alpha) - mbeta_log(alpha));
                         }
@@ -76,12 +77,12 @@ public:
                         sum[*it] = gamma_distribution.log_gradient((*it)->d);
                 }
                 // loop through the alignment
-                for (typename alignment_t<CODE_TYPE>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        pt_gradient_t<ALPHABET_SIZE, CODE_TYPE> gradient(tree, *it);
+                for (typename alignment_t<AC>::iterator it = alignment.begin(); it != alignment.end(); it++) {
+                        pt_gradient_t<AS, AC, PC> gradient(tree, *it);
 
                         double norm = 0.0;
                         // loop over monomials
-                        for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator ut = gradient.normalization().begin();
+                        for (typename polynomial_t<AS, PC>::const_iterator ut = gradient.normalization().begin();
                              ut != gradient.normalization().end(); ut++) {
                                 norm += ut->coefficient()*exp(mbeta_log(ut->exponent(), alpha));
                         }
@@ -89,7 +90,7 @@ public:
                         for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
                                 double result = 0;
                                 // loop over monomials
-                                for (typename polynomial_t<ALPHABET_SIZE, CODE_TYPE>::const_iterator ut = gradient[*is].begin();
+                                for (typename polynomial_t<AS, PC>::const_iterator ut = gradient[*is].begin();
                                      ut != gradient[*is].end(); ut++) {
                                         result += ut->coefficient()*exp(mbeta_log(ut->exponent(), alpha));
                                 }
@@ -139,8 +140,8 @@ public:
 
 private:
         pt_root_t tree;
-        alignment_t<CODE_TYPE> alignment;
-        exponent_t<ALPHABET_SIZE, CODE_TYPE> alpha;
+        alignment_t<AC> alignment;
+        exponent_t<AS, PC> alpha;
         gamma_distribution_t gamma_distribution;
         double epsilon;
         double eta;
