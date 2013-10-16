@@ -33,6 +33,7 @@
 
 #include <tfbayes/fasta/fasta.hh>
 #include <tfbayes/phylotree/phylotree.hh>
+#include <tfbayes/phylotree/phylotree-approximation.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/linalg.hh>
@@ -185,6 +186,32 @@ public:
         }
         // Methods
         ////////////////////////////////////////////////////////////////////////
+        template<size_t AS, typename PC>
+        std::matrix<double> approximate(const pt_root_t& tree) {
+                std::matrix<double> result(length(), AS);
+
+                for (size_t i = 0; i < length(); i++) {
+                        // compute the polynomial
+                        polynomial_t<AS, PC> poly = pt_polynomial_t<AS, AC, PC>(tree, operator[](i));
+                        polynomial_t<AS, PC> variational
+                                = dkl_approximate<AS, PC>(poly);
+
+                        for (size_t j = 0; j < AS; j++) {
+                                result[i][j] = variational.begin()->exponent()[j];
+                        }
+                }
+                return result;
+        }
+        template<typename PC>
+        std::matrix<double> approximate(const pt_root_t& tree) {
+                switch (alphabet().size()) {
+                case 5: return approximate<5, PC>(tree); break;
+                default: 
+                        std::cerr << "scan(): Invalid alphabet size."
+                                  << std::endl;
+                        exit(EXIT_FAILURE);
+                }
+        }
         template<size_t AS, typename PC>
         std::vector<double> scan(const pt_root_t& tree, std::matrix<PC>& counts) {
                 std::vector<double> result(length(), 0);
