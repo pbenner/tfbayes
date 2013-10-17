@@ -433,7 +433,7 @@ nedge_node_t::convert(
                 tree = tree ? new pt_node_t(0.0, tree, tmp_node) : tmp_node;
         }
 
-        return make_tuple(tree, leaves);
+        return boost::tuples::make_tuple(tree, leaves);
 }
 
 nedge_root_t::nedge_root_t(

@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,9 @@
 
 class data_gaussian_t : public data_t<std::vector<double> >, public indexer_t {
 public:
-         data_gaussian_t(size_t cluster, size_t samples, gsl_matrix* Sigma, const double* pi);
+         data_gaussian_t(size_t samples,
+                         const std::matrix<double>& Sigma,
+                         const std::vector<double>& pi);
          data_gaussian_t(const data_gaussian_t& data);
         ~data_gaussian_t();
 
@@ -46,8 +48,8 @@ public:
                 std::swap(first._length,          second._length);
                 std::swap(first._cluster,         second._cluster);
                 std::swap(first._mu,              second._mu);
-                std::swap(first. _original_cluster_assignments,
-                          second._original_cluster_assignments);
+                std::swap(first. _initial_cluster_assignments,
+                          second._initial_cluster_assignments);
         }
         // operators
         ////////////////////////////////////////////////////////////////////////
@@ -74,8 +76,8 @@ public:
         size_t elements() const;
         size_t length() const;
         void shuffle();
-        gsl_matrix* original_means();
-        gsl_vector* original_cluster_assignments();
+        const std::matrix<double>& initial_means() const;
+        const std::vector<double>& initial_cluster_assignments() const;
 
 private:
         std::vector<index_i*> indices;
@@ -86,11 +88,9 @@ private:
         size_t _cluster;
 
         // means for generating samples
-        gsl_matrix* _mu;
-        // original cluster assignments
-        gsl_vector* _original_cluster_assignments;
-
-        std::vector<std::vector<double> > generate_samples(size_t cluster, size_t samples, gsl_matrix* Sigma, const double* pi);
+        std::matrix<double> _mu;
+        // initial cluster assignments
+        std::vector<double> _initial_cluster_assignments;
 };
 
 #endif /* DATA_GAUSSIAN_HH */

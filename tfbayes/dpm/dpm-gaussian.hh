@@ -32,10 +32,10 @@
 class dpm_gaussian_t : public mixture_model_t, public gibbs_state_t {
 public:
          dpm_gaussian_t(double alpha,
-                      gsl_matrix* _Sigma,
-                      gsl_matrix* _Sigma_0,
-                      gsl_vector* _mu_0,
-                      const data_gaussian_t& data);
+                        const std::matrix<double>& Sigma,
+                        const std::matrix<double>& Sigma_0,
+                        const std::vector<double>& mu_0,
+                        const data_gaussian_t& data);
          dpm_gaussian_t(const dpm_gaussian_t& dpm);
         ~dpm_gaussian_t();
 
@@ -60,7 +60,7 @@ public:
         double posterior() const;
         dpm_partition_t partition() const;
         bool   valid_for_sampling(const index_i& index) const;
-        gsl_matrix* means() const;
+        std::matrix<double> means() const;
 
         const mixture_state_t& state() const;
               mixture_state_t& state();
@@ -68,20 +68,11 @@ public:
 private:
         baseline_tag_t _baseline_tag;
 
-        // likelihood parameters
-        gsl_matrix* cov;
-        gsl_matrix* cov_inv;
-
-        // prior parameters
-        gsl_vector* mu_0;
-        gsl_matrix* cov_0;
-        gsl_matrix* cov_inv_0;
-
         // data and clusters
         const data_gaussian_t* _data;
 
         // parameters
-        double alpha;
+        double _alpha;
 };
 
 #endif /* DPM_GAUSSIAN_HH */

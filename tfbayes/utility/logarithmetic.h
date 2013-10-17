@@ -22,8 +22,8 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <stdlib.h>
-#include <math.h>
+#include <cstdlib>
+#include <cmath>
 
 /* Log Sum of Exponentials Algorithm */
 

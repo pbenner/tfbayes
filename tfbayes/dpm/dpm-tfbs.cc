@@ -327,7 +327,7 @@ dpm_tfbs_t::likelihood() const {
                 const cluster_t& cluster = **it;
                 result += cluster.model().log_likelihood();
         }
-        assert(!isnan(result));
+        assert(!std::isnan(result));
 
         return result;
 }
@@ -346,7 +346,7 @@ dpm_tfbs_t::posterior() const {
         // process prior
         result += _process_prior->joint(_state);
 
-        assert(!isnan(result));
+        assert(!std::isnan(result));
 
         return result;
 }

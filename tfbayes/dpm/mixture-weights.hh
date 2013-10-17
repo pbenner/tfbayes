@@ -25,8 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <vector>
-
-#include <math.h>
+#include <cmath>
 
 #include <tfbayes/utility/clonable.hh>
 

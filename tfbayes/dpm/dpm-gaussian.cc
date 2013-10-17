@@ -33,14 +33,14 @@ using namespace std;
 
 dpm_gaussian_t::dpm_gaussian_t(
         double alpha,
-        gsl_matrix* Sigma,
-        gsl_matrix* Sigma_0,
-        gsl_vector* mu_0,
+        const matrix<double>& Sigma,
+        const matrix<double>& Sigma_0,
+        const vector<double>& mu_0,
         const data_gaussian_t& data)
         : gibbs_state_t(data_t<cluster_tag_t>(data.elements(), -1)),
           _data(&data),
           // strength parameter for the dirichlet process
-          alpha(alpha)
+          _alpha(alpha)
 {
         _baseline_tag = "baseline";
         gibbs_state_t::add_baseline_model(new bivariate_normal_t(Sigma, Sigma_0, mu_0, data), _baseline_tag);
@@ -54,19 +54,9 @@ dpm_gaussian_t::dpm_gaussian_t(
 dpm_gaussian_t::dpm_gaussian_t(const dpm_gaussian_t& dpm)
         : gibbs_state_t(dpm),
           _baseline_tag(dpm._baseline_tag),
-          cov          (gsl_matrix_alloc(dpm.cov->size1, dpm.cov->size2)),
-          cov_inv      (gsl_matrix_alloc(dpm.cov_inv->size1, dpm.cov_inv->size2)),
-          mu_0         (gsl_vector_alloc(dpm.mu_0->size)),
-          cov_0        (gsl_matrix_alloc(dpm.cov_0->size1, dpm.cov_0->size2)),
-          cov_inv_0    (gsl_matrix_alloc(dpm.cov_inv_0->size1, dpm.cov_inv_0->size2)),
           _data        (dpm._data),
-          alpha        (dpm.alpha)
+          _alpha       (dpm._alpha)
 {
-        gsl_matrix_memcpy(cov, dpm.cov);
-        gsl_matrix_memcpy(cov_inv, dpm.cov_inv);
-        gsl_vector_memcpy(mu_0, dpm.mu_0);
-        gsl_matrix_memcpy(cov_0, dpm.cov_0);
-        gsl_matrix_memcpy(cov_inv_0, dpm.cov_inv_0);
 }
 
 dpm_gaussian_t::~dpm_gaussian_t() {
@@ -77,13 +67,8 @@ void swap(dpm_gaussian_t& first, dpm_gaussian_t& second)
         swap(static_cast<gibbs_state_t&>(first),
              static_cast<gibbs_state_t&>(second));
         swap(first._baseline_tag, second._baseline_tag);
-        swap(first.cov,           second.cov);
-        swap(first.cov_inv,       second.cov_inv);
-        swap(first.mu_0,          second.mu_0);
-        swap(first.cov_0,         second.cov_0);
-        swap(first.cov_inv_0,     second.cov_inv_0);
         swap(first._data,         second._data);
-        swap(first.alpha,         second.alpha);
+        swap(first._alpha,        second._alpha);
 }
 
 dpm_gaussian_t*
@@ -137,33 +122,26 @@ dpm_gaussian_t::mixture_weights(const index_i& index, double log_weights[], clus
                 cluster_tags[i] = cluster.cluster_tag();
                 double num_elements = (double)cluster.size();
                 // normalization constant
-                sum = logadd(sum, log(num_elements/(alpha + N)) + cluster.model().log_predictive(range));
+                sum = logadd(sum, log(num_elements/(_alpha + N)) + cluster.model().log_predictive(range));
                 log_weights[i] = sum;
                 i++;
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         cluster_tags[components] = gibbs_state_t::get_free_cluster(_baseline_tag).cluster_tag();
-        sum = logadd(sum, log(alpha/(alpha + N)) + gibbs_state_t::operator[](cluster_tags[components]).model().log_predictive(range));
+        sum = logadd(sum, log(_alpha/(_alpha + N)) + gibbs_state_t::operator[](cluster_tags[components]).model().log_predictive(range));
         log_weights[components] = sum;
 }
 
-gsl_matrix*
+matrix<double>
 dpm_gaussian_t::means() const {
-        if (mixture_components() == 0) {
-                return NULL;
-        }
+        matrix<double> means;
 
-        gsl_matrix* means = gsl_matrix_alloc(mixture_components(), 2);
-
-        size_t i = 0;
         for (mixture_state_t::const_iterator it = gibbs_state_t::begin();
              it != gibbs_state_t::end(); it++) {
                 cluster_t& cluster = **it;
                 bivariate_normal_t& bg = static_cast<bivariate_normal_t&>(cluster.model());
-                gsl_matrix_set(means, i, 0, gsl_vector_get(bg.mean(), 0));
-                gsl_matrix_set(means, i, 1, gsl_vector_get(bg.mean(), 1));
-                i++;
+                means.push_back(bg.mean());
         }
 
         return means;

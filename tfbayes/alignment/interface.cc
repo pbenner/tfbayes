@@ -83,7 +83,7 @@ sequence_t<> alignment_getsequence(alignment_t<>& a, string taxon)
         return a[taxon];
 }
 
-char alignment_getitem(alignment_t<>& a, tuple index)
+char alignment_getitem(alignment_t<>& a, boost::python::tuple index)
 {
         size_t i = extract<size_t>(index[0]);
         size_t j = extract<size_t>(index[1]);
@@ -97,7 +97,7 @@ char alignment_getitem(alignment_t<>& a, tuple index)
         }
 }
 
-void alignment_setitem(alignment_t<>& a, tuple index, alphabet_code_t d)
+void alignment_setitem(alignment_t<>& a, boost::python::tuple index, alphabet_code_t d)
 {
         size_t i = extract<size_t>(index[0]);
         size_t j = extract<size_t>(index[1]);

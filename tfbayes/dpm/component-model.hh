@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
+#include <cmath>
 
 #include <iostream>
 #include <vector>
@@ -55,6 +55,12 @@ public:
                 { }
 
         virtual component_model_t* clone() const = 0;
+
+        friend void swap(component_model_t& first, component_model_t& second) {
+                std::swap(first._cluster_assignments, second._cluster_assignments);
+        }
+
+        virtual component_model_t& operator=(const component_model_t& component_model) = 0;
 
         // purely virtual functions
         virtual size_t add(const range_t& range) = 0;
@@ -96,6 +102,17 @@ public:
 
         independence_background_t* clone() const;
 
+        friend void swap(independence_background_t& first, independence_background_t& second) {
+                swap(static_cast<component_model_t&>(first),
+                     static_cast<component_model_t&>(second));
+                std::swap(first._size,                 second._size);
+                std::swap(first._bg_cluster_tag,       second._bg_cluster_tag);
+                std::swap(first._precomputed_marginal, second._precomputed_marginal);
+                std::swap(first._data,                 second._data);
+        }
+
+        independence_background_t& operator=(const component_model_t& component_model);
+
         // datatypes
         typedef data_tfbs_t::code_t counts_t;
 
@@ -107,23 +124,26 @@ public:
         double log_predictive(const range_t& range);
         double log_predictive(const std::vector<range_t>& range_set);
         double log_likelihood() const;
-        virtual std::string print_counts() const;
+        std::string print_counts() const;
         void set_bg_cluster_tag(cluster_tag_t cluster_tag);
 
-        virtual const sequence_data_t<cluster_tag_t>& cluster_assignments() const {
-                return *static_cast<const sequence_data_t<cluster_tag_t>*>(&component_model_t::cluster_assignments());
+        const sequence_data_t<cluster_tag_t>& cluster_assignments() const {
+                return static_cast<const sequence_data_t<cluster_tag_t>&>(component_model_t::cluster_assignments());
+        }
+        const sequence_data_t<data_tfbs_t::code_t>& data() {
+                return *_data;
         }
 
         friend std::ostream& operator<< (std::ostream& o, const independence_background_t& pd);
 
 protected:
-        const sequence_data_t<data_tfbs_t::code_t>& _data;
-
-        const size_t _size;
+        size_t _size;
 
         cluster_tag_t _bg_cluster_tag;
 
         sequence_data_t<double> _precomputed_marginal;
+
+        const sequence_data_t<data_tfbs_t::code_t>* _data;
 };
 
 // Multinomial/Dirichlet Model
@@ -138,6 +158,19 @@ public:
 
         product_dirichlet_t* clone() const;
 
+        friend void swap(product_dirichlet_t& first, product_dirichlet_t& second) {
+                swap(static_cast<component_model_t&>(first),
+                     static_cast<component_model_t&>(second));
+                std::swap(first.alpha,      second.alpha);
+                std::swap(first.counts,     second.counts);
+                std::swap(first.tmp_counts, second.tmp_counts);
+                std::swap(first._size1,     second._size1);
+                std::swap(first._size2,     second._size2);
+                std::swap(first._data,      second._data);
+        }
+
+        product_dirichlet_t& operator=(const component_model_t& component_model);
+
         // datatypes
         typedef data_tfbs_t::code_t counts_t;
 
@@ -149,7 +182,11 @@ public:
         double log_predictive(const range_t& range);
         double log_predictive(const std::vector<range_t>& range);
         double log_likelihood() const;
-        virtual std::string print_counts() const;
+        std::string print_counts() const;
+
+        const sequence_data_t<data_tfbs_t::code_t>& data() const {
+                return *_data;
+        }
 
         friend std::ostream& operator<< (std::ostream& o, const product_dirichlet_t& pd);
 
@@ -159,42 +196,10 @@ protected:
 
         counts_t tmp_counts;
 
-        const sequence_data_t<data_tfbs_t::code_t>& _data;
+        size_t _size1;
+        size_t _size2;
 
-        const size_t _size1;
-        const size_t _size2;
-};
-
-// Void Model
-////////////////////////////////////////////////////////////////////////////////
-
-class uniform_background_t : public component_model_t {
-public:
-         uniform_background_t(const sequence_data_t<data_tfbs_t::code_t>& data,
-                              const alignment_set_t<short>& alignment_set);
-         uniform_background_t(const uniform_background_t& distribution);
-        ~uniform_background_t();
-
-        uniform_background_t* clone() const;
-
-        // datatypes
-        typedef data_tfbs_t::code_t counts_t;
-
-        size_t add(const range_t& range);
-        size_t remove(const range_t& range);
-        size_t count(const range_t& range);
-        double predictive(const range_t& range);
-        double predictive(const std::vector<range_t>& range);
-        double log_predictive(const range_t& range);
-        double log_predictive(const std::vector<range_t>& range);
-        double log_likelihood() const;
-        virtual std::string print_counts() const;
-
-        friend std::ostream& operator<< (std::ostream& o, const uniform_background_t& pd);
-
-protected:
-        sequence_data_t<double> _events;
-        double _log_likelihood;
+        const sequence_data_t<data_tfbs_t::code_t>* _data;
 };
 
 // Markov Chain Mixture
@@ -212,6 +217,8 @@ public:
 
         markov_chain_mixture_t* clone() const;
 
+        markov_chain_mixture_t& operator=(const component_model_t& component_model);
+
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
@@ -221,8 +228,8 @@ public:
         double log_predictive(const std::vector<range_t>& range_set);
         double log_likelihood() const;
 
-        virtual const sequence_data_t<cluster_tag_t>& cluster_assignments() const {
-                return *static_cast<const sequence_data_t<cluster_tag_t>*>(&component_model_t::cluster_assignments());
+        const sequence_data_t<cluster_tag_t>& cluster_assignments() const {
+                return static_cast<const sequence_data_t<cluster_tag_t>&>(component_model_t::cluster_assignments());
         }
 
         friend std::ostream& operator<< (std::ostream& o, const markov_chain_mixture_t& pd);
@@ -261,14 +268,36 @@ protected:
 class bivariate_normal_t : public component_model_t {
 public:
          bivariate_normal_t();
-         bivariate_normal_t(const gsl_matrix* Sigma,
-                            const gsl_matrix* Sigma_0,
-                            const gsl_vector* mu_0,
+         bivariate_normal_t(const std::matrix<double>& Sigma,
+                            const std::matrix<double>& Sigma_0,
+                            const std::vector<double>& mu_0,
                             const data_t<std::vector<double> >& data);
          bivariate_normal_t(const bivariate_normal_t& bn);
         ~bivariate_normal_t();
 
         bivariate_normal_t* clone() const;
+
+        friend void swap(bivariate_normal_t& first, bivariate_normal_t& second) {
+                swap(static_cast<component_model_t&>(first),
+                     static_cast<component_model_t&>(second));
+                std::swap(first._Sigma_0_inv, second._Sigma_0_inv);
+                std::swap(first._mu_0,        second._mu_0);
+                std::swap(first._Sigma,       second._Sigma);
+                std::swap(first._Sigma_inv,   second._Sigma_inv);
+                std::swap(first._mu,          second._mu);
+                std::swap(first._N,           second._N);
+                std::swap(first._Sigma_N,     second._Sigma_N);
+                std::swap(first._Sigma_N_inv, second._Sigma_N_inv);
+                std::swap(first._mu_N,        second._mu_N);
+                std::swap(first._dimension,   second._dimension);
+                std::swap(first._inv_perm,    second._inv_perm);
+                std::swap(first._inv_tmp,     second._inv_tmp);
+                std::swap(first._tmp1,        second._tmp1);
+                std::swap(first._tmp2,        second._tmp2);
+                std::swap(first._data,        second._data);
+        }
+
+        bivariate_normal_t& operator=(const component_model_t& component_model);
 
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
@@ -278,7 +307,11 @@ public:
         double log_predictive(const range_t& range);
         double log_predictive(const std::vector<range_t>& range_set);
         double log_likelihood() const;
-        const gsl_vector* mean() const;
+        std::vector<double> mean() const;
+
+        const data_t<std::vector<double> >& data() const {
+                return *_data;
+        }
 
         friend std::ostream& operator<< (std::ostream& o, const bivariate_normal_t& pd);
 
@@ -299,7 +332,7 @@ protected:
         gsl_vector* _mu_N;
 
         // other
-        const size_t _dimension;
+        size_t _dimension;
         gsl_permutation* _inv_perm;
         gsl_matrix* _inv_tmp;
         gsl_vector* _tmp1;
@@ -308,7 +341,7 @@ protected:
         void inverse(gsl_matrix* dst, const gsl_matrix* src);
         void update();
 
-        const data_t<std::vector<double> >& _data;
+        const data_t<std::vector<double> >* _data;
 };
 
 #endif /* COMPONENT_MODEL_HH */

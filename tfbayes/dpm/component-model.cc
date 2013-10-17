@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,6 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <math.h>
-#include <string.h>
 #include <sstream>
 #include <vector>
 #include <iostream>
@@ -183,13 +181,13 @@ hashed_gamma_marginal(
 
 independence_background_t::independence_background_t(
         const matrix<double>& _alpha,
-        const sequence_data_t<data_tfbs_t::code_t>& data,
+        const sequence_data_t<data_tfbs_t::code_t>& _data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments)
         : component_model_t(cluster_assignments),
-          _data(data),
           _size(data_tfbs_t::alphabet_size),
           _bg_cluster_tag(0),
-          _precomputed_marginal(data.sizes(), 0)
+          _precomputed_marginal(_data.sizes(), 0),
+          _data(&_data)
 {
         data_tfbs_t::code_t alpha;
 
@@ -203,10 +201,10 @@ independence_background_t::independence_background_t(
 
         /* go through the data and precompute
          * lnbeta(n + alpha) - lnbeta(alpha) */
-        for(size_t i = 0; i < _data.size(); i++) {
-                for(size_t j = 0; j < _data[i].size(); j++) {
+        for(size_t i = 0; i < data().size(); i++) {
+                for(size_t j = 0; j < data()[i].size(); j++) {
                         _precomputed_marginal[i][j] =
-                                  fast_lnbeta<data_tfbs_t::alphabet_size>(alpha, _data[i][j])
+                                  fast_lnbeta<data_tfbs_t::alphabet_size>(alpha, data()[i][j])
                                 - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha);
                 }
         }
@@ -217,24 +215,24 @@ independence_background_t::independence_background_t(
  * are numerically integrated out. */
 independence_background_t::independence_background_t(
         const double k, const double g,
-        const sequence_data_t<data_tfbs_t::code_t>& data,
+        const sequence_data_t<data_tfbs_t::code_t>& _data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments)
         : component_model_t(cluster_assignments),
-          _data(data),
           _size(data_tfbs_t::alphabet_size),
           _bg_cluster_tag(0),
-          _precomputed_marginal(data.sizes(), 0)
+          _precomputed_marginal(_data.sizes(), 0),
+          _data(&_data)
 {
         boost::unordered_map<data_tfbs_t::code_t, double> map;
 
         /* go through the data and precompute
          * lnbeta(n + alpha) - lnbeta(alpha) */
-        for(size_t i = 0; i < _data.size(); i++) {
-                for(size_t j = 0; j < _data[i].size(); j++) {
+        for(size_t i = 0; i < data().size(); i++) {
+                for(size_t j = 0; j < data()[i].size(); j++) {
                         /* compute percentage by linearly
                          * interpolating two values */
-                        const double p = j/(double)_data[i].size();
-                        const double q = (p*(i+1.0) + (1.0-p)*i)/(double)_data.size();
+                        const double p = j/(double)data()[i].size();
+                        const double q = (p*(i+1.0) + (1.0-p)*i)/(double)data().size();
 
                         flockfile(stdout);
                         cout.precision(2);
@@ -242,7 +240,7 @@ independence_background_t::independence_background_t(
                              << q*100.0 << "%"                  << flush;
                         funlockfile(stdout);
 
-                        _precomputed_marginal[i][j] = hashed_gamma_marginal(_data[i][j], k, g, map);
+                        _precomputed_marginal[i][j] = hashed_gamma_marginal(data()[i][j], k, g, map);
                 }
         }
 
@@ -253,10 +251,10 @@ independence_background_t::independence_background_t(
 
 independence_background_t::independence_background_t(const independence_background_t& distribution)
         : component_model_t(distribution),
-          _data(distribution._data),
           _size(distribution._size),
           _bg_cluster_tag(distribution._bg_cluster_tag),
-          _precomputed_marginal(distribution._precomputed_marginal)
+          _precomputed_marginal(distribution._precomputed_marginal),
+          _data(distribution._data)
 {
 }
 
@@ -266,6 +264,14 @@ independence_background_t::~independence_background_t() {
 independence_background_t*
 independence_background_t::clone() const {
         return new independence_background_t(*this);
+}
+
+independence_background_t&
+independence_background_t::operator=(const component_model_t& component_model)
+{
+        independence_background_t tmp(static_cast<const independence_background_t&>(component_model));
+        swap(*this, tmp);
+        return *this;
 }
 
 size_t
@@ -372,9 +378,9 @@ product_dirichlet_t::product_dirichlet_t(
         const matrix<double>& _alpha,
         const sequence_data_t<data_tfbs_t::code_t>& data)
         : component_model_t(),
-          _data(data),
           _size1(_alpha.size()),
-          _size2(_alpha[0].size())
+          _size2(_alpha[0].size()),
+          _data(&data)
 {
         for (size_t i = 0; i < _alpha.size(); i++) {
                 alpha .push_back(counts_t());
@@ -390,9 +396,9 @@ product_dirichlet_t::product_dirichlet_t(const product_dirichlet_t& distribution
         : component_model_t(distribution),
           alpha (distribution.alpha),
           counts(distribution.counts),
-          _data (distribution._data),
           _size1(distribution._size1),
-          _size2(distribution._size2)
+          _size2(distribution._size2),
+          _data (distribution._data)
 {
 }
 
@@ -402,6 +408,14 @@ product_dirichlet_t::~product_dirichlet_t() {
 product_dirichlet_t*
 product_dirichlet_t::clone() const {
         return new product_dirichlet_t(*this);
+}
+
+product_dirichlet_t&
+product_dirichlet_t::operator=(const component_model_t& component_model)
+{
+        product_dirichlet_t tmp(static_cast<const product_dirichlet_t&>(component_model));
+        swap(*this, tmp);
+        return *this;
 }
 
 size_t
@@ -414,7 +428,7 @@ product_dirichlet_t::add(const range_t& range) {
         for (i = 0; i < length; i++) {
                 const seq_index_t index(sequence, position+i);
                 for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
-                        counts[i%_size1][k] += _data[index][k];
+                        counts[i%_size1][k] += data()[index][k];
                 }
         }
         return i/_size1;
@@ -430,7 +444,7 @@ product_dirichlet_t::remove(const range_t& range) {
         for (i = 0; i < length; i++) {
                 const seq_index_t index(sequence, position+i);
                 for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
-                        counts[i%_size1][k] -= _data[index][k];
+                        counts[i%_size1][k] -= data()[index][k];
                 }
         }
         return i/_size1;
@@ -463,7 +477,7 @@ double product_dirichlet_t::log_predictive(const range_t& range) {
 
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1], _data[index])
+                result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1], data()[index])
                         - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1]);
         }
 
@@ -492,7 +506,7 @@ double product_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
 
                         /* add counts of this subsequence to tmp_counts */
                         for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
-                                tmp_counts[j] += _data[index][j];
+                                tmp_counts[j] += data()[index][j];
                         }
                 }
                 result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1], tmp_counts)
@@ -547,6 +561,10 @@ markov_chain_mixture_t::markov_chain_mixture_t(
           _max_context(options.background_context),
           _alphabet_size(alphabet_size)
 {
+        cerr << "Error: The markov chain mixture model is broken!"
+             << endl;
+        exit(EXIT_FAILURE);
+
         _length = context_t::counts_size(alphabet_size, _max_context);
         _alpha  = (double*)malloc(_length*sizeof(double));
         _counts = (double*)malloc(_length*sizeof(double));
@@ -632,6 +650,14 @@ markov_chain_mixture_t::~markov_chain_mixture_t() {
 markov_chain_mixture_t*
 markov_chain_mixture_t::clone() const {
         return new markov_chain_mixture_t(*this);
+}
+
+markov_chain_mixture_t&
+markov_chain_mixture_t::operator=(const component_model_t& component_model)
+{
+        // broken
+        exit(EXIT_FAILURE);
+        return *this;
 }
 
 size_t
@@ -825,13 +851,19 @@ double markov_chain_mixture_t::log_likelihood() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 bivariate_normal_t::bivariate_normal_t(
-        const gsl_matrix* Sigma,
-        const gsl_matrix* Sigma_0,
-        const gsl_vector* mu_0,
+        const std::matrix<double>& arg_Sigma,
+        const std::matrix<double>& arg_Sigma_0,
+        const std::vector<double>& arg_mu_0,
         const data_t<vector<double> >& data)
         : component_model_t(),
-          _N(0), _dimension(2), _data(data)
+          _N               (0),
+          _dimension       (2),
+          _data            (&data)
 {
+        gsl_matrix* Sigma   = to_gsl_matrix(arg_Sigma);
+        gsl_matrix* Sigma_0 = to_gsl_matrix(arg_Sigma_0);
+        gsl_vector* mu_0    = to_gsl_vector(arg_mu_0);
+
         // alloc tmp
         _inv_tmp  = gsl_matrix_alloc(_dimension, _dimension);
         _inv_perm = gsl_permutation_alloc(_dimension);
@@ -864,11 +896,18 @@ bivariate_normal_t::bivariate_normal_t(
         gsl_matrix_memcpy(_Sigma_N, Sigma_0);
         gsl_matrix_add   (_Sigma_N, Sigma);
         inverse(_Sigma_N_inv, _Sigma_N);
+
+        // free args
+        gsl_matrix_free(Sigma);
+        gsl_matrix_free(Sigma_0);
+        gsl_vector_free(mu_0);
 }
 
 bivariate_normal_t::bivariate_normal_t(const bivariate_normal_t& bn)
         : component_model_t(bn),
-          _N(bn._N), _dimension(bn._dimension), _data(bn._data)
+          _N               (bn._N),
+          _dimension       (bn._dimension),
+          _data            (bn._data)
 {
         // alloc tmp
         _inv_tmp  = gsl_matrix_alloc(_dimension, _dimension);
@@ -933,6 +972,14 @@ bivariate_normal_t::clone() const {
         return new bivariate_normal_t(*this);
 }
 
+bivariate_normal_t&
+bivariate_normal_t::operator=(const component_model_t& component_model)
+{
+        bivariate_normal_t tmp(static_cast<const bivariate_normal_t&>(component_model));
+        swap(*this, tmp);
+        return *this;
+}
+
 void
 bivariate_normal_t::inverse(gsl_matrix* dst, const gsl_matrix* src) {
         int _inv_s = 0;
@@ -948,9 +995,9 @@ bivariate_normal_t::update()
 
         // compute posterior covariance _Sigma_N and _Sigma_N_inv
         gsl_matrix_memcpy(_Sigma_N_inv, _Sigma_inv);
-        gsl_matrix_scale(_Sigma_N_inv, _N);
-        gsl_matrix_add(_Sigma_N_inv, _Sigma_0_inv);
-        inverse(_Sigma_N, _Sigma_N_inv);
+        gsl_matrix_scale (_Sigma_N_inv, _N);
+        gsl_matrix_add   (_Sigma_N_inv, _Sigma_0_inv);
+        inverse          (_Sigma_N, _Sigma_N_inv);
 
         // compute posterior mean _mu_N
         // tmp1 = Sigma^-1 mu
@@ -970,7 +1017,7 @@ bivariate_normal_t::update()
 size_t
 bivariate_normal_t::add(const range_t& range)
 {
-        const_iterator_t<vector<double> > iterator = _data[range];
+        const_iterator_t<vector<double> > iterator = data()[range];
 
         do {
                 for (size_t i = 0; i < _dimension; i++) {
@@ -987,7 +1034,7 @@ bivariate_normal_t::add(const range_t& range)
 size_t
 bivariate_normal_t::remove(const range_t& range)
 {
-        const_iterator_t<vector<double> > iterator = _data[range];
+        const_iterator_t<vector<double> > iterator = data()[range];
 
         do {
                 for (size_t i = 0; i < _dimension; i++) {
@@ -1012,14 +1059,14 @@ bivariate_normal_t::count(const range_t& range) {
 }
 
 double bivariate_normal_t::predictive(const range_t& range) {
-        const_iterator_t<vector<double> > iterator = _data[range];
+        const_iterator_t<vector<double> > iterator = data()[range];
 
-        double mu_x = gsl_vector_get(_mu_N, 0);
-        double mu_y = gsl_vector_get(_mu_N, 1);
+        double mu_x    = gsl_vector_get(_mu_N, 0);
+        double mu_y    = gsl_vector_get(_mu_N, 1);
         double sigma_x = sqrt(gsl_matrix_get(_Sigma_N, 0, 0));
         double sigma_y = sqrt(gsl_matrix_get(_Sigma_N, 1, 1));
-        double rho = gsl_matrix_get(_Sigma_N, 0, 1)/(sigma_x*sigma_y);
-        double result = 1;
+        double rho     = gsl_matrix_get(_Sigma_N, 0, 1)/(sigma_x*sigma_y);
+        double result  = 1;
 
         do {
                 result *= gsl_ran_bivariate_gaussian_pdf((*iterator)[0]-mu_x, (*iterator)[1]-mu_y, sigma_x, sigma_y, rho);
@@ -1046,8 +1093,8 @@ bivariate_normal_t::log_likelihood() const
         return 0;
 }
 
-const gsl_vector*
+std::vector<double>
 bivariate_normal_t::mean() const
 {
-        return _mu;
+        return from_gsl_vector(_mu);
 }

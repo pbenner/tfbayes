@@ -126,11 +126,11 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
                 ;
         class_<baseline_priors_t>("baseline_priors_t")
                 .def("__iter__", boost::python::iterator<baseline_priors_t>())
-                .def("append", &baseline_priors_t::push_back)
+//                .def("append", &baseline_priors_t::push_back)
                 ;
         class_<baseline_tags_t>("baseline_tags_t")
                 .def("__iter__", boost::python::iterator<baseline_tags_t>())
-                .def("append", &baseline_tags_t::push_back)
+//                .def("append", &baseline_tags_t::push_back)
                 ;
         class_<dpm_tfbs_pmcmc_t, boost::noncopyable>("dpm_tfbs_pmcmc_t", no_init)
                 .def(init<tfbs_options_t>())

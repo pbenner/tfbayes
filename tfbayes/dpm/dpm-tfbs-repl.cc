@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -204,7 +204,7 @@ session_t::start() {
                     buffer(_data, n),
                     boost::bind(&session_t::handle_write,
                                 shared_from_this(),
-                                placeholders::error));
+                                boost::asio::placeholders::error));
 }
 
 void
@@ -216,7 +216,7 @@ session_t::handle_read(const boost::system::error_code& error,
                             buffer(_data, n),
                             boost::bind(&session_t::handle_write,
                                         shared_from_this(),
-                                        placeholders::error));
+                                        boost::asio::placeholders::error));
         }
 }
 
@@ -226,8 +226,8 @@ session_t::handle_write(const boost::system::error_code& error) {
                 _socket.async_read_some(buffer(_data, _data.size()),
                                         boost::bind(&session_t::handle_read,
                                                     shared_from_this(),
-                                                    placeholders::error,
-                                                    placeholders::bytes_transferred));
+                                                    boost::asio::placeholders::error,
+                                                    boost::asio::placeholders::bytes_transferred));
         }
 }
 
@@ -246,7 +246,7 @@ server_t::server_t(io_service& ios, const string& file,
         session_ptr new_session(new session_t(_ios, _command_queue, _output_queue));
         _acceptor.async_accept(new_session->socket(),
                                boost::bind(&server_t::handle_accept, this, new_session,
-                                           placeholders::error));
+                                           boost::asio::placeholders::error));
 }
 
 void
@@ -257,6 +257,6 @@ server_t::handle_accept(session_ptr new_session,
                 new_session.reset(new session_t(_ios, _command_queue, _output_queue));
                 _acceptor.async_accept(new_session->socket(),
                                        boost::bind(&server_t::handle_accept, this, new_session,
-                                                   placeholders::error));
+                                                   boost::asio::placeholders::error));
         }
 }
