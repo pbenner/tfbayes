@@ -24,7 +24,12 @@
 
 #include <stddef.h>
 #include <vector>
-#include <type_traits>
+
+/* since this is the only position where c++0x might be useful
+ * in the code we try to stick with boost here */
+//#include <type_traits>
+#include <boost/type_traits/is_integral.hpp>
+#include <boost/utility/enable_if.hpp>
 
 #include <gsl/gsl_matrix.h>
 
@@ -48,7 +53,7 @@ namespace std {
                 matrix (InputIterator first,
                         InputIterator last,
                         const allocator<vector<double> >& a = allocator<vector<double> >(),
-                        typename std::enable_if<!is_integral<InputIterator>::value>::type* = 0)
+                        typename boost::disable_if<boost::is_integral<InputIterator> >::type* = 0)
                         : vector<vector<T> >(first, last, a) { }
                 matrix<T> transpose(T init = 0.0) {
                         matrix<T> m(columns(), rows(), init);

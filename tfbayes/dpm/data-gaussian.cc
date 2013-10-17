@@ -109,7 +109,7 @@ data_gaussian_t::data_gaussian_t(const data_gaussian_t& data)
 
 data_gaussian_t::~data_gaussian_t()
 {
-        for (data_gaussian_t::iterator it = begin(); it != end(); it++) {
+        for (iterator it = begin(); it != end(); it++) {
                 delete(*it);
         }
 }

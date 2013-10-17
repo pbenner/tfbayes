@@ -314,7 +314,7 @@ AX_CFLAGS_GCC_OPTION([-fomit-frame-pointer])
 dnl turn link time optimization on (works only on some systems so far)
 #AX_CFLAGS_GCC_OPTION([-flto])
 
-AX_CXXFLAGS_GCC_OPTION([-std=c++0x])
+#AX_CXXFLAGS_GCC_OPTION([-std=c++0x])
 AX_CXXFLAGS_GCC_OPTION([-Wall])
 AX_CXXFLAGS_GCC_OPTION([-Wwrite-strings])
 AX_CXXFLAGS_GCC_OPTION([-Wstrict-prototypes])
