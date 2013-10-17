@@ -215,7 +215,7 @@ public:
         template<size_t AS, typename PC>
         std::vector<double> scan(const pt_root_t& tree, std::matrix<PC>& counts) {
                 std::vector<double> result(length(), 0);
-                vector<exponent_t<AS, PC> > exponents;
+                std::vector<exponent_t<AS, PC> > exponents;
 
                 for (size_t j = 0; j < counts.size(); j++) {
                         exponent_t<AS, PC> tmp
@@ -250,7 +250,7 @@ public:
         template<size_t AS, typename PC>
         std::vector<double> marginal_likelihood(const pt_root_t& tree, const std::vector<PC>& prior) {
                 exponent_t<AS, PC> alpha(prior.begin(), prior.end());
-                vector<double> result;
+                std::vector<double> result;
 
                 /* go through the alignment and compute the marginal
                  * likelihood for each position */

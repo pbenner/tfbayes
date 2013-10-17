@@ -22,6 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <limits>
+
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_monte.h>
 #include <gsl/gsl_monte_plain.h>
@@ -257,11 +259,11 @@ dkl_optimize_params(
         const polynomial_t<AS, PC>& poly)
 {
         boost::array<double, AS> result;
-        double norm = -HUGE_VAL;
+        double norm = std::numeric_limits<double>::min();
 
         /* initialize result */
         for (size_t i = 0; i < AS; i++) {
-                result[i] = -HUGE_VAL;
+                result[i] = std::numeric_limits<double>::min();
         }
 
         /* compute normalization constant */

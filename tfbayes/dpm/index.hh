@@ -54,7 +54,9 @@ public:
         __inline__ index_t(const index_t& index) : _x0(index._x0) {
         }
 
-        virtual index_i* clone() const { return new index_t(*this); }
+        virtual index_t* clone() const {
+                return new index_t(*this);
+        }
 
         friend std::ostream& operator<< (std::ostream& o, const index_t& index);
 
@@ -103,7 +105,9 @@ public:
                 _x[1] = seq_index[1];
         }
 
-        virtual index_i* clone() const { return new seq_index_t(*this); }
+        virtual seq_index_t* clone() const {
+                return new seq_index_t(*this);
+        }
 
         friend std::ostream& operator<< (std::ostream& o, const seq_index_t& seq_index);
 

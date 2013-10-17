@@ -46,6 +46,8 @@ void sample(
         gibbs_sampler_t sampler(gdpm, data);
 
         sampler.sample(100, 100);
+
+        __dpm_free__();
 }
 
 int

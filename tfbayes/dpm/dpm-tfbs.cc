@@ -20,7 +20,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <sstream>
-#include <string.h>
+#include <limits>
 
 #include <tfbayes/dpm/dpm-tfbs.hh>
 #include <tfbayes/utility/statistics.hh>
@@ -246,7 +246,7 @@ dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_
         const range_t range(index, _tfbs_length);
         ssize_t mixture_n  = mixture_components();
         ssize_t baseline_n = baseline_components();
-        double sum         = -HUGE_VAL;
+        double sum         = numeric_limits<double>::min();;
 
         cluster_tag_t i = 0;
         ////////////////////////////////////////////////////////////////////////
@@ -283,7 +283,7 @@ dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights
 {
         ssize_t mixture_n  = mixture_components();
         ssize_t baseline_n = baseline_components();
-        double sum         = -HUGE_VAL;
+        double sum         = numeric_limits<double>::min();;
         double n           = range_set.size();
 
         cluster_tag_t i = 0;

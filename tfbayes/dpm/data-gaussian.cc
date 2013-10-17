@@ -38,7 +38,7 @@ data_gaussian_t::data_gaussian_t(
 {
         /* copy contents of pi into a standard array */
         double _pi[pi.size()];
-        //copy(pi.begin(), pi.end(), _pi);
+        copy(pi.begin(), pi.end(), _pi);
 
         /* initialize gsl random generator */
         gsl_ran_discrete_t* gdd = gsl_ran_discrete_preproc(pi.size(), _pi);
@@ -57,7 +57,7 @@ data_gaussian_t::data_gaussian_t(
         double x1;
         vector<double> x(2,0);
 
-        // /* generate a random mean for each cluster */
+        /* generate a random mean for each cluster */
         _mu = matrix<double>(pi.size(), 2);
         for (size_t i = 0; i < pi.size(); i++) {
                 _mu[i][0] = 1.2*(double)rand()/RAND_MAX-0.5;

@@ -26,6 +26,7 @@
 #include <boost/unordered_map.hpp>
 #include <cmath>
 #include <algorithm> /* std::min */
+#include <limits>
 
 #include <tfbayes/phylotree/phylotree-gradient.hh>
 #include <tfbayes/uipac/alphabet.hh>
@@ -58,7 +59,7 @@ public:
                 for (typename alignment_t<AC>::iterator it = alignment.begin(); it != alignment.end(); it++) {
                         const polynomial_t<AS, PC> polynomial = pt_polynomial_t<AS, AC, PC>(tree, *it);
                         // loop over monomials
-                        double tmp = -HUGE_VAL;
+                        double tmp = std::numeric_limits<double>::min();;
                         for (typename polynomial_t<AS, PC>::const_iterator ut = polynomial.begin();
                              ut != polynomial.end(); ut++) {
                                 tmp = logadd(tmp, log(ut->coefficient()) + mbeta_log(ut->exponent(), alpha) - mbeta_log(alpha));

@@ -40,7 +40,7 @@ using namespace boost::python;
 
 alignment_t<>* alignment_from_alignio(object a, const pt_root_t& tree)
 {
-        string type = extract<string>(str(a.attr("__class__")));
+        std::string type = extract<std::string>(str(a.attr("__class__")));
 
         /* check type of python object */
         if (type != "<class 'Bio.Align.MultipleSeqAlignment'>") {
@@ -55,12 +55,12 @@ alignment_t<>* alignment_from_alignio(object a, const pt_root_t& tree)
 
         /* transfer alignment data */
         for (ssize_t i = 0; i < len(a); i++) {
-                sequence_t<> s(extract<string>(str(a[i].attr("seq"))));
-                string descr = extract<string>(str(a[i].attr("name")));
+                sequence_t<> s(extract<std::string>(str(a[i].attr("seq"))));
+                std::string descr = extract<std::string>(str(a[i].attr("name")));
                 /* the description shoud never be empty */
                 assert(descr != "");
                 /* extract the taxon from name */
-                string taxon = token(descr, '.')[0];
+                std::string taxon = token(descr, '.')[0];
                 /* if taxon is an element of the phylogenetic tree,
                  * insert it into the alignment */
                 pt_node_t::id_t id = tree.get_leaf_id(taxon);
@@ -78,7 +78,7 @@ alignment_t<>* alignment_from_alignio(object a, const pt_root_t& tree)
 // library interface
 // -----------------------------------------------------------------------------
 
-sequence_t<> alignment_getsequence(alignment_t<>& a, string taxon)
+sequence_t<> alignment_getsequence(alignment_t<>& a, std::string taxon)
 {
         return a[taxon];
 }
@@ -106,12 +106,12 @@ void alignment_setitem(alignment_t<>& a, boost::python::tuple index, alphabet_co
         a[alignment_index_t(i,j)] = a.alphabet().code(d);
 }
 
-string sequence_str(sequence_t<>& s)
+std::string sequence_str(sequence_t<>& s)
 {
         return to_string(s);
 }
 
-string alignment_str(alignment_t<>& a)
+std::string alignment_str(alignment_t<>& a)
 {
         return to_string(print_alignment_pretty(a));
 }
@@ -126,7 +126,7 @@ BOOST_PYTHON_MODULE(interface)
                  * alignment_from_alignio() is very general */
                 .def("__init__",             make_constructor(alignment_from_alignio))
                 /* this constructor needs to come last */
-                .def(init<string, pt_root_t>())
+                .def(init<std::string, pt_root_t>())
                 .def("__iter__",             boost::python::iterator<alignment_t<> >())
                 .def("__getitem__",          alignment_getsequence)
                 .def("__getitem__",          alignment_getitem)

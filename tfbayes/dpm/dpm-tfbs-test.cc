@@ -20,6 +20,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <iostream>
+#include <limits>
 #include <sstream>
 
 #include <tfbayes/dpm/dpm-tfbs.hh>
@@ -156,7 +157,7 @@ dpm_tfbs_t::test_background() {
 
 void normalize(size_t components, double *log_weights)
 {
-        double sum = -HUGE_VAL;
+        double sum = numeric_limits<double>::min();;
 
         for (size_t i = 0; i < components; i++) {
                 sum = logadd(sum, log_weights[i]);

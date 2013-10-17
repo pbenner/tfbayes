@@ -19,12 +19,7 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <string.h>
-
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_linalg.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_blas.h>
+#include <limits>
 
 #include <tfbayes/dpm/dpm-gaussian.hh>
 #include <tfbayes/utility/logarithmetic.h>
@@ -112,7 +107,7 @@ void
 dpm_gaussian_t::mixture_weights(const index_i& index, double log_weights[], cluster_tag_t cluster_tags[])
 {
         size_t components = mixture_components();
-        double sum        = -HUGE_VAL;
+        double sum        = numeric_limits<double>::min();
         double N          = _data->elements() - 1;
         range_t range(index, 1);
 

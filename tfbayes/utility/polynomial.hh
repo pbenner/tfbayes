@@ -24,6 +24,7 @@
 
 #include <tfbayes/utility/logarithmetic.h>
 #include <utility>
+#include <limits>
 
 #include <boost/array.hpp>
 #include <boost/unordered_map.hpp>
@@ -309,7 +310,7 @@ public:
                 return result;
         }
         C log_eval(const boost::array<double, S>& val) const {
-                C result(-HUGE_VAL);
+                C result(std::numeric_limits<double>::min());
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         result = logadd(result, it->log_eval(val));
                 }

@@ -24,20 +24,21 @@
 
 #include <cstdlib>
 #include <cmath>
+#include <limits>
 
 /* Log Sum of Exponentials Algorithm */
 
-static inline
+static __inline__
 double logadd(double a, double b)
 {
-        if (a < b) return a == -HUGE_VAL ? b : b + log1p(exp(a-b));
-        else       return b == -HUGE_VAL ? a : a + log1p(exp(b-a));
+        if (a < b) return a == std::numeric_limits<double>::min() ? b : b + log1p(exp(a-b));
+        else       return b == std::numeric_limits<double>::min() ? a : a + log1p(exp(b-a));
 }
 
-static inline
+static __inline__
 double logsub(double a, double b)
 {
-        return b == -HUGE_VAL ? a : a + log(1-exp(b-a));
+        return b == std::numeric_limits<double>::min() ? a : a + log(1-exp(b-a));
 }
 
 #endif /* _LOGARITHMETIC_H_ */

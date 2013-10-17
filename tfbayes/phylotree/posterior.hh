@@ -22,6 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <limits>
+
 #include <boost/array.hpp>
 
 #include <tfbayes/phylotree/marginal-likelihood.hh>
@@ -38,7 +40,7 @@ boost::array<double, AS> pt_posterior_expectation(
         const polynomial_t<AS, PC>& polynomial,
         const exponent_t<AS, PC>& alpha)
 {
-        double norm = -HUGE_VAL;
+        double norm = std::numeric_limits<double>::min();
         boost::array<double, AS> result;
 
         /* compute normalization constant */

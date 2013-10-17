@@ -16,6 +16,7 @@
  */
 
 #include <iostream>
+#include <limits>
 
 #include <phylotree.hh>
 
@@ -275,7 +276,7 @@ pt_root_t::pt_root_t(pt_node_t* left,
                      pt_leaf_t* outgroup,
                      const std::string name,
                      optional<const pt_root_t&> tree)
-        : pt_node_t(-HUGE_VAL, left, right, name),
+        : pt_node_t(numeric_limits<double>::min(), left, right, name),
           _outgroup(outgroup)
 {
         // count outgroup as leaf if present and set the ancestor of

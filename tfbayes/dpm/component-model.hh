@@ -53,6 +53,7 @@ public:
         component_model_t(const data_t<cluster_tag_t>& cluster_assignments)
                 : _cluster_assignments(&cluster_assignments)
                 { }
+        virtual ~component_model_t() { };
 
         virtual component_model_t* clone() const = 0;
 

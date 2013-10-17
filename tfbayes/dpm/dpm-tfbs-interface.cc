@@ -48,6 +48,20 @@ void index_i_setitem(index_i& index, size_t i, size_t d)
         index[i] = d;
 }
 
+void baseline_priors_push_back(
+        baseline_priors_t& baseline_priors,
+        const std::matrix<double>& m)
+{
+        baseline_priors.push_back(m);
+}
+
+void baseline_tags_push_back(
+        baseline_tags_t& baseline_tags,
+        const std::string& s)
+{
+        baseline_tags.push_back(s);
+}
+
 template<typename T>
 std::string to_string(const T& t)
 {
@@ -126,16 +140,16 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
                 ;
         class_<baseline_priors_t>("baseline_priors_t")
                 .def("__iter__", boost::python::iterator<baseline_priors_t>())
-//                .def("append", &baseline_priors_t::push_back)
+                .def("append", &baseline_priors_push_back)
                 ;
         class_<baseline_tags_t>("baseline_tags_t")
                 .def("__iter__", boost::python::iterator<baseline_tags_t>())
-//                .def("append", &baseline_tags_t::push_back)
+                .def("append",  &baseline_tags_push_back)
                 ;
         class_<dpm_tfbs_pmcmc_t, boost::noncopyable>("dpm_tfbs_pmcmc_t", no_init)
                 .def(init<tfbs_options_t>())
                 .def(init<tfbs_options_t, sampling_history_t>())
                 .def("sample", &dpm_tfbs_pmcmc_t::sample)
-                .def("save", &dpm_tfbs_pmcmc_t::save)
+                .def("save",   &dpm_tfbs_pmcmc_t::save)
                 ;
 }
