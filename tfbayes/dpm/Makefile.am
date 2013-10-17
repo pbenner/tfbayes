@@ -81,7 +81,7 @@ libtfbayes_dpm_la_LDFLAGS = -no-undefined -version-info 0:0:0
 pkgpythondir = $(pyexecdir)/tfbayes/dpm
 
 ## compile python files
-pkgpython_PYTHON = __init__.py dpm_gaussian_interface.py
+pkgpython_PYTHON = __init__.py
 
 ## scripts
 dist_bin_SCRIPTS = \
@@ -89,7 +89,23 @@ dist_bin_SCRIPTS = \
 	dpm-tfbs-demo
 
 ## python libraries
-pkgpython_LTLIBRARIES = dpm_tfbs_interface.la
+pkgpython_LTLIBRARIES = interface.la dpm_gaussian_interface.la dpm_tfbs_interface.la
+
+interface_la_CPPFLAGS = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS)
+interface_la_CXXFLAGS =
+interface_la_SOURCES  = \
+	interface.cc
+interface_la_LIBADD   = libtfbayes-dpm.la
+interface_la_LIBADD  += $(LIB_BOOST_PYTHON)
+interface_la_LDFLAGS  = -avoid-version -module
+
+dpm_gaussian_interface_la_CPPFLAGS = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS)
+dpm_gaussian_interface_la_CXXFLAGS =
+dpm_gaussian_interface_la_SOURCES  = \
+	dpm-gaussian-interface.cc
+dpm_gaussian_interface_la_LIBADD   = libtfbayes-dpm.la
+dpm_gaussian_interface_la_LIBADD  += $(LIB_BOOST_PYTHON)
+dpm_gaussian_interface_la_LDFLAGS  = -avoid-version -module
 
 dpm_tfbs_interface_la_CPPFLAGS = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS)
 dpm_tfbs_interface_la_CXXFLAGS =
