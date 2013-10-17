@@ -29,19 +29,20 @@
 #include <tfbayes/phylotree/phylotree-parser.hh>
 #include <tfbayes/phylotree/phylotree-polynomial.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
+#include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/linalg.hh>
 
-template <size_t ALPHABET_SIZE, typename CODE_TYPE>
+template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
 class phylotree_hmm_t : public std::matrix<double>
 {
 public:
-        typedef std::vector<exponent_t<ALPHABET_SIZE, CODE_TYPE> > priors_t;
+        typedef std::vector<exponent_t<AS, PC> > priors_t;
 
         using std::matrix<double>::operator=;
 
         phylotree_hmm_t(
-                const vector<double>& px_0,
-                const matrix<double>& transition,
+                const std::vector<double>& px_0,
+                const std::matrix<double>& transition,
                 const priors_t& priors)
                 : std::matrix<double>(),
                   px_0(px_0),
@@ -51,17 +52,17 @@ public:
                 dim = px_0.size();
         }
 
-        void run(const pt_root_t& tree, const alignment_t<CODE_TYPE>& alignment) {
+        void run(const pt_root_t& tree, const alignment_t<AC>& alignment) {
                 // initialize data structures
-                likelihood = matrix<double>();
-                prediction = matrix<double>();
-                forward    = matrix<double>();
+                likelihood = std::matrix<double>();
+                prediction = std::matrix<double>();
+                forward    = std::matrix<double>();
                 // run forward and backward algorithm
                 run_forward (tree, alignment);
                 run_backward();
                 // compute posterior marginals
                 size_t length = likelihood.size();
-                operator=(matrix<double>(length-1, dim));
+                operator=(std::matrix<double>(length-1, dim));
                 for (size_t k = 1; k < likelihood.size(); k++) {
                         for (size_t i = 0; i < dim; i++) {
                                 operator[](k-1)[i] = forward[k][i]*backward[k][i];
@@ -71,10 +72,10 @@ public:
         }
 
 protected:
-        void run_forward(const pt_root_t& tree, const alignment_t<CODE_TYPE>& alignment) {
+        void run_forward(const pt_root_t& tree, const alignment_t<AC>& alignment) {
 
-                likelihood.push_back(vector<double>(dim, 1.0));
-                prediction.push_back(vector<double>(dim, 0.0));
+                likelihood.push_back(std::vector<double>(dim, 1.0));
+                prediction.push_back(std::vector<double>(dim, 0.0));
                 // initialize prediction
                 for (size_t i = 0; i < dim; i++) {
                         for (size_t j = 0; j < dim; j++) {
@@ -83,10 +84,10 @@ protected:
                 }
                 forward.push_back(px_0);
 
-                for (typename alignment_t<CODE_TYPE>::const_iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        vector<double> likelihood_k(dim, 0.0); // p(z_k | x_k)
-                        vector<double> prediction_k(dim, 0.0); // p(x_k | z_1:k-1)
-                        vector<double> forward_k(dim, 0.0);
+                for (typename alignment_t<AC>::const_iterator it = alignment.begin(); it != alignment.end(); it++) {
+                        std::vector<double> likelihood_k(dim, 0.0); // p(z_k | x_k)
+                        std::vector<double> prediction_k(dim, 0.0); // p(x_k | z_1:k-1)
+                        std::vector<double> forward_k(dim, 0.0);
 
                         // compute likelihood
                         for (size_t j = 0; j < dim; j++) {
@@ -117,13 +118,13 @@ protected:
         }
         void run_backward() {
                 size_t length = likelihood.size();
-                backward = matrix<double>(length, dim);
+                backward = std::matrix<double>(length, dim);
                 backward[length-1] = likelihood[length-1];
                 normalize(backward[length-1]);
                 // loop backwards (we don't need the alignment here)
                 for (size_t k = 1; k < length; k++) {
-                        vector<double>& backward_k   = backward  [length-k-1];
-                        vector<double>& likelihood_k = likelihood[length-k-1];
+                        std::vector<double>& backward_k   = backward  [length-k-1];
+                        std::vector<double>& likelihood_k = likelihood[length-k-1];
                         // loop over states
                         for (size_t i = 0; i < dim; i++) {
                                 for (size_t j = 0; j < dim; j++) {
@@ -134,7 +135,7 @@ protected:
                         normalize(backward_k);
                 }
         }
-        void normalize(vector<double>& vector) const {
+        void normalize(std::vector<double>& vector) const {
                 double normalization = 0.0;
 
                 for (size_t i = 0; i < vector.size(); i++) {
@@ -147,14 +148,14 @@ protected:
 
         size_t dim;
 
-        vector<double> px_0;
-        matrix<double> transition;
+        std::vector<double> px_0;
+        std::matrix<double> transition;
         priors_t priors;
 
-        matrix<double> likelihood;
-        matrix<double> prediction;
-        matrix<double> forward;
-        matrix<double> backward;
+        std::matrix<double> likelihood;
+        std::matrix<double> prediction;
+        std::matrix<double> forward;
+        std::matrix<double> backward;
 };
 
 #endif /* PHYLOTREE_HMM_HH */
