@@ -27,7 +27,7 @@
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/phylotree-polynomial.hh>
 #include <tfbayes/utility/statistics.hh>
-#include <tfbayes/utility/logarithmetic.h>
+#include <tfbayes/utility/logarithmetic.hh>
 #include <tfbayes/utility/polynomial.hh>
 
 /* AS: ALPHABET SIZE

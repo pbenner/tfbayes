@@ -1,4 +1,4 @@
-/* Copyright (C) 2012 Philipp Benner
+/* Copyright (C) 2012-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,12 +22,13 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <tfbayes/utility/logarithmetic.h>
 #include <utility>
 #include <limits>
 
 #include <boost/array.hpp>
 #include <boost/unordered_map.hpp>
+
+#include <tfbayes/utility/logarithmetic.hh>
 
 /* This polynomial class is used for Bayesian computations. The
  * exponent contains the count statistics of the likelihood or prior

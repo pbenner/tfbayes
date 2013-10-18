@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -153,7 +153,7 @@ dpm_tfbs_t::test_background() {
         exit(EXIT_SUCCESS);
 }
 
-#include <tfbayes/utility/logarithmetic.h>
+#include <tfbayes/utility/logarithmetic.hh>
 
 void normalize(size_t components, double *log_weights)
 {
