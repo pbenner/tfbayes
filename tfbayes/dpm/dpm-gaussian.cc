@@ -107,7 +107,7 @@ void
 dpm_gaussian_t::mixture_weights(const index_i& index, double log_weights[], cluster_tag_t cluster_tags[])
 {
         size_t components = mixture_components();
-        double sum        = numeric_limits<double>::min();
+        double sum        = -numeric_limits<double>::infinity();
         double N          = _data->elements() - 1;
         range_t range(index, 1);
 

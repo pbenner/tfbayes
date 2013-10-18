@@ -157,7 +157,7 @@ dpm_tfbs_t::test_background() {
 
 void normalize(size_t components, double *log_weights)
 {
-        double sum = numeric_limits<double>::min();;
+        double sum = -numeric_limits<double>::infinity();
 
         for (size_t i = 0; i < components; i++) {
                 sum = logadd(sum, log_weights[i]);

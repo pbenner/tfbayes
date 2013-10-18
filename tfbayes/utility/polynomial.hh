@@ -311,7 +311,7 @@ public:
                 return result;
         }
         C log_eval(const boost::array<double, S>& val) const {
-                C result(std::numeric_limits<double>::min());
+                C result(-std::numeric_limits<double>::infinity());
                 for (const_iterator it = this->begin(); it != this->end(); it++) {
                         result = logadd(result, it->log_eval(val));
                 }

@@ -40,7 +40,7 @@ boost::array<double, AS> pt_posterior_expectation(
         const polynomial_t<AS, PC>& polynomial,
         const exponent_t<AS, PC>& alpha)
 {
-        double norm = std::numeric_limits<double>::min();
+        double norm = -std::numeric_limits<double>::infinity();
         boost::array<double, AS> result;
 
         /* compute normalization constant */

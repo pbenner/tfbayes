@@ -259,11 +259,11 @@ dkl_optimize_params(
         const polynomial_t<AS, PC>& poly)
 {
         boost::array<double, AS> result;
-        double norm = std::numeric_limits<double>::min();
+        double norm = -std::numeric_limits<double>::infinity();
 
         /* initialize result */
         for (size_t i = 0; i < AS; i++) {
-                result[i] = std::numeric_limits<double>::min();
+                result[i] = -std::numeric_limits<double>::infinity();
         }
 
         /* compute normalization constant */
