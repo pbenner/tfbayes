@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ operator<< (std::ostream& o, const sequence_data_t<T>& sd) {
 }
 
 template <typename T>
-class iterator_t
+class iterator_t : public std::iterator<std::forward_iterator_tag, T>
 {
 public:
         iterator_t(data_t<T>& data, const index_i& index, size_t length)
@@ -77,18 +77,20 @@ public:
         T& operator*() {
                 return _data[_pos];
         }
-
-        void reset() {
-                _pos = _index;
-                _i   = 0;
-        }
-
         bool operator++(int i) {
                 if (_i+1 < _length) {
                         _pos++; _i++;
                         return true;
                 }
                 return false;
+        }
+        bool operator==(const iterator_t& it) const {
+                return (_index == it._index) &&
+                       (_pos   == it._pos  );
+        }
+        bool operator!=(const iterator_t& it) const {
+                return (_index != it._index) ||
+                       (_pos   != it._pos  );
         }
 
 private:
@@ -99,7 +101,7 @@ private:
 };
 
 template <typename T>
-class const_iterator_t
+class const_iterator_t : public std::iterator<std::forward_iterator_tag, const T>
 {
 public:
         const_iterator_t(const data_t<T>& data, const index_i& index, size_t length)
@@ -112,18 +114,20 @@ public:
         const T& operator*() const {
                 return _data[_pos];
         }
-
-        void reset() {
-                _pos = _index;
-                _i   = 0;
-        }
-
         bool operator++(int i) {
                 if (_i+1 < _length) {
                         _pos++; _i++;
                         return true;
                 }
                 return false;
+        }
+        bool operator==(const const_iterator_t& it) const {
+                return (_index == it._index) &&
+                       (_pos   == it._pos  );
+        }
+        bool operator!=(const const_iterator_t& it) const {
+                return (_index != it._index) ||
+                       (_pos   != it._pos  );
         }
 
 private:
