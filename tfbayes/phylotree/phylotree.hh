@@ -1,4 +1,4 @@
-/* Copyright (C) 2012, 2013 Philipp Benner
+/* Copyright (C) 2012-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,8 +31,6 @@
 
 #include <boost/optional.hpp>
 #include <boost/unordered_map.hpp>
-
-using boost::optional;
 
 #include <tfbayes/utility/clonable.hh>
 
@@ -145,12 +143,12 @@ public:
                   pt_leaf_t* outgroup = NULL,
                   const std::string name = "",
                   // if root is not null then copy ids from this tree
-                  optional<const pt_root_t&> tree = optional<const pt_root_t&>());
+                  boost::optional<const pt_root_t&> tree = boost::optional<const pt_root_t&>());
         // convert a normal node to a root (and delete the old node)
         pt_root_t(pt_node_t& node,
                   pt_leaf_t* outgroup = NULL,
                   // if root is not null then copy ids from this tree
-                  optional<const pt_root_t&> tree = optional<const pt_root_t&>());
+                  boost::optional<const pt_root_t&> tree = boost::optional<const pt_root_t&>());
         pt_root_t(const pt_root_t& root);
         virtual ~pt_root_t();
 
@@ -163,17 +161,17 @@ public:
         id_t get_node_id(const std::string& taxon) const;
         id_t get_leaf_id(const std::string& taxon) const;
 
-        optional<const pt_leaf_t&> outgroup() const {
-                return _outgroup ? *_outgroup : optional<const pt_leaf_t&>();
+        boost::optional<const pt_leaf_t&> outgroup() const {
+                return _outgroup ? *_outgroup : boost::optional<const pt_leaf_t&>();
         }
-        optional<      pt_leaf_t&> outgroup() {
-                return _outgroup ? *_outgroup : optional<      pt_leaf_t&>();
+        boost::optional<      pt_leaf_t&> outgroup() {
+                return _outgroup ? *_outgroup : boost::optional<      pt_leaf_t&>();
         }
 
-        optional<      pt_leaf_t&> operator()(const std::string& taxon);
-        optional<const pt_leaf_t&> operator()(const std::string& taxon) const;
-        optional<      pt_leaf_t&> operator()(id_t id);
-        optional<const pt_leaf_t&> operator()(id_t id) const;
+        boost::optional<      pt_leaf_t&> operator()(const std::string& taxon);
+        boost::optional<const pt_leaf_t&> operator()(const std::string& taxon) const;
+        boost::optional<      pt_leaf_t&> operator()(id_t id);
+        boost::optional<const pt_leaf_t&> operator()(id_t id) const;
 
         // leaf or node name -> leaf or node
         leaf_map_t leaf_map;
