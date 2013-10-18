@@ -30,6 +30,7 @@
 #include <tfbayes/dpm/cluster.hh>
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/dpm/datatypes.hh>
+#include <tfbayes/dpm/dpm-partition.hh>
 
 // mixture_state_t
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,6 +83,9 @@ public:
         // different in child classes, so make this virtual
         virtual data_t<cluster_tag_t>& cluster_assignments() { return *_cluster_assignments; }
         virtual const data_t<cluster_tag_t>& cluster_assignments() const { return *_cluster_assignments; }
+        // also provide a function to generate a partition from
+        // cluster assignments
+        virtual dpm_partition_t partition() const;
 
 protected:
         std::vector<cluster_t*> clusters;

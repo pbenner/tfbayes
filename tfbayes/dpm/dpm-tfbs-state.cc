@@ -250,3 +250,22 @@ dpm_tfbs_state_t::proposal(cluster_t& cluster, stringstream& ss)
         }
         return false;
 }
+
+dpm_partition_t
+dpm_tfbs_state_t::partition() const
+{
+        dpm_partition_t dpm_partition;
+
+        // loop through all clusters
+        for (dpm_tfbs_state_t::const_iterator it = begin(); it != end(); it++) {
+                const cluster_t& cluster = **it;
+                if (cluster.cluster_tag() != bg_cluster_tag) {
+                        dpm_partition.add_component(cluster.baseline_tag());
+                        // loop through cluster elements
+                        for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
+                                dpm_partition.back().insert(is->index());
+                        }
+                }
+        }
+        return dpm_partition;
+}

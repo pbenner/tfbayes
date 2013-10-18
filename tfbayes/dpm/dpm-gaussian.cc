@@ -159,11 +159,6 @@ dpm_gaussian_t::posterior() const {
         return 0;
 }
 
-dpm_partition_t
-dpm_gaussian_t::partition() const {
-        return dpm_partition_t();
-}
-
 const mixture_state_t&
 dpm_gaussian_t::state() const {
         return *this;

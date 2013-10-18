@@ -28,6 +28,7 @@
 
 #include <tfbayes/dpm/data-gaussian.hh>
 #include <tfbayes/dpm/dpm-gaussian.hh>
+#include <tfbayes/dpm/dpm-partition.hh>
 #include <tfbayes/dpm/sampler.hh>
 #include <tfbayes/utility/linalg.hh>
 
@@ -198,6 +199,54 @@ using namespace boost::python;
 // tools
 // -----------------------------------------------------------------------------
 
+class dpm_gaussian_sampler_t : public gibbs_sampler_t {
+public:
+        dpm_gaussian_sampler_t(const dpm_gaussian_t& dpm, const data_gaussian_t& data)
+                : gibbs_sampler_t(dpm, data),
+                  _data          (&data)
+                { }
+
+        const dpm_gaussian_t& dpm() const {
+                return static_cast<const dpm_gaussian_t&>(gibbs_sampler_t::dpm());
+        }
+        const dpm_gaussian_t& state() const {
+                return static_cast<const dpm_gaussian_t&>(gibbs_sampler_t::state());
+        }
+        const data_gaussian_t& data() const {
+                return *_data;
+        }
+private:
+        const data_gaussian_t* _data;
+};
+
+size_t dpm_num_clusters(const dpm_gaussian_sampler_t& sampler) {
+        return sampler.state().size();
+}
+
+dpm_partition_t dpm_partition(const dpm_gaussian_sampler_t& sampler) {
+        return sampler.state().partition();
+}
+
+std::matrix<double> dpm_means(const dpm_gaussian_sampler_t& sampler) {
+        return sampler.dpm().means();
+}
+
+std::vector<double> data_get_point(const data_gaussian_t& data, const index_i& index) {
+        return data[index];
+}
+
+std::matrix<double> data_initial_means(const data_gaussian_t& data) {
+        return data.initial_means();
+}
+
+std::vector<double> data_initial_cluster_assignments(const data_gaussian_t& data) {
+        return data.initial_cluster_assignments();
+}
+
+size_t data_size(const data_gaussian_t& data) {
+        return data.size();
+}
+
 // interface
 // -----------------------------------------------------------------------------
 
@@ -207,6 +256,10 @@ BOOST_PYTHON_MODULE(dpm_gaussian_interface)
                 .def(init<size_t,
                           const std::matrix<double>&,
                           const std::vector<double>&>())
+                .def("__getitem__",                 &data_get_point)
+                .def("__len__",                     &data_size)
+                .def("initial_means",               &data_initial_means)
+                .def("initial_cluster_assignments", &data_initial_cluster_assignments)
                 ;
         class_<dpm_gaussian_t, bases<mixture_model_t> >("dpm_gaussian_t", no_init)
                 .def(init<double,
@@ -214,5 +267,12 @@ BOOST_PYTHON_MODULE(dpm_gaussian_interface)
                           const std::matrix<double>&,
                           const std::vector<double>&,
                           const data_gaussian_t&>())
+                ;
+        class_<dpm_gaussian_sampler_t, bases<gibbs_sampler_t> >("dpm_gaussian_sampler_t", no_init)
+                .def(init<const dpm_gaussian_t&,
+                          const data_gaussian_t&>())
+                .def("num_clusters", &dpm_num_clusters)
+                .def("partition",    &dpm_partition)
+                .def("means",        &dpm_means)
                 ;
 }

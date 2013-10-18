@@ -206,6 +206,24 @@ mixture_state_t::update(Observed<cluster_event_t>* observed, cluster_event_t eve
         }
 }
 
+dpm_partition_t
+mixture_state_t::partition() const
+{
+        dpm_partition_t dpm_partition;
+
+        // loop through all clusters
+        for (const_iterator it = begin(); it != end(); it++) {
+                const cluster_t& cluster = **it;
+                dpm_partition.add_component(cluster.baseline_tag());
+                // loop through cluster elements
+                for (cluster_t::const_iterator is = cluster.begin();
+                     is != cluster.end(); is++) {
+                        dpm_partition.back().insert(is->index());
+                }
+        }
+        return dpm_partition;
+}
+
 ostream& operator<< (ostream& o, const mixture_state_t& state)
 {
         o << "(" << state.size() << "): ";

@@ -32,7 +32,6 @@ data_gaussian_t::data_gaussian_t(
         const vector<double>& pi)
         : data_t<std::vector<double> >(),
           _elements(samples),
-          _length  (1),
           _cluster (pi.size())
 {
         gsl_rng* _r = gsl_rng_alloc (gsl_rng_default);
@@ -96,7 +95,6 @@ data_gaussian_t::data_gaussian_t(
 
 data_gaussian_t::data_gaussian_t(const data_gaussian_t& data)
         : _elements(data._elements),
-          _length  (data._length),
           _cluster (data._cluster),
           _mu      (data._mu),
           _initial_cluster_assignments(data._initial_cluster_assignments)
@@ -125,11 +123,6 @@ data_gaussian_t::shuffle() {
 size_t
 data_gaussian_t::elements() const {
         return _elements;
-}
-
-size_t
-data_gaussian_t::length() const {
-        return _length;
 }
 
 const matrix<double>&

@@ -49,7 +49,7 @@ int
 main(void) {
         matrix<double> Sigma   (2,2,0);
         matrix<double> Sigma_0 (2,2,0);
-        vector<double> mu      ( 2,0);
+        vector<double> mu_0    ( 2,0);
         vector<double> pi      (11,0);
 
         Sigma[0][0] = 0.01;
@@ -62,8 +62,8 @@ main(void) {
         Sigma_0[1][0] = 0.1;
         Sigma_0[1][1] = 10.0;
 
-        mu[0] = 0;
-        mu[1] = 0;
+        mu_0[0] = 0;
+        mu_0[1] = 0;
 
         pi[0]  = 0.27693787;
         pi[1]  = 0.06001137;
@@ -77,5 +77,5 @@ main(void) {
         pi[9]  = 0.29406385;
         pi[10] = 0.06357562;
 
-        sample(1000, 1, Sigma, Sigma_0, mu, pi);
+        sample(1000, 1, Sigma, Sigma_0, mu_0, pi);
 }

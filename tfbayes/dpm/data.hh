@@ -172,6 +172,9 @@ public:
         virtual T& operator[](const index_i& index) {
                 return _data[index[0]];
         }
+        virtual size_t size() const {
+                return _data.size();
+        }
 
 protected:
         std::vector<T> _data;

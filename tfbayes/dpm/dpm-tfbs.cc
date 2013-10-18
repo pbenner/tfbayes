@@ -351,25 +351,6 @@ dpm_tfbs_t::posterior() const {
         return result;
 }
 
-dpm_partition_t
-dpm_tfbs_t::partition() const
-{
-        dpm_partition_t dpm_partition;
-
-        // loop through all clusters
-        for (dpm_tfbs_state_t::const_iterator it = state().begin(); it != state().end(); it++) {
-                const cluster_t& cluster = **it;
-                if (cluster.cluster_tag() != state().bg_cluster_tag) {
-                        dpm_partition.add_component(cluster.baseline_tag());
-                        // loop through cluster elements
-                        for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
-                                dpm_partition.back().insert(is->index());
-                        }
-                }
-        }
-        return dpm_partition;
-}
-
 dpm_tfbs_state_t&
 dpm_tfbs_t::state() {
         return _state;

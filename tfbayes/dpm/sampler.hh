@@ -35,10 +35,12 @@ class sampler_t : public clonable {
 public:
         sampler_t(const std::string& name = "");
         sampler_t(const sampler_t& sampler)
-                : _name(sampler._name) { }
+                : _name(sampler._name),
+                  _gen (sampler._gen) { }
 
         friend void swap(sampler_t& first, sampler_t& second) {
                 std::swap(first._name, second._name);
+                std::swap(first._gen,  second._gen);
         }
 
         virtual sampler_t& operator=(const sampler_t& sampler) = 0;
