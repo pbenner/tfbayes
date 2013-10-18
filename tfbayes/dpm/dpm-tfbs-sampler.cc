@@ -137,7 +137,7 @@ dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp, const
                 }
         }
         else {
-                new_cluster_tag = cluster_tags[select_component(components, log_weights)];
+                new_cluster_tag = cluster_tags[select_component(components, log_weights, gen())];
         }
 
         ////////////////////////////////////////////////////////////////////////
@@ -203,7 +203,7 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp, const b
                 new_cluster_tag = cluster_tags[select_max_component(components, log_weights)];
         }
         else {
-                new_cluster_tag = cluster_tags[select_component(components, log_weights)];
+                new_cluster_tag = cluster_tags[select_component(components, log_weights, gen())];
         }
 
         ////////////////////////////////////////////////////////////////////////

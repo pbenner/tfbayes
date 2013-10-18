@@ -26,7 +26,6 @@
 #include <boost/python/iterator.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-#include <tfbayes/dpm/init.hh>
 #include <tfbayes/dpm/index.hh>
 #include <tfbayes/dpm/indexer.hh>
 #include <tfbayes/dpm/mixture-model.hh>
@@ -62,9 +61,6 @@ std::string to_string(const T& t)
 
 BOOST_PYTHON_MODULE(interface)
 {
-        // init dpm library
-        def("dpm_init", __dpm_init__);
-        def("dpm_free", __dpm_free__);
         // class definitions
         class_<sampling_history_t>("sampling_history_t")
                 .def_readwrite("switches",            &sampling_history_t::switches)

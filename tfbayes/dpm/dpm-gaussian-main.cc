@@ -23,7 +23,6 @@
 
 #include <gsl/gsl_matrix.h>
 
-#include <tfbayes/dpm/init.hh>
 #include <tfbayes/dpm/data-gaussian.hh>
 #include <tfbayes/dpm/dpm-gaussian.hh>
 #include <tfbayes/dpm/sampler.hh>
@@ -39,15 +38,11 @@ void sample(
         const vector<double> mu_0,
         const vector<double> pi)
 {
-        __dpm_init__();
-
         data_gaussian_t data(samples, Sigma, pi);
         dpm_gaussian_t  gdpm(alpha, Sigma, Sigma_0, mu_0, data);
         gibbs_sampler_t sampler(gdpm, data);
 
         sampler.sample(100, 100);
-
-        __dpm_free__();
 }
 
 int

@@ -168,8 +168,16 @@ void normalize(size_t components, double *log_weights)
         }
 }
 
+#include <sys/time.h>
+#include <boost/random/mersenne_twister.hpp>
+
 void
 dpm_tfbs_t::test() {
+        boost::random::mt19937 gen;
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        gen.seed(tv.tv_sec*tv.tv_usec);
+
         seq_index_t index1(0,0);
         seq_index_t index2(1,0);
         seq_index_t index3(2,0);
@@ -197,7 +205,7 @@ dpm_tfbs_t::test() {
                 cout << "weight " << i << ": " << exp(log_weights[i]) << endl;
         }
         for (size_t i = 0; i < 100; i++) {
-                new_cluster_tag = cluster_tags[select_component(components, log_weights)];
+                new_cluster_tag = cluster_tags[select_component(components, log_weights, gen)];
                 cout << "selected cluster " << new_cluster_tag << endl;
         }
 
@@ -207,7 +215,7 @@ dpm_tfbs_t::test() {
                 cout << "weight " << i << ": " << log_weights[i] << endl;
         }
         for (size_t i = 0; i < 100; i++) {
-                new_cluster_tag = cluster_tags[select_component(components, log_weights)];
+                new_cluster_tag = cluster_tags[select_component(components, log_weights, gen)];
                 cout << "selected cluster " << new_cluster_tag << endl;
         }
 

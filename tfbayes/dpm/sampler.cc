@@ -20,14 +20,29 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <sstream>
-
-#include <gsl/gsl_randist.h>
+#include <sys/time.h>
 
 #include <tfbayes/dpm/sampler.hh>
 #include <tfbayes/dpm/state.hh>
 #include <tfbayes/utility/statistics.hh>
 
 using namespace std;
+
+// Sampler
+////////////////////////////////////////////////////////////////////////////////
+
+sampler_t::sampler_t(const string& name)
+        : _name(name),
+          _gen() {
+        if (name != "")
+                cerr << name << ": ";
+        cerr << "Initializing thread-safe random number generator."
+             << endl;
+        /* seed generator */
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        _gen.seed(tv.tv_sec*tv.tv_usec);
+}
 
 // Gibbs Sampler
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +118,7 @@ gibbs_sampler_t::_gibbs_sample(const index_i& index)
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
         // to that cluster
-        cluster_tag_t new_cluster_tag = cluster_tags[select_component(components, log_weights)];
+        cluster_tag_t new_cluster_tag = cluster_tags[select_component(components, log_weights, gen())];
 
         ////////////////////////////////////////////////////////////////////////
         state().add(index, new_cluster_tag);
@@ -129,6 +144,13 @@ gibbs_sampler_t::_gibbs_sample() {
 
 size_t
 gibbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
+
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        time_t seed = tv.tv_sec*tv.tv_usec;
+
+        srand(seed);
+
         return _gibbs_sample();
 }
 

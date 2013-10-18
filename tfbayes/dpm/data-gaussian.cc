@@ -23,7 +23,6 @@
 #include <gsl/gsl_randist.h>
 
 #include <tfbayes/dpm/data-gaussian.hh>
-#include <tfbayes/dpm/init.hh>
 
 using namespace std;
 
@@ -36,6 +35,8 @@ data_gaussian_t::data_gaussian_t(
           _length  (1),
           _cluster (pi.size())
 {
+        gsl_rng* _r = gsl_rng_alloc (gsl_rng_default);
+
         /* copy contents of pi into a standard array */
         double _pi[pi.size()];
         copy(pi.begin(), pi.end(), _pi);
@@ -63,7 +64,6 @@ data_gaussian_t::data_gaussian_t(
                 _mu[i][0] = 1.2*(double)rand()/RAND_MAX-0.5;
                 _mu[i][1] = 1.2*(double)rand()/RAND_MAX-0.5;
         }
-
         /* generate samples */
         for (size_t i = 0; i < samples; i++) {
                 /* select component */
@@ -89,6 +89,9 @@ data_gaussian_t::data_gaussian_t(
                 sampling_indices.push_back(index);
         }
         shuffle();
+
+        /* free random number generator */
+        gsl_rng_free (_r);
 }
 
 data_gaussian_t::data_gaussian_t(const data_gaussian_t& data)
