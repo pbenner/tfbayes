@@ -50,7 +50,7 @@ public:
         component_model_t()
                 : _cluster_assignments(NULL)
                 { }
-        component_model_t(const data_t<cluster_tag_t>& cluster_assignments)
+        component_model_t(const data_i<cluster_tag_t>& cluster_assignments)
                 : _cluster_assignments(&cluster_assignments)
                 { }
         virtual ~component_model_t() { };
@@ -58,7 +58,8 @@ public:
         virtual component_model_t* clone() const = 0;
 
         friend void swap(component_model_t& first, component_model_t& second) {
-                std::swap(first._cluster_assignments, second._cluster_assignments);
+                using std::swap;
+                swap(first._cluster_assignments, second._cluster_assignments);
         }
 
         virtual component_model_t& operator=(const component_model_t& component_model) = 0;
@@ -74,15 +75,15 @@ public:
         virtual double log_likelihood() const = 0;
         virtual std::string print_counts() const { return std::string(); }
 
-        virtual const data_t<cluster_tag_t>& cluster_assignments() const {
+        virtual const data_i<cluster_tag_t>& cluster_assignments() const {
                 return *_cluster_assignments;
         }
-        virtual void set_cluster_assignments(const data_t<cluster_tag_t>& cluster_assignments) {
+        virtual void set_cluster_assignments(const data_i<cluster_tag_t>& cluster_assignments) {
                 _cluster_assignments = &cluster_assignments;
         }
 
 protected:
-        const data_t<cluster_tag_t>* _cluster_assignments;
+        const data_i<cluster_tag_t>* _cluster_assignments;
 };
 
 // Independence Background Model
@@ -104,12 +105,13 @@ public:
         independence_background_t* clone() const;
 
         friend void swap(independence_background_t& first, independence_background_t& second) {
+                using std::swap;
                 swap(static_cast<component_model_t&>(first),
                      static_cast<component_model_t&>(second));
-                std::swap(first._size,                 second._size);
-                std::swap(first._bg_cluster_tag,       second._bg_cluster_tag);
-                std::swap(first._precomputed_marginal, second._precomputed_marginal);
-                std::swap(first._data,                 second._data);
+                swap(first._size,                 second._size);
+                swap(first._bg_cluster_tag,       second._bg_cluster_tag);
+                swap(first._precomputed_marginal, second._precomputed_marginal);
+                swap(first._data,                 second._data);
         }
 
         independence_background_t& operator=(const component_model_t& component_model);
@@ -160,14 +162,15 @@ public:
         product_dirichlet_t* clone() const;
 
         friend void swap(product_dirichlet_t& first, product_dirichlet_t& second) {
+                using std::swap;
                 swap(static_cast<component_model_t&>(first),
                      static_cast<component_model_t&>(second));
-                std::swap(first.alpha,      second.alpha);
-                std::swap(first.counts,     second.counts);
-                std::swap(first.tmp_counts, second.tmp_counts);
-                std::swap(first._size1,     second._size1);
-                std::swap(first._size2,     second._size2);
-                std::swap(first._data,      second._data);
+                swap(first.alpha,      second.alpha);
+                swap(first.counts,     second.counts);
+                swap(first.tmp_counts, second.tmp_counts);
+                swap(first._size1,     second._size1);
+                swap(first._size2,     second._size2);
+                swap(first._data,      second._data);
         }
 
         product_dirichlet_t& operator=(const component_model_t& component_model);
@@ -279,23 +282,24 @@ public:
         bivariate_normal_t* clone() const;
 
         friend void swap(bivariate_normal_t& first, bivariate_normal_t& second) {
+                using std::swap;
                 swap(static_cast<component_model_t&>(first),
                      static_cast<component_model_t&>(second));
-                std::swap(first._Sigma_0_inv, second._Sigma_0_inv);
-                std::swap(first._mu_0,        second._mu_0);
-                std::swap(first._Sigma,       second._Sigma);
-                std::swap(first._Sigma_inv,   second._Sigma_inv);
-                std::swap(first._mu,          second._mu);
-                std::swap(first._N,           second._N);
-                std::swap(first._Sigma_N,     second._Sigma_N);
-                std::swap(first._Sigma_N_inv, second._Sigma_N_inv);
-                std::swap(first._mu_N,        second._mu_N);
-                std::swap(first._dimension,   second._dimension);
-                std::swap(first._inv_perm,    second._inv_perm);
-                std::swap(first._inv_tmp,     second._inv_tmp);
-                std::swap(first._tmp1,        second._tmp1);
-                std::swap(first._tmp2,        second._tmp2);
-                std::swap(first._data,        second._data);
+                swap(first._Sigma_0_inv, second._Sigma_0_inv);
+                swap(first._mu_0,        second._mu_0);
+                swap(first._Sigma,       second._Sigma);
+                swap(first._Sigma_inv,   second._Sigma_inv);
+                swap(first._mu,          second._mu);
+                swap(first._N,           second._N);
+                swap(first._Sigma_N,     second._Sigma_N);
+                swap(first._Sigma_N_inv, second._Sigma_N_inv);
+                swap(first._mu_N,        second._mu_N);
+                swap(first._dimension,   second._dimension);
+                swap(first._inv_perm,    second._inv_perm);
+                swap(first._inv_tmp,     second._inv_tmp);
+                swap(first._tmp1,        second._tmp1);
+                swap(first._tmp2,        second._tmp2);
+                swap(first._data,        second._data);
         }
 
         bivariate_normal_t& operator=(const component_model_t& component_model);

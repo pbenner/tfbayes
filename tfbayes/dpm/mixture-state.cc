@@ -29,7 +29,7 @@
 
 using namespace std;
 
-mixture_state_t::mixture_state_t(const data_t<cluster_tag_t>& cluster_assignments)
+mixture_state_t::mixture_state_t(const data_i<cluster_tag_t>& cluster_assignments)
         : used_clusters_size(0), free_clusters_size(0),
           _cluster_assignments(cluster_assignments.clone())
 {

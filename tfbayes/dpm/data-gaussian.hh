@@ -40,30 +40,32 @@ public:
         ~data_gaussian_t();
 
         friend void swap(data_gaussian_t& first, data_gaussian_t& second) {
+                using std::swap;
                 swap(static_cast<data_t<std::vector<double> >&>(first),
                      static_cast<data_t<std::vector<double> >&>(second));
-                std::swap(first.indices,          second.indices);
-                std::swap(first.sampling_indices, second.sampling_indices);
-                std::swap(first._elements,        second._elements);
-                std::swap(first._cluster,         second._cluster);
-                std::swap(first._mu,              second._mu);
-                std::swap(first. _initial_cluster_assignments,
-                          second._initial_cluster_assignments);
+                swap(first.indices,          second.indices);
+                swap(first.sampling_indices, second.sampling_indices);
+                swap(first._elements,        second._elements);
+                swap(first._cluster,         second._cluster);
+                swap(first._mu,              second._mu);
+                swap(first. _initial_cluster_assignments,
+                     second._initial_cluster_assignments);
         }
         // operators
         ////////////////////////////////////////////////////////////////////////
-        virtual data_gaussian_t& operator=(const data_t<std::vector<double> >& data) {
+        virtual data_gaussian_t& operator=(const data_i<std::vector<double> >& data) {
+                using std::swap;
                 data_gaussian_t tmp(static_cast<const data_gaussian_t&>(data));
                 swap(*this, tmp);
                 return *this;
         }
         // iterators
         ////////////////////////////////////////////////////////////////////////
-        iterator begin() { return indices.begin(); }
-        iterator end()   { return indices.end();   }
+        indexer_t::iterator begin() { return indices.begin(); }
+        indexer_t::iterator end()   { return indices.end();   }
 
-        const_iterator begin() const { return indices.begin(); }
-        const_iterator end()   const { return indices.end();   }
+        indexer_t::const_iterator begin() const { return indices.begin(); }
+        indexer_t::const_iterator end()   const { return indices.end();   }
 
         sampling_iterator sampling_begin() const
                 { return sampling_indices.begin(); }

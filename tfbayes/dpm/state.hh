@@ -28,7 +28,7 @@
 
 class gibbs_state_t : public mixture_state_t {
 public:
-        gibbs_state_t(const data_t<cluster_tag_t>& cluster_assignments)
+        gibbs_state_t(const data_i<cluster_tag_t>& cluster_assignments)
                 : mixture_state_t(cluster_assignments) {}
 
         friend void swap(gibbs_state_t& first, gibbs_state_t& second) {

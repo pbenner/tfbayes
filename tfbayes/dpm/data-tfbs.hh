@@ -36,7 +36,7 @@
 
 /* data_tfbs_t is the container for the data that provides some basic
  * operations like indexing and iteration */
-class data_tfbs_t : public sequence_data_t<__CODE_TYPE__>, public indexer_t {
+class data_tfbs_t : public indexer_t, public sequence_data_t<__CODE_TYPE__> {
 public:
         // typedefs
         ////////////////////////////////////////////////////////////////////////
@@ -55,17 +55,19 @@ public:
         ~data_tfbs_t();
 
         friend void swap(data_tfbs_t& first, data_tfbs_t& second) {
+                using std::swap;
                 swap(static_cast<sequence_data_t<__CODE_TYPE__>&>(first),
                      static_cast<sequence_data_t<__CODE_TYPE__>&>(second));
-                std::swap(first.indices,          second.indices);
-                std::swap(first.sampling_indices, second.sampling_indices);
-                std::swap(first._n_sequences,     second._n_sequences);
-                std::swap(first._elements,        second._elements);
+                swap(first.indices,          second.indices);
+                swap(first.sampling_indices, second.sampling_indices);
+                swap(first._n_sequences,     second._n_sequences);
+                swap(first._elements,        second._elements);
         }
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-        virtual data_tfbs_t& operator=(const data_t<__CODE_TYPE__>& data) {
+        virtual data_tfbs_t& operator=(const data_i<code_t>& data) {
+                using std::swap;
                 data_tfbs_t tmp(static_cast<const data_tfbs_t&>(data));
                 swap(*this, tmp);
                 return *this;
@@ -74,10 +76,10 @@ public:
         ////////////////////////////////////////////////////////////////////////
 
         // iterators over the full dataset (excluding masked nucleotides)
-        iterator begin() { return indices.begin(); }
-        iterator end()   { return indices.end();   }
-        const_iterator begin() const { return indices.begin(); }
-        const_iterator end()   const { return indices.end();   }
+        indexer_t::iterator begin() { return indices.begin(); }
+        indexer_t::iterator end()   { return indices.end();   }
+        indexer_t::const_iterator begin() const { return indices.begin(); }
+        indexer_t::const_iterator end()   const { return indices.end();   }
 
         // randomized iterator where in addition regions are excluded
         // where no binding site would fit

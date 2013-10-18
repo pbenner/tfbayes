@@ -89,11 +89,11 @@ data_tfbs_t::data_tfbs_t(const data_tfbs_t& data)
           _n_sequences(data._n_sequences),
           _elements(data._elements)
 {
-        for (data_tfbs_t::const_iterator it = data.begin(); it != data.end(); it++) {
+        for (indexer_t::const_iterator it = data.begin(); it != data.end(); it++) {
                 index_i* index = (**it).clone();
                 indices.push_back(index);
         }
-        for (data_tfbs_t::sampling_iterator it = data.sampling_begin();
+        for (indexer_t::sampling_iterator it = data.sampling_begin();
              it != data.sampling_end(); it++)
         {
                 index_i* index = (**it).clone();
@@ -104,10 +104,10 @@ data_tfbs_t::data_tfbs_t(const data_tfbs_t& data)
 
 data_tfbs_t::~data_tfbs_t()
 {
-        for (data_tfbs_t::iterator it = begin(); it != end(); it++) {
+        for (indexer_t::iterator it = begin(); it != end(); it++) {
                 delete(*it);
         }
-        for (data_tfbs_t::sampling_iterator it = sampling_begin();
+        for (indexer_t::sampling_iterator it = sampling_begin();
              it != sampling_end(); it++) {
                 delete(*it);
         }

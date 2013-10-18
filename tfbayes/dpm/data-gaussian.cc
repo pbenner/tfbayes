@@ -100,7 +100,7 @@ data_gaussian_t::data_gaussian_t(const data_gaussian_t& data)
           _initial_cluster_assignments(data._initial_cluster_assignments)
 {
         // generate a randomized list of indices
-        for (data_gaussian_t::const_iterator it = data.begin(); it != data.end(); it++) {
+        for (indexer_t::const_iterator it = data.begin(); it != data.end(); it++) {
                 index_i* index = (**it).clone();
                 indices.push_back(index);
                 sampling_indices.push_back(index);
@@ -110,7 +110,7 @@ data_gaussian_t::data_gaussian_t(const data_gaussian_t& data)
 
 data_gaussian_t::~data_gaussian_t()
 {
-        for (iterator it = begin(); it != end(); it++) {
+        for (indexer_t::iterator it = begin(); it != end(); it++) {
                 delete(*it);
         }
 }

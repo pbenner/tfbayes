@@ -40,7 +40,7 @@
 
 class mixture_state_t : public Observer<cluster_event_t>, public clonable {
 public:
-         mixture_state_t(const data_t<cluster_tag_t>& cluster_assignments);
+         mixture_state_t(const data_i<cluster_tag_t>& cluster_assignments);
          mixture_state_t(const mixture_state_t& cm);
         ~mixture_state_t();
 
@@ -81,8 +81,8 @@ public:
         __inline__ size_t size() const { return used_clusters_size; }
         // access to cluster assignments, the data type might be
         // different in child classes, so make this virtual
-        virtual data_t<cluster_tag_t>& cluster_assignments() { return *_cluster_assignments; }
-        virtual const data_t<cluster_tag_t>& cluster_assignments() const { return *_cluster_assignments; }
+        virtual data_i<cluster_tag_t>& cluster_assignments() { return *_cluster_assignments; }
+        virtual const data_i<cluster_tag_t>& cluster_assignments() const { return *_cluster_assignments; }
         // also provide a function to generate a partition from
         // cluster assignments
         virtual dpm_partition_t partition() const;
@@ -101,7 +101,7 @@ protected:
         std::map<baseline_tag_t,component_model_t*> baseline_models;
 
         // assignments to clusters
-        data_t<cluster_tag_t>* _cluster_assignments;
+        data_i<cluster_tag_t>* _cluster_assignments;
 };
 
 std::ostream& operator<< (std::ostream& o, const mixture_state_t& state);

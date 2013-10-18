@@ -34,14 +34,15 @@
 // data_t and iterator_t
 ////////////////////////////////////////////////////////////////////////////////
 
+template <typename T> class data_i;
 template <typename T> class data_t;
 template <typename T> class sequence_data_t;
 
 template <typename T>
 std::ostream&
 operator<< (std::ostream& o, const data_t<T>& sd) {
-        for (size_t i = 0; i < sd._data.size(); i++) {
-                o << sd._data[i] << " ";
+        for (size_t i = 0; i < sd.size(); i++) {
+                o << sd[i] << " ";
         }
         o << std::endl;
 
@@ -51,9 +52,9 @@ operator<< (std::ostream& o, const data_t<T>& sd) {
 template <typename T>
 std::ostream&
 operator<< (std::ostream& o, const sequence_data_t<T>& sd) {
-        for (size_t i = 0; i < sd._data.size(); i++) {
-                for (size_t j = 0; j < sd._data[i].size(); j++) {
-                        o << sd._data[i][j] << " ";
+        for (size_t i = 0; i < sd.size(); i++) {
+                for (size_t j = 0; j < sd[i].size(); j++) {
+                        o << sd[i][j] << " ";
                 }
                 o << std::endl;
         }
@@ -64,7 +65,7 @@ template <typename T>
 class iterator_t : public std::iterator<std::forward_iterator_tag, T>
 {
 public:
-        iterator_t(data_t<T>& data, const index_i& index, size_t length)
+        iterator_t(data_i<T>& data, const index_i& index, size_t length)
                 : _data(data), _index(index), _pos(*index.clone()), _length(length), _i(0) {
         }
         ~iterator_t() {
@@ -92,9 +93,8 @@ public:
                 return (_index != it._index) ||
                        (_pos   != it._pos  );
         }
-
-private:
-        data_t<T>& _data;
+protected:
+        data_i<T>& _data;
         const index_i& _index;
         index_i& _pos;
         size_t _length, _i;
@@ -104,7 +104,7 @@ template <typename T>
 class const_iterator_t : public std::iterator<std::forward_iterator_tag, const T>
 {
 public:
-        const_iterator_t(const data_t<T>& data, const index_i& index, size_t length)
+        const_iterator_t(const data_i<T>& data, const index_i& index, size_t length)
                 : _data(data), _index(index), _pos(*index.clone()), _length(length), _i(0) {
         }
         ~const_iterator_t() {
@@ -129,39 +129,58 @@ public:
                 return (_index != it._index) ||
                        (_pos   != it._pos  );
         }
-
-private:
-        const data_t<T>& _data;
+protected:
+        const data_i<T>& _data;
         const index_i& _index;
         index_i& _pos;
         size_t _length, _i;
 };
 
 template <typename T>
-class data_t : public clonable
+class data_i : public clonable {
+public:
+        virtual data_i<T>* clone() const = 0;
+        virtual data_i<T>& operator=(const data_i<T>& data) {
+                std::cerr << "Error: data_i<T> assignment operator called"
+                          << std::endl;
+                exit(EXIT_FAILURE);
+        }
+        virtual const_iterator_t<T> operator[](const range_t& range) const = 0;
+        virtual iterator_t<T> operator[](const range_t& range) = 0;
+        virtual const T& operator[](const index_i& index) const = 0;
+        virtual T& operator[](const index_i& index) = 0;
+};
+
+template <typename T>
+class data_t : public data_i<T>, public std::vector<T>
 {
 public:
-        data_t() : _data() {
+        using std::vector<T>::size;
+        using std::vector<T>::push_back;
+        using std::vector<T>::operator[];
+        using std::vector<T>::operator=;
+
+        data_t() : std::vector<T>() {
         }
-        data_t(size_t n, T init) : _data(n, init) {
+        data_t(size_t n, T init)
+                : std::vector<T>(n, init) {
         }
-        data_t(const std::vector<T>& data) : _data(data) {
+        data_t(const std::vector<T>& data)
+                : std::vector<T>(data) {
         }
         virtual ~data_t() {}
 
-        virtual data_t* clone() const {
-                return new data_t(*this);
-        }
-
         friend void swap(data_t<T>& first, data_t<T>& second) {
-                std::swap(first._data, second._data);
+                using std::swap;
+                swap(static_cast<std::vector<T>&>(first),
+                     static_cast<std::vector<T>&>(second));
         }
-
-        friend std::ostream& operator<< <> (std::ostream& o, const data_t<T>& sd);
-
-        virtual data_t& operator=(const data_t& data) {
-                data_t<T> tmp(data);
-                swap(*this, tmp);
+        virtual data_t<T>* clone() const {
+                return new data_t<T>(*this);
+        }
+        virtual data_t<T>& operator=(const data_i<T>& data) {
+                std::vector<T>::operator=(
+                        static_cast<const data_t<T>&>(data));
                 return *this;
         }
         virtual const_iterator_t<T> operator[](const range_t& range) const {
@@ -171,51 +190,48 @@ public:
                 return iterator_t<T>(*this, range.index(), range.length());
         }
         virtual const T& operator[](const index_i& index) const {
-                return _data[index[0]];
+                return std::vector<T>::operator[](index[0]);
         }
         virtual T& operator[](const index_i& index) {
-                return _data[index[0]];
+                return std::vector<T>::operator[](index[0]);
         }
-        virtual size_t size() const {
-                return _data.size();
-        }
-
-protected:
-        std::vector<T> _data;
+        friend std::ostream& operator<< <> (std::ostream& o, const data_t<T>& sd);
 };
 
 template <typename T>
-class sequence_data_t : public data_t<T>
+class sequence_data_t : public data_i<T>, public std::vector<std::vector<T> >
 {
 public:
-        sequence_data_t() : _data() {
+        using std::vector<std::vector<T> >::size;
+        using std::vector<std::vector<T> >::push_back;
+        using std::vector<std::vector<T> >::operator[];
+        using std::vector<std::vector<T> >::operator=;
+
+        sequence_data_t() : std::vector<std::vector<T> >() {
         }
-        sequence_data_t(const std::vector<size_t> n, const T init) : _data() {
+        sequence_data_t(const std::vector<size_t> n, const T init)
+                : std::vector<std::vector<T> >() {
                 for (size_t i = 0; i < n.size(); i++) {
-                        _data.push_back(std::vector<T>(n[i], init));
+                        push_back(std::vector<T>(n[i], init));
                 }
         }
-        sequence_data_t(const std::vector<std::vector<T> >& data) : _data(data) {
+        sequence_data_t(const std::vector<std::vector<T> >& data)
+                : std::vector<std::vector<T> >(data) {
         }
         virtual ~sequence_data_t() {
         }
 
-        virtual sequence_data_t* clone() const {
-                return new sequence_data_t(*this);
+        void swap(sequence_data_t<T>& first, sequence_data_t<T>& second) {
+                using std::swap;
+                swap(static_cast<std::vector<std::vector<T> >&>(first),
+                     static_cast<std::vector<std::vector<T> >&>(second));
         }
-
-        friend void swap(sequence_data_t<T>& first, sequence_data_t<T>& second) {
-                std::swap(first._data, second._data);
+        virtual sequence_data_t<T>* clone() const {
+                return new sequence_data_t<T>(*this);
         }
-
-        friend std::ostream& operator<< <> (std::ostream& o, const sequence_data_t<T>& sd);
-
-        virtual void push_back(const std::vector<T>& sequence) {
-                _data.push_back(sequence);
-        }
-        virtual sequence_data_t& operator=(const data_t<T>& data) {
-                sequence_data_t<T> tmp(static_cast<const sequence_data_t<T>&>(data));
-                swap(*this, tmp);
+        virtual sequence_data_t<T>& operator=(const data_i<T>& data) {
+                std::vector<std::vector<T> >::operator=(
+                        static_cast<const sequence_data_t<T>&>(data));
                 return *this;
         }
         virtual const_iterator_t<T> operator[](const range_t& range) const {
@@ -225,33 +241,22 @@ public:
                 return iterator_t<T>(*this, range.index(), range.length());
         }
         virtual const T& operator[](const index_i& index) const {
-                return _data[index[0]][index[1]];
+                return std::vector<std::vector<T> >::operator[](index[0])[index[1]];
         }
         virtual T& operator[](const index_i& index) {
-                return _data[index[0]][index[1]];
-        }
-        virtual const std::vector<T>& operator[](size_t i) const {
-                return _data[i];
-        }
-        virtual std::vector<T>& operator[](size_t i) {
-                return _data[i];
-        }
-        virtual size_t size() const {
-                return _data.size();
+                return std::vector<std::vector<T> >::operator[](index[0])[index[1]];
         }
         virtual size_t size(size_t i) const {
-                return _data[i].size();
+                return operator[](i).size();
         }
         virtual std::vector<size_t> sizes() const {
                 std::vector<size_t> lengths;
                 for (size_t i = 0; i < size(); i++) {
-                        lengths.push_back(_data[i].size());
+                        lengths.push_back(operator[](i).size());
                 }
                 return lengths;
         }
-
-protected:
-        std::vector<std::vector<T> > _data;
+        friend std::ostream& operator<< <> (std::ostream& o, const sequence_data_t<T>& sd);
 };
 
 #endif /* DATA_HH */

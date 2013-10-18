@@ -47,7 +47,7 @@ public:
         ////////////////////////////////////////////////////////////////////////
         typedef mixture_state_t::const_iterator cm_iterator;
         typedef cluster_t::const_iterator cl_iterator;
-        typedef data_tfbs_t::const_iterator da_iterator;
+        typedef indexer_t::const_iterator da_iterator;
 
         // operators
         ////////////////////////////////////////////////////////////////////////

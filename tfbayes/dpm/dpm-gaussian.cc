@@ -40,7 +40,7 @@ dpm_gaussian_t::dpm_gaussian_t(
         _baseline_tag = "baseline";
         gibbs_state_t::add_baseline_model(new bivariate_normal_t(Sigma, Sigma_0, mu_0, data), _baseline_tag);
         cluster_tag_t cluster_tag = gibbs_state_t::get_free_cluster(_baseline_tag).cluster_tag();
-        for (data_gaussian_t::const_iterator it = _data->begin();
+        for (indexer_t::const_iterator it = _data->begin();
              it != _data->end(); it++) {
                 gibbs_state_t::operator[](cluster_tag).add_observations(range_t(**it,1));
         }
