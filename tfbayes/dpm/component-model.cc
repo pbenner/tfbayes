@@ -896,6 +896,7 @@ bivariate_normal_t::bivariate_normal_t(
         gsl_matrix_memcpy(_Sigma_N, Sigma_0);
         gsl_matrix_add   (_Sigma_N, Sigma);
         inverse(_Sigma_N_inv, _Sigma_N);
+        gsl_vector_memcpy(_mu_N, mu_0);
 
         // free args
         gsl_matrix_free(Sigma);
