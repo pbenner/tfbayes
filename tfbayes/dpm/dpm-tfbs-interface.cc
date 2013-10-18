@@ -26,7 +26,6 @@
 #include <boost/python/iterator.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-#include <tfbayes/dpm/init.hh>
 #include <tfbayes/dpm/index.hh>
 #include <tfbayes/dpm/dpm-partition.hh>
 #include <tfbayes/dpm/dpm-sampling-history.hh>

@@ -31,14 +31,14 @@
 static __inline__
 double logadd(double a, double b)
 {
-        if (a < b) return a == std::numeric_limits<double>::min() ? b : b + log1p(exp(a-b));
-        else       return b == std::numeric_limits<double>::min() ? a : a + log1p(exp(b-a));
+        if (a < b) return a == -std::numeric_limits<double>::infinity() ? b : b + log1p(exp(a-b));
+        else       return b == -std::numeric_limits<double>::infinity() ? a : a + log1p(exp(b-a));
 }
 
 static __inline__
 double logsub(double a, double b)
 {
-        return b == std::numeric_limits<double>::min() ? a : a + log(1-exp(b-a));
+        return b == -std::numeric_limits<double>::infinity() ? a : a + log(1-exp(b-a));
 }
 
 #endif /* _LOGARITHMETIC_H_ */

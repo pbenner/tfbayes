@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 #include <limits>
 
 #include <tfbayes/dpm/dpm-gaussian.hh>
-#include <tfbayes/utility/logarithmetic.h>
+#include <tfbayes/utility/logarithmetic.hh>
 
 using namespace std;
 
@@ -107,7 +107,7 @@ void
 dpm_gaussian_t::mixture_weights(const index_i& index, double log_weights[], cluster_tag_t cluster_tags[])
 {
         size_t components = mixture_components();
-        double sum        = numeric_limits<double>::min();
+        double sum        = -numeric_limits<double>::infinity();
         double N          = _data->elements() - 1;
         range_t range(index, 1);
 
@@ -157,11 +157,6 @@ dpm_gaussian_t::likelihood() const {
 double
 dpm_gaussian_t::posterior() const {
         return 0;
-}
-
-dpm_partition_t
-dpm_gaussian_t::partition() const {
-        return dpm_partition_t();
 }
 
 const mixture_state_t&

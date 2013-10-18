@@ -189,7 +189,7 @@ public:
 
         double log_posterior(const polynomial_t<AS, PC>& polynomial) {
                 // loop over monomials
-                double result = std::numeric_limits<double>::min();
+                double result = -std::numeric_limits<double>::infinity();
                 for (typename polynomial_t<AS, PC>::const_iterator ut = polynomial.begin();
                      ut != polynomial.end(); ut++) {
                         result = logadd(result, log(ut->coefficient()) + mbeta_log(ut->exponent(), alpha) - mbeta_log(alpha));

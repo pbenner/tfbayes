@@ -118,12 +118,16 @@ std::vector<double> dirichlet_sample(const std::vector<double>& _alpha, gsl_rng*
         return _theta;
 }
 
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_01.hpp>
+
 static inline
-size_t select_component(size_t k, double log_weights[])
+size_t select_component(size_t k, double log_weights[], boost::random::mt19937& gen)
 {
         /* log_weights are cumulative */
-
-        const double r = (double)rand()/RAND_MAX;
+        boost::random::uniform_01<> dist;
+        
+        const double r = dist(gen);
 
         if (r == 0.0) {
                 return 0;

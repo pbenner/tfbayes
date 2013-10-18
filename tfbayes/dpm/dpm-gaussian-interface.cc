@@ -28,175 +28,43 @@
 
 #include <tfbayes/dpm/data-gaussian.hh>
 #include <tfbayes/dpm/dpm-gaussian.hh>
+#include <tfbayes/dpm/dpm-partition.hh>
 #include <tfbayes/dpm/sampler.hh>
 #include <tfbayes/utility/linalg.hh>
-
-// using namespace std;
-
-// static dpm_gaussian_t* _gdpm;
-// static data_gaussian_t* _data;
-// static gibbs_sampler_t* _sampler;
-
-// __BEGIN_DECLS
-
-// // python interface
-// // -----------------------------------------------------------------------------
-
-// void _dpm_gaussian_init(
-//         int samples,
-//         double alpha,
-//         matrix_t* _Sigma,
-//         matrix_t* _Sigma_0,
-//         vector_t* _mu_0,
-//         vector_t* _pi)
-// {
-//         __dpm_init__();
-
-//         gsl_matrix *Sigma    = to_gsl_matrix(_Sigma);
-//         gsl_matrix *Sigma_0  = to_gsl_matrix(_Sigma_0);
-//         gsl_vector *mu_0     = to_gsl_vector(_mu_0);
-//         const size_t cluster = _pi->size;
-
-//         _data    = new data_gaussian_t(cluster, (size_t)samples, Sigma, _pi->vec);
-//         _gdpm    = new dpm_gaussian_t(alpha, Sigma, Sigma_0, mu_0, *_data);
-//         _sampler = new gibbs_sampler_t(*_gdpm, *_gdpm, *_data);
-
-//         gsl_matrix_free(Sigma);
-//         gsl_matrix_free(Sigma_0);
-//         gsl_vector_free(mu_0);
-// }
-
-// unsigned int _dpm_gaussian_num_clusters() {
-//         return _gdpm->state().size();
-// }
-
-// vector_t* _dpm_gaussian_cluster_tags() {
-//         size_t cluster = _gdpm->state().size();
-//         vector_t* cluster_tags = alloc_vector(cluster);
-//         const mixture_state_t& state = _gdpm->state();
-
-//         size_t i = 0;
-//         for (mixture_state_t::const_iterator it = state.begin();
-//              it != state.end(); it++) {
-//                 cluster_tags->vec[i++] = (*it)->cluster_tag();
-//         }
-//         return cluster_tags;
-// }
-
-// matrix_t* _dpm_gaussian_cluster_elements(int tag) {
-//         const mixture_state_t& state = _gdpm->state();
-//         const cluster_t& cluster = state[(cluster_tag_t)tag];
-//         matrix_t* elements = alloc_matrix(cluster.size(), 2);
-
-//         size_t i = 0;
-//         for (data_gaussian_t::const_iterator it = _data->begin();
-//              it != _data->end(); it++) {
-//                 if ((*_gdpm)[**it] == (cluster_tag_t)tag) {
-//                         elements->mat[i][0] = (*_data)[**it][0];
-//                         elements->mat[i][1] = (*_data)[**it][1];
-//                         i++;
-//                 }
-//         }
-
-//         return elements;
-// }
-
-// vector_t* _dpm_gaussian_cluster_assignments() {
-//         vector_t* result;
-//         size_t n = _data->elements();
-
-//         // allocate matrix
-//         result = alloc_vector(n);
-//         // copy samples
-//         for (data_gaussian_t::const_iterator it = _data->begin();
-//              it != _data->end(); it++) {
-//                 const index_i& index = **it;
-//                 result->vec[index[0]] = (*_gdpm)[index];
-//         }
-//         return result;
-// }
-
-// vector_t* _dpm_gaussian_hist_likelihood() {
-//         const vector<double>& likelihood = _sampler->sampling_history().likelihood[0];
-//         size_t length = likelihood.size();
-//         vector_t* result = alloc_vector(length);
-
-//         for (size_t i = 0; i < length; i++) {
-//                 result->vec[i] = likelihood[i];
-//         }
-
-//         return result;
-// }
-
-// vector_t* _dpm_gaussian_hist_switches() {
-//         const vector<double>& switches = _sampler->sampling_history().switches[0];
-//         size_t length = switches.size();
-//         vector_t* result = alloc_vector(length);
-
-//         for (size_t i = 0; i < length; i++) {
-//                 result->vec[i] = switches[i];
-//         }
-
-//         return result;
-// }
-
-// matrix_t* _dpm_gaussian_means() {
-//         gsl_matrix* tmp = _gdpm->means();
-//         matrix_t* means;
-//         if (tmp == NULL) {
-//                 means = alloc_matrix(0,0);
-//         }
-//         else {  
-//                 means = from_gsl_matrix(tmp);
-//                 gsl_matrix_free(tmp);
-//         }
-//         return means;
-// }
-
-// matrix_t* _dpm_gaussian_data() {
-//         matrix_t* data = alloc_matrix(_data->elements(), 2);
-
-//         size_t i = 0;
-//         for (data_gaussian_t::const_iterator it = _data->begin();
-//              it != _data->end(); it++) {
-//                 data->mat[i][0] = (*_data)[**it][0];
-//                 data->mat[i][1] = (*_data)[**it][1];
-//                 i++;
-//         }
-
-//         return data;
-// }
-
-// matrix_t* _dpm_gaussian_original_means() {
-//         gsl_matrix* means = _data->original_means();
-//         return from_gsl_matrix(means);
-// }
-
-// vector_t* _dpm_gaussian_original_cluster_assignments() {
-//         gsl_vector* original_cluster_assignments = _data->original_cluster_assignments();
-//         return from_gsl_vector(original_cluster_assignments);
-// }
-
-// void _dpm_gaussian_print() {
-//         cout << *_gdpm << endl;
-// }
-
-// void _dpm_gaussian_sample(unsigned int n, unsigned int burnin) {
-//         _sampler->sample((size_t)n, (size_t)burnin);
-// }
-
-// void _dpm_gaussian_free() {
-//         delete(_data);
-//         delete(_gdpm);
-//         delete(_sampler);
-// }
-
-// __END_DECLS
 
 using namespace boost::python;
 
 // tools
 // -----------------------------------------------------------------------------
+
+class dpm_gaussian_sampler_t : public gibbs_sampler_t {
+public:
+        dpm_gaussian_sampler_t(const dpm_gaussian_t& dpm, const data_gaussian_t& data)
+                : gibbs_sampler_t(dpm, data),
+                  _data          (&data)
+                { }
+
+        const data_gaussian_t& data() const {
+                return *_data;
+        }
+        const dpm_gaussian_t& dpm() const {
+                return static_cast<const dpm_gaussian_t&>(gibbs_sampler_t::dpm());
+        }
+private:
+        const data_gaussian_t* _data;
+};
+
+size_t dpm_num_clusters(const dpm_gaussian_t& dpm) {
+        return dpm.state().size();
+}
+
+dpm_partition_t dpm_partition(const dpm_gaussian_t& dpm) {
+        return dpm.state().partition();
+}
+
+std::vector<double> data_get_point(const data_gaussian_t& data, const index_i& index) {
+        return data[index];
+}
 
 // interface
 // -----------------------------------------------------------------------------
@@ -207,6 +75,12 @@ BOOST_PYTHON_MODULE(dpm_gaussian_interface)
                 .def(init<size_t,
                           const std::matrix<double>&,
                           const std::vector<double>&>())
+                .def("__getitem__",                 &data_get_point)
+                .def("__len__",                     &data_gaussian_t::size)
+                .def("initial_means",               &data_gaussian_t::initial_means,
+                     return_internal_reference<>())
+                .def("initial_cluster_assignments", &data_gaussian_t::initial_cluster_assignments,
+                     return_internal_reference<>())
                 ;
         class_<dpm_gaussian_t, bases<mixture_model_t> >("dpm_gaussian_t", no_init)
                 .def(init<double,
@@ -214,5 +88,14 @@ BOOST_PYTHON_MODULE(dpm_gaussian_interface)
                           const std::matrix<double>&,
                           const std::vector<double>&,
                           const data_gaussian_t&>())
+                .def("num_clusters", &dpm_num_clusters)
+                .def("partition",    &dpm_partition)
+                .def("means",        &dpm_gaussian_t::means)
+                ;
+        class_<dpm_gaussian_sampler_t, bases<gibbs_sampler_t> >("dpm_gaussian_sampler_t", no_init)
+                .def(init<const dpm_gaussian_t&,
+                          const data_gaussian_t&>())
+                .def("dpm",  &dpm_gaussian_sampler_t::dpm,  return_internal_reference<>())
+                .def("data", &dpm_gaussian_sampler_t::data, return_internal_reference<>())
                 ;
 }

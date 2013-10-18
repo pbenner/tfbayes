@@ -10,7 +10,7 @@ otherinclude_HEADERS = \
 	clonable.hh \
 	distribution.hh \
 	linalg.hh \
-	logarithmetic.h \
+	logarithmetic.hh \
 	permutation.hh \
 	polynomial.hh \
 	progress.hh \

@@ -58,7 +58,6 @@ public:
         void   remove(const index_i& index, cluster_tag_t tag);
         double likelihood() const;
         double posterior() const;
-        dpm_partition_t partition() const;
         bool   valid_for_sampling(const index_i& index) const;
         std::matrix<double> means() const;
 

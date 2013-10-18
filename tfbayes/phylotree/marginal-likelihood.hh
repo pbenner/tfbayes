@@ -27,7 +27,7 @@
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/phylotree-polynomial.hh>
 #include <tfbayes/utility/statistics.hh>
-#include <tfbayes/utility/logarithmetic.h>
+#include <tfbayes/utility/logarithmetic.hh>
 #include <tfbayes/utility/polynomial.hh>
 
 /* AS: ALPHABET SIZE
@@ -40,7 +40,7 @@ double pt_marginal_likelihood(
         const polynomial_t<AS, PC>& polynomial,
         const exponent_t<AS, PC>& alpha)
 {
-        double result = std::numeric_limits<double>::min();
+        double result = -std::numeric_limits<double>::infinity();
         double mbeta_alpha = mbeta_log(alpha);
 
         for (typename polynomial_t<AS, PC>::const_iterator it = polynomial.begin();

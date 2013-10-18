@@ -22,6 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <boost/random/mersenne_twister.hpp>
+
 #include <tfbayes/dpm/datatypes.hh>
 #include <tfbayes/dpm/dpm-sampling-history.hh>
 #include <tfbayes/dpm/indexer.hh>
@@ -31,13 +33,14 @@
 
 class sampler_t : public clonable {
 public:
-        sampler_t(const std::string& name = "")
-                : _name(name) { }
+        sampler_t(const std::string& name = "");
         sampler_t(const sampler_t& sampler)
-                : _name(sampler._name) { }
+                : _name(sampler._name),
+                  _gen (sampler._gen) { }
 
         friend void swap(sampler_t& first, sampler_t& second) {
                 std::swap(first._name, second._name);
+                std::swap(first._gen,  second._gen);
         }
 
         virtual sampler_t& operator=(const sampler_t& sampler) = 0;
@@ -47,8 +50,10 @@ public:
         virtual       sampling_history_t& sampling_history() = 0;
         virtual const std::string& name() const { return _name; }
         virtual       std::string& name()       { return _name; }
+        virtual boost::random::mt19937& gen()   { return _gen;  }
 protected:
         std::string _name;
+        boost::random::mt19937 _gen;
 };
 
 class gibbs_sampler_t : public sampler_t {

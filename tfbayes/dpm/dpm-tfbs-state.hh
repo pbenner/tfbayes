@@ -73,6 +73,8 @@ public:
                 return *static_cast<const sequence_data_t<cluster_tag_t>*>(&gibbs_state_t::cluster_assignments());
         }
 
+        dpm_partition_t partition() const;
+
         // data
         ////////////////////////////////////////////////////////////////////////
 

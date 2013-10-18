@@ -1,4 +1,4 @@
-/* Copyright (C) 2011, 2012 Philipp Benner
+/* Copyright (C) 2011-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 
 #include <tfbayes/dpm/dpm-tfbs.hh>
 #include <tfbayes/utility/statistics.hh>
-#include <tfbayes/utility/logarithmetic.h>
+#include <tfbayes/utility/logarithmetic.hh>
 
 using namespace std;
 
@@ -246,7 +246,7 @@ dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_
         const range_t range(index, _tfbs_length);
         ssize_t mixture_n  = mixture_components();
         ssize_t baseline_n = baseline_components();
-        double sum         = numeric_limits<double>::min();;
+        double sum         = -numeric_limits<double>::infinity();
 
         cluster_tag_t i = 0;
         ////////////////////////////////////////////////////////////////////////
@@ -283,7 +283,7 @@ dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights
 {
         ssize_t mixture_n  = mixture_components();
         ssize_t baseline_n = baseline_components();
-        double sum         = numeric_limits<double>::min();;
+        double sum         = -numeric_limits<double>::infinity();
         double n           = range_set.size();
 
         cluster_tag_t i = 0;
@@ -349,25 +349,6 @@ dpm_tfbs_t::posterior() const {
         assert(!std::isnan(result));
 
         return result;
-}
-
-dpm_partition_t
-dpm_tfbs_t::partition() const
-{
-        dpm_partition_t dpm_partition;
-
-        // loop through all clusters
-        for (dpm_tfbs_state_t::const_iterator it = state().begin(); it != state().end(); it++) {
-                const cluster_t& cluster = **it;
-                if (cluster.cluster_tag() != state().bg_cluster_tag) {
-                        dpm_partition.add_component(cluster.baseline_tag());
-                        // loop through cluster elements
-                        for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
-                                dpm_partition.back().insert(is->index());
-                        }
-                }
-        }
-        return dpm_partition;
 }
 
 dpm_tfbs_state_t&

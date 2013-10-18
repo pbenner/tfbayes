@@ -30,14 +30,13 @@
 #include <getopt.h>
 
 #define alphabet_size 5
-typedef float code_t;
 
 using namespace std;
 
 // Input/Output
 ////////////////////////////////////////////////////////////////////////////////
 
-ostream& operator<< (ostream& o, const exponent_t<alphabet_size, code_t>& exponent) {
+ostream& operator<< (ostream& o, const exponent_t<alphabet_size>& exponent) {
         if(exponent[0]) o << " Pa^" << exponent[0];
         if(exponent[1]) o << " Pc^" << exponent[1];
         if(exponent[2]) o << " Pg^" << exponent[2];
@@ -45,14 +44,14 @@ ostream& operator<< (ostream& o, const exponent_t<alphabet_size, code_t>& expone
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_term_t<alphabet_size, code_t>& term) {
+ostream& operator<< (ostream& o, const polynomial_term_t<alphabet_size>& term) {
         o << term.coefficient()
           << term.exponent();
 
         return o;
 }
-ostream& operator<< (ostream& o, const polynomial_t<alphabet_size, code_t>& polynomial) {
-        for (polynomial_t<alphabet_size, code_t>::const_iterator it = polynomial.begin();
+ostream& operator<< (ostream& o, const polynomial_t<alphabet_size>& polynomial) {
+        for (polynomial_t<alphabet_size>::const_iterator it = polynomial.begin();
              it != polynomial.end(); it++) {
                 if (it != polynomial.begin()) {
                         o << " + " << *it;
@@ -65,7 +64,7 @@ ostream& operator<< (ostream& o, const polynomial_t<alphabet_size, code_t>& poly
         return o;
 }
 
-size_t hash_value(const exponent_t<alphabet_size, code_t>& exponent) {
+size_t hash_value(const exponent_t<alphabet_size>& exponent) {
         size_t seed = 0;
         seed += (size_t)exponent[0] << 0;
         seed += (size_t)exponent[1] << 2;
@@ -81,7 +80,7 @@ size_t hash_value(const exponent_t<alphabet_size, code_t>& exponent) {
 
 typedef struct _options_t {
         size_t dimension;
-        phylotree_hmm_t<alphabet_size, code_t>::priors_t priors;
+        phylotree_hmm_t<alphabet_size>::priors_t priors;
         matrix<double> transition;
         bool verbose;
         _options_t()
@@ -90,8 +89,8 @@ typedef struct _options_t {
                   transition(),
                   verbose(false) {
 
-                exponent_t<alphabet_size, code_t> alpha_0;
-                exponent_t<alphabet_size, code_t> alpha_1;
+                exponent_t<alphabet_size> alpha_0;
+                exponent_t<alphabet_size> alpha_1;
                 for (size_t i = 0; i < alphabet_size; i++) {
                         alpha_0[i] = 0.1;
                         alpha_1[i] = 1.0;
@@ -175,12 +174,12 @@ void run_hmm(const char* file_tree, const char* file_alignment)
         pt_root_t pt_root = parse_tree_file(file_tree);
 
         /* alignment */
-        alignment_t<code_t> alignment(file_alignment, pt_root);
+        alignment_t<> alignment(file_alignment, pt_root);
 
         /* uniform distribution on the initial state */
         vector<double> px_0(dimension, 1.0/(double)dimension);
 
-        phylotree_hmm_t<alphabet_size, code_t> hmm(px_0, options.transition, options.priors);
+        phylotree_hmm_t<alphabet_size> hmm(px_0, options.transition, options.priors);
         hmm.run(pt_root, alignment);
 
         for (size_t i = 0; i < hmm.size(); i++) {
@@ -198,14 +197,14 @@ void init_options(const string& alpha, const string& transition)
         vector<string> tmp_;
 
         if (alpha != "") {
-                options.priors = phylotree_hmm_t<alphabet_size, code_t>::priors_t();
+                options.priors = phylotree_hmm_t<alphabet_size>::priors_t();
                 tmp = token(strip(alpha), ' ');
                 for (size_t i = 0; i < tmp.size(); i++) {
                         if (tmp[i] == "") {
                                 continue;
                         }
                         string str = tmp[i];
-                        exponent_t<alphabet_size, code_t> alpha;
+                        exponent_t<alphabet_size> alpha;
                         for (size_t i = 0; i < alphabet_size; i++) {
                                 alpha[i] = atof(str.c_str());
                         }

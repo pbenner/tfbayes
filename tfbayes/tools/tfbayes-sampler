@@ -69,16 +69,12 @@ def usage():
 # ------------------------------------------------------------------------------
 
 def sample():
-    # initialize library
-    dpm_init()
     # run sampler
     samples = sampler_config.samples[0]
     burnin  = sampler_config.samples[1]
     sampler = dpm_tfbs_pmcmc_t(sampler_config, results_config)
     sampler.sample(samples, burnin)
     sampler.save(sampler_config.save)
-    # free library
-    dpm_free()
 
 # main
 # ------------------------------------------------------------------------------

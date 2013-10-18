@@ -45,7 +45,6 @@ public:
                 std::swap(first.indices,          second.indices);
                 std::swap(first.sampling_indices, second.sampling_indices);
                 std::swap(first._elements,        second._elements);
-                std::swap(first._length,          second._length);
                 std::swap(first._cluster,         second._cluster);
                 std::swap(first._mu,              second._mu);
                 std::swap(first. _initial_cluster_assignments,
@@ -74,7 +73,6 @@ public:
         // methods
         ////////////////////////////////////////////////////////////////////////
         size_t elements() const;
-        size_t length() const;
         void shuffle();
         const std::matrix<double>& initial_means() const;
         const std::vector<double>& initial_cluster_assignments() const;
@@ -84,7 +82,6 @@ private:
         std::vector<index_i*> sampling_indices;
 
         size_t _elements;
-        size_t _length;
         size_t _cluster;
 
         // means for generating samples

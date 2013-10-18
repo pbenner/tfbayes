@@ -74,7 +74,6 @@ public:
         }
         void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[], const double temp);
         void   mixture_weights(const std::vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[], const double temp = 1.0, const bool include_background = true);
-        dpm_partition_t partition() const;
         double likelihood() const;
         double posterior() const;
         bool   valid_for_sampling(const index_i& index) const;

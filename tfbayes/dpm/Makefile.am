@@ -58,8 +58,6 @@ libtfbayes_dpm_la_SOURCES =		\
 	index.cc			\
 	index.hh			\
 	indexer.hh			\
-	init.cc				\
-	init.hh				\
 	mixture-model.hh		\
 	mixture-state.cc		\
 	mixture-state.hh		\

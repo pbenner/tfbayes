@@ -27,7 +27,6 @@
 
 #include <getopt.h>
 
-#include <tfbayes/dpm/init.hh>
 #include <tfbayes/dpm/dpm-tfbs.hh>
 #include <tfbayes/dpm/dpm-tfbs-sampler.hh>
 #include <tfbayes/dpm/dpm-sampling-history.hh>
@@ -185,8 +184,6 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
 
 int main(int argc, char *argv[])
 {
-        __dpm_init__();
-
         char *phylogenetic_data_file;
 	char *fasta_alignment_file;
 
@@ -270,8 +267,6 @@ int main(int argc, char *argv[])
         fasta_alignment_file   = argv[optind+1];
 
         run_dpm(phylogenetic_data_file, fasta_alignment_file);
-
-        __dpm_free__();
 
         return 0;
 }
