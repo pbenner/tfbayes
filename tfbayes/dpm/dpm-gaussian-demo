@@ -69,10 +69,11 @@ class interactive_sampler_t():
         self.data    = data_gaussian_t(n, cov, pi)
         self.sampler = dpm_gaussian_sampler_t(
             dpm_gaussian_t(alpha, cov, cov_0, mu_0, self.data), self.data)
+        self.dpm     = self.sampler.dpm()
         # initialize plot
         # ----------------------------------------------------------------------
         self.plot_result(ax)
-        mu  = np.array(self.sampler.means())
+        mu  = np.array(self.dpm.means())
         x, y, X, Y = plot_grid(ax)
         weights = self.weights()
         self.Z = weights[0]*binormal_density(mu[0], self.cov)(X, Y)
@@ -93,15 +94,15 @@ class interactive_sampler_t():
     def run(self, ax):
         self.sample(1, 0)
         x, y, X, Y = plot_grid(ax)
-        mu = np.array(self.sampler.means())
+        mu = np.array(self.dpm.means())
         weights = self.weights()
         for w, m in zip(weights, mu):
             self.Z = (self.Z + w*binormal_density(m, self.cov)(X,Y))
         self.Z*=float(self.steps-1)/float(self.steps)
     def weights(self):
-        num_clusters = self.sampler.num_clusters()
+        num_clusters = self.dpm.num_clusters()
         w = np.zeros(num_clusters)
-        for i, c in zip(range(0, num_clusters), self.sampler.partition()):
+        for i, c in zip(range(0, num_clusters), self.dpm.partition()):
             w[i] = float(len(c))
         return w/sum(w)
     def data_points(self):
@@ -136,14 +137,14 @@ class interactive_sampler_t():
         ax.set_axis_off()
         ax.set_xlim([-1,1])
         ax.set_ylim([-1,1])
-        num_clusters = self.sampler.num_clusters()
+        num_clusters = self.dpm.num_clusters()
         # samples
-        for c, subset in enumerate(self.sampler.partition()):
+        for c, subset in enumerate(self.dpm.partition()):
             x, y = zip(*[ self.data[index] for index in subset ])
             ax.scatter(x, y, c=self.cluster_colors[c], alpha=0.75)
             ax.set_title("Clustering Result K="+str(num_clusters)+", N="+str(self.steps))
         # means
-        mu  = np.array(self.sampler.means())
+        mu  = np.array(self.dpm.means())
         ax.scatter(*zip(*mu), c='red', s=50, marker='^')
     def plot_joint(self, ax):
         x, y, X, Y = plot_grid(ax)
