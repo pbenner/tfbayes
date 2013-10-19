@@ -27,10 +27,10 @@ dist_bin_SCRIPTS = \
 	tfbayes-align \
 	tfbayes-approximate \
 	tfbayes-bed \
+	tfbayes-estimate \
 	tfbayes-expectation \
 	tfbayes-cluster \
 	tfbayes-generate \
-	tfbayes-mean \
 	tfbayes-motifformat \
 	tfbayes-fasta-to-maf \
 	tfbayes-maf-to-fasta \

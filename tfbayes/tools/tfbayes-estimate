@@ -47,12 +47,13 @@ options = {
 def usage():
     """Print usage."""
     print
-    print "tfbayes-mean [option]... COMMAND SAMPLER_CONFIG"
+    print "tfbayes-estimate [option]... COMMAND SAMPLER_CONFIG"
     print
-    print "This program computes the mean or median partition from a set"
-    print "of posterior samples."
+    print "This program computes a point estimate (e.g. mean or median)"
+    print "from a set of posterior samples."
     print
     print "Commands:"
+    print "       map                         - compute map partition"
     print "       mean                        - compute mean partition"
     print "       median                      - compute median parititon"
     print
@@ -73,10 +74,15 @@ def compute_mean(command):
     # initialize dpm
     dpm_tfbs  =  dpm_tfbs_t(sampler_config, data_tfbs)
     # compute mean or median
-    if command == "mean":
-        results_config['mean_partition']   = dpm_tfbs.mean(results_config['sampling_history'].partitions, True)
-    if command == "median":
-        results_config['median_partition'] = dpm_tfbs.median(results_config['sampling_history'].partitions, True)
+    if command == "map":
+        results_config['map_partition'] = dpm_tfbs.map(results_config['sampling_history'], True)
+    elif command == "mean":
+        results_config['mean_partition'] = dpm_tfbs.mean(results_config['sampling_history'], True)
+    elif command == "median":
+        results_config['median_partition'] = dpm_tfbs.median(results_config['sampling_history'], True)
+    else:
+            usage()
+            return 1
     # save result
     save_results_config(sampler_config.save, results_config)
 

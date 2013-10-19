@@ -40,7 +40,7 @@ libtfbayes_dpm_la_SOURCES =		\
 	dpm-tfbs.hh			\
 	dpm-tfbs-command.cc		\
 	dpm-tfbs-command.hh		\
-	dpm-tfbs-mean.cc                \
+	dpm-tfbs-estimate.cc            \
 	dpm-tfbs-repl.cc		\
 	dpm-tfbs-repl.hh		\
 	dpm-tfbs-options.hh		\

@@ -88,6 +88,7 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
                 ;
         class_<dpm_tfbs_t>("dpm_tfbs_t", no_init)
                 .def(init<const tfbs_options_t&, const data_tfbs_t&>())
+                .def("map",     &dpm_tfbs_t::map)
                 .def("mean",    &dpm_tfbs_t::mean)
                 .def("median",  &dpm_tfbs_t::median)
                 ;

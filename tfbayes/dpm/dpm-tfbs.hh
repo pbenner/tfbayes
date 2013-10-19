@@ -30,6 +30,7 @@
 #include <tfbayes/dpm/dpm-tfbs-options.hh>
 #include <tfbayes/dpm/dpm-tfbs-prior.hh>
 #include <tfbayes/dpm/dpm-tfbs-state.hh>
+#include <tfbayes/dpm/dpm-sampling-history.hh>
 #include <tfbayes/utility/linalg.hh>
 
 class dpm_tfbs_t : public mixture_model_t {
@@ -82,8 +83,9 @@ public:
 
         // compute point estimates
         ////////////////////////////////////////////////////////////////////////
-        dpm_partition_t mean  (const dpm_partition_list_t& partitions, bool verbose = false) const;
-        dpm_partition_t median(const dpm_partition_list_t& partitions, bool verbose = false) const;
+        dpm_partition_t map   (const sampling_history_t& histroy, bool verbose = false) const;
+        dpm_partition_t mean  (const sampling_history_t& history, bool verbose = false) const;
+        dpm_partition_t median(const sampling_history_t& history, bool verbose = false) const;
 
         // test methods
         ////////////////////////////////////////////////////////////////////////

@@ -214,7 +214,7 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp, const b
                      << "cluster " << old_cluster_tag
                      << " merged into cluster " << new_cluster_tag
                      << " (" << state()[new_cluster_tag].size()
-                     << "+" << range_set.size() << ")." << endl;
+                     << "+" << range_set.size() << ")" << endl;
         }
         fflush(stdout);
         funlockfile(stdout);

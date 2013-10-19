@@ -27,14 +27,21 @@
 #include <boost/unordered/unordered_set.hpp>
 
 #include <tfbayes/dpm/dpm-tfbs.hh>
+#include <tfbayes/dpm/dpm-sampling-history.hh>
 #include <tfbayes/utility/progress.hh>
 
 using namespace std;
+
+// utility
+// -----------------------------------------------------------------------------
 
 size_t hash_value(const seq_index_t& seq_index)
 {
         return seq_index.hash();
 }
+
+// functions for computing means and medians
+// -----------------------------------------------------------------------------
 
 static void
 init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data,
@@ -163,20 +170,128 @@ dpm_tfbs_estimate(const dpm_partition_list_t& partitions,
         return partitions[argmin];
 }
 
-dpm_partition_t
-dpm_tfbs_t::mean(const dpm_partition_list_t& partitions, bool verbose) const
+static dpm_partition_t
+dpm_tfbs_estimate(const sampling_history_t& history,
+                  const vector<size_t>& sizes, size_t tfbs_length,
+                  bool verbose, double (*loss)(double))
 {
-        if (verbose) {
-                cerr << "Computing mean partition: " << endl;
+        /* number of parallel samplers */
+        size_t n = history.temperature.size();
+
+        /* if there are no samples, return immediately */
+        if (n == 0) return dpm_partition_t();
+
+        /* number of samples for each sampler */
+        size_t m = history.temperature[0].size();
+
+        /* list of feasible partitions */
+        dpm_partition_list_t partitions;
+
+        /* number of partitions that were discarded */
+        size_t discarded = 0;
+
+        for (size_t i = 0; i < m; i++) {
+                for (size_t j = 0; j < n; j++) {
+                        /* if the temperature is greater than one
+                         * discard the sample, since it belongs
+                         * to the burnin period */
+                        if (history.temperature[j][i] > 1.0) {
+                                discarded++;
+                                continue;
+                        }
+                        assert(i*n+j < history.partitions.size());
+                        /* save partition */
+                        partitions.push_back(history.partitions[i*n+j]);
+                }
         }
-        return dpm_tfbs_estimate(partitions, data().sizes(), _tfbs_length, verbose, &mean_loss);
+        if (verbose) {
+                cerr << boost::format("(Discarded first %d partitions!)") % discarded
+                     << endl;
+        }
+        /* compute estimate */
+        return dpm_tfbs_estimate(partitions, sizes, tfbs_length, verbose, loss);
+}
+
+// functions for computing map partitions
+// -----------------------------------------------------------------------------
+
+static dpm_partition_t
+compute_map(const sampling_history_t& history, dpm_tfbs_t& dpm_tfbs, bool verbose)
+{
+        /* number of parallel samplers */
+        size_t n = history.temperature.size();
+
+        /* if there are no samples, return immediately */
+        if (n == 0) return dpm_partition_t();
+
+        /* number of samples for each sampler */
+        size_t m = history.temperature[0].size();
+
+        /* number of partitions that were discarded */
+        size_t discarded = 0;
+
+        /* max and argmax of posterior samples */
+        double max = -numeric_limits<double>::infinity();
+        size_t argmax = 0;
+
+        for (size_t i = 0; i < m; i++) {
+                for (size_t j = 0; j < n; j++) {
+                        /* if the temperature is greater than one
+                         * discard the sample, since it belongs
+                         * to the burnin period */
+                        if (history.temperature[j][i] > 1.0) {
+                                discarded++;
+                                continue;
+                        }
+                        assert(i*n+j < history.partitions.size());
+                        if (max < history.posterior[j][i]) {
+                                max = history.posterior[j][i];
+                                argmax = i*n+j;
+                        }
+                }
+        }
+        if (verbose) {
+                cerr << boost::format("(Discarded first %d partitions!)") % discarded
+                     << endl;
+        }
+        if (max > -numeric_limits<double>::infinity()) {
+                return history.partitions[argmax];
+        }
+        else {
+                return dpm_partition_t();
+        }
+}
+
+// entry points
+// -----------------------------------------------------------------------------
+
+dpm_partition_t
+dpm_tfbs_t::map(const sampling_history_t& history, bool verbose) const
+{
+        /* create a copy of this object */
+        dpm_tfbs_t dpm_tfbs(*this);
+
+        if (verbose) {
+                cerr << "Computing mean partition: ";
+        }
+
+        return compute_map(history, dpm_tfbs, verbose);
 }
 
 dpm_partition_t
-dpm_tfbs_t::median(const dpm_partition_list_t& partitions, bool verbose) const
+dpm_tfbs_t::mean(const sampling_history_t& history, bool verbose) const
 {
         if (verbose) {
-                cerr << "Computing median partition: " << endl;
+                cerr << "Computing mean partition: ";
         }
-        return dpm_tfbs_estimate(partitions, data().sizes(), _tfbs_length, verbose, &median_loss);
+        return dpm_tfbs_estimate(history, data().sizes(), _tfbs_length, verbose, &mean_loss);
+}
+
+dpm_partition_t
+dpm_tfbs_t::median(const sampling_history_t& history, bool verbose) const
+{
+        if (verbose) {
+                cerr << "Computing median partition: ";
+        }
+        return dpm_tfbs_estimate(history, data().sizes(), _tfbs_length, verbose, &median_loss);
 }
