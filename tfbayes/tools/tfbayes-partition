@@ -48,6 +48,7 @@ def importMatplotlib(backend=None):
 # ------------------------------------------------------------------------------
 
 sampler_config = default_sampler_config()
+results_config = default_results_config()
 
 options = {
     'plot'             : False,
@@ -89,7 +90,7 @@ def usage():
 # ------------------------------------------------------------------------------
 
 def plot_cluster_list(cluster_list):
-    basename = os.path.splitext(os.path.split(sampler_config['save'])[1])[0]
+    basename = os.path.splitext(os.path.split(sampler_config.save)[1])[0]
     files    = plot.plot_cluster_list(cluster_list, basename, revcomp=options['revcomp'])
     if options['join']:
         cmd = 'pdftk %s cat output %s_cluster.pdf' % (' '.join(files), basename)
@@ -103,18 +104,16 @@ def plot_cluster_list(cluster_list):
 # ------------------------------------------------------------------------------
 
 def main(command, sampler_config_file):
-    results_config = {}
     parse_sampler_config(sampler_config_file, sampler_config)
     # check if all required options are specified
-    if not sampler_config['tfbs_length']:
+    if not sampler_config.tfbs_length:
         raise IOError('tfbs length is unknown')
-    if not sampler_config['save']:
+    if not sampler_config.save:
         raise IOError('no result file specified')
-    if not sampler_config['phylogenetic_data']:
+    if not sampler_config.phylogenetic_file:
         raise IOError('no sequences file specified')
     # parse results file
-    results_config_file = sampler_config['save']
-    parse_results_config(results_config_file, results_config)
+    parse_results_config(sampler_config.save, results_config)
     if options['save']:
         config_parser_save = ConfigParser.ConfigParser()
         config_parser_save.read(options['save'])
@@ -124,7 +123,7 @@ def main(command, sampler_config_file):
         cluster_list = fileio.load_cluster_list(config_parser_load, sampler_config)
     else:
         # parse sequences fasta file
-        descriptions, sequences = parse_sequences(sampler_config['phylogenetic_data'])
+        descriptions, sequences = parse_sequences(sampler_config.phylogenetic_file)
         cluster_list = generate_cluster_list(sequences, sampler_config, results_config, command)
     if options['save']:
         fileio.save_cluster_list(config_parser_save, cluster_list)

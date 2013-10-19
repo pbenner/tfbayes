@@ -103,23 +103,30 @@ def sort_cluster_list(cluster_list):
 # generate motifs
 # ------------------------------------------------------------------------------
 
-def generate_cluster(sequences, dpm_subset, identifier, sampler_config):
-    counts       = [ [ 0.0 for j in range(sampler_config['tfbs_length']) ] for i in range(4) ]
-    counts_gap   = [ 0.0 ] * sampler_config['tfbs_length']
-    alpha        = sampler_config['baseline_priors'][dpm_subset.identifier][0:4]
-    alpha_gap    = sampler_config['baseline_priors'][dpm_subset.identifier][4]
-    components   = len(dpm_subset.subset)
-    cluster_type = dpm_subset.identifier
-    for position in dpm_subset.subset:
+def get_baseline_prior(tag, sampler_config):
+    for baseline_prior, baseline_tag in zip(sampler_config.baseline_priors,
+                                            sampler_config.baseline_tags):
+        if tag == baseline_tag:
+            return baseline_prior
+    raise IOError("Baseline prior not found!")
+
+def generate_cluster(sequences, dpm_subset, idx, sampler_config):
+    counts         = [ [ 0.0 for j in range(sampler_config.tfbs_length) ] for i in range(4) ]
+    counts_gap     = [ 0.0 ] * sampler_config.tfbs_length
+    baseline_prior = get_baseline_prior(dpm_subset.dpm_subset_tag(), sampler_config)
+    alpha          = baseline_prior[0:4]
+    alpha_gap      = baseline_prior[4]
+    components     = len(dpm_subset)
+    for position in dpm_subset:
         s = position[0]
         p = position[1]
         # loop over the motif
-        for j in range(sampler_config['tfbs_length']):
+        for j in range(sampler_config.tfbs_length):
             # loop over all nucleotides plus counts for gaps
             for i in range(4):
                 counts[i][j] += sequences[s][p+j][i]
             counts_gap[j] += sequences[s][p+j][4]
-    return cluster_t(counts, counts_gap, alpha, alpha_gap, components, identifier, cluster_type)
+    return cluster_t(counts, counts_gap, alpha, alpha_gap, components, idx, dpm_subset.dpm_subset_tag())
 
 def generate_cluster_list(sequences, sampler_config, results_config, which = 'map'):
     """Loop through the partition and for each subset generate a motif."""
@@ -128,15 +135,15 @@ def generate_cluster_list(sequences, sampler_config, results_config, which = 'ma
     if which == 'map':
         if not results_config.has_key('map_partition'):
             raise IOError("MAP partition is not available in results file.")
-        partition = parse_partition(results_config['map_partition'])
+        partition = results_config['map_partition']
     elif which == 'mean':
         if not results_config.has_key('mean_partition'):
             raise IOError("Mean partition is not available in results file.")
-        partition = parse_partition(results_config['mean_partition'])
+        partition = results_config['mean_partition']
     elif which == 'median':
         if not results_config.has_key('median_partition'):
             raise IOError("Median partition is not available in results file.")
-        partition = parse_partition(results_config['median_partition'])
+        partition = results_config['median_partition']
     else:
         raise IOError("`%s' is not a valid partition type." % which)
     # generate cluster list

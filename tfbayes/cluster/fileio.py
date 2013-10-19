@@ -19,8 +19,8 @@
 import re
 
 from ..uipac  import *
-from ..config import *
-from cluster  import *
+#from ..config import *
+from cluster  import cluster_t
 
 # pwm to string
 # ------------------------------------------------------------------------------
