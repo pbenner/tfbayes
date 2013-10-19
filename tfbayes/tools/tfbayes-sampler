@@ -26,10 +26,10 @@ import os
 # local imports
 # ------------------------------------------------------------------------------
 
-from tfbayes.config                 import *
-from tfbayes.cluster                import parse_partition
-from tfbayes.dpm.dpm_tfbs_interface import *
-from tfbayes.interface              import sigint
+from tfbayes.config     import *
+from tfbayes.cluster    import parse_partition
+from tfbayes.dpm        import *
+from tfbayes.interface  import sigint
 
 # global options
 # ------------------------------------------------------------------------------

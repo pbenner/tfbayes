@@ -22,7 +22,7 @@ import ConfigParser
 from tools import *
 
 from tfbayes.interface import *
-from tfbayes.dpm.dpm_tfbs_interface import *
+from tfbayes.dpm       import *
 
 # default sampler config
 # ------------------------------------------------------------------------------

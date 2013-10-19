@@ -19,7 +19,6 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <cmath>
 #include <cstdlib>
 
 #include <gsl/gsl_sf_gamma.h>
@@ -30,9 +29,10 @@
 double fast_lngamma(double x)
 {
         if (x <= 1000.0) {
-                // a simple cast or trunc() introduces severe
-                // numerical errors!
-                size_t n = static_cast<size_t>(round(x*100.0-1.0));
+                // static casting uses a simple trunc() to
+                // convert a double to integer, therefore add
+                // 0.5 to reduce the numerical error
+                size_t n = static_cast<size_t>(x*100.0-1.0+0.5);
 
                 return fast_lngamma_table[n][1];
         }

@@ -22,7 +22,7 @@ from tools import *
 
 from tfbayes.cluster   import parse_partition_list
 from tfbayes.interface import *
-from tfbayes.dpm.dpm_tfbs_interface import *
+from tfbayes.dpm       import *
 
 # default results config
 # ------------------------------------------------------------------------------

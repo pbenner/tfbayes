@@ -20,7 +20,7 @@ import re
 
 from tfbayes.cluster   import cluster_t
 from tfbayes.interface import *
-from tfbayes.dpm.dpm_tfbs_interface import *
+from tfbayes.dpm       import *
 
 # parse results partition
 # ------------------------------------------------------------------------------
