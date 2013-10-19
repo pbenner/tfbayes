@@ -324,7 +324,9 @@ AX_CXXFLAGS_GCC_OPTION([-Wtrampolines])
 AX_CXXFLAGS_GCC_OPTION([-fno-nested-functions])
 AX_CXXFLAGS_GCC_OPTION([-fomit-frame-pointer])
 dnl no runtime type information
-AX_CXXFLAGS_GCC_OPTION([-fno-rtti], CXXFLAGS_NORTTI)
+dnl (-fno-rtti causes trouble while linking with rtti-enabled libraries)
+#AX_CXXFLAGS_GCC_OPTION([-fno-rtti], CXXFLAGS_NORTTI)
+dnl but it is possible to disable rtti in boost
 AX_CXXFLAGS_GCC_OPTION([-DBOOST_NO_TYPEID], CXXFLAGS_NORTTI)
 AX_CXXFLAGS_GCC_OPTION([-DBOOST_NO_RTTI], CXXFLAGS_NORTTI)
 dnl turn link time optimization on (works only on some systems so far)

@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/include
-#AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
+AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
 noinst_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug
 
