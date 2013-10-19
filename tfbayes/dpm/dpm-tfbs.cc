@@ -28,14 +28,15 @@
 
 using namespace std;
 
-dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, const alignment_set_t<>& alignment_set,
-        const dpm_partition_t& partition)
+dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
+                       const data_tfbs_t& data,
+                       boost::optional<const alignment_set_t<>&> alignment_set)
         : // baseline
           _baseline_weights(options.baseline_weights),
           // phylogenetic information
           _data(&data),
           // coded nucleotide sequences
-          _alignment_set(&alignment_set),
+          _alignment_set(NULL),
           // cluster manager
           _state(data.sizes(), options.tfbs_length, 0, data),
           // mixture weight for the dirichlet process
@@ -47,9 +48,12 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
 {
         ////////////////////////////////////////////////////////////////////////////////
         // check that the alignment data matches the phylogenetic data
-        assert(data.size() == alignment_set.size());
-        for (size_t i = 0; i < data.size(); i++) {
-                assert(data[i].size() == alignment_set[i].length());
+        if (alignment_set) {
+                assert(data.size() == alignment_set->size());
+                for (size_t i = 0; i < data.size(); i++) {
+                        assert(data[i].size() == (*alignment_set)[i].length());
+                }
+                _alignment_set = &*alignment_set;
         }
 
         ////////////////////////////////////////////////////////////////////////////////
@@ -123,20 +127,6 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
         else {
                 cerr << "Unknown prior process." << endl;
                 exit(EXIT_FAILURE);
-        }
-        ////////////////////////////////////////////////////////////////////////////////
-        // use a map partition from a previous sampling run to
-        // initialize the state
-        for (dpm_partition_t::const_iterator it = partition.begin(); it != partition.end(); it++) {
-                const dpm_subset_t& subset(*it);
-                cluster_t& cluster = _state.get_free_cluster(subset.dpm_subset_tag());
-
-                for (dpm_subset_t::const_iterator is = subset.begin(); is != subset.end(); is++) {
-                        assert(valid_for_sampling(**is));
-                        assert(_state[**is] == _state.bg_cluster_tag);
-                        _state.remove(**is, _state.bg_cluster_tag);
-                        _state.add   (**is, cluster.cluster_tag());
-                }
         }
         ////////////////////////////////////////////////////////////////////////////////
         //test();

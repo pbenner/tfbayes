@@ -33,5 +33,8 @@ def read_matrix(config_parser, section, option, converter):
 def write_vector(config, section, option, vector):
     config.set(section, option, " ".join(map(str, vector)))
 
-def write_matrix(config, section, option, matrix):
-    config.set(section, option, "\n"+"\n".join(map(lambda arg: " ".join(map(str, arg)), matrix)))
+def write_matrix(config, section, option, matrix, converter = None):
+    if converter:
+        config.set(section, option, "\n"+"\n".join(map(lambda arg: " ".join(map(lambda a: str(int(a)), arg)), matrix)))
+    else:
+        config.set(section, option, "\n"+"\n".join(map(lambda arg: " ".join(map(str, arg)), matrix)))

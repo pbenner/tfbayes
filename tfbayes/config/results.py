@@ -20,6 +20,7 @@ import ConfigParser
 
 from tools import *
 
+from tfbayes.cluster   import parse_partition
 from tfbayes.cluster   import parse_partition_list
 from tfbayes.interface import *
 from tfbayes.dpm       import *
@@ -28,7 +29,12 @@ from tfbayes.dpm       import *
 # ------------------------------------------------------------------------------
 
 def default_results_config():
-    results_config = sampling_history_t()
+    results_config = {
+        'sampling_history' : sampling_history_t(),
+        'map_partition'    : dpm_partition_t(),
+        'mean_partition'   : dpm_partition_t(),
+        'median_partition' : dpm_partition_t()
+        }
     return results_config
 
 # parse results config
@@ -40,23 +46,23 @@ def parse_results_config(config_file, results_config):
     if not config_parser.has_section('Result'):
         raise IOError("Invalid configuration file.")
     if config_parser.has_option('Result', 'components'):
-        results_config.components = read_matrix(config_parser, 'Result', 'components', int)
+        results_config['sampling_history'].components = read_matrix(config_parser, 'Result', 'components', int)
     if config_parser.has_option('Result', 'likelihood'):
-        results_config.likelihood = read_matrix(config_parser, 'Result', 'likelihood', float)
+        results_config['sampling_history'].likelihood = read_matrix(config_parser, 'Result', 'likelihood', float)
     if config_parser.has_option('Result', 'posterior'):
-        results_config.posterior = read_matrix(config_parser, 'Result', 'posterior', float)
+        results_config['sampling_history'].posterior = read_matrix(config_parser, 'Result', 'posterior', float)
     if config_parser.has_option('Result', 'temperature'):
-        results_config.temperature = read_matrix(config_parser, 'Result', 'temperature', float)
+        results_config['sampling_history'].temperature = read_matrix(config_parser, 'Result', 'temperature', float)
     if config_parser.has_option('Result', 'switches'):
-        results_config.switches = read_matrix(config_parser, 'Result', 'switches', float)
-    if config_parser.has_option('Result', 'map_partition'):
-        results_config.map_partition = config_parser.get('Result', 'map_partition')
-    if config_parser.has_option('Result', 'mean_partition'):
-        results_config.mean_partition = config_parser.get('Result', 'mean_partition')
-    if config_parser.has_option('Result', 'median_partition'):
-        results_config.median_partition = config_parser.get('Result', 'median_partition')
+        results_config['sampling_history'].switches = read_matrix(config_parser, 'Result', 'switches', float)
     if config_parser.has_option('Result', 'partitions'):
-        results_config.partitions = parse_partition_list(config_parser.get('Result', 'partitions'))
+        results_config['sampling_history'].partitions = parse_partition_list(config_parser.get('Result', 'partitions'))
+    if config_parser.has_option('Result', 'map_partition'):
+        results_config['map_partition'] = parse_partition(config_parser.get('Result', 'map_partition'))
+    if config_parser.has_option('Result', 'mean_partition'):
+        results_config['mean_partition'] = parse_partition(config_parser.get('Result', 'mean_partition'))
+    if config_parser.has_option('Result', 'median_partition'):
+        results_config['median_partition'] = parse_partition(config_parser.get('Result', 'median_partition'))
 
 # save results config
 # ------------------------------------------------------------------------------
@@ -64,18 +70,17 @@ def parse_results_config(config_file, results_config):
 def save_results_config(config_file, results_config):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.add_section('Result')
-    write_matrix(config_parser, 'Result', 'components',  results_config.components)
-    write_matrix(config_parser, 'Result', 'likelihood',  results_config.likelihood)
-    write_matrix(config_parser, 'Result', 'posterior',   results_config.posterior)
-    write_matrix(config_parser, 'Result', 'switches',    results_config.switches)
-    write_matrix(config_parser, 'Result', 'temperature', results_config.temperature)
-    if results_config.has_key('partitions'):
-        config_parser.set('Result', 'partitions',       results_config.partitions)
-    if results_config.has_key('map_partition'):
-        config_parser.set('Result', 'map_partition',    results_config.map_partition)
-    if results_config.has_key('mean_partition'):
-        config_parser.set('Result', 'mean_partition',   results_config.mean_partition)
-    if results_config.has_key('median_partition'):
-        config_parser.set('Result', 'median_partition', results_config.median_partition)
+    write_matrix(config_parser, 'Result', 'components',  results_config['sampling_history'].components, int)
+    write_matrix(config_parser, 'Result', 'likelihood',  results_config['sampling_history'].likelihood)
+    write_matrix(config_parser, 'Result', 'posterior',   results_config['sampling_history'].posterior)
+    write_matrix(config_parser, 'Result', 'switches',    results_config['sampling_history'].switches, int)
+    write_matrix(config_parser, 'Result', 'temperature', results_config['sampling_history'].temperature)
+    config_parser.set('Result', 'partitions',       results_config['sampling_history'].partitions)
+    if results_config.has_key('map_partition') and results_config['map_partition']:
+        config_parser.set('Result', 'map_partition',    results_config['map_partition'])
+    if results_config.has_key('mean_partition') and results_config['mean_partition']:
+        config_parser.set('Result', 'mean_partition',   results_config['mean_partition'])
+    if results_config.has_key('median_partition') and results_config['median_partition']:
+        config_parser.set('Result', 'median_partition', results_config['median_partition'])
     with open(config_file, 'wb') as config_fp:
         config_parser.write(config_fp)

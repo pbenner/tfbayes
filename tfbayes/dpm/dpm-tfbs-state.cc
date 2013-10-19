@@ -201,7 +201,7 @@ dpm_tfbs_state_t::move_left(cluster_t& cluster)
                 add(range.index(), bg_cluster_tag);
                 if (position > 0 && valid_tfbs_position(index)) {
                         remove(index, bg_cluster_tag);
-                        add(index, cluster.cluster_tag());
+                        add   (index, cluster.cluster_tag());
                 }
         }
 
@@ -227,7 +227,7 @@ dpm_tfbs_state_t::move_right(cluster_t& cluster)
                 add(range.index(), bg_cluster_tag);
                 if (position+tfbs_length < sequence_length && valid_tfbs_position(index)) {
                         remove(index, bg_cluster_tag);
-                        add(index, cluster.cluster_tag());
+                        add   (index, cluster.cluster_tag());
                 }
         }
         return true;
@@ -268,4 +268,34 @@ dpm_tfbs_state_t::partition() const
                 }
         }
         return dpm_partition;
+}
+
+void
+dpm_tfbs_state_t::set_partition(const dpm_partition_t& partition)
+{
+        ////////////////////////////////////////////////////////////////////////////////
+        // release all clusters
+        for (dpm_tfbs_state_t::const_iterator it = begin(); it != end(); it++) {
+                const cluster_t& cluster = **it;
+                if (cluster.cluster_tag() != bg_cluster_tag) {
+                        // loop through cluster elements
+                        for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
+                                remove(is->index(), cluster.cluster_tag());
+                                add   (is->index(), bg_cluster_tag);
+                        }
+                }
+        }
+        ////////////////////////////////////////////////////////////////////////////////
+        // set state to given partition
+        for (dpm_partition_t::const_iterator it = partition.begin(); it != partition.end(); it++) {
+                const dpm_subset_t& subset(*it);
+                cluster_t& cluster = get_free_cluster(subset.dpm_subset_tag());
+
+                for (dpm_subset_t::const_iterator is = subset.begin(); is != subset.end(); is++) {
+                        assert(valid_tfbs_position(**is));
+                        assert(operator[](**is) == bg_cluster_tag);
+                        remove(**is, bg_cluster_tag);
+                        add   (**is, cluster.cluster_tag());
+                }
+        }
 }

@@ -66,27 +66,24 @@ def usage():
 
 def compute_mean(command):
     # get posterior samples from results config
-    results_config = {}
-    parse_results_config(sampler_config['save'], results_config)
-    partition_list = parse_partition_list(results_config['partitions'])
-    # init sampler
-    dpm_init(sampler_config,
-             sampler_config['phylogenetic_data'],
-             sampler_config['alignment_data'])
+    results_config = default_results_config()
+    parse_results_config(sampler_config.save, results_config)
+    # inititialize data
+    data_tfbs = data_tfbs_t(sampler_config.phylogenetic_file, sampler_config.tfbs_length)
+    # initialize dpm
+    dpm_tfbs  =  dpm_tfbs_t(sampler_config, data_tfbs)
     # compute mean or median
     if command == "mean":
-        results_config['mean_partition'] = dpm_mean(partition_list)
+        results_config['mean_partition']   = dpm_tfbs.mean(results_config['sampling_history'].partitions, True)
     if command == "median":
-        results_config['median_partition'] = dpm_median(partition_list)
+        results_config['median_partition'] = dpm_tfbs.median(results_config['sampling_history'].partitions, True)
     # save result
-    save_results_config(sampler_config['save'], results_config)
-    # free sampler
-    dpm_free()
+    save_results_config(sampler_config.save, results_config)
 
 # main
 # ------------------------------------------------------------------------------
 
-def main():
+def __main__():
     global options
     global sampler_config
     try:

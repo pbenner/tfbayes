@@ -74,6 +74,7 @@ public:
         }
 
         dpm_partition_t partition() const;
+        void set_partition(const dpm_partition_t& partition);
 
         // data
         ////////////////////////////////////////////////////////////////////////

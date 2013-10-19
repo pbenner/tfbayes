@@ -119,11 +119,8 @@ public:
         const tfbs_options_t& options() const;
         const data_tfbs_t& data() const;
 
-        // compute point estimates
+        // save sampling results
         ////////////////////////////////////////////////////////////////////////
-        dpm_partition_t map() const;
-        dpm_partition_t mean() const;
-        dpm_partition_t median() const;
         void save(const std::string& filename) const;
 
 protected:

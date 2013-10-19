@@ -432,24 +432,24 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
           _bt(NULL)
 {
         for (size_t i = 0; i < _size; i++) {
-                if (history.partitions.size() == 0) {
-                        dpm_tfbs_t dpm_tfbs(options, _data, _alignment_set);
-                        _population[i] = new dpm_tfbs_sampler_t(options, dpm_tfbs, _data, _output_queue);
-                }
-                else
-                if (history.partitions.size() % _size == 0) {
+                // initialize dpm_tfbs
+                dpm_tfbs_t dpm_tfbs(options, _data, _alignment_set);
+                // check if we have to resume from an old state
+                if (history.partitions.size() != 0) {
+                        if (history.partitions.size() % _size != 0) {
+                                cerr << "Cannot resume from previous sampling run: Number of"
+                                     << " partitions does not match."
+                                     << endl;
+                                exit(EXIT_FAILURE);
+                        }
+                        // resume partition
                         const dpm_partition_t& partition = history.partitions
                                 [history.partitions.size()-_size+i];
-                        dpm_tfbs_t dpm_tfbs(options, _data, _alignment_set,
-                                            partition);
-                        _population[i] = new dpm_tfbs_sampler_t(options, dpm_tfbs, _data, _output_queue);
+                        dpm_tfbs.state().set_partition(partition);
                 }
-                else {
-                        cerr << "Cannot resume from previous sampling run: Number of" << endl
-                             << "partitions does not match."
-                             << endl;
-                        exit(EXIT_FAILURE);
-                }
+                // initialize sampler
+                _population[i] = new dpm_tfbs_sampler_t(options, dpm_tfbs, _data, _output_queue);
+                // make some noise
                 std::stringstream ss;
                 ss << "Sampler " << i+1;
                 operator[](i).name() = ss.str();
@@ -504,21 +504,6 @@ dpm_tfbs_pmcmc_t::options() const {
 const data_tfbs_t&
 dpm_tfbs_pmcmc_t::data() const {
         return _data;
-}
-
-dpm_partition_t
-dpm_tfbs_pmcmc_t::map() const {
-        return dpm_partition_t();
-}
-
-dpm_partition_t
-dpm_tfbs_pmcmc_t::mean() const {
-        return dpm_partition_t();
-}
-
-dpm_partition_t
-dpm_tfbs_pmcmc_t::median() const {
-        return dpm_partition_t();
 }
 
 void

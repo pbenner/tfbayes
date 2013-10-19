@@ -22,6 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <boost/optional.hpp>
+
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/dpm/mixture-model.hh>
 #include <tfbayes/dpm/data-tfbs.hh>
@@ -34,8 +36,8 @@ class dpm_tfbs_t : public mixture_model_t {
 public:
          dpm_tfbs_t(const tfbs_options_t& options,
                     const data_tfbs_t& data,
-                    const alignment_set_t<>& alignment_set,
-                    const dpm_partition_t& partition = dpm_partition_t());
+                    boost::optional<const alignment_set_t<>&> alignment_set =
+                    boost::optional<const alignment_set_t<>&>());
          dpm_tfbs_t(const dpm_tfbs_t& dpm);
         ~dpm_tfbs_t();
 
@@ -77,6 +79,11 @@ public:
         double likelihood() const;
         double posterior() const;
         bool   valid_for_sampling(const index_i& index) const;
+
+        // compute point estimates
+        ////////////////////////////////////////////////////////////////////////
+        dpm_partition_t mean  (const dpm_partition_list_t& partitions, bool verbose = false) const;
+        dpm_partition_t median(const dpm_partition_list_t& partitions, bool verbose = false) const;
 
         // test methods
         ////////////////////////////////////////////////////////////////////////

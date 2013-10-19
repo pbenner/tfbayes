@@ -83,6 +83,14 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
                 .def("__iter__", boost::python::iterator<baseline_tags_t>())
                 .def("append",  &baseline_tags_push_back)
                 ;
+        class_<data_tfbs_t>("data_tfbs_t", no_init)
+                .def(init<const std::string&, size_t>())
+                ;
+        class_<dpm_tfbs_t>("dpm_tfbs_t", no_init)
+                .def(init<const tfbs_options_t&, const data_tfbs_t&>())
+                .def("mean",    &dpm_tfbs_t::mean)
+                .def("median",  &dpm_tfbs_t::median)
+                ;
         class_<dpm_tfbs_pmcmc_t, boost::noncopyable>("dpm_tfbs_pmcmc_t", no_init)
                 .def(init<tfbs_options_t>())
                 .def(init<tfbs_options_t, sampling_history_t>())
