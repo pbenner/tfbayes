@@ -143,7 +143,6 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options, const data_tfbs_t& data, c
         //test_background();
         //test_moves();
         //test_metropolis_hastings();
-        cout << "posterior: " << posterior() << endl;
 }
 
 dpm_tfbs_t::dpm_tfbs_t(const dpm_tfbs_t& dpm)
