@@ -107,7 +107,7 @@ def get_baseline_prior(tag, sampler_config):
     for baseline_prior, baseline_tag in zip(sampler_config.baseline_priors,
                                             sampler_config.baseline_tags):
         if tag == baseline_tag:
-            return baseline_prior
+            return map(list, zip(*baseline_prior))
     raise IOError("Baseline prior not found!")
 
 def generate_cluster(sequences, dpm_subset, idx, sampler_config):
