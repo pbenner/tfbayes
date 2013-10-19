@@ -86,8 +86,8 @@ data_tfbs_t::data_tfbs_t(const string& phylogenetic_input, size_t tfbs_length)
 
 data_tfbs_t::data_tfbs_t(const data_tfbs_t& data)
         : sequence_data_t<code_t>(*this),
-          _n_sequences(data._n_sequences),
-          _elements(data._elements)
+          _n_sequences (data._n_sequences),
+          _elements    (data._elements)
 {
         for (indexer_t::const_iterator it = data.begin(); it != data.end(); it++) {
                 index_i* index = (**it).clone();

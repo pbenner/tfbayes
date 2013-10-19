@@ -168,6 +168,9 @@ public:
         data_t(const std::vector<T>& data)
                 : std::vector<T>(data) {
         }
+        data_t(const data_t& data)
+                : std::vector<T>(data) {
+        }
         virtual ~data_t() {}
 
         friend void swap(data_t<T>& first, data_t<T>& second) {
@@ -216,6 +219,9 @@ public:
                 }
         }
         sequence_data_t(const std::vector<std::vector<T> >& data)
+                : std::vector<std::vector<T> >(data) {
+        }
+        sequence_data_t(const sequence_data_t& data)
                 : std::vector<std::vector<T> >(data) {
         }
         virtual ~sequence_data_t() {
