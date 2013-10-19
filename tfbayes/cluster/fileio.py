@@ -19,8 +19,7 @@
 import re
 
 from ..uipac  import *
-#from ..config import *
-from cluster  import cluster_t
+from ..config import read_vector, write_vector
 
 # pwm to string
 # ------------------------------------------------------------------------------
