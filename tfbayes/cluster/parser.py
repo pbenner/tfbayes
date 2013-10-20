@@ -71,16 +71,16 @@ def generate_cluster_list(sequences, sampler_config, results_config, which = 'ma
     cluster_list = []
     # receive partition from results file
     if which == 'map':
-        if not results_config.has_key('map_partition'):
-            raise IOError("MAP partition is not available in results file.")
+        if not results_config.has_key('map_partition') or not results_config['map_partition']:
+            raise IOError("MAP partition is not available in results file. Use `tfbayes-estimate' to compute it.")
         partition = results_config['map_partition']
     elif which == 'mean':
-        if not results_config.has_key('mean_partition'):
-            raise IOError("Mean partition is not available in results file.")
+        if not results_config.has_key('mean_partition') or not results_config['mean_partition']:
+            raise IOError("Mean partition is not available in results file. Use `tfbayes-estimate' to compute it.")
         partition = results_config['mean_partition']
     elif which == 'median':
-        if not results_config.has_key('median_partition'):
-            raise IOError("Median partition is not available in results file.")
+        if not results_config.has_key('median_partition') or not results_config['median_partition']:
+            raise IOError("Median partition is not available in results file. Use `tfbayes-estimate' to compute it.")
         partition = results_config['median_partition']
     else:
         raise IOError("`%s' is not a valid partition type." % which)

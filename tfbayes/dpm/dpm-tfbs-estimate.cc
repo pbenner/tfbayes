@@ -215,8 +215,63 @@ dpm_tfbs_estimate(const sampling_history_t& history,
 // functions for computing map partitions
 // -----------------------------------------------------------------------------
 
+static bool
+map_local_optimization(const index_i& index, dpm_tfbs_t& dpm, bool verbose) {
+        ////////////////////////////////////////////////////////////////////////
+        // check if we can sample this element
+        if (!dpm.valid_for_sampling(index)) {
+                return false;
+        }
+        ////////////////////////////////////////////////////////////////////////
+        // release the element from its cluster
+        cluster_tag_t old_cluster_tag = dpm.state()[index];
+        dpm.state().remove(index, old_cluster_tag);
+        size_t components = dpm.mixture_components() + dpm.baseline_components();
+        double log_weights[components];
+        cluster_tag_t cluster_tags[components];
+        dpm.mixture_weights(index, log_weights, cluster_tags);
+
+        ////////////////////////////////////////////////////////////////////////
+        // draw a new cluster for the element and assign the element
+        // to that cluster
+        cluster_tag_t new_cluster_tag;
+        new_cluster_tag = cluster_tags[select_max_component(components, log_weights)];
+        if (verbose && new_cluster_tag != old_cluster_tag) {
+                cout << "Moving " << (const seq_index_t&)index
+                     << " from cluster " << old_cluster_tag
+                     << " to cluster "   << new_cluster_tag
+                     << endl;
+        }
+
+        ////////////////////////////////////////////////////////////////////////
+        dpm.state().add(index, new_cluster_tag);
+
+        return old_cluster_tag != new_cluster_tag;
+}
+
 static dpm_partition_t
-compute_map(const sampling_history_t& history, dpm_tfbs_t& dpm_tfbs, bool verbose)
+map_local_optimization(dpm_tfbs_t& dpm, bool verbose) {
+        bool optimized;
+        /* make some noise */
+        if (verbose) cout << "Performing local optimizations..." << endl;
+        /* loop until no local optimizations are possible */
+        do {
+                optimized = false;
+                for (indexer_t::const_iterator it = dpm.data().sampling_begin();
+                     it != dpm.data().sampling_end(); it++) {
+                        optimized |= map_local_optimization(**it, dpm, verbose);
+                }
+                if (verbose) {
+                        cout << "Posterior: " << dpm.posterior()
+                             << endl;
+                }
+        } while (optimized);
+        /* return final partition */
+        return dpm.state().partition();
+}
+
+static dpm_partition_t
+compute_map(const sampling_history_t& history, dpm_tfbs_t& dpm, bool verbose)
 {
         /* number of parallel samplers */
         size_t n = history.temperature.size();
@@ -251,11 +306,14 @@ compute_map(const sampling_history_t& history, dpm_tfbs_t& dpm_tfbs, bool verbos
                 }
         }
         if (verbose) {
-                cerr << boost::format("(Discarded first %d partitions!)") % discarded
+                cout << boost::format("(Discarded first %d partitions!)") % discarded
                      << endl;
         }
         if (max > -numeric_limits<double>::infinity()) {
-                return history.partitions[argmax];
+                /* set dpm state to best partition */
+                dpm.state().set_partition(history.partitions[argmax]);
+                /* optimize this partition locally */
+                return map_local_optimization(dpm, verbose);
         }
         else {
                 return dpm_partition_t();
@@ -272,7 +330,7 @@ dpm_tfbs_t::map(const sampling_history_t& history, bool verbose) const
         dpm_tfbs_t dpm_tfbs(*this);
 
         if (verbose) {
-                cerr << "Computing mean partition: ";
+                cout << "Computing map partition: ";
         }
 
         return compute_map(history, dpm_tfbs, verbose);
@@ -282,7 +340,7 @@ dpm_partition_t
 dpm_tfbs_t::mean(const sampling_history_t& history, bool verbose) const
 {
         if (verbose) {
-                cerr << "Computing mean partition: ";
+                cout << "Computing mean partition: ";
         }
         return dpm_tfbs_estimate(history, data().sizes(), _tfbs_length, verbose, &mean_loss);
 }
@@ -291,7 +349,7 @@ dpm_partition_t
 dpm_tfbs_t::median(const sampling_history_t& history, bool verbose) const
 {
         if (verbose) {
-                cerr << "Computing median partition: ";
+                cout << "Computing median partition: ";
         }
         return dpm_tfbs_estimate(history, data().sizes(), _tfbs_length, verbose, &median_loss);
 }

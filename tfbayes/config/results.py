@@ -75,11 +75,11 @@ def save_results_config(config_file, results_config):
     write_matrix(config_parser, 'Result', 'posterior',   results_config['sampling_history'].posterior)
     write_matrix(config_parser, 'Result', 'switches',    results_config['sampling_history'].switches, int)
     write_matrix(config_parser, 'Result', 'temperature', results_config['sampling_history'].temperature)
-    config_parser.set('Result', 'partitions',       results_config['sampling_history'].partitions)
+    config_parser.set('Result', 'partitions', results_config['sampling_history'].partitions)
     if results_config.has_key('map_partition') and results_config['map_partition']:
-        config_parser.set('Result', 'map_partition',    results_config['map_partition'])
+        config_parser.set('Result', 'map_partition', results_config['map_partition'])
     if results_config.has_key('mean_partition') and results_config['mean_partition']:
-        config_parser.set('Result', 'mean_partition',   results_config['mean_partition'])
+        config_parser.set('Result', 'mean_partition', results_config['mean_partition'])
     if results_config.has_key('median_partition') and results_config['median_partition']:
         config_parser.set('Result', 'median_partition', results_config['median_partition'])
     with open(config_file, 'wb') as config_fp:
