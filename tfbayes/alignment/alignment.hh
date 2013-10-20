@@ -347,7 +347,7 @@ protected:
                 for (taxon_map_t::const_iterator it = taxon_map().begin();
                      it != taxon_map().end(); it++) {
                         if (tmp[it->second].size() == 0) {
-                                std::cerr << boost::format("Warning: taxon `%s' has sequence length zero") % it->first
+                                std::cerr << boost::format("Warning: taxon `%s' has sequence length zero (regarding as missing data)") % it->first
                                           << std::endl;
                                 // fill with missing data
                                 tmp[it->second] = sequence_t<AC>(length(), alphabet());

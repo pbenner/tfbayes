@@ -156,6 +156,68 @@ generates a less conserved region with plenty of gaps, i.e.
 	oryCun2: ---AGGAGA-G--T-T-CC-CACCGACGC-GCG--CTGT-CTCGGCGA-GA-ACTGGTGA-GA---C-GACAG-GT--G-CT-A-AA-T-AGGATAC-TC
 
 
+## Example: ChIP-Seq data analysis
+
+Sequences from a ChIP-Seq experiment must be available in *maf* or *mfa* format. In a first step, the training data is preprocessed. For each ChIP-Seq peak in our target species (e.g. DroMel) we are given the nucleotide sequence around this location as a multiple sequence alignment. The purpose of the analysis is to find the motif for our target species and we regard the sequences of all other species as additional information. Therefore, we first remove all columns in the alignment where the target species has a gap ('-'):
+
+	tfbayes-preprocess-alignment -v -s DroMel -m 50 training-set.orig.maf > training-set.filtered.maf
+
+In addition, the command masks all sites in a sequence as missing data ('N') if more than 50 consecutive gaps appear. The filtered data is then used to compute the phylogenetic approximation:
+
+	tfbayes-approximate -v $(PHYLOTREE) < training-set.filtered.maf > training-set.approximation.fa
+
+The sampler requires the alignment data in *fasta* format, we convert the *maf* file with
+
+	tfbayes-maf-to-fasta training-set.filtered.maf training-set.filtered.fa
+
+Before running the sampler, we need to specify a configuration file (*training-set.cfg*):
+
+	[TFBS-Sampler]
+	alignment-file    = training-set.filtered.fa
+	phylogenetic-file = training-set.approximation.fa
+	save = training-set.result
+	socket-file = training-set.srv
+	process-prior = pitman-yor process
+	samples = 1000:100
+	population-size = 4
+	alpha = 10
+	discount = 0.0
+	lambda = 0.00000000000001
+	initial-temperature = 5
+	tfbs-length = 10
+	background-model = independence-dirichlet
+	background-alpha =
+	                 10.0
+	                 10.0
+	                 10.0
+	                 10.0
+	                 10.0
+	baseline-priors = baseline-default
+	baseline-default =
+	                 0.200 0.200 0.200 0.200 0.200 0.200 0.200 0.200 0.200 0.200
+	                 0.200 0.200 0.200 0.200 0.200 0.200 0.200 0.200 0.200 0.200
+	                 0.200 0.200 0.200 0.200 0.200 0.200 0.200 0.200 0.200 0.200
+	                 0.200 0.200 0.200 0.200 0.200 0.200 0.200 0.200 0.200 0.200
+	                 0.100 0.100 0.100 0.100 0.100 0.100 0.100 0.100 0.100 0.100
+
+The sampler is executed with
+
+	tfbayes-sampler training-set.cfg
+
+which first generates a sequence of 100 burnin samples with temperature greater one and afterwards starts the actual MCMC simulation. The sampler runs 4 Markov chains in parallel, each generates a set of 1000 samples. Once the sampling process has finished, we may plot the posterior probabilities, number of clusters and temperature with
+
+	tfbayes-plot training-set.cfg
+
+A point estimate (i.e. map, mean or median) is computed with the *tfbayes-estimate* command. The computation of the mean and median might take a while and it might be reasonable to only take a subset of the posterior samples, i.e.
+
+	tfbayes-estimate -v --take=1000 mean training-set.cfg
+
+A point estimate can be converted to a logo with
+
+	tfbayes-partition -v -j mean training-set.cfg
+
+which generates a *training-set.pdf* that contains a motif for each cluster (requires *pdftk*).
+
 ## Alignment gaps
 
 The library supports two ways of handling alignment gaps. Which one is used is coded in the alignment data:
