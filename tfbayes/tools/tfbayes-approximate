@@ -28,11 +28,11 @@ import Queue
 import threading
 import thread
 
-from tfbayes                import alignio
-from tfbayes.alignment      import *
-from tfbayes.phylotree      import *
-from tfbayes.uipac.alphabet import DNA
-from tfbayes.interface      import sigint
+from tfbayes            import alignio
+from tfbayes.alignment  import *
+from tfbayes.phylotree  import *
+from tfbayes.uipac      import DNA
+from tfbayes.interface  import sigint
 
 # usage
 # ------------------------------------------------------------------------------
