@@ -303,6 +303,7 @@ AX_CXXFLAGS_GCC_OPTION([-Wtrampolines])
 #AX_CXXFLAGS_GCC_OPTION([-fPIC])
 AX_CXXFLAGS_GCC_OPTION([-fno-nested-functions])
 AX_CXXFLAGS_GCC_OPTION([-fomit-frame-pointer])
+AX_CXXFLAGS_GCC_OPTION([-fvisibility-inlines-hidden])
 dnl no runtime type information
 dnl (-fno-rtti causes trouble while linking with rtti-enabled libraries)
 #AX_CXXFLAGS_GCC_OPTION([-fno-rtti], CXXFLAGS_NORTTI)
