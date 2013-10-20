@@ -46,8 +46,12 @@ static void
 init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data,
           size_t tfbs_length)
 {
-        // begin with cluster tag 1, since 0 is reserved for the background
-        cluster_tag_t k = 1;
+        /* Cluster labeling convention:
+         * The kth cluster gets all labels from k*tfbs_length + 1 to
+         * k*tfbs_length + tfbs_length. Hence, each site in a
+         * cluster gets a unique label. The label 0 is reserved for
+         * the background */
+        cluster_tag_t k = 0;
 
         for (dpm_partition_t::const_iterator it = partition.begin();
              it != partition.end(); it++, k++) {
@@ -55,7 +59,7 @@ init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data
                      is != it->end(); is++) {
                         const seq_index_t& index = static_cast<const seq_index_t&>(**is);
                         for (size_t i = 0; i < tfbs_length; i++) {
-                                data[index[0]][index[1]+i] = k;
+                                data[index[0]][index[1]+i] = k*tfbs_length+i+1;
                         }
                 }
         }
