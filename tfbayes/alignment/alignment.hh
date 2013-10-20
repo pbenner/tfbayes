@@ -302,7 +302,9 @@ protected:
                 std::matrix<AC> tmp(n_species(), 0);
                 std::string line;
 
-                while (parser) {
+                for (size_t i = 1; parser; i++) {
+                        std::cerr << boost::format("Reading sequence %d...") % i
+                                  << std::endl;
                         line = parser();
                         if (line == "")
                                 continue;
@@ -414,7 +416,7 @@ public:
 
                 /* the fasta parser returns a single line for each
                  * sequence */
-                while (parser) {
+                for (size_t i = 1; parser;) {
                         line = parser();
                         if (line == "")
                                 continue;
@@ -425,6 +427,8 @@ public:
                         }
                         if (occurred.find(parser.taxon()) != occurred.end()) {
                                 // push alignment
+                                std::cerr << boost::format("Reading alignment %d...") % i++
+                                          << std::endl;
                                 push_back(alignment_t<AC>(sequences, taxon_map, alphabet));
                                 // reset occurrences
                                 occurred.clear();

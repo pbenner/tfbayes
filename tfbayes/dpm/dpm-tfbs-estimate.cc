@@ -23,8 +23,6 @@
 
 #include <stdint.h>
 
-#include <gperftools/profiler.h>
-
 #include <boost/unordered/unordered_set.hpp>
 
 #include <tfbayes/dpm/dpm-tfbs.hh>
