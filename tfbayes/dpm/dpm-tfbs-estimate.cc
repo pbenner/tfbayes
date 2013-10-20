@@ -22,7 +22,6 @@
 #define __STDC_LIMIT_MACROS
 
 #include <stdint.h>
-#include <set>
 
 #include <boost/unordered/unordered_set.hpp>
 

@@ -39,7 +39,6 @@ AM_PROG_LEX
 AC_PROG_YACC
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
-AC_PROG_RANLIB
 LT_INIT
 LT_PATH_LD
 
@@ -216,25 +215,6 @@ AC_CHECK_FUNCS(dprintf)
 AC_CHECK_FUNCS(vsyslog)
 
 dnl ,---------------------------- 
-dnl | PRECISION
-dnl `----------------------------
-
-AC_ARG_ENABLE([longdouble],
-	[AS_HELP_STRING([--enable-longdouble],
-								[use long double for probabilities @<:@default=yes@:>@])],
-	[],
-	[enable_longdouble=yes])
-AS_IF([test "x$enable_longdouble" = "xyes"],
-	[AC_CHECK_FUNCS([expl logl log1pl], [], [enable_longdouble=no])], [])
-AS_IF([test "x$enable_longdouble" = "xyes"],
-	[AC_DEFINE([PROB_T], [long double], [Use long double to store log probabilities.])],
-	[AC_DEFINE([PROB_T], [double], [Use double to store log probabilities.])
-	 AC_DEFINE([expl], [exp], [Replace expl with exp])
-	 AC_DEFINE([logl], [log], [Replace logl with log])
-	 AC_DEFINE([log1pl], [log1p], [Replace log1pl with log1p])
-	 ])
-
-dnl ,---------------------------- 
 dnl | GCC_OPTIONS
 dnl `----------------------------
 
@@ -380,7 +360,6 @@ System type:              ${host}
 Build with debug symbols: ${enable_debug}
 Profiling support:        ${enable_profiling}
 Native processor support: ${enable_native}
-Use long double:          ${enable_longdouble}
 ])
 
 dnl Local Variables:
