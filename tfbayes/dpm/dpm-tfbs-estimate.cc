@@ -201,7 +201,7 @@ dpm_tfbs_estimate(const dpm_partition_list_t& partitions,
 static dpm_partition_t
 dpm_tfbs_estimate(const sampling_history_t& history,
                   const vector<size_t>& sizes, size_t tfbs_length,
-                  bool verbose, double (*loss)(double))
+                  ssize_t take, bool verbose, double (*loss)(double))
 {
         /* number of parallel samplers */
         size_t n = history.temperature.size();
@@ -232,9 +232,19 @@ dpm_tfbs_estimate(const sampling_history_t& history,
                         partitions.push_back(history.partitions[i*n+j]);
                 }
         }
-        if (verbose) {
-                cerr << boost::format("(Discarded first %d partitions!)") % discarded
-                     << endl;
+        /* select a subset of partitions */
+        if (take != -1 && (ssize_t)partitions.size() > take) {
+                if (verbose) {
+                        cerr << boost::format("(Taking only the last %d partitions)") % take
+                             << endl;
+                }
+                partitions = dpm_partition_list_t(partitions.end()-take, partitions.end());
+        }
+        else {
+                if (verbose) {
+                        cerr << boost::format("(Discarded first %d partitions)") % discarded
+                             << endl;
+                }
         }
         /* compute estimate */
         return dpm_tfbs_estimate(partitions, sizes, tfbs_length, verbose, loss);
@@ -417,19 +427,19 @@ dpm_tfbs_t::map(const sampling_history_t& history, bool verbose) const
 }
 
 dpm_partition_t
-dpm_tfbs_t::mean(const sampling_history_t& history, bool verbose) const
+dpm_tfbs_t::mean(const sampling_history_t& history, ssize_t take, bool verbose) const
 {
         if (verbose) {
                 cout << "Computing mean partition: ";
         }
-        return dpm_tfbs_estimate(history, data().sizes(), _tfbs_length, verbose, &mean_loss);
+        return dpm_tfbs_estimate(history, data().sizes(), _tfbs_length, take, verbose, &mean_loss);
 }
 
 dpm_partition_t
-dpm_tfbs_t::median(const sampling_history_t& history, bool verbose) const
+dpm_tfbs_t::median(const sampling_history_t& history, ssize_t take, bool verbose) const
 {
         if (verbose) {
                 cout << "Computing median partition: ";
         }
-        return dpm_tfbs_estimate(history, data().sizes(), _tfbs_length, verbose, &median_loss);
+        return dpm_tfbs_estimate(history, data().sizes(), _tfbs_length, take, verbose, &median_loss);
 }

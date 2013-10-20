@@ -36,7 +36,7 @@ from tfbayes.interface              import sigint
 sampler_config = default_sampler_config()
 
 options = {
-    'resume'              : None,
+    'take'                : -1,
     'verbose'             : False
     }
 
@@ -57,6 +57,9 @@ def usage():
     print "       median                      - compute median parititon"
     print
     print "Options:"
+    print "       --take=N                    - take last N partitions to compute"
+    print "                                     the mean or median"
+    print
     print "   -h, --help                      - print help"
     print "   -v, --verbose                   - be verbose"
     print
@@ -76,9 +79,9 @@ def compute_mean(command):
     if command == "map":
         results_config['map_partition'] = dpm_tfbs.map(results_config['sampling_history'], options['verbose'])
     elif command == "mean":
-        results_config['mean_partition'] = dpm_tfbs.mean(results_config['sampling_history'], options['verbose'])
+        results_config['mean_partition'] = dpm_tfbs.mean(results_config['sampling_history'], options['take'], options['verbose'])
     elif command == "median":
-        results_config['median_partition'] = dpm_tfbs.median(results_config['sampling_history'], options['verbose'])
+        results_config['median_partition'] = dpm_tfbs.median(results_config['sampling_history'], options['take'], options['verbose'])
     else:
             usage()
             return 1
@@ -92,7 +95,8 @@ def __main__():
     global options
     global sampler_config
     try:
-        longopts   = ["help",
+        longopts   = ["take=",
+                      "help",
                       "verbose"]
         opts, tail = getopt.getopt(sys.argv[1:], "vh", longopts)
     except getopt.GetoptError:
@@ -106,6 +110,8 @@ def __main__():
     parse_sampler_config(tail[1], sampler_config)
     # override those options with command line arguments
     for o, a in opts:
+        if o == "--take":
+            options["take"] = int(a)
         if o in ("-v", "--verbose"):
             sys.stderr.write("Verbose mode turned on.\n")
             options["verbose"] = True
