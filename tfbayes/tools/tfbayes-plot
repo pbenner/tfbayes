@@ -83,15 +83,20 @@ def usage():
 def plot_posterior_and_components(results_config, show):
     fig = pyplot.figure()
     fig.subplots_adjust(left=0.15)
-    ax1 = fig.add_subplot(2,1,1)
-    ax2 = fig.add_subplot(2,1,2)
-    ax1.set_xlabel("sample")
+    ax1 = fig.add_subplot(3,1,1)
+    ax2 = fig.add_subplot(3,1,2)
+    ax3 = fig.add_subplot(3,1,3)
     ax1.set_ylabel("log posterior")
     ax2.set_ylabel("components")
-    for l in results_config['posterior']:
+    ax3.set_ylabel("temperature")
+    ax3.set_xlabel("sample")
+    for l in results_config['sampling_history'].posterior:
         p1 = ax1.plot(l)
-    for c in results_config['components']:
+    for c in results_config['sampling_history'].components:
         p2 = ax2.plot(c)
+    for t in results_config['sampling_history'].temperature:
+        p3 = ax3.plot(t)
+    ax3.set_ylim(0, ax3.get_ylim()[1])
     show()
 
 def plot_result(results_config):
@@ -112,10 +117,10 @@ def plot_result(results_config):
 # ------------------------------------------------------------------------------
 
 def main(sampler_config_file):
-    sampler_config = {}
-    results_config = {}
+    sampler_config = default_sampler_config()
+    results_config = default_results_config()
     parse_sampler_config(sampler_config_file, sampler_config)
-    results_config_file = sampler_config['save']
+    results_config_file = sampler_config.save
     parse_results_config(results_config_file, results_config)
     plot_result(results_config)
 
