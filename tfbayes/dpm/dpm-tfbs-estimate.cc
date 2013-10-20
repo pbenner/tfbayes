@@ -216,6 +216,48 @@ dpm_tfbs_estimate(const sampling_history_t& history,
 // -----------------------------------------------------------------------------
 
 static bool
+map_local_optimization(cluster_t& cluster, dpm_tfbs_t& dpm, bool verbose)
+{
+        double posterior_ref = dpm.posterior();
+        double posterior_left;
+        double posterior_right;
+        stringstream ss;
+        size_t size = cluster.size();
+
+        dpm.state().save(cluster.cluster_tag());
+        dpm.state().move_left(cluster);
+        posterior_left = dpm.posterior();
+        dpm.state().restore();
+
+        dpm.state().save(cluster.cluster_tag());
+        dpm.state().move_right(cluster);
+        posterior_right = dpm.posterior();
+        dpm.state().restore();
+
+        if (posterior_left > posterior_ref && posterior_left > posterior_right) {
+                dpm.state().move_left(cluster);
+                ss << "moved to the left";
+        }
+        else if (posterior_right > posterior_ref && posterior_right > posterior_left) {
+                dpm.state().move_right(cluster);
+                ss << "moved to the right";
+        }
+        else {
+                return false;
+        }
+        if (verbose) {
+                cout << boost::format("Cluster %d %s (%d -> %d)")
+                        % cluster.cluster_tag()
+                        % ss.str()
+                        % size
+                        % cluster.size()
+                     << endl;
+        }
+
+        return true;
+}
+
+static bool
 map_local_optimization(const index_i& index, dpm_tfbs_t& dpm, bool verbose) {
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
@@ -253,12 +295,22 @@ static dpm_partition_t
 map_local_optimization(dpm_tfbs_t& dpm, bool verbose) {
         bool optimized;
         /* make some noise */
-        if (verbose) cout << "Performing local optimizations..." << endl;
+        if (verbose) {
+                cout << "Performing local optimizations..." << endl
+                     << "Posterior: " << dpm.posterior()
+                     << endl;
+        }
         /* loop until no local optimizations are possible */
         do {
                 optimized = false;
+                /* optimize single positions */
                 for (indexer_t::const_iterator it = dpm.data().sampling_begin();
                      it != dpm.data().sampling_end(); it++) {
+                        optimized |= map_local_optimization(**it, dpm, verbose);
+                }
+                /* optimize by moving whole clusters */
+                for (mixture_state_t::iterator it = dpm.state().begin();
+                     it != dpm.state().end(); it++) {
                         optimized |= map_local_optimization(**it, dpm, verbose);
                 }
                 if (verbose) {

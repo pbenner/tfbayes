@@ -104,7 +104,7 @@ dpm_tfbs_sampler_t::dpm() const
 ////////////////////////////////////////////////////////////////////////////////
 
 bool
-dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp, const bool optimize) {
+dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp) {
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
         if (!dpm().valid_for_sampling(index)) {
@@ -122,23 +122,7 @@ dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp, const
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
         // to that cluster
-        cluster_tag_t new_cluster_tag;
-        if (optimize) {
-                new_cluster_tag = cluster_tags[select_max_component(components, log_weights)];
-                if (new_cluster_tag != old_cluster_tag) {
-                        flockfile(stdout);
-                        cout << _name << ": "
-                             << "moving " << (const seq_index_t&)index
-                             << " from cluster " << old_cluster_tag
-                             << " to cluster "   << new_cluster_tag
-                             << endl;
-                        fflush(stdout);
-                        funlockfile(stdout);
-                }
-        }
-        else {
-                new_cluster_tag = cluster_tags[select_component(components, log_weights, gen())];
-        }
+        cluster_tag_t new_cluster_tag = cluster_tags[select_component(components, log_weights, gen())];
 
         ////////////////////////////////////////////////////////////////////////
         dpm().state().add(index, new_cluster_tag);
@@ -147,7 +131,7 @@ dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp, const
 }
 
 size_t
-dpm_tfbs_sampler_t::_gibbs_sample(const double temp, const bool optimize) {
+dpm_tfbs_sampler_t::_gibbs_sample(const double temp) {
         size_t sum = 0;
         // the indexer needs to be constant since it is shared between
         // processes, so to shuffle the indices we first need to
@@ -157,7 +141,7 @@ dpm_tfbs_sampler_t::_gibbs_sample(const double temp, const bool optimize) {
         // now sample
         for (vector<index_i*>::iterator it = indices.begin();
              it != indices.end(); it++) {
-                if(_gibbs_sample(**it, temp, optimize)) sum+=1;
+                if(_gibbs_sample(**it, temp)) sum+=1;
         }
         return sum;
 }
@@ -166,7 +150,7 @@ dpm_tfbs_sampler_t::_gibbs_sample(const double temp, const bool optimize) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void
-dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp, const bool optimize)
+dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp)
 {
         vector<range_t> range_set;
         cluster_tag_t old_cluster_tag = cluster.cluster_tag();
@@ -198,13 +182,7 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp, const b
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
         // to that cluster
-        cluster_tag_t new_cluster_tag;
-        if (optimize) {
-                new_cluster_tag = cluster_tags[select_max_component(components, log_weights)];
-        }
-        else {
-                new_cluster_tag = cluster_tags[select_component(components, log_weights, gen())];
-        }
+        cluster_tag_t new_cluster_tag = cluster_tags[select_component(components, log_weights, gen())];
 
         ////////////////////////////////////////////////////////////////////////
         // print some information to stdout
@@ -230,7 +208,7 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp, const b
 }
 
 void
-dpm_tfbs_sampler_t::_block_sample(const double temp, const bool optimize)
+dpm_tfbs_sampler_t::_block_sample(const double temp)
 {
         // since clusters are modified it is not possible to simply
         // loop through the list of clusters, we need to be a bit more
@@ -248,7 +226,7 @@ dpm_tfbs_sampler_t::_block_sample(const double temp, const bool optimize)
         for (vector<cluster_tag_t>::const_iterator it = used_clusters.begin(); it != used_clusters.end(); it++) {
                 cluster_t& cluster = state()[*it];
                 if (cluster.size() != 0) {
-                        _block_sample(cluster, temp, optimize);
+                        _block_sample(cluster, temp);
                 }
         }
 }
@@ -322,11 +300,11 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         _sampling_history.temperature[0].push_back(temperature);
         // call the standard hybrid sampler that first produces a
         // Gibbs sample and afterwards make a Metropolis-Hastings step
-        size_t s = _gibbs_sample(temperature, false);
+        size_t s = _gibbs_sample(temperature);
         _metropolis_sample(temperature);
         // do a Gibbs block sampling step, i.e. go through all
         // clusters and try to merge them
-        _block_sample(temperature, false);
+        _block_sample(temperature);
         // we are done with sampling here, now process commands
         flockfile(stdout);
         cout << _name << ": "
@@ -343,78 +321,6 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
                 _output_queue->push(ss.str());
         }
         return s;
-}
-
-// Optimization
-////////////////////////////////////////////////////////////////////////////////
-
-bool
-dpm_tfbs_sampler_t::optimize(cluster_t& cluster) {
-        double posterior_ref = dpm().posterior();
-        double posterior_left;
-        double posterior_right;
-        stringstream ss;
-        size_t size = cluster.size();
-
-        dpm().state().save(cluster.cluster_tag());
-        dpm().state().move_left(cluster);
-        posterior_left = dpm().posterior();
-        dpm().state().restore();
-
-        dpm().state().save(cluster.cluster_tag());
-        dpm().state().move_right(cluster);
-        posterior_right = dpm().posterior();
-        dpm().state().restore();
-
-        if (posterior_left > posterior_ref && posterior_left > posterior_right) {
-                dpm().state().move_left(cluster);
-                ss << "moved to the left";
-        }
-        else if (posterior_right > posterior_ref && posterior_right > posterior_left) {
-                dpm().state().move_right(cluster);
-                ss << "moved to the right";
-        }
-        else {
-                return false;
-        }
-
-        flockfile(stdout);
-        cout << _name << ": "
-             << "cluster "
-             << cluster.cluster_tag()
-             << " "
-             << ss.str()
-             << " "
-             << "("  << size
-             << "->" << cluster.size()
-             << ")"
-             << endl;
-        fflush(stdout);
-        funlockfile(stdout);
-
-        return true;
-}
-
-void
-dpm_tfbs_sampler_t::optimize() {
-        // print old posterior value
-        flockfile(stdout);
-        cout << _name << ": "
-             << "old posterior value: " << dpm().posterior()
-             << endl;
-        fflush(stdout);
-        funlockfile(stdout);
-        // block optimization
-        for (cl_iterator it = dpm().state().begin(); it != dpm().state().end(); it++) {
-                optimize(**it);
-        }
-        // output resulting posterior value
-        flockfile(stdout);
-        cout << _name << ": "
-             << "new posterior value: " << dpm().posterior()
-             << endl;
-        fflush(stdout);
-        funlockfile(stdout);
 }
 
 // dpm_tfbs_pmcmc_t
