@@ -49,30 +49,32 @@ class index_t : public index_i {
 public:
         inline index_t() {
         }
-        inline explicit index_t(size_t x0) : _x0(x0) {
+        inline explicit index_t(size_t x0) __attribute__((hot))
+                : _x0(x0) {
         }
-        inline index_t(const index_t& index) : _x0(index._x0) {
+        inline index_t(const index_t& index) __attribute__((hot))
+                : _x0(index._x0) {
         }
 
-        virtual index_t* clone() const {
+        virtual index_t* clone() const __attribute__((hot)) {
                 return new index_t(*this);
         }
 
         friend std::ostream& operator<< (std::ostream& o, const index_t& index);
 
-        virtual inline const size_t& operator[](size_t i) const {
+        virtual inline const size_t& operator[](size_t i) const __attribute__((hot)) {
                 return _x0;
         }
-        virtual inline size_t& operator[](size_t i) {
+        virtual inline size_t& operator[](size_t i) __attribute__((hot)) {
                 return _x0;
         }
-        virtual inline bool operator==(const index_i& index) const {
+        virtual inline bool operator==(const index_i& index) const __attribute__((hot)) {
                 return _x0 == index[0];
         }
-        virtual inline bool operator!=(const index_i& index) const {
+        virtual inline bool operator!=(const index_i& index) const __attribute__((hot)) {
                 return _x0 != index[0];
         }
-        virtual inline index_t& operator=(const index_i& index) {
+        virtual inline index_t& operator=(const index_i& index) __attribute__((hot)) {
                 _x0 = index[0];
                 return *this;
         }
@@ -96,34 +98,34 @@ class seq_index_t : public index_i {
 public:
         inline seq_index_t() {
         }
-        inline seq_index_t(size_t x0, size_t x1) {
+        inline seq_index_t(size_t x0, size_t x1) __attribute__((hot)) {
                 _x[0] = x0;
                 _x[1] = x1;
         }
-        inline seq_index_t(const seq_index_t& seq_index) {
+        inline seq_index_t(const seq_index_t& seq_index) __attribute__((hot)) {
                 _x[0] = seq_index[0];
                 _x[1] = seq_index[1];
         }
 
-        virtual seq_index_t* clone() const {
+        virtual seq_index_t* clone() const __attribute__((hot)) {
                 return new seq_index_t(*this);
         }
 
         friend std::ostream& operator<< (std::ostream& o, const seq_index_t& seq_index);
 
-        virtual inline const size_t& operator[](size_t i) const {
+        virtual inline const size_t& operator[](size_t i) const __attribute__((hot)) {
                 return _x[i];
         }
-        virtual inline size_t& operator[](size_t i) {
+        virtual inline size_t& operator[](size_t i) __attribute__((hot)) {
                 return _x[i];
         }
-        virtual inline bool operator==(const index_i& seq_index) const {
+        virtual inline bool operator==(const index_i& seq_index) const __attribute__((hot)) {
                 return _x[0] == seq_index[0] && _x[1] == seq_index[1];
         }
-        virtual inline bool operator!=(const index_i& seq_index) const {
+        virtual inline bool operator!=(const index_i& seq_index) const __attribute__((hot)) {
                 return _x[0] != seq_index[0] || _x[1] != seq_index[1];
         }
-        virtual inline seq_index_t& operator=(const index_i& seq_index) {
+        virtual inline seq_index_t& operator=(const index_i& seq_index) __attribute__((hot)) {
                 _x[0] = seq_index[0];
                 _x[1] = seq_index[1];
                 return *this;
@@ -148,17 +150,17 @@ protected:
 
 class range_t {
 public:
-        range_t(const index_i& index, size_t length) 
+        range_t(const index_i& index, size_t length) __attribute__((hot))
                 : _index(index.clone()), _length(length) {
         }
-        range_t(const range_t& range) :
-                _index (range.index().clone()),
-                _length(range.length())
-                { }
-        ~range_t() {
+        range_t(const range_t& range) __attribute__((hot))
+                : _index (range.index().clone()),
+                  _length(range.length()) {
+        }
+        ~range_t() __attribute__((hot)) {
                 delete(_index);
         }
-        range_t& operator=(const range_t& range) {
+        range_t& operator=(const range_t& range) __attribute__((hot)) {
                 range_t tmp(range);
                 swap(*this, tmp);
                 return *this;
@@ -168,13 +170,13 @@ public:
                 swap(first._index,  second._index );
                 swap(first._length, second._length);
         }
-        bool operator==(const range_t& range) const {
+        bool operator==(const range_t& range) const __attribute__((hot)) {
                 return range.index() == *_index && range.length() == _length;
         }
-        const index_i& index() const {
+        const index_i& index() const __attribute__((hot)) {
                 return *_index;
         }
-        const size_t& length() const {
+        const size_t& length() const __attribute__((hot)) {
                 return _length;
         }
 
