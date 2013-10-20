@@ -23,6 +23,8 @@
 
 #include <stdint.h>
 
+#include <gperftools/profiler.h>
+
 #include <boost/unordered/unordered_set.hpp>
 
 #include <tfbayes/dpm/dpm-tfbs.hh>
@@ -53,7 +55,7 @@ init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data
              it != partition.end(); it++, k++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& index = *static_cast<const seq_index_t*>(*is);
+                        const seq_index_t& index = static_cast<const seq_index_t&>(**is);
                         for (size_t i = 0; i < tfbs_length; i++) {
                                 data[index[0]][index[1]+i] = k;
                         }
@@ -69,7 +71,7 @@ clean_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& dat
              it != partition.end(); it++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& index = *static_cast<const seq_index_t*>(*is);
+                        const seq_index_t& index = static_cast<const seq_index_t&>(**is);
                         for (size_t i = 0; i < tfbs_length; i++) {
                                 data[index[0]][index[1]+i] = 0;
                         }
@@ -116,7 +118,7 @@ distance(const dpm_partition_t& pi_a,
              it != pi_a.end(); it++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& tmp = *static_cast<const seq_index_t*>(*is);
+                        const seq_index_t& tmp = static_cast<const seq_index_t&>(**is);
                         for (size_t i = 0; i < tfbs_length; i++) {
                                 indices.insert(seq_index_t(tmp[0], tmp[1]+i));
                         }
@@ -128,7 +130,7 @@ distance(const dpm_partition_t& pi_a,
              it != pi_b.end(); it++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& tmp = *static_cast<const seq_index_t*>(*is);
+                        const seq_index_t& tmp = static_cast<const seq_index_t&>(**is);
                         for (size_t i = 0; i < tfbs_length; i++) {
                                 indices.insert(seq_index_t(tmp[0], tmp[1]+i));
                         }

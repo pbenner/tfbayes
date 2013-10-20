@@ -64,9 +64,9 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-        __inline__       cluster_t& operator[](cluster_tag_t c)            { return *clusters[c]; }
-        __inline__ const cluster_t& operator[](cluster_tag_t c)      const { return *clusters[c]; }
-        __inline__   cluster_tag_t  operator[](const index_i& index) const { return  cluster_assignments()[index]; }
+        inline       cluster_t& operator[](cluster_tag_t c)            { return *clusters[c]; }
+        inline const cluster_t& operator[](cluster_tag_t c)      const { return *clusters[c]; }
+        inline   cluster_tag_t  operator[](const index_i& index) const { return  cluster_assignments()[index]; }
 
         virtual mixture_state_t& operator=(const mixture_state_t& mixture_state);
 
@@ -78,7 +78,7 @@ public:
         cluster_tag_t add_cluster(baseline_tag_t baseline_tag);
         cluster_tag_t add_cluster(component_model_t* distribution);
         cluster_t& get_free_cluster(baseline_tag_t baseline_tag);
-        __inline__ size_t size() const { return used_clusters_size; }
+        inline size_t size() const { return used_clusters_size; }
         // access to cluster assignments, the data type might be
         // different in child classes, so make this virtual
         virtual data_i<cluster_tag_t>& cluster_assignments() { return *_cluster_assignments; }

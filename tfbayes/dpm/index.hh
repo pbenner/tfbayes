@@ -47,11 +47,11 @@ public:
 
 class index_t : public index_i {
 public:
-        __inline__ index_t() {
+        inline index_t() {
         }
-        __inline__ explicit index_t(size_t x0) : _x0(x0) {
+        inline explicit index_t(size_t x0) : _x0(x0) {
         }
-        __inline__ index_t(const index_t& index) : _x0(index._x0) {
+        inline index_t(const index_t& index) : _x0(index._x0) {
         }
 
         virtual index_t* clone() const {
@@ -60,26 +60,26 @@ public:
 
         friend std::ostream& operator<< (std::ostream& o, const index_t& index);
 
-        virtual __inline__ const size_t& operator[](size_t i) const {
+        virtual inline const size_t& operator[](size_t i) const __attribute__((always_inline)) {
                 return _x0;
         }
-        virtual __inline__ size_t& operator[](size_t i) {
+        virtual inline size_t& operator[](size_t i) __attribute__((always_inline)) {
                 return _x0;
         }
-        virtual __inline__ bool operator==(const index_i& index) const {
+        virtual inline bool operator==(const index_i& index) const {
                 return _x0 == index[0];
         }
-        virtual __inline__ bool operator!=(const index_i& index) const {
+        virtual inline bool operator!=(const index_i& index) const {
                 return _x0 != index[0];
         }
-        virtual __inline__ index_t& operator=(const index_i& index) {
+        virtual inline index_t& operator=(const index_i& index) {
                 _x0 = index[0];
                 return *this;
         }
-        virtual __inline__ void operator++(int i) {
+        virtual inline void operator++(int i) {
                 _x0++;
         }
-        virtual __inline__ bool operator<(const index_i& index) const {
+        virtual inline bool operator<(const index_i& index) const {
                 return _x0 < index[0];
         }
         virtual size_t hash() const {
@@ -94,13 +94,13 @@ protected:
 
 class seq_index_t : public index_i {
 public:
-        __inline__ seq_index_t() {
+        inline seq_index_t() {
         }
-        __inline__ seq_index_t(size_t x0, size_t x1) {
+        inline seq_index_t(size_t x0, size_t x1) {
                 _x[0] = x0;
                 _x[1] = x1;
         }
-        __inline__ seq_index_t(const seq_index_t& seq_index) {
+        inline seq_index_t(const seq_index_t& seq_index) {
                 _x[0] = seq_index[0];
                 _x[1] = seq_index[1];
         }
@@ -111,27 +111,27 @@ public:
 
         friend std::ostream& operator<< (std::ostream& o, const seq_index_t& seq_index);
 
-        virtual __inline__ const size_t& operator[](size_t i) const {
+        virtual inline const size_t& operator[](size_t i) const __attribute__((always_inline)) {
                 return _x[i];
         }
-        virtual __inline__ size_t& operator[](size_t i) {
+        virtual inline size_t& operator[](size_t i) __attribute__((always_inline)) {
                 return _x[i];
         }
-        virtual __inline__ bool operator==(const index_i& seq_index) const {
+        virtual inline bool operator==(const index_i& seq_index) const {
                 return _x[0] == seq_index[0] && _x[1] == seq_index[1];
         }
-        virtual __inline__ bool operator!=(const index_i& seq_index) const {
+        virtual inline bool operator!=(const index_i& seq_index) const {
                 return _x[0] != seq_index[0] || _x[1] != seq_index[1];
         }
-        virtual __inline__ seq_index_t& operator=(const index_i& seq_index) {
+        virtual inline seq_index_t& operator=(const index_i& seq_index) {
                 _x[0] = seq_index[0];
                 _x[1] = seq_index[1];
                 return *this;
         }
-        virtual __inline__ void operator++(int i) {
+        virtual inline void operator++(int i) {
                 _x[1]++;
         }
-        virtual __inline__ bool operator<(const index_i& seq_index) const {
+        virtual inline bool operator<(const index_i& seq_index) const {
                 return _x[0] < seq_index[0] || (_x[0] == seq_index[0] && _x[1] < seq_index[1]);
         }
         virtual size_t hash() const {

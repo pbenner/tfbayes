@@ -77,7 +77,7 @@ namespace std {
 // gsl vector/matrix conversion
 ////////////////////////////////////////////////////////////////////////////////
 
-static __inline__
+static inline
 gsl_vector * to_gsl_vector(const std::vector<double>& vector)
 {
         gsl_vector *v = gsl_vector_alloc(vector.size());
@@ -88,7 +88,7 @@ gsl_vector * to_gsl_vector(const std::vector<double>& vector)
         return v;
 }
 
-static __inline__
+static inline
 std::vector<double> from_gsl_vector(const gsl_vector * vector)
 {
         std::vector<double> v(vector->size, 0);
@@ -99,7 +99,7 @@ std::vector<double> from_gsl_vector(const gsl_vector * vector)
         return v;
 }
 
-static __inline__
+static inline
 gsl_matrix * to_gsl_matrix(const std::matrix<double>& matrix)
 {
         gsl_matrix *m = gsl_matrix_alloc(matrix.rows(), matrix.columns());
@@ -112,7 +112,7 @@ gsl_matrix * to_gsl_matrix(const std::matrix<double>& matrix)
         return m;
 }
 
-static __inline__
+static inline
 std::matrix<double> from_gsl_matrix(const gsl_matrix * matrix)
 {
         std::matrix<double> m(matrix->size1, matrix->size2);

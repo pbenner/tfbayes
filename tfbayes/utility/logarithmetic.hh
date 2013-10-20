@@ -28,14 +28,14 @@
 
 /* Log Sum of Exponentials Algorithm */
 
-static __inline__
+static inline
 double logadd(double a, double b)
 {
         if (a < b) return a == -std::numeric_limits<double>::infinity() ? b : b + log1p(exp(a-b));
         else       return b == -std::numeric_limits<double>::infinity() ? a : a + log1p(exp(b-a));
 }
 
-static __inline__
+static inline
 double logsub(double a, double b)
 {
         return b == -std::numeric_limits<double>::infinity() ? a : a + log(1-exp(b-a));

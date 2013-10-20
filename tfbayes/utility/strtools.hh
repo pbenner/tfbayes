@@ -22,7 +22,7 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-static __inline__
+static inline
 const std::string strip(const std::string& str) {
         const std::string& whitespace = " \t\n";
         const size_t begin = str.find_first_not_of(whitespace);
@@ -35,7 +35,7 @@ const std::string strip(const std::string& str) {
         return str.substr(begin, range);
 }
 
-static __inline__
+static inline
 std::vector<std::string> token(const std::string& str, char t) {
         std::string token;
         std::vector<std::string> tokens;
@@ -47,7 +47,7 @@ std::vector<std::string> token(const std::string& str, char t) {
 }
 
 /* introduce a new line every n characters */
-static __inline__
+static inline
 std::string split_string(const std::string& str, size_t n)
 {
         std::string result(str);

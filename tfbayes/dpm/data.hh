@@ -190,16 +190,16 @@ public:
                         static_cast<const data_t<T>&>(data));
                 return *this;
         }
-        virtual const_iterator_t<T> operator[](const range_t& range) const {
+        virtual inline const_iterator_t<T> operator[](const range_t& range) const __attribute__((always_inline)) {
                 return const_iterator_t<T>(*this, range.index(), range.length());
         }
-        virtual iterator_t<T> operator[](const range_t& range) {
+        virtual inline iterator_t<T> operator[](const range_t& range) __attribute__((always_inline)) {
                 return iterator_t<T>(*this, range.index(), range.length());
         }
-        virtual const T& operator[](const index_i& index) const {
+        virtual inline const T& operator[](const index_i& index) const __attribute__((always_inline)) {
                 return std::vector<T>::operator[](index[0]);
         }
-        virtual T& operator[](const index_i& index) {
+        virtual inline T& operator[](const index_i& index) __attribute__((always_inline)) {
                 return std::vector<T>::operator[](index[0]);
         }
         friend std::ostream& operator<< <> (std::ostream& o, const data_t<T>& sd);
@@ -252,16 +252,16 @@ public:
                         static_cast<const sequence_data_t<T>&>(data));
                 return *this;
         }
-        virtual const_iterator_t<T> operator[](const range_t& range) const {
+        virtual inline const_iterator_t<T> operator[](const range_t& range) const __attribute__((always_inline)) {
                 return const_iterator_t<T>(*this, range.index(), range.length());
         }
-        virtual iterator_t<T> operator[](const range_t& range) {
+        virtual inline iterator_t<T> operator[](const range_t& range) __attribute__((always_inline)) {
                 return iterator_t<T>(*this, range.index(), range.length());
         }
-        virtual const T& operator[](const index_i& index) const {
+        virtual inline const T& operator[](const index_i& index) const __attribute__((always_inline)) {
                 return std::vector<std::vector<T> >::operator[](index[0])[index[1]];
         }
-        virtual T& operator[](const index_i& index) {
+        virtual inline T& operator[](const index_i& index) __attribute__((always_inline)) {
                 return std::vector<std::vector<T> >::operator[](index[0])[index[1]];
         }
         virtual size_t size(size_t i) const {
