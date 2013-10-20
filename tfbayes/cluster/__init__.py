@@ -15,8 +15,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 from cluster     import *
-from fileio      import load_cluster, load_cluster_list, save_cluster, save_cluster_list, print_pwm, parse_pwm, print_counts, parse_counts
+from fileio      import load_cluster
+from fileio      import load_cluster_list
+from fileio      import save_cluster
+from fileio      import save_cluster_list
+from fileio      import print_pwm, parse_pwm
+from fileio      import print_counts
+from fileio      import parse_counts
 from plot        import *
 from information import *
 from tools       import *
-from parser      import generate_cluster_list, parse_partition, parse_partition_list
+from parser      import generate_cluster_list

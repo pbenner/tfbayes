@@ -20,10 +20,10 @@ import ConfigParser
 
 from tools import *
 
-from tfbayes.cluster   import parse_partition
-from tfbayes.cluster   import parse_partition_list
-from tfbayes.interface import *
-from tfbayes.dpm       import *
+from parser      import parse_partition
+from parser      import parse_partition_list
+from ..interface import *
+from ..dpm       import *
 
 # default results config
 # ------------------------------------------------------------------------------

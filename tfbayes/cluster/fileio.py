@@ -18,8 +18,8 @@
 
 import re
 
-from ..uipac  import *
-from ..config import read_vector, write_vector
+from ..uipac import *
+from ..config.tools import read_vector, write_vector
 
 # pwm to string
 # ------------------------------------------------------------------------------
