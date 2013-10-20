@@ -74,11 +74,11 @@ def compute_mean(command):
     dpm_tfbs  =  dpm_tfbs_t(sampler_config, data_tfbs)
     # compute mean or median
     if command == "map":
-        results_config['map_partition'] = dpm_tfbs.map(results_config['sampling_history'], True)
+        results_config['map_partition'] = dpm_tfbs.map(results_config['sampling_history'], options['verbose'])
     elif command == "mean":
-        results_config['mean_partition'] = dpm_tfbs.mean(results_config['sampling_history'], True)
+        results_config['mean_partition'] = dpm_tfbs.mean(results_config['sampling_history'], options['verbose'])
     elif command == "median":
-        results_config['median_partition'] = dpm_tfbs.median(results_config['sampling_history'], True)
+        results_config['median_partition'] = dpm_tfbs.median(results_config['sampling_history'], options['verbose'])
     else:
             usage()
             return 1
