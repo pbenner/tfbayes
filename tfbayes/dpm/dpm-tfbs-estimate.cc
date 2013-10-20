@@ -47,6 +47,7 @@ static void
 init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data,
           size_t tfbs_length)
 {
+        // begin with cluster tag 1, since 0 is reserved for the background
         cluster_tag_t k = 1;
 
         for (dpm_partition_t::const_iterator it = partition.begin();
@@ -56,6 +57,22 @@ init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data
                         const seq_index_t& index = *static_cast<const seq_index_t*>(*is);
                         for (size_t i = 0; i < tfbs_length; i++) {
                                 data[index[0]][index[1]+i] = k;
+                        }
+                }
+        }
+}
+
+static void
+clean_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data,
+          size_t tfbs_length)
+{
+        for (dpm_partition_t::const_iterator it = partition.begin();
+             it != partition.end(); it++) {
+                for (dpm_subset_t::const_iterator is = it->begin();
+                     is != it->end(); is++) {
+                        const seq_index_t& index = *static_cast<const seq_index_t*>(*is);
+                        for (size_t i = 0; i < tfbs_length; i++) {
+                                data[index[0]][index[1]+i] = 0;
                         }
                 }
         }
@@ -82,17 +99,20 @@ distance(const boost::unordered_set<seq_index_t>& indices,
 }
 
 static size_t
-distance(const dpm_partition_t& pi_a, const dpm_partition_t& pi_b,
-         const vector<size_t>& sizes, size_t tfbs_length)
+distance(const dpm_partition_t& pi_a,
+         const dpm_partition_t& pi_b,
+         sequence_data_t<cluster_tag_t>& a,
+         sequence_data_t<cluster_tag_t>& b,
+         size_t tfbs_length)
 {
         boost::unordered_set<seq_index_t> indices;
-        sequence_data_t<cluster_tag_t> a(sizes, 0);
-        sequence_data_t<cluster_tag_t> b(sizes, 0);
 
+        // initialize auxiliary cluster information
         init_data(pi_a, a, tfbs_length);
         init_data(pi_b, b, tfbs_length);
 
-        // go through subsets of partition a
+        // go through subsets of partition a and record all positions
+        // that are assigned to a cluster
         for (dpm_partition_t::const_iterator it = pi_a.begin();
              it != pi_a.end(); it++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
@@ -103,7 +123,8 @@ distance(const dpm_partition_t& pi_a, const dpm_partition_t& pi_b,
                         }
                 }
         }
-        // go through subsets of partition b
+        // go through subsets of partition b and record all positions
+        // that are assigned to a cluster
         for (dpm_partition_t::const_iterator it = pi_b.begin();
              it != pi_b.end(); it++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
@@ -114,6 +135,10 @@ distance(const dpm_partition_t& pi_a, const dpm_partition_t& pi_b,
                         }
                 }
         }
+        // clean data
+        clean_data(pi_a, a, tfbs_length);
+        clean_data(pi_b, b, tfbs_length);
+
         return distance(indices, a, b);
 }
 
@@ -142,6 +167,10 @@ dpm_tfbs_estimate(const dpm_partition_list_t& partitions,
                 return dpm_partition_t();
         }
 
+        // auxiliary storage
+        sequence_data_t<cluster_tag_t> a(sizes, 0);
+        sequence_data_t<cluster_tag_t> b(sizes, 0);
+
         // matrix of distances between every pair of partitions
         matrix<size_t> distances(n, n);
         vector<size_t> sums(n, 0);
@@ -154,7 +183,7 @@ dpm_tfbs_estimate(const dpm_partition_list_t& partitions,
                         if (verbose) {
                                 cerr << progress_t(2.0*(k+1)/(double)(n*n-n));
                         }
-                        distances[i][j] = distance(partitions[i], partitions[j], sizes, tfbs_length);
+                        distances[i][j] = distance(partitions[i], partitions[j], a, b, tfbs_length);
                         distances[j][i] = distances[i][j];
                 }
         }
