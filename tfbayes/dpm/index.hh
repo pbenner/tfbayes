@@ -60,10 +60,10 @@ public:
 
         friend std::ostream& operator<< (std::ostream& o, const index_t& index);
 
-        virtual inline const size_t& operator[](size_t i) const __attribute__((always_inline)) {
+        virtual inline const size_t& operator[](size_t i) const {
                 return _x0;
         }
-        virtual inline size_t& operator[](size_t i) __attribute__((always_inline)) {
+        virtual inline size_t& operator[](size_t i) {
                 return _x0;
         }
         virtual inline bool operator==(const index_i& index) const {
@@ -111,10 +111,10 @@ public:
 
         friend std::ostream& operator<< (std::ostream& o, const seq_index_t& seq_index);
 
-        virtual inline const size_t& operator[](size_t i) const __attribute__((always_inline)) {
+        virtual inline const size_t& operator[](size_t i) const {
                 return _x[i];
         }
-        virtual inline size_t& operator[](size_t i) __attribute__((always_inline)) {
+        virtual inline size_t& operator[](size_t i) {
                 return _x[i];
         }
         virtual inline bool operator==(const index_i& seq_index) const {
