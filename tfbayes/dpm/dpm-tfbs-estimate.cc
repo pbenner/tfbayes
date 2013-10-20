@@ -396,7 +396,7 @@ compute_map(const sampling_history_t& history, dpm_tfbs_t& dpm, bool verbose)
                 }
         }
         if (verbose) {
-                cout << boost::format("(Discarded first %d partitions!)") % discarded
+                cout << boost::format("(Discarded first %d partitions)") % discarded
                      << endl;
         }
         if (max > -numeric_limits<double>::infinity()) {
