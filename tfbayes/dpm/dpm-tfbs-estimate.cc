@@ -84,9 +84,10 @@ clean_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& dat
 static size_t
 distance(const boost::unordered_set<seq_index_t>& indices,
          const sequence_data_t<cluster_tag_t>& a,
-         const sequence_data_t<cluster_tag_t>& b)
+         const sequence_data_t<cluster_tag_t>& b,
+         size_t bg_size)
 {
-        size_t d = 0;
+        size_t d = 0, bg = 0;
 
         for (boost::unordered_set<seq_index_t>::const_iterator it = indices.begin();
              it != indices.end(); it++) {
@@ -94,11 +95,14 @@ distance(const boost::unordered_set<seq_index_t>& indices,
                      is != indices.end(); is++) {
                         if ((a[*it] == a[*is] && b[*it] != b[*is]) ||
                             (a[*it] != a[*is] && b[*it] == b[*is])) {
-                                d += 1;
+                                d++;
                         }
                 }
+                if (a[*it] == 0 || b[*it] == 0) {
+                        bg++;
+                }
         }
-        return d;
+        return d + bg*bg_size;
 }
 
 static size_t
@@ -106,7 +110,8 @@ distance(const dpm_partition_t& pi_a,
          const dpm_partition_t& pi_b,
          sequence_data_t<cluster_tag_t>& a,
          sequence_data_t<cluster_tag_t>& b,
-         size_t tfbs_length)
+         size_t tfbs_length,
+         const dpm_tfbs_t& dpm)
 {
         boost::unordered_set<seq_index_t> indices;
 
@@ -138,11 +143,54 @@ distance(const dpm_partition_t& pi_a,
                         }
                 }
         }
+        // size of the background cluster
+        size_t bg_size = dpm.data().elements() - indices.size();
+        cout << "bg_size: " << bg_size<< endl;
+
+        // compute the distance
+        size_t d = distance(indices, a, b, bg_size);
+
         // clean data
         clean_data(pi_a, a, tfbs_length);
         clean_data(pi_b, b, tfbs_length);
 
-        return distance(indices, a, b);
+        return d;
+}
+
+static size_t
+naive_distance(const dpm_partition_t& pi_a,
+               const dpm_partition_t& pi_b,
+               sequence_data_t<cluster_tag_t>& a,
+               sequence_data_t<cluster_tag_t>& b,
+               size_t tfbs_length,
+               const dpm_tfbs_t& dpm)
+{
+        boost::unordered_set<seq_index_t> indices;
+        // resulting distance
+        size_t d = 0;
+
+        // initialize auxiliary cluster information
+        init_data(pi_a, a, tfbs_length);
+        init_data(pi_b, b, tfbs_length);
+
+        for (indexer_t::const_iterator it = dpm.data().begin();
+             it != dpm.data().end(); it++) {
+                for (indexer_t::const_iterator is = it+1;
+                     is != dpm.data().end(); is++) {
+                        const seq_index_t& i = static_cast<const seq_index_t&>(**it);
+                        const seq_index_t& j = static_cast<const seq_index_t&>(**is);
+                        if ((a[i] == a[j] && b[i] != b[j]) ||
+                            (a[i] != a[j] && b[i] == b[j])) {
+                                d += 1;
+                        }
+                }
+        }
+
+        // clean data
+        clean_data(pi_a, a, tfbs_length);
+        clean_data(pi_b, b, tfbs_length);
+
+        return d;
 }
 
 static
@@ -160,7 +208,8 @@ double median_loss(double d)
 static dpm_partition_t
 dpm_tfbs_estimate(const dpm_partition_list_t& partitions,
                   const vector<size_t>& sizes, size_t tfbs_length,
-                  bool verbose, double (*loss)(double))
+                  bool verbose, double (*loss)(double),
+                  const dpm_tfbs_t& dpm)
 {
         // number of partitions
         const size_t n = partitions.size();
@@ -186,7 +235,11 @@ dpm_tfbs_estimate(const dpm_partition_list_t& partitions,
                         if (verbose) {
                                 cerr << progress_t(2.0*(k+1)/(double)(n*n-n));
                         }
-                        distances[i][j] = distance(partitions[i], partitions[j], a, b, tfbs_length);
+                        cout << endl;
+                        cout << "      distance: " <<       distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
+                        cout << "naive distance: " << naive_distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
+                        exit(EXIT_FAILURE);
+                        distances[i][j] = distance(partitions[i], partitions[j], a, b, tfbs_length, dpm);
                         distances[j][i] = distances[i][j];
                 }
         }
@@ -205,7 +258,8 @@ dpm_tfbs_estimate(const dpm_partition_list_t& partitions,
 static dpm_partition_t
 dpm_tfbs_estimate(const sampling_history_t& history,
                   const vector<size_t>& sizes, size_t tfbs_length,
-                  ssize_t take, bool verbose, double (*loss)(double))
+                  ssize_t take, bool verbose, double (*loss)(double),
+                  const dpm_tfbs_t& dpm)
 {
         /* number of parallel samplers */
         size_t n = history.temperature.size();
@@ -251,7 +305,7 @@ dpm_tfbs_estimate(const sampling_history_t& history,
                 }
         }
         /* compute estimate */
-        return dpm_tfbs_estimate(partitions, sizes, tfbs_length, verbose, loss);
+        return dpm_tfbs_estimate(partitions, sizes, tfbs_length, verbose, loss, dpm);
 }
 
 // functions for computing map partitions
@@ -436,7 +490,7 @@ dpm_tfbs_t::mean(const sampling_history_t& history, ssize_t take, bool verbose) 
         if (verbose) {
                 cout << "Computing mean partition: ";
         }
-        return dpm_tfbs_estimate(history, data().sizes(), _tfbs_length, take, verbose, &mean_loss);
+        return dpm_tfbs_estimate(history, data().sizes(), _tfbs_length, take, verbose, &mean_loss, *this);
 }
 
 dpm_partition_t
@@ -445,5 +499,5 @@ dpm_tfbs_t::median(const sampling_history_t& history, ssize_t take, bool verbose
         if (verbose) {
                 cout << "Computing median partition: ";
         }
-        return dpm_tfbs_estimate(history, data().sizes(), _tfbs_length, take, verbose, &median_loss);
+        return dpm_tfbs_estimate(history, data().sizes(), _tfbs_length, take, verbose, &median_loss, *this);
 }
