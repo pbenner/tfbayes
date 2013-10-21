@@ -313,6 +313,9 @@ AX_CXXFLAGS_GCC_OPTION([-DBOOST_NO_RTTI], CXXFLAGS_NORTTI)
 dnl turn link time optimization on (works only on some systems so far)
 #AX_CXXFLAGS_GCC_OPTION([-flto])
 
+# check for attributes
+AX_GCC_ATTRIBUTE_HOT
+
 AC_SUBST(CXXFLAGS_NORTTI)
 
 dnl ,---------------------------- 

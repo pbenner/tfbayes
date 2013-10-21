@@ -190,16 +190,16 @@ public:
                         static_cast<const data_t<T>&>(data));
                 return *this;
         }
-        virtual inline const_iterator_t<T> operator[](const range_t& range) const __attribute__((hot)) {
+        virtual inline const_iterator_t<T> operator[](const range_t& range) const GCC_ATTRIBUTE_HOT {
                 return const_iterator_t<T>(*this, range.index(), range.length());
         }
-        virtual inline iterator_t<T> operator[](const range_t& range) __attribute__((hot)) {
+        virtual inline iterator_t<T> operator[](const range_t& range) GCC_ATTRIBUTE_HOT {
                 return iterator_t<T>(*this, range.index(), range.length());
         }
-        virtual inline const T& operator[](const index_i& index) const __attribute__((hot)) {
+        virtual inline const T& operator[](const index_i& index) const GCC_ATTRIBUTE_HOT {
                 return std::vector<T>::operator[](index[0]);
         }
-        virtual inline T& operator[](const index_i& index) __attribute__((hot)) {
+        virtual inline T& operator[](const index_i& index) GCC_ATTRIBUTE_HOT {
                 return std::vector<T>::operator[](index[0]);
         }
         friend std::ostream& operator<< <> (std::ostream& o, const data_t<T>& sd);
@@ -252,16 +252,16 @@ public:
                         static_cast<const sequence_data_t<T>&>(data));
                 return *this;
         }
-        virtual inline const_iterator_t<T> operator[](const range_t& range) const __attribute__((hot)) {
+        virtual inline const_iterator_t<T> operator[](const range_t& range) const GCC_ATTRIBUTE_HOT {
                 return const_iterator_t<T>(*this, range.index(), range.length());
         }
-        virtual inline iterator_t<T> operator[](const range_t& range) __attribute__((hot)) {
+        virtual inline iterator_t<T> operator[](const range_t& range) GCC_ATTRIBUTE_HOT {
                 return iterator_t<T>(*this, range.index(), range.length());
         }
-        virtual inline const T& operator[](const index_i& index) const __attribute__((hot)) {
+        virtual inline const T& operator[](const index_i& index) const GCC_ATTRIBUTE_HOT {
                 return std::vector<std::vector<T> >::operator[](index[0])[index[1]];
         }
-        virtual inline T& operator[](const index_i& index) __attribute__((hot)) {
+        virtual inline T& operator[](const index_i& index) GCC_ATTRIBUTE_HOT {
                 return std::vector<std::vector<T> >::operator[](index[0])[index[1]];
         }
         virtual size_t size(size_t i) const {
