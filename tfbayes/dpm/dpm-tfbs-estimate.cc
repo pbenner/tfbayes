@@ -150,7 +150,9 @@ distance1(const boost::unordered_set<seq_index_t>& indices,
         return d + bg*bg_size;
 }
 
-// highly optimized distance function
+// highly optimized distance function (formulas can be found in
+// Lawrence Hubert. Comparing Partitions. Journal of
+// Classification, 1985)
 // -----------------------------------------------------------------------------
 
 static size_t
