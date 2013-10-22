@@ -149,13 +149,6 @@ gibbs_sampler_t::_gibbs_sample() {
 
 size_t
 gibbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
-
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        time_t seed = tv.tv_sec*tv.tv_usec;
-
-        srand(seed);
-
         return _gibbs_sample();
 }
 

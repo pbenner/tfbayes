@@ -22,6 +22,9 @@
 #include <iostream>
 #include <limits>
 #include <sstream>
+#include <sys/time.h>
+
+#include <boost/random/mersenne_twister.hpp>
 
 #include <tfbayes/dpm/dpm-tfbs.hh>
 #include <tfbayes/utility/statistics.hh>
@@ -30,6 +33,11 @@ using namespace std;
 
 void
 dpm_tfbs_t::test_metropolis_hastings() {
+        boost::random::mt19937 gen;
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        gen.seed(tv.tv_sec*tv.tv_usec);
+
         seq_index_t index1(0,53);
         seq_index_t index2(1,26);
         double l1, l2;
@@ -50,7 +58,7 @@ dpm_tfbs_t::test_metropolis_hastings() {
         cout << "likelihood: " << l1 << endl;
 
         stringstream ss;
-        _state.proposal(cluster1, ss);
+        _state.proposal(cluster1, ss, gen);
         l2 = likelihood();
         cout << _state.cluster_assignments() << endl;
         cout << "likelihood: " << l2 << endl;
@@ -167,9 +175,6 @@ void normalize(size_t components, double *log_weights)
                 log_weights[i] -= sum;
         }
 }
-
-#include <sys/time.h>
-#include <boost/random/mersenne_twister.hpp>
 
 void
 dpm_tfbs_t::test() {

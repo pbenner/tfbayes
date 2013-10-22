@@ -21,6 +21,9 @@
 
 #include <sstream>
 
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+
 #include <tfbayes/dpm/dpm-tfbs-state.hh>
 
 using namespace std;
@@ -234,12 +237,14 @@ dpm_tfbs_state_t::move_right(cluster_t& cluster)
 }
 
 bool
-dpm_tfbs_state_t::proposal(cluster_t& cluster, stringstream& ss)
+dpm_tfbs_state_t::proposal(cluster_t& cluster, stringstream& ss, boost::random::mt19937& gen)
 {
+        boost::random::uniform_int_distribution<> dist(0, 1);
+
         save(cluster.cluster_tag());
 
         if (cluster.cluster_tag() != bg_cluster_tag && cluster.size() > 1) {
-                if (rand() % 2 == 0) {
+                if (dist(gen) == 0) {
                         ss << "move to right";
                         return move_right(cluster);
                 }

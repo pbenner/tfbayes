@@ -19,6 +19,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <boost/random/uniform_01.hpp>
+
 #include <tfbayes/dpm/dpm-tfbs-sampler.hh>
 #include <tfbayes/utility/statistics.hh>
 
@@ -241,12 +243,14 @@ dpm_tfbs_sampler_t::_metropolis_sample(cluster_t& cluster, const double temp) {
         stringstream ss;
         size_t size = cluster.size();
 
-        if (dpm().state().proposal(cluster, ss)) {
+        /* allocate a uniform distribution on the unit inverval */
+        boost::random::uniform_01<> dist;
+
+        if (dpm().state().proposal(cluster, ss, gen())) {
                 posterior_tmp = dpm().posterior();
 
-                const double r = (double)rand()/RAND_MAX;
                 /* posterior value is on log scale! */
-                if (r <= min(exp((posterior_tmp - posterior_ref)/temp), 1.0)) {
+                if (dist(gen()) <= min(exp((posterior_tmp - posterior_ref)/temp), 1.0)) {
                         goto accepted;
                 }
                 dpm().state().restore();

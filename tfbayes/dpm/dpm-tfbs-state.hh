@@ -58,7 +58,7 @@ public:
         bool move_left (cluster_t& cluster);
         bool move_right(cluster_t& cluster);
 
-        bool proposal(cluster_t& cluster, std::stringstream& ss);
+        bool proposal(cluster_t& cluster, std::stringstream& ss, boost::random::mt19937& gen);
         void save(cluster_tag_t cluster_tag);
         void restore();
 
