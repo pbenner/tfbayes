@@ -178,16 +178,12 @@ distance2(const boost::unordered_set<seq_index_t>& indices,
         mapped_matrix<double> m(la, lb);
         std::vector<double> ma(la, 0.0);
         std::vector<double> mb(lb, 0.0);
-        double bg = 0.0;
 
         for (boost::unordered_set<seq_index_t>::const_iterator it = indices.begin();
              it != indices.end(); it++) {
                 m(a[*it], b[*it]) += 1.0;
                 ma[a[*it]] += 1.0;
                 mb[b[*it]] += 1.0;
-                if (a[*it] == 0 || b[*it] == 0) {
-                        bg += 1.0;
-                }
         }
 
         // compute distance from contingency table
@@ -204,7 +200,7 @@ distance2(const boost::unordered_set<seq_index_t>& indices,
                         result -= (*is)*(*is);
                 }
         }
-        return result + bg*bg_size;
+        return result + (ma[0]+mb[0])*bg_size;
 }
 
 static size_t
