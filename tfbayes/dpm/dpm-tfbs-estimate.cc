@@ -148,13 +148,141 @@ distance(const dpm_partition_t& pi_a,
         cout << "bg_size: " << bg_size<< endl;
 
         // compute the distance
-        size_t d = distance(indices, a, b, bg_size);
+//        size_t d = distance(indices, a, b, bg_size);
+        size_t d = distance(indices, a, b, 0);
 
         // clean data
         clean_data(pi_a, a, tfbs_length);
         clean_data(pi_b, b, tfbs_length);
 
         return d;
+}
+
+static size_t
+cluster_intersection_size(const dpm_subset_t& sa,
+                          const sequence_data_t<cluster_tag_t>& a,
+                          const sequence_data_t<cluster_tag_t>& b,
+                          ssize_t id_a, ssize_t id_b,
+                          size_t k1, size_t k2)
+{
+        size_t result = 0;
+
+        for (dpm_subset_t::const_iterator it = sa.begin();
+             it != sa.end(); it++) {
+                const seq_index_t& index = static_cast<const seq_index_t&>(**it);
+                if (a[index[0]][index[1]+k1] == id_a &&
+                    b[index[0]][index[1]+k2] == id_b) {
+                        result++;
+                }
+        }
+
+        return result;
+}
+
+static size_t
+optimized_distance(const dpm_partition_t& pi_a,
+                   const dpm_partition_t& pi_b,
+                   sequence_data_t<cluster_tag_t>& a,
+                   sequence_data_t<cluster_tag_t>& b,
+                   size_t tfbs_length,
+                   const dpm_tfbs_t& dpm)
+{
+        boost::unordered_set<seq_index_t> indices;
+
+        // resulting distance
+        size_t result = 0.0;
+
+        // partition sizes
+        size_t la = pi_a.size()*tfbs_length+1;
+        size_t lb = pi_b.size()*tfbs_length+1;
+
+        // initialize auxiliary cluster information
+        init_data(pi_a, a, tfbs_length);
+        init_data(pi_b, b, tfbs_length);
+
+        // contingency table
+        matrix<double> m(la+1, lb+1, 0.0);
+
+        // compute contingency table
+        // for (dpm_partition_t::const_iterator it = pi_a.begin();
+        //      it != pi_a.end(); it++) {
+        //         for (dpm_subset_t::const_iterator is = it->begin();
+        //              is != it->end(); is++) {
+        //                 const seq_index_t& tmp = static_cast<const seq_index_t&>(**is);
+        //                 for (size_t i = 0; i < tfbs_length; i++) {
+        //                         if (b[tmp[0]][tmp[1]+i] == 0) {
+        //                                 assert(a[tmp[0]][tmp[1]+i] != 0);
+        //                                 m[a[tmp[0]][tmp[1]+i]][0]++;
+        //                         }
+        //                 }
+        //         }
+        // }
+        // for (dpm_partition_t::const_iterator it = pi_b.begin();
+        //      it != pi_b.end(); it++) {
+        //         for (dpm_subset_t::const_iterator is = it->begin();
+        //              is != it->end(); is++) {
+        //                 const seq_index_t& tmp = static_cast<const seq_index_t&>(**is);
+        //                 for (size_t i = 0; i < tfbs_length; i++) {
+        //                         if (a[tmp[0]][tmp[1]+i] == 0) {
+        //                                 m[0][b[tmp[0]][tmp[1]+i]]++;
+        //                         }
+        //                 }
+        //         }
+        // }
+        for (size_t i = 0; i < pi_a.size(); i++) {
+                for (size_t k = 0; k < tfbs_length; k++) {
+                        size_t id_a = i*tfbs_length+k+1;
+                        m[id_a][0]   = cluster_intersection_size(pi_a[i], a, b, id_a, 0, k, k);
+                        m[id_a][lb] += m[id_a][0];
+                        m[la]  [0]  += m[id_a][0];
+                        m[la]  [lb] += m[id_a][0];
+                }
+        }
+        for (size_t j = 0; j <  pi_b.size(); j++) {
+                for (size_t k = 0; k < tfbs_length; k++) {
+                        size_t id_b = j*tfbs_length+k+1;
+                        m[0] [id_b]  = cluster_intersection_size(pi_b[j], a, b, 0, id_b, k, k);
+                        m[la][id_b] += m[0][id_b];
+                        m[0] [lb]   += m[0][id_b];
+                        m[la][lb]   += m[0][id_b];
+                }
+        }
+        for (size_t i = 0; i < pi_a.size(); i++) {
+                for (size_t k1 = 0; k1 < tfbs_length; k1++) {
+                        for (size_t j = 0; j <  pi_b.size(); j++) {
+                                for (size_t k2 = 0; k2 < tfbs_length; k2++) {
+                                        size_t id_a = i*tfbs_length+k1+1;
+                                        size_t id_b = j*tfbs_length+k2+1;
+                                        m[id_a]    [id_b]  = cluster_intersection_size(pi_a[i], a, b, id_a, id_b, k1, k1);
+                                        m[id_a]    [lb]   += m[id_a][id_b];
+                                        m[la][id_b]       += m[id_a][id_b];
+                                        m[la][lb]         += m[id_a][id_b];
+                                }
+                        }
+                }
+        }
+        // size of the background cluster
+        size_t bg_size = dpm.data().elements() - m[la][lb];
+        cout << "bg_size: " << bg_size<< endl;
+
+        // compute distance from contingency table
+        for (size_t i = 0; i < la; i++) {
+                result += 1.0/2.0*m[i][lb]*m[i][lb];
+        }
+        for (size_t j = 0; j < lb; j++) {
+                result += 1.0/2.0*m[la][j]*m[la][j];
+        }
+        for (size_t i = 0; i < la; i++) {
+                for (size_t j = 0; j <  lb; j++) {
+                        result -= m[i][j]*m[i][j];
+                }
+        }
+
+        // clean data
+        clean_data(pi_a, a, tfbs_length);
+        clean_data(pi_b, b, tfbs_length);
+
+        return result;
 }
 
 static size_t
@@ -236,8 +364,9 @@ dpm_tfbs_estimate(const dpm_partition_list_t& partitions,
                                 cerr << progress_t(2.0*(k+1)/(double)(n*n-n));
                         }
                         cout << endl;
-                        cout << "      distance: " <<       distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
-                        cout << "naive distance: " << naive_distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
+                        cout << "          distance: " <<           distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
+                        cout << "optimized distance: " << optimized_distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
+                        cout << "    naive distance: " <<     naive_distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
                         exit(EXIT_FAILURE);
                         distances[i][j] = distance(partitions[i], partitions[j], a, b, tfbs_length, dpm);
                         distances[j][i] = distances[i][j];
