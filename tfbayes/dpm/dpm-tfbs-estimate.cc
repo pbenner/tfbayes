@@ -24,6 +24,8 @@
 #include <stdint.h>
 
 #include <boost/unordered/unordered_set.hpp>
+#include <boost/numeric/ublas/matrix_sparse.hpp>
+#include <boost/numeric/ublas/io.hpp>
 
 #include <tfbayes/dpm/dpm-tfbs.hh>
 #include <tfbayes/dpm/dpm-sampling-history.hh>
@@ -82,10 +84,10 @@ clean_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& dat
 }
 
 static size_t
-distance(const boost::unordered_set<seq_index_t>& indices,
-         const sequence_data_t<cluster_tag_t>& a,
-         const sequence_data_t<cluster_tag_t>& b,
-         size_t bg_size)
+distance1(const boost::unordered_set<seq_index_t>& indices,
+          const sequence_data_t<cluster_tag_t>& a,
+          const sequence_data_t<cluster_tag_t>& b,
+          size_t bg_size)
 {
         size_t d = 0, bg = 0;
 
@@ -102,7 +104,57 @@ distance(const boost::unordered_set<seq_index_t>& indices,
                         bg++;
                 }
         }
-        return d + bg*bg_size;
+        return d;// + bg*bg_size;
+}
+
+static size_t
+distance2(const boost::unordered_set<seq_index_t>& indices,
+          const dpm_partition_t& pi_a,
+          const dpm_partition_t& pi_b,
+          const sequence_data_t<cluster_tag_t>& a,
+          const sequence_data_t<cluster_tag_t>& b,
+          size_t tfbs_length,
+          size_t bg_size)
+{
+        // boost sparse matrices
+        using namespace boost::numeric::ublas;
+
+        // resulting distance
+        double result = 0;
+
+        // number of clusters
+        size_t la = pi_a.size()*tfbs_length+1;
+        size_t lb = pi_b.size()*tfbs_length+1;
+
+        // contingency table
+        mapped_matrix<double> m(la, lb);
+        std::vector<double> ma(la, 0.0);
+        std::vector<double> mb(lb, 0.0);
+        double n = 0.0;
+
+        for (boost::unordered_set<seq_index_t>::const_iterator it = indices.begin();
+             it != indices.end(); it++) {
+                m(a[*it], b[*it]) += 1.0;
+                ma[a[*it]] += 1.0;
+                mb[b[*it]] += 1.0;
+                n += 1.0;
+        }
+
+        // compute distance from contingency table
+        for (size_t i = 0; i < la; i++) {
+                result += 1.0/2.0*ma[i]*ma[i];
+        }
+        for (size_t j = 0; j < lb; j++) {
+                result += 1.0/2.0*mb[j]*mb[j];
+        }
+        for (mapped_matrix<double>::const_iterator1 it = m.begin1();
+             it != m.end1(); it++) {
+                for (mapped_matrix<double>::const_iterator2 is = it.begin();
+                     is != it.end(); is++) {
+                        result -= (*is)*(*is);
+                }
+        }
+        return result;// + n*bg_size;
 }
 
 static size_t
@@ -145,118 +197,16 @@ distance(const dpm_partition_t& pi_a,
         }
         // size of the background cluster
         size_t bg_size = dpm.data().elements() - indices.size();
-        //cout << "bg_size: " << bg_size<< endl;
 
         // compute the distance
-//        size_t d = distance(indices, a, b, bg_size);
-        size_t d = distance(indices, a, b, 0);
+//        size_t d = distance1(indices, a, b, bg_size);
+        size_t d = distance2(indices, pi_a, pi_b, a, b, tfbs_length, bg_size);
 
         // clean data
         clean_data(pi_a, a, tfbs_length);
         clean_data(pi_b, b, tfbs_length);
 
         return d;
-}
-
-static size_t
-cluster_intersection_size(const dpm_subset_t& sa,
-                          const sequence_data_t<cluster_tag_t>& a,
-                          const sequence_data_t<cluster_tag_t>& b,
-                          ssize_t id_a, ssize_t id_b,
-                          size_t k1, size_t k2)
-{
-        size_t result = 0;
-
-        for (dpm_subset_t::const_iterator it = sa.begin();
-             it != sa.end(); it++) {
-                const seq_index_t& index = static_cast<const seq_index_t&>(**it);
-                if (a[index[0]][index[1]+k1] == id_a &&
-                    b[index[0]][index[1]+k2] == id_b) {
-                        result++;
-                }
-        }
-
-        return result;
-}
-
-static size_t
-optimized_distance(const dpm_partition_t& pi_a,
-                   const dpm_partition_t& pi_b,
-                   sequence_data_t<cluster_tag_t>& a,
-                   sequence_data_t<cluster_tag_t>& b,
-                   size_t tfbs_length,
-                   const dpm_tfbs_t& dpm)
-{
-        boost::unordered_set<seq_index_t> indices;
-
-        // resulting distance
-        double result = 0;
-
-        // partition sizes
-        size_t la = pi_a.size()*tfbs_length+1;
-        size_t lb = pi_b.size()*tfbs_length+1;
-
-        // initialize auxiliary cluster information
-        init_data(pi_a, a, tfbs_length);
-        init_data(pi_b, b, tfbs_length);
-
-        // go through subsets of partition a and record all positions
-        // that are assigned to a cluster
-        for (dpm_partition_t::const_iterator it = pi_a.begin();
-             it != pi_a.end(); it++) {
-                for (dpm_subset_t::const_iterator is = it->begin();
-                     is != it->end(); is++) {
-                        const seq_index_t& tmp = static_cast<const seq_index_t&>(**is);
-                        for (size_t i = 0; i < tfbs_length; i++) {
-                                indices.insert(seq_index_t(tmp[0], tmp[1]+i));
-                        }
-                }
-        }
-        // go through subsets of partition b and record all positions
-        // that are assigned to a cluster
-        for (dpm_partition_t::const_iterator it = pi_b.begin();
-             it != pi_b.end(); it++) {
-                for (dpm_subset_t::const_iterator is = it->begin();
-                     is != it->end(); is++) {
-                        const seq_index_t& tmp = static_cast<const seq_index_t&>(**is);
-                        for (size_t i = 0; i < tfbs_length; i++) {
-                                indices.insert(seq_index_t(tmp[0], tmp[1]+i));
-                        }
-                }
-        }
-
-        // contingency table
-        matrix<double> m(la+1, lb+1, 0.0);
-
-        for (boost::unordered_set<seq_index_t>::const_iterator it = indices.begin();
-             it != indices.end(); it++) {
-                m[a[*it]][b[*it]] += 1.0;
-                m[la    ][b[*it]] += 1.0;
-                m[a[*it]][lb    ] += 1.0;
-                m[la    ][lb    ] += 1.0;
-        }
-
-        size_t bg_size = dpm.data().elements() - m[la][lb];
-        //cout << "bg_size: " << bg_size<< endl;
-
-        // compute distance from contingency table
-        for (size_t i = 0; i < la; i++) {
-                result += 1.0/2.0*m[i][lb]*m[i][lb];
-        }
-        for (size_t j = 0; j < lb; j++) {
-                result += 1.0/2.0*m[la][j]*m[la][j];
-        }
-        for (size_t i = 0; i < la; i++) {
-                for (size_t j = 0; j <  lb; j++) {
-                        result -= m[i][j]*m[i][j];
-                }
-        }
-
-        // clean data
-        clean_data(pi_a, a, tfbs_length);
-        clean_data(pi_b, b, tfbs_length);
-
-        return result;
 }
 
 static size_t
@@ -338,7 +288,6 @@ dpm_tfbs_estimate(const dpm_partition_list_t& partitions,
                                 cerr << progress_t(2.0*(k+1)/(double)(n*n-n));
                         }
                         cout << endl;
-                        cout << "optimized distance: " << optimized_distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
                         cout << "          distance: " <<           distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
                         cout << "    naive distance: " <<     naive_distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
                         exit(EXIT_FAILURE);
