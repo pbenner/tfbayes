@@ -294,10 +294,10 @@ dpm_tfbs_estimate(const dpm_partition_list_t& partitions,
         size_t min = SIZE_MAX, argmin = SIZE_MAX;
 
         for (size_t i = 0, k = 0; i < n; i++) {
-                if (verbose) {
-                        cerr << progress_t(2.0*(k+1)/(double)(n*n-n));
-                }
                 for (size_t j = i+1; j < n; j++, k++) {
+                        if (verbose) {
+                                cerr << progress_t(2.0*(k+1)/(double)(n*n-n));
+                        }
                         distances[i][j] = distance(partitions[i], partitions[j], a, b, dpm);
                         distances[j][i] = distances[i][j];
                 }
