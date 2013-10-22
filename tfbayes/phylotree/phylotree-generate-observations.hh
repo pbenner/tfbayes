@@ -38,12 +38,13 @@ template <size_t AS, typename AC>
 void pt_generate_observations(const pt_node_t& node,
                               const std::vector<double>& stationary,
                               const AC parent_nucleotide,
-                              std::vector<AC>& observations)
+                              std::vector<AC>& observations,
+                              boost::random::mt19937& gen)
 {
         double r = (double)rand()/RAND_MAX;
         AC nucleotide;
         if (r <= node.mutation_probability()) {
-                nucleotide = categorial_sample<AS, AC>(stationary);
+                nucleotide = categorical_sample<AS, AC>(stationary, gen);
         }
         else {
                 nucleotide = parent_nucleotide;
@@ -55,30 +56,31 @@ void pt_generate_observations(const pt_node_t& node,
         /* traverse the treee */
         else {
                 pt_generate_observations<AS, AC>(
-                        node.left (), stationary, nucleotide, observations);
+                        node.left (), stationary, nucleotide, observations, gen);
                 pt_generate_observations<AS, AC>(
-                        node.right(), stationary, nucleotide, observations);
+                        node.right(), stationary, nucleotide, observations, gen);
         }
 }
 
 template <size_t AS, typename AC>
 std::vector<AC>
-pt_generate_observations(const pt_root_t& tree, const std::vector<double>& stationary)
+pt_generate_observations(const pt_root_t& tree, const std::vector<double>& stationary,
+                         boost::random::mt19937& gen)
 {
         std::vector<AC> observations(tree.n_leaves, -1);
-        AC nucleotide = categorial_sample<AS, AC>(stationary);
+        AC nucleotide = categorical_sample<AS, AC>(stationary, gen);
 
         /* check for an outgroup */
         if (tree.outgroup()) {
                 pt_generate_observations<AS, AC>(
-                        static_cast<const pt_leaf_t&>(*tree.outgroup()), stationary, nucleotide, observations);
+                        static_cast<const pt_leaf_t&>(*tree.outgroup()), stationary, nucleotide, observations, gen);
         }
         /* traverse the treee */
         if (!tree.leaf()) {
                 pt_generate_observations<AS, AC>(
-                        tree.left (), stationary, nucleotide, observations);
+                        tree.left (), stationary, nucleotide, observations, gen);
                 pt_generate_observations<AS, AC>(
-                        tree.right(), stationary, nucleotide, observations);
+                        tree.right(), stationary, nucleotide, observations, gen);
         }
         return observations;
 }

@@ -29,6 +29,9 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_sf_gamma.h>
 
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_01.hpp>
+
 #include <tfbayes/utility/polynomial.hh>
 
 template <size_t AS, typename PC>
@@ -84,9 +87,11 @@ double mbeta_log(
 }
 
 template <size_t AS, typename PC>
-size_t categorial_sample(const std::vector<double>& p)
+size_t categorical_sample(const std::vector<double>& p, boost::random::mt19937& gen)
 {
-        double r = (double)rand()/RAND_MAX;
+        boost::random::uniform_01<> dist;
+
+        double r = dist(gen);
         double c = 0.0;
 
         for (size_t i = 0; i < AS-1; i++) {
@@ -117,9 +122,6 @@ std::vector<double> dirichlet_sample(const std::vector<double>& _alpha, gsl_rng*
         }
         return _theta;
 }
-
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_01.hpp>
 
 static inline
 size_t select_component(size_t k, double log_weights[], boost::random::mt19937& gen)

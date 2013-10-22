@@ -27,6 +27,7 @@
 #include <cstdlib>
 
 #include <boost/format.hpp>
+#include <boost/random/mersenne_twister.hpp>
 
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/phylotree-parser.hh>
@@ -72,8 +73,8 @@ void print_usage(char *pname, FILE *fp)
         (void)fprintf(fp, "\nUsage: %s [OPTION] MODEL TREE\n\n", pname);
         (void)fprintf(fp,
                       "Models:\n"
-                      "             simple           - all columns are generated with the same pseudocounts"
-                      "             tfbs             - enrich alignment with certain patterns"
+                      "             simple           - all columns are generated with the same pseudocounts\n"
+                      "             tfbs             - enrich alignment with certain patterns\n"
                       "\n"
                       "Options:\n"
                       "             -a F:F:F:F:F     - pseudo counts (five floats separated by a colon)\n"
@@ -149,7 +150,7 @@ public:
         const pattern_t& operator()() {
                 size_t c   = occurrences.size();
                 double sum = 0.0;
-                double ra  = (double)rand()/RAND_MAX;
+                double ra  = gsl_rng_uniform(r);
 
                 // draw from an existing cluster
                 for (size_t i = 0; i < c; i++) {
@@ -214,7 +215,7 @@ void insert_observations(alignment_t<>& alignment, size_t i, const vector<alphab
 }
 
 static
-void generate_tfbs_alignment(const pt_root_t& pt_root, gsl_rng * r)
+void generate_tfbs_alignment(const pt_root_t& pt_root, gsl_rng * r, boost::random::mt19937& gen)
 {
         dirichlet_process_t dirichlet_process(options.d, options.alpha, r);
         vector<double> stationary;
@@ -228,7 +229,7 @@ void generate_tfbs_alignment(const pt_root_t& pt_root, gsl_rng * r)
                 if ((double)rand()/RAND_MAX <= options.lambda) {
                         const pattern_t& pattern = dirichlet_process();
                         for (size_t j = 0; j < pattern.size() && i+j < options.n; j++) {
-                                observations = pt_generate_observations<alphabet_size, alphabet_code_t>(pt_root, pattern[j]);
+                                observations = pt_generate_observations<alphabet_size, alphabet_code_t>(pt_root, pattern[j], gen);
                                 insert_observations(alignment, i+j, observations);
                         }
                         i += pattern.size() - 1;
@@ -236,7 +237,7 @@ void generate_tfbs_alignment(const pt_root_t& pt_root, gsl_rng * r)
                 // generate background
                 else {
                         stationary   = dirichlet_sample<alphabet_size>(options.beta, r);
-                        observations = pt_generate_observations<alphabet_size, alphabet_code_t>(pt_root, stationary);
+                        observations = pt_generate_observations<alphabet_size, alphabet_code_t>(pt_root, stationary, gen);
                         insert_observations(alignment, i, observations);
                 }
         }
@@ -246,7 +247,7 @@ void generate_tfbs_alignment(const pt_root_t& pt_root, gsl_rng * r)
         print_alignment(alignment);
 }
 
-void generate_simple_alignment(const pt_root_t& pt_root, gsl_rng * r)
+void generate_simple_alignment(const pt_root_t& pt_root, gsl_rng * r, boost::random::mt19937& gen)
 {
         // alignment
         alignment_t<> alignment(options.n, pt_root);
@@ -256,7 +257,7 @@ void generate_simple_alignment(const pt_root_t& pt_root, gsl_rng * r)
                 vector<double         > stationary   =
                         dirichlet_sample<alphabet_size>(options.alpha, r);
                 vector<alphabet_code_t> observations =
-                        pt_generate_observations<alphabet_size, alphabet_code_t>(pt_root, stationary);
+                        pt_generate_observations<alphabet_size, alphabet_code_t>(pt_root, stationary, gen);
 
                 alignment[i] = observations;
         }
@@ -266,15 +267,6 @@ void generate_simple_alignment(const pt_root_t& pt_root, gsl_rng * r)
 
 // Main
 ////////////////////////////////////////////////////////////////////////////////
-
-static
-void init() {
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        time_t seed = tv.tv_sec*tv.tv_usec;
-
-        srand(seed);
-}
 
 static
 pt_root_t parse_tree_file(const string& filename)
@@ -288,22 +280,30 @@ pt_root_t parse_tree_file(const string& filename)
 static
 void generate_alignment(const string& model, const char* treefile)
 {
-        init();
+        // seed
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        size_t seed = tv.tv_sec*tv.tv_usec;
 
         // gsl random number generator
         gsl_rng_env_setup();
         const gsl_rng_type * T = gsl_rng_default;
         gsl_rng * r = gsl_rng_alloc(T);
+        gsl_rng_set(r, seed);
+
+        // random number generator for the phylotree library
+        boost::random::mt19937 gen;
+        gen.seed(seed);
 
         // parse tree
         pt_root_t pt_root = parse_tree_file(treefile);
 
         // switch command
         if (model == "simple") {
-                generate_simple_alignment(pt_root, r);
+                generate_simple_alignment(pt_root, r, gen);
         }
         else if (model == "tfbs") {
-                generate_tfbs_alignment(pt_root, r);
+                generate_tfbs_alignment(pt_root, r, gen);
         }
         else {
                 wrong_usage("Invalid statistical model.");
