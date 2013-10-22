@@ -14,17 +14,17 @@ dnl You should have received a copy of the GNU General Public License
 dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-AC_DEFUN([AX_GCC_ATTRIBUTE_HOT],[
+AC_DEFUN([AX_GCC_ATTRIBUTE_UNUSED],[
 AC_CACHE_CHECK(
-  [for  __attribute__((hot))],
+  [for  __attribute__((unused))],
   ax_cv_gcc_const_call,[
   AC_TRY_COMPILE([
-    __attribute__((hot))
+    __attribute__((unused))
     int f(int i) { return i; }],
     [],
-    ax_cv_gcc_attribute_hot=yes, ax_cv_gcc_attribute_hot=no)])
-  if test "$ax_cv_gcc_attribute_hot" = yes; then
-    AC_DEFINE([GCC_ATTRIBUTE_HOT],[__attribute__((hot))],
-      [Attribute to declare functions as hot spots of the program])
+    ax_cv_gcc_attribute_unused=yes, ax_cv_gcc_attribute_unused=no)])
+  if test "$ax_cv_gcc_attribute_unused" = yes; then
+    AC_DEFINE([GCC_ATTRIBUTE_UNUSED],[__attribute__((unused))],
+      [Attribute to declare variables as unused])
   fi
 ])

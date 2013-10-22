@@ -315,6 +315,7 @@ dnl turn link time optimization on (works only on some systems so far)
 
 # check for attributes
 AX_GCC_ATTRIBUTE_HOT
+AX_GCC_ATTRIBUTE_UNUSED
 
 AC_SUBST(CXXFLAGS_NORTTI)
 

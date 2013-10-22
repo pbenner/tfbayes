@@ -86,6 +86,7 @@ clean_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& dat
 // naive distance function (for debugging purposes)
 // -----------------------------------------------------------------------------
 
+GCC_ATTRIBUTE_UNUSED
 static size_t
 naive_distance(const dpm_partition_t& pi_a,
                const dpm_partition_t& pi_b,
@@ -126,6 +127,7 @@ naive_distance(const dpm_partition_t& pi_a,
 // bug still quadratic in the number of foreground indices!
 // -----------------------------------------------------------------------------
 
+GCC_ATTRIBUTE_UNUSED
 static size_t
 distance1(const boost::unordered_set<seq_index_t>& indices,
           const sequence_data_t<cluster_tag_t>& a,
