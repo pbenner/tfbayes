@@ -299,10 +299,6 @@ dpm_tfbs_estimate(const dpm_partition_list_t& partitions,
                         if (verbose) {
                                 cerr << progress_t(2.0*(k+1)/(double)(n*n-n));
                         }
-                        // cout << endl;
-                        // cout << "          distance: " <<           distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
-                        // cout << "    naive distance: " <<     naive_distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
-                        // exit(EXIT_FAILURE);
                         distances[i][j] = distance(partitions[i], partitions[j], a, b, tfbs_length, dpm);
                         distances[j][i] = distances[i][j];
                 }
