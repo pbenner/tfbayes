@@ -41,7 +41,7 @@ size_t hash_value(const seq_index_t& seq_index)
         return seq_index.hash();
 }
 
-// functions for computing means and medians
+// utilities for computing means and medians
 // -----------------------------------------------------------------------------
 
 static void
@@ -83,6 +83,49 @@ clean_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& dat
         }
 }
 
+// naive distance function (for debugging purposes)
+// -----------------------------------------------------------------------------
+
+static size_t
+naive_distance(const dpm_partition_t& pi_a,
+               const dpm_partition_t& pi_b,
+               sequence_data_t<cluster_tag_t>& a,
+               sequence_data_t<cluster_tag_t>& b,
+               size_t tfbs_length,
+               const dpm_tfbs_t& dpm)
+{
+        boost::unordered_set<seq_index_t> indices;
+        // resulting distance
+        size_t d = 0;
+
+        // initialize auxiliary cluster information
+        init_data(pi_a, a, tfbs_length);
+        init_data(pi_b, b, tfbs_length);
+
+        for (indexer_t::const_iterator it = dpm.data().begin();
+             it != dpm.data().end(); it++) {
+                for (indexer_t::const_iterator is = it+1;
+                     is != dpm.data().end(); is++) {
+                        const seq_index_t& i = static_cast<const seq_index_t&>(**it);
+                        const seq_index_t& j = static_cast<const seq_index_t&>(**is);
+                        if ((a[i] == a[j] && b[i] != b[j]) ||
+                            (a[i] != a[j] && b[i] == b[j])) {
+                                d += 1;
+                        }
+                }
+        }
+
+        // clean data
+        clean_data(pi_a, a, tfbs_length);
+        clean_data(pi_b, b, tfbs_length);
+
+        return d;
+}
+
+// a slightly less naive implementation of a distance function
+// bug still quadratic in the number of foreground indices!
+// -----------------------------------------------------------------------------
+
 static size_t
 distance1(const boost::unordered_set<seq_index_t>& indices,
           const sequence_data_t<cluster_tag_t>& a,
@@ -106,6 +149,9 @@ distance1(const boost::unordered_set<seq_index_t>& indices,
         }
         return d + bg*bg_size;
 }
+
+// highly optimized distance function
+// -----------------------------------------------------------------------------
 
 static size_t
 distance2(const boost::unordered_set<seq_index_t>& indices,
@@ -211,42 +257,6 @@ distance(const dpm_partition_t& pi_a,
         return d;
 }
 
-static size_t
-naive_distance(const dpm_partition_t& pi_a,
-               const dpm_partition_t& pi_b,
-               sequence_data_t<cluster_tag_t>& a,
-               sequence_data_t<cluster_tag_t>& b,
-               size_t tfbs_length,
-               const dpm_tfbs_t& dpm)
-{
-        boost::unordered_set<seq_index_t> indices;
-        // resulting distance
-        size_t d = 0;
-
-        // initialize auxiliary cluster information
-        init_data(pi_a, a, tfbs_length);
-        init_data(pi_b, b, tfbs_length);
-
-        for (indexer_t::const_iterator it = dpm.data().begin();
-             it != dpm.data().end(); it++) {
-                for (indexer_t::const_iterator is = it+1;
-                     is != dpm.data().end(); is++) {
-                        const seq_index_t& i = static_cast<const seq_index_t&>(**it);
-                        const seq_index_t& j = static_cast<const seq_index_t&>(**is);
-                        if ((a[i] == a[j] && b[i] != b[j]) ||
-                            (a[i] != a[j] && b[i] == b[j])) {
-                                d += 1;
-                        }
-                }
-        }
-
-        // clean data
-        clean_data(pi_a, a, tfbs_length);
-        clean_data(pi_b, b, tfbs_length);
-
-        return d;
-}
-
 static
 double mean_loss(double d)
 {
@@ -289,10 +299,10 @@ dpm_tfbs_estimate(const dpm_partition_list_t& partitions,
                         if (verbose) {
                                 cerr << progress_t(2.0*(k+1)/(double)(n*n-n));
                         }
-                        cout << endl;
-                        cout << "          distance: " <<           distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
-                        cout << "    naive distance: " <<     naive_distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
-                        exit(EXIT_FAILURE);
+                        // cout << endl;
+                        // cout << "          distance: " <<           distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
+                        // cout << "    naive distance: " <<     naive_distance(partitions[i], partitions[j], a, b, tfbs_length, dpm) << endl;
+                        // exit(EXIT_FAILURE);
                         distances[i][j] = distance(partitions[i], partitions[j], a, b, tfbs_length, dpm);
                         distances[j][i] = distances[i][j];
                 }
