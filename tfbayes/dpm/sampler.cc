@@ -20,6 +20,8 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <sstream>
+#include <chrono>
+#include <thread>
 #include <sys/time.h>
 
 #include <tfbayes/dpm/sampler.hh>
@@ -38,6 +40,9 @@ sampler_t::sampler_t(const string& name)
                 cerr << name << ": ";
         cerr << "Initializing thread-safe random number generator."
              << endl;
+        /* sleep for a millisecond to make sure that we get
+         * a unique seed */
+        this_thread::sleep_for(chrono::milliseconds(1));
         /* seed generator */
         struct timeval tv;
         gettimeofday(&tv, NULL);

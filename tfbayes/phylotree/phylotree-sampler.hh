@@ -27,6 +27,8 @@
 #include <cmath>
 #include <algorithm> /* std::min */
 #include <iomanip>
+#include <chrono>
+#include <thread>
 #include <sys/time.h>
 #include <limits>
 
@@ -134,6 +136,9 @@ public:
                   step(0),
                   tree(tree) {
 
+                // sleep for a millisecond to make sure that we get
+                // a unique seed
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 // initialize random generator
                 struct timeval tv;
                 gettimeofday(&tv, NULL);
