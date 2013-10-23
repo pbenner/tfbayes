@@ -349,6 +349,8 @@ AC_CONFIG_FILES([
 	tfbayes/dpm/Makefile
 	tfbayes/cluster/Makefile
 	tfbayes/uipac/Makefile
+	tfbayes/weblogo/Makefile
+	tfbayes/corebio/Makefile
 	tfbayes/tools/Makefile
 	tfbayes/utility/Makefile
  	])

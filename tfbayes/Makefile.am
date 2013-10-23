@@ -1,6 +1,8 @@
 ## Process this file with automake to produce Makefile.in
 
 SUBDIRS  = alignio
+SUBDIRS += weblogo
+SUBDIRS += corebio
 SUBDIRS += interface
 SUBDIRS += fastarithmetics
 SUBDIRS += fasta

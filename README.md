@@ -36,7 +36,6 @@ Some of the scripts are written in *python* and require:
 	biopython
 	numpy
 	matplotlib
-	weblogolib
 
 ## Installation
 

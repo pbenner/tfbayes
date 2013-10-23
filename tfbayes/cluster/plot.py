@@ -19,12 +19,10 @@
 import numpy as np
 import math
 
-# import weblogo module
-from corebio.seq import Alphabet
-from weblogolib import *
-from weblogolib.colorscheme import nucleotide
-
-from ..uipac.alphabet import DNA
+from ..corebio.seq         import Alphabet
+from ..uipac.alphabet      import DNA
+from ..weblogo             import *
+from ..weblogo.colorscheme import nucleotide
 
 import information
 
