@@ -43,6 +43,7 @@ struct IndexPtrEqual {
 
 class dpm_subset_t : public boost::unordered_set<index_i*, IndexPtrHash, IndexPtrEqual> {
 public:
+
         // typedefs
         ////////////////////////////////////////////////////////////////////////
         typedef boost::unordered_set<index_i*, IndexPtrHash, IndexPtrEqual> base_t;
@@ -65,6 +66,9 @@ public:
                         delete(index);
                 }
         }
+
+        // operators
+        ////////////////////////////////////////////////////////////////////////
         // make sure that every element is cloned
         dpm_subset_t& operator=(const dpm_subset_t& dpm_subset) {
                 this->clear();
@@ -75,7 +79,6 @@ public:
                 _dpm_subset_tag = dpm_subset.dpm_subset_tag();
                 return *this;
         }
-
         // methods
         ////////////////////////////////////////////////////////////////////////
         std::pair<iterator, bool> insert(const index_i& index) {
@@ -118,7 +121,7 @@ public:
                 return _dpm_subset_tag;
         }
 
-private:
+protected:
         dpm_subset_tag_t _dpm_subset_tag;
 };
 
