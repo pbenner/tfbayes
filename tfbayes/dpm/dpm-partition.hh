@@ -29,25 +29,37 @@
 
 typedef std::string dpm_subset_tag_t;
 
-class dpm_subset_t : public boost::unordered_set<index_i*> {
+struct IndexPtrHash {
+        size_t operator()(index_i* const& index) const {
+                return index->hash();
+        }
+};
+
+struct IndexPtrEqual {
+        bool operator()(index_i* const& lhs, index_i* const& rhs) const {
+                return *lhs == *rhs;
+        }
+};
+
+class dpm_subset_t : public boost::unordered_set<index_i*, IndexPtrHash, IndexPtrEqual> {
 public:
         // typedefs
         ////////////////////////////////////////////////////////////////////////
-        typedef boost::unordered_set<index_i*> set_t;
+        typedef boost::unordered_set<index_i*, IndexPtrHash, IndexPtrEqual> base_t;
 
         // constructors
         ////////////////////////////////////////////////////////////////////////
         dpm_subset_t(const dpm_subset_tag_t& dpm_subset_tag)
-        : boost::unordered_set<index_i*>(),
+                : base_t(),
           _dpm_subset_tag(dpm_subset_tag)
                 {}
         dpm_subset_t(const dpm_subset_t& dpm_subset)
-                : boost::unordered_set<index_i*>() {
+                : base_t() {
                 operator=(dpm_subset);
         }
         // free every index in the set before the set gets destructed
         virtual ~dpm_subset_t() {
-                for (set_t::const_iterator it = this->begin();
+                for (base_t::const_iterator it = this->begin();
                      it != this->end(); it++) {
                         index_i* index = *it;
                         delete(index);
@@ -56,7 +68,7 @@ public:
         // make sure that every element is cloned
         dpm_subset_t& operator=(const dpm_subset_t& dpm_subset) {
                 this->clear();
-                for (set_t::const_iterator it = dpm_subset.begin();
+                for (base_t::const_iterator it = dpm_subset.begin();
                      it != dpm_subset.end(); it++) {
                         insert(**it);
                 }
@@ -66,11 +78,41 @@ public:
 
         // methods
         ////////////////////////////////////////////////////////////////////////
-        void insert(const index_i& index) {
-
-                set_t::insert(index.clone());
+        std::pair<iterator, bool> insert(const index_i& index) {
+                std::pair<iterator, bool> result;
+                // clone index
+                index_i* tmp = index.clone();
+                // insert address to index
+                result = base_t::insert(tmp);
+                // free index if insert was not successful
+                if (!result.second) {
+                        delete(tmp);
+                }
+                return result;
         }
-
+        iterator erase(const_iterator position) {
+                // free index memory
+                delete(*position);
+                // erase index pointer
+                return base_t::erase(position);
+        }
+        size_type erase(const index_i& index) {
+                size_type result = 0;
+                // clone the index
+                index_i* i = index.clone();
+                // find index pointer
+                iterator it = find(i);
+                if (it != end()) {
+                        // if index exists, erase it
+                        index_i* tmp = *it;
+                        result = base_t::erase(i);
+                        // and free memory
+                        delete(tmp);
+                }
+                // free memory of cloned index
+                delete(i);
+                return result;
+        }
         // each subset represents a cluster with a specific model
         const dpm_subset_tag_t dpm_subset_tag() const {
                 return _dpm_subset_tag;
