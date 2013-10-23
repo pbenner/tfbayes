@@ -18,6 +18,7 @@ The definitions can for instance be placed in the local *.profile* or *.bash_pro
 
 The following libraries are required for tfbayes:
 
+	boost_python
 	boost_system
 	boost_thread
 	boost_regex

@@ -386,7 +386,7 @@ dpm_tfbs_optimize_estimate(const dpm_partition_list_t& partitions,
                                 // new estimate is worse
                                 new_loss = old_loss;
                                 // reverse changes
-                                subset.insert(index).first;
+                                subset.insert(index);
                         }
                 }
                 // check if subset is empty
