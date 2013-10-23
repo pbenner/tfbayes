@@ -20,9 +20,10 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <sstream>
-#include <chrono>
-#include <thread>
 #include <sys/time.h>
+
+#include <boost/thread/thread.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <tfbayes/dpm/sampler.hh>
 #include <tfbayes/dpm/state.hh>
@@ -42,7 +43,7 @@ sampler_t::sampler_t(const string& name)
              << endl;
         /* sleep for a millisecond to make sure that we get
          * a unique seed */
-        this_thread::sleep_for(chrono::milliseconds(1));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
         /* seed generator */
         struct timeval tv;
         gettimeofday(&tv, NULL);

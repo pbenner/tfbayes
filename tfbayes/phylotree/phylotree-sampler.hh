@@ -27,10 +27,11 @@
 #include <cmath>
 #include <algorithm> /* std::min */
 #include <iomanip>
-#include <chrono>
-#include <thread>
 #include <sys/time.h>
 #include <limits>
+
+#include <boost/thread/thread.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <gsl/gsl_randist.h>
 
@@ -138,7 +139,7 @@ public:
 
                 // sleep for a millisecond to make sure that we get
                 // a unique seed
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                boost::this_thread::sleep(boost::posix_time::milliseconds(1));
                 // initialize random generator
                 struct timeval tv;
                 gettimeofday(&tv, NULL);
