@@ -54,7 +54,7 @@ and otherwise simply
 
 The preferred compiler is *clang*, to use it type
 
-	CC=clang CXX=clang++ ./configure
+	CXX=clang++ ./configure
 
 Now the source can be compiled and installed with
 
@@ -65,7 +65,7 @@ Now the source can be compiled and installed with
 
 LTO can significantly improve the performance of TFBayes. It is recommended to use it with *clang* and *clang++*. It is disabled by default, to switch it on use
 
-	CC=clang CXX=clang++ ./configure --enable-lto
+	CXX=clang++ ./configure --enable-lto
 
 ### Known errors
 
