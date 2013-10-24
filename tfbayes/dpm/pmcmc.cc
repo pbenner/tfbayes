@@ -140,16 +140,18 @@ population_mcmc_t::update_sampling_history()
 void
 population_mcmc_t::operator()(size_t n, size_t burnin)
 {
-        // requires move operator (c++0x)
-        std::vector<boost::thread> threads(_size);
+        std::vector<boost::thread*> threads(_size);
 
         // sample
         for (size_t i = 0; i < _size; i++) {
-                threads[i] = boost::thread(boost::ref(*_population[i]), n, burnin);
+                threads[i] = new boost::thread(boost::ref(*_population[i]), n, burnin);
         }
         // join threads
         for (size_t i = 0; i < _size; i++) {
-                threads[i].join();
+                threads[i]->join();
+        }
+        for (size_t i = 0; i < _size; i++) {
+                delete(threads[i]);
         }
         update_sampling_history();
 }

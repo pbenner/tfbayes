@@ -379,15 +379,18 @@ public:
         ////////////////////////////////////////////////////////////////////////////////
         void operator()(size_t samples, size_t burnin) {
 
-                std::vector<boost::thread> threads(population.size());
+                std::vector<boost::thread*> threads(population.size());
 
                 // sample
                 for (size_t i = 0; i < population.size(); i++) {
-                        threads[i] = boost::thread(boost::ref(*population[i]), samples, burnin, i==0);
+                        threads[i] = new boost::thread(boost::ref(*population[i]), samples, burnin, i==0);
                 }
                 // join threads
                 for (size_t i = 0; i < population.size(); i++) {
-                        threads[i].join();
+                        threads[i]->join();
+                }
+                for (size_t i = 0; i < population.size(); i++) {
+                        delete(threads[i]);
                 }
                 update_samples();
                 update_history();
