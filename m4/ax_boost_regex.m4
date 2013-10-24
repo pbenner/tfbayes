@@ -39,9 +39,9 @@ AC_DEFUN([AX_BOOST_REGEX],
                    [use the Regex library from boost - it is possible to specify a certain library for the linker
                         e.g. --with-boost-regex=boost_regex-gcc-mt-d-1_33_1 ]),
         [
-        if test "$withval" = "no"; then
+        if test "x$withval" = "xno"; then
 			want_boost="no"
-        elif test "$withval" = "yes"; then
+        elif test "x$withval" = "xyes"; then
             want_boost="yes"
             ax_boost_user_regex_lib=""
         else

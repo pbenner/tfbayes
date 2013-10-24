@@ -70,7 +70,7 @@ dnl ,----------------------------
 dnl | PYTHON
 dnl `----------------------------
 
-AM_PATH_PYTHON(2.5)
+#AM_PATH_PYTHON(2.5)
 AC_PYTHON_DEVEL
 
 dnl ,---------------------------- 
@@ -79,13 +79,17 @@ dnl `----------------------------
 
 AX_BOOST_BASE([1.37.0],,
   AC_MSG_ERROR([this library is required]))
-AX_BOOST_PYTHON([1.37.0],,
-  AC_MSG_ERROR([this library is required]))
+echo hello
 AX_BOOST_REGEX([1.37.0],,
   AC_MSG_ERROR([this library is required]))
+echo world
 AX_BOOST_SYSTEM([1.37.0],,
   AC_MSG_ERROR([this library is required]))
+echo tadaa
 AX_BOOST_THREAD([1.37.0],,
+  AC_MSG_ERROR([this library is required]))
+echo dumdum
+AX_BOOST_PYTHON([1.37.0],,
   AC_MSG_ERROR([this library is required]))
 
 dnl ,---------------------------- 
