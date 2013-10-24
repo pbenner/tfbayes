@@ -56,19 +56,19 @@ dnl | MACRO DEFINITIONS
 dnl `----------------------------
 
 AC_DEFUN([AC_MY_ARG_WITH],
-	[# create help entry and conditionals
-		AC_ARG_WITH([$1],
-			AC_HELP_STRING([--with-$1],
-				[# help string
-					build $1 (default is $2)]),
-			ac_cv_use_$1=$withval,
-			ac_cv_use_$1=$2)
-		AC_CACHE_CHECK(whether to use $1, ac_cv_use_$1, ac_cv_use_$1=$2)])
+  [# create help entry and conditionals
+    AC_ARG_WITH([$1],
+      AC_HELP_STRING([--with-$1],
+        [# help string
+          build $1 (default is $2)]),
+      ac_cv_use_$1=$withval,
+      ac_cv_use_$1=$2)
+    AC_CACHE_CHECK(whether to use $1, ac_cv_use_$1, ac_cv_use_$1=$2)])
 
 dnl AC_NEW_SUBDIR(subdir_name, default_config)
 AC_DEFUN([AC_NEW_SUBDIR],
         [AC_MY_ARG_WITH([$1], [$3])
-	AM_CONDITIONAL([COND_$2], [test "$ac_cv_use_$1" = yes])])
+  AM_CONDITIONAL([COND_$2], [test "$ac_cv_use_$1" = yes])])
 
 dnl ,---------------------------- 
 dnl | LIBRARIES
@@ -78,11 +78,11 @@ dnl HP-UX provides a library called libhplx which provides linux apis.
 AC_ARG_VAR(HPLX_LIBRARY_PATH, [Path to the hplx library directory (only for hp-ux systems).])
 AC_ARG_VAR(HPLX_INCLUDE_PATH, [Path to the hplx include directory (only for hp-ux systems).])
 AC_CHECK_LIB([hplx], [hstrerror],
-	[# Add additional include an library directory.
-	LDFLAGS="$LDFLAGS -L${HPLX_LIBRARY_PATH:-/usr/local/hplx/lib}"
-	CFLAGS="$CFLAGS -I${HPLX_INCLUDE_PATH:-/usr/local/hplx/include}"],,
-	[# Additional libraries:
-	-lsec])
+  [# Add additional include an library directory.
+  LDFLAGS="$LDFLAGS -L${HPLX_LIBRARY_PATH:-/usr/local/hplx/lib}"
+  CFLAGS="$CFLAGS -I${HPLX_INCLUDE_PATH:-/usr/local/hplx/include}"],,
+  [# Additional libraries:
+  -lsec])
 
 AC_CHECK_LIB([ucb], [sprintf])
 dnl Tru64 distributes vasprintf() in -liberty
@@ -102,20 +102,20 @@ AC_SUBST(LIB_PTHREAD)
 AC_SUBST(LIB_GLPK)
 
 AX_BOOST_BASE([1.37.0],,
-	AC_MSG_ERROR([this library is required]))
+  AC_MSG_ERROR([this library is required]))
 
 AC_CHECK_LIB(boost_system-gcc-mt, main, LIB_BOOST_SYSTEM="-lboost_system-gcc-mt",
-	[AC_CHECK_LIB(boost_system-mt, main, LIB_BOOST_SYSTEM="-lboost_system-mt",
-		[AC_CHECK_LIB(boost_system, main, LIB_BOOST_SYSTEM="-lboost_system",
-			[AC_MSG_ERROR([this library is required])])])])
+  [AC_CHECK_LIB(boost_system-mt, main, LIB_BOOST_SYSTEM="-lboost_system-mt",
+    [AC_CHECK_LIB(boost_system, main, LIB_BOOST_SYSTEM="-lboost_system",
+      [AC_MSG_ERROR([this library is required])])])])
 AC_CHECK_LIB(boost_thread-gcc-mt, main, LIB_BOOST_THREAD="-lboost_thread-gcc-mt",
-	[AC_CHECK_LIB(boost_thread-mt, main, LIB_BOOST_THREAD="-lboost_thread-mt",
-		[AC_CHECK_LIB(boost_thread, main, LIB_BOOST_THREAD="-lboost_thread",
-			[AC_MSG_ERROR([this library is required])])])])
+  [AC_CHECK_LIB(boost_thread-mt, main, LIB_BOOST_THREAD="-lboost_thread-mt",
+    [AC_CHECK_LIB(boost_thread, main, LIB_BOOST_THREAD="-lboost_thread",
+      [AC_MSG_ERROR([this library is required])])])])
 AC_CHECK_LIB(boost_regex-gcc-mt, main, LIB_BOOST_REGEX="-lboost_regex-gcc-mt",
-	[AC_CHECK_LIB(boost_regex-mt, main, LIB_BOOST_REGEX="-lboost_regex-mt",
-		[AC_CHECK_LIB(boost_regex, main, LIB_BOOST_REGEX="-lboost_regex",
-			[AC_MSG_ERROR([this library is required])])])])
+  [AC_CHECK_LIB(boost_regex-mt, main, LIB_BOOST_REGEX="-lboost_regex-mt",
+    [AC_CHECK_LIB(boost_regex, main, LIB_BOOST_REGEX="-lboost_regex",
+      [AC_MSG_ERROR([this library is required])])])])
 
 AC_SUBST(LIB_BOOST_SYSTEM)
 AC_SUBST(LIB_BOOST_THREAD)
@@ -129,12 +129,12 @@ AM_PATH_PYTHON(2.5)
 AC_PYTHON_DEVEL
 
 AC_CHECK_LIB(boost_python-gcc-mt, main, LIB_BOOST_PYTHON="-lboost_python-gcc-mt",
-	[AC_CHECK_LIB(boost_python-mt, main, LIB_BOOST_PYTHON="-lboost_python-mt",
-		[AC_CHECK_LIB(boost_python, main, LIB_BOOST_PYTHON="-lboost_python",
-			[AC_MSG_ERROR([this library is required])]
-			[$PYTHON_LDFLAGS])],
-			[$PYTHON_LDFLAGS])],
-			[$PYTHON_LDFLAGS])
+  [AC_CHECK_LIB(boost_python-mt, main, LIB_BOOST_PYTHON="-lboost_python-mt",
+    [AC_CHECK_LIB(boost_python, main, LIB_BOOST_PYTHON="-lboost_python",
+      [AC_MSG_ERROR([this library is required])]
+      [$PYTHON_LDFLAGS])],
+      [$PYTHON_LDFLAGS])],
+      [$PYTHON_LDFLAGS])
 
 AC_SUBST(LIB_BOOST_PYTHON)
 
@@ -149,31 +149,31 @@ AH_VERBATIM([_GNU_SOURCE],
 #endif])
 
 AC_DEFINE_UNQUOTED(TARGET, "$target",
-	[System type this program will compile code for (only needed for compilers).])
+  [System type this program will compile code for (only needed for compilers).])
 AC_DEFINE_UNQUOTED(TARGET_CPU, "$target_cpu",
-	[System cpu this program will compile code for (only needed for compilers).])
+  [System cpu this program will compile code for (only needed for compilers).])
 AC_DEFINE_UNQUOTED(TARGET_OS, "$target_os",
-	[Operatins system this program will compile code for (only needed for compilers).])
+  [Operatins system this program will compile code for (only needed for compilers).])
 AC_DEFINE_UNQUOTED(TARGET_VENDOR, "$target_vendor",
-	[System vendor type this program will compile code for (only needed for compilers).])
+  [System vendor type this program will compile code for (only needed for compilers).])
 
 AC_DEFINE_UNQUOTED(BUILD, "$build",
-	[System type this program was built on.])
+  [System type this program was built on.])
 AC_DEFINE_UNQUOTED(BUILD_CPU, "$build_cpu",
-	[System cpu this program was built on.])
+  [System cpu this program was built on.])
 AC_DEFINE_UNQUOTED(BUILD_OS, "$build_os",
-	[Operatins system this program was built on.])
+  [Operatins system this program was built on.])
 AC_DEFINE_UNQUOTED(BUILD_VENDOR, "$build_vendor",
-	[System vendor type this program was built on.])
+  [System vendor type this program was built on.])
 
 AC_DEFINE_UNQUOTED(HOST, "$host",
-	[System type this program will run on.])
+  [System type this program will run on.])
 AC_DEFINE_UNQUOTED(HOST_CPU, "$host_cpu",
-	[System cpu this program will run on.])
+  [System cpu this program will run on.])
 AC_DEFINE_UNQUOTED(HOST_OS, "$host_os",
-	[Operatins system this program will run on.])
+  [Operatins system this program will run on.])
 AC_DEFINE_UNQUOTED(HOST_VENDOR, "$host_vendor",
-	[System vendor type this program will run on.])
+  [System vendor type this program will run on.])
 
 dnl ,---------------------------- 
 dnl | HEADERS
@@ -182,10 +182,10 @@ dnl `----------------------------
 HEADERS_TO_CHECK="stdarg.h syslog.h signal.h pthread.h"
 
 AC_CHECK_HEADERS($HEADERS_TO_CHECK,,
-	AC_MSG_ERROR([this header is required]))
+  AC_MSG_ERROR([this header is required]))
 
 AC_CHECK_HEADER([error.h],
-	AC_DEFINE(HAVE_ERROR_H, [], [Needed on OpenBSD systems.]))
+  AC_DEFINE(HAVE_ERROR_H, [], [Needed on OpenBSD systems.]))
 
 dnl ,---------------------------- 
 dnl | FUNCTIONS
@@ -199,69 +199,69 @@ dnl | GCC_OPTIONS
 dnl `----------------------------
 
 AC_ARG_ENABLE([debug],
-	[AS_HELP_STRING([--enable-debug],
-								[turn on debugging @<:@default=no@:>@])],
-	[],
-	[enable_debug=no])
+  [AS_HELP_STRING([--enable-debug],
+                [turn on debugging @<:@default=no@:>@])],
+  [],
+  [enable_debug=no])
 AC_ARG_ENABLE([profiling],
-	[AS_HELP_STRING([--enable-profiling],
-								[turn on profiling support @<:@default=no@:>@])],
-	[],
-	[enable_profiling=no])
+  [AS_HELP_STRING([--enable-profiling],
+                [turn on profiling support @<:@default=no@:>@])],
+  [],
+  [enable_profiling=no])
 AC_ARG_ENABLE([profile-generate],
-	[AS_HELP_STRING([--enable-profile-generate],
-								[generate optimization profiles @<:@default=no@:>@])],
-	[],
-	[enable_profile_generate=no])
+  [AS_HELP_STRING([--enable-profile-generate],
+                [generate optimization profiles @<:@default=no@:>@])],
+  [],
+  [enable_profile_generate=no])
 AC_ARG_ENABLE([lto],
-	[AS_HELP_STRING([--enable-lto],
-								[enable link time optimization (LTO) @<:@default=no@:>@])],
-	[],
-	[enable_lto=no])
+  [AS_HELP_STRING([--enable-lto],
+                [enable link time optimization (LTO) @<:@default=no@:>@])],
+  [],
+  [enable_lto=no])
 AC_ARG_ENABLE([profile-use],
-	[AS_HELP_STRING([--enable-profile-use],
-								[use optimization profiles @<:@default=no@:>@])],
-	[],
-	[enable_profile_use=no])
+  [AS_HELP_STRING([--enable-profile-use],
+                [use optimization profiles @<:@default=no@:>@])],
+  [],
+  [enable_profile_use=no])
 AC_ARG_ENABLE([native],
-	[AS_HELP_STRING([--enable-native],
-								[compile with native support @<:@default=no@:>@])],
-	[],
-	[enable_native=no])
+  [AS_HELP_STRING([--enable-native],
+                [compile with native support @<:@default=no@:>@])],
+  [],
+  [enable_native=no])
 AS_IF([test "x$enable_debug" = "xyes"],
   [AX_CFLAGS_GCC_OPTION([-O0])
    AX_CFLAGS_GCC_OPTION([-g])
    AX_CFLAGS_GCC_OPTION([-ggdb])
-	 dnl
-	 AX_CXXFLAGS_GCC_OPTION([-O0])
-	 AX_CXXFLAGS_GCC_OPTION([-g])
+   dnl
+   AX_CXXFLAGS_GCC_OPTION([-O0])
+   AX_CXXFLAGS_GCC_OPTION([-g])
    AX_CXXFLAGS_GCC_OPTION([-ggdb])
-	 CFLAGS="$CFLAGS -DDEBUG"
-	 CXXFLAGS="$CXXFLAGS -DDEBUG"
-	 LDFLAGS="$LDFLAGS -static"],
+   CFLAGS="$CFLAGS -DDEBUG"
+   CXXFLAGS="$CXXFLAGS -DDEBUG"
+   LDFLAGS="$LDFLAGS -static"],
   [AX_CFLAGS_GCC_OPTION([-O3])
    AX_CFLAGS_GCC_OPTION([-ffast-math])
-	 dnl
-	 AX_CXXFLAGS_GCC_OPTION([-O3])
+   dnl
+   AX_CXXFLAGS_GCC_OPTION([-O3])
    AX_CXXFLAGS_GCC_OPTION([-ffast-math])])
 AS_IF([test "x$enable_lto" = "xyes"],
   [AX_CFLAGS_GCC_OPTION([-flto])
-	 AX_CXXFLAGS_GCC_OPTION([-flto])])
+   AX_CXXFLAGS_GCC_OPTION([-flto])])
 AS_IF([test "x$enable_profiling" = "xyes"],
-	[AX_CFLAGS_GCC_OPTION([-pg])
-	 AX_CXXFLAGS_GCC_OPTION([-pg])
-	 LDFLAGS="$LDFLAGS -static"])
+  [AX_CFLAGS_GCC_OPTION([-pg])
+   AX_CXXFLAGS_GCC_OPTION([-pg])
+   LDFLAGS="$LDFLAGS -static"])
 AS_IF([test "x$enable_profile_generate" = "xyes"],
-	[AX_CFLAGS_GCC_OPTION([-fprofile-generate])
-	 AX_CXXFLAGS_GCC_OPTION([-fprofile-generate])
-	 LDFLAGS="$LDFLAGS -static"])
+  [AX_CFLAGS_GCC_OPTION([-fprofile-generate])
+   AX_CXXFLAGS_GCC_OPTION([-fprofile-generate])
+   LDFLAGS="$LDFLAGS -static"])
 AS_IF([test "x$enable_profile_use" = "xyes"],
-	[AX_CFLAGS_GCC_OPTION([-fprofile-use])
-	 AX_CXXFLAGS_GCC_OPTION([-fprofile-use])
-	 LDFLAGS="$LDFLAGS"])
+  [AX_CFLAGS_GCC_OPTION([-fprofile-use])
+   AX_CXXFLAGS_GCC_OPTION([-fprofile-use])
+   LDFLAGS="$LDFLAGS"])
 AS_IF([test "x$enable_native" = "xyes"],
-	[AX_CFLAGS_GCC_OPTION([-march=native])
-	 AX_CXXFLAGS_GCC_OPTION([-march=native])])
+  [AX_CFLAGS_GCC_OPTION([-march=native])
+   AX_CXXFLAGS_GCC_OPTION([-march=native])])
 
 AX_CFLAGS_GCC_OPTION([-Wall])
 AX_CFLAGS_GCC_OPTION([-Wwrite-strings])
@@ -314,25 +314,25 @@ dnl `----------------------------
 
 AC_CONFIG_HEADER([tfbayes/config.h:tfbayes/config.h.in])
 AC_CONFIG_FILES([
-	Makefile
-	data/Makefile
-	tfbayes/version.h
-	tfbayes/Makefile
-	tfbayes/alignment/Makefile
-	tfbayes/alignio/Makefile
-	tfbayes/fastarithmetics/Makefile
-	tfbayes/fasta/Makefile
-	tfbayes/config/Makefile
-	tfbayes/interface/Makefile
-	tfbayes/phylotree/Makefile
-	tfbayes/dpm/Makefile
-	tfbayes/cluster/Makefile
-	tfbayes/uipac/Makefile
-	tfbayes/weblogo/Makefile
-	tfbayes/corebio/Makefile
-	tfbayes/tools/Makefile
-	tfbayes/utility/Makefile
- 	])
+  Makefile
+  data/Makefile
+  tfbayes/version.h
+  tfbayes/Makefile
+  tfbayes/alignment/Makefile
+  tfbayes/alignio/Makefile
+  tfbayes/fastarithmetics/Makefile
+  tfbayes/fasta/Makefile
+  tfbayes/config/Makefile
+  tfbayes/interface/Makefile
+  tfbayes/phylotree/Makefile
+  tfbayes/dpm/Makefile
+  tfbayes/cluster/Makefile
+  tfbayes/uipac/Makefile
+  tfbayes/weblogo/Makefile
+  tfbayes/corebio/Makefile
+  tfbayes/tools/Makefile
+  tfbayes/utility/Makefile
+  ])
 
 AC_OUTPUT
 
@@ -349,5 +349,6 @@ Native processor support: ${enable_native}
 ])
 
 dnl Local Variables:
-dnl tab-width: 2
+dnl indent-tabs-mode: nil
+dnl tab-stop-list: (2 4 6 8 10 12 14 16 18 20)
 dnl End:
