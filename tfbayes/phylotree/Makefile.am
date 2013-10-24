@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-AM_CPPFLAGS = -I$(top_srcdir) $(BOOST_CPPFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir)
 AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
 ## flex/bison
@@ -117,8 +117,7 @@ interface_la_SOURCES  = \
 	interface.cc
 interface_la_LIBADD   = $(BOOST_PYTHON_LIB)
 interface_la_LIBADD  += libtfbayes-phylotree.la
-interface_la_LDFLAGS  = $(BOOST_LDFLAGS)
-interface_la_LDFLAGS += -module
+interface_la_LDFLAGS  = -avoid-version
 interface_la_LDFLAGS += -module
 
 ## set python package name

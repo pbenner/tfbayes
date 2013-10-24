@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-AM_CPPFLAGS = -I$(top_srcdir) $(BOOST_CPPFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir)
 AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
 ## install headers
@@ -32,8 +32,7 @@ interface_la_LIBADD  += -lm
 interface_la_LIBADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
 interface_la_LIBADD  += $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
 interface_la_LIBADD  += $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
-interface_la_LDFLAGS  = $(BOOST_LDFLAGS)
-interface_la_LDFLAGS += -avoid-version
+interface_la_LDFLAGS  = -avoid-version
 interface_la_LDFLAGS += -module
 
 ## set python package name

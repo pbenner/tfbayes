@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-AM_CPPFLAGS = -I$(top_srcdir) $(BOOST_CPPFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir)
 AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
 bin_PROGRAMS = tfbayes-generate-alignment tfbayes-treespace-optimize tfbayes-treespace-mean tfbayes-treespace-histogram
@@ -11,9 +11,9 @@ tfbayes_generate_alignment_LDADD   = ../phylotree/libtfbayes-phylotree.la
 tfbayes_treespace_optimize_SOURCES  = tfbayes-treespace-optimize.cc
 tfbayes_treespace_optimize_LDADD    = ../phylotree/libtfbayes-phylotree.la
 tfbayes_treespace_optimize_LDADD   += ../fasta/libtfbayes-fasta.la
+tfbayes_treespace_optimize_LDADD   += $(LIB_PTHREAD)
 tfbayes_treespace_optimize_LDADD   += $(BOOST_SYSTEM_LIB)
 tfbayes_treespace_optimize_LDADD   += $(BOOST_THREAD_LIB)
-tfbayes_treespace_optimize_LDFLAGS  = $(BOOST_LFGLAGS)
 
 tfbayes_treespace_mean_SOURCES = tfbayes-treespace-mean.cc
 tfbayes_treespace_mean_LDADD   = ../phylotree/libtfbayes-phylotree.la

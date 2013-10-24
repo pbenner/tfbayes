@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-AM_CPPFLAGS = -I$(top_srcdir) $(BOOST_CPPFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir)
 
 ## install headers
 otherincludedir = $(includedir)/tfbayes/interface
@@ -13,8 +13,7 @@ datatypes_la_CPPFLAGS  = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS)
 datatypes_la_SOURCES   = \
 	datatypes.cc
 datatypes_la_LIBADD    = $(BOOST_PYTHON_LIB)
-datatypes_la_LDFLAGS   = $(BOOST_LDFLAGS)
-datatypes_la_LDFLAGS  += -avoid-version
+datatypes_la_LDFLAGS   = -avoid-version
 datatypes_la_LDFLAGS  += -module
 
 ## set python package name

@@ -63,14 +63,17 @@ AC_CHECK_LIB([gsl], [gsl_blas_dgemm],,
   AC_MSG_ERROR([this library is required]))
 AC_CHECK_LIB([glpk], [glp_simplex], LIB_GLPK="-lglpk",
   AC_MSG_ERROR([this library is required]))
+AC_CHECK_LIB([pthread], [pthread_create], LIB_PTHREAD="-lpthread",
+  AC_MSG_ERROR([this library is required]))
 
 AC_SUBST(LIB_GLPK)
+AC_SUBST(LIB_PTHREAD)
 
 dnl ,---------------------------- 
 dnl | PYTHON
 dnl `----------------------------
 
-#AM_PATH_PYTHON(2.5)
+AM_PATH_PYTHON(2.5)
 AC_PYTHON_DEVEL
 
 dnl ,---------------------------- 
@@ -79,17 +82,13 @@ dnl `----------------------------
 
 AX_BOOST_BASE([1.37.0],,
   AC_MSG_ERROR([this library is required]))
-echo hello
-AX_BOOST_REGEX([1.37.0],,
+AX_BOOST_REGEX(,
   AC_MSG_ERROR([this library is required]))
-echo world
-AX_BOOST_SYSTEM([1.37.0],,
+AX_BOOST_SYSTEM(,
   AC_MSG_ERROR([this library is required]))
-echo tadaa
-AX_BOOST_THREAD([1.37.0],,
+AX_BOOST_THREAD(,
   AC_MSG_ERROR([this library is required]))
-echo dumdum
-AX_BOOST_PYTHON([1.37.0],,
+AX_BOOST_PYTHON(,
   AC_MSG_ERROR([this library is required]))
 
 dnl ,---------------------------- 

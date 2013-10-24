@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-AM_CPPFLAGS = -I$(top_srcdir) $(BOOST_CPPFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir)
 AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
 noinst_PROGRAMS = alphabet-test
@@ -14,7 +14,8 @@ lib_LTLIBRARIES = libtfbayes-uipac.la
 libtfbayes_uipac_la_SOURCES = \
 	alphabet.cc
 	alphabet.hh
-libtfbayes_uipac_la_LDFLAGS = -no-undefined -version-info 0:0:0
+libtfbayes_uipac_la_LDFLAGS  = -no-undefined
+libtfbayes_uipac_la_LDFLAGS += -version-info 0:0:0
 
 ## python interface
 pkgpython_LTLIBRARIES = interface.la
@@ -25,8 +26,7 @@ interface_la_SOURCES  = \
 	interface.cc
 interface_la_LIBADD   = $(BOOST_PYTHON_LIB)
 interface_la_LIBADD  += libtfbayes-uipac.la
-interface_la_LDFLAGS  = $(BOOST_LDFLAGS)
-interface_la_LDFLAGS += -avoid-version
+interface_la_LDFLAGS  = -avoid-version
 interface_la_LDFLAGS += -module
 
 ## set python package name
