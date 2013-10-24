@@ -1,8 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 
-AM_CPPFLAGS = -I$(top_srcdir)
-AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
-
 ## install headers
 otherincludedir = $(includedir)/tfbayes/utility
 otherinclude_HEADERS = \

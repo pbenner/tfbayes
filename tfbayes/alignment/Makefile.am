@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-AM_CPPFLAGS = -I$(top_srcdir)
+AM_CPPFLAGS = -I$(top_srcdir) $(BOOST_CPPFLAGS)
 AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
 ## install headers
@@ -27,12 +27,14 @@ interface_la_CPPFLAGS = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS)
 interface_la_CXXFLAGS = 
 interface_la_SOURCES  = \
 	interface.cc
-interface_la_LIBADD   = $(LIB_BOOST_PYTHON)
+interface_la_LIBADD   = $(BOOST_PYTHON_LIB)
 interface_la_LIBADD  += -lm
 interface_la_LIBADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
 interface_la_LIBADD  += $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
 interface_la_LIBADD  += $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
-interface_la_LDFLAGS  = -avoid-version -module
+interface_la_LDFLAGS  = $(BOOST_LDFLAGS)
+interface_la_LDFLAGS  = -avoid-version
+interface_la_LDFLAGS  = -module
 
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/alignment

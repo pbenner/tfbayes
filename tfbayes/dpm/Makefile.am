@@ -1,23 +1,34 @@
 ## Process this file with automake to produce Makefile.in
 
-AM_CPPFLAGS = -I$(top_srcdir)
+AM_CPPFLAGS = -I$(top_srcdir) $(BOOST_CPPFLAGS)
 AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
 noinst_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug
 
 # mcm_test_SOURCES = mcm-test.cc
 # mcm_test_LDADD   = libtfbayes-dpm.la
-# mcm_test_LDADD  += -lm $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
+# mcm_test_LDADD  += -lm
+# mcm_test_LDADD  += $(BOOST_LDFLAGS)
+# mcm_test_LDADD  += $(BOOST_REGEX_LIB)
+# mcm_test_LDADD  += $(BOOST_SYSTEM_LIB)
+# mcm_test_LDADD  += $(BOOST_THREAD_LIB)
 
 dpm_gaussian_debug_SOURCES = dpm-gaussian-main.cc
-dpm_gaussian_debug_LDADD   = $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
-dpm_gaussian_debug_LDADD  += libtfbayes-dpm.la
-dpm_gaussian_debug_LDADD  += $(THREADING) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
+dpm_gaussian_debug_LDADD   = libtfbayes-dpm.la
+dpm_gaussian_debug_LDADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
+dpm_gaussian_debug_LDADD  += $(BOOST_REGEX_LIB)
+dpm_gaussian_debug_LDADD  += $(BOOST_SYSTEM_LIB)
+dpm_gaussian_debug_LDADD  += $(BOOST_THREAD_LIB)
+dpm_gaussian_debug_LDFLAGS = $(BOOST_LDFLAGS)
 
 dpm_tfbs_debug_SOURCES  = dpm-tfbs-main.cc
-dpm_tfbs_debug_LDADD    = $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
-dpm_tfbs_debug_LDADD   += libtfbayes-dpm.la
-dpm_tfbs_debug_LDADD   += $(THREADING) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
+dpm_tfbs_debug_LDADD    = libtfbayes-dpm.la
+dpm_tfbs_debug_LDADD   += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
+dpm_tfbs_debug_LDADD   += $(BOOST_ASIO_LIB)
+dpm_tfbs_debug_LDADD   += $(BOOST_REGEX_LIB)
+dpm_tfbs_debug_LDADD   += $(BOOST_SYSTEM_LIB)
+dpm_tfbs_debug_LDADD   += $(BOOST_THREAD_LIB)
+dpm_tfbs_debug_LDFLAGS  = $(BOOST_LDFLAGS)
 
 ## dpm library
 lib_LTLIBRARIES = libtfbayes-dpm.la
@@ -68,11 +79,15 @@ libtfbayes_dpm_la_SOURCES =		\
 	sampler.hh			\
 	save-queue.hh                   \
 	state.hh
-libtfbayes_dpm_la_LIBADD  = $(top_builddir)/tfbayes/fastarithmetics/libtfbayes-fastarithmetics.la
-libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
-libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
-libtfbayes_dpm_la_LIBADD += $(THREADING ) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
-libtfbayes_dpm_la_LDFLAGS = -no-undefined -version-info 0:0:0
+libtfbayes_dpm_la_LIBADD   = $(top_builddir)/tfbayes/fastarithmetics/libtfbayes-fastarithmetics.la
+libtfbayes_dpm_la_LIBADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
+libtfbayes_dpm_la_LIBADD  += $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
+libtfbayes_dpm_la_LIBADD  += $(BOOST_REGEX_LIB)
+libtfbayes_dpm_la_LIBADD  += $(BOOST_SYSTEM_LIB)
+libtfbayes_dpm_la_LIBADD  += $(BOOST_THREAD_LIB)
+libtfbayes_dpm_la_LDFLAGS  = $(BOOST_LDFLAGS)
+libtfbayes_dpm_la_LDFLAGS += -no-undefined
+libtfbayes_dpm_la_LDFLAGS += -version-info 0:0:0
 
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/dpm
@@ -93,16 +108,20 @@ interface_la_CXXFLAGS =
 interface_la_SOURCES  = \
 	interface.cc
 interface_la_LIBADD   = libtfbayes-dpm.la
-interface_la_LIBADD  += $(LIB_BOOST_PYTHON)
-interface_la_LDFLAGS  = -avoid-version -module
+interface_la_LIBADD  += $(BOOST_PYTHON_LIB)
+interface_la_LDFLAGS  = $(BOOST_LDFLAGS)
+interface_la_LDFLAGS += -avoid-version
+interface_la_LDFLAGS += -module
 
 dpm_gaussian_interface_la_CPPFLAGS = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS)
 dpm_gaussian_interface_la_CXXFLAGS =
 dpm_gaussian_interface_la_SOURCES  = \
 	dpm-gaussian-interface.cc
 dpm_gaussian_interface_la_LIBADD   = libtfbayes-dpm.la
-dpm_gaussian_interface_la_LIBADD  += $(LIB_BOOST_PYTHON)
-dpm_gaussian_interface_la_LDFLAGS  = -avoid-version -module
+dpm_gaussian_interface_la_LIBADD  += $(BOOST_PYTHON_LIB)
+dpm_gaussian_interface_la_LDFLAGS  = $(BOOST_LDFLAGS)
+dpm_gaussian_interface_la_LDFLAGS += -avoid-version
+dpm_gaussian_interface_la_LDFLAGS += -module
 
 dpm_tfbs_interface_la_CPPFLAGS = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS)
 dpm_tfbs_interface_la_CXXFLAGS =
@@ -110,7 +129,9 @@ dpm_tfbs_interface_la_SOURCES  = \
 	dpm-tfbs-interface.cc
 dpm_tfbs_interface_la_LIBADD   = libtfbayes-dpm.la
 dpm_tfbs_interface_la_LIBADD  += $(LIB_BOOST_PYTHON)
-dpm_tfbs_interface_la_LDFLAGS  = -avoid-version -module
+dpm_tfbs_interface_la_LDFLAGS  = $(BOOST_LDFLAGS)
+dpm_tfbs_interface_la_LDFLAGS += -avoid-version
+dpm_tfbs_interface_la_LDFLAGS += -module
 
 ## extra dist
 EXTRA_DIST = dpm-tfbs-demo-1.cfg dpm-tfbs-demo-1.fa.in dpm-tfbs-demo-2.cfg dpm-tfbs-demo-2.fa.in

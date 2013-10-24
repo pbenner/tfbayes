@@ -66,26 +66,6 @@ AC_CHECK_LIB([glpk], [glp_simplex], LIB_GLPK="-lglpk",
 
 AC_SUBST(LIB_GLPK)
 
-AX_BOOST_BASE([1.37.0],,
-  AC_MSG_ERROR([this library is required]))
-
-AC_CHECK_LIB(boost_system-gcc-mt, main, LIB_BOOST_SYSTEM="-lboost_system-gcc-mt",
-  [AC_CHECK_LIB(boost_system-mt, main, LIB_BOOST_SYSTEM="-lboost_system-mt",
-    [AC_CHECK_LIB(boost_system, main, LIB_BOOST_SYSTEM="-lboost_system",
-      [AC_MSG_ERROR([this library is required])])])])
-AC_CHECK_LIB(boost_thread-gcc-mt, main, LIB_BOOST_THREAD="-lboost_thread-gcc-mt",
-  [AC_CHECK_LIB(boost_thread-mt, main, LIB_BOOST_THREAD="-lboost_thread-mt",
-    [AC_CHECK_LIB(boost_thread, main, LIB_BOOST_THREAD="-lboost_thread",
-      [AC_MSG_ERROR([this library is required])])])])
-AC_CHECK_LIB(boost_regex-gcc-mt, main, LIB_BOOST_REGEX="-lboost_regex-gcc-mt",
-  [AC_CHECK_LIB(boost_regex-mt, main, LIB_BOOST_REGEX="-lboost_regex-mt",
-    [AC_CHECK_LIB(boost_regex, main, LIB_BOOST_REGEX="-lboost_regex",
-      [AC_MSG_ERROR([this library is required])])])])
-
-AC_SUBST(LIB_BOOST_SYSTEM)
-AC_SUBST(LIB_BOOST_THREAD)
-AC_SUBST(LIB_BOOST_REGEX)
-
 dnl ,---------------------------- 
 dnl | PYTHON
 dnl `----------------------------
@@ -93,15 +73,20 @@ dnl `----------------------------
 AM_PATH_PYTHON(2.5)
 AC_PYTHON_DEVEL
 
-AC_CHECK_LIB(boost_python-gcc-mt, main, LIB_BOOST_PYTHON="-lboost_python-gcc-mt",
-  [AC_CHECK_LIB(boost_python-mt, main, LIB_BOOST_PYTHON="-lboost_python-mt",
-    [AC_CHECK_LIB(boost_python, main, LIB_BOOST_PYTHON="-lboost_python",
-      [AC_MSG_ERROR([this library is required])]
-      [$PYTHON_LDFLAGS])],
-      [$PYTHON_LDFLAGS])],
-      [$PYTHON_LDFLAGS])
+dnl ,---------------------------- 
+dnl | BOOST
+dnl `----------------------------
 
-AC_SUBST(LIB_BOOST_PYTHON)
+AX_BOOST_BASE([1.37.0],,
+  AC_MSG_ERROR([this library is required]))
+AX_BOOST_PYTHON([1.37.0],,
+  AC_MSG_ERROR([this library is required]))
+AX_BOOST_REGEX([1.37.0],,
+  AC_MSG_ERROR([this library is required]))
+AX_BOOST_SYSTEM([1.37.0],,
+  AC_MSG_ERROR([this library is required]))
+AX_BOOST_THREAD([1.37.0],,
+  AC_MSG_ERROR([this library is required]))
 
 dnl ,---------------------------- 
 dnl | DEFINES
@@ -215,17 +200,12 @@ AX_CXXFLAGS_GCC_OPTION([-DBOOST_NO_TYPEID], CXXFLAGS_NORTTI)
 AX_CXXFLAGS_GCC_OPTION([-DBOOST_NO_RTTI], CXXFLAGS_NORTTI)
 dnl turn link time optimization on (works only on some systems so far)
 #AX_CXXFLAGS_GCC_OPTION([-flto])
-dnl test various threading options
-AX_CXXFLAGS_GCC_OPTION([-threads], THREADING)
-AX_CXXFLAGS_GCC_OPTION([-mthread], THREADING)
-AX_CXXFLAGS_GCC_OPTION([-pthread], THREADING)
 
 # check for attributes
 AX_GCC_ATTRIBUTE_HOT
 AX_GCC_ATTRIBUTE_UNUSED
 
 AC_SUBST(CXXFLAGS_NORTTI)
-AC_SUBST(THREADING)
 
 dnl ,---------------------------- 
 dnl | AC_OUTPUT
