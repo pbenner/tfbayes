@@ -4,4 +4,3 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS  = tfbayes
 SUBDIRS += data
-SUBDIRS += include

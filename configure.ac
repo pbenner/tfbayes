@@ -139,26 +139,6 @@ AC_CHECK_LIB(boost_python-gcc-mt, main, LIB_BOOST_PYTHON="-lboost_python-gcc-mt"
 AC_SUBST(LIB_BOOST_PYTHON)
 
 dnl ,---------------------------- 
-dnl | GETOPT_LONG
-dnl `----------------------------
-
-AC_DEFUN([FUNC_GETOPT_LONG],
-	[AC_PREREQ(2.49)dnl
-		# clean out junk possibly left behind by a previous configuration
-		rm -f include/getopt.h
-		# Check for getopt_long support
-		AC_CHECK_HEADERS([getopt.h])
-		AC_CHECK_FUNCS([getopt_long],,
-			[# FreeBSD has a gnugetopt library for this
-				AC_CHECK_LIB([gnugetopt],[getopt_long],[AC_DEFINE([HAVE_GETOPT_LONG])],
-					[# use the GNU replacement
-						AC_LIBOBJ(getopt)
-						AC_LIBOBJ(getopt1)
-						AC_CONFIG_LINKS([include/getopt.h:include/gnugetopt.h])])])])
-
-FUNC_GETOPT_LONG
-
-dnl ,---------------------------- 
 dnl | DEFINES
 dnl `----------------------------
 
@@ -336,7 +316,6 @@ AC_CONFIG_HEADER([tfbayes/config.h:tfbayes/config.h.in])
 AC_CONFIG_FILES([
 	Makefile
 	data/Makefile
-	include/Makefile
 	tfbayes/version.h
 	tfbayes/Makefile
 	tfbayes/alignment/Makefile
