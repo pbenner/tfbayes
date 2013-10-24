@@ -26,8 +26,8 @@ interface_la_SOURCES  = \
 interface_la_LIBADD   = $(BOOST_PYTHON_LIB)
 interface_la_LIBADD  += libtfbayes-uipac.la
 interface_la_LDFLAGS  = $(BOOST_LDFLAGS)
-interface_la_LDFLAGS  = -avoid-version
-interface_la_LDFLAGS  = -module
+interface_la_LDFLAGS += -avoid-version
+interface_la_LDFLAGS += -module
 
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/uipac
