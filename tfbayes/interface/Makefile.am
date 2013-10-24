@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)
+AM_CPPFLAGS = -I$(top_srcdir)
 
 ## install headers
 otherincludedir = $(includedir)/tfbayes/interface
