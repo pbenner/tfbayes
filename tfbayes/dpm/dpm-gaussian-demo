@@ -108,7 +108,7 @@ class interactive_sampler_t():
     def data_points(self):
         return [ list(self.data[index_t(i)]) for i in range(len(self.data)) ]
     def sample(self, n, burnin):
-        self.sampler.sample(n, burnin)
+        self.sampler(n, burnin)
         self.steps += 1
     def plot_data(self, ax):
         """ Plot data generated from a mixture of Gaussians. """

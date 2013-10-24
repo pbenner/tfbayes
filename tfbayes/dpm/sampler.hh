@@ -45,7 +45,8 @@ public:
 
         virtual sampler_t& operator=(const sampler_t& sampler) = 0;
 
-        virtual void sample(size_t n, size_t burnin) = 0;
+        virtual void operator()(size_t n, size_t burnin) = 0;
+
         virtual const sampling_history_t& sampling_history() const = 0;
         virtual       sampling_history_t& sampling_history() = 0;
         virtual const std::string& name() const { return _name; }
@@ -74,7 +75,7 @@ public:
 
         // methods
         ////////////////////////////////////////////////////////////////////////
-        void sample(size_t n, size_t burnin);
+        void operator()(size_t n, size_t burnin);
 
         // access methods
         ////////////////////////////////////////////////////////////////////////

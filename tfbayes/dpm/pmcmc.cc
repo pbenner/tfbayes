@@ -152,13 +152,13 @@ void * sample_thread(void* _data)
         const size_t n        = data->n;
         const size_t burnin   = data->burnin;
 
-        sampler->sample(n, burnin);
+        sampler->operator()(n, burnin);
 
         return NULL;
 }
 
 void
-population_mcmc_t::sample(size_t n, size_t burnin)
+population_mcmc_t::operator()(size_t n, size_t burnin)
 {
         pthread_data_t data[_size];
         pthread_t threads[_size];

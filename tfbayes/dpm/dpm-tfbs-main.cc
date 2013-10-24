@@ -176,7 +176,7 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         dpm_tfbs_pmcmc_t pmcmc(tfbs_options);
 
         // execute the sampler
-        pmcmc.sample(options.samples, options.burnin);
+        pmcmc(options.samples, options.burnin);
 
         // save result
         pmcmc.save(options.save);

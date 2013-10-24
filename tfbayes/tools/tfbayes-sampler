@@ -72,7 +72,7 @@ def sample():
     samples = sampler_config.samples[0]
     burnin  = sampler_config.samples[1]
     sampler = dpm_tfbs_pmcmc_t(sampler_config, results_config['sampling_history'])
-    sampler.sample(samples, burnin)
+    sampler(samples, burnin)
     sampler.save(sampler_config.save)
 
 # main

@@ -196,7 +196,7 @@ gibbs_sampler_t::_update_sampling_history(size_t switches)
 }
 
 void
-gibbs_sampler_t::sample(size_t n, size_t burnin) {
+gibbs_sampler_t::operator()(size_t n, size_t burnin) {
         // temperature for simulated annealing
         // burn in sampling
         for (size_t i = 0; i < burnin; i++) {

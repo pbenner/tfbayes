@@ -42,7 +42,7 @@ void sample(
         dpm_gaussian_t  gdpm(alpha, Sigma, Sigma_0, mu_0, data);
         gibbs_sampler_t sampler(gdpm, data);
 
-        sampler.sample(100, 100);
+        sampler(100, 100);
 }
 
 int

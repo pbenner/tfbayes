@@ -115,6 +115,6 @@ BOOST_PYTHON_MODULE(interface)
         class_<gibbs_sampler_t>("gibbs_sampler_t", no_init)
                 .def(init<const mixture_model_t&,
                           const indexer_t&>())
-                .def("sample", &gibbs_sampler_t::sample)
+                .def("__call__", &gibbs_sampler_t::operator())
                 ;
 }

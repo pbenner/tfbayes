@@ -44,14 +44,14 @@ public:
 
         virtual population_mcmc_t& operator=(const sampler_t& sampler);
 
+        void operator()(size_t n, size_t burnin);
+
         // methods
         ////////////////////////////////////////////////////////////////////////
-        void sample(size_t n, size_t burnin);
-        size_t size() const;
-
         const sampling_history_t& sampling_history() const;
               sampling_history_t& sampling_history();
 
+        size_t size() const;
 protected:
         std::vector<sampler_t*> _population;
         size_t _size;

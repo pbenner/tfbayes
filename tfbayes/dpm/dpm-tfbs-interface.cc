@@ -95,7 +95,7 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
         class_<dpm_tfbs_pmcmc_t, boost::noncopyable>("dpm_tfbs_pmcmc_t", no_init)
                 .def(init<tfbs_options_t>())
                 .def(init<tfbs_options_t, sampling_history_t>())
-                .def("sample", &dpm_tfbs_pmcmc_t::sample)
-                .def("save",   &dpm_tfbs_pmcmc_t::save)
+                .def("__call__", &dpm_tfbs_pmcmc_t::operator())
+                .def("save",     &dpm_tfbs_pmcmc_t::save)
                 ;
 }
