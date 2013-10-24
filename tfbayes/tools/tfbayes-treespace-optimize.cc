@@ -235,7 +235,7 @@ void run_optimization(const string& method, const char* file_tree, const char* f
 //                gamma_jump_t jump(1.6, 0.4);
                 pt_metropolis_hastings_t<alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
                 pt_pmcmc_hastings_t<alphabet_size> pmcmc(options.jobs, pt_metropolis_hastings);
-                pmcmc.sample(options.max_steps, options.burnin);
+                pmcmc(options.max_steps, options.burnin);
                 /* print posterior values to separate file */
                 if (options.posterior != "") {
                         ofstream csv(options.posterior.c_str());

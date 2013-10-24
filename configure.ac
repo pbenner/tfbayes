@@ -25,12 +25,12 @@ AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR([auxtools/compile])
 dnl we have a README.md instead of a README
 AM_INIT_AUTOMAKE([gnu dist-bzip2 foreign])
+dnl find c++ compiler but
 dnl turn of AC_PROG_CC's default behaviour
-: ${CFLAGS=""}
 : ${CXXFLAGS=""}
-AC_PROG_CC
 AC_PROG_CXX
-AC_C_CONST
+dnl run tests (ac_try_compile) for C++ only
+AC_LANG([C++])
 AC_ISC_POSIX
 AC_PROG_INSTALL
 AM_PROG_CC_C_O
@@ -52,53 +52,18 @@ AC_SUBST([PACKAGE_LICENSE], ["GPL"])
 AC_SUBST([PACKAGE_DESCRIPTION], [""])
 
 dnl ,---------------------------- 
-dnl | MACRO DEFINITIONS
-dnl `----------------------------
-
-AC_DEFUN([AC_MY_ARG_WITH],
-  [# create help entry and conditionals
-    AC_ARG_WITH([$1],
-      AC_HELP_STRING([--with-$1],
-        [# help string
-          build $1 (default is $2)]),
-      ac_cv_use_$1=$withval,
-      ac_cv_use_$1=$2)
-    AC_CACHE_CHECK(whether to use $1, ac_cv_use_$1, ac_cv_use_$1=$2)])
-
-dnl AC_NEW_SUBDIR(subdir_name, default_config)
-AC_DEFUN([AC_NEW_SUBDIR],
-        [AC_MY_ARG_WITH([$1], [$3])
-  AM_CONDITIONAL([COND_$2], [test "$ac_cv_use_$1" = yes])])
-
-dnl ,---------------------------- 
 dnl | LIBRARIES
 dnl `----------------------------
 
-dnl HP-UX provides a library called libhplx which provides linux apis.
-AC_ARG_VAR(HPLX_LIBRARY_PATH, [Path to the hplx library directory (only for hp-ux systems).])
-AC_ARG_VAR(HPLX_INCLUDE_PATH, [Path to the hplx include directory (only for hp-ux systems).])
-AC_CHECK_LIB([hplx], [hstrerror],
-  [# Add additional include an library directory.
-  LDFLAGS="$LDFLAGS -L${HPLX_LIBRARY_PATH:-/usr/local/hplx/lib}"
-  CFLAGS="$CFLAGS -I${HPLX_INCLUDE_PATH:-/usr/local/hplx/include}"],,
-  [# Additional libraries:
-  -lsec])
-
-AC_CHECK_LIB([ucb], [sprintf])
-dnl Tru64 distributes vasprintf() in -liberty
-AC_CHECK_LIB([iberty], [vasprintf])
 AC_CHECK_LIB([m],[cos],,
   AC_MSG_ERROR([this library is required]))
 AC_CHECK_LIB([gslcblas],[cblas_dgemm],,
   AC_MSG_ERROR([this library is required]))
 AC_CHECK_LIB([gsl], [gsl_blas_dgemm],,
   AC_MSG_ERROR([this library is required]))
-AC_CHECK_LIB([pthread], [pthread_create], LIB_PTHREAD="-lpthread",
-  AC_MSG_ERROR([this library is required]))
 AC_CHECK_LIB([glpk], [glp_simplex], LIB_GLPK="-lglpk",
   AC_MSG_ERROR([this library is required]))
 
-AC_SUBST(LIB_PTHREAD)
 AC_SUBST(LIB_GLPK)
 
 AX_BOOST_BASE([1.37.0],,
@@ -175,24 +140,6 @@ AC_DEFINE_UNQUOTED(HOST_OS, "$host_os",
 AC_DEFINE_UNQUOTED(HOST_VENDOR, "$host_vendor",
   [System vendor type this program will run on.])
 
-dnl ,---------------------------- 
-dnl | HEADERS
-dnl `----------------------------
-
-HEADERS_TO_CHECK="stdarg.h syslog.h signal.h pthread.h"
-
-AC_CHECK_HEADERS($HEADERS_TO_CHECK,,
-  AC_MSG_ERROR([this header is required]))
-
-AC_CHECK_HEADER([error.h],
-  AC_DEFINE(HAVE_ERROR_H, [], [Needed on OpenBSD systems.]))
-
-dnl ,---------------------------- 
-dnl | FUNCTIONS
-dnl `----------------------------
-
-AC_CHECK_FUNCS(dprintf)
-AC_CHECK_FUNCS(vsyslog)
 
 dnl ,---------------------------- 
 dnl | GCC_OPTIONS
@@ -229,50 +176,26 @@ AC_ARG_ENABLE([native],
   [],
   [enable_native=no])
 AS_IF([test "x$enable_debug" = "xyes"],
-  [AX_CFLAGS_GCC_OPTION([-O0])
-   AX_CFLAGS_GCC_OPTION([-g])
-   AX_CFLAGS_GCC_OPTION([-ggdb])
-   dnl
-   AX_CXXFLAGS_GCC_OPTION([-O0])
+  [AX_CXXFLAGS_GCC_OPTION([-O0])
    AX_CXXFLAGS_GCC_OPTION([-g])
    AX_CXXFLAGS_GCC_OPTION([-ggdb])
-   CFLAGS="$CFLAGS -DDEBUG"
    CXXFLAGS="$CXXFLAGS -DDEBUG"
    LDFLAGS="$LDFLAGS -static"],
-  [AX_CFLAGS_GCC_OPTION([-O3])
-   AX_CFLAGS_GCC_OPTION([-ffast-math])
-   dnl
-   AX_CXXFLAGS_GCC_OPTION([-O3])
+  [AX_CXXFLAGS_GCC_OPTION([-O3])
    AX_CXXFLAGS_GCC_OPTION([-ffast-math])])
 AS_IF([test "x$enable_lto" = "xyes"],
-  [AX_CFLAGS_GCC_OPTION([-flto])
-   AX_CXXFLAGS_GCC_OPTION([-flto])])
+  [AX_CXXFLAGS_GCC_OPTION([-flto])])
 AS_IF([test "x$enable_profiling" = "xyes"],
-  [AX_CFLAGS_GCC_OPTION([-pg])
-   AX_CXXFLAGS_GCC_OPTION([-pg])
+  [AX_CXXFLAGS_GCC_OPTION([-pg])
    LDFLAGS="$LDFLAGS -static"])
 AS_IF([test "x$enable_profile_generate" = "xyes"],
-  [AX_CFLAGS_GCC_OPTION([-fprofile-generate])
-   AX_CXXFLAGS_GCC_OPTION([-fprofile-generate])
+  [AX_CXXFLAGS_GCC_OPTION([-fprofile-generate])
    LDFLAGS="$LDFLAGS -static"])
 AS_IF([test "x$enable_profile_use" = "xyes"],
-  [AX_CFLAGS_GCC_OPTION([-fprofile-use])
-   AX_CXXFLAGS_GCC_OPTION([-fprofile-use])
+  [AX_CXXFLAGS_GCC_OPTION([-fprofile-use])
    LDFLAGS="$LDFLAGS"])
 AS_IF([test "x$enable_native" = "xyes"],
-  [AX_CFLAGS_GCC_OPTION([-march=native])
-   AX_CXXFLAGS_GCC_OPTION([-march=native])])
-
-AX_CFLAGS_GCC_OPTION([-Wall])
-AX_CFLAGS_GCC_OPTION([-Wwrite-strings])
-AX_CFLAGS_GCC_OPTION([-Wstrict-prototypes])
-AX_CFLAGS_GCC_OPTION([-Wno-trigraphs])
-AX_CFLAGS_GCC_OPTION([-Wtrampolines])
-#AX_CFLAGS_GCC_OPTION([-fPIC])
-AX_CFLAGS_GCC_OPTION([-fno-nested-functions])
-AX_CFLAGS_GCC_OPTION([-fomit-frame-pointer])
-dnl turn link time optimization on (works only on some systems so far)
-#AX_CFLAGS_GCC_OPTION([-flto])
+  [AX_CXXFLAGS_GCC_OPTION([-march=native])])
 
 AX_CXXFLAGS_GCC_OPTION([-std=c++0x])
 AX_CXXFLAGS_GCC_OPTION([-Wall])
@@ -292,21 +215,17 @@ AX_CXXFLAGS_GCC_OPTION([-DBOOST_NO_TYPEID], CXXFLAGS_NORTTI)
 AX_CXXFLAGS_GCC_OPTION([-DBOOST_NO_RTTI], CXXFLAGS_NORTTI)
 dnl turn link time optimization on (works only on some systems so far)
 #AX_CXXFLAGS_GCC_OPTION([-flto])
+dnl test various threading options
+AX_CXXFLAGS_GCC_OPTION([-threads], THREADING)
+AX_CXXFLAGS_GCC_OPTION([-mthread], THREADING)
+AX_CXXFLAGS_GCC_OPTION([-pthread], THREADING)
 
 # check for attributes
 AX_GCC_ATTRIBUTE_HOT
 AX_GCC_ATTRIBUTE_UNUSED
 
 AC_SUBST(CXXFLAGS_NORTTI)
-
-dnl ,---------------------------- 
-dnl | CYGWIN
-dnl `----------------------------
-
-dnl disable library dependency check on cygwin
-dnl because of problems with -liberty
-AS_IF([test "x$host_os" = "xcygwin"],
-  [deplibs_check_method="pass_all"], [])
+AC_SUBST(THREADING)
 
 dnl ,---------------------------- 
 dnl | AC_OUTPUT

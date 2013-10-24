@@ -21,10 +21,9 @@
 
 #include <iostream>
 #include <sstream>
+#include <cassert>
 
-#include <assert.h>
-#include <pthread.h>
-#include <unistd.h>
+#include <boost/thread.hpp>
 
 #include <tfbayes/dpm/pmcmc.hh>
 
@@ -138,53 +137,19 @@ population_mcmc_t::update_sampling_history()
         }
 }
 
-typedef struct {
-        sampler_t* sampler;
-        size_t n;
-        size_t burnin;
-} pthread_data_t;
-
-static
-void * sample_thread(void* _data)
-{
-        pthread_data_t* data  = (pthread_data_t*)_data;
-        sampler_t* sampler    = data->sampler;
-        const size_t n        = data->n;
-        const size_t burnin   = data->burnin;
-
-        sampler->operator()(n, burnin);
-
-        return NULL;
-}
-
 void
 population_mcmc_t::operator()(size_t n, size_t burnin)
 {
-        pthread_data_t data[_size];
-        pthread_t threads[_size];
-        int rc;
-
-        for (size_t i = 0; i < _size; i++) {
-                data[i].sampler = _population[i];
-                data[i].n       = n;
-                data[i].burnin  = burnin;
-        }
+        // requires move operator (c++0x)
+        std::vector<boost::thread> threads(_size);
 
         // sample
         for (size_t i = 0; i < _size; i++) {
-                rc = pthread_create(&threads[i], NULL, sample_thread, (void *)&data[i]);
-                if (rc) {
-                        cerr << "Couldn't create thread." << endl;
-                        exit(EXIT_FAILURE);
-                }
+                threads[i] = boost::thread(boost::ref(*_population[i]), n, burnin);
         }
         // join threads
         for (size_t i = 0; i < _size; i++) {
-                rc = pthread_join(threads[i], NULL);
-                if (rc) {
-                        cerr << "Couldn't join thread." << endl;
-                        exit(EXIT_FAILURE);
-                }
+                threads[i].join();
         }
         update_sampling_history();
 }

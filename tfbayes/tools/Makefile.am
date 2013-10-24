@@ -9,7 +9,7 @@ tfbayes_generate_alignment_SOURCES = tfbayes-generate-alignment.cc
 tfbayes_generate_alignment_LDADD   = ../phylotree/libtfbayes-phylotree.la
 
 tfbayes_treespace_optimize_SOURCES = tfbayes-treespace-optimize.cc
-tfbayes_treespace_optimize_LDADD   = -lpthread
+tfbayes_treespace_optimize_LDADD   = $(THREADING)
 tfbayes_treespace_optimize_LDADD  += ../phylotree/libtfbayes-phylotree.la
 tfbayes_treespace_optimize_LDADD  += ../fasta/libtfbayes-fasta.la
 tfbayes_treespace_optimize_LDADD  += $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)

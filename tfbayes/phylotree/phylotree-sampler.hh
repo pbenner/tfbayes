@@ -30,7 +30,7 @@
 #include <sys/time.h>
 #include <limits>
 
-#include <boost/thread/thread.hpp>
+#include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <gsl/gsl_randist.h>
@@ -320,6 +320,10 @@ public:
                 }
                 if (progress) std::cerr << std::endl;
         }
+        void operator()(size_t n, size_t m, bool progress = true) {
+                burnin(m, progress);
+                sample(n, progress);
+        }
 
         std::vector<double> acceptance;
         std::vector<double> log_posterior_history;
@@ -338,9 +342,6 @@ protected:
 
         pt_root_t tree;
 };
-
-#include <assert.h>
-#include <pthread.h>
 
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
 class pt_pmcmc_hastings_t
@@ -374,54 +375,19 @@ public:
         ////////////////////////////////////////////////////////////////////////////////
         typedef pt_metropolis_hastings_t<AS, AC, PC> pt_sampler_t;
 
-        typedef struct {
-                pt_sampler_t* sampler;
-                size_t samples;
-                size_t burnin;
-                bool print_status;
-        } pthread_data_t;
-
         // sampling methods
         ////////////////////////////////////////////////////////////////////////////////
-        static
-        void * sample_thread(void* _data) {
-                pthread_data_t* data  = (pthread_data_t*)_data;
-                pt_sampler_t* sampler = data->sampler;
-                const size_t  samples = data->samples;
-                const size_t burnin   = data->burnin;
+        void operator()(size_t samples, size_t burnin) {
 
-                sampler->burnin(burnin,  data->print_status);
-                sampler->sample(samples, data->print_status);
+                std::vector<boost::thread> threads(population.size());
 
-                return NULL;
-        }
-        void sample(size_t samples, size_t burnin) {
-
-                pthread_data_t* data = new pthread_data_t[population.size()];
-                pthread_t threads[population.size()];
-                int rc;
-
-                for (size_t i = 0; i < population.size(); i++) {
-                        data[i].sampler      = population[i];
-                        data[i].samples      = samples;
-                        data[i].burnin       = burnin;
-                        data[i].print_status = (i == 0);
-                }
                 // sample
                 for (size_t i = 0; i < population.size(); i++) {
-                        rc = pthread_create(&threads[i], NULL, sample_thread, (void *)&data[i]);
-                        if (rc) {
-                                std::cerr << "Couldn't create thread." << std::endl;
-                                exit(EXIT_FAILURE);
-                        }
+                        threads[i] = boost::thread(boost::ref(*population[i]), samples, burnin, i==0);
                 }
                 // join threads
                 for (size_t i = 0; i < population.size(); i++) {
-                        rc = pthread_join(threads[i], NULL);
-                        if (rc) {
-                                std::cerr << "Couldn't join thread." << std::endl;
-                                exit(EXIT_FAILURE);
-                        }
+                        threads[i].join();
                 }
                 update_samples();
                 update_history();

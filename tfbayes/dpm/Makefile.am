@@ -12,15 +12,15 @@ noinst_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug
 dpm_gaussian_debug_SOURCES = dpm-gaussian-main.cc
 dpm_gaussian_debug_LDADD   = $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
 dpm_gaussian_debug_LDADD  += libtfbayes-dpm.la
-dpm_gaussian_debug_LDADD  += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
+dpm_gaussian_debug_LDADD  += $(THREADING) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 
-dpm_tfbs_debug_SOURCES = dpm-tfbs-main.cc
-dpm_tfbs_debug_LDADD   = $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
-dpm_tfbs_debug_LDADD  += libtfbayes-dpm.la
-dpm_tfbs_debug_LDADD  += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
+dpm_tfbs_debug_SOURCES  = dpm-tfbs-main.cc
+dpm_tfbs_debug_LDADD    = $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
+dpm_tfbs_debug_LDADD   += libtfbayes-dpm.la
+dpm_tfbs_debug_LDADD   += $(THREADING) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 
 ## dpm library
-lib_LTLIBRARIES  = libtfbayes-dpm.la
+lib_LTLIBRARIES = libtfbayes-dpm.la
 libtfbayes_dpm_la_SOURCES =		\
 	clonable.hh			\
 	cluster.cc			\
@@ -71,7 +71,7 @@ libtfbayes_dpm_la_SOURCES =		\
 libtfbayes_dpm_la_LIBADD  = $(top_builddir)/tfbayes/fastarithmetics/libtfbayes-fastarithmetics.la
 libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
 libtfbayes_dpm_la_LIBADD += $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
-libtfbayes_dpm_la_LIBADD += $(LIB_PTHREAD) $(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
+libtfbayes_dpm_la_LIBADD += $(THREADING )$(LIB_BOOST_REGEX) $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD)
 libtfbayes_dpm_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
 ## set python package name
