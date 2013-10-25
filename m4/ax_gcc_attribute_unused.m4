@@ -17,14 +17,21 @@ dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 AC_DEFUN([AX_GCC_ATTRIBUTE_UNUSED],[
 AC_CACHE_CHECK(
   [for  __attribute__((unused))],
-  ax_cv_gcc_const_call,[
+  ax_cv_gcc_attribute_unused,[
+  ac_save_cxx_werror_flag=$ac_cxx_werror_flag
+  ac_cxx_werror_flag=yes
   AC_TRY_COMPILE([
     __attribute__((unused))
     int f(int i) { return i; }],
     [],
-    ax_cv_gcc_attribute_unused=yes, ax_cv_gcc_attribute_unused=no)])
+    ax_cv_gcc_attribute_unused=yes, ax_cv_gcc_attribute_unused=no)
+  ac_cxx_werror_flag=$ac_save_cxx_werror_flag
+  ])
   if test "$ax_cv_gcc_attribute_unused" = yes; then
     AC_DEFINE([GCC_ATTRIBUTE_UNUSED],[__attribute__((unused))],
+      [Attribute to declare variables as unused])
+  else
+    AC_DEFINE([GCC_ATTRIBUTE_UNUSED],[],
       [Attribute to declare variables as unused])
   fi
 ])
