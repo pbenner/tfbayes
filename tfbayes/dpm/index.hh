@@ -49,10 +49,10 @@ class index_t : public index_i {
 public:
         inline index_t() {
         }
-        inline explicit index_t(size_t x0) __attribute__((hot))
+        inline explicit index_t(size_t x0) GCC_ATTRIBUTE_HOT
                 : _x0(x0) {
         }
-        inline index_t(const index_t& index) __attribute__((hot))
+        inline index_t(const index_t& index) GCC_ATTRIBUTE_HOT
                 : _x0(index._x0) {
         }
 

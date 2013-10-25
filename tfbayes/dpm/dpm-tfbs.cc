@@ -230,6 +230,7 @@ dpm_tfbs_t::baseline_components() const
         return _baseline_tags.size();
 }
 
+GCC_ATTRIBUTE_HOT
 void
 dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_tag_t cluster_tags[], const double temp)
 {
@@ -268,6 +269,7 @@ dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_
         }
 }
 
+GCC_ATTRIBUTE_HOT
 void
 dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[], const double temp, const bool include_background)
 {

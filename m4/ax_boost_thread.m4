@@ -21,17 +21,6 @@ AC_CHECK_LIB(boost_thread-gcc-mt, main, BOOST_THREAD_LIB="-lboost_thread-gcc-mt"
     [AC_CHECK_LIB(boost_thread, main, BOOST_THREAD_LIB="-lboost_thread",
       [$2])])])
 
-# if test "x$host_os" = "xsolaris" ; then
-#   BOOST_CPPFLAGS="-pthreads $BOOST_CPPFLAGS"
-#   BOOST_LDFLAGS="-pthreads $BOOST_LDFLAGS"
-# elif test "x$host_os" = "xmingw32" ; then
-#   BOOST_CPPFLAGS="-mthreads $BOOST_CPPFLAGS"
-#   BOOST_LDFLAGS="-mthreads $BOOST_LDFLAGS"
-# else
-#   BOOST_CPPFLAGS="-pthread $BOOST_CPPFLAGS"
-#   BOOST_LDFLAGS="-pthread $BOOST_LDFLAGS"
-# fi
-
 AC_SUBST(BOOST_THREAD_LIB)
 AC_SUBST(BOOST_CPPFLAGS)
 AC_SUBST(BOOST_LDFLAGS)
