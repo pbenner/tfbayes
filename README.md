@@ -19,7 +19,7 @@ where of course the system's python version has to be used. The definitions can 
 
 The following libraries are required for tfbayes:
 
-	boost (>= 1.50)
+	boost (>= 1.47)
 	boost_python
 	boost_system
 	boost_thread
