@@ -25,6 +25,7 @@
 #include <cstddef>
 #include <iostream>
 
+#include <boost/utility.hpp>
 #include <boost/functional/hash.hpp> 
 
 #include <tfbayes/dpm/clonable.hh>
@@ -32,7 +33,7 @@
 // index_t and range_t
 ////////////////////////////////////////////////////////////////////////////////
 
-class index_i : public clonable {
+class index_i : public clonable, boost::noncopyable {
 public:
         virtual index_i* clone() const = 0;
         virtual const size_t& operator[](size_t i) const = 0;
@@ -44,6 +45,14 @@ public:
         virtual bool operator<(const index_i& index) const = 0;
         virtual size_t hash() const = 0;
 };
+
+inline size_t hash_value(const index_i& index) {
+        return index.hash();
+}
+inline index_i* new_clone(const index_i& index)
+{
+    return index.clone();
+}
 
 class index_t : public index_i {
 public:

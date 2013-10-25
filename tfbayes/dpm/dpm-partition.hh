@@ -22,50 +22,32 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <boost/unordered_set.hpp>
+#include <boost/ptr_container/ptr_unordered_set.hpp>
 
 #include <tfbayes/dpm/index.hh>
 #include <tfbayes/dpm/datatypes.hh>
 
 typedef std::string dpm_subset_tag_t;
 
-class dpm_subset_t : public clonable {
+class dpm_subset_t : public clonable, public boost::ptr_unordered_set<index_i> {
 public:
-        struct IndexPtrHash {
-                size_t operator()(index_i* const& index) const {
-                        return index->hash();
-                }
-        };
-        struct IndexPtrEqual {
-                bool operator()(index_i* const& lhs, index_i* const& rhs) const {
-                        return *lhs == *rhs;
-                }
-        };
         // typedefs
         ////////////////////////////////////////////////////////////////////////
-        typedef boost::unordered_set<index_i*, IndexPtrHash, IndexPtrEqual> index_set_t;
-        typedef index_set_t::iterator iterator;
-        typedef index_set_t::const_iterator const_iterator;
+        typedef boost::ptr_unordered_set<index_i> base_t;
+        typedef base_t::iterator iterator;
+        typedef base_t::const_iterator const_iterator;
 
         // constructors
         ////////////////////////////////////////////////////////////////////////
         dpm_subset_t(const dpm_subset_tag_t& dpm_subset_tag)
-                : _dpm_subset_tag(dpm_subset_tag)
+                : base_t(),
+                  _dpm_subset_tag(dpm_subset_tag)
                 {}
         dpm_subset_t(const dpm_subset_t& dpm_subset)
-                : _dpm_subset_tag(dpm_subset._dpm_subset_tag) {
-                // make sure that every element is cloned
-                for (const_iterator it = dpm_subset.begin();
-                     it != dpm_subset.end(); it++) {
-                        insert(**it);
-                }
+                : base_t(dpm_subset),
+                  _dpm_subset_tag(dpm_subset._dpm_subset_tag) {
         }
-        // free every index in the set before the set gets destructed
         virtual ~dpm_subset_t() {
-                for (index_set_t::const_iterator it = _index_set.begin();
-                     it != _index_set.end(); it++) {
-                        delete(*it);
-                }
         }
 
         dpm_subset_t* clone() const {
@@ -74,80 +56,31 @@ public:
 
         friend void swap(dpm_subset_t& left, dpm_subset_t& right) {
                 using std::swap;
+                swap(static_cast<base_t&>(left),
+                     static_cast<base_t&>(right));
                 swap(left._dpm_subset_tag, right._dpm_subset_tag);
-                swap(left._index_set,      right._index_set);
         }
 
         // operators
         ////////////////////////////////////////////////////////////////////////
         dpm_subset_t& operator=(const dpm_subset_t& dpm_subset) {
+                using std::swap;
                 dpm_subset_t tmp(dpm_subset);
                 swap(*this, tmp);
                 return *this;
         }
-
         // methods
         ////////////////////////////////////////////////////////////////////////
         std::pair<iterator, bool> insert(const index_i& index) {
-                std::pair<iterator, bool> result;
-                // clone index
-                index_i* tmp = index.clone();
-                // insert address to index
-                result = _index_set.insert(tmp);
-                // free index if insert was not successful
-                if (!result.second) {
-                        delete(tmp);
-                }
-                return result;
-        }
-        iterator erase(const_iterator position) {
-                // free index memory
-                delete(*position);
-                // erase index pointer
-                return _index_set.erase(position);
-        }
-        size_t erase(const index_i& index) {
-                // find index pointer
-                iterator it = find(index);
-                if (it != end()) {
-                        // if index exists, erase it
-                        erase(it);
-                        // one erased
-                        return 1;
-                }
-                // free memory of cloned index
-                return 0;
-        }
-        iterator find(const index_i& index) {
-                index_i* i = index.clone();
-                // find index pointer
-                iterator it = _index_set.find(i);
-                // free index
-                delete(i);
-                return it;
+                // alway clone objects when inserting them
+                return base_t::insert(index.clone());
         }
         // each subset represents a cluster with a specific model
         const dpm_subset_tag_t dpm_subset_tag() const {
                 return _dpm_subset_tag;
         }
-              iterator begin()       { return _index_set.begin(); };
-        const_iterator begin() const { return _index_set.begin(); };
-              iterator end()         { return _index_set.end();   };
-        const_iterator end()   const { return _index_set.end();   };
-
-        size_t size() const {
-                return _index_set.size();
-        }
-        bool operator==(const dpm_subset_t& rhs) const {
-                return _dpm_subset_tag == rhs._dpm_subset_tag &&
-                        _index_set == rhs._index_set;
-        }
-        bool operator!=(const dpm_subset_t& rhs) const {
-                return !operator==(rhs);
-        }
 protected:
         dpm_subset_tag_t _dpm_subset_tag;
-        index_set_t _index_set;
 };
 
 class dpm_partition_t : public std::vector<dpm_subset_t> {

@@ -56,7 +56,7 @@ init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data
              it != partition.end(); it++, k++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& index = static_cast<const seq_index_t&>(**is);
+                        const seq_index_t& index = static_cast<const seq_index_t&>(*is);
                         for (size_t i = 0; i < tfbs_length; i++) {
                                 data[index[0]][index[1]+i] = k*tfbs_length+i+1;
                         }
@@ -72,7 +72,7 @@ clean_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& dat
              it != partition.end(); it++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& index = static_cast<const seq_index_t&>(**is);
+                        const seq_index_t& index = static_cast<const seq_index_t&>(*is);
                         for (size_t i = 0; i < tfbs_length; i++) {
                                 data[index[0]][index[1]+i] = 0;
                         }
@@ -225,7 +225,7 @@ distance(const dpm_partition_t& pi_a,
              it != pi_a.end(); it++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& tmp = static_cast<const seq_index_t&>(**is);
+                        const seq_index_t& tmp = static_cast<const seq_index_t&>(*is);
                         for (size_t i = 0; i < tfbs_length; i++) {
                                 indices.insert(seq_index_t(tmp[0], tmp[1]+i));
                         }
@@ -237,7 +237,7 @@ distance(const dpm_partition_t& pi_a,
              it != pi_b.end(); it++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& tmp = static_cast<const seq_index_t&>(**is);
+                        const seq_index_t& tmp = static_cast<const seq_index_t&>(*is);
                         for (size_t i = 0; i < tfbs_length; i++) {
                                 indices.insert(seq_index_t(tmp[0], tmp[1]+i));
                         }
@@ -366,13 +366,13 @@ dpm_tfbs_optimize_estimate(const dpm_partition_list_t& partitions,
                 // populate index list
                 for (dpm_subset_t::iterator is = subset.begin();
                      is != subset.end(); is++) {
-                        indices.insert(static_cast<const seq_index_t&>(**is));
+                        indices.insert(static_cast<const seq_index_t&>(*is));
                 }
 
                 for (boost::unordered_set<seq_index_t>::const_iterator is = indices.begin();
                      is != indices.end(); is++) {
                         // save index pointer
-                        const seq_index_t& index(*is);
+                        const seq_index_t index(static_cast<const seq_index_t&>(*is));
                         // erase index from subset
                         subset.erase(index);
                         // compute new loss

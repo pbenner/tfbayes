@@ -124,7 +124,7 @@ dpm_tfbs_interface_la_CXXFLAGS =
 dpm_tfbs_interface_la_SOURCES  = \
 	dpm-tfbs-interface.cc
 dpm_tfbs_interface_la_LIBADD   = libtfbayes-dpm.la
-dpm_tfbs_interface_la_LIBADD  += $(LIB_BOOST_PYTHON)
+dpm_tfbs_interface_la_LIBADD  += $(BOOST_PYTHON_LIB)
 dpm_tfbs_interface_la_LDFLAGS  = -avoid-version
 dpm_tfbs_interface_la_LDFLAGS += -module
 

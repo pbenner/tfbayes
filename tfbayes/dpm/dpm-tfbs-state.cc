@@ -297,10 +297,10 @@ dpm_tfbs_state_t::set_partition(const dpm_partition_t& partition)
                 cluster_t& cluster = get_free_cluster(subset.dpm_subset_tag());
 
                 for (dpm_subset_t::const_iterator is = subset.begin(); is != subset.end(); is++) {
-                        assert(valid_tfbs_position(**is));
-                        assert(operator[](**is) == bg_cluster_tag);
-                        remove(**is, bg_cluster_tag);
-                        add   (**is, cluster.cluster_tag());
+                        assert(valid_tfbs_position(*is));
+                        assert(operator[](*is) == bg_cluster_tag);
+                        remove(*is, bg_cluster_tag);
+                        add   (*is, cluster.cluster_tag());
                 }
         }
 }
