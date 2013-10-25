@@ -80,7 +80,7 @@ dnl ,----------------------------
 dnl | BOOST
 dnl `----------------------------
 
-AX_BOOST_BASE([1.50.0],,
+AX_BOOST_BASE([1.47.0],,
   AC_MSG_ERROR([this library is required]))
 AX_BOOST_REGEX(,
   AC_MSG_ERROR([this library is required]))
