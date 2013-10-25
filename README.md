@@ -18,6 +18,7 @@ The definitions can for instance be placed in the local *.profile* or *.bash_pro
 
 The following libraries are required for tfbayes:
 
+	boost (>= 1.50)
 	boost_python
 	boost_system
 	boost_thread
@@ -28,7 +29,7 @@ The following libraries are required for tfbayes:
 
 Requirements for parsing phylogenetic trees in newick format:
 
-	bison
+	bison (>= 2.7)
 	flex
 
 Some of the scripts are written in *python* and require:
