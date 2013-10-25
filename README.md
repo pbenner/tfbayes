@@ -11,8 +11,9 @@ It is necessary to export some environment variables for a local installation. H
 	export LD_LIBRARY_PATH=$HOME/.usr/lib:$LD_LIBRARY_PATH
 	export LIBRARY_PATH=$HOME/.usr/lib:$LIBRARY_PATH
 	export MANPATH=$HOME/.usr/share/man:$MANPATH
+	export PYTHONPATH=$HOME/.usr/lib/python2.7/site-packages/:$PYTHONPATH
 
-The definitions can for instance be placed in the local *.profile* or *.bash_profile*.
+where of course the system's python version has to be used. The definitions can for instance be placed in the local *.profile* or *.bash_profile*.
 
 ## Requirements
 
