@@ -190,11 +190,10 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp)
         // print some information to stdout
         flockfile(stdout);
         if (state()[new_cluster_tag].size() != 0) {
-                cout << _name << ": "
-                     << "cluster " << old_cluster_tag
-                     << " merged into cluster " << new_cluster_tag
-                     << " (" << state()[new_cluster_tag].size()
-                     << "+" << range_set.size() << ")" << endl;
+                cout << boost::format("%s: cluster %d merged with cluster %d (%d + %d)")
+                        % _name % old_cluster_tag % new_cluster_tag
+                        % state()[new_cluster_tag].size() % range_set.size()
+                     << endl;
         }
         fflush(stdout);
         funlockfile(stdout);
@@ -259,15 +258,8 @@ dpm_tfbs_sampler_t::_metropolis_sample(cluster_t& cluster, const double temp) {
 
 accepted:
         flockfile(stdout);
-        cout << _name << ": "
-             << "cluster "
-             << cluster.cluster_tag()
-             << ": "
-             << ss.str()
-             << " accepted "
-             << "("  << size
-             << "->" << cluster.size()
-             << ")"
+        cout << boost::format("%s: cluster %d: %s accepted (%d -> %d)")
+                % _name % cluster.cluster_tag() % ss.str() % size % cluster.size()
              << endl;
         fflush(stdout);
         funlockfile(stdout);
@@ -311,8 +303,7 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         _block_sample(temperature);
         // we are done with sampling here, now process commands
         flockfile(stdout);
-        cout << _name << ": "
-             << "Processing commands."
+        cout << boost::format("%s: Processing commands.") % _name
              << endl;
         fflush(stdout);
         funlockfile(stdout);
