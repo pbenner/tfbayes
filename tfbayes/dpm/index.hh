@@ -159,10 +159,10 @@ protected:
 
 class range_t {
 public:
-        range_t(const index_i& index, size_t length) __attribute__((hot))
+        range_t(const index_i& index, size_t length) GCC_ATTRIBUTE_HOT
                 : _index(index.clone()), _length(length) {
         }
-        range_t(const range_t& range) __attribute__((hot))
+        range_t(const range_t& range) GCC_ATTRIBUTE_HOT
                 : _index (range.index().clone()),
                   _length(range.length()) {
         }
