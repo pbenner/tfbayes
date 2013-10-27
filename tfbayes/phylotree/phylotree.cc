@@ -347,11 +347,11 @@ void swap(pt_root_t& first, pt_root_t&second)
 {
         swap(static_cast<pt_node_t&>(first),
              static_cast<pt_node_t&>(second));
-        std::swap(first.leaf_map,  second.leaf_map);
-        std::swap(first.node_map,  second.node_map);
-        std::swap(first.leaves,    second.leaves);
-        std::swap(first.nodes,     second.nodes);
-        std::swap(first._outgroup, second._outgroup);
+        swap(first.leaf_map,  second.leaf_map);
+        swap(first.node_map,  second.node_map);
+        swap(first.leaves,    second.leaves);
+        swap(first.nodes,     second.nodes);
+        swap(first._outgroup, second._outgroup);
 }
 
 pt_root_t&
