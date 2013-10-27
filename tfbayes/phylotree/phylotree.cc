@@ -576,8 +576,7 @@ newick_format::operator()(std::ostream& o) const
 
 ostream& operator<< (ostream& o, const pt_node_t& node)
 {
-        print_phylotree(o, node, 0);
-        return o;
+        return print_phylotree(o, node, 0);
 }
 
 ostream& operator<< (ostream& o, const newick_format& nf)
