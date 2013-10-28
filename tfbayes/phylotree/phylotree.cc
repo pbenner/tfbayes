@@ -89,14 +89,14 @@ pt_node_t::clone() const
 
 void swap(pt_node_t& first, pt_node_t&second)
 {
-        std::swap(first.d,         second.d);
-        std::swap(first.name,      second.name);
-        std::swap(first.n_leaves,  second.n_leaves);
-        std::swap(first.n_nodes,   second.n_nodes);
-        std::swap(first.id,        second.id);
-        std::swap(first._left,     second._left);
-        std::swap(first._right,    second._right);
-        std::swap(first._ancestor, second._ancestor);
+        swap(first.d,         second.d);
+        swap(first.name,      second.name);
+        swap(first.n_leaves,  second.n_leaves);
+        swap(first.n_nodes,   second.n_nodes);
+        swap(first.id,        second.id);
+        swap(first._left,     second._left);
+        swap(first._right,    second._right);
+        swap(first._ancestor, second._ancestor);
 }
 
 pt_node_t&
