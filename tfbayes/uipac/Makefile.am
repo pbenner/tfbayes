@@ -12,7 +12,7 @@ alphabet_test_LDADD   = libtfbayes-uipac.la
 lib_LTLIBRARIES = libtfbayes-uipac.la
 
 libtfbayes_uipac_la_SOURCES = \
-	alphabet.cc
+	alphabet.cc \
 	alphabet.hh
 libtfbayes_uipac_la_LDFLAGS  = -no-undefined
 libtfbayes_uipac_la_LDFLAGS += -version-info 0:0:0

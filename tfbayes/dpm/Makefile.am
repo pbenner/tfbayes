@@ -70,6 +70,7 @@ libtfbayes_dpm_la_SOURCES =		\
 	mixture-state.cc		\
 	mixture-state.hh		\
 	mixture-weights.hh		\
+	nucleotide-context.hh           \
 	observer.hh			\
 	pmcmc.cc			\
 	pmcmc.hh			\

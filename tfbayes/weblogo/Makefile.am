@@ -9,6 +9,9 @@ pkgpython_PYTHON = __init__.py color.py colorscheme.py
 ## other data
 pkgpython_DATA = template.eps
 
+EXTRA_DIST = \
+	template.eps
+
 ## clean python files
 clean-local:
 	$(RM) *.pyc
