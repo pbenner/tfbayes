@@ -15,8 +15,8 @@ SUBDIRS += alignment
 SUBDIRS += utility
 SUBDIRS += tools
 
-otherincludedir = $(includedir)/tfbayes
-otherinclude_HEADERS = \
+## headers
+noinst_HEADERS = \
 	config.h
 
 ## set python package name

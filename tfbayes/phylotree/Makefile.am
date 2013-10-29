@@ -60,11 +60,13 @@ libtfbayes_phylotree_la_SOURCES = \
 	phylotree.hh \
 	phylotree-approximation.hh \
 	phylotree-expand.hh \
+	phylotree-generate-observations.hh \
 	phylotree-gradient.hh \
 	phylotree-gradient-ascent.hh \
 	phylotree-polynomial.hh \
 	phylotree-sampler.hh \
 	phylotree-lexer.ll \
+	phylotree-parser.h \
 	phylotree-parser.hh \
 	phylotree-parser.yy \
 	phylotree-parsetree.cc \
@@ -85,27 +87,6 @@ libtfbayes_phylotree_la_LIBADD  += $(LIB_GLPK)
 libtfbayes_phylotree_la_LIBADD  += $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
 libtfbayes_phylotree_la_LDFLAGS  = -no-undefined 
 libtfbayes_phylotree_la_LDFLAGS += -version-info 0:0:0
-
-otherincludedir = $(includedir)/tfbayes/phylotree
-otherinclude_HEADERS = \
-	leafset.hh \
-	phylotree.hh \
-	phylotree-approximation.hh \
-	phylotree-expand.hh \
-	phylotree-generate-observations.hh \
-	phylotree-gradient.hh \
-	phylotree-gradient-ascent.hh \
-	phylotree-polynomial.hh \
-	phylotree-sampler.hh \
-	phylotree-parser.h \
-	phylotree-parser.hh \
-	phylotree-parsetree.hh \
-	phylotree-simplify.hh \
-	posterior.hh \
-	incomplete-expression.hh \
-	marginal-likelihood.hh \
-	utility.hh \
-	treespace.hh
 
 ## other files that should be distributed
 EXTRA_DIST = phylotree.nb

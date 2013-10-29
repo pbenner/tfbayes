@@ -10,8 +10,8 @@ libtfbayes_fasta_la_SOURCES  = fasta.cc fasta.hh
 libtfbayes_fasta_la_LDFLAGS  = -no-undefined
 libtfbayes_fasta_la_LDFLAGS += -version-info 0:0:0
 
-otherincludedir = $(includedir)/tfbayes/fasta
-otherinclude_HEADERS = \
+## headers
+noinst_HEADERS = \
 	fasta.hh
 
 ## set python package name

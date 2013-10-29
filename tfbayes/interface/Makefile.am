@@ -2,9 +2,8 @@
 
 AM_CPPFLAGS = -I$(top_srcdir)
 
-## install headers
-otherincludedir = $(includedir)/tfbayes/interface
-otherinclude_HEADERS = exceptions.hh utility.hh
+## headers
+noinst_HEADERS = exceptions.hh utility.hh
 
 ## interface
 pkgpython_LTLIBRARIES = datatypes.la

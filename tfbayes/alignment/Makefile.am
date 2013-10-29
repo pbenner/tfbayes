@@ -3,9 +3,8 @@
 AM_CPPFLAGS = -I$(top_srcdir)
 AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
-## install headers
-otherincludedir = $(includedir)/tfbayes/alignment
-otherinclude_HEADERS = alignment.hh alignment-hmm.hh sequence.hh
+## headers
+noinst_HEADERS = alignment.hh alignment-hmm.hh sequence.hh
 
 noinst_PROGRAMS = alignment-test alignment-hmm-test
 

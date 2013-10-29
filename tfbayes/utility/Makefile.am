@@ -1,8 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
-## install headers
-otherincludedir = $(includedir)/tfbayes/utility
-otherinclude_HEADERS = \
+## headers
+noinst_HEADERS = \
 	abysmal-stack.hh \
 	clonable.hh \
 	distribution.hh \
