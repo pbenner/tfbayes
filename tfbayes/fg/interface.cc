@@ -1,0 +1,46 @@
+/* Copyright (C) 2013 Philipp Benner
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#include <Python.h>
+
+#include <locale>
+#include <cctype>
+#include <sstream>
+#include <string>
+
+#include <boost/python.hpp>
+#include <boost/python/def.hpp>
+#include <boost/python/iterator.hpp>
+#include <boost/python/make_constructor.hpp>
+
+#include <tfbayes/fg/distribution.hh>
+
+using namespace boost::python;
+
+BOOST_PYTHON_MODULE(interface)
+{
+        class_<distribution_i, boost::noncopyable>("distribution_i", no_init)
+                ;
+        class_<exponential_family_i, bases<distribution_i>, boost::noncopyable>("exponential_family_i", no_init)
+                .def("density",       &exponential_family_i::density)
+                .def("base_measure",  &exponential_family_i::base_measure)
+                .def("log_partition", &exponential_family_i::log_partition)
+                ;
+        class_<normal_distribution_t, bases<exponential_family_i> >("normal_distribution_t", no_init)
+                .def(init<double, double>())
+                ;
+}
