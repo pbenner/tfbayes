@@ -152,7 +152,7 @@ public:
 
         // methods
         virtual double density(double x) const {
-                array_t T = statistics(x);
+                const array_t& T = statistics(x);
                 // is x in the domain of this function?
                 if (!boost::icl::contains(_domain, x)) {
                         return 0.0;
