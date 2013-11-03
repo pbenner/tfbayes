@@ -212,16 +212,18 @@ protected:
 
 class normal_distribution_t : public exponential_family_t<2> {
 public:
+        typedef exponential_family_t<2> base_t;
+
         normal_distribution_t(double mean, double precision) {
                 parameters()[0] = mean*precision;
                 parameters()[1] = -0.5*precision;
                 renormalize();
         }
-        normal_distribution_t(const exponential_family_t<2>::array_t parameters) {
+        normal_distribution_t(const base_t::array_t parameters) {
                 this->parameters() = parameters;
         }
         normal_distribution_t(const normal_distribution_t& normal_distribution)
-                : exponential_family_t<2>(normal_distribution)
+                : base_t(normal_distribution)
                 { }
 
         virtual normal_distribution_t* clone() const {
@@ -247,7 +249,7 @@ public:
                 return _T;
         }
         virtual void renormalize() {
-                exponential_family_t<2>::renormalize();
+                base_t::renormalize();
                 const double& p1 = parameters()[0];
                 const double& p2 = parameters()[1];
                 _log_partition =  -1.0/4.0*std::pow(p1/p2, 2.0)*p2 -
@@ -264,17 +266,19 @@ protected:
 
 class gamma_distribution_t : public exponential_family_t<2> {
 public:
+        typedef exponential_family_t<2> base_t;
+
         gamma_distribution_t(double shape, double rate) :
-                exponential_family_t<2>(positive_domain()) {
+                base_t(positive_domain()) {
                 parameters()[0] = shape-1.0;
                 parameters()[1] = -rate;
                 renormalize();
         }
-        gamma_distribution_t(const exponential_family_t<2>::array_t parameters) {
+        gamma_distribution_t(const base_t::array_t parameters) {
                 this->parameters() = parameters;
         }
         gamma_distribution_t(const gamma_distribution_t& gamma_distribution)
-                : exponential_family_t<2>(gamma_distribution)
+                : base_t(gamma_distribution)
                 { }
 
         virtual gamma_distribution_t* clone() const {
@@ -300,7 +304,7 @@ public:
                 return _T;
         }
         virtual void renormalize() {
-                exponential_family_t<2>::renormalize();
+                base_t::renormalize();
                 const double& p1 = parameters()[0];
                 const double& p2 = parameters()[1];
                 _log_partition =  std::log(boost::math::tgamma(p1+1.0)) -
