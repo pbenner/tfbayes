@@ -64,11 +64,6 @@ template<> double distribution_i::moment<2>() const {
         return moment_second();
 }
 
-#define REAL_DOMAIN \
-        boost::icl::interval<double>::open( \
-                -std::numeric_limits<double>::infinity(),       \
-                std::numeric_limits<double>::infinity())
-
 inline
 boost::icl::interval<double>::type real_domain() {
         return boost::icl::interval<double>::open(
