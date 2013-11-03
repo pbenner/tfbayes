@@ -36,7 +36,7 @@ public:
         virtual distribution_i* clone() const = 0;
 
         template<size_t K> double moment() const {
-                return 0.0;
+                return std::numeric_limits<double>::infinity();
         }
 protected:
         virtual double moment_first () const = 0;

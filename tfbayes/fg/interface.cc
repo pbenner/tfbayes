@@ -31,9 +31,23 @@
 
 using namespace boost::python;
 
+static
+double distribution_moment(const distribution_i& distribution, size_t n)
+{
+        switch (n) {
+        case 1:
+                return distribution.moment<1>();
+        case 2:
+                return distribution.moment<2>();
+        default:
+                return std::numeric_limits<double>::infinity();
+        }
+}
+
 BOOST_PYTHON_MODULE(interface)
 {
         class_<distribution_i, boost::noncopyable>("distribution_i", no_init)
+                .def("moment", &distribution_moment)
                 ;
         class_<exponential_family_i, bases<distribution_i>, boost::noncopyable>("exponential_family_i", no_init)
                 .def("density",       &exponential_family_i::density)
