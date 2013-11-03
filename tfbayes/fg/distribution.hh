@@ -35,6 +35,8 @@ class distribution_i : public clonable {
 public:
         virtual distribution_i* clone() const = 0;
 
+        virtual distribution_i& operator=(const distribution_i& distribution) = 0;
+
         template<size_t K> double moment() const {
                 return std::numeric_limits<double>::infinity();
         }
@@ -45,7 +47,6 @@ protected:
 
 class exponential_family_i : public distribution_i {
 public:
-
         virtual double density(double x) const = 0;
         virtual double base_measure(double x) const = 0;
         virtual double log_partition() const = 0;
@@ -79,6 +80,9 @@ public:
                   _n            (e._n)
                 { }
 
+        // clone object
+        virtual exponential_family_t* clone() const = 0;
+
         friend void swap(exponential_family_t& left,
                          exponential_family_t& right) {
                 using std::swap;
@@ -86,9 +90,6 @@ public:
                 swap(left._log_partition, right._log_partition);
                 swap(left._n,             right._n);
         }
-
-        // clone object
-        virtual exponential_family_t* clone() const = 0;
 
         // pure functions
         virtual array_t statistics(double x) const = 0;
@@ -159,11 +160,64 @@ public:
                 return new normal_distribution_t(*this);
         }
 
-        friend void swap(normal_distribution_t& left,
-                         normal_distribution_t& right) {
+        virtual normal_distribution_t& operator=(const distribution_i& distribution) {
+                return operator=(static_cast<const normal_distribution_t&>(distribution));
+        }
+        virtual normal_distribution_t& operator=(const normal_distribution_t& distribution) {
                 using std::swap;
-                swap(static_cast<exponential_family_t<2>&>(left),
-                     static_cast<exponential_family_t<2>&>(right));
+                normal_distribution_t tmp(distribution);
+                swap(*this, tmp);
+                return *this;
+        }
+
+        virtual double base_measure(double x) const {
+                return 1.0/std::pow(std::sqrt(2.0*M_PI), n());
+        }
+        virtual array_t statistics(double x) const {
+                array_t T;
+                T[0] = x;
+                T[1] = std::pow(x, 2.0);
+                return T;
+        }
+        virtual void renormalize() {
+                exponential_family_t<2>::renormalize();
+                const double& p1 = parameters()[0];
+                const double& p2 = parameters()[1];
+                _log_partition =  -1.0/4.0*std::pow(p1/p2, 2.0)*p2 -
+                        0.5*std::log(-2.0*p2);
+        }
+protected:
+        virtual double moment_first () const {
+                return -0.5*parameters()[0]/parameters()[1];
+        }
+        virtual double moment_second() const {
+                return -0.5/parameters()[1];
+        }
+};
+
+class gamma_distribution_t : public exponential_family_t<2> {
+public:
+        gamma_distribution_t(double mean, double precision) {
+                parameters()[0] = mean*precision;
+                parameters()[1] = -0.5*precision;
+                renormalize();
+        }
+        gamma_distribution_t(const gamma_distribution_t& gamma_distribution)
+                : exponential_family_t<2>(gamma_distribution)
+                { }
+
+        virtual gamma_distribution_t* clone() const {
+                return new gamma_distribution_t(*this);
+        }
+
+        virtual gamma_distribution_t& operator=(const distribution_i& distribution) {
+                return operator=(static_cast<const gamma_distribution_t&>(distribution));
+        }
+        virtual gamma_distribution_t& operator=(const gamma_distribution_t& distribution) {
+                using std::swap;
+                gamma_distribution_t tmp(distribution);
+                swap(*this, tmp);
+                return *this;
         }
 
         virtual double base_measure(double x) const {
