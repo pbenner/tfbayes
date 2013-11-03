@@ -217,6 +217,9 @@ public:
                 parameters()[1] = -0.5*precision;
                 renormalize();
         }
+        normal_distribution_t(const exponential_family_t<2>::array_t parameters) {
+                this->parameters() = parameters;
+        }
         normal_distribution_t(const normal_distribution_t& normal_distribution)
                 : exponential_family_t<2>(normal_distribution)
                 { }
@@ -266,6 +269,9 @@ public:
                 parameters()[0] = shape-1.0;
                 parameters()[1] = -rate;
                 renormalize();
+        }
+        gamma_distribution_t(const exponential_family_t<2>::array_t parameters) {
+                this->parameters() = parameters;
         }
         gamma_distribution_t(const gamma_distribution_t& gamma_distribution)
                 : exponential_family_t<2>(gamma_distribution)
