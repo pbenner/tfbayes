@@ -228,8 +228,8 @@ class gamma_distribution_t : public exponential_family_t<2> {
 public:
         gamma_distribution_t(double shape, double rate) :
                 exponential_family_t<2>(positive_domain()) {
-                parameters()[0] = shape;
-                parameters()[1] = rate;
+                parameters()[0] = shape-1.0;
+                parameters()[1] = -rate;
                 renormalize();
         }
         gamma_distribution_t(const gamma_distribution_t& gamma_distribution)
@@ -251,7 +251,7 @@ public:
         }
 
         virtual double base_measure(double x) const {
-                return 1.0/std::pow(x, n());
+                return 1.0;
         }
         virtual array_t statistics(double x) const {
                 array_t T;
@@ -263,19 +263,19 @@ public:
                 exponential_family_t<2>::renormalize();
                 const double& p1 = parameters()[0];
                 const double& p2 = parameters()[1];
-                _log_partition =  std::log(boost::math::tgamma(p1)) -
-                        p1*std::log(p2);
+                _log_partition =  std::log(boost::math::tgamma(p1+1.0)) -
+                        - (p1+1.0)*std::log(-p2);
         }
 protected:
         virtual double moment_first () const {
                 const double& p1 = parameters()[0];
                 const double& p2 = parameters()[1];
-                return p1/p2;
+                return -(p1+1.0)/p2;
         }
         virtual double moment_second() const {
                 const double& p1 = parameters()[0];
                 const double& p2 = parameters()[1];
-                return p1*(1.0+p1)/(p2*p2);
+                return (p1+1.0)*(p1+2.0)/(p2*p2);
         }
 };
 
