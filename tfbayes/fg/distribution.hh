@@ -256,7 +256,7 @@ public:
         virtual array_t statistics(double x) const {
                 array_t T;
                 T[0] = std::log(x);
-                T[1] = -x;
+                T[1] = x;
                 return T;
         }
         virtual void renormalize() {
@@ -264,7 +264,7 @@ public:
                 const double& p1 = parameters()[0];
                 const double& p2 = parameters()[1];
                 _log_partition =  std::log(boost::math::tgamma(p1+1.0)) -
-                        - (p1+1.0)*std::log(-p2);
+                        (p1+1.0)*std::log(-p2);
         }
 protected:
         virtual double moment_first () const {

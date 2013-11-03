@@ -24,7 +24,7 @@ def plot_density(d, x_from, x_to, n=1001):
 ################################################################################
 
 integrate(normal_distribution_t(1,2), -5, 5)
-integrate(gamma_distribution_t(1,2), 0.001, 5)
+integrate(gamma_distribution_t(1,2), 0.0, 5)
 
 # plot density
 ################################################################################
