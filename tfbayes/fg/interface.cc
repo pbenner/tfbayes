@@ -26,6 +26,7 @@
 #include <boost/python/def.hpp>
 #include <boost/python/iterator.hpp>
 #include <boost/python/make_constructor.hpp>
+#include <boost/python/operators.hpp>
 
 #include <tfbayes/fg/distribution.hh>
 
@@ -53,6 +54,8 @@ BOOST_PYTHON_MODULE(interface)
                 .def("density",       &exponential_family_i::density)
                 .def("base_measure",  &exponential_family_i::base_measure)
                 .def("log_partition", &exponential_family_i::log_partition)
+                .def("renormalize",   &exponential_family_i::renormalize)
+                .def(self *= self)
                 ;
         class_<normal_distribution_t, bases<exponential_family_i> >("normal_distribution_t", no_init)
                 .def(init<double, double>())
