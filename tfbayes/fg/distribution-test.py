@@ -20,6 +20,13 @@ def plot_density(d, x_from, x_to, n=1001):
     p = plt.plot(x,y)
     plt.show()
 
+# test moments
+################################################################################
+
+d = dirac_distribution_t(2)
+d.moment(1)
+d.moment(2)
+
 # test if density is normalized
 ################################################################################
 

@@ -32,7 +32,8 @@
 #include <boost/icl/interval_set.hpp>
 #include <boost/math/special_functions/gamma.hpp>
 
-// interface for exponential families
+// interface for distributions, in general a distribution might not
+// even have a density (e.g. dirac measure), so this is very limited
 class distribution_i : public clonable {
 public:
         virtual distribution_i* clone() const = 0;
@@ -47,6 +48,43 @@ protected:
         virtual double moment_second() const = 0;
 };
 
+class dirac_distribution_t : public distribution_i {
+public:
+        dirac_distribution_t(double x) :
+                _x(x) { }
+
+        virtual dirac_distribution_t* clone() const {
+                return new dirac_distribution_t(*this);
+        }
+
+        friend void swap(dirac_distribution_t& left,
+                         dirac_distribution_t& right) {
+                using std::swap;
+                swap(left._x, right._x);
+        }
+
+        virtual distribution_i& operator=(const distribution_i& distribution) {
+                return operator=(static_cast<const dirac_distribution_t&>(distribution));
+        }
+        virtual distribution_i& operator=(const dirac_distribution_t& distribution) {
+                using std::swap;
+                dirac_distribution_t tmp(distribution);
+                swap(*this, tmp);
+                return *this;
+        }
+
+protected:
+        virtual double moment_first () const {
+                return _x;
+        }
+        virtual double moment_second() const {
+                return _x*_x;
+        }
+        // location of the dirac measure
+        double _x;
+};
+
+// what every exponential family should provide
 class exponential_family_i : public distribution_i {
 public:
         virtual double density(double x) const = 0;

@@ -51,6 +51,9 @@ BOOST_PYTHON_MODULE(interface)
         class_<distribution_i, boost::noncopyable>("distribution_i", no_init)
                 .def("moment", &distribution_moment)
                 ;
+        class_<dirac_distribution_t, bases<distribution_i> >("dirac_distribution_t", no_init)
+                .def(init<double>())
+                ;
         class_<exponential_family_i, bases<distribution_i>, boost::noncopyable>("exponential_family_i", no_init)
                 .def("density",       &exponential_family_i::density)
                 .def("base_measure",  &exponential_family_i::base_measure)
