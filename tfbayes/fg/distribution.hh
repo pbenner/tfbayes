@@ -115,7 +115,7 @@ public:
         }
 
         // pure functions
-        virtual array_t statistics(double x) const = 0;
+        virtual const array_t& statistics(double x) const = 0;
 
         // methods
         virtual double density(double x) const {
@@ -165,7 +165,10 @@ protected:
         virtual double& n() {
                 return _n;
         }
+        // natural parameters
         array_t _parameters;
+        // sufficient statistics
+        mutable array_t _T;
         // normalization constant
         double _log_partition;
         // domain of the density (compact support)
@@ -202,11 +205,10 @@ public:
         virtual double base_measure(double x) const {
                 return 1.0/std::pow(std::sqrt(2.0*M_PI), n());
         }
-        virtual array_t statistics(double x) const {
-                array_t T;
-                T[0] = x;
-                T[1] = std::pow(x, 2.0);
-                return T;
+        virtual const array_t& statistics(double x) const {
+                _T[0] = x;
+                _T[1] = std::pow(x, 2.0);
+                return _T;
         }
         virtual void renormalize() {
                 exponential_family_t<2>::renormalize();
@@ -253,11 +255,10 @@ public:
         virtual double base_measure(double x) const {
                 return 1.0;
         }
-        virtual array_t statistics(double x) const {
-                array_t T;
-                T[0] = std::log(x);
-                T[1] = x;
-                return T;
+        virtual const array_t& statistics(double x) const {
+                _T[0] = std::log(x);
+                _T[1] = x;
+                return _T;
         }
         virtual void renormalize() {
                 exponential_family_t<2>::renormalize();
