@@ -144,8 +144,8 @@ public:
         virtual double log_partition() const {
                 const double& p1 = parameters()[0];
                 const double& p2 = parameters()[1];
-                return 1.0/4.0*std::pow(p1/p2, 2.0)*p2 -
-                        std::log(std::sqrt(-2*p2));
+                return -1.0/4.0*std::pow(p1/p2, 2.0)*p2 -
+                        0.5*std::log(-2.0*p2);
         }
         virtual array_t statistics(double x) const {
                 array_t T;
