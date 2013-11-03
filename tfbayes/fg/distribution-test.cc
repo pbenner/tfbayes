@@ -28,7 +28,7 @@ main()
 
         exponential_family_i* e = &n;
 
-        boost::array<double, 2> p = static_cast<const normal_distribution_t*>(e)->parameters();
+        boost::array<double, 2> p = static_cast<const normal_distribution_t&>(*e).parameters();
 //        boost::array<double, 2> p = e->parameters(boost::array<double, 2>());
 
         cout << "moment: "

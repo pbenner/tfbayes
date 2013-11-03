@@ -31,7 +31,7 @@
 #include <boost/noncopyable.hpp>
 
 // interface for exponential families
-class distribution_i : public clonable, boost::noncopyable {
+class distribution_i : public clonable {
 public:
         virtual distribution_i* clone() const = 0;
 
@@ -43,7 +43,7 @@ protected:
         virtual double moment_second() const = 0;
 };
 
-class exponential_family_i : public distribution_i, boost::noncopyable {
+class exponential_family_i : public distribution_i {
 public:
 
         virtual double density(double x) const = 0;
@@ -122,8 +122,8 @@ public:
                 parameters()[1] = -0.5*precision;
         }
         normal_distribution_t(const normal_distribution_t& normal_distribution)
-                : exponential_family_t(normal_distribution),
-                  _n      (normal_distribution._n) {
+                : exponential_family_t<2>(normal_distribution),
+                  _n(normal_distribution._n) {
         }
 
         virtual normal_distribution_t* clone() const {

@@ -33,7 +33,7 @@
 // index_t and range_t
 ////////////////////////////////////////////////////////////////////////////////
 
-class index_i : public clonable, boost::noncopyable {
+class index_i : public clonable {
 public:
         virtual index_i* clone() const = 0;
         virtual const size_t& operator[](size_t i) const = 0;
