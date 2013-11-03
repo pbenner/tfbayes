@@ -15,20 +15,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <iostream>
+#ifndef FG_MESSAGES_HH
+#define FG_MESSAGES_HH
+
+#ifdef HAVE_CONFIG_H
+#include <tfbayes/config.h>
+#endif /* HAVE_CONFIG_H */
 
 #include <distribution.hh>
 
-using namespace std;
+// a message from a factor node to a variable node
+typedef exponential_family_i p_message_t;
+// a message from a variable node to a factor node
+typedef distribution_i q_message_t;
 
-int
-main()
-{
-        normal_distribution_t n(3,1);
-
-        cout << "moment: "
-             << n.moment<1>()
-             << endl;
-
-        return 0;
-}
+#endif /* FG_MESSAGES_HH */

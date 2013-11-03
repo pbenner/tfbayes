@@ -17,18 +17,11 @@
 
 #include <iostream>
 
-#include <distribution.hh>
+#include <factor-graph.hh>
 
 using namespace std;
 
 int
 main()
 {
-        normal_distribution_t n(3,1);
-
-        cout << "moment: "
-             << n.moment<1>()
-             << endl;
-
-        return 0;
 }

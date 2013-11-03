@@ -4,9 +4,10 @@
 AM_CPPFLAGS = -I$(top_srcdir)
 AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
-noinst_PROGRAMS = distribution-test
+noinst_PROGRAMS = distribution-test factor-graph-test
 
 distribution_test_SOURCES = distribution-test.cc
+factor_graph_test_SOURCES = factor-graph-test.cc
 
 ## fg library
 # lib_LTLIBRARIES = libtfbayes-fg.la

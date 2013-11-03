@@ -15,20 +15,28 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <iostream>
+#ifndef FG_FACTOR_GRAPH_HH
+#define FG_FACTOR_GRAPH_HH
 
-#include <distribution.hh>
+#ifdef HAVE_CONFIG_H
+#include <tfbayes/config.h>
+#endif /* HAVE_CONFIG_H */
 
-using namespace std;
+#include <vector>
 
-int
-main()
-{
-        normal_distribution_t n(3,1);
+#include <node-types.hh>
 
-        cout << "moment: "
-             << n.moment<1>()
-             << endl;
+class factor_graph_t {
+public:
+        factor_graph_t(const std::vector<variable_node_i*> variable_nodes,
+                       const std::vector<  factor_node_i*> factor_nodes) :
+                _variable_nodes(variable_nodes),
+                _factor_nodes  (factor_nodes)
+                { }
 
-        return 0;
-}
+protected:
+        std::vector<variable_node_i*> _variable_nodes;
+        std::vector<  factor_node_i*> _factor_nodes;
+};
+
+#endif /* FG_FACTOR_GRAPH_HH */
