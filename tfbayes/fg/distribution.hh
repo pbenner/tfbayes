@@ -22,13 +22,15 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <limits>
 #define _USE_MATH_DEFINES
 #include <cmath>
 
 #include <utility/clonable.hh>
 
 #include <boost/array.hpp>
-#include <boost/noncopyable.hpp>
+#include <boost/icl/interval_set.hpp>
+#include <boost/math/special_functions/gamma.hpp>
 
 // interface for exponential families
 class distribution_i : public clonable {
@@ -62,6 +64,24 @@ template<> double distribution_i::moment<2>() const {
         return moment_second();
 }
 
+#define REAL_DOMAIN \
+        boost::icl::interval<double>::open( \
+                -std::numeric_limits<double>::infinity(),       \
+                std::numeric_limits<double>::infinity())
+
+inline
+boost::icl::interval<double>::type real_domain() {
+        return boost::icl::interval<double>::open(
+                -std::numeric_limits<double>::infinity(),
+                 std::numeric_limits<double>::infinity());
+}
+inline
+boost::icl::interval<double>::type positive_domain() {
+        return boost::icl::interval<double>::open(
+                0,
+                std::numeric_limits<double>::infinity());
+}
+
 // implement what is common to most exponential families
 template <size_t D>
 class exponential_family_t : public exponential_family_i {
@@ -70,13 +90,15 @@ public:
         typedef boost::array<double, D> array_t;
 
         // constructors
-        exponential_family_t()
+        exponential_family_t(boost::icl::interval<double>::type domain = real_domain())
                 : _log_partition(0.0),
+                  _domain       (domain),
                   _n            (1.0)
                 { }
         exponential_family_t(const exponential_family_t& e)
                 : _parameters   (e._parameters),
                   _log_partition(e._log_partition),
+                  _domain       (e._domain),
                   _n            (e._n)
                 { }
 
@@ -88,6 +110,7 @@ public:
                 using std::swap;
                 swap(left._parameters,    right._parameters);
                 swap(left._log_partition, right._log_partition);
+                swap(left._domain,        right._domain);
                 swap(left._n,             right._n);
         }
 
@@ -97,6 +120,10 @@ public:
         // methods
         virtual double density(double x) const {
                 array_t T = statistics(x);
+                // is x in the domain of this function?
+                if (!boost::icl::contains(_domain, x)) {
+                        return 0.0;
+                }
                 double tmp = 0.0;
                 // compute dot product
                 for (size_t i = 0; i < D; i++) {
@@ -141,6 +168,8 @@ protected:
         array_t _parameters;
         // normalization constant
         double _log_partition;
+        // domain of the density (compact support)
+        boost::icl::interval<double>::type _domain;
         // keep track of the number of multiplications
         double _n;
 };
@@ -197,9 +226,10 @@ protected:
 
 class gamma_distribution_t : public exponential_family_t<2> {
 public:
-        gamma_distribution_t(double mean, double precision) {
-                parameters()[0] = mean*precision;
-                parameters()[1] = -0.5*precision;
+        gamma_distribution_t(double shape, double rate) :
+                exponential_family_t<2>(positive_domain()) {
+                parameters()[0] = shape;
+                parameters()[1] = rate;
                 renormalize();
         }
         gamma_distribution_t(const gamma_distribution_t& gamma_distribution)
@@ -221,27 +251,31 @@ public:
         }
 
         virtual double base_measure(double x) const {
-                return 1.0/std::pow(std::sqrt(2.0*M_PI), n());
+                return 1.0/std::pow(x, n());
         }
         virtual array_t statistics(double x) const {
                 array_t T;
-                T[0] = x;
-                T[1] = std::pow(x, 2.0);
+                T[0] = std::log(x);
+                T[1] = -x;
                 return T;
         }
         virtual void renormalize() {
                 exponential_family_t<2>::renormalize();
                 const double& p1 = parameters()[0];
                 const double& p2 = parameters()[1];
-                _log_partition =  -1.0/4.0*std::pow(p1/p2, 2.0)*p2 -
-                        0.5*std::log(-2.0*p2);
+                _log_partition =  std::log(boost::math::tgamma(p1)) -
+                        p1*std::log(p2);
         }
 protected:
         virtual double moment_first () const {
-                return -0.5*parameters()[0]/parameters()[1];
+                const double& p1 = parameters()[0];
+                const double& p2 = parameters()[1];
+                return p1/p2;
         }
         virtual double moment_second() const {
-                return -0.5/parameters()[1];
+                const double& p1 = parameters()[0];
+                const double& p2 = parameters()[1];
+                return p1*(1.0+p1)/(p2*p2);
         }
 };
 

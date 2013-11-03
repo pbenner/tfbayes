@@ -22,6 +22,7 @@
 #include <sstream>
 #include <string>
 
+#include <boost/noncopyable.hpp>
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/iterator.hpp>
@@ -58,6 +59,9 @@ BOOST_PYTHON_MODULE(interface)
                 .def(self *= self)
                 ;
         class_<normal_distribution_t, bases<exponential_family_i> >("normal_distribution_t", no_init)
+                .def(init<double, double>())
+                ;
+        class_<gamma_distribution_t, bases<exponential_family_i> >("gamma_distribution_t", no_init)
                 .def(init<double, double>())
                 ;
 }
