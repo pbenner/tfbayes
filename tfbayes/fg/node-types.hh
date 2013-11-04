@@ -51,15 +51,18 @@ public:
 
         // send messages to all connected variable nodes
         virtual void send_messages() = 0;
+
+protected:
+        // prepare a message to the i'th connected variable
+        // node (p messages)
+        virtual const p_message_t& message(size_t i) = 0;
+private:
         // receive a message from a variable node (q message), this
         // method should do nothing but to save the message and notify
         // the factor graph
+        // this function must be private so it can only be used by the link
+        // function of the class that implements linking nodes
         virtual void recv_message(size_t i, const q_message_t& msg) = 0;
-
-protected:
-        // send a message to the i'th connected variable
-        // node (p messages)
-        virtual void send_message(size_t i) = 0;
 };
 
 class variable_node_i : public clonable {
@@ -73,15 +76,16 @@ public:
 
         // send messages to all connected factor nodes
         virtual void send_messages() = 0;
+
+protected:
+        virtual const p_message_t& message() = 0;
+private:
         // receive a message from a factor node (p message), this
         // method should do nothing but to save the message and notify
         // the factor graph
+        // this function must be private so it can only be used by the link
+        // function of the class that implements linking nodes
         virtual void recv_message(size_t i, const p_message_t& msg) = 0;
-
-protected:
-        // send a message to the i'th connected factor
-        // node (q messages)
-        virtual void send_message(size_t i) = 0;
 };
 
 // basic implementations
@@ -92,7 +96,7 @@ class factor_node_t : public factor_node_i {
 public:
         virtual void send_messages() {
                 for (size_t i = 0; i < D; i++) {
-                        send_message(i);
+                        mailer[i](message(i));
                 }
         }
         virtual void link(size_t i, variable_node_i& variable_node) {
@@ -100,21 +104,27 @@ public:
                 mailer[i] = variable_node.link(
                         boost::bind(tmp, this, i, _1));
         }
-        virtual void recv_message(size_t i, const q_message_t& msg) {
-                // received a message from neighbor i
-                mailbox[i] = &msg;
-        }
 
 protected:
         boost::array<boost::function<void (const p_message_t&)>, D> mailer;
         boost::array<const q_message_t*, D> mailbox;
+private:
+        virtual void recv_message(size_t i, const q_message_t& msg) {
+                // received a message from neighbor i
+                mailbox[i] = &msg;
+        }
 };
 
 class variable_node_t : public variable_node_i {
 public:
         virtual void send_messages() {
+                // check if there are any nodes connected
+                if (mailbox.size() == 0) return;
+                // prepare the message
+                const p_message_t& msg = message();
+                // send message
                 for (size_t i = 0; i < mailer.size(); i++) {
-                        send_message(i);
+                        mailer[i](msg);
                 }
         }
         virtual boost::function<void (const p_message_t&)> link(boost::function<void (const q_message_t&)> f) {
@@ -124,14 +134,15 @@ public:
                 mailbox.push_back(NULL);
                 return boost::bind(tmp, this, i, _1);
         }
-        virtual void recv_message(size_t i, const p_message_t& msg) {
-                // received a message from neighbor i
-                mailbox[i] = &msg;
-        }
 
 protected:
         std::vector<boost::function<void (const q_message_t&)> > mailer;
         std::vector<const p_message_t*> mailbox;
+private:
+        virtual void recv_message(size_t i, const p_message_t& msg) {
+                // received a message from neighbor i
+                mailbox[i] = &msg;
+        }
 };
 
 #endif /* FG_NODE_TYPES_HH */

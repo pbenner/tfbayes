@@ -35,10 +35,13 @@ public:
         }
 
 protected:
-        void send_message(size_t i) {
+        const p_message_t& message(size_t i) {
+                return msg1;
         }
 
         normal_distribution_t distribution;
+
+        normal_distribution_t msg1;
 };
 
 #endif /* FG_VARIATIONAL_FACTOR_NODE_HH */
