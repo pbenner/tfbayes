@@ -22,10 +22,11 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <mutex>
-
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+// std::mutex does not work with Mac OS X, so instead
+// we use boost::mutex
+#include <boost/thread.hpp>
 
 #include <messages.hh>
 #include <observable.hh>
@@ -169,7 +170,7 @@ private:
                 mtx.unlock();
         }
         // locking mechanism for the mailbox
-        mutable std::mutex mtx;
+        mutable boost::mutex mtx;
 };
 
 template <typename T>
@@ -257,7 +258,7 @@ private:
                 mtx.unlock();
         }
         // locking mechanism for the mailbox
-        mutable std::mutex mtx;
+        mutable boost::mutex mtx;
 };
 
 #endif /* __TFBAYES_FG_NODE_TYPES_HH__ */

@@ -23,9 +23,10 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <limits>
-#include <mutex>
 #include <queue>
 #include <vector>
+
+#include <boost/thread.hpp>
 
 #include <node-types.hh>
 
@@ -71,7 +72,7 @@ private:
                 mtx.unlock();
         }
         // lock for the queue
-        mutable std::mutex mtx;
+        mutable boost::mutex mtx;
 };
 
 #endif /* __TFBAYES_FG_FACTOR_GRAPH_HH__ */

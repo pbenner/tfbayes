@@ -18,7 +18,6 @@
 #include <iostream>
 
 #include <boost/bind.hpp>
-#include <boost/thread.hpp>
 
 #include <factor-graph.hh>
 
@@ -30,7 +29,7 @@ using namespace std;
 class factor_graph_thread_t {
 public:
         factor_graph_thread_t(queue<factor_graph_node_i*>& queue,
-                              mutex& mtx) :
+                              boost::mutex& mtx) :
                 _queue(&queue),
                 _mtx  (&mtx)
                 { }
@@ -50,13 +49,13 @@ public:
         queue<factor_graph_node_i*>& queue() {
                 return *_queue;
         }
-        mutex& mtx() {
+        boost::mutex& mtx() {
                 return *_mtx;
         }
 
 protected:
         std::queue<factor_graph_node_i*>* _queue;
-        mutex* _mtx;
+        boost::mutex* _mtx;
 };
 
 // the factor graph
