@@ -15,6 +15,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <boost/bind.hpp>
+#include <boost/thread.hpp>
+
 #include <factor-graph.hh>
 
 // class that implements threads on factor graphs
@@ -61,7 +64,18 @@ factor_graph_t::factor_graph_t(const std::vector<variable_node_i*> variable_node
         _variable_nodes (variable_nodes),
         _factor_nodes   (factor_nodes),
         _threads        (threads)
-{ }
+{
+        void (factor_graph_t::*tmp) (factor_graph_node_i*) = &factor_graph_t::add_node;
+
+        for (size_t i = 0; i < _variable_nodes.size(); i++) {
+                _variable_nodes[i]->observe(
+                        boost::bind(tmp, this, _variable_nodes[i]));
+        }
+        for (size_t i = 0; i < _factor_nodes.size(); i++) {
+                _factor_nodes[i]->observe(
+                        boost::bind(tmp, this, _factor_nodes[i]));
+        }
+}
 
 factor_graph_t::~factor_graph_t() {
         for (size_t i = 0; i < _variable_nodes.size(); i++) {
@@ -90,6 +104,14 @@ factor_graph_t::operator=(const factor_graph_t& node) {
 void
 factor_graph_t::operator()(size_t n) {
         std::vector<boost::thread*> threads(_threads);
+
+        // add all nodes to the queue
+        for (size_t i = 0; i < _variable_nodes.size(); i++) {
+                _queue.push(_variable_nodes[i]);
+        }
+        for (size_t i = 0; i < _factor_nodes.size(); i++) {
+                _queue.push(_factor_nodes[i]);
+        }
 
         // sample
         for (size_t i = 0; i < _threads; i++) {

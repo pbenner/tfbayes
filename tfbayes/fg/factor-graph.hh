@@ -27,8 +27,6 @@
 #include <queue>
 #include <vector>
 
-#include <boost/thread.hpp>
-
 #include <node-types.hh>
 
 class factor_graph_t {
@@ -55,6 +53,7 @@ public:
 
         factor_graph_t& operator=(const factor_graph_t& node);
 
+        // execute the message passing algorithm
         void operator()(size_t n = std::numeric_limits<size_t>::infinity());
 
 protected:
@@ -65,6 +64,13 @@ protected:
         // number of threads
         size_t _threads;
 private:
+        // add a node to the queue
+        void add_node(factor_graph_node_i* node) {
+                mtx.lock();
+                _queue.push(node);
+                mtx.unlock();
+        }
+        // lock for the queue
         mutable std::mutex mtx;
 };
 
