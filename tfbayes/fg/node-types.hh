@@ -63,6 +63,9 @@ public:
         // link a variable node to this factor node
         virtual void link(size_t i, variable_node_i& variable_node) = 0;
 
+        // neighboring variable nodes
+        virtual const std::vector<variable_node_i*>& neighbors() const = 0;
+
 protected:
         // prepare a message to the i'th connected variable
         // node (p messages)
@@ -105,11 +108,15 @@ private:
 template <size_t D>
 class factor_node_t : public virtual factor_node_i, public observable_t {
 public:
-        factor_node_t()
+        factor_node_t() :
+                _neighbors(D, NULL)
                 { }
         factor_node_t(const factor_node_t& factor_node) :
-                mailer      (factor_node.mailer),
-                mailbox     (factor_node.mailbox)
+        // do not copy the mailer and mailbox, since they should be
+        // populated manually to create a new network
+                mailer    (),
+                mailbox   (),
+                _neighbors(D, NULL)
                 { }
 
         virtual factor_node_t* clone() const = 0;
@@ -118,8 +125,9 @@ public:
                 using std::swap;
                 swap(static_cast<observable_t&>(left),
                      static_cast<observable_t&>(right));
-                swap(left.mailer,  right.mailer);
-                swap(left.mailbox, right.mailbox);
+                swap(left.mailer,     right.mailer);
+                swap(left.mailbox,    right.mailbox);
+                swap(left._neighbors, right._neighbors);
         }
 
         factor_node_t& operator=(const factor_node_t& node) {
@@ -138,13 +146,21 @@ public:
         }
         virtual void link(size_t i, variable_node_i& variable_node) {
                 void (factor_node_t::*tmp) (size_t, const q_message_t&) = &factor_node_t::recv_message;
+                // receive and send mailer
                 mailer[i] = variable_node.link(
                         boost::bind(tmp, this, i, _1));
+                // save neighbor
+                _neighbors[i] = &variable_node;
+        }
+        virtual const std::vector<variable_node_i*>& neighbors() const {
+                return _neighbors;
         }
 
 protected:
         boost::array<boost::function<void (const p_message_t&)>, D> mailer;
         boost::array<const q_message_t*, D> mailbox;
+        // keep track of neighboring nodes for cloning whole networks
+        std::vector<variable_node_i*> _neighbors;
 private:
         virtual void recv_message(size_t i, const q_message_t& msg) {
                 // received a message from neighbor i
@@ -162,8 +178,10 @@ public:
         variable_node_t()
                 { }
         variable_node_t(const variable_node_t& variable_node) :
-                mailer      (variable_node.mailer),
-                mailbox     (variable_node.mailbox),
+        // do not copy the mailer and mailbox, since they should be
+        // populated manually to create a new network
+                mailer      (),
+                mailbox     (),
                 old_message (variable_node.old_message),
                 new_message (variable_node.new_message)
                 { }

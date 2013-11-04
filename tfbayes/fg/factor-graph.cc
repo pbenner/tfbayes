@@ -15,18 +15,22 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <iostream>
+
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 
 #include <factor-graph.hh>
+
+using namespace std;
 
 // class that implements threads on factor graphs
 ////////////////////////////////////////////////////////////////////////////////
 
 class factor_graph_thread_t {
 public:
-        factor_graph_thread_t(std::queue<factor_graph_node_i*>& queue,
-                              std::mutex& mtx) :
+        factor_graph_thread_t(queue<factor_graph_node_i*>& queue,
+                              mutex& mtx) :
                 _queue(&queue),
                 _mtx  (&mtx)
                 { }
@@ -43,24 +47,24 @@ public:
                         job->send_messages();
                 }
         }
-        std::queue<factor_graph_node_i*>& queue() {
+        queue<factor_graph_node_i*>& queue() {
                 return *_queue;
         }
-        std::mutex& mtx() {
+        mutex& mtx() {
                 return *_mtx;
         }
 
 protected:
         std::queue<factor_graph_node_i*>* _queue;
-        std::mutex* _mtx;
+        mutex* _mtx;
 };
 
 // the factor graph
 ////////////////////////////////////////////////////////////////////////////////
 
-factor_graph_t::factor_graph_t(const std::vector<variable_node_i*> variable_nodes,
-               const std::vector<  factor_node_i*> factor_nodes,
-               size_t threads) :
+factor_graph_t::factor_graph_t(const vector<variable_node_i*> variable_nodes,
+                               const vector<  factor_node_i*> factor_nodes,
+                               size_t threads) :
         _variable_nodes (variable_nodes),
         _factor_nodes   (factor_nodes),
         _threads        (threads)
@@ -91,11 +95,30 @@ factor_graph_t::factor_graph_t(const factor_graph_t& factor_graph) :
         _factor_nodes   (factor_graph._factor_nodes),
         _queue          (factor_graph._queue),
         _threads        (factor_graph._threads)
-{ }
+{
+        std::map<variable_node_i*, variable_node_i*> vmap;
+
+        // clone all nodes of the factor graph
+        for (size_t i = 0; i < factor_graph._variable_nodes.size(); i++) {
+                _variable_nodes.push_back(factor_graph._variable_nodes[i]->clone());
+                // keep track of which node replacements
+                vmap[factor_graph._variable_nodes[i]] = _variable_nodes[i];
+        }
+        for (size_t i = 0; i < factor_graph._factor_nodes.size(); i++) {
+                _factor_nodes.push_back(factor_graph._factor_nodes[i]->clone());
+        }
+        // find connected nodes and link them
+        for (size_t i = 0; i < factor_graph._factor_nodes.size(); i++) {
+                const vector<variable_node_i*>& neighbors =
+                        factor_graph._factor_nodes[i]->neighbors();
+                for (size_t j = 0; j < neighbors.size(); j++) {
+                        _factor_nodes[i]->link(j, *vmap[neighbors[j]]);
+                }
+        }
+}
 
 factor_graph_t&
 factor_graph_t::operator=(const factor_graph_t& node) {
-        using std::swap;
         factor_graph_t tmp(node);
         swap(*this, tmp);
         return *this;
@@ -103,7 +126,7 @@ factor_graph_t::operator=(const factor_graph_t& node) {
 
 void
 factor_graph_t::operator()(size_t n) {
-        std::vector<boost::thread*> threads(_threads);
+        vector<boost::thread*> threads(_threads);
 
         // add all nodes to the queue
         for (size_t i = 0; i < _variable_nodes.size(); i++) {
