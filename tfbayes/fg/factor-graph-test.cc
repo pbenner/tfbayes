@@ -26,6 +26,7 @@ int
 main()
 {
         normal_node_t* n1 = new normal_node_t();
+        variable_node_t<normal_distribution_t>* n2 = new variable_node_t<normal_distribution_t>();
 
         delete(n1);
 }

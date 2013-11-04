@@ -40,6 +40,10 @@ public:
 
         virtual distribution_i& operator=(const distribution_i& distribution) = 0;
 
+        // comparison operators
+        virtual bool operator==(const distribution_i& rhs) const = 0;
+        virtual bool operator!=(const distribution_i& rhs) const = 0;
+
         template<size_t K> double moment() const {
                 return std::numeric_limits<double>::infinity();
         }
@@ -71,6 +75,14 @@ public:
                 dirac_distribution_t tmp(distribution);
                 swap(*this, tmp);
                 return *this;
+        }
+        virtual bool operator==(const distribution_i& rhs) const {
+                const dirac_distribution_t& tmp = static_cast<const dirac_distribution_t&>(rhs);
+                return _x == tmp._x;
+        }
+        virtual bool operator!=(const distribution_i& rhs) const {
+                const dirac_distribution_t& tmp = static_cast<const dirac_distribution_t&>(rhs);
+                return _x != tmp._x;
         }
 
 protected:
@@ -145,6 +157,20 @@ public:
                 swap(left._log_partition, right._log_partition);
                 swap(left._domain,        right._domain);
                 swap(left._n,             right._n);
+        }
+
+        // operators
+        virtual bool operator==(const distribution_i& rhs) const {
+                const exponential_family_t<D>& tmp = static_cast<const exponential_family_t<D>&>(rhs);
+                for (size_t i = 0; i < D; i++) {
+                        if (std::abs(parameters()[i] - tmp.parameters()[i]) > 0.0000001) {
+                                return false;
+                        }
+                }
+                return true;
+        }
+        virtual bool operator!=(const distribution_i& rhs) const {
+                return !operator==(rhs);
         }
 
         // pure functions

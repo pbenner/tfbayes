@@ -115,17 +115,26 @@ private:
         }
 };
 
+template <typename T>
 class variable_node_t : public variable_node_i {
 public:
+        virtual variable_node_t* clone() const {
+                return new variable_node_t<T>(*this);
+        }
+
         virtual void send_messages() {
                 // check if there are any nodes connected
                 if (mailbox.size() == 0) return;
                 // prepare the message
                 const p_message_t& msg = message();
+                // check if this message was sent before
+                if (msg == old_message) return;
                 // send message
                 for (size_t i = 0; i < mailer.size(); i++) {
                         mailer[i](msg);
                 }
+                // save message
+                old_message = msg;
         }
         virtual boost::function<void (const p_message_t&)> link(boost::function<void (const q_message_t&)> f) {
                 void (variable_node_t::*tmp) (size_t, const p_message_t&) = &variable_node_t::recv_message;
@@ -136,8 +145,19 @@ public:
         }
 
 protected:
+        virtual const p_message_t& message() {
+                new_message = T();
+                for (size_t i = 0; i < mailbox.size(); i++) {
+                        new_message *= static_cast<const T&>(*mailbox[i]);
+                }
+                return new_message;
+        }
+
         std::vector<boost::function<void (const q_message_t&)> > mailer;
         std::vector<const p_message_t*> mailbox;
+
+        T old_message;
+        T new_message;
 private:
         virtual void recv_message(size_t i, const p_message_t& msg) {
                 // received a message from neighbor i
