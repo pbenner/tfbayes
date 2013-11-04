@@ -35,7 +35,7 @@ public:
         }
 
 protected:
-        const p_message_t& message(size_t i) {
+        const p_message_t& message(size_t i) const {
                 return msg1;
         }
 

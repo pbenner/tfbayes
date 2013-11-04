@@ -22,6 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <mutex>
+
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
@@ -52,12 +54,12 @@ public:
         virtual void link(size_t i, variable_node_i& variable_node) = 0;
 
         // send messages to all connected variable nodes
-        virtual void send_messages() = 0;
+        virtual void send_messages() const = 0;
 
 protected:
         // prepare a message to the i'th connected variable
         // node (p messages)
-        virtual const p_message_t& message(size_t i) = 0;
+        virtual const p_message_t& message(size_t i) const = 0;
 private:
         // receive a message from a variable node (q message), this
         // method should do nothing but to save the message and notify
@@ -96,10 +98,36 @@ private:
 template <size_t D>
 class factor_node_t : public virtual factor_node_i, public observable_t {
 public:
-        virtual void send_messages() {
+        factor_node_t()
+                { }
+        factor_node_t(const factor_node_t& factor_node) :
+                mailer      (factor_node.mailer),
+                mailbox     (factor_node.mailbox)
+                { }
+
+        virtual factor_node_t* clone() const = 0;
+
+        friend void swap(factor_node_t& left, factor_node_t& right) {
+                using std::swap;
+                swap(static_cast<observable_t&>(left),
+                     static_cast<observable_t&>(right));
+                swap(left.mailer,  right.mailer);
+                swap(left.mailbox, right.mailbox);
+        }
+
+        factor_node_t& operator=(const factor_node_t& node) {
+                using std::swap;
+                factor_node_t tmp(node);
+                swap(*this, tmp);
+                return *this;
+        }
+
+        virtual void send_messages() const {
+                mtx.lock();
                 for (size_t i = 0; i < D; i++) {
                         mailer[i](message(i));
                 }
+                mtx.unlock();
         }
         virtual void link(size_t i, variable_node_i& variable_node) {
                 void (factor_node_t::*tmp) (size_t, const q_message_t&) = &factor_node_t::recv_message;
@@ -113,15 +141,45 @@ protected:
 private:
         virtual void recv_message(size_t i, const q_message_t& msg) {
                 // received a message from neighbor i
+                mtx.lock();
                 mailbox[i] = &msg;
+                mtx.unlock();
         }
+        // locking mechanism for the mailbox
+        mutable std::mutex mtx;
 };
 
 template <typename T>
 class variable_node_t : public virtual variable_node_i, public observable_t {
 public:
+        variable_node_t()
+                { }
+        variable_node_t(const variable_node_t& variable_node) :
+                mailer      (variable_node.mailer),
+                mailbox     (variable_node.mailbox),
+                old_message (variable_node.old_message),
+                new_message (variable_node.new_message)
+                { }
+
         virtual variable_node_t* clone() const {
-                return new variable_node_t<T>(*this);
+                return new variable_node_t(*this);
+        }
+
+        friend void swap(variable_node_t& left, variable_node_t& right) {
+                using std::swap;
+                swap(static_cast<observable_t&>(left),
+                     static_cast<observable_t&>(right));
+                swap(left.mailer,      right.mailer);
+                swap(left.mailbox,     right.mailbox);
+                swap(left.old_message, right.old_message);
+                swap(left.new_message, right.new_message);
+        }
+
+        variable_node_t& operator=(const variable_node_t& node) {
+                using std::swap;
+                variable_node_t tmp(node);
+                swap(*this, tmp);
+                return *this;
         }
 
         virtual void send_messages() {
@@ -149,9 +207,15 @@ public:
 protected:
         virtual const p_message_t& message() {
                 new_message = T();
+                // lock mailbox
+                mtx.lock();
+                // prepare message
                 for (size_t i = 0; i < mailbox.size(); i++) {
                         new_message *= static_cast<const T&>(*mailbox[i]);
                 }
+                // unlock mailbox
+                mtx.unlock();
+
                 return new_message;
         }
 
@@ -163,8 +227,12 @@ protected:
 private:
         virtual void recv_message(size_t i, const p_message_t& msg) {
                 // received a message from neighbor i
+                mtx.lock();
                 mailbox[i] = &msg;
+                mtx.unlock();
         }
+        // locking mechanism for the mailbox
+        mutable std::mutex mtx;
 };
 
 #endif /* __TFBAYES_FG_NODE_TYPES_HH__ */
