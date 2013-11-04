@@ -32,7 +32,8 @@
 // with variational message passing for continuous ones. Different
 // types of algorithms meet at variable nodes, hence, those nodes need
 // to understand messages that originate from different
-// algorithms.
+// algorithms and multiply them to get a new q-message. The common
+// language, i.e. the typ of q-messages, is exponential families.
 
 // interfaces
 ////////////////////////////////////////////////////////////////////////////////
