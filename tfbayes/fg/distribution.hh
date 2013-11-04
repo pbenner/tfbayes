@@ -163,7 +163,7 @@ public:
         virtual bool operator==(const distribution_i& rhs) const {
                 const exponential_family_t<D>& tmp = static_cast<const exponential_family_t<D>&>(rhs);
                 for (size_t i = 0; i < D; i++) {
-                        if (std::abs(parameters()[i] - tmp.parameters()[i]) > 0.0000001) {
+                        if (std::abs(parameters()[i] - tmp.parameters()[i]) > 1.0e-10) {
                                 return false;
                         }
                 }
