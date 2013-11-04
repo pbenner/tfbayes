@@ -123,10 +123,10 @@ public:
         typedef boost::array<double, D> array_t;
 
         // constructors
-        exponential_family_t(boost::icl::interval<double>::type domain = real_domain())
+        exponential_family_t(size_t n = 1.0, boost::icl::interval<double>::type domain = real_domain())
                 : _log_partition(0.0),
                   _domain       (domain),
-                  _n            (1.0)
+                  _n            (n)
                 { }
         exponential_family_t(const exponential_family_t& e)
                 : _parameters   (e._parameters),
@@ -214,12 +214,20 @@ class normal_distribution_t : public exponential_family_t<2> {
 public:
         typedef exponential_family_t<2> base_t;
 
-        normal_distribution_t(double mean, double precision) {
+        // void object
+        normal_distribution_t() :
+                base_t(0.0) {
+                parameters()[0] = 0.0;
+                parameters()[1] = 0.0;
+        }
+        normal_distribution_t(double mean, double precision) :
+                base_t() {
                 parameters()[0] = mean*precision;
                 parameters()[1] = -0.5*precision;
                 renormalize();
         }
-        normal_distribution_t(const base_t::array_t parameters) {
+        normal_distribution_t(const base_t::array_t parameters) :
+                base_t() {
                 this->parameters() = parameters;
         }
         normal_distribution_t(const normal_distribution_t& normal_distribution)
@@ -268,13 +276,20 @@ class gamma_distribution_t : public exponential_family_t<2> {
 public:
         typedef exponential_family_t<2> base_t;
 
+        // void object
+        gamma_distribution_t() :
+                base_t(0.0, positive_domain()) {
+                parameters()[0] = 0.0;
+                parameters()[1] = 0.0;
+        }
         gamma_distribution_t(double shape, double rate) :
-                base_t(positive_domain()) {
+                base_t(1.0, positive_domain()) {
                 parameters()[0] = shape-1.0;
                 parameters()[1] = rate;
                 renormalize();
         }
-        gamma_distribution_t(const base_t::array_t parameters) {
+        gamma_distribution_t(const base_t::array_t parameters) :
+                base_t(1.0, positive_domain()) {
                 this->parameters() = parameters;
         }
         gamma_distribution_t(const gamma_distribution_t& gamma_distribution)

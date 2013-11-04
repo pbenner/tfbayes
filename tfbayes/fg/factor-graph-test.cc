@@ -18,10 +18,14 @@
 #include <iostream>
 
 #include <factor-graph.hh>
+#include <variational-factor-node.hh>
 
 using namespace std;
 
 int
 main()
 {
+        normal_node_t* n1 = new normal_node_t();
+
+        delete(n1);
 }

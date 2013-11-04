@@ -24,55 +24,21 @@
 
 #include <node-types.hh>
 
-// It is possible to combine different message passing algorithms in
-// one factor graph, e.g. the sum product algorithm for discrete nodes
-// with variational message passing for continuous ones. Different
-// types of algorithms meet at variable nodes, hence, those nodes need
-// to understand messages that originate from different
-// algorithms.
-
-class factor_node_i : public clonable {
-public:
-        virtual factor_node_i* clone() const = 0;
-
-        // access to connected variable nodes
-        // virtual const variable_node_t& operator[](size_t i) const = 0;
-        // virtual       variable_node_t& operator[](size_t i) = 0;
-
-        // link a variable node to this factor node
-        virtual void link(size_t i, variable_node_i* variable_node) = 0;
-
-        // send messages to all connected variable nodes
-        virtual void send_messages() = 0;
-        // receive a message from a variable node (q message), this
-        // method shoud do nothing but to save the message and notify
-        // the factor graph
-        virtual void recv_message(const q_message_i& msg) = 0;
-
-protected:
-        // send a message to the i'th connected variable
-        // node (p messages)
-        virtual void send_message(size_t i) = 0;
-};
-
 // a factor node is an exponential family with the ability to send
 // and receive messages
-template <size_t D>
-class variational_factor_node_t : public factor_node_i {
+class normal_node_t : public factor_node_t<3> {
 public:
-        virtual void send_messages() {
-                for (size_t i = 0; i < D; i++) {
-                        send_message(i);
-                }
-        }
-        virtual void link(size_t i, variable_node_i* variable_node) {
-                if (i < D) {
-                        connected_nodes[i] = variable_node;
-                }
+        typedef factor_node_t<3> base_t;
+
+        virtual normal_node_t* clone() const {
+                return new normal_node_t(*this);
         }
 
 protected:
-        boost::array<variable_node_i*, D> connected_nodes;
+        void send_message(size_t i) {
+        }
+
+        normal_distribution_t distribution;
 };
 
 #endif /* FG_VARIATIONAL_FACTOR_NODE_HH */

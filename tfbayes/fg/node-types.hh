@@ -22,6 +22,9 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
+
 #include <messages.hh>
 
 // It is possible to combine different message passing algorithms in
@@ -31,22 +34,27 @@
 // to understand messages that originate from different
 // algorithms.
 
+// interfaces
+////////////////////////////////////////////////////////////////////////////////
+
 class   factor_node_i;
 class variable_node_i;
 
 class factor_node_i : public clonable {
 public:
+        virtual ~factor_node_i() { };
+
         virtual factor_node_i* clone() const = 0;
 
         // link a variable node to this factor node
-        virtual void link(size_t i, variable_node_i* variable_node) = 0;
+        virtual void link(size_t i, variable_node_i& variable_node) = 0;
 
         // send messages to all connected variable nodes
         virtual void send_messages() = 0;
         // receive a message from a variable node (q message), this
         // method should do nothing but to save the message and notify
         // the factor graph
-        virtual void recv_message(const q_message_t& msg) = 0;
+        virtual void recv_message(size_t i, const q_message_t& msg) = 0;
 
 protected:
         // send a message to the i'th connected variable
@@ -56,22 +64,74 @@ protected:
 
 class variable_node_i : public clonable {
 public:
+        virtual ~variable_node_i() { };
+
         virtual variable_node_i* clone() const = 0;
 
         // link a factor node to this variable node
-        virtual void link(size_t i, factor_node_i* factor_node) = 0;
+        virtual boost::function<void (const p_message_t&)> link(boost::function<void (const q_message_t&)> f) = 0;
 
         // send messages to all connected factor nodes
         virtual void send_messages() = 0;
         // receive a message from a factor node (p message), this
         // method should do nothing but to save the message and notify
         // the factor graph
-        virtual void recv_message(const p_message_t& msg) = 0;
+        virtual void recv_message(size_t i, const p_message_t& msg) = 0;
 
 protected:
         // send a message to the i'th connected factor
         // node (q messages)
         virtual void send_message(size_t i) = 0;
+};
+
+// basic implementations
+////////////////////////////////////////////////////////////////////////////////
+
+template <size_t D>
+class factor_node_t : public factor_node_i {
+public:
+        virtual void send_messages() {
+                for (size_t i = 0; i < D; i++) {
+                        send_message(i);
+                }
+        }
+        virtual void link(size_t i, variable_node_i& variable_node) {
+                void (factor_node_t::*tmp) (size_t, const q_message_t&) = &factor_node_t::recv_message;
+                mailer[i] = variable_node.link(
+                        boost::bind(tmp, this, i, _1));
+        }
+        virtual void recv_message(size_t i, const q_message_t& msg) {
+                // received a message from neighbor i
+                mailbox[i] = &msg;
+        }
+
+protected:
+        boost::array<boost::function<void (const p_message_t&)>, D> mailer;
+        boost::array<const q_message_t*, D> mailbox;
+};
+
+class variable_node_t : public variable_node_i {
+public:
+        virtual void send_messages() {
+                for (size_t i = 0; i < mailer.size(); i++) {
+                        send_message(i);
+                }
+        }
+        virtual boost::function<void (const p_message_t&)> link(boost::function<void (const q_message_t&)> f) {
+                void (variable_node_t::*tmp) (size_t, const p_message_t&) = &variable_node_t::recv_message;
+                size_t i = mailer.size();
+                mailer .push_back(f);
+                mailbox.push_back(NULL);
+                return boost::bind(tmp, this, i, _1);
+        }
+        virtual void recv_message(size_t i, const p_message_t& msg) {
+                // received a message from neighbor i
+                mailbox[i] = &msg;
+        }
+
+protected:
+        std::vector<boost::function<void (const q_message_t&)> > mailer;
+        std::vector<const p_message_t*> mailbox;
 };
 
 #endif /* FG_NODE_TYPES_HH */
