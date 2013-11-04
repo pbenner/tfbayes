@@ -26,7 +26,7 @@
 #include <tfbayes/dpm/dpm-tfbs-state.hh>
 #include <tfbayes/utility/clonable.hh>
 
-class dpm_tfbs_prior_t : public clonable {
+class dpm_tfbs_prior_t : public virtual clonable {
 public:
         virtual ~dpm_tfbs_prior_t() {}
 

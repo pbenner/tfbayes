@@ -45,7 +45,7 @@
 // component_model_t interface
 ////////////////////////////////////////////////////////////////////////////////
 
-class component_model_t : public clonable {
+class component_model_t : public virtual clonable {
 public:
         component_model_t()
                 : _cluster_assignments(NULL)

@@ -37,7 +37,7 @@
 class pt_leaf_t;
 class pt_root_t;
 
-class pt_node_t : public clonable {
+class pt_node_t : public virtual clonable {
 public:
         /* typedefs */
         typedef boost::unordered_map<std::string, pt_leaf_t*> leaf_map_t;

@@ -38,7 +38,7 @@
 // The cluster manager has a list of clusters and keeps track which of
 // them are used. If needed it allocates more free clusters.
 
-class mixture_state_t : public Observer<cluster_event_t>, public clonable {
+class mixture_state_t : public Observer<cluster_event_t>, public virtual clonable {
 public:
          mixture_state_t(const data_i<cluster_tag_t>& cluster_assignments);
          mixture_state_t(const mixture_state_t& cm);

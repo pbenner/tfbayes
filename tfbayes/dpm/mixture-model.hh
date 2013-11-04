@@ -30,7 +30,7 @@
 
 #include <tfbayes/utility/clonable.hh>
 
-class mixture_model_t : public clonable {
+class mixture_model_t : public virtual clonable {
 public:
         virtual ~mixture_model_t() {}
 

@@ -169,7 +169,7 @@ size_t hash_value(const topology_t& topology);
 // nedge_node_t and nedge_root_t for convertig ntrees to pt_root_t trees
 ////////////////////////////////////////////////////////////////////////////////
 
-class nedge_node_t : public clonable {
+class nedge_node_t : public virtual clonable {
 public:
         typedef boost::unordered_map<nedge_t, nedge_node_t*> map_t;
         typedef boost::tuple<pt_node_t*, nsplit_t::part_t> convert_t;

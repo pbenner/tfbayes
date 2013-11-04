@@ -137,7 +137,7 @@ protected:
 };
 
 template <typename T>
-class data_i : public clonable {
+class data_i : public virtual clonable {
 public:
         virtual data_i<T>* clone() const = 0;
         virtual data_i<T>& operator=(const data_i<T>& data) = 0;

@@ -48,7 +48,7 @@
  * PC: POLYNOMIAL CODE TYPE
  */
 
-class jumping_distribution_t : public clonable
+class jumping_distribution_t : public virtual clonable
 {
 public:
         jumping_distribution_t* clone() const = 0;
@@ -119,7 +119,7 @@ private:
 };
 
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
-class pt_metropolis_hastings_t : public clonable
+class pt_metropolis_hastings_t : public virtual clonable
 {
 public:
         pt_metropolis_hastings_t(const pt_root_t& tree,

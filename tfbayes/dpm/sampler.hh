@@ -31,12 +31,14 @@
 #include <tfbayes/dpm/state.hh>
 #include <tfbayes/utility/clonable.hh>
 
-class sampler_t : public clonable {
+class sampler_t : public virtual clonable {
 public:
         sampler_t(const std::string& name = "");
         sampler_t(const sampler_t& sampler)
                 : _name(sampler._name),
                   _gen (sampler._gen) { }
+
+        virtual sampler_t* clone() const = 0;
 
         friend void swap(sampler_t& first, sampler_t& second) {
                 std::swap(first._name, second._name);

@@ -29,7 +29,7 @@
 
 #include <tfbayes/utility/clonable.hh>
 
-class mixture_weights_t : virtual public std::vector<double>, public clonable {
+class mixture_weights_t : virtual public std::vector<double>, public virtual clonable {
 public:
         virtual ~mixture_weights_t() {}
 

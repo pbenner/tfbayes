@@ -29,7 +29,7 @@
 
 typedef std::string dpm_subset_tag_t;
 
-class dpm_subset_t : public clonable, public boost::ptr_unordered_set<index_i> {
+class dpm_subset_t : public virtual clonable, public boost::ptr_unordered_set<index_i> {
 public:
         // typedefs
         ////////////////////////////////////////////////////////////////////////
