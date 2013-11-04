@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __TFBAYES_FG_FG_DISTRIBUTION_HH__
-#define __TFBAYES_FG_FG_DISTRIBUTION_HH__
+#ifndef __TFBAYES_FG_DISTRIBUTION_HH__
+#define __TFBAYES_FG_DISTRIBUTION_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -34,7 +34,7 @@
 
 // interface for distributions, in general a distribution might not
 // even have a density (e.g. dirac measure), so this is very limited
-class distribution_i : public clonable {
+class distribution_i : public virtual clonable {
 public:
         virtual distribution_i* clone() const = 0;
 
@@ -364,4 +364,4 @@ protected:
         }
 };
 
-#endif /* __TFBAYES_FG_FG_DISTRIBUTION_HH__ */
+#endif /* __TFBAYES_FG_DISTRIBUTION_HH__ */

@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __TFBAYES_FG_FG_NODE_TYPES_HH__
-#define __TFBAYES_FG_FG_NODE_TYPES_HH__
+#ifndef __TFBAYES_FG_NODE_TYPES_HH__
+#define __TFBAYES_FG_NODE_TYPES_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -26,6 +26,7 @@
 #include <boost/bind.hpp>
 
 #include <messages.hh>
+#include <observable.hh>
 
 // It is possible to combine different message passing algorithms in
 // one factor graph, e.g. the sum product algorithm for discrete nodes
@@ -41,9 +42,9 @@
 class   factor_node_i;
 class variable_node_i;
 
-class factor_node_i : public clonable {
+class factor_node_i : public virtual clonable, public virtual observable_i {
 public:
-        virtual ~factor_node_i() { };
+        virtual ~factor_node_i() { }
 
         virtual factor_node_i* clone() const = 0;
 
@@ -66,9 +67,9 @@ private:
         virtual void recv_message(size_t i, const q_message_t& msg) = 0;
 };
 
-class variable_node_i : public clonable {
+class variable_node_i : public virtual clonable, public virtual observable_i {
 public:
-        virtual ~variable_node_i() { };
+        virtual ~variable_node_i() { }
 
         virtual variable_node_i* clone() const = 0;
 
@@ -93,7 +94,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <size_t D>
-class factor_node_t : public factor_node_i {
+class factor_node_t : public virtual factor_node_i, public observable_t {
 public:
         virtual void send_messages() {
                 for (size_t i = 0; i < D; i++) {
@@ -117,7 +118,7 @@ private:
 };
 
 template <typename T>
-class variable_node_t : public variable_node_i {
+class variable_node_t : public virtual variable_node_i, public observable_t {
 public:
         virtual variable_node_t* clone() const {
                 return new variable_node_t<T>(*this);
@@ -166,4 +167,4 @@ private:
         }
 };
 
-#endif /* __TFBAYES_FG_FG_NODE_TYPES_HH__ */
+#endif /* __TFBAYES_FG_NODE_TYPES_HH__ */
