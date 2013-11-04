@@ -41,10 +41,20 @@
 // interfaces
 ////////////////////////////////////////////////////////////////////////////////
 
+// a general node in a factor graph must be clonable, observable,
+// and be able to send messages to neighboring nodes
+class factor_graph_node_i : public virtual clonable, public virtual observable_i {
+public:
+        virtual ~factor_graph_node_i() { }
+
+        // send messages to all connected variable nodes
+        virtual void send_messages() = 0;
+};
+
 class   factor_node_i;
 class variable_node_i;
 
-class factor_node_i : public virtual clonable, public virtual observable_i {
+class factor_node_i : public virtual factor_graph_node_i {
 public:
         virtual ~factor_node_i() { }
 
@@ -52,9 +62,6 @@ public:
 
         // link a variable node to this factor node
         virtual void link(size_t i, variable_node_i& variable_node) = 0;
-
-        // send messages to all connected variable nodes
-        virtual void send_messages() const = 0;
 
 protected:
         // prepare a message to the i'th connected variable
@@ -69,7 +76,7 @@ private:
         virtual void recv_message(size_t i, const q_message_t& msg) = 0;
 };
 
-class variable_node_i : public virtual clonable, public virtual observable_i {
+class variable_node_i : public virtual factor_graph_node_i {
 public:
         virtual ~variable_node_i() { }
 
@@ -122,7 +129,7 @@ public:
                 return *this;
         }
 
-        virtual void send_messages() const {
+        virtual void send_messages() {
                 mtx.lock();
                 for (size_t i = 0; i < D; i++) {
                         mailer[i](message(i));
