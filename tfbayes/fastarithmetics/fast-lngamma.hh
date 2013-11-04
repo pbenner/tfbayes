@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef FAST_LNGAMMA_HH
-#define FAST_LNGAMMA_HH
+#ifndef __TFBAYES_FASTARITHMETICS_FAST_LNGAMMA_HH__
+#define __TFBAYES_FASTARITHMETICS_FAST_LNGAMMA_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -24,4 +24,4 @@
 
 double fast_lngamma(double x);
 
-#endif /* FAST_LNGAMMA_HH */
+#endif /* __TFBAYES_FASTARITHMETICS_FAST_LNGAMMA_HH__ */

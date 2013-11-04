@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef PHYLOTREE_SIMPLIFY_HH
-#define PHYLOTREE_SIMPLIFY_HH
+#ifndef __TFBAYES_PHYLOTREE_PHYLOTREE_SIMPLIFY_HH__
+#define __TFBAYES_PHYLOTREE_PHYLOTREE_SIMPLIFY_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -27,4 +27,4 @@
 
 incomplete_expression_t pt_simplify(const pt_root_t& node);
 
-#endif /* PHYLOTREE_SIMPLIFY_HH */
+#endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_SIMPLIFY_HH__ */

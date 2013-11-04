@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef ABYSMAL_STACK_HH
-#define ABYSMAL_STACK_HH
+#ifndef __TFBAYES_UTILITY_ABYSMAL_STACK_HH__
+#define __TFBAYES_UTILITY_ABYSMAL_STACK_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -84,4 +84,4 @@ protected:
         size_t _clogged;
 };
 
-#endif /* ABYSMAL_STACK_HH */
+#endif /* __TFBAYES_UTILITY_ABYSMAL_STACK_HH__ */

@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DISTRIBUTION_HH
-#define DISTRIBUTION_HH
+#ifndef __TFBAYES_UTILITY_DISTRIBUTION_HH__
+#define __TFBAYES_UTILITY_DISTRIBUTION_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -59,4 +59,4 @@ public:
         double lambda_pow_r;
 };
 
-#endif /* DISTRIBUTION_HH */
+#endif /* __TFBAYES_UTILITY_DISTRIBUTION_HH__ */

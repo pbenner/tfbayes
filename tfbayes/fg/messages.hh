@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef FG_MESSAGES_HH
-#define FG_MESSAGES_HH
+#ifndef __TFBAYES_FG_FG_MESSAGES_HH__
+#define __TFBAYES_FG_FG_MESSAGES_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -29,4 +29,4 @@ typedef exponential_family_i p_message_t;
 // a message from a variable node to a factor node
 typedef distribution_i q_message_t;
 
-#endif /* FG_MESSAGES_HH */
+#endif /* __TFBAYES_FG_FG_MESSAGES_HH__ */

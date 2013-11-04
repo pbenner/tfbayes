@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef MIXTURE_WEIGHTS_HH
-#define MIXTURE_WEIGHTS_HH
+#ifndef __TFBAYES_DPM_MIXTURE_WEIGHTS_HH__
+#define __TFBAYES_DPM_MIXTURE_WEIGHTS_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -143,4 +143,4 @@ private:
         double *entropy;
 };
 
-#endif /* MIXTURE_WEIGHTS_HH */
+#endif /* __TFBAYES_DPM_MIXTURE_WEIGHTS_HH__ */

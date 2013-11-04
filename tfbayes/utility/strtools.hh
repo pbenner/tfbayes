@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef STRTOOLS_HH
-#define STRTOOLS_HH
+#ifndef __TFBAYES_UTILITY_STRTOOLS_HH__
+#define __TFBAYES_UTILITY_STRTOOLS_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -59,4 +59,4 @@ std::string split_string(const std::string& str, size_t n)
         return result;
 }
 
-#endif /* STRTOOLS_HH */
+#endif /* __TFBAYES_UTILITY_STRTOOLS_HH__ */

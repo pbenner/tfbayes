@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef CLUSTER_HH
-#define CLUSTER_HH
+#ifndef __TFBAYES_DPM_CLUSTER_HH__
+#define __TFBAYES_DPM_CLUSTER_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -87,4 +87,4 @@ private:
         size_t _size;
 };
 
-#endif /* CLUSTER_HH */
+#endif /* __TFBAYES_DPM_CLUSTER_HH__ */

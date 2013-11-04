@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef ALIGNMENT_HH
-#define ALIGNMENT_HH
+#ifndef __TFBAYES_ALIGNMENT_ALIGNMENT_HH__
+#define __TFBAYES_ALIGNMENT_ALIGNMENT_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -545,4 +545,4 @@ std::ostream& operator<< (std::ostream& o, const print_alignment_fasta_t<AC>&  a
         return o;
 }
 
-#endif /* ALIGNMENT_HH */
+#endif /* __TFBAYES_ALIGNMENT_ALIGNMENT_HH__ */

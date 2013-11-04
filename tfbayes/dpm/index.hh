@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef INDEX_HH
-#define INDEX_HH
+#ifndef __TFBAYES_DPM_INDEX_HH__
+#define __TFBAYES_DPM_INDEX_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -28,7 +28,7 @@
 #include <boost/utility.hpp>
 #include <boost/functional/hash.hpp> 
 
-#include <tfbayes/dpm/clonable.hh>
+#include <tfbayes/utility/clonable.hh>
 
 // index_t and range_t
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,4 +200,4 @@ size_t hash_value(const range_t& range)
         return range.index().hash();
 }
 
-#endif /* INDEX_HH */
+#endif /* __TFBAYES_DPM_INDEX_HH__ */

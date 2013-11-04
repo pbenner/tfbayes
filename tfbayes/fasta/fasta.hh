@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef FASTA_HH
-#define FASTA_HH
+#ifndef __TFBAYES_FASTA_FASTA_HH__
+#define __TFBAYES_FASTA_FASTA_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -52,4 +52,4 @@ protected:
         std::vector<std::string> _description;
 };
 
-#endif /* FASTA_HH */
+#endif /* __TFBAYES_FASTA_FASTA_HH__ */

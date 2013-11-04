@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef OBSERVER_HH
-#define OBSERVER_HH
+#ifndef __TFBAYES_DPM_OBSERVER_HH__
+#define __TFBAYES_DPM_OBSERVER_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -59,4 +59,4 @@ protected:
         Observer<E>* observer;
 };
 
-#endif /* OBSERVER_HH */
+#endif /* __TFBAYES_DPM_OBSERVER_HH__ */

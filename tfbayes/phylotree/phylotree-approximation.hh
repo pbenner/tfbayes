@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef PHYLOTREE_APPROXIMATION_HH
-#define PHYLOTREE_APPROXIMATION_HH
+#ifndef __TFBAYES_PHYLOTREE_PHYLOTREE_APPROXIMATION_HH__
+#define __TFBAYES_PHYLOTREE_PHYLOTREE_APPROXIMATION_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -415,4 +415,4 @@ dkl_optimize(
         return result;
 }
 
-#endif /* PHYLOTREE_APPROXIMATION_HH */
+#endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_APPROXIMATION_HH__ */

@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _PROGRESS_HH_
-#define _PROGRESS_HH_
+#ifndef __TFBAYES_UTILITY__PROGRESS_HH___
+#define __TFBAYES_UTILITY__PROGRESS_HH___
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -54,4 +54,4 @@ protected:
         static const ssize_t LINE_WIDTH = 40;
 };
 
-#endif /* _PROGRESS_HH_ */
+#endif /* __TFBAYES_UTILITY__PROGRESS_HH___ */

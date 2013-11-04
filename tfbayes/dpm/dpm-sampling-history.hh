@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef SAMPLING_HISTORY_HH
-#define SAMPLING_HISTORY_HH
+#ifndef __TFBAYES_DPM_SAMPLING_HISTORY_HH__
+#define __TFBAYES_DPM_SAMPLING_HISTORY_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -35,4 +35,4 @@ public:
         dpm_partition_list_t partitions;
 };
 
-#endif /* SAMPLING_HISTORY_HH */
+#endif /* __TFBAYES_DPM_SAMPLING_HISTORY_HH__ */

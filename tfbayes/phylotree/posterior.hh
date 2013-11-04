@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef POSTERIOR_HH
-#define POSTERIOR_HH
+#ifndef __TFBAYES_PHYLOTREE_POSTERIOR_HH__
+#define __TFBAYES_PHYLOTREE_POSTERIOR_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -101,4 +101,4 @@ double pt_posterior_density(
         return exp(result - pt_marginal_likelihood(likelihood, alpha));
 }
 
-#endif /* POSTERIOR_HH */
+#endif /* __TFBAYES_PHYLOTREE_POSTERIOR_HH__ */

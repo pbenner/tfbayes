@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DPM_GAUSSIAN_HH
-#define DPM_GAUSSIAN_HH
+#ifndef __TFBAYES_DPM_DPM_GAUSSIAN_HH__
+#define __TFBAYES_DPM_DPM_GAUSSIAN_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -74,4 +74,4 @@ private:
         double _alpha;
 };
 
-#endif /* DPM_GAUSSIAN_HH */
+#endif /* __TFBAYES_DPM_DPM_GAUSSIAN_HH__ */

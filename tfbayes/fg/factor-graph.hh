@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef FG_FACTOR_GRAPH_HH
-#define FG_FACTOR_GRAPH_HH
+#ifndef __TFBAYES_FG_FG_FACTOR_GRAPH_HH__
+#define __TFBAYES_FG_FG_FACTOR_GRAPH_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -39,4 +39,4 @@ protected:
         std::vector<  factor_node_i*> _factor_nodes;
 };
 
-#endif /* FG_FACTOR_GRAPH_HH */
+#endif /* __TFBAYES_FG_FG_FACTOR_GRAPH_HH__ */

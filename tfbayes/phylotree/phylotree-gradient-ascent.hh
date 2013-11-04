@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef PHYLOTREE_GRADIENT_GRADIENT_HH
-#define PHYLOTREE_GRADIENT_GRADIENT_HH
+#ifndef __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_GRADIENT_HH__
+#define __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_GRADIENT_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -149,4 +149,4 @@ private:
         boost::unordered_map<pt_node_t*, double> sum_prev;
 };
 
-#endif /* PHYLOTREE_GRADIENT_GRADIENT_HH */
+#endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_GRADIENT_HH__ */

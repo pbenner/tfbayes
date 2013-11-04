@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef PHYLOTREE_HH
-#define PHYLOTREE_HH
+#ifndef __TFBAYES_PHYLOTREE_PHYLOTREE_HH__
+#define __TFBAYES_PHYLOTREE_PHYLOTREE_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -202,4 +202,4 @@ protected:
 std::ostream& operator<< (std::ostream& o, const pt_node_t& node);
 std::ostream& operator<< (std::ostream& o, const newick_format& nf);
 
-#endif /* PHYLOTREE_HH */
+#endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_HH__ */

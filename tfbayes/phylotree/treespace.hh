@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef TREESPACE_HH
-#define TREESPACE_HH
+#ifndef __TFBAYES_PHYLOTREE_TREESPACE_HH__
+#define __TFBAYES_PHYLOTREE_TREESPACE_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -501,4 +501,4 @@ std::ostream& operator<< (std::ostream& o, const topology_t& topology);
 std::ostream& operator<< (std::ostream& o, const npath_t& npath);
 std::ostream& operator<< (std::ostream& o, const std::list<npath_t>& npath_list);
 
-#endif /* TREESPACE_HH */
+#endif /* __TFBAYES_PHYLOTREE_TREESPACE_HH__ */

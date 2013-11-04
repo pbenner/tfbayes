@@ -31,7 +31,6 @@ dpm_tfbs_debug_LDADD   += $(BOOST_THREAD_LIB)
 ## dpm library
 lib_LTLIBRARIES = libtfbayes-dpm.la
 libtfbayes_dpm_la_SOURCES =		\
-	clonable.hh			\
 	cluster.cc			\
 	cluster.hh			\
 	component-model.cc		\

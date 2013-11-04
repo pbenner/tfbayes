@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef PHYLOTREE_GENERATE_OBSERVATIONS_HH
-#define PHYLOTREE_GENERATE_OBSERVATIONS_HH
+#ifndef __TFBAYES_PHYLOTREE_PHYLOTREE_GENERATE_OBSERVATIONS_HH__
+#define __TFBAYES_PHYLOTREE_PHYLOTREE_GENERATE_OBSERVATIONS_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -85,4 +85,4 @@ pt_generate_observations(const pt_root_t& tree, const std::vector<double>& stati
         return observations;
 }
 
-#endif /* PHYLOTREE_GENERATE_OBSERVATIONS_HH */
+#endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_GENERATE_OBSERVATIONS_HH__ */

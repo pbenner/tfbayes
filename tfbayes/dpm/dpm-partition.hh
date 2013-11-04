@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DPM_PARTITION_HH
-#define DPM_PARTITION_HH
+#ifndef __TFBAYES_DPM_DPM_PARTITION_HH__
+#define __TFBAYES_DPM_DPM_PARTITION_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -103,4 +103,4 @@ std::ostream& operator<< (std::ostream& o, const dpm_subset_t& dpm_subset);
 std::ostream& operator<< (std::ostream& o, const dpm_partition_t& partition);
 std::ostream& operator<< (std::ostream& o, const dpm_partition_list_t& partitions);
 
-#endif /* DPM_PARTITION_HH */
+#endif /* __TFBAYES_DPM_DPM_PARTITION_HH__ */

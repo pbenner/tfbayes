@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef NUCLEOTIDE_CONTEXT_HH
-#define NUCLEOTIDE_CONTEXT_HH
+#ifndef __TFBAYES_DPM_NUCLEOTIDE_CONTEXT_HH__
+#define __TFBAYES_DPM_NUCLEOTIDE_CONTEXT_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -97,4 +97,4 @@ public:
         }
 };
 
-#endif /* NUCLEOTIDE_CONTEXT_HH */
+#endif /* __TFBAYES_DPM_NUCLEOTIDE_CONTEXT_HH__ */

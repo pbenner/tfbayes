@@ -16,8 +16,8 @@
  */
 
 
-#ifndef INTERFACE_UTILITY_HH
-#define INTERFACE_UTILITY_HH
+#ifndef __TFBAYES_INTERFACE_INTERFACE_UTILITY_HH__
+#define __TFBAYES_INTERFACE_INTERFACE_UTILITY_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -33,4 +33,4 @@ std::string to_string(const T& t)
         return ss.str();
 }
 
-#endif /* INTERFACE_UTILITY_HH */
+#endif /* __TFBAYES_INTERFACE_INTERFACE_UTILITY_HH__ */

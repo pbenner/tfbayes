@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef INCOMPLETE_EXPRESSION_HH
-#define INCOMPLETE_EXPRESSION_HH
+#ifndef __TFBAYES_PHYLOTREE_INCOMPLETE_EXPRESSION_HH__
+#define __TFBAYES_PHYLOTREE_INCOMPLETE_EXPRESSION_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -206,4 +206,4 @@ std::ostream& operator<< (std::ostream& o, const incomplete_expression_t& expres
 
 size_t hash_value(const incomplete_leafset_t& leafset);
 
-#endif /* INCOMPLETE_EXPRESSION_HH */
+#endif /* __TFBAYES_PHYLOTREE_INCOMPLETE_EXPRESSION_HH__ */

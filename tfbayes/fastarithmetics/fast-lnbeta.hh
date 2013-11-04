@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef FAST_LNBETA_HH
-#define FAST_LNBETA_HH
+#ifndef __TFBAYES_FASTARITHMETICS_FAST_LNBETA_HH__
+#define __TFBAYES_FASTARITHMETICS_FAST_LNBETA_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -104,4 +104,4 @@ double fast_lnbeta(
         return sum2 - fast_lngamma(sum1);
 }
 
-#endif /* FAST_LNBETA_HH */
+#endif /* __TFBAYES_FASTARITHMETICS_FAST_LNBETA_HH__ */

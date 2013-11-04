@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DATA_HH
-#define DATA_HH
+#ifndef __TFBAYES_DPM_DATA_HH__
+#define __TFBAYES_DPM_DATA_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -277,4 +277,4 @@ public:
         friend std::ostream& operator<< <> (std::ostream& o, const sequence_data_t<T>& sd);
 };
 
-#endif /* DATA_HH */
+#endif /* __TFBAYES_DPM_DATA_HH__ */

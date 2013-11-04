@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef CLONABLE_HH
-#define CLONABLE_HH
+#ifndef __TFBAYES_UTILITY_CLONABLE_HH__
+#define __TFBAYES_UTILITY_CLONABLE_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -27,4 +27,4 @@ struct clonable {
     virtual clonable* clone() const = 0;
 };
 
-#endif /* CLONABLE_HH */
+#endif /* __TFBAYES_UTILITY_CLONABLE_HH__ */

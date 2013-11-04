@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef FG_VARIATIONAL_FACTOR_NODE_HH
-#define FG_VARIATIONAL_FACTOR_NODE_HH
+#ifndef __TFBAYES_FG_FG_VARIATIONAL_FACTOR_NODE_HH__
+#define __TFBAYES_FG_FG_VARIATIONAL_FACTOR_NODE_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -44,4 +44,4 @@ protected:
         normal_distribution_t msg1;
 };
 
-#endif /* FG_VARIATIONAL_FACTOR_NODE_HH */
+#endif /* __TFBAYES_FG_FG_VARIATIONAL_FACTOR_NODE_HH__ */

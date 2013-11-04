@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef STATE_HH
-#define STATE_HH
+#ifndef __TFBAYES_DPM_STATE_HH__
+#define __TFBAYES_DPM_STATE_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -42,4 +42,4 @@ public:
         virtual void remove(const index_i& index, cluster_tag_t tag) = 0;
 };
 
-#endif /* STATE_HH */
+#endif /* __TFBAYES_DPM_STATE_HH__ */

@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef MARGINAL_LIKELIHOOD_HH
-#define MARGINAL_LIKELIHOOD_HH
+#ifndef __TFBAYES_PHYLOTREE_MARGINAL_LIKELIHOOD_HH__
+#define __TFBAYES_PHYLOTREE_MARGINAL_LIKELIHOOD_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -64,4 +64,4 @@ double pt_marginal_likelihood(
         return pt_marginal_likelihood<AS, PC>(polynomial, alpha);
 }
 
-#endif /* MARGINAL_LIKELIHOOD_HH */
+#endif /* __TFBAYES_PHYLOTREE_MARGINAL_LIKELIHOOD_HH__ */

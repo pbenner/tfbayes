@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DATA_GAUSSIAN_HH
-#define DATA_GAUSSIAN_HH
+#ifndef __TFBAYES_DPM_DATA_GAUSSIAN_HH__
+#define __TFBAYES_DPM_DATA_GAUSSIAN_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -92,4 +92,4 @@ private:
         std::vector<double> _initial_cluster_assignments;
 };
 
-#endif /* DATA_GAUSSIAN_HH */
+#endif /* __TFBAYES_DPM_DATA_GAUSSIAN_HH__ */

@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef SEQUENCE_HH
-#define SEQUENCE_HH
+#ifndef __TFBAYES_ALIGNMENT_SEQUENCE_HH__
+#define __TFBAYES_ALIGNMENT_SEQUENCE_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -91,4 +91,4 @@ protected:
         alphabet_t alphabet;
 };
 
-#endif /* SEQUENCE_HH */
+#endif /* __TFBAYES_ALIGNMENT_SEQUENCE_HH__ */

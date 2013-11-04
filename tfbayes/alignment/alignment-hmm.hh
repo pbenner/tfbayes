@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef PHYLOTREE_HMM_HH
-#define PHYLOTREE_HMM_HH
+#ifndef __TFBAYES_ALIGNMENT_PHYLOTREE_HMM_HH__
+#define __TFBAYES_ALIGNMENT_PHYLOTREE_HMM_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -158,4 +158,4 @@ protected:
         std::matrix<double> backward;
 };
 
-#endif /* PHYLOTREE_HMM_HH */
+#endif /* __TFBAYES_ALIGNMENT_PHYLOTREE_HMM_HH__ */

@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef UTILITY_HH
-#define UTILITY_HH
+#ifndef __TFBAYES_PHYLOTREE_UTILITY_HH__
+#define __TFBAYES_PHYLOTREE_UTILITY_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -78,4 +78,4 @@ size_t hash_value(const exponent_t< 4, double>& exponent);
 size_t hash_value(const exponent_t< 5, double>& exponent);
 size_t hash_value(const exponent_t<10, double>& exponent);
 
-#endif /* UTILITY_HH */
+#endif /* __TFBAYES_PHYLOTREE_UTILITY_HH__ */

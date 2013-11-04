@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef STATISTICS_HH
-#define STATISTICS_HH
+#ifndef __TFBAYES_UTILITY_STATISTICS_HH__
+#define __TFBAYES_UTILITY_STATISTICS_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -172,4 +172,4 @@ size_t select_max_component(size_t k, double log_weights[])
         return result;
 }
 
-#endif /* STATISTICS_HH */
+#endif /* __TFBAYES_UTILITY_STATISTICS_HH__ */

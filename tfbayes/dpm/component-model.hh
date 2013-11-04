@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef COMPONENT_MODEL_HH
-#define COMPONENT_MODEL_HH
+#ifndef __TFBAYES_DPM_COMPONENT_MODEL_HH__
+#define __TFBAYES_DPM_COMPONENT_MODEL_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -349,4 +349,4 @@ protected:
         const data_t<std::vector<double> >* _data;
 };
 
-#endif /* COMPONENT_MODEL_HH */
+#endif /* __TFBAYES_DPM_COMPONENT_MODEL_HH__ */

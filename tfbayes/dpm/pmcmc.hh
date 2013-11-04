@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef PMCMC_HH
-#define PMCMC_HH
+#ifndef __TFBAYES_DPM_PMCMC_HH__
+#define __TFBAYES_DPM_PMCMC_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -62,4 +62,4 @@ protected:
         virtual void update_sampling_history();
 };
 
-#endif /* PMCMC_HH */
+#endif /* __TFBAYES_DPM_PMCMC_HH__ */

@@ -16,8 +16,8 @@
  */
 
 
-#ifndef INTERFACE_EXCEPTIONS_HH
-#define INTERFACE_EXCEPTIONS_HH
+#ifndef __TFBAYES_INTERFACE_INTERFACE_EXCEPTIONS_HH__
+#define __TFBAYES_INTERFACE_INTERFACE_EXCEPTIONS_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -56,4 +56,4 @@ void raise_TypeError(const std::string& msg)
         throw boost::python::error_already_set();
 }
 
-#endif /* INTERFACE_EXCEPTIONS_HH */
+#endif /* __TFBAYES_INTERFACE_INTERFACE_EXCEPTIONS_HH__ */

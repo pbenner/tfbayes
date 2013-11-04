@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef INDEXER_HH
-#define INDEXER_HH
+#ifndef __TFBAYES_DPM_INDEXER_HH__
+#define __TFBAYES_DPM_INDEXER_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -58,4 +58,4 @@ public:
         virtual void shuffle() = 0;
 };
 
-#endif /* INDEXER_HH */
+#endif /* __TFBAYES_DPM_INDEXER_HH__ */

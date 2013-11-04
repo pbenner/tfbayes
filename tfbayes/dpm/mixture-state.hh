@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef MIXTURE_STATE_HH
-#define MIXTURE_STATE_HH
+#ifndef __TFBAYES_DPM_MIXTURE_STATE_HH__
+#define __TFBAYES_DPM_MIXTURE_STATE_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -26,11 +26,11 @@
 #include <map>
 #include <vector>
 
-#include <tfbayes/dpm/clonable.hh>
 #include <tfbayes/dpm/cluster.hh>
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/dpm/datatypes.hh>
 #include <tfbayes/dpm/dpm-partition.hh>
+#include <tfbayes/utility/clonable.hh>
 
 // mixture_state_t
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,4 +106,4 @@ protected:
 
 std::ostream& operator<< (std::ostream& o, const mixture_state_t& state);
 
-#endif /* MIXTURE_STATE_HH */
+#endif /* __TFBAYES_DPM_MIXTURE_STATE_HH__ */

@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef ALPHABET_HH
-#define ALPHABET_HH
+#ifndef __TFBAYES_UIPAC_ALPHABET_HH__
+#define __TFBAYES_UIPAC_ALPHABET_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -66,4 +66,4 @@ protected:
         static const alphabet_code_t _decode[];
 };
 
-#endif /* ALPHABET_HH */
+#endif /* __TFBAYES_UIPAC_ALPHABET_HH__ */

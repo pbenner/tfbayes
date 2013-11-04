@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DPM_TFBS_PRIOR_HH
-#define DPM_TFBS_PRIOR_HH
+#ifndef __TFBAYES_DPM_DPM_TFBS_PRIOR_HH__
+#define __TFBAYES_DPM_DPM_TFBS_PRIOR_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -77,4 +77,4 @@ public:
         double joint(const dpm_tfbs_state_t& state) const;
 };
 
-#endif /* DPM_TFBS_PRIOR_HH */
+#endif /* __TFBAYES_DPM_DPM_TFBS_PRIOR_HH__ */

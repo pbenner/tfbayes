@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef MIXTURE_MODEL_HH
-#define MIXTURE_MODEL_HH
+#ifndef __TFBAYES_DPM_MIXTURE_MODEL_HH__
+#define __TFBAYES_DPM_MIXTURE_MODEL_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -25,9 +25,10 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>
 
-#include <clonable.hh>
 #include <mixture-state.hh>
 #include <dpm-partition.hh>
+
+#include <tfbayes/utility/clonable.hh>
 
 class mixture_model_t : public clonable {
 public:
@@ -51,4 +52,4 @@ public:
         virtual mixture_model_t& operator=(const mixture_model_t& mixture_model) = 0;
 };
 
-#endif /* MIXTURE_MODEL_HH */
+#endif /* __TFBAYES_DPM_MIXTURE_MODEL_HH__ */

@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef LEAFSET_HH
-#define LEAFSET_HH
+#ifndef __TFBAYES_PHYLOTREE_LEAFSET_HH__
+#define __TFBAYES_PHYLOTREE_LEAFSET_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -44,4 +44,4 @@ size_t hash_value(const leafset_t& set);
 
 std::ostream& operator<< (std::ostream& o, const leafset_t& leafset);
 
-#endif /* LEAFSET_HH */
+#endif /* __TFBAYES_PHYLOTREE_LEAFSET_HH__ */

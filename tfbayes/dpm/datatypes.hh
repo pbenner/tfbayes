@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DATATYPES_HH
-#define DATATYPES_HH
+#ifndef __TFBAYES_DPM_DATATYPES_HH__
+#define __TFBAYES_DPM_DATATYPES_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -41,4 +41,4 @@ typedef enum {
         cluster_event_add_word, cluster_event_remove_word
 } cluster_event_t;
 
-#endif /* DATATYPES_HH */
+#endif /* __TFBAYES_DPM_DATATYPES_HH__ */

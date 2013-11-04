@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef LINALG_HH
-#define LINALG_HH
+#ifndef __TFBAYES_UTILITY_LINALG_HH__
+#define __TFBAYES_UTILITY_LINALG_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -125,4 +125,4 @@ std::matrix<double> from_gsl_matrix(const gsl_matrix * matrix)
         return m;
 }
 
-#endif /* LINALG_HH */
+#endif /* __TFBAYES_UTILITY_LINALG_HH__ */

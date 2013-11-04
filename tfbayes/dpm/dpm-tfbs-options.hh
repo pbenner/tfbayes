@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DPM_TFBS_OPTIONS_HH
-#define DPM_TFBS_OPTIONS_HH
+#ifndef __TFBAYES_DPM_DPM_TFBS_OPTIONS_HH__
+#define __TFBAYES_DPM_DPM_TFBS_OPTIONS_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -54,4 +54,4 @@ typedef struct {
 
 std::ostream& operator<<(std::ostream& o, const tfbs_options_t& options);
 
-#endif /* DPM_TFBS_OPTIONS_HH */
+#endif /* __TFBAYES_DPM_DPM_TFBS_OPTIONS_HH__ */
