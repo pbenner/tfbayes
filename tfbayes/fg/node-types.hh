@@ -31,6 +31,7 @@
 // we use boost::mutex
 #include <boost/thread.hpp>
 
+#include <mailbox.hh>
 #include <messages.hh>
 #include <observable.hh>
 
@@ -93,15 +94,8 @@ public:
         virtual void send_messages() = 0;
 
         // link a factor node to this variable node
-        virtual boost::function<void (const p_message_t&)>
-        link(boost::function<void (const q_message_t&)> f, boost::mutex& m) = 0;
+        virtual mailbox_slot_t<p_message_t>& link(mailbox_slot_t<q_message_t>& slot) = 0;
 
-        // get the lock of this node
-        virtual boost::mutex& lock() = 0;
-
-protected:
-        // prepare the message to be sent
-        virtual const p_message_t& message() = 0;
 private:
         // receive a message from a factor node (p message), this
         // method should do nothing but to save the message and notify
@@ -111,18 +105,6 @@ private:
         virtual void recv_message(size_t i, const p_message_t& msg) = 0;
 };
 
-// a mailbox to share messages between nodes that supports threading
-////////////////////////////////////////////////////////////////////////////////
-
-class p_mailbox_slot_t : public boost::mutex, public boost::optional<p_message_t&> {
-};
-class q_mailbox_slot_t : public boost::mutex, public boost::optional<q_message_t&> {
-};
-class p_mailbox_t : public std::vector<p_mailbox_slot_t> {
-};
-class q_mailbox_t : public std::vector<q_mailbox_slot_t> {
-};
-
 // basic implementations
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -130,20 +112,16 @@ template <size_t D>
 class factor_node_t : public virtual factor_node_i, public observable_t {
 public:
         factor_node_t() :
-                mailer    (),
-                mailbox   (),
+                _inbox    (),
+                outbox    (),
                 _neighbors(D, NULL) {
-                // initialize mailbox
-                std::fill(mailbox.begin(), mailbox.end(), (const q_message_t*)NULL);
         }
         factor_node_t(const factor_node_t& factor_node) :
         // do not copy the mailer and mailbox, since they should be
         // populated manually to create a new network
-                mailer    (),
-                mailbox   (),
+                _inbox    (),
+                outbox    (),
                 _neighbors(D, NULL) {
-                // initialize mailbox
-                std::fill(mailbox.begin(), mailbox.end(), (const q_message_t*)NULL);
         }
 
         virtual factor_node_t* clone() const = 0;
@@ -178,8 +156,9 @@ public:
         }
         virtual void link(size_t i, variable_node_i& variable_node) {
                 assert(i < D);
-                // pointer to the method that receives messages
-                void (factor_node_t::*tmp) (size_t, const q_message_t&) = &factor_node_t::recv_message;
+                // pointer to the method that notifies the factor
+                // graph about an update
+                void (factor_node_t::*tmp) () = &factor_node_t::notify;
                 // receive and send mailer
                 mailer[i] = variable_node.link(
                         boost::bind(tmp, this, i, _1), message_locks[i]);
@@ -217,32 +196,24 @@ private:
                         if (mailbox_locks[i]) mailbox_locks[i]->unlock();
                 }
         }
-        // locking mechanism for locally saved messages
-        mutable boost::array<boost::mutex, D> message_locks;
-        // locks for all slots in the mailbox
-        mutable boost::array<boost::optional<boost::mutex&>, D> mailbox_locks;
 };
 
 template <typename T>
 class variable_node_t : public virtual variable_node_i, public observable_t {
 public:
         variable_node_t() :
-                mailer      (),
-                mailbox     (),
+                _inbox      (),
+                outbox      (),
                 old_message (),
                 new_message () {
-                // initialize mailbox
-                std::fill(mailbox.begin(), mailbox.end(), (const p_message_t*)NULL);
         }
         variable_node_t(const variable_node_t& variable_node) :
-        // do not copy the mailer and mailbox, since they should be
+        // do not copy the inbox and outbox, since they should be
         // populated manually to create a new network
-                mailer      (),
-                mailbox     (),
+                _inbox      (),
+                outbox      (),
                 old_message (variable_node.old_message),
                 new_message (variable_node.new_message) {
-                // initialize mailbox
-                std::fill(mailbox.begin(), mailbox.end(), (const p_message_t*)NULL);
         }
         virtual variable_node_t* clone() const {
                 return new variable_node_t(*this);
@@ -267,76 +238,52 @@ public:
 
         virtual void send_messages() {
                 std::cout << "variable node " << this << " is sending messages" << std::endl;
-                // check if there are any nodes connected
-                if (mailbox.size() == 0) return;
-                // prepare the message
-                const p_message_t& msg = message();
-                // check if this message was sent before
-                if (msg == old_message) return;
-                // send message
-                for (size_t i = 0; i < mailer.size(); i++) {
-                        std::cout << "-> sending message to neighbor " << i << std::endl;
-                        mailer[i](msg);
-                }
-                // save message
-                old_message = msg;
-        }
-        virtual boost::function<void (const p_message_t&)> link(boost::function<void (const q_message_t&)> f, boost::mutex& m) {
-                void (variable_node_t::*tmp) (size_t, const p_message_t&) = &variable_node_t::recv_message;
-                size_t i = mailer.size();
-                mailer .push_back(f);
-                mailbox.push_back(NULL);
-                mailbox_locks.push_back(m);
-                return boost::bind(tmp, this, i, _1);
-        }
-        virtual boost::mutex& lock() {
-                return message_lock;
-        }
-
-protected:
-        virtual const p_message_t& message() {
                 // a temporary message
                 T msg;
                 // loop over all slots of the mailbox
-                for (size_t i = 0; i < mailbox.size(); i++) {
-                        // is there something in slot i to receive?
-                        if (!mailbox_locks[i]) {
-                                continue;
-                        }
+                for (size_t i = 0; i < inbox.size(); i++) {
                         // lock this slot
-                        mailbox_locks[i]->lock();
+                        inbox[i]->lock();
                         // and get the message
-                        if (mailbox[i]) {
-                                msg *= static_cast<const T&>(*mailbox[i]);
-                        }
+                        msg *= static_cast<const T&>(inbox[i]);
                         // release lock
-                        mailbox_locks[i]->unlock();
+                        inbox[i]->unlock();
                 }
-                // update locally saved message
-                message_lock.lock();
+                // check if this message was sent before
+                if (msg == old_message) return;
+                // lock all connected nodes
+                for (size_t i = 0; i < outbox.size(); i++) {
+                        std::cout << "-> sending message to neighbor " << i << std::endl;
+                        outbox[i]->lock();
+                }
+                // send message
                 new_message = msg;
-                message_lock.unlock();
-
-                return new_message;
+                // unlock and notify
+                for (size_t i = 0; i < outbox.size(); i++) {
+                        outbox[i]->notify();
+                        outbox[i]->unlock();
+                }
+                // save message
+                old_message = new_message;
+        }
+        virtual mailbox_slot_t<p_message_t>& link(mailbox_slot_t<q_message_t>& slot) {
+                void (variable_node_t::*tmp) () = &variable_node_t::notify;
+                // save slot to the outbox
+                outbox.push_back(slot);
+                // put the current message into the box
+                slot.replace(&new_message);
+                // and prepare a new inbox for this node
+                _inbox.push_back(*new mailbox_slot_t<p_message_t>(notify));
+                return inbox[inbox.size()-1];
         }
 
-        std::vector<boost::function<void (const q_message_t&)> > mailer;
-        std::vector<const p_message_t*> mailbox;
+protected:
+        // mailboxes
+        _inbox_t<p_message_t> _inbox;
+        outbox_t<q_message_t> outbox;
 
         T old_message;
         T new_message;
-private:
-        virtual void recv_message(size_t i, const p_message_t& msg) {
-                std::cout << "variable node has received a message from neighbor " << i << std::endl;
-                // received a message from neighbor i
-                mailbox_locks[i]->lock();
-                mailbox[i] = &msg;
-                mailbox_locks[i]->unlock();
-        }
-        // locking mechanism for the locally saved message
-        mutable boost::mutex message_lock;
-        // locks for all slots in the mailbox
-        mutable std::vector<boost::optional<boost::mutex&> > mailbox_locks;
 };
 
 #endif /* __TFBAYES_FG_NODE_TYPES_HH__ */
