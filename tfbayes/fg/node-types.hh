@@ -193,6 +193,8 @@ private:
                 mailbox[i] = &msg;
                 mailbox_locks[i]->unlock();
         }
+        // lock every slot in the mailbox, so that we can prepare a
+        // new message without receiving new mail while doing so
         void lock_mailbox() const {
                 for (size_t i = 0; i < D; i++) {
                         if (mailbox_locks[i]) mailbox_locks[i]->lock();
