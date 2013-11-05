@@ -24,14 +24,18 @@
 
 #include <node-types.hh>
 
+// variable node specializations
+typedef variable_node_t<normal_distribution_t> normal_vnode_t;
+typedef variable_node_t< gamma_distribution_t>  gamma_vnode_t;
+
 // a factor node is an exponential family with the ability to send
 // and receive messages
-class normal_node_t : public factor_node_t<3> {
+class normal_fnode_t : public factor_node_t<3> {
 public:
         typedef factor_node_t<3> base_t;
 
-        virtual normal_node_t* clone() const {
-                return new normal_node_t(*this);
+        virtual normal_fnode_t* clone() const {
+                return new normal_fnode_t(*this);
         }
 
 protected:

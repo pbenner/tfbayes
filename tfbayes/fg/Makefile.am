@@ -19,7 +19,7 @@ libtfbayes_fg_la_SOURCES = \
 	messages.hh \
 	node-types.hh \
 	observable.hh \
-	variational-factor-node.hh
+	variational.hh
 libtfbayes_fg_la_LIBADD   = $(LIB_PTHREAD)
 libtfbayes_fg_la_LIBADD  += $(BOOST_THREAD_LIB)
 libtfbayes_fg_la_LIBADD  += $(BOOST_SYSTEM_LIB)
