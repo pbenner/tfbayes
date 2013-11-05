@@ -266,6 +266,13 @@ public:
                 return new normal_distribution_t(*this);
         }
 
+        friend void swap(normal_distribution_t& left,
+                         normal_distribution_t& right) {
+                using std::swap;
+                swap(static_cast<exponential_family_t&>(left),
+                     static_cast<exponential_family_t&>(right));
+        }
+
         virtual normal_distribution_t& operator=(const distribution_i& distribution) {
                 return operator=(static_cast<const normal_distribution_t&>(distribution));
         }
@@ -326,6 +333,13 @@ public:
 
         virtual gamma_distribution_t* clone() const {
                 return new gamma_distribution_t(*this);
+        }
+
+        friend void swap(gamma_distribution_t& left,
+                         gamma_distribution_t& right) {
+                using std::swap;
+                swap(static_cast<exponential_family_t&>(left),
+                     static_cast<exponential_family_t&>(right));
         }
 
         virtual gamma_distribution_t& operator=(const distribution_i& distribution) {

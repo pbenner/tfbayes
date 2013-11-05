@@ -22,6 +22,7 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <algorithm>    // std::fill
 #include <cassert>
 
 #include <boost/function.hpp>
@@ -112,15 +113,21 @@ template <size_t D>
 class factor_node_t : public virtual factor_node_i, public observable_t {
 public:
         factor_node_t() :
-                _neighbors(D, NULL)
-                { }
+                mailer    (),
+                mailbox   (),
+                _neighbors(D, NULL) {
+                // initialize mailbox
+                std::fill(mailbox.begin(), mailbox.end(), (const q_message_t*)NULL);
+        }
         factor_node_t(const factor_node_t& factor_node) :
         // do not copy the mailer and mailbox, since they should be
         // populated manually to create a new network
                 mailer    (),
                 mailbox   (),
-                _neighbors(D, NULL)
-                { }
+                _neighbors(D, NULL) {
+                // initialize mailbox
+                std::fill(mailbox.begin(), mailbox.end(), (const q_message_t*)NULL);
+        }
 
         virtual factor_node_t* clone() const = 0;
 
@@ -141,8 +148,11 @@ public:
         }
 
         virtual void send_messages() {
+                std::cout << "factor node " << this << " is sending messages" << std::endl;
                 mtx.lock();
                 for (size_t i = 0; i < D; i++) {
+                        if (mailer[i] == NULL)
+                                continue;
                         mailer[i](message(i));
                 }
                 mtx.unlock();
@@ -168,6 +178,7 @@ protected:
         std::vector<variable_node_i*> _neighbors;
 private:
         virtual void recv_message(size_t i, const q_message_t& msg) {
+                std::cout << "factor node has received a message from neighbor " << i << std::endl;
                 // received a message from neighbor i
                 mtx.lock();
                 mailbox[i] = &msg;
@@ -180,17 +191,24 @@ private:
 template <typename T>
 class variable_node_t : public virtual variable_node_i, public observable_t {
 public:
-        variable_node_t()
-                { }
+        variable_node_t() :
+                mailer      (),
+                mailbox     (),
+                old_message (),
+                new_message () {
+                // initialize mailbox
+                std::fill(mailbox.begin(), mailbox.end(), (const p_message_t*)NULL);
+        }
         variable_node_t(const variable_node_t& variable_node) :
         // do not copy the mailer and mailbox, since they should be
         // populated manually to create a new network
                 mailer      (),
                 mailbox     (),
                 old_message (variable_node.old_message),
-                new_message (variable_node.new_message)
-                { }
-
+                new_message (variable_node.new_message) {
+                // initialize mailbox
+                std::fill(mailbox.begin(), mailbox.end(), (const p_message_t*)NULL);
+        }
         virtual variable_node_t* clone() const {
                 return new variable_node_t(*this);
         }
@@ -213,6 +231,7 @@ public:
         }
 
         virtual void send_messages() {
+                std::cout << "variable node " << this << " is sending messages" << std::endl;
                 // check if there are any nodes connected
                 if (mailbox.size() == 0) return;
                 // prepare the message
@@ -241,6 +260,9 @@ protected:
                 mtx.lock();
                 // prepare message
                 for (size_t i = 0; i < mailbox.size(); i++) {
+                        if (mailbox[i] == NULL) {
+                                continue;
+                        }
                         new_message *= static_cast<const T&>(*mailbox[i]);
                 }
                 // unlock mailbox
@@ -256,6 +278,7 @@ protected:
         T new_message;
 private:
         virtual void recv_message(size_t i, const p_message_t& msg) {
+                std::cout << "variable node has received a message from neighbor " << i << std::endl;
                 // received a message from neighbor i
                 mtx.lock();
                 mailbox[i] = &msg;

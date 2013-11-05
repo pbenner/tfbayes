@@ -32,11 +32,15 @@ public:
                 _mtx  (&mtx)
                 { }
 
-        void operator()(size_t n) {
+        void operator()(boost::optional<size_t> n = boost::optional<size_t>()) {
                 // pointer to a node
                 factor_graph_node_i* job;
                 // get jobs from the queue
-                for (; !queue().empty() && n > 0; n--) {
+                while ( !queue().empty()) {
+                        // stop if maximum number of iterations is reached
+                        if (n && (*n) == 0) break;
+                        // decrement n
+                        if (n) (*n)--;
                         mtx().lock();
                         job = queue().front();
                         queue().pop();
@@ -126,8 +130,12 @@ factor_graph_t::operator=(const factor_graph_t& node) {
 }
 
 void
-factor_graph_t::operator()(size_t n) {
+factor_graph_t::operator()(boost::optional<size_t> n) {
         vector<boost::thread*> threads(_threads);
+
+        cout << "creating " << _threads << " threads" << endl;
+        cout << "n iterations " << n << endl;
+        cout << "n iterations " << std::numeric_limits<size_t>::infinity() << endl;
 
         // add all nodes to the queue
         for (size_t i = 0; i < _variable_nodes.size(); i++) {
@@ -139,7 +147,12 @@ factor_graph_t::operator()(size_t n) {
 
         // sample
         for (size_t i = 0; i < _threads; i++) {
-                threads[i] = new boost::thread(factor_graph_thread_t(_queue, mtx), n/_threads);
+                if (n) {
+                        threads[i] = new boost::thread(factor_graph_thread_t(_queue, mtx), (*n)/_threads);
+                }
+                else {
+                        threads[i] = new boost::thread(factor_graph_thread_t(_queue, mtx));
+                }
         }
         // join threads
         for (size_t i = 0; i < _threads; i++) {

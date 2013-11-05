@@ -26,6 +26,7 @@
 #include <queue>
 #include <vector>
 
+#include <boost/optional.hpp>
 #include <boost/thread.hpp>
 
 #include <node-types.hh>
@@ -55,7 +56,7 @@ public:
         factor_graph_t& operator=(const factor_graph_t& node);
 
         // execute the message passing algorithm
-        void operator()(size_t n = std::numeric_limits<size_t>::infinity());
+        void operator()(boost::optional<size_t> n = boost::optional<size_t>());
 
 protected:
         std::vector<variable_node_i*> _variable_nodes;
