@@ -137,22 +137,14 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
         cout << "n iterations " << n << endl;
         cout << "n iterations " << std::numeric_limits<size_t>::infinity() << endl;
 
-        // add all nodes to the queue
+        // add all variable nodes to the queue
         for (size_t i = 0; i < _variable_nodes.size(); i++) {
                 _queue.push(_variable_nodes[i]);
-        }
-        for (size_t i = 0; i < _factor_nodes.size(); i++) {
-                _queue.push(_factor_nodes[i]);
         }
 
         // sample
         for (size_t i = 0; i < _threads; i++) {
-                if (n) {
-                        threads[i] = new boost::thread(factor_graph_thread_t(_queue, mtx), (*n)/_threads);
-                }
-                else {
-                        threads[i] = new boost::thread(factor_graph_thread_t(_queue, mtx));
-                }
+                threads[i] = new boost::thread(factor_graph_thread_t(_queue, mtx), n);
         }
         // join threads
         for (size_t i = 0; i < _threads; i++) {
