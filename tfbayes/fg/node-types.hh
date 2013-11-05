@@ -111,6 +111,18 @@ private:
         virtual void recv_message(size_t i, const p_message_t& msg) = 0;
 };
 
+// a mailbox to share messages between nodes that supports threading
+////////////////////////////////////////////////////////////////////////////////
+
+class p_mailbox_slot_t : public boost::mutex, public boost::optional<p_message_t&> {
+};
+class q_mailbox_slot_t : public boost::mutex, public boost::optional<q_message_t&> {
+};
+class p_mailbox_t : public std::vector<p_mailbox_slot_t> {
+};
+class q_mailbox_t : public std::vector<q_mailbox_slot_t> {
+};
+
 // basic implementations
 ////////////////////////////////////////////////////////////////////////////////
 
