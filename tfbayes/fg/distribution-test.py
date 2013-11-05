@@ -20,6 +20,21 @@ def plot_density(d, x_from, x_to, n=1001):
     p = plt.plot(x,y)
     plt.show()
 
+def plot_density_list(d_list, x_from, x_to, labels=None, xlab="x", ylab="density", n=1001):
+    p_list = []
+    ax = plt.subplot(1,1,1)
+    for i, d in enumerate(d_list):
+        x = np.linspace(x_from, x_to, num=n)
+        y = map(d.density, x)
+        if labels:
+            p_list.append(ax.plot(x,y,label=labels[i]))
+        else:
+            p_list.append(ax.plot(x,y))
+    ax.set_xlabel(xlab)
+    ax.set_ylabel(ylab)
+    if labels:
+        ax.legend()
+
 # test moments
 ################################################################################
 
@@ -57,3 +72,15 @@ g1 *= g2
 g1.renormalize()
 
 plot_density(g1, 0, 5)
+
+# make some nice graphics
+################################################################################
+
+n0  = normal_distribution_t()
+n1  = normal_distribution_t(1,2)
+n2  = normal_distribution_t(2,3)
+n0 *= n1
+n0 *= n2
+
+plot_density_list([n0,n1,n2], -5, 5, ["n0", "n1", "n2"])
+plt.savefig("distribution-test.png")
