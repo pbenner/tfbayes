@@ -107,10 +107,12 @@ public:
         virtual exponential_family_i& operator*=(const exponential_family_i& e) = 0;
 };
 
-template<> double distribution_i::moment<1>() const {
+template<>
+inline double distribution_i::moment<1>() const {
         return moment_first();
 }
-template<> double distribution_i::moment<2>() const {
+template<>
+inline double distribution_i::moment<2>() const {
         return moment_second();
 }
 

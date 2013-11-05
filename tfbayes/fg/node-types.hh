@@ -22,6 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <cassert>
+
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 // std::mutex does not work with Mac OS X, so instead
@@ -146,6 +148,8 @@ public:
                 mtx.unlock();
         }
         virtual void link(size_t i, variable_node_i& variable_node) {
+                assert(i < D);
+                // pointer to the method that receives messages
                 void (factor_node_t::*tmp) (size_t, const q_message_t&) = &factor_node_t::recv_message;
                 // receive and send mailer
                 mailer[i] = variable_node.link(

@@ -90,9 +90,9 @@ factor_graph_t::~factor_graph_t() {
 }
 
 factor_graph_t::factor_graph_t(const factor_graph_t& factor_graph) :
-        _variable_nodes (factor_graph._variable_nodes),
-        _factor_nodes   (factor_graph._factor_nodes),
-        _queue          (factor_graph._queue),
+        _variable_nodes (),
+        _factor_nodes   (),
+        _queue          (),
         _threads        (factor_graph._threads)
 {
         std::map<variable_node_i*, variable_node_i*> vmap;
@@ -111,6 +111,8 @@ factor_graph_t::factor_graph_t(const factor_graph_t& factor_graph) :
                 const vector<variable_node_i*>& neighbors =
                         factor_graph._factor_nodes[i]->neighbors();
                 for (size_t j = 0; j < neighbors.size(); j++) {
+                        if (!neighbors[j])
+                                continue;
                         _factor_nodes[i]->link(j, *vmap[neighbors[j]]);
                 }
         }

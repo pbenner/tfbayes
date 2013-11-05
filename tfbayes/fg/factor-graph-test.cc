@@ -16,6 +16,7 @@
  */
 
 #include <iostream>
+#include <vector>
 
 #include <factor-graph.hh>
 #include <variational.hh>
@@ -27,6 +28,18 @@ main()
 {
         normal_fnode_t* n1 = new normal_fnode_t();
         normal_vnode_t* n2 = new normal_vnode_t();
+         gamma_vnode_t* n3 = new  gamma_vnode_t();
 
-        delete(n1);
+        vector<variable_node_i*> vnodes;
+        vector<  factor_node_i*> fnodes;
+
+        n1->link(1, *n2);
+        n1->link(2, *n3);
+
+        fnodes.push_back(n1);
+        vnodes.push_back(n2);
+        vnodes.push_back(n3);
+
+        factor_graph_t fg1(vnodes, fnodes);
+        factor_graph_t fg2(fg1);
 }
