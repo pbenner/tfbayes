@@ -154,11 +154,15 @@ public:
 
         virtual void send_messages() {
                 std::cout << "factor node " << this << " is sending messages" << std::endl;
+                lock_mailbox();
                 for (size_t i = 0; i < D; i++) {
                         if (mailer[i]) {
+                                message_locks[i].lock();
                                 mailer[i](message(i));
+                                message_locks[i].unlock();
                         }
                 }
+                unlock_mailbox();
         }
         virtual void link(size_t i, variable_node_i& variable_node) {
                 assert(i < D);
@@ -181,8 +185,6 @@ protected:
         boost::array<const q_message_t*, D> mailbox;
         // keep track of neighboring nodes for cloning whole networks
         std::vector<variable_node_i*> _neighbors;
-        // locking mechanism for locally saved messages
-        mutable boost::array<boost::mutex, D> message_locks;
 private:
         virtual void recv_message(size_t i, const q_message_t& msg) {
                 std::cout << "factor node has received a message from neighbor " << i << std::endl;
@@ -191,6 +193,18 @@ private:
                 mailbox[i] = &msg;
                 mailbox_locks[i]->unlock();
         }
+        void lock_mailbox() const {
+                for (size_t i = 0; i < D; i++) {
+                        if (mailbox_locks[i]) mailbox_locks[i]->lock();
+                }
+        }
+        void unlock_mailbox() const {
+                for (size_t i = 0; i < D; i++) {
+                        if (mailbox_locks[i]) mailbox_locks[i]->unlock();
+                }
+        }
+        // locking mechanism for locally saved messages
+        mutable boost::array<boost::mutex, D> message_locks;
         // locks for all slots in the mailbox
         mutable boost::array<boost::optional<boost::mutex&>, D> mailbox_locks;
 };
