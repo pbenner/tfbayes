@@ -21,14 +21,12 @@
 
 #include <factor-graph.hh>
 
-using namespace std;
-
 // class that implements threads on factor graphs
 ////////////////////////////////////////////////////////////////////////////////
 
 class factor_graph_thread_t {
 public:
-        factor_graph_thread_t(queue<factor_graph_node_i*>& queue,
+        factor_graph_thread_t(std::queue<factor_graph_node_i*>& queue,
                               boost::mutex& mtx) :
                 _queue(&queue),
                 _mtx  (&mtx)
@@ -46,7 +44,7 @@ public:
                         job->send_messages();
                 }
         }
-        queue<factor_graph_node_i*>& queue() {
+        std::queue<factor_graph_node_i*>& queue() {
                 return *_queue;
         }
         boost::mutex& mtx() {
@@ -60,6 +58,8 @@ protected:
 
 // the factor graph
 ////////////////////////////////////////////////////////////////////////////////
+
+using namespace std;
 
 factor_graph_t::factor_graph_t(const vector<variable_node_i*> variable_nodes,
                                const vector<  factor_node_i*> factor_nodes,
