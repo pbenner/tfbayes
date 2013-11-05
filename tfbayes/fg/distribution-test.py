@@ -21,6 +21,7 @@ def plot_density(d, x_from, x_to, n=1001):
     plt.show()
 
 def plot_density_list(d_list, x_from, x_to, labels=None, xlab="x", ylab="density", n=1001):
+    plt.clf()
     p_list = []
     ax = plt.subplot(1,1,1)
     for i, d in enumerate(d_list):
@@ -81,6 +82,7 @@ n1  = normal_distribution_t(1,2)
 n2  = normal_distribution_t(2,3)
 n0 *= n1
 n0 *= n2
+n0.renormalize()
 
 plot_density_list([n0,n1,n2], -5, 5, ["n0", "n1", "n2"])
 plt.savefig("distribution-test.png")
