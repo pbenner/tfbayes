@@ -39,11 +39,28 @@ public:
         }
 
 protected:
-        const p_message_t& message(size_t i) const {
-                return msg1;
+        const p_message_t& message(size_t i) {
+                switch (i) {
+                case '0': return message1();
+                case '1': return message2();
+                case '2': return message3();
+                default: assert(false);
+                }
+        }
+        const p_message_t& message1() {
+                return distribution1;
+        }
+        const p_message_t& message2() {
+                return distribution2;
+        }
+        const p_message_t& message3() {
+                return distribution3;
         }
 
-        normal_distribution_t distribution;
+        // messages
+        normal_distribution_t distribution1;
+        normal_distribution_t distribution2;
+         gamma_distribution_t distribution3;
 
         normal_distribution_t msg1;
 };

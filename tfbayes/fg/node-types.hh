@@ -73,7 +73,7 @@ public:
 protected:
         // prepare a message to the i'th connected variable
         // node (p messages)
-        virtual const p_message_t& message(size_t i) const = 0;
+        virtual const p_message_t& message(size_t i) = 0;
 private:
         // receive a message from a variable node (q message), this
         // method should do nothing but to save the message and notify
