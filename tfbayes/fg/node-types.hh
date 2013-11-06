@@ -252,7 +252,7 @@ public:
                 // put the current message into the box
                 slot.replace(messages[i]);
                 // and prepare a new inbox for this node
-                _inbox.push_back(new mailbox_slot_t<p_message_t>());
+                _inbox++;
                 _inbox[i].observe(boost::bind(tmp, this));
                 return _inbox[i];
         }

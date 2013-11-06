@@ -65,9 +65,13 @@ public:
         }
         _inbox_t(size_t n) :
                 base_t() {
-                for (size_t i = 0; i < n; i++) {
-                        this->push_back(new mailbox_slot_t<T>());
-                }
+                for (size_t i = 0; i < n; i++)
+                        (*this)++;
+        }
+        // add an additional slot
+        _inbox_t& operator++(int) {
+                this->push_back(new mailbox_slot_t<T>());
+                return *this;
         }
 };
 
