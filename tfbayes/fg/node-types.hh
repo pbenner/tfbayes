@@ -133,7 +133,7 @@ public:
                 for (size_t i = 0; i < D; i++) {
                         if (outbox[i]) {
                                 outbox[i]->lock();
-                                message(i);
+                                outbox[i]->replace(message(i));
                                 outbox[i]->notify();
                                 outbox[i]->unlock();
                         }

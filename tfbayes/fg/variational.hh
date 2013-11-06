@@ -41,17 +41,17 @@ public:
 protected:
         const p_message_t& initial_message(size_t i) const {
                 switch (i) {
-                case '0': return distribution1;
-                case '1': return distribution2;
-                case '2': return distribution3;
+                case 0: return distribution1;
+                case 1: return distribution2;
+                case 2: return distribution3;
                 default: assert(false);
                 }
         }
         const p_message_t& message(size_t i) {
                 switch (i) {
-                case '0': return message1();
-                case '1': return message2();
-                case '2': return message3();
+                case 0: return message1();
+                case 1: return message2();
+                case 2: return message3();
                 default: assert(false);
                 }
         }
