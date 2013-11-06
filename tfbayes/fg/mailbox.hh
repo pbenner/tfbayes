@@ -47,10 +47,18 @@ protected:
         boost::function<void ()> _fptr_;
 };
 template <typename T>
-class _inbox_t : public boost::vector<boost::optional<mailbox_slot_t<T>&> > {
+class _inbox_t : public std::vector<boost::optional<mailbox_slot_t<T>&> > {
 public:
-        ~inbox_t() {
-                for (size_t i = 0; i < size(); i++) {
+        typedef std::vector<boost::optional<mailbox_slot_t<T>&> > base_t;
+
+        _inbox_t() :
+                base_t() {
+        }
+        _inbox_t(size_t n) :
+                base_t(n, boost::optional<mailbox_slot_t<T>&>()) {
+        }
+        ~_inbox_t() {
+                for (size_t i = 0; i < this->size(); i++) {
                         if (this->operator[](i)) {
                                 delete(&*this->operator[](i));
                         }
@@ -59,6 +67,15 @@ public:
 };
 template <typename T>
 class outbox_t : public std::vector<boost::optional<mailbox_slot_t<T>&> > {
+public:
+        typedef std::vector<boost::optional<mailbox_slot_t<T>&> > base_t;
+
+        outbox_t() :
+                base_t() {
+        }
+        outbox_t(size_t n) :
+                base_t(n, boost::optional<mailbox_slot_t<T>&>()) {
+        }
 };
 
 #endif /* __TFBAYES_FG_MAILBOX_HH__ */

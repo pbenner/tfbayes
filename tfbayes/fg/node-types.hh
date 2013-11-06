@@ -75,13 +75,6 @@ protected:
         // prepare a message to the i'th connected variable
         // node (p messages)
         virtual const p_message_t& message(size_t i) = 0;
-private:
-        // receive a message from a variable node (q message), this
-        // method should do nothing but to save the message and notify
-        // the factor graph
-        // this function must be private so it can only be used by the link
-        // function of the class that implements linking nodes
-        virtual void recv_message(size_t i, const q_message_t& msg) = 0;
 };
 
 class variable_node_i : public virtual factor_graph_node_i {
@@ -95,14 +88,6 @@ public:
 
         // link a factor node to this variable node
         virtual mailbox_slot_t<p_message_t>& link(mailbox_slot_t<q_message_t>& slot) = 0;
-
-private:
-        // receive a message from a factor node (p message), this
-        // method should do nothing but to save the message and notify
-        // the factor graph
-        // this function must be private so it can only be used by the link
-        // function of the class that implements linking nodes
-        virtual void recv_message(size_t i, const p_message_t& msg) = 0;
 };
 
 // basic implementations
@@ -112,15 +97,15 @@ template <size_t D>
 class factor_node_t : public virtual factor_node_i, public observable_t {
 public:
         factor_node_t() :
-                _inbox    (),
-                outbox    (),
+                _inbox    (D),
+                outbox    (D),
                 _neighbors(D, NULL) {
         }
         factor_node_t(const factor_node_t& factor_node) :
         // do not copy the mailer and mailbox, since they should be
         // populated manually to create a new network
-                _inbox    (),
-                outbox    (),
+                _inbox    (D),
+                outbox    (D),
                 _neighbors(D, NULL) {
         }
 
@@ -130,8 +115,8 @@ public:
                 using std::swap;
                 swap(static_cast<observable_t&>(left),
                      static_cast<observable_t&>(right));
-                swap(left.mailer,     right.mailer);
-                swap(left.mailbox,    right.mailbox);
+                swap(left._inbox,     right._inbox);
+                swap(left.outbox,     right.outbox);
                 swap(left._neighbors, right._neighbors);
         }
 
@@ -144,26 +129,26 @@ public:
 
         virtual void send_messages() {
                 std::cout << "factor node " << this << " is sending messages" << std::endl;
-                lock_mailbox();
+                lock_inbox();
                 for (size_t i = 0; i < D; i++) {
-                        if (mailer[i]) {
-                                message_locks[i].lock();
-                                mailer[i](message(i));
-                                message_locks[i].unlock();
+                        if (outbox[i]) {
+                                outbox[i]->lock();
+                                message(i);
+                                outbox[i]->notify();
+                                outbox[i]->unlock();
                         }
                 }
-                unlock_mailbox();
+                unlock_inbox();
         }
         virtual void link(size_t i, variable_node_i& variable_node) {
                 assert(i < D);
                 // pointer to the method that notifies the factor
                 // graph about an update
-                void (factor_node_t::*tmp) () = &factor_node_t::notify;
+                void (observable_t::*tmp) () const = &factor_node_t::notify;
+                // prepare a new inbox slot
+                _inbox[i] = *new mailbox_slot_t<q_message_t>(boost::bind(tmp, this));
                 // receive and send mailer
-                mailer[i] = variable_node.link(
-                        boost::bind(tmp, this, i, _1), message_locks[i]);
-                // receive the lock of the variable node
-                mailbox_locks[i] = variable_node.lock();
+                outbox[i] = variable_node.link(*_inbox[i]);
                 // save neighbor
                 _neighbors[i] = &variable_node;
         }
@@ -172,28 +157,22 @@ public:
         }
 
 protected:
-        boost::array<boost::function<void (const p_message_t&)>, D> mailer;
-        boost::array<const q_message_t*, D> mailbox;
+        // mailboxes
+        _inbox_t<q_message_t> _inbox;
+        outbox_t<p_message_t> outbox;
         // keep track of neighboring nodes for cloning whole networks
         std::vector<variable_node_i*> _neighbors;
 private:
-        virtual void recv_message(size_t i, const q_message_t& msg) {
-                std::cout << "factor node has received a message from neighbor " << i << std::endl;
-                // received a message from neighbor i
-                mailbox_locks[i]->lock();
-                mailbox[i] = &msg;
-                mailbox_locks[i]->unlock();
-        }
         // lock every slot in the mailbox, so that we can prepare a
         // new message without receiving new mail while doing so
-        void lock_mailbox() const {
+        void lock_inbox() const {
                 for (size_t i = 0; i < D; i++) {
-                        if (mailbox_locks[i]) mailbox_locks[i]->lock();
+                        if (_inbox[i]) _inbox[i]->lock();
                 }
         }
-        void unlock_mailbox() const {
+        void unlock_inbox() const {
                 for (size_t i = 0; i < D; i++) {
-                        if (mailbox_locks[i]) mailbox_locks[i]->unlock();
+                        if (_inbox[i]) _inbox[i]->unlock();
                 }
         }
 };
@@ -241,13 +220,13 @@ public:
                 // a temporary message
                 T msg;
                 // loop over all slots of the mailbox
-                for (size_t i = 0; i < inbox.size(); i++) {
+                for (size_t i = 0; i < _inbox.size(); i++) {
                         // lock this slot
-                        inbox[i]->lock();
+                        _inbox[i]->lock();
                         // and get the message
-                        msg *= static_cast<const T&>(inbox[i]);
+                        msg *= static_cast<const T&>((*_inbox[i])());
                         // release lock
-                        inbox[i]->unlock();
+                        _inbox[i]->unlock();
                 }
                 // check if this message was sent before
                 if (msg == old_message) return;
@@ -267,14 +246,14 @@ public:
                 old_message = new_message;
         }
         virtual mailbox_slot_t<p_message_t>& link(mailbox_slot_t<q_message_t>& slot) {
-                void (variable_node_t::*tmp) () = &variable_node_t::notify;
+                void (observable_t::*tmp) () const = &variable_node_t::notify;
                 // save slot to the outbox
                 outbox.push_back(slot);
                 // put the current message into the box
                 slot.replace(&new_message);
                 // and prepare a new inbox for this node
-                _inbox.push_back(*new mailbox_slot_t<p_message_t>(notify));
-                return inbox[inbox.size()-1];
+                _inbox.push_back(*new mailbox_slot_t<p_message_t>(boost::bind(tmp, this)));
+                return *_inbox[_inbox.size()-1];
         }
 
 protected:
