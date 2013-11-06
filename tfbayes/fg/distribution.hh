@@ -362,21 +362,21 @@ public:
         }
         virtual void renormalize() {
                 base_t::renormalize();
-                const double& p1 = parameters()[0];
-                const double& p2 = parameters()[1];
-                _log_partition =  std::log(boost::math::tgamma(p1+1.0)) -
-                        (p1+1.0)*std::log(p2);
+                const double& a1 = parameters()[0]+1.0;
+                const double& a2 = parameters()[1];
+                _log_partition =  std::log(boost::math::tgamma(a1)) -
+                        (a1)*std::log(a2);
         }
 protected:
         virtual double moment_first () const {
-                const double& p1 = parameters()[0];
-                const double& p2 = parameters()[1];
-                return (p1+1.0)/p2;
+                const double& a1 = parameters()[0]+1.0;
+                const double& a2 = parameters()[1];
+                return a1/a2;
         }
         virtual double moment_second() const {
-                const double& p1 = parameters()[0];
-                const double& p2 = parameters()[1];
-                return (p1+1.0)*(p1+2.0)/(p2*p2);
+                const double& a1 = parameters()[0]+1.0;
+                const double& a2 = parameters()[1];
+                return a1*(a1+1.0)/(a2*a2);
         }
 };
 
