@@ -88,6 +88,10 @@ public:
 
         // link a factor node to this variable node
         virtual mailbox_slot_t<p_message_t>& link(mailbox_slot_t<q_message_t>& slot) = 0;
+
+protected:
+        // prepare the q message
+        virtual const q_message_t& message() = 0;
 };
 
 // basic implementations
@@ -221,18 +225,8 @@ public:
 
         virtual void send_messages() {
                 std::cout << "variable node " << this << " is sending messages" << std::endl;
-                // reset message
-                new_message = T();
-                // loop over all slots of the mailbox
-                for (size_t i = 0; i < _inbox.size(); i++) {
-                        // lock this slot
-                        _inbox[i].lock();
-                        // and get the message
-                        std::cout << "-> getting message from slot " << i << std::endl;
-                        new_message *= static_cast<const T&>(_inbox[i]());
-                        // release lock
-                        _inbox[i].unlock();
-                }
+                // compute new q-message
+                message();
                 // check if this message was sent before
                 if (new_message == old_message) return;
                 // lock all connected nodes
@@ -264,6 +258,21 @@ public:
         }
 
 protected:
+        virtual const q_message_t& message() {
+                // reset message
+                new_message = T();
+                // loop over all slots of the mailbox
+                for (size_t i = 0; i < _inbox.size(); i++) {
+                        // lock this slot
+                        _inbox[i].lock();
+                        // and get the message
+                        std::cout << "-> getting message from slot " << i << std::endl;
+                        new_message *= static_cast<const T&>(_inbox[i]());
+                        // release lock
+                        _inbox[i].unlock();
+                }
+                return new_message;
+        }
         // mailboxes
         _inbox_t<p_message_t> _inbox;
         outbox_t<q_message_t> outbox;
