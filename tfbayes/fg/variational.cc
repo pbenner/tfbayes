@@ -103,3 +103,70 @@ normal_fnode_t::message3() {
 
         return distribution3;
 }
+
+// gamma factor node
+////////////////////////////////////////////////////////////////////////////////
+
+gamma_fnode_t::gamma_fnode_t(double shape, double rate) :
+        dshape (shape),
+        drate  (drate) {
+        // set the inbox to the given parameters, however,
+        // once a node is connected to a slot, the respective
+        // parameter (represented by the dirac distribution)
+        // is replaced
+        _inbox[1].replace(dshape);
+        _inbox[2].replace(drate);
+}
+
+gamma_fnode_t*
+gamma_fnode_t::clone() const {
+        return new gamma_fnode_t(*this);
+}
+
+bool
+gamma_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
+        switch (i) {
+        case 0: return variable_node.type() == typeid(gamma_distribution_t);
+        case 1: return false;
+        case 2: return variable_node.type() == typeid(gamma_distribution_t);
+        default: assert(false);
+        }
+}
+
+const p_message_t&
+gamma_fnode_t::initial_message(size_t i) const {
+        switch (i) {
+        case 0: return distribution1;
+        case 2: return distribution3;
+        default: assert(false);
+        }
+}
+
+const p_message_t&
+gamma_fnode_t::message(size_t i) {
+        switch (i) {
+        case 0: return message1();
+        case 2: return message3();
+        default: assert(false);
+        }
+}
+
+const p_message_t&
+gamma_fnode_t::message1() {
+        double shape = _inbox[1]().moment<1>();
+        double rate  = _inbox[2]().moment<1>();
+
+        distribution1 = gamma_distribution_t(shape, rate);
+
+        return distribution1;
+}
+
+const p_message_t&
+gamma_fnode_t::message3() {
+        double shape =   _inbox[1]().moment<1>() + 1.0;
+        double rate  = - _inbox[0]().moment<1>();
+
+        distribution3 = gamma_distribution_t(shape, rate);
+
+        return distribution3;
+}

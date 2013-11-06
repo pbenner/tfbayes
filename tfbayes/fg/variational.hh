@@ -25,11 +25,12 @@
 #include <node-types.hh>
 
 // variable node specializations
+////////////////////////////////////////////////////////////////////////////////
 typedef variable_node_t<normal_distribution_t> normal_vnode_t;
 typedef variable_node_t< gamma_distribution_t>  gamma_vnode_t;
 
-// a factor node is an exponential family with the ability to send
-// and receive messages
+// factor node specializations
+////////////////////////////////////////////////////////////////////////////////
 class normal_fnode_t : public factor_node_t<3> {
 public:
         typedef factor_node_t<3> base_t;
@@ -56,8 +57,32 @@ protected:
         normal_distribution_t distribution1;
         normal_distribution_t distribution2;
          gamma_distribution_t distribution3;
+};
 
-        normal_distribution_t msg1;
+class gamma_fnode_t : public factor_node_t<3> {
+public:
+        typedef factor_node_t<3> base_t;
+
+        gamma_fnode_t(double shape, double rate);
+
+        virtual gamma_fnode_t* clone() const;
+
+protected:
+        virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
+        virtual const p_message_t& initial_message(size_t i) const;
+        virtual const p_message_t& message(size_t i);
+
+        // message preparation
+        const p_message_t& message1();
+        const p_message_t& message3();
+
+        // parameters
+        dirac_distribution_t dshape;
+        dirac_distribution_t drate;
+
+        // messages
+        gamma_distribution_t distribution1;
+        gamma_distribution_t distribution3;
 };
 
 #endif /* __TFBAYES_FG_VARIATIONAL_HH__ */
