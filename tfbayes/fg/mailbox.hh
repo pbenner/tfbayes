@@ -34,8 +34,8 @@ public:
                 return *_ptr_;
         }
         // replace contents
-        void replace(const T* ptr) {
-                _ptr_ = ptr;
+        void replace(const T& ptr) {
+                _ptr_ = &ptr;
         }
         // notify the owner of this mailbox slot that a new message
         // has been received

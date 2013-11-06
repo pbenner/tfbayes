@@ -149,6 +149,8 @@ public:
                 _inbox[i] = *new mailbox_slot_t<q_message_t>(boost::bind(tmp, this));
                 // receive and send mailer
                 outbox[i] = variable_node.link(*_inbox[i]);
+                // initialize outbox
+                outbox[i]->replace(initial_message(i));
                 // save neighbor
                 _neighbors[i] = &variable_node;
         }
@@ -158,7 +160,7 @@ public:
 
 protected:
         // initialize outbox i
-        virtual void init(size_t i) = 0;
+        virtual const p_message_t& initial_message(size_t i) const = 0;
         // mailboxes
         _inbox_t<q_message_t> _inbox;
         outbox_t<p_message_t> outbox;
@@ -252,7 +254,7 @@ public:
                 // save slot to the outbox
                 outbox.push_back(slot);
                 // put the current message into the box
-                slot.replace(&new_message);
+                slot.replace(new_message);
                 // and prepare a new inbox for this node
                 _inbox.push_back(*new mailbox_slot_t<p_message_t>(boost::bind(tmp, this)));
                 return *_inbox[_inbox.size()-1];
