@@ -27,14 +27,13 @@
 #include <boost/thread.hpp>
 #include <boost/function.hpp>
 #include <boost/optional.hpp>
+#include <boost/ptr_container/ptr_vector.hpp>
+
+#include <observable.hh>
 
 template <typename T>
-class mailbox_slot_t : public boost::mutex {
+class mailbox_slot_t : public boost::mutex, public observable_t {
 public:
-        mailbox_slot_t(const boost::function<void ()> f) :
-                _fptr_(f) {
-        }
-
         // access the contents
         const T& receive() const {
                 return *_ptr_;
@@ -43,14 +42,8 @@ public:
         void replace(const T& ptr) {
                 _ptr_ = &ptr;
         }
-        // notify the owner of this mailbox slot that a new message
-        // has been received
-        void notify() const {
-                _fptr_();
-        }
 protected:
         const T* _ptr_;
-        boost::function<void ()> _fptr_;
 };
 
 // For variable nodes, it is necessary that the inbox is able to have
@@ -63,21 +56,17 @@ protected:
 // connected to the slot, then a dirac distribution is placed in the
 // slot that represents the respective fixed parameter.
 template <typename T>
-class _inbox_t : public std::vector<boost::optional<mailbox_slot_t<T>&> > {
+class _inbox_t : public boost::ptr_vector<mailbox_slot_t<T> > {
 public:
-        typedef std::vector<boost::optional<mailbox_slot_t<T>&> > base_t;
+        typedef boost::ptr_vector<mailbox_slot_t<T> > base_t;
 
         _inbox_t() :
                 base_t() {
         }
         _inbox_t(size_t n) :
-                base_t(n, boost::optional<mailbox_slot_t<T>&>()) {
-        }
-        ~_inbox_t() {
-                for (size_t i = 0; i < this->size(); i++) {
-                        if (this->operator[](i)) {
-                                delete(&*this->operator[](i));
-                        }
+                base_t() {
+                for (size_t i = 0; i < n; i++) {
+                        this->push_back(new mailbox_slot_t<T>());
                 }
         }
 };
