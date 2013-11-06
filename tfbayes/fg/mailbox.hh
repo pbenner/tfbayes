@@ -22,6 +22,12 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <vector>
+
+#include <boost/thread.hpp>
+#include <boost/function.hpp>
+#include <boost/optional.hpp>
+
 template <typename T>
 class mailbox_slot_t : public boost::mutex {
 public:
