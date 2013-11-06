@@ -67,6 +67,11 @@ protected:
                 }
         }
         const p_message_t& message1() {
+                double mean      = _inbox[1]().moment<1>();
+                double precision = _inbox[2]().moment<1>();
+
+                distribution1 = normal_distribution_t(mean, precision);
+
                 return distribution1;
         }
         const p_message_t& message2() {
