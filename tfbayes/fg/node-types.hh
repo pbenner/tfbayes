@@ -206,8 +206,8 @@ public:
                 using std::swap;
                 swap(static_cast<observable_t&>(left),
                      static_cast<observable_t&>(right));
-                swap(left.mailer,      right.mailer);
-                swap(left.mailbox,     right.mailbox);
+                swap(left._inbox,      right._inbox);
+                swap(left.outbox,      right.outbox);
                 swap(left.old_message, right.old_message);
                 swap(left.new_message, right.new_message);
         }
@@ -228,6 +228,7 @@ public:
                         // lock this slot
                         _inbox[i]->lock();
                         // and get the message
+                        std::cout << "-> getting message from slot " << i << std::endl;
                         msg *= static_cast<const T&>(_inbox[i]->receive());
                         // release lock
                         _inbox[i]->unlock();

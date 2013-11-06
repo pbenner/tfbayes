@@ -154,3 +154,11 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
                 delete(threads[i]);
         }
 }
+
+void
+factor_graph_t::add_node(factor_graph_node_i* node) {
+        cout << "adding node " << node << " to the queue" << endl;
+        mtx.lock();
+        _queue.push(node);
+        mtx.unlock();
+}

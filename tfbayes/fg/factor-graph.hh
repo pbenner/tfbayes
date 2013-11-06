@@ -67,11 +67,7 @@ protected:
         size_t _threads;
 private:
         // add a node to the queue
-        void add_node(factor_graph_node_i* node) {
-                mtx.lock();
-                _queue.push(node);
-                mtx.unlock();
-        }
+        void add_node(factor_graph_node_i* node);
         // lock for the queue
         mutable boost::mutex mtx;
 };
