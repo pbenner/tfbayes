@@ -50,6 +50,14 @@ public:
         }
 
 protected:
+        virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const {
+                switch (i) {
+                case 0: return variable_node.type() == typeid(normal_distribution_t);
+                case 1: return variable_node.type() == typeid(normal_distribution_t);
+                case 2: return variable_node.type() == typeid( gamma_distribution_t);
+                default: assert(false);
+                }
+        }
         const p_message_t& initial_message(size_t i) const {
                 switch (i) {
                 case 0: return distribution1;

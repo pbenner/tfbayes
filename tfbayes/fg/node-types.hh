@@ -23,6 +23,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <algorithm>    // std::fill
+#include <typeinfo>
 #include <cassert>
 
 #include <boost/function.hpp>
@@ -72,6 +73,9 @@ public:
         virtual const std::vector<variable_node_i*>& neighbors() const = 0;
 
 protected:
+        // check conjugacy of connecting nodes
+        virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const = 0;
+
         // prepare a message to the i'th connected variable
         // node (p messages)
         virtual const p_message_t& message(size_t i) = 0;
@@ -91,6 +95,9 @@ public:
 
         // condition on some data
         virtual void condition(double data) = 0;
+
+        // get the type of the distribution this node represents
+        virtual const std::type_info& type() const = 0;
 
 protected:
         // prepare the q message
@@ -149,6 +156,9 @@ public:
         }
         virtual void link(size_t i, variable_node_i& variable_node) {
                 assert(i < D);
+                // allow only conjugate nodes to connect
+                if (!is_conjugate(i, variable_node))
+                    return;
                 // pointer to the method that notifies the factor
                 // graph about an update
                 void (observable_t::*tmp) () const = &factor_node_t::notify;
@@ -258,6 +268,9 @@ public:
         }
         virtual void condition(double data) {
                 this->data = data;
+        }
+        virtual const std::type_info& type() const {
+                return typeid(T);
         }
 
 protected:
