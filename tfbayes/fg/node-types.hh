@@ -221,29 +221,27 @@ public:
 
         virtual void send_messages() {
                 std::cout << "variable node " << this << " is sending messages" << std::endl;
-                // a temporary message
-                T msg;
+                // reset message
+                new_message = T();
                 // loop over all slots of the mailbox
                 for (size_t i = 0; i < _inbox.size(); i++) {
                         // lock this slot
                         _inbox[i].lock();
                         // and get the message
                         std::cout << "-> getting message from slot " << i << std::endl;
-                        msg *= static_cast<const T&>(_inbox[i]());
+                        new_message *= static_cast<const T&>(_inbox[i]());
                         // release lock
                         _inbox[i].unlock();
                 }
                 // check if this message was sent before
-                if (msg == old_message) return;
+                if (new_message == old_message) return;
                 // lock all connected nodes
                 for (size_t i = 0; i < outbox.size(); i++) {
                         std::cout << "-> sending message to neighbor " << i << std::endl;
                         outbox[i]->lock();
-                }
-                // send message
-                new_message = msg;
-                // unlock and notify
-                for (size_t i = 0; i < outbox.size(); i++) {
+                        messages[i] = new_message;
+                        // the link is already present
+                        // outbox[i]->replace(messages[i]);
                         outbox[i]->notify();
                         outbox[i]->unlock();
                 }
@@ -253,10 +251,12 @@ public:
         virtual mailbox_slot_t<p_message_t>& link(mailbox_slot_t<q_message_t>& slot) {
                 size_t i = _inbox.size();
                 void (observable_t::*tmp) () const = &variable_node_t::notify;
+                // allocate a new message
+                messages.push_back(T());
                 // save slot to the outbox
                 outbox.push_back(slot);
                 // put the current message into the box
-                slot.replace(new_message);
+                slot.replace(messages[i]);
                 // and prepare a new inbox for this node
                 _inbox.push_back(new mailbox_slot_t<p_message_t>());
                 _inbox[i].observe(boost::bind(tmp, this));
@@ -270,6 +270,7 @@ protected:
 
         T old_message;
         T new_message;
+        std::vector<T> messages;
 };
 
 #endif /* __TFBAYES_FG_NODE_TYPES_HH__ */
