@@ -34,76 +34,19 @@ class normal_fnode_t : public factor_node_t<3> {
 public:
         typedef factor_node_t<3> base_t;
 
-        normal_fnode_t(double mean, double precision) :
-                dmean(mean),
-                dprecision(precision) {
-                // set the inbox to the given parameters, however,
-                // once a node is connected to a slot, the respective
-                // parameter (represented by the dirac distribution)
-                // is replaced
-                _inbox[1].replace(dmean);
-                _inbox[2].replace(dprecision);
-        }
+        normal_fnode_t(double mean, double precision);
 
-        virtual normal_fnode_t* clone() const {
-                return new normal_fnode_t(*this);
-        }
+        virtual normal_fnode_t* clone() const;
 
 protected:
-        virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const {
-                switch (i) {
-                case 0: return variable_node.type() == typeid(normal_distribution_t);
-                case 1: return variable_node.type() == typeid(normal_distribution_t);
-                case 2: return variable_node.type() == typeid( gamma_distribution_t);
-                default: assert(false);
-                }
-        }
-        const p_message_t& initial_message(size_t i) const {
-                switch (i) {
-                case 0: return distribution1;
-                case 1: return distribution2;
-                case 2: return distribution3;
-                default: assert(false);
-                }
-        }
-        const p_message_t& message(size_t i) {
-                switch (i) {
-                case 0: return message1();
-                case 1: return message2();
-                case 2: return message3();
-                default: assert(false);
-                }
-        }
-        const p_message_t& message1() {
-                double mean      = _inbox[1]().moment<1>();
-                double precision = _inbox[2]().moment<1>();
+        virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
+        virtual const p_message_t& initial_message(size_t i) const;
+        virtual const p_message_t& message(size_t i);
 
-                distribution1 = normal_distribution_t(mean, precision);
-
-                return distribution1;
-        }
-        const p_message_t& message2() {
-                double mean      = _inbox[0]().moment<1>();
-                double precision = _inbox[2]().moment<1>();
-
-                distribution2 = normal_distribution_t(mean, precision);
-
-                return distribution2;
-        }
-        const p_message_t& message3() {
-                // moments
-                double y   = _inbox[0]().moment<1>();
-                double y2  = _inbox[0]().moment<2>();
-                double mu  = _inbox[1]().moment<1>();
-                double mu2 = _inbox[1]().moment<2>();
-                // parameters of the gamma distribution
-                double shape = 1.5;
-                double rate  = 0.5*(y2 - 2.0*y*mu + mu2);
-                // replace distribution
-                distribution3 = gamma_distribution_t(shape, rate);
-
-                return distribution3;
-        }
+        // message preparation
+        const p_message_t& message1();
+        const p_message_t& message2();
+        const p_message_t& message3();
 
         // parameters
         dirac_distribution_t dmean;
