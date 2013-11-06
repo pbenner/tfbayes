@@ -75,9 +75,25 @@ protected:
                 return distribution1;
         }
         const p_message_t& message2() {
+                double mean      = _inbox[0]().moment<1>();
+                double precision = _inbox[2]().moment<1>();
+
+                distribution2 = normal_distribution_t(mean, precision);
+
                 return distribution2;
         }
         const p_message_t& message3() {
+                // moments
+                double y   = _inbox[0]().moment<1>();
+                double y2  = _inbox[0]().moment<2>();
+                double mu  = _inbox[1]().moment<1>();
+                double mu2 = _inbox[1]().moment<2>();
+                // parameters of the gamma distribution
+                double shape = 1.5;
+                double rate  = 0.5*(y2 - 2.0*y*mu + mu2);
+                // replace distribution
+                distribution3 = gamma_distribution_t(shape, rate);
+
                 return distribution3;
         }
 
