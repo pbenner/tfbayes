@@ -39,6 +39,14 @@ public:
         }
 
 protected:
+        void init(size_t i) {
+                switch (i) {
+                case '0': outbox[i]->replace(&distribution1);
+                case '1': outbox[i]->replace(&distribution2);
+                case '2': outbox[i]->replace(&distribution3);
+                default: assert(false);
+                }
+        }
         const p_message_t& message(size_t i) {
                 switch (i) {
                 case '0': return message1();

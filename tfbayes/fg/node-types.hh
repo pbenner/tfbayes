@@ -157,6 +157,8 @@ public:
         }
 
 protected:
+        // initialize outbox i
+        virtual void init(size_t i) = 0;
         // mailboxes
         _inbox_t<q_message_t> _inbox;
         outbox_t<p_message_t> outbox;
@@ -224,7 +226,7 @@ public:
                         // lock this slot
                         _inbox[i]->lock();
                         // and get the message
-                        msg *= static_cast<const T&>((*_inbox[i])());
+                        msg *= static_cast<const T&>(_inbox[i]->receive());
                         // release lock
                         _inbox[i]->unlock();
                 }

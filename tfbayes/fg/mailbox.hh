@@ -30,7 +30,7 @@ public:
         }
 
         // access the contents
-        const T& operator()() const {
+        const T& receive() const {
                 return *_ptr_;
         }
         // replace contents
