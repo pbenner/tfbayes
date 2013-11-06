@@ -89,6 +89,9 @@ public:
         // link a factor node to this variable node
         virtual mailbox_slot_t<p_message_t>& link(mailbox_slot_t<q_message_t>& slot) = 0;
 
+        // condition on some data
+        virtual void condition(double data) = 0;
+
 protected:
         // prepare the q message
         virtual const q_message_t& message() = 0;
@@ -188,11 +191,7 @@ private:
 template <typename T>
 class variable_node_t : public virtual variable_node_i, public observable_t {
 public:
-        variable_node_t() :
-                _inbox      (),
-                outbox      (),
-                old_message (),
-                new_message () {
+        variable_node_t() {
         }
         variable_node_t(const variable_node_t& variable_node) :
         // do not copy the inbox and outbox, since they should be
@@ -200,7 +199,8 @@ public:
                 _inbox      (),
                 outbox      (),
                 old_message (variable_node.old_message),
-                new_message (variable_node.new_message) {
+                new_message (variable_node.new_message),
+                data        (variable_node.data) {
         }
         virtual variable_node_t* clone() const {
                 return new variable_node_t(*this);
@@ -256,30 +256,40 @@ public:
                 _inbox[i].observe(boost::bind(tmp, this));
                 return _inbox[i];
         }
+        virtual void condition(double data) {
+                this->data = data;
+        }
 
 protected:
         virtual const q_message_t& message() {
-                // reset message
-                new_message = T();
-                // loop over all slots of the mailbox
-                for (size_t i = 0; i < _inbox.size(); i++) {
-                        // lock this slot
-                        _inbox[i].lock();
-                        // and get the message
-                        std::cout << "-> getting message from slot " << i << std::endl;
-                        new_message *= static_cast<const T&>(_inbox[i]());
-                        // release lock
-                        _inbox[i].unlock();
+                if (data) {
+                        new_message = dirac_distribution_t(*data);
+                }
+                else {
+                        // reset message
+                        new_message = T();
+                        // loop over all slots of the mailbox
+                        for (size_t i = 0; i < _inbox.size(); i++) {
+                                // lock this slot
+                                _inbox[i].lock();
+                                // and get the message
+                                std::cout << "-> getting message from slot " << i << std::endl;
+                                new_message *= static_cast<const T&>(_inbox[i]());
+                                // release lock
+                                _inbox[i].unlock();
+                        }
                 }
                 return new_message;
         }
         // mailboxes
         _inbox_t<p_message_t> _inbox;
         outbox_t<q_message_t> outbox;
-
+        // messages
         T old_message;
         T new_message;
         std::vector<T> messages;
+        // observations
+        boost::optional<double> data;
 };
 
 #endif /* __TFBAYES_FG_NODE_TYPES_HH__ */
