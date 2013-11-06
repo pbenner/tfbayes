@@ -147,7 +147,7 @@ public:
                 void (observable_t::*tmp) () const = &factor_node_t::notify;
                 // observe the mailbox slot
                 _inbox[i].observe(boost::bind(tmp, this));
-                // receive and send mailer
+                // exchange mailbox slots
                 outbox[i] = variable_node.link(_inbox[i]);
                 // initialize outbox
                 outbox[i]->replace(initial_message(i));
@@ -229,7 +229,7 @@ public:
                         _inbox[i].lock();
                         // and get the message
                         std::cout << "-> getting message from slot " << i << std::endl;
-                        msg *= static_cast<const T&>(_inbox[i].receive());
+                        msg *= static_cast<const T&>(_inbox[i]());
                         // release lock
                         _inbox[i].unlock();
                 }

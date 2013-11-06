@@ -35,7 +35,7 @@ template <typename T>
 class mailbox_slot_t : public boost::mutex, public observable_t {
 public:
         // access the contents
-        const T& receive() const {
+        const T& operator()() const {
                 return *_ptr_;
         }
         // replace contents
