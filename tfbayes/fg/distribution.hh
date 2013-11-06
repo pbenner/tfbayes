@@ -269,8 +269,8 @@ public:
         friend void swap(normal_distribution_t& left,
                          normal_distribution_t& right) {
                 using std::swap;
-                swap(static_cast<exponential_family_t&>(left),
-                     static_cast<exponential_family_t&>(right));
+                swap(static_cast<base_t&>(left),
+                     static_cast<base_t&>(right));
         }
 
         virtual normal_distribution_t& operator=(const distribution_i& distribution) {
@@ -338,8 +338,8 @@ public:
         friend void swap(gamma_distribution_t& left,
                          gamma_distribution_t& right) {
                 using std::swap;
-                swap(static_cast<exponential_family_t&>(left),
-                     static_cast<exponential_family_t&>(right));
+                swap(static_cast<base_t&>(left),
+                     static_cast<base_t&>(right));
         }
 
         virtual gamma_distribution_t& operator=(const distribution_i& distribution) {
