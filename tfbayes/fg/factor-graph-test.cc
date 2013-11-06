@@ -26,7 +26,7 @@ using namespace std;
 int
 main()
 {
-        normal_fnode_t* n1 = new normal_fnode_t();
+        normal_fnode_t* n1 = new normal_fnode_t(1,2);
         normal_vnode_t* n2 = new normal_vnode_t();
          gamma_vnode_t* n3 = new  gamma_vnode_t();
 

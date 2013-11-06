@@ -34,6 +34,17 @@ class normal_fnode_t : public factor_node_t<3> {
 public:
         typedef factor_node_t<3> base_t;
 
+        normal_fnode_t(double mean, double precision) :
+                dmean(mean),
+                dprecision(precision) {
+                // set the inbox to the given parameters, however,
+                // once a node is connected to a slot, the respective
+                // parameter (represented by the dirac distribution)
+                // is replaced
+                _inbox[1].replace(dmean);
+                _inbox[2].replace(dprecision);
+        }
+
         virtual normal_fnode_t* clone() const {
                 return new normal_fnode_t(*this);
         }
@@ -64,6 +75,10 @@ protected:
         const p_message_t& message3() {
                 return distribution3;
         }
+
+        // parameters
+        dirac_distribution_t dmean;
+        dirac_distribution_t dprecision;
 
         // messages
         normal_distribution_t distribution1;
