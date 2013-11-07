@@ -248,10 +248,13 @@ public:
         virtual void send_messages() {
                 std::cout << "variable node " << this << " is sending messages" << std::endl;
                 // compute new q-message
+                std::cout << "<-> old mean " << current_message.template moment<1>() << std::endl;
                 current_message = message();
+                std::cout << "<-> new mean " << current_message.template moment<1>() << std::endl;
                 // check if this message was sent before
                 if (!current_message) {
-                        std::cout << "-> new message is the same, stopping." << std::endl;
+                        std::cout << "-> new message is the same, stopping." << std::endl
+                                  << std::endl;
                         return;
                 }
                 // lock all connected nodes

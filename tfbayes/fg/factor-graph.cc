@@ -135,11 +135,11 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
 
         cout << "creating " << _threads << " threads" << endl;
         cout << "n iterations " << n << endl;
-        cout << "n iterations " << std::numeric_limits<size_t>::infinity() << endl;
 
-        // add all variable nodes to the queue
+        // initialize the network by letting all variable nodes send
+        // their messages first
         for (size_t i = 0; i < _variable_nodes.size(); i++) {
-                _queue.push(_variable_nodes[i]);
+                _variable_nodes[i]->send_messages();
         }
 
         // sample

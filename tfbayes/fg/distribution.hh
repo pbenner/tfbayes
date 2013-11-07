@@ -58,7 +58,7 @@ protected:
 class dirac_distribution_t : public distribution_i {
 public:
         dirac_distribution_t() :
-                _x(std::numeric_limits<double>::quiet_NaN()) { }
+                _x() { }
         dirac_distribution_t(double x) :
                 _x(x) { }
 
@@ -84,29 +84,28 @@ public:
         virtual dirac_distribution_t& operator*=(const distribution_i& rhs) {
                 const dirac_distribution_t& tmp = static_cast<const dirac_distribution_t&>(rhs);
                 // multiplication is just like a logical and
-                if (_x != tmp._x) {
-                        _x = std::numeric_limits<double>::quiet_NaN();
+                if ((!_x || !tmp._x) || (*_x != tmp._x)) {
+                        _x = boost::optional<double>();
                 }
                 return *this;
         }
         virtual bool operator==(const distribution_i& rhs) const {
                 const dirac_distribution_t& tmp = static_cast<const dirac_distribution_t&>(rhs);
-                return _x == tmp._x;
+                return _x && tmp._x && *_x == *tmp._x;
         }
         virtual bool operator!=(const distribution_i& rhs) const {
-                const dirac_distribution_t& tmp = static_cast<const dirac_distribution_t&>(rhs);
-                return _x != tmp._x;
+                return !operator==(rhs);
         }
 
 protected:
         virtual double moment_first () const {
-                return _x;
+                return _x ? *_x : std::numeric_limits<double>::infinity();
         }
         virtual double moment_second() const {
-                return _x*_x;
+                return _x ? (*_x)*(*_x) : std::numeric_limits<double>::infinity();
         }
         // location of the dirac measure
-        double _x;
+        boost::optional<double> _x;
 };
 
 // what every exponential family should provide
