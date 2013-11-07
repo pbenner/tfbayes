@@ -25,8 +25,6 @@
 #include <algorithm> /* std::swap */
 #include <utility>   /* std::swap */
 
-#include <iostream>
-
 template <typename T>
 class hotnews_t {
 public:
