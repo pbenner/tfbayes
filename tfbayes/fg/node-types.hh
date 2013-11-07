@@ -28,6 +28,7 @@
 
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <boost/ptr_container/ptr_vector.hpp>
 // std::mutex does not work with Mac OS X, so instead
 // we use boost::mutex
 #include <boost/thread.hpp>
@@ -87,6 +88,9 @@ public:
         virtual ~variable_node_i() { }
 
         virtual variable_node_i* clone() const = 0;
+
+        // get current message
+        virtual const p_message_t& operator()() const = 0;
 
         // send messages to all connected factor nodes
         virtual void send_messages() = 0;
@@ -236,6 +240,9 @@ public:
                 return *this;
         }
 
+        virtual const T& operator()() const {
+                return new_message;
+        }
         virtual void send_messages() {
                 std::cout << "variable node " << this << " is sending messages" << std::endl;
                 // compute new q-message
@@ -248,7 +255,7 @@ public:
                         outbox[i]->lock();
                         messages[i] = new_message;
                         // the link is already present
-                        // outbox[i]->replace(messages[i]);
+                        outbox[i]->replace(messages[i]);
                         outbox[i]->notify();
                         outbox[i]->unlock();
                 }
@@ -259,7 +266,7 @@ public:
                 size_t i = _inbox.size();
                 void (observable_t::*tmp) () const = &variable_node_t::notify;
                 // allocate a new message
-                messages.push_back(T());
+                messages.push_back(new T());
                 // save slot to the outbox
                 outbox.push_back(slot);
                 // put the current message into the box
@@ -294,6 +301,7 @@ protected:
                                 // release lock
                                 _inbox[i].unlock();
                         }
+                        new_message.renormalize();
                 }
                 return new_message;
         }
@@ -303,7 +311,7 @@ protected:
         // messages
         T old_message;
         T new_message;
-        std::vector<T> messages;
+        boost::ptr_vector<T> messages;
         // observations
         boost::optional<double> data;
 };

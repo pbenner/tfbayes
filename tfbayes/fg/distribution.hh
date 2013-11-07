@@ -102,7 +102,7 @@ public:
         virtual double density(double x) const = 0;
         virtual double base_measure(double x) const = 0;
         virtual double log_partition() const = 0;
-        virtual void renormalize() = 0;
+        virtual bool renormalize() = 0;
 
         virtual exponential_family_i& operator*=(const exponential_family_i& e) = 0;
 };
@@ -212,8 +212,13 @@ public:
                 // and return
                 return *this;
         }
-        virtual void renormalize() {
+        virtual bool renormalize() {
+                // can't renormalize if this is a null object
+                if (_n == 0.0) {
+                        return false;
+                }
                 _n = 1.0;
+                return true;
         }
 protected:
         // access methods
@@ -291,12 +296,15 @@ public:
                 _T[1] = std::pow(x, 2.0);
                 return _T;
         }
-        virtual void renormalize() {
-                base_t::renormalize();
+        virtual bool renormalize() {
+                if (!base_t::renormalize()) {
+                        return false;
+                }
                 const double& p1 = parameters()[0];
                 const double& p2 = parameters()[1];
                 _log_partition =  -1.0/4.0*std::pow(p1/p2, 2.0)*p2 -
                         0.5*std::log(-2.0*p2);
+                return true;
         }
 protected:
         virtual double moment_first () const {
@@ -360,12 +368,15 @@ public:
                 _T[1] = -x;
                 return _T;
         }
-        virtual void renormalize() {
-                base_t::renormalize();
+        virtual bool renormalize() {
+                if (!base_t::renormalize()) {
+                        return false;
+                }
                 const double& a1 = parameters()[0]+1.0;
                 const double& a2 = parameters()[1];
                 _log_partition =  std::log(boost::math::tgamma(a1)) -
                         (a1)*std::log(a2);
+                return true;
         }
 protected:
         virtual double moment_first () const {

@@ -29,8 +29,10 @@ normal_fnode_t::normal_fnode_t(double mean, double precision) :
         // once a node is connected to a slot, the respective
         // parameter (represented by the dirac distribution)
         // is replaced
+        cout << "initializing mailbox" << endl;
         _inbox[1].replace(dmean);
         _inbox[2].replace(dprecision);
+        cout << "done." << endl;
 }
 
 normal_fnode_t*
