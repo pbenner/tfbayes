@@ -35,6 +35,7 @@
 // we use boost::mutex
 #include <boost/thread.hpp>
 
+#include <hotnews.hh>
 #include <mailbox.hh>
 #include <messages.hh>
 #include <observable.hh>
@@ -105,10 +106,10 @@ public:
 
 protected:
         // prepare the q message
-        virtual boost::optional<const q_message_t&> message() = 0;
+        virtual const q_message_t& message() = 0;
 };
 
-// basic implementations
+// basic implementations of factor and variable nodes
 ////////////////////////////////////////////////////////////////////////////////
 
 template <size_t D>
@@ -242,25 +243,22 @@ public:
         }
 
         virtual const T& operator()() const {
-                return current_message;
+                return current_message();
         }
         virtual void send_messages() {
                 std::cout << "variable node " << this << " is sending messages" << std::endl;
                 // compute new q-message
-                boost::optional<const q_message_t&> msg = message();
+                current_message = message();
                 // check if this message was sent before
-                if (!msg) {
+                if (!current_message) {
                         std::cout << "-> new message is the same, stopping." << std::endl;
                         return;
-                }
-                if (outbox.size() == 0) {
-                        std::cout << "-> outbox size is zero, stopping." << std::endl;
                 }
                 // lock all connected nodes
                 for (size_t i = 0; i < outbox.size(); i++) {
                         std::cout << "-> sending message to neighbor " << i << std::endl;
                         outbox[i]->lock();
-                        messages[i] = *msg;
+                        messages[i] = current_message();
                         // the link is already present
                         outbox[i]->replace(messages[i]);
                         outbox[i]->notify();
@@ -287,11 +285,13 @@ public:
         }
 
 protected:
+        // prepare the q message
+        virtual const T& message() = 0;
         // mailboxes
         _inbox_t<p_message_t> _inbox;
         outbox_t<q_message_t> outbox;
         // messages
-        T current_message;
+        hotnews_t<T> current_message;
         // keep a message for each node
         boost::ptr_vector<T> messages;
 };
@@ -314,9 +314,9 @@ public:
                 return new exponential_vnode_t(*this);
         }
 protected:
-        virtual boost::optional<const q_message_t&> message() {
-                // create a new message
-                T new_message;
+        virtual const T& message() {
+                // reset new_message
+                new_message = T();
                 // loop over all slots of the mailbox
                 for (size_t i = 0; i < this->_inbox.size(); i++) {
                         // lock this slot
@@ -331,14 +331,9 @@ protected:
                 new_message.renormalize();
                 std::cout << "-> message mean: " << new_message.template moment<1>() << std::endl;
                 // has this message be sent before?
-                if (new_message == this->current_message) {
-                        return boost::optional<const q_message_t&>();
-                }
-                else {
-                        this->current_message = new_message;
-                        return this->current_message;
-                }
+                return new_message;
         }
+        T new_message;
 };
 
 class data_vnode_t : public variable_node_t<dirac_distribution_t> {
@@ -357,15 +352,12 @@ public:
                 return new data_vnode_t(*this);
         }
 protected:
-        virtual boost::optional<const q_message_t&> message() {
-                dirac_distribution_t new_message(data);
-                if (this->current_message == new_message) {
-                        return boost::optional<const q_message_t&>();
-                }
-                this->current_message = new_message;
-                return this->current_message;
+        virtual const dirac_distribution_t& message() {
+                new_message = dirac_distribution_t(data);
+                return new_message;
         }
         double data;
+        dirac_distribution_t new_message;
 };
 
 #endif /* __TFBAYES_FG_NODE_TYPES_HH__ */

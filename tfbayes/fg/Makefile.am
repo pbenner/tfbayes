@@ -16,6 +16,7 @@ libtfbayes_fg_la_SOURCES = \
 	distribution.hh \
 	factor-graph.cc \
 	factor-graph.hh \
+	hotnews.hh \
 	mailbox.hh \
 	messages.hh \
 	node-types.hh \
