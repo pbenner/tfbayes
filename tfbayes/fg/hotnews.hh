@@ -25,8 +25,6 @@
 #include <algorithm> /* std::swap */
 #include <utility>   /* std::swap */
 
-#include <iostream>
-
 template <typename T>
 class hotnews_t : public T {
 public:
@@ -52,11 +50,7 @@ public:
                 // stink a little
                 hot = (*this != rhs);
                 if (hot) {
-                        std::cout << "---> message is hot" << std::endl;
                         T::operator=(rhs);
-                }
-                else {
-                        std::cout << "---> message is not hot" << std::endl;
                 }
                 return *this;
         }

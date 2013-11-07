@@ -148,7 +148,8 @@ public:
         }
 
         virtual void send_messages() {
-                std::cout << "factor node " << this << " is sending messages" << std::endl;
+                // since the whole inbox is locket, it is not
+                // necessary to also lock this method seperately
                 lock_inbox();
                 for (size_t i = 0; i < D; i++) {
                         if (outbox[i]) {
@@ -159,7 +160,6 @@ public:
                         }
                 }
                 unlock_inbox();
-                std::cout << std::endl;
         }
         virtual bool link(size_t i, variable_node_i& variable_node) {
                 assert(i < D);
@@ -246,28 +246,26 @@ public:
                 return current_message;
         }
         virtual void send_messages() {
-                std::cout << "variable node " << this << " is sending messages" << std::endl;
+                // lock this method to prevent other threads entering
+                // here at the same time
+                mtx.lock();
                 // compute new q-message
-                std::cout << "<-> old mean " << current_message.template moment<1>() << std::endl;
                 current_message = message();
-                std::cout << "<-> new mean " << current_message.template moment<1>() << std::endl;
                 // check if this message was sent before
                 if (!current_message) {
-                        std::cout << "-> new message is the same, stopping." << std::endl
-                                  << std::endl;
+                        mtx.unlock();
                         return;
                 }
                 // lock all connected nodes
                 for (size_t i = 0; i < outbox.size(); i++) {
-                        std::cout << "-> sending message to neighbor " << i << std::endl;
                         outbox[i]->lock();
                         messages[i] = current_message;
                         // the link is already present
                         outbox[i]->replace(messages[i]);
-                        outbox[i]->notify();
                         outbox[i]->unlock();
+                        outbox[i]->notify();
                 }
-                std::cout << std::endl;
+                mtx.unlock();
         }
         virtual mailbox_slot_t<p_message_t>& link(mailbox_slot_t<q_message_t>& slot) {
                 size_t i = _inbox.size();
@@ -297,6 +295,8 @@ protected:
         hotnews_t<T> current_message;
         // keep a message for each node
         boost::ptr_vector<T> messages;
+        // lock this node
+        boost::mutex mtx;
 };
 
 // specializations of the variable node
@@ -325,14 +325,12 @@ protected:
                         // lock this slot
                         this->_inbox[i].lock();
                         // and get the message
-                        std::cout << "-> getting message from slot " << i << std::endl;
                         new_message *= this->_inbox[i]();
                         // release lock
                         this->_inbox[i].unlock();
                 }
                 // normalize message
                 new_message.renormalize();
-                std::cout << "-> message mean: " << new_message.template moment<1>() << std::endl;
                 // has this message be sent before?
                 return new_message;
         }
@@ -357,7 +355,6 @@ public:
 protected:
         virtual const dirac_distribution_t& message() {
                 new_message = dirac_distribution_t(data);
-                std::cout << "-> message mean (dirac): " << new_message.moment<1>() << std::endl;
                 return new_message;
         }
         double data;

@@ -133,9 +133,6 @@ void
 factor_graph_t::operator()(boost::optional<size_t> n) {
         vector<boost::thread*> threads(_threads);
 
-        cout << "creating " << _threads << " threads" << endl;
-        cout << "n iterations " << n << endl;
-
         // initialize the network by letting all variable nodes send
         // their messages first
         for (size_t i = 0; i < _variable_nodes.size(); i++) {
@@ -157,7 +154,6 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
 
 void
 factor_graph_t::add_node(factor_graph_node_i* node) {
-        cout << "adding node " << node << " to the queue" << endl;
         mtx.lock();
         _queue.push(node);
         mtx.unlock();

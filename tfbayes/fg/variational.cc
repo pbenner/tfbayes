@@ -33,10 +33,8 @@ normal_fnode_t::normal_fnode_t(double mean, double precision) :
         // once a node is connected to a slot, the respective
         // parameter (represented by the dirac distribution)
         // is replaced
-        cout << "initializing mailbox" << endl;
         _inbox[1].replace(dmean);
         _inbox[2].replace(dprecision);
-        cout << "done." << endl;
 }
 
 normal_fnode_t*
@@ -87,10 +85,6 @@ normal_fnode_t::message1() {
         double mean      = _inbox[1]().moment<1>();
         double precision = _inbox[2]().moment<1>();
 
-        cout << "preparing message 1:" << endl
-             << "-> mean     : " << mean      << endl
-             << "-> precisoin: " << precision << endl;
-
         distribution1 = normal_distribution_t(mean, precision);
 
         return distribution1;
@@ -100,10 +94,6 @@ const p_message_t&
 normal_fnode_t::message2() {
         double mean      = _inbox[0]().moment<1>();
         double precision = _inbox[2]().moment<1>();
-
-        cout << "preparing message 2:" << endl
-             << "-> mean     : " << mean      << endl
-             << "-> precisoin: " << precision << endl;
 
         distribution2 = normal_distribution_t(mean, precision);
 
@@ -120,10 +110,6 @@ normal_fnode_t::message3() {
         // parameters of the gamma distribution
         double shape = 1.5;
         double rate  = 0.5*(y2 - 2.0*y*mu + mu2);
-
-        cout << "preparing message 3:" << endl
-             << "-> shape: " << shape << endl
-             << "-> rate : " << rate  << endl;
 
         // replace distribution
         distribution3 = gamma_distribution_t(shape, rate);
