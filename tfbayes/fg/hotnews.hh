@@ -26,7 +26,7 @@
 #include <utility>   /* std::swap */
 
 template <typename T>
-class hotnews_t {
+class hotnews_t : public T {
 public:
         hotnews_t() :
                 hot(true) {
@@ -34,16 +34,10 @@ public:
 
         friend void swap(hotnews_t& left, hotnews_t& right) {
                 using std::swap;
-                swap(left.news, right.news);
-                swap(left.hot,  right.hot);
+                swap(static_cast<T&>(left), static_cast<T&>(right));
+                swap(left.hot, right.hot);
         }
-        // access news
-        T& operator()() {
-                return news;
-        }
-        const T& operator()() const {
-                return news;
-        }
+
         // standard assignment operator
         hotnews_t& operator=(const hotnews_t& rhs) {
                 using std::swap;
@@ -54,8 +48,10 @@ public:
         hotnews_t& operator=(const T& rhs) {
                 // if we receive the same news twice, it starts to
                 // stink a little
-                hot  = (news != rhs);
-                news = rhs;
+                hot = (*this != rhs);
+                if (hot) {
+                        T::operator=(rhs);
+                }
                 return *this;
         }
         // is this news still hot or does it stink like old fish?
@@ -63,7 +59,6 @@ public:
                 return hot;
         }
 protected:
-        T news;
         bool hot;
 };
 

@@ -243,7 +243,7 @@ public:
         }
 
         virtual const T& operator()() const {
-                return current_message();
+                return current_message;
         }
         virtual void send_messages() {
                 std::cout << "variable node " << this << " is sending messages" << std::endl;
@@ -258,7 +258,7 @@ public:
                 for (size_t i = 0; i < outbox.size(); i++) {
                         std::cout << "-> sending message to neighbor " << i << std::endl;
                         outbox[i]->lock();
-                        messages[i] = current_message();
+                        messages[i] = current_message;
                         // the link is already present
                         outbox[i]->replace(messages[i]);
                         outbox[i]->notify();
