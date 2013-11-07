@@ -27,9 +27,9 @@ int
 main()
 {
         normal_fnode_t* f1 = new normal_fnode_t(1,2);
-        normal_vnode_t* v1 = new normal_vnode_t();
+          data_vnode_t* v1 = new data_vnode_t(1.42);
 
-        normal_fnode_t* f2 = new normal_fnode_t(0,2);
+        normal_fnode_t* f2 = new normal_fnode_t(2,2);
         normal_vnode_t* v2 = new normal_vnode_t();
 
 //        gamma_fnode_t* f3 = new gamma_fnode_t(1,2);
@@ -45,7 +45,7 @@ main()
         f2->link("output", *v2);
 //        f3->link("output", *v3);
 
-        v1->condition(1.32);
+//        v1->condition(1.32);
 
         fnodes.push_back(f1);
         fnodes.push_back(f2);

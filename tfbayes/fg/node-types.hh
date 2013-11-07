@@ -29,6 +29,8 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
+#include <boost/type_traits/is_class.hpp>
+#include <boost/utility/enable_if.hpp>
 // std::mutex does not work with Mac OS X, so instead
 // we use boost::mutex
 #include <boost/thread.hpp>
@@ -90,7 +92,7 @@ public:
         virtual variable_node_i* clone() const = 0;
 
         // get current message
-        virtual const p_message_t& operator()() const = 0;
+        virtual const q_message_t& operator()() const = 0;
 
         // send messages to all connected factor nodes
         virtual void send_messages() = 0;
@@ -98,15 +100,12 @@ public:
         // link a factor node to this variable node
         virtual mailbox_slot_t<p_message_t>& link(mailbox_slot_t<q_message_t>& slot) = 0;
 
-        // condition on some data
-        virtual void condition(double data) = 0;
-
         // get the type of the distribution this node represents
         virtual const std::type_info& type() const = 0;
 
 protected:
         // prepare the q message
-        virtual const q_message_t& message() = 0;
+        virtual boost::optional<const q_message_t&> message() = 0;
 };
 
 // basic implementations
@@ -121,11 +120,12 @@ public:
                 _neighbors(D, NULL) {
         }
         factor_node_t(const factor_node_t& factor_node) :
+                observable_t(factor_node),
         // do not copy the mailer and mailbox, since they should be
         // populated manually to create a new network
-                _inbox    (D),
-                outbox    (D),
-                _neighbors(D, NULL) {
+                _inbox      (D),
+                outbox      (D),
+                _neighbors  (D, NULL) {
         }
 
         virtual factor_node_t* clone() const = 0;
@@ -158,12 +158,17 @@ public:
                         }
                 }
                 unlock_inbox();
+                std::cout << std::endl;
         }
         virtual bool link(size_t i, variable_node_i& variable_node) {
                 assert(i < D);
                 // allow only conjugate nodes to connect
-                if (!is_conjugate(i, variable_node))
-                    return false;
+                if (// variable_node either has to be a conjugate distribution
+                    !is_conjugate(i, variable_node) &&
+                    // or a dirac distribution
+                    variable_node.type() != typeid(dirac_distribution_t)) {
+                        return false;
+                }
                 // pointer to the method that notifies the factor
                 // graph about an update
                 void (observable_t::*tmp) () const = &factor_node_t::notify;
@@ -211,26 +216,22 @@ public:
         variable_node_t() {
         }
         variable_node_t(const variable_node_t& variable_node) :
+                observable_t   (variable_node),
         // do not copy the inbox and outbox, since they should be
         // populated manually to create a new network
-                _inbox      (),
-                outbox      (),
-                old_message (variable_node.old_message),
-                new_message (variable_node.new_message),
-                data        (variable_node.data) {
-        }
-        virtual variable_node_t* clone() const {
-                return new variable_node_t(*this);
+                _inbox         (),
+                outbox         (),
+                current_message(variable_node.current_message),
+                messages       () {
         }
 
         friend void swap(variable_node_t& left, variable_node_t& right) {
                 using std::swap;
                 swap(static_cast<observable_t&>(left),
                      static_cast<observable_t&>(right));
-                swap(left._inbox,      right._inbox);
-                swap(left.outbox,      right.outbox);
-                swap(left.old_message, right.old_message);
-                swap(left.new_message, right.new_message);
+                swap(left._inbox, right._inbox);
+                swap(left.outbox, right.outbox);
+                swap(left.current_message, right.current_message);
         }
 
         variable_node_t& operator=(const variable_node_t& node) {
@@ -241,26 +242,31 @@ public:
         }
 
         virtual const T& operator()() const {
-                return new_message;
+                return current_message;
         }
         virtual void send_messages() {
                 std::cout << "variable node " << this << " is sending messages" << std::endl;
                 // compute new q-message
-                message();
+                boost::optional<const q_message_t&> msg = message();
                 // check if this message was sent before
-                if (new_message == old_message) return;
+                if (!msg) {
+                        std::cout << "-> new message is the same, stopping." << std::endl;
+                        return;
+                }
+                if (outbox.size() == 0) {
+                        std::cout << "-> outbox size is zero, stopping." << std::endl;
+                }
                 // lock all connected nodes
                 for (size_t i = 0; i < outbox.size(); i++) {
                         std::cout << "-> sending message to neighbor " << i << std::endl;
                         outbox[i]->lock();
-                        messages[i] = new_message;
+                        messages[i] = *msg;
                         // the link is already present
                         outbox[i]->replace(messages[i]);
                         outbox[i]->notify();
                         outbox[i]->unlock();
                 }
-                // save message
-                old_message = new_message;
+                std::cout << std::endl;
         }
         virtual mailbox_slot_t<p_message_t>& link(mailbox_slot_t<q_message_t>& slot) {
                 size_t i = _inbox.size();
@@ -276,44 +282,90 @@ public:
                 _inbox[i].observe(boost::bind(tmp, this));
                 return _inbox[i];
         }
-        virtual void condition(double data) {
-                this->data = data;
-        }
         virtual const std::type_info& type() const {
                 return typeid(T);
         }
 
 protected:
-        virtual const q_message_t& message() {
-                if (data) {
-                        new_message = dirac_distribution_t(*data);
-                }
-                else {
-                        // reset message
-                        new_message = T();
-                        // loop over all slots of the mailbox
-                        for (size_t i = 0; i < _inbox.size(); i++) {
-                                // lock this slot
-                                _inbox[i].lock();
-                                // and get the message
-                                std::cout << "-> getting message from slot " << i << std::endl;
-                                new_message *= static_cast<const T&>(_inbox[i]());
-                                // release lock
-                                _inbox[i].unlock();
-                        }
-                        new_message.renormalize();
-                }
-                return new_message;
-        }
         // mailboxes
         _inbox_t<p_message_t> _inbox;
         outbox_t<q_message_t> outbox;
         // messages
-        T old_message;
-        T new_message;
+        T current_message;
+        // keep a message for each node
         boost::ptr_vector<T> messages;
-        // observations
-        boost::optional<double> data;
+};
+
+// specializations of the variable node
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+class exponential_vnode_t : public variable_node_t<T> {
+public:
+        typedef variable_node_t<T> base_t;
+
+        exponential_vnode_t() :
+                base_t() {
+        }
+        exponential_vnode_t(const exponential_vnode_t& exponential_vnode) :
+                base_t(exponential_vnode) {
+        }
+        virtual exponential_vnode_t* clone() const {
+                return new exponential_vnode_t(*this);
+        }
+protected:
+        virtual boost::optional<const q_message_t&> message() {
+                // create a new message
+                T new_message;
+                // loop over all slots of the mailbox
+                for (size_t i = 0; i < this->_inbox.size(); i++) {
+                        // lock this slot
+                        this->_inbox[i].lock();
+                        // and get the message
+                        std::cout << "-> getting message from slot " << i << std::endl;
+                        new_message *= this->_inbox[i]();
+                        // release lock
+                        this->_inbox[i].unlock();
+                }
+                // normalize message
+                new_message.renormalize();
+                std::cout << "-> message mean: " << new_message.template moment<1>() << std::endl;
+                // has this message be sent before?
+                if (new_message == this->current_message) {
+                        return boost::optional<const q_message_t&>();
+                }
+                else {
+                        this->current_message = new_message;
+                        return this->current_message;
+                }
+        }
+};
+
+class data_vnode_t : public variable_node_t<dirac_distribution_t> {
+public:
+        typedef variable_node_t<dirac_distribution_t> base_t;
+
+        data_vnode_t(double x) :
+                base_t(),
+                data(x) {
+        }
+        data_vnode_t(const data_vnode_t& data_vnode) :
+                base_t(data_vnode),
+                data  (data_vnode.data) {
+        }
+        virtual data_vnode_t* clone() const {
+                return new data_vnode_t(*this);
+        }
+protected:
+        virtual boost::optional<const q_message_t&> message() {
+                dirac_distribution_t new_message(data);
+                if (this->current_message == new_message) {
+                        return boost::optional<const q_message_t&>();
+                }
+                this->current_message = new_message;
+                return this->current_message;
+        }
+        double data;
 };
 
 #endif /* __TFBAYES_FG_NODE_TYPES_HH__ */

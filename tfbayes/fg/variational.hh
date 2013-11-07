@@ -26,8 +26,8 @@
 
 // variable node specializations
 ////////////////////////////////////////////////////////////////////////////////
-typedef variable_node_t<normal_distribution_t> normal_vnode_t;
-typedef variable_node_t< gamma_distribution_t>  gamma_vnode_t;
+typedef exponential_vnode_t<normal_distribution_t> normal_vnode_t;
+typedef exponential_vnode_t< gamma_distribution_t>  gamma_vnode_t;
 
 // factor node specializations
 ////////////////////////////////////////////////////////////////////////////////

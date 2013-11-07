@@ -40,6 +40,9 @@ public:
 
         virtual distribution_i& operator=(const distribution_i& distribution) = 0;
 
+        // multiplication of distributions
+        virtual distribution_i& operator*=(const distribution_i& e) = 0;
+
         // comparison operators
         virtual bool operator==(const distribution_i& rhs) const = 0;
         virtual bool operator!=(const distribution_i& rhs) const = 0;
@@ -54,6 +57,8 @@ protected:
 
 class dirac_distribution_t : public distribution_i {
 public:
+        dirac_distribution_t() :
+                _x(std::numeric_limits<double>::quiet_NaN()) { }
         dirac_distribution_t(double x) :
                 _x(x) { }
 
@@ -74,6 +79,14 @@ public:
                 using std::swap;
                 dirac_distribution_t tmp(distribution);
                 swap(*this, tmp);
+                return *this;
+        }
+        virtual dirac_distribution_t& operator*=(const distribution_i& rhs) {
+                const dirac_distribution_t& tmp = static_cast<const dirac_distribution_t&>(rhs);
+                // multiplication is just like a logical and
+                if (_x != tmp._x) {
+                        _x = std::numeric_limits<double>::quiet_NaN();
+                }
                 return *this;
         }
         virtual bool operator==(const distribution_i& rhs) const {
@@ -103,8 +116,6 @@ public:
         virtual double base_measure(double x) const = 0;
         virtual double log_partition() const = 0;
         virtual bool renormalize() = 0;
-
-        virtual exponential_family_i& operator*=(const exponential_family_i& e) = 0;
 };
 
 template<>
@@ -198,7 +209,7 @@ public:
         virtual double log_partition() const {
                 return _log_partition;
         }
-        virtual exponential_family_t& operator*=(const exponential_family_i& _e) {
+        virtual exponential_family_t& operator*=(const distribution_i& _e) {
                 const exponential_family_t& e =
                         static_cast<const exponential_family_t&>(_e);
                 // add parameters

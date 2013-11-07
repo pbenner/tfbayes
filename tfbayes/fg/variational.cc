@@ -83,6 +83,10 @@ normal_fnode_t::message1() {
         double mean      = _inbox[1]().moment<1>();
         double precision = _inbox[2]().moment<1>();
 
+        cout << "preparing message 1:" << endl
+             << "-> mean     : " << mean      << endl
+             << "-> precisoin: " << precision << endl;
+
         distribution1 = normal_distribution_t(mean, precision);
 
         return distribution1;
@@ -92,6 +96,10 @@ const p_message_t&
 normal_fnode_t::message2() {
         double mean      = _inbox[0]().moment<1>();
         double precision = _inbox[2]().moment<1>();
+
+        cout << "preparing message 2:" << endl
+             << "-> mean     : " << mean      << endl
+             << "-> precisoin: " << precision << endl;
 
         distribution2 = normal_distribution_t(mean, precision);
 
@@ -108,6 +116,11 @@ normal_fnode_t::message3() {
         // parameters of the gamma distribution
         double shape = 1.5;
         double rate  = 0.5*(y2 - 2.0*y*mu + mu2);
+
+        cout << "preparing message 3:" << endl
+             << "-> shape: " << shape << endl
+             << "-> rate : " << rate  << endl;
+
         // replace distribution
         distribution3 = gamma_distribution_t(shape, rate);
 
