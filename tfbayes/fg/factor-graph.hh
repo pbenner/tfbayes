@@ -33,8 +33,8 @@
 
 class factor_graph_t {
 public:
-        factor_graph_t(const std::vector<variable_node_i*> variable_nodes,
-                       const std::vector<  factor_node_i*> factor_nodes,
+        factor_graph_t(const std::vector<  factor_node_i*> factor_nodes,
+                       const std::vector<variable_node_i*> variable_nodes,
                        size_t threads = 1);
         factor_graph_t(const factor_graph_t& factor_graph);
 
@@ -59,8 +59,8 @@ public:
         void operator()(boost::optional<size_t> n = boost::optional<size_t>());
 
 protected:
-        std::vector<variable_node_i*> _variable_nodes;
         std::vector<  factor_node_i*> _factor_nodes;
+        std::vector<variable_node_i*> _variable_nodes;
         // queue of nodes that need to send messages
         std::queue<factor_graph_node_i*> _queue;
         // number of threads

@@ -65,11 +65,11 @@ protected:
 
 using namespace std;
 
-factor_graph_t::factor_graph_t(const vector<variable_node_i*> variable_nodes,
-                               const vector<  factor_node_i*> factor_nodes,
+factor_graph_t::factor_graph_t(const vector<  factor_node_i*> factor_nodes,
+                               const vector<variable_node_i*> variable_nodes,
                                size_t threads) :
-        _variable_nodes (variable_nodes),
         _factor_nodes   (factor_nodes),
+        _variable_nodes (variable_nodes),
         _threads        (threads)
 {
         void (factor_graph_t::*tmp) (factor_graph_node_i*) = &factor_graph_t::add_node;
@@ -94,8 +94,8 @@ factor_graph_t::~factor_graph_t() {
 }
 
 factor_graph_t::factor_graph_t(const factor_graph_t& factor_graph) :
-        _variable_nodes (),
         _factor_nodes   (),
+        _variable_nodes (),
         _queue          (),
         _threads        (factor_graph._threads)
 {
