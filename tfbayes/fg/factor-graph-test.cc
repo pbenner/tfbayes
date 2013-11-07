@@ -32,33 +32,31 @@ main()
         normal_fnode_t* f2 = new normal_fnode_t(2,2);
         normal_vnode_t* v2 = new normal_vnode_t();
 
-//        gamma_fnode_t* f3 = new gamma_fnode_t(1,2);
-//        gamma_vnode_t* v3 = new gamma_vnode_t();
+        gamma_fnode_t* f3 = new gamma_fnode_t(1,2);
+        gamma_vnode_t* v3 = new gamma_vnode_t();
 
         vector<variable_node_i*> vnodes;
         vector<  factor_node_i*> fnodes;
 
         f1->link("output",    *v1);
         f1->link("mean",      *v2);
-//        f1->link("precision", *v3);
+        f1->link("precision", *v3);
 
         f2->link("output", *v2);
-//        f3->link("output", *v3);
-
-//        v1->condition(1.32);
+        f3->link("output", *v3);
 
         fnodes.push_back(f1);
         fnodes.push_back(f2);
-//        fnodes.push_back(f3);
+        fnodes.push_back(f3);
         vnodes.push_back(v1);
         vnodes.push_back(v2);
-//        vnodes.push_back(v3);
+        vnodes.push_back(v3);
 
         factor_graph_t fg1(vnodes, fnodes);
         factor_graph_t fg2(fg1);
 
         fg1();
 
-        cout << "mean: " << (*v2)().moment<1>()
-             << endl;
+        cout << "mean: " << (*v2)().moment<1>() << endl
+             << "mean: " << (*v3)().moment<1>() << endl;
 }

@@ -354,6 +354,7 @@ public:
 protected:
         virtual const dirac_distribution_t& message() {
                 new_message = dirac_distribution_t(data);
+                std::cout << "-> message mean (dirac): " << new_message.moment<1>() << std::endl;
                 return new_message;
         }
         double data;

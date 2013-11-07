@@ -29,7 +29,7 @@ template <typename T>
 class hotnews_t : public T {
 public:
         hotnews_t() :
-                hot(true) {
+                hot(false) {
         }
 
         friend void swap(hotnews_t& left, hotnews_t& right) {

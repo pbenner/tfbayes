@@ -24,7 +24,11 @@ using namespace std;
 
 normal_fnode_t::normal_fnode_t(double mean, double precision) :
         dmean(mean),
-        dprecision(precision) {
+        dprecision(precision),
+        // initial distributions
+        distribution1(0,1),
+        distribution2(0,1),
+        distribution3(1,1) {
         // set the inbox to the given parameters, however,
         // once a node is connected to a slot, the respective
         // parameter (represented by the dirac distribution)
@@ -132,7 +136,10 @@ normal_fnode_t::message3() {
 
 gamma_fnode_t::gamma_fnode_t(double shape, double rate) :
         dshape (shape),
-        drate  (rate) {
+        drate  (rate),
+        // initial distributions
+        distribution1(1,1),
+        distribution3(1,1) {
         // set the inbox to the given parameters, however,
         // once a node is connected to a slot, the respective
         // parameter (represented by the dirac distribution)
