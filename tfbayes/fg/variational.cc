@@ -39,6 +39,14 @@ normal_fnode_t::clone() const {
 }
 
 bool
+normal_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
+        if      (id == "output"   ) return base_t::link(0, variable_node);
+        else if (id == "mean"     ) return base_t::link(1, variable_node);
+        else if (id == "precision") return base_t::link(2, variable_node);
+        else return false;
+}
+
+bool
 normal_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
         switch (i) {
         case 0: return variable_node.type() == typeid(normal_distribution_t);
@@ -109,7 +117,7 @@ normal_fnode_t::message3() {
 
 gamma_fnode_t::gamma_fnode_t(double shape, double rate) :
         dshape (shape),
-        drate  (drate) {
+        drate  (rate) {
         // set the inbox to the given parameters, however,
         // once a node is connected to a slot, the respective
         // parameter (represented by the dirac distribution)
@@ -121,6 +129,14 @@ gamma_fnode_t::gamma_fnode_t(double shape, double rate) :
 gamma_fnode_t*
 gamma_fnode_t::clone() const {
         return new gamma_fnode_t(*this);
+}
+
+bool
+gamma_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
+        if      (id == "output") return base_t::link(0, variable_node);
+        else if (id == "shape" ) return base_t::link(1, variable_node);
+        else if (id == "rate"  ) return base_t::link(2, variable_node);
+        else return false;
 }
 
 bool

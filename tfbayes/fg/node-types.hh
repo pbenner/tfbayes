@@ -67,7 +67,8 @@ public:
         virtual factor_node_i* clone() const = 0;
 
         // link a variable node to this factor node
-        virtual void link(size_t i, variable_node_i& variable_node) = 0;
+        virtual bool link(size_t i, variable_node_i& variable_node) = 0;
+        virtual bool link(const std::string& id, variable_node_i& variable_node) = 0;
 
         // neighboring variable nodes
         virtual const std::vector<variable_node_i*>& neighbors() const = 0;
@@ -154,11 +155,11 @@ public:
                 }
                 unlock_inbox();
         }
-        virtual void link(size_t i, variable_node_i& variable_node) {
+        virtual bool link(size_t i, variable_node_i& variable_node) {
                 assert(i < D);
                 // allow only conjugate nodes to connect
                 if (!is_conjugate(i, variable_node))
-                    return;
+                    return false;
                 // pointer to the method that notifies the factor
                 // graph about an update
                 void (observable_t::*tmp) () const = &factor_node_t::notify;
@@ -170,6 +171,8 @@ public:
                 outbox[i]->replace(initial_message(i));
                 // save neighbor
                 _neighbors[i] = &variable_node;
+                // return that the nodes were successfully linked
+                return true;
         }
         virtual const std::vector<variable_node_i*>& neighbors() const {
                 return _neighbors;

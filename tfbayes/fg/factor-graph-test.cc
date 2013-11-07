@@ -26,19 +26,31 @@ using namespace std;
 int
 main()
 {
-        normal_fnode_t* n1 = new normal_fnode_t(1,2);
-        normal_vnode_t* n2 = new normal_vnode_t();
-         gamma_vnode_t* n3 = new  gamma_vnode_t();
+        normal_fnode_t* f1 = new normal_fnode_t(1,2);
+        normal_vnode_t* v1 = new normal_vnode_t();
+
+        normal_fnode_t* f2 = new normal_fnode_t(0,2);
+        normal_vnode_t* v2 = new normal_vnode_t();
+
+        gamma_fnode_t* f3 = new gamma_fnode_t(1,2);
+        gamma_vnode_t* v3 = new gamma_vnode_t();
 
         vector<variable_node_i*> vnodes;
         vector<  factor_node_i*> fnodes;
 
-        n1->link(1, *n2);
-        n1->link(2, *n3);
+        f1->link("output",    *v1);
+        f1->link("mean",      *v2);
+        f1->link("precision", *v3);
 
-        fnodes.push_back(n1);
-        vnodes.push_back(n2);
-        vnodes.push_back(n3);
+        f2->link("output", *v2);
+        f3->link("output", *v3);
+
+        fnodes.push_back(f1);
+        fnodes.push_back(f2);
+        fnodes.push_back(f3);
+        vnodes.push_back(v1);
+        vnodes.push_back(v2);
+        vnodes.push_back(v3);
 
         factor_graph_t fg1(vnodes, fnodes);
         factor_graph_t fg2(fg1);

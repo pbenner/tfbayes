@@ -39,6 +39,7 @@ public:
 
         virtual normal_fnode_t* clone() const;
 
+        virtual bool link(const std::string& id, variable_node_i& variable_node);
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
         virtual const p_message_t& initial_message(size_t i) const;
@@ -67,6 +68,7 @@ public:
 
         virtual gamma_fnode_t* clone() const;
 
+        virtual bool link(const std::string& id, variable_node_i& variable_node);
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
         virtual const p_message_t& initial_message(size_t i) const;
