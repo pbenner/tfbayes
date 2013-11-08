@@ -27,23 +27,11 @@
 #include <vector>
 
 #include <boost/optional.hpp>
-#include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/thread.hpp>
 
+#include <tfbayes/fg/node-set.hh>
 #include <tfbayes/fg/node-types.hh>
 #include <tfbayes/utility/default-operator.hh>
-
-template <typename T>
-class node_set_t : public boost::ptr_vector<T> {
-public:
-        node_set_t<T>& operator+=(T* node) {
-                this->push_back(node);
-                return *this;
-        }
-};
-
-typedef node_set_t<factor_node_i> factor_set_t;
-typedef node_set_t<variable_node_i> variable_set_t;
 
 class factor_graph_t {
 public:
