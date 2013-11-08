@@ -125,7 +125,6 @@ public:
                 _inbox    (D),
                 outbox    (D),
                 _neighbors(D, NULL) {
-                std::cout << "creating factor node " << this << std::endl;
         }
         factor_node_t(const factor_node_t& factor_node) :
                 factor_node_i(factor_node),
@@ -135,7 +134,6 @@ public:
                 _inbox      (D),
                 outbox      (D),
                 _neighbors  (D, NULL) {
-                std::cout << "copying factor node from " << &factor_node << " to " << this << std::endl;
         }
 
         virtual factor_node_t* clone() const = 0;
@@ -165,13 +163,11 @@ public:
         }
         virtual bool link(size_t i, variable_node_i& variable_node) {
                 assert(i < D);
-                std::cout << "linking factor node " << this << " with variable node " << &variable_node << std::endl;
                 // allow only conjugate nodes to connect
                 if (// variable_node either has to be a conjugate distribution
                     !is_conjugate(i, variable_node) &&
                     // or a dirac distribution
                     variable_node.type() != typeid(dirac_distribution_t)) {
-                        std::cout << "ERROR: can't link." << std::endl;
                         return false;
                 }
                 // pointer to the method that notifies the factor
@@ -219,7 +215,6 @@ template <typename T>
 class variable_node_t : public variable_node_i, public observable_t {
 public:
         variable_node_t() {
-                std::cout << "creating variable node " << this << std::endl;
         }
         variable_node_t(const variable_node_t& variable_node) :
                 variable_node_i(variable_node),
@@ -230,7 +225,6 @@ public:
                 outbox         (),
                 current_message(variable_node.current_message),
                 messages       () {
-                std::cout << "copying variable node from " << &variable_node << " to " << this << std::endl;
         }
 
         friend void swap(variable_node_t& left, variable_node_t& right) {
@@ -241,7 +235,6 @@ public:
                 swap(left.outbox,          right.outbox);
                 swap(left.current_message, right.current_message);
                 swap(left.messages,        right.messages);
-                std::cout << "SWAP CALLED" << std::endl;
         }
 
         virtual const T& operator()() const {
@@ -317,7 +310,6 @@ public:
                 new_message (exponential_vnode.new_message) {
         }
         virtual exponential_vnode_t* clone() const {
-                std::cout << "cloning exponential vnode" << std::endl;
                 return new exponential_vnode_t(*this);
         }
         derived_assignment_operator(variable_node_i, exponential_vnode_t)
@@ -356,7 +348,6 @@ public:
                 new_message (data_vnode.new_message) {
         }
         virtual data_vnode_t* clone() const {
-                std::cout << "cloning data vnode" << std::endl;
                 return new data_vnode_t(*this);
         }
         derived_assignment_operator(variable_node_i, data_vnode_t)

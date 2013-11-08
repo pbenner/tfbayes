@@ -38,6 +38,7 @@ public:
         typedef factor_node_t<3> base_t;
 
         normal_fnode_t(double mean, double precision);
+        normal_fnode_t(const normal_fnode_t& normal_fnode);
 
         virtual normal_fnode_t* clone() const;
 
@@ -69,6 +70,7 @@ public:
         typedef factor_node_t<3> base_t;
 
         gamma_fnode_t(double shape, double rate);
+        gamma_fnode_t(const gamma_fnode_t& gamma_fnode);
 
         virtual gamma_fnode_t* clone() const;
 

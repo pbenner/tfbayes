@@ -23,8 +23,8 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 normal_fnode_t::normal_fnode_t(double mean, double precision) :
-        dmean(mean),
-        dprecision(precision),
+        dmean        (mean),
+        dprecision   (precision),
         // initial distributions
         distribution1(0,1),
         distribution2(0,1),
@@ -37,9 +37,18 @@ normal_fnode_t::normal_fnode_t(double mean, double precision) :
         _inbox[2].replace(dprecision);
 }
 
+normal_fnode_t::normal_fnode_t(const normal_fnode_t& normal_fnode) :
+        dmean        (normal_fnode.dmean),
+        dprecision   (normal_fnode.dprecision),
+        distribution1(normal_fnode.distribution1),
+        distribution2(normal_fnode.distribution2),
+        distribution3(normal_fnode.distribution3) {
+        _inbox[1].replace(dmean);
+        _inbox[2].replace(dprecision);
+}
+
 normal_fnode_t*
 normal_fnode_t::clone() const {
-        std::cout << "cloning normal fnode" << std::endl;
         return new normal_fnode_t(*this);
 }
 
@@ -135,9 +144,17 @@ gamma_fnode_t::gamma_fnode_t(double shape, double rate) :
         _inbox[2].replace(drate);
 }
 
+gamma_fnode_t::gamma_fnode_t(const gamma_fnode_t& gamma_fnode) :
+        dshape       (gamma_fnode.dshape),
+        drate        (gamma_fnode.drate),
+        distribution1(gamma_fnode.distribution1),
+        distribution3(gamma_fnode.distribution3) {
+        _inbox[1].replace(dshape);
+        _inbox[2].replace(drate);
+}
+
 gamma_fnode_t*
 gamma_fnode_t::clone() const {
-        std::cout << "cloning gamma fnode" << std::endl;
         return new gamma_fnode_t(*this);
 }
 
