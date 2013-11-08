@@ -262,8 +262,8 @@ public:
                         messages[i] = current_message;
                         // the link is already present
                         outbox[i]->replace(messages[i]);
-                        outbox[i]->unlock();
                         outbox[i]->notify();
+                        outbox[i]->unlock();
                 }
                 mtx.unlock();
         }

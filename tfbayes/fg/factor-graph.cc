@@ -36,16 +36,24 @@ public:
                 // pointer to a node
                 factor_graph_node_i* job;
                 // get jobs from the queue
-                while ( !queue().empty()) {
+                while (true) {
                         // stop if maximum number of iterations is reached
                         if (n && (*n) == 0) break;
                         // decrement n
                         if (n) (*n)--;
+                        // lock queue
                         mtx().lock();
-                        job = queue().front();
-                        queue().pop();
-                        mtx().unlock();
-                        job->send_messages();
+                        // receive objects if queue is not empty
+                        if (queue().empty()) {
+                                mtx().unlock();
+                                break;
+                        }
+                        else {
+                                job = queue().front();
+                                queue().pop();
+                                mtx().unlock();
+                                job->send_messages();
+                        }
                 }
         }
         std::queue<factor_graph_node_i*>& queue() {
