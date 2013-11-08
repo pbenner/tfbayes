@@ -21,6 +21,7 @@
 #include <cctype>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <boost/noncopyable.hpp>
 #include <boost/python.hpp>
@@ -29,9 +30,14 @@
 #include <boost/python/make_constructor.hpp>
 #include <boost/python/operators.hpp>
 
-#include <tfbayes/fg/distribution.hh>
+#include <distribution.hh>
+#include <variational.hh>
+#include <factor-graph.hh>
 
 using namespace boost::python;
+
+// utility
+// -----------------------------------------------------------------------------
 
 static
 double distribution_moment(const distribution_i& distribution, size_t n)
@@ -46,8 +52,30 @@ double distribution_moment(const distribution_i& distribution, size_t n)
         }
 }
 
+static
+factor_graph_t* construct_factor_graph(list& factor_nodes, list& variable_nodes)
+{
+        std::vector<  factor_node_i*> fnodes;
+        std::vector<variable_node_i*> vnodes;
+
+        for (ssize_t i = 0; i < len(factor_nodes); i++) {
+                factor_node_i& ref = extract<factor_node_i&>(factor_nodes[i]);
+                fnodes.push_back(&ref);
+        }
+        for (ssize_t i = 0; i < len(variable_nodes); i++) {
+                variable_node_i& ref = extract<variable_node_i&>(variable_nodes[i]);
+                vnodes.push_back(&ref);
+        }
+        return new factor_graph_t(fnodes, vnodes);
+}
+
+// interface
+// -----------------------------------------------------------------------------
+
 BOOST_PYTHON_MODULE(interface)
 {
+        // distributions
+        // ---------------------------------------------------------------------
         class_<distribution_i, boost::noncopyable>("distribution_i", no_init)
                 .def("moment", &distribution_moment)
                 ;
@@ -66,5 +94,33 @@ BOOST_PYTHON_MODULE(interface)
                 ;
         class_<gamma_distribution_t, bases<exponential_family_i> >("gamma_distribution_t")
                 .def(init<double, double>())
+                ;
+        // factor nodes
+        // ---------------------------------------------------------------------
+        class_<factor_node_i, boost::noncopyable>("factor_node_i", no_init)
+                .def("link", static_cast<bool (factor_node_i::*)(const std::string&, variable_node_i&)>(&factor_node_i::link))
+                ;
+        class_<normal_fnode_t, bases<variable_node_i> >("normal_fnode_t", no_init)
+                .def(init<double, double>())
+                ;
+        class_<gamma_fnode_t, bases<variable_node_i> >("gamma_fnode_t", no_init)
+                .def(init<double, double>())
+                ;
+        // variable nodes
+        // ---------------------------------------------------------------------
+        class_<variable_node_i, boost::noncopyable>("variable_node_i", no_init)
+                .def("__call__", &variable_node_i::operator(), return_internal_reference<>())
+                ;
+        class_<data_vnode_t, bases<variable_node_i> >("data_vnode_t", no_init)
+                .def(init<double>())
+                ;
+        class_<normal_vnode_t, bases<variable_node_i> >("normal_vnode_t")
+                ;
+        class_<gamma_vnode_t, bases<variable_node_i> >("gamma_vnode_t")
+                ;
+        // factor graph
+        // ---------------------------------------------------------------------
+        class_<factor_graph_t>("factor_graph_t", no_init)
+                .def("__init__", make_constructor(construct_factor_graph))
                 ;
 }
