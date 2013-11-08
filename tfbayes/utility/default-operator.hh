@@ -26,6 +26,14 @@
 #include <utility>   /* std::swap */
 
 #define default_assignment_operator(type_t) \
+        type_t& operator=(const type_t& type) { \
+                using std::swap; \
+                type_t tmp(type); \
+                swap(*this, tmp); \
+                return *this; \
+        }
+
+#define virtual_assignment_operator(type_t) \
         virtual type_t& operator=(const type_t& type) { \
                 using std::swap; \
                 type_t tmp(type); \

@@ -29,8 +29,6 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
-#include <boost/type_traits/is_class.hpp>
-#include <boost/utility/enable_if.hpp>
 // std::mutex does not work with Mac OS X, so instead
 // we use boost::mutex
 #include <boost/thread.hpp>
@@ -114,6 +112,15 @@ protected:
         // prepare the q message
         virtual const q_message_t& message() = 0;
 };
+
+inline factor_node_i* new_clone(const factor_node_i& a)
+{
+    return a.clone();
+}
+inline variable_node_i* new_clone(const variable_node_i& a)
+{
+    return a.clone();
+}
 
 // basic implementations of factor and variable nodes
 ////////////////////////////////////////////////////////////////////////////////

@@ -55,16 +55,16 @@ double distribution_moment(const distribution_i& distribution, size_t n)
 static
 factor_graph_t* construct_factor_graph(list& factor_nodes, list& variable_nodes)
 {
-        std::vector<  factor_node_i*> fnodes;
-        std::vector<variable_node_i*> vnodes;
+        factor_set_t fnodes;
+        variable_set_t vnodes;
 
         for (ssize_t i = 0; i < len(factor_nodes); i++) {
                 factor_node_i& ref = extract<factor_node_i&>(factor_nodes[i]);
-                fnodes.push_back(&ref);
+                fnodes += &ref;
         }
         for (ssize_t i = 0; i < len(variable_nodes); i++) {
                 variable_node_i& ref = extract<variable_node_i&>(variable_nodes[i]);
-                vnodes.push_back(&ref);
+                vnodes += &ref;
         }
         return new factor_graph_t(fnodes, vnodes);
 }

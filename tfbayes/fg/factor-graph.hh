@@ -27,18 +27,33 @@
 #include <vector>
 
 #include <boost/optional.hpp>
+#include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/thread.hpp>
+
+#include <tfbayes/utility/default-operator.hh>
 
 #include <node-types.hh>
 
+template <typename T>
+class node_set_t : public boost::ptr_vector<T> {
+public:
+        node_set_t<T>& operator+=(T* node) {
+                this->push_back(node);
+                return *this;
+        }
+};
+
+typedef node_set_t<factor_node_i> factor_set_t;
+typedef node_set_t<variable_node_i> variable_set_t;
+
 class factor_graph_t {
 public:
-        factor_graph_t(const std::vector<  factor_node_i*> factor_nodes,
-                       const std::vector<variable_node_i*> variable_nodes,
+        factor_graph_t(const factor_set_t& factor_nodes,
+                       const variable_set_t& variable_nodes,
                        size_t threads = 1);
         factor_graph_t(const factor_graph_t& factor_graph);
 
-        virtual ~factor_graph_t();
+        virtual ~factor_graph_t() { }
 
 
         virtual factor_graph_t* clone() const {
@@ -53,21 +68,21 @@ public:
                 swap(left._threads,        right._threads);
         }
 
-        factor_graph_t& operator=(const factor_graph_t& node);
+        default_assignment_operator(factor_graph_t)
 
         // execute the message passing algorithm
         void operator()(boost::optional<size_t> n = boost::optional<size_t>());
 
 protected:
-        std::vector<  factor_node_i*> _factor_nodes;
-        std::vector<variable_node_i*> _variable_nodes;
+        factor_set_t _factor_nodes;
+        variable_set_t _variable_nodes;
         // queue of nodes that need to send messages
         std::queue<factor_graph_node_i*> _queue;
         // number of threads
         size_t _threads;
 private:
-        void clone_nodes(const std::vector<  factor_node_i*> factor_nodes,
-                         const std::vector<variable_node_i*> variable_nodes);
+        void clone_nodes(const factor_set_t& factor_nodes,
+                         const variable_set_t& variable_nodes);
         // add a node to the queue
         void add_node(factor_graph_node_i* node);
         // lock for the queue

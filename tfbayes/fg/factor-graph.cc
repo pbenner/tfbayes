@@ -73,8 +73,8 @@ protected:
 
 using namespace std;
 
-factor_graph_t::factor_graph_t(const vector<  factor_node_i*> factor_nodes,
-                               const vector<variable_node_i*> variable_nodes,
+factor_graph_t::factor_graph_t(const factor_set_t& factor_nodes,
+                               const variable_set_t& variable_nodes,
                                size_t threads) :
         // don't initialize lists here since all nodes are cloned later
         _factor_nodes   (),
@@ -87,21 +87,12 @@ factor_graph_t::factor_graph_t(const vector<  factor_node_i*> factor_nodes,
         clone_nodes(factor_nodes, variable_nodes);
 
         for (size_t i = 0; i < _variable_nodes.size(); i++) {
-                _variable_nodes[i]->observe(
-                        boost::bind(tmp, this, _variable_nodes[i]));
+                _variable_nodes[i].observe(
+                        boost::bind(tmp, this, &_variable_nodes[i]));
         }
         for (size_t i = 0; i < _factor_nodes.size(); i++) {
-                _factor_nodes[i]->observe(
-                        boost::bind(tmp, this, _factor_nodes[i]));
-        }
-}
-
-factor_graph_t::~factor_graph_t() {
-        for (size_t i = 0; i < _variable_nodes.size(); i++) {
-                delete(_variable_nodes[i]);
-        }
-        for (size_t i = 0; i < _factor_nodes.size(); i++) {
-                delete(_factor_nodes[i]);
+                _factor_nodes[i].observe(
+                        boost::bind(tmp, this, &_factor_nodes[i]));
         }
 }
 
@@ -116,13 +107,6 @@ factor_graph_t::factor_graph_t(const factor_graph_t& factor_graph) :
                     factor_graph._variable_nodes);
 }
 
-factor_graph_t&
-factor_graph_t::operator=(const factor_graph_t& node) {
-        factor_graph_t tmp(node);
-        swap(*this, tmp);
-        return *this;
-}
-
 void
 factor_graph_t::operator()(boost::optional<size_t> n) {
         vector<boost::thread*> threads(_threads);
@@ -130,7 +114,7 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
         // initialize the network by letting all variable nodes send
         // their messages first
         for (size_t i = 0; i < _variable_nodes.size(); i++) {
-                _variable_nodes[i]->send_messages();
+                _variable_nodes[i].send_messages();
         }
 
         // sample
@@ -154,28 +138,28 @@ factor_graph_t::add_node(factor_graph_node_i* node) {
 }
 
 void
-factor_graph_t::clone_nodes(const std::vector<  factor_node_i*> fnodes,
-                            const std::vector<variable_node_i*> vnodes)
+factor_graph_t::clone_nodes(const factor_set_t& fnodes,
+                            const variable_set_t& vnodes)
 {
         // map old nodes to new ones
-        std::map<variable_node_i*, variable_node_i*> vmap;
+        std::map<const variable_node_i*, variable_node_i*> vmap;
 
         for (size_t i = 0; i < vnodes.size(); i++) {
-                _variable_nodes.push_back(vnodes[i]->clone());
+                _variable_nodes += vnodes[i].clone();
                 // keep track of which node replacements
-                vmap[vnodes[i]] = _variable_nodes[i];
+                vmap[&vnodes[i]] = &_variable_nodes[i];
         }
         for (size_t i = 0; i < fnodes.size(); i++) {
-                _factor_nodes.push_back(fnodes[i]->clone());
+                _factor_nodes += fnodes[i].clone();
         }
         // find connected nodes and link them
         for (size_t i = 0; i < fnodes.size(); i++) {
                 const vector<variable_node_i*>& neighbors =
-                        fnodes[i]->neighbors();
+                        fnodes[i].neighbors();
                 for (size_t j = 0; j < neighbors.size(); j++) {
                         if (!neighbors[j])
                                 continue;
-                        _factor_nodes[i]->link(j, *vmap[neighbors[j]]);
+                        _factor_nodes[i].link(j, *vmap[neighbors[j]]);
                 }
         }
 }
