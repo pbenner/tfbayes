@@ -52,8 +52,8 @@ main()
         vnodes.push_back(v2);
         vnodes.push_back(v3);
 
-        factor_graph_t fg1(fnodes, vnodes, 5);
-        factor_graph_t fg2(fg1);
+        factor_graph_t fg1(fnodes, vnodes, 1);
+        //factor_graph_t fg2(fg1);
 
         fg1();
 

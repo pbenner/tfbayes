@@ -35,6 +35,8 @@
 // we use boost::mutex
 #include <boost/thread.hpp>
 
+#include <tfbayes/utility/default-operator.hh>
+
 #include <hotnews.hh>
 #include <mailbox.hh>
 #include <messages.hh>
@@ -64,11 +66,13 @@ public:
 class   factor_node_i;
 class variable_node_i;
 
-class factor_node_i : public virtual factor_graph_node_i {
+class factor_node_i : public factor_graph_node_i {
 public:
         virtual ~factor_node_i() { }
 
         virtual factor_node_i* clone() const = 0;
+
+        virtual factor_node_i& operator=(const factor_node_i& factor_node) = 0;
 
         // link a variable node to this factor node
         virtual bool link(size_t i, variable_node_i& variable_node) = 0;
@@ -92,6 +96,8 @@ public:
 
         virtual variable_node_i* clone() const = 0;
 
+        virtual variable_node_i& operator=(const variable_node_i& variable_node) = 0;
+
         // get current message
         virtual const q_message_t& operator()() const = 0;
 
@@ -113,7 +119,7 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <size_t D>
-class factor_node_t : public virtual factor_node_i, public observable_t {
+class factor_node_t : public factor_node_i, public observable_t {
 public:
         factor_node_t() :
                 _inbox    (D),
@@ -122,7 +128,8 @@ public:
                 std::cout << "creating factor node " << this << std::endl;
         }
         factor_node_t(const factor_node_t& factor_node) :
-                observable_t(factor_node),
+                factor_node_i(factor_node),
+                observable_t (factor_node),
         // do not copy the mailer and mailbox, since they should be
         // populated manually to create a new network
                 _inbox      (D),
@@ -142,13 +149,6 @@ public:
                 swap(left._neighbors, right._neighbors);
         }
 
-        factor_node_t& operator=(const factor_node_t& node) {
-                using std::swap;
-                factor_node_t tmp(node);
-                swap(*this, tmp);
-                return *this;
-        }
-
         virtual void send_messages() {
                 // since the whole inbox is locket, it is not
                 // necessary to also lock this method seperately
@@ -165,11 +165,13 @@ public:
         }
         virtual bool link(size_t i, variable_node_i& variable_node) {
                 assert(i < D);
+                std::cout << "linking factor node " << this << " with variable node " << &variable_node << std::endl;
                 // allow only conjugate nodes to connect
                 if (// variable_node either has to be a conjugate distribution
                     !is_conjugate(i, variable_node) &&
                     // or a dirac distribution
                     variable_node.type() != typeid(dirac_distribution_t)) {
+                        std::cout << "ERROR: can't link." << std::endl;
                         return false;
                 }
                 // pointer to the method that notifies the factor
@@ -214,12 +216,13 @@ private:
 };
 
 template <typename T>
-class variable_node_t : public virtual variable_node_i, public observable_t {
+class variable_node_t : public variable_node_i, public observable_t {
 public:
         variable_node_t() {
                 std::cout << "creating variable node " << this << std::endl;
         }
         variable_node_t(const variable_node_t& variable_node) :
+                variable_node_i(variable_node),
                 observable_t   (variable_node),
         // do not copy the inbox and outbox, since they should be
         // populated manually to create a new network
@@ -234,16 +237,11 @@ public:
                 using std::swap;
                 swap(static_cast<observable_t&>(left),
                      static_cast<observable_t&>(right));
-                swap(left._inbox, right._inbox);
-                swap(left.outbox, right.outbox);
+                swap(left._inbox,          right._inbox);
+                swap(left.outbox,          right.outbox);
                 swap(left.current_message, right.current_message);
-        }
-
-        variable_node_t& operator=(const variable_node_t& node) {
-                using std::swap;
-                variable_node_t tmp(node);
-                swap(*this, tmp);
-                return *this;
+                swap(left.messages,        right.messages);
+                std::cout << "SWAP CALLED" << std::endl;
         }
 
         virtual const T& operator()() const {
@@ -315,11 +313,14 @@ public:
                 base_t() {
         }
         exponential_vnode_t(const exponential_vnode_t& exponential_vnode) :
-                base_t(exponential_vnode) {
+                base_t      (exponential_vnode),
+                new_message (exponential_vnode.new_message) {
         }
         virtual exponential_vnode_t* clone() const {
+                std::cout << "cloning exponential vnode" << std::endl;
                 return new exponential_vnode_t(*this);
         }
+        derived_assignment_operator(variable_node_i, exponential_vnode_t)
 protected:
         virtual const T& message() {
                 // reset new_message
@@ -350,12 +351,15 @@ public:
                 data(x) {
         }
         data_vnode_t(const data_vnode_t& data_vnode) :
-                base_t(data_vnode),
-                data  (data_vnode.data) {
+                base_t      (data_vnode),
+                data        (data_vnode.data),
+                new_message (data_vnode.new_message) {
         }
         virtual data_vnode_t* clone() const {
+                std::cout << "cloning data vnode" << std::endl;
                 return new data_vnode_t(*this);
         }
+        derived_assignment_operator(variable_node_i, data_vnode_t)
 protected:
         virtual const dirac_distribution_t& message() {
                 new_message = dirac_distribution_t(data);

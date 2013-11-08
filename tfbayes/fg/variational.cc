@@ -39,6 +39,7 @@ normal_fnode_t::normal_fnode_t(double mean, double precision) :
 
 normal_fnode_t*
 normal_fnode_t::clone() const {
+        std::cout << "cloning normal fnode" << std::endl;
         return new normal_fnode_t(*this);
 }
 
@@ -136,6 +137,7 @@ gamma_fnode_t::gamma_fnode_t(double shape, double rate) :
 
 gamma_fnode_t*
 gamma_fnode_t::clone() const {
+        std::cout << "cloning gamma fnode" << std::endl;
         return new gamma_fnode_t(*this);
 }
 

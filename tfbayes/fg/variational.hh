@@ -22,6 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <tfbayes/utility/default-operator.hh>
+
 #include <node-types.hh>
 
 // variable node specializations
@@ -38,6 +40,8 @@ public:
         normal_fnode_t(double mean, double precision);
 
         virtual normal_fnode_t* clone() const;
+
+        derived_assignment_operator(factor_node_i, normal_fnode_t)
 
         virtual bool link(const std::string& id, variable_node_i& variable_node);
 protected:
@@ -67,6 +71,8 @@ public:
         gamma_fnode_t(double shape, double rate);
 
         virtual gamma_fnode_t* clone() const;
+
+        derived_assignment_operator(factor_node_i, gamma_fnode_t)
 
         virtual bool link(const std::string& id, variable_node_i& variable_node);
 protected:
