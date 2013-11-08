@@ -26,11 +26,11 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-#include <utility/clonable.hh>
-
 #include <boost/array.hpp>
 #include <boost/icl/interval_set.hpp>
 #include <boost/math/special_functions/gamma.hpp>
+
+#include <tfbayes/utility/clonable.hh>
 
 // interface for distributions, in general a distribution might not
 // even have a density (e.g. dirac measure), so this is very limited

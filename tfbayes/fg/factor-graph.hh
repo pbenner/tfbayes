@@ -30,9 +30,8 @@
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/thread.hpp>
 
+#include <tfbayes/fg/node-types.hh>
 #include <tfbayes/utility/default-operator.hh>
-
-#include <node-types.hh>
 
 template <typename T>
 class node_set_t : public boost::ptr_vector<T> {

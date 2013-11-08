@@ -33,12 +33,11 @@
 // we use boost::mutex
 #include <boost/thread.hpp>
 
+#include <tfbayes/fg/hotnews.hh>
+#include <tfbayes/fg/mailbox.hh>
+#include <tfbayes/fg/messages.hh>
 #include <tfbayes/utility/default-operator.hh>
-
-#include <hotnews.hh>
-#include <mailbox.hh>
-#include <messages.hh>
-#include <observable.hh>
+#include <tfbayes/utility/observable.hh>
 
 // It is possible to combine different message passing algorithms in
 // one factor graph, e.g. the sum product algorithm for discrete nodes

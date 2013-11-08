@@ -20,7 +20,6 @@ libtfbayes_fg_la_SOURCES = \
 	mailbox.hh \
 	messages.hh \
 	node-types.hh \
-	observable.hh \
 	variational.hh \
 	variational.cc
 libtfbayes_fg_la_LIBADD   = $(LIB_PTHREAD)

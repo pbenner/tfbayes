@@ -25,6 +25,8 @@
 #include <algorithm> /* std::swap */
 #include <utility>   /* std::swap */
 
+#include <tfbayes/utility/default-operator.hh>
+
 template <typename T>
 class hotnews_t : public T {
 public:
@@ -39,12 +41,8 @@ public:
         }
 
         // standard assignment operator
-        hotnews_t& operator=(const hotnews_t& rhs) {
-                using std::swap;
-                hotnews_t tmp(rhs);
-                swap(*this, rhs);
-                return *this;
-        }
+        default_assignment_operator(hotnews_t)
+
         hotnews_t& operator=(const T& rhs) {
                 // if we receive the same news twice, it starts to
                 // stink a little

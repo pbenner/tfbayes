@@ -29,7 +29,7 @@
 #include <boost/optional.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 
-#include <observable.hh>
+#include <tfbayes/utility/observable.hh>
 
 template <typename T>
 class mailbox_slot_t : public boost::mutex, public observable_t {

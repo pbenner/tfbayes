@@ -22,9 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <tfbayes/fg/node-types.hh>
 #include <tfbayes/utility/default-operator.hh>
-
-#include <node-types.hh>
 
 // variable node specializations
 ////////////////////////////////////////////////////////////////////////////////

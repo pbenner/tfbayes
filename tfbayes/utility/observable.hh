@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __TFBAYES_FG_OBSERVABLE_HH__
-#define __TFBAYES_FG_OBSERVABLE_HH__
+#ifndef __TFBAYES_UTILITY_OBSERVABLE_HH__
+#define __TFBAYES_UTILITY_OBSERVABLE_HH__
 
 #include <algorithm> /* std::swap */
 #include <utility>   /* std::swap */
@@ -48,4 +48,4 @@ private:
         boost::function<void ()> _notify;
 };
 
-#endif /* __TFBAYES_FG_OBSERVABLE_HH__ */
+#endif /* __TFBAYES_UTILITY_OBSERVABLE_HH__ */

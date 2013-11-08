@@ -7,6 +7,7 @@ noinst_HEADERS = \
 	distribution.hh \
 	linalg.hh \
 	logarithmetic.hh \
+	observable.hh \
 	permutation.hh \
 	polynomial.hh \
 	progress.hh \

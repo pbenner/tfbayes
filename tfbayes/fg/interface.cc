@@ -30,9 +30,9 @@
 #include <boost/python/make_constructor.hpp>
 #include <boost/python/operators.hpp>
 
-#include <distribution.hh>
-#include <variational.hh>
-#include <factor-graph.hh>
+#include <tfbayes/fg/distribution.hh>
+#include <tfbayes/fg/variational.hh>
+#include <tfbayes/fg/factor-graph.hh>
 
 using namespace boost::python;
 

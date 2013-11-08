@@ -22,7 +22,7 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <distribution.hh>
+#include <tfbayes/fg/distribution.hh>
 
 // a message from a factor node to a variable node
 typedef exponential_family_i p_message_t;
