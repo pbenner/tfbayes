@@ -100,10 +100,10 @@ BOOST_PYTHON_MODULE(interface)
         class_<factor_node_i, boost::noncopyable>("factor_node_i", no_init)
                 .def("link", static_cast<bool (factor_node_i::*)(const std::string&, variable_node_i&)>(&factor_node_i::link))
                 ;
-        class_<normal_fnode_t, bases<variable_node_i> >("normal_fnode_t", no_init)
+        class_<normal_fnode_t, bases<factor_node_i> >("normal_fnode_t", no_init)
                 .def(init<double, double>())
                 ;
-        class_<gamma_fnode_t, bases<variable_node_i> >("gamma_fnode_t", no_init)
+        class_<gamma_fnode_t, bases<factor_node_i> >("gamma_fnode_t", no_init)
                 .def(init<double, double>())
                 ;
         // variable nodes

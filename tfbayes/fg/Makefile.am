@@ -36,7 +36,8 @@ interface_la_CPPFLAGS = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS)
 interface_la_CXXFLAGS = 
 interface_la_SOURCES  = \
 	interface.cc
-interface_la_LIBADD   = $(BOOST_PYTHON_LIB)
+interface_la_LIBADD   = libtfbayes-fg.la
+interface_la_LIBADD  += $(BOOST_PYTHON_LIB)
 interface_la_LIBADD  += -lm
 interface_la_LDFLAGS  = -avoid-version
 interface_la_LDFLAGS += -module

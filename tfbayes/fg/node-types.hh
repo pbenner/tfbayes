@@ -119,6 +119,7 @@ public:
                 _inbox    (D),
                 outbox    (D),
                 _neighbors(D, NULL) {
+                std::cout << "creating factor node " << this << std::endl;
         }
         factor_node_t(const factor_node_t& factor_node) :
                 observable_t(factor_node),
@@ -127,6 +128,7 @@ public:
                 _inbox      (D),
                 outbox      (D),
                 _neighbors  (D, NULL) {
+                std::cout << "copying factor node from " << &factor_node << " to " << this << std::endl;
         }
 
         virtual factor_node_t* clone() const = 0;
@@ -215,6 +217,7 @@ template <typename T>
 class variable_node_t : public virtual variable_node_i, public observable_t {
 public:
         variable_node_t() {
+                std::cout << "creating variable node " << this << std::endl;
         }
         variable_node_t(const variable_node_t& variable_node) :
                 observable_t   (variable_node),
@@ -224,6 +227,7 @@ public:
                 outbox         (),
                 current_message(variable_node.current_message),
                 messages       () {
+                std::cout << "copying variable node from " << &variable_node << " to " << this << std::endl;
         }
 
         friend void swap(variable_node_t& left, variable_node_t& right) {
