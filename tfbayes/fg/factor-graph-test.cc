@@ -29,34 +29,27 @@ main()
         factor_set_t fnodes;
         variable_set_t vnodes;
 
-        normal_fnode_t* f1 = new normal_fnode_t(1,2);
-          data_vnode_t* v1 = new data_vnode_t(1.42);
+        fnodes += new normal_fnode_t(1,2, "f1");
+        vnodes += new data_vnode_t(1.42, "v1");
 
-        normal_fnode_t* f2 = new normal_fnode_t(2,2);
-        normal_vnode_t* v2 = new normal_vnode_t();
+        fnodes += new normal_fnode_t(2,2, "f2");
+        vnodes += new normal_vnode_t("v2");
 
-        gamma_fnode_t* f3 = new gamma_fnode_t(1,2);
-        gamma_vnode_t* v3 = new gamma_vnode_t();
+        fnodes += new gamma_fnode_t(1,2, "f3");
+        vnodes += new gamma_vnode_t("v3");
 
-        f1->link("output",    *v1);
-        f1->link("mean",      *v2);
-        f1->link("precision", *v3);
+        fnodes["f1"]->link("output",    *vnodes["v1"]);
+        fnodes["f1"]->link("mean",      *vnodes["v2"]);
+        fnodes["f1"]->link("precision", *vnodes["v3"]);
+        fnodes["f2"]->link("output",    *vnodes["v2"]);
+        fnodes["f3"]->link("output",    *vnodes["v3"]);
 
-        f2->link("output", *v2);
-        f3->link("output", *v3);
-
-        fnodes += f1;
-        fnodes += f2;
-        fnodes += f3;
-        vnodes += v1;
-        vnodes += v2;
-        vnodes += v3;
-
+        std::cout << std::endl;
         factor_graph_t fg1(fnodes, vnodes, 1);
         //factor_graph_t fg2(fg1);
 
         fg1();
 
-        cout << "mean: " << (*v2)().moment<1>() << endl
-             << "mean: " << (*v3)().moment<1>() << endl;
+        // cout << "mean: " << (*v2)().moment<1>() << endl
+        //      << "mean: " << (*v3)().moment<1>() << endl;
 }

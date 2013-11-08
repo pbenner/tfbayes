@@ -22,7 +22,9 @@ using namespace std;
 // normal factor node
 ////////////////////////////////////////////////////////////////////////////////
 
-normal_fnode_t::normal_fnode_t(double mean, double precision) :
+normal_fnode_t::normal_fnode_t(double mean, double precision,
+                               const std::string& name) :
+        base_t       (name),
         dmean        (mean),
         dprecision   (precision),
         // initial distributions
@@ -38,6 +40,7 @@ normal_fnode_t::normal_fnode_t(double mean, double precision) :
 }
 
 normal_fnode_t::normal_fnode_t(const normal_fnode_t& normal_fnode) :
+        base_t       (normal_fnode),
         dmean        (normal_fnode.dmean),
         dprecision   (normal_fnode.dprecision),
         distribution1(normal_fnode.distribution1),
@@ -130,7 +133,9 @@ normal_fnode_t::message3() {
 // gamma factor node
 ////////////////////////////////////////////////////////////////////////////////
 
-gamma_fnode_t::gamma_fnode_t(double shape, double rate) :
+gamma_fnode_t::gamma_fnode_t(double shape, double rate,
+                             const std::string& name) :
+        base_t (name),
         dshape (shape),
         drate  (rate),
         // initial distributions
@@ -145,6 +150,7 @@ gamma_fnode_t::gamma_fnode_t(double shape, double rate) :
 }
 
 gamma_fnode_t::gamma_fnode_t(const gamma_fnode_t& gamma_fnode) :
+        base_t       (gamma_fnode),
         dshape       (gamma_fnode.dshape),
         drate        (gamma_fnode.drate),
         distribution1(gamma_fnode.distribution1),

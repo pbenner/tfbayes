@@ -58,6 +58,9 @@ public:
 
         // send messages to all connected variable nodes
         virtual void send_messages() = 0;
+
+        // a node might have an identifier
+        virtual const std::string& name() const = 0;
 };
 
 class   factor_node_i;
@@ -127,19 +130,21 @@ inline variable_node_i* new_clone(const variable_node_i& a)
 template <size_t D>
 class factor_node_t : public factor_node_i, public observable_t {
 public:
-        factor_node_t() :
-                _inbox    (D),
-                outbox    (D),
-                _neighbors(D, NULL) {
+        factor_node_t(const std::string& name = "") :
+                _inbox       (D),
+                outbox       (D),
+                _neighbors   (D, NULL),
+                _name        (name) {
         }
         factor_node_t(const factor_node_t& factor_node) :
                 factor_node_i(factor_node),
                 observable_t (factor_node),
-        // do not copy the mailer and mailbox, since they should be
-        // populated manually to create a new network
-                _inbox      (D),
-                outbox      (D),
-                _neighbors  (D, NULL) {
+                // do not copy the mailer and mailbox, since they should be
+                // populated manually to create a new network
+                _inbox       (D),
+                outbox       (D),
+                _neighbors   (D, NULL),
+                _name        (factor_node._name) {
         }
 
         virtual factor_node_t* clone() const = 0;
@@ -151,6 +156,7 @@ public:
                 swap(left._inbox,     right._inbox);
                 swap(left.outbox,     right.outbox);
                 swap(left._neighbors, right._neighbors);
+                swap(left._name,      right._name);
         }
 
         virtual void send_messages() {
@@ -169,6 +175,7 @@ public:
         }
         virtual bool link(size_t i, variable_node_i& variable_node) {
                 assert(i < D);
+                std::cout << "linking factor node " << this << " with variable node " << &variable_node << std::endl;
                 // allow only conjugate nodes to connect
                 if (// variable_node either has to be a conjugate distribution
                     !is_conjugate(i, variable_node) &&
@@ -193,6 +200,9 @@ public:
         virtual const std::vector<variable_node_i*>& neighbors() const {
                 return _neighbors;
         }
+        virtual const std::string& name() const {
+                return _name;
+        }
 
 protected:
         // initialize outbox i
@@ -202,6 +212,8 @@ protected:
         outbox_t<p_message_t> outbox;
         // keep track of neighboring nodes for cloning whole networks
         std::vector<variable_node_i*> _neighbors;
+        // id of this node
+        std::string _name;
 private:
         // lock every slot in the mailbox, so that we can prepare a
         // new message without receiving new mail while doing so
@@ -220,7 +232,8 @@ private:
 template <typename T>
 class variable_node_t : public variable_node_i, public observable_t {
 public:
-        variable_node_t() {
+        variable_node_t(const std::string& name = "") :
+                _name          (name) {
         }
         variable_node_t(const variable_node_t& variable_node) :
                 variable_node_i(variable_node),
@@ -285,6 +298,9 @@ public:
         virtual const std::type_info& type() const {
                 return typeid(T);
         }
+        virtual const std::string& name() const {
+                return _name;
+        }
 
 protected:
         // prepare the q message
@@ -298,6 +314,8 @@ protected:
         boost::ptr_vector<T> messages;
         // lock this node
         boost::mutex mtx;
+        // id of this node
+        std::string _name;
 };
 
 // specializations of the variable node
@@ -308,8 +326,8 @@ class exponential_vnode_t : public variable_node_t<T> {
 public:
         typedef variable_node_t<T> base_t;
 
-        exponential_vnode_t() :
-                base_t() {
+        exponential_vnode_t(const std::string& name = "") :
+                base_t(name) {
         }
         exponential_vnode_t(const exponential_vnode_t& exponential_vnode) :
                 base_t      (exponential_vnode),
@@ -344,8 +362,8 @@ class data_vnode_t : public variable_node_t<dirac_distribution_t> {
 public:
         typedef variable_node_t<dirac_distribution_t> base_t;
 
-        data_vnode_t(double x) :
-                base_t(),
+        data_vnode_t(double x, const std::string& name = "") :
+                base_t(name),
                 data(x) {
         }
         data_vnode_t(const data_vnode_t& data_vnode) :
