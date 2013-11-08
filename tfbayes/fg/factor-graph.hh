@@ -66,6 +66,8 @@ protected:
         // number of threads
         size_t _threads;
 private:
+        void clone_nodes(const std::vector<  factor_node_i*> factor_nodes,
+                         const std::vector<variable_node_i*> variable_nodes);
         // add a node to the queue
         void add_node(factor_graph_node_i* node);
         // lock for the queue

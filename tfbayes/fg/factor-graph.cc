@@ -76,11 +76,15 @@ using namespace std;
 factor_graph_t::factor_graph_t(const vector<  factor_node_i*> factor_nodes,
                                const vector<variable_node_i*> variable_nodes,
                                size_t threads) :
-        _factor_nodes   (factor_nodes),
-        _variable_nodes (variable_nodes),
+        // don't initialize lists here since all nodes are cloned later
+        _factor_nodes   (),
+        _variable_nodes (),
         _threads        (threads)
 {
         void (factor_graph_t::*tmp) (factor_graph_node_i*) = &factor_graph_t::add_node;
+
+        // clone all nodes before proceeding
+        clone_nodes(factor_nodes, variable_nodes);
 
         for (size_t i = 0; i < _variable_nodes.size(); i++) {
                 _variable_nodes[i]->observe(
@@ -107,27 +111,9 @@ factor_graph_t::factor_graph_t(const factor_graph_t& factor_graph) :
         _queue          (),
         _threads        (factor_graph._threads)
 {
-        std::map<variable_node_i*, variable_node_i*> vmap;
-
         // clone all nodes of the factor graph
-        for (size_t i = 0; i < factor_graph._variable_nodes.size(); i++) {
-                _variable_nodes.push_back(factor_graph._variable_nodes[i]->clone());
-                // keep track of which node replacements
-                vmap[factor_graph._variable_nodes[i]] = _variable_nodes[i];
-        }
-        for (size_t i = 0; i < factor_graph._factor_nodes.size(); i++) {
-                _factor_nodes.push_back(factor_graph._factor_nodes[i]->clone());
-        }
-        // find connected nodes and link them
-        for (size_t i = 0; i < factor_graph._factor_nodes.size(); i++) {
-                const vector<variable_node_i*>& neighbors =
-                        factor_graph._factor_nodes[i]->neighbors();
-                for (size_t j = 0; j < neighbors.size(); j++) {
-                        if (!neighbors[j])
-                                continue;
-                        _factor_nodes[i]->link(j, *vmap[neighbors[j]]);
-                }
-        }
+        clone_nodes(factor_graph._factor_nodes,
+                    factor_graph._variable_nodes);
 }
 
 factor_graph_t&
@@ -165,4 +151,31 @@ factor_graph_t::add_node(factor_graph_node_i* node) {
         mtx.lock();
         _queue.push(node);
         mtx.unlock();
+}
+
+void
+factor_graph_t::clone_nodes(const std::vector<  factor_node_i*> fnodes,
+                            const std::vector<variable_node_i*> vnodes)
+{
+        // map old nodes to new ones
+        std::map<variable_node_i*, variable_node_i*> vmap;
+
+        for (size_t i = 0; i < vnodes.size(); i++) {
+                _variable_nodes.push_back(vnodes[i]->clone());
+                // keep track of which node replacements
+                vmap[vnodes[i]] = _variable_nodes[i];
+        }
+        for (size_t i = 0; i < fnodes.size(); i++) {
+                _factor_nodes.push_back(fnodes[i]->clone());
+        }
+        // find connected nodes and link them
+        for (size_t i = 0; i < fnodes.size(); i++) {
+                const vector<variable_node_i*>& neighbors =
+                        fnodes[i]->neighbors();
+                for (size_t j = 0; j < neighbors.size(); j++) {
+                        if (!neighbors[j])
+                                continue;
+                        _factor_nodes[i]->link(j, *vmap[neighbors[j]]);
+                }
+        }
 }
