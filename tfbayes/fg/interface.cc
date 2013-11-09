@@ -24,6 +24,7 @@
 #include <vector>
 
 #include <boost/noncopyable.hpp>
+#include <boost/format.hpp>
 #include <boost/python.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/iterator.hpp>
@@ -33,6 +34,7 @@
 #include <tfbayes/fg/distribution.hh>
 #include <tfbayes/fg/variational.hh>
 #include <tfbayes/fg/factor-graph.hh>
+#include <tfbayes/interface/exceptions.hh>
 
 using namespace boost::python;
 
@@ -69,6 +71,30 @@ factor_graph_t* construct_factor_graph(list& factor_nodes, list& variable_nodes)
         return new factor_graph_t(fnodes, vnodes);
 }
 
+static
+const distribution_i& access_distribution(const factor_graph_t& factor_graph, const std::string& name)
+{
+        boost::optional<const distribution_i&> result = factor_graph[name];
+
+        if (!result) {
+                raise_IOError(boost::str(boost::format("Variable node `%s' not found in factor graph.")
+                                         % name));
+        }
+        return *result;
+}
+
+static
+void call_factor_graph(factor_graph_t& factor_graph)
+{
+        factor_graph();
+}
+
+static
+void call_factor_graph(factor_graph_t& factor_graph, size_t n)
+{
+        factor_graph(n);
+}
+
 // interface
 // -----------------------------------------------------------------------------
 
@@ -102,9 +128,11 @@ BOOST_PYTHON_MODULE(interface)
                 ;
         class_<normal_fnode_t, bases<factor_node_i> >("normal_fnode_t", no_init)
                 .def(init<double, double>())
+                .def(init<double, double, std::string>())
                 ;
         class_<gamma_fnode_t, bases<factor_node_i> >("gamma_fnode_t", no_init)
                 .def(init<double, double>())
+                .def(init<double, double, std::string>())
                 ;
         // variable nodes
         // ---------------------------------------------------------------------
@@ -113,14 +141,20 @@ BOOST_PYTHON_MODULE(interface)
                 ;
         class_<data_vnode_t, bases<variable_node_i> >("data_vnode_t", no_init)
                 .def(init<double>())
+                .def(init<double, std::string>())
                 ;
         class_<normal_vnode_t, bases<variable_node_i> >("normal_vnode_t")
+                .def(init<std::string>())
                 ;
         class_<gamma_vnode_t, bases<variable_node_i> >("gamma_vnode_t")
+                .def(init<std::string>())
                 ;
         // factor graph
         // ---------------------------------------------------------------------
         class_<factor_graph_t>("factor_graph_t", no_init)
                 .def("__init__", make_constructor(construct_factor_graph))
+                .def("__call__", static_cast<void (*)(factor_graph_t&)>(&call_factor_graph))
+                .def("__call__", static_cast<void (*)(factor_graph_t&, size_t)>(&call_factor_graph))
+                .def("__getitem__", &access_distribution, return_internal_reference<>())
                 ;
 }
