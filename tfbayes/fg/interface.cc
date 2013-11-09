@@ -55,7 +55,7 @@ double distribution_moment(const distribution_i& distribution, size_t n)
 }
 
 static
-factor_graph_t* construct_factor_graph(list& factor_nodes, list& variable_nodes)
+factor_graph_t* construct_factor_graph(list& factor_nodes, list& variable_nodes, size_t threads = 1)
 {
         factor_set_t fnodes;
         variable_set_t vnodes;
@@ -68,13 +68,23 @@ factor_graph_t* construct_factor_graph(list& factor_nodes, list& variable_nodes)
                 variable_node_i& ref = extract<variable_node_i&>(variable_nodes[i]);
                 vnodes += &ref;
         }
-        factor_graph_t* fg = new factor_graph_t(fnodes, vnodes);
+        factor_graph_t* fg = new factor_graph_t(fnodes, vnodes, threads);
 
         // make sure that no nodes are deleted
         fnodes.release().release();
         vnodes.release().release();
 
         return fg;
+}
+static
+factor_graph_t* construct_factor_graph_1(list& factor_nodes, list& variable_nodes)
+{
+        return construct_factor_graph(factor_nodes, variable_nodes);
+}
+static
+factor_graph_t* construct_factor_graph_2(list& factor_nodes, list& variable_nodes, size_t threads)
+{
+        return construct_factor_graph(factor_nodes, variable_nodes, threads);
 }
 
 static
@@ -158,7 +168,8 @@ BOOST_PYTHON_MODULE(interface)
         // factor graph
         // ---------------------------------------------------------------------
         class_<factor_graph_t>("factor_graph_t", no_init)
-                .def("__init__", make_constructor(construct_factor_graph))
+                .def("__init__", make_constructor(&construct_factor_graph_1))
+                .def("__init__", make_constructor(&construct_factor_graph_2))
                 .def("__call__", static_cast<void (*)(factor_graph_t&)>(&call_factor_graph))
                 .def("__call__", static_cast<void (*)(factor_graph_t&, size_t)>(&call_factor_graph))
                 .def("__getitem__", &access_distribution, return_internal_reference<>())
