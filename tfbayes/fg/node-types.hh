@@ -115,6 +115,7 @@ protected:
         virtual const q_message_t& message() = 0;
 };
 
+// tell boost how to clone nodes
 inline factor_node_i* new_clone(const factor_node_i& a)
 {
     return a.clone();
