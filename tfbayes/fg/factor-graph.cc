@@ -130,6 +130,18 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
         }
 }
 
+boost::optional<const distribution_i&>
+factor_graph_t::operator[](const std::string& name) const
+{
+        if (_variable_nodes[name]) {
+                return  (*_variable_nodes[name])();
+        }
+        else {
+                cout << "ERR DID NOT FIND: " << name << endl;
+                return boost::optional<const distribution_i&>();
+        }
+}
+
 void
 factor_graph_t::add_node(factor_graph_node_i* node) {
         mtx.lock();

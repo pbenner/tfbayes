@@ -175,7 +175,6 @@ public:
         }
         virtual bool link(size_t i, variable_node_i& variable_node) {
                 assert(i < D);
-                std::cout << "linking factor node " << this << " with variable node " << &variable_node << std::endl;
                 // allow only conjugate nodes to connect
                 if (// variable_node either has to be a conjugate distribution
                     !is_conjugate(i, variable_node) &&
@@ -243,7 +242,8 @@ public:
                 _inbox         (),
                 outbox         (),
                 current_message(variable_node.current_message),
-                messages       () {
+                messages       (),
+                _name          (variable_node._name) {
         }
 
         friend void swap(variable_node_t& left, variable_node_t& right) {

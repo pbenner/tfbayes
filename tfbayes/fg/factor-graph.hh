@@ -60,6 +60,9 @@ public:
         // execute the message passing algorithm
         void operator()(boost::optional<size_t> n = boost::optional<size_t>());
 
+        // get the distribution of a node
+        boost::optional<const distribution_i&> operator[](const std::string& name) const;
+
 protected:
         factor_set_t _factor_nodes;
         variable_set_t _variable_nodes;

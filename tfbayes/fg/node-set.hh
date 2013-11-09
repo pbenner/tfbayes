@@ -56,7 +56,7 @@ public:
                 if (it != _map.end()) {
                         return base_t::operator[](it->second);
                 }
-                return boost::optional<T&>();
+                return boost::optional<const T&>();
         }
                 
 protected:

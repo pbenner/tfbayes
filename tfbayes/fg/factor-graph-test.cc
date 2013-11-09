@@ -44,12 +44,11 @@ main()
         fnodes["f2"]->link("output",    *vnodes["v2"]);
         fnodes["f3"]->link("output",    *vnodes["v3"]);
 
-        std::cout << std::endl;
         factor_graph_t fg1(fnodes, vnodes, 1);
-        //factor_graph_t fg2(fg1);
+        factor_graph_t fg2(fg1);
 
         fg1();
 
-        // cout << "mean: " << (*v2)().moment<1>() << endl
-        //      << "mean: " << (*v3)().moment<1>() << endl;
+        cout << "mean: " << fg1["v2"]->moment<1>() << endl
+             << "mean: " << fg1["v3"]->moment<1>() << endl;
 }
