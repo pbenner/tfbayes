@@ -137,7 +137,6 @@ factor_graph_t::operator[](const std::string& name) const
                 return  (*_variable_nodes[name])();
         }
         else {
-                cout << "ERR DID NOT FIND: " << name << endl;
                 return boost::optional<const distribution_i&>();
         }
 }

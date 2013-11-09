@@ -62,13 +62,19 @@ factor_graph_t* construct_factor_graph(list& factor_nodes, list& variable_nodes)
 
         for (ssize_t i = 0; i < len(factor_nodes); i++) {
                 factor_node_i& ref = extract<factor_node_i&>(factor_nodes[i]);
-                fnodes += ref.clone();
+                fnodes += &ref;
         }
         for (ssize_t i = 0; i < len(variable_nodes); i++) {
                 variable_node_i& ref = extract<variable_node_i&>(variable_nodes[i]);
-                vnodes += ref.clone();
+                vnodes += &ref;
         }
-        return new factor_graph_t(fnodes, vnodes);
+        factor_graph_t* fg = new factor_graph_t(fnodes, vnodes);
+
+        // make sure that no nodes are deleted
+        fnodes.release().release();
+        vnodes.release().release();
+
+        return fg;
 }
 
 static
