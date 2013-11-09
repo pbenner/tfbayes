@@ -62,7 +62,7 @@ def plot_density_list(d_list, x_from, x_to, labels=None, xlab="x", ylab="density
         ax.legend()
 
 def plot_fg(fg, nodes, x_from, x_to, labels=None, xlab="x", ylab="density"):
-    densities = map(lambda name: exponential_family_i(fg[name]), l)
+    densities = map(lambda name: exponential_family_i(fg[name]), nodes)
     plot_density_list(densities, x_from, x_to, labels, xlab=xlab, ylab=ylab)
 
 # test

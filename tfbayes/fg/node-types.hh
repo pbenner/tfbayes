@@ -180,8 +180,10 @@ public:
                 // allow only conjugate nodes to connect
                 if (// variable_node either has to be a conjugate distribution
                     !is_conjugate(i, variable_node) &&
-                    // or a dirac distribution
-                    variable_node.type() != typeid(dirac_distribution_t)) {
+                    // or a dirac distribution if it is connected to
+                    // the output variable
+                    !(i == 0 &&
+                      variable_node.type() == typeid(dirac_distribution_t))) {
                         return false;
                 }
                 // pointer to the method that notifies the factor
