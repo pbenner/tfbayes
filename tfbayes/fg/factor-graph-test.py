@@ -1,3 +1,7 @@
+#! /usr/bin/env python
+
+import numpy as np
+import matplotlib.pyplot as plt
 
 from tfbayes.fg import *
 
@@ -18,12 +22,37 @@ def construct_fg1():
     f1.link("precision", v3)
     return factor_graph_t([f1,f2,f3],[v1,v2,v3])
 
+# utility
+################################################################################
+
+def plot_density_list(d_list, x_from, x_to, labels=None, xlab="x", ylab="density", n=1001):
+    plt.clf()
+    p_list = []
+    ax = plt.subplot(1,1,1)
+    for i, d in enumerate(d_list):
+        x = np.linspace(x_from, x_to, num=n)
+        y = map(d.density, x)
+        if labels:
+            p_list.append(ax.plot(x,y,label=labels[i]))
+        else:
+            p_list.append(ax.plot(x,y))
+    ax.set_xlabel(xlab)
+    ax.set_ylabel(ylab)
+    if labels:
+        ax.legend()
+
 # test
 ################################################################################
 
 fg = construct_fg1()
 
 fg()
+
+l = ["v2", "v3"]
+d = map(lambda name: exponential_family_i(fg[name]), l)
+
+plot_density_list(d, 0, 5, labels=["normal","gamma"])
+plt.show()
 
 fg["v2"].moment(1)
 fg["v3"].moment(1)

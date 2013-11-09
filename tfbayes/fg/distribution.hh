@@ -111,6 +111,8 @@ protected:
 // what every exponential family should provide
 class exponential_family_i : public distribution_i {
 public:
+        virtual exponential_family_i* clone() const = 0;
+
         virtual double density(double x) const = 0;
         virtual double base_measure(double x) const = 0;
         virtual double log_partition() const = 0;

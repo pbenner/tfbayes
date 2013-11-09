@@ -55,6 +55,19 @@ double distribution_moment(const distribution_i& distribution, size_t n)
 }
 
 static
+exponential_family_i* cast_exponential_family(const distribution_i& distribution)
+{
+        const exponential_family_i* result;
+
+        if ((result = dynamic_cast<const exponential_family_i*>(&distribution))) {
+                return result->clone();
+        }
+        raise_IOError("Distribution could not be casted to an exponential family!");
+        // never reached
+        return NULL;
+}
+
+static
 factor_graph_t* construct_factor_graph(list& factor_nodes, list& variable_nodes, size_t threads = 1)
 {
         factor_set_t fnodes;
@@ -125,6 +138,7 @@ BOOST_PYTHON_MODULE(interface)
                 .def(init<double>())
                 ;
         class_<exponential_family_i, bases<distribution_i>, boost::noncopyable>("exponential_family_i", no_init)
+                .def("__init__",      make_constructor(&cast_exponential_family))
                 .def("density",       &exponential_family_i::density)
                 .def("base_measure",  &exponential_family_i::base_measure)
                 .def("log_partition", &exponential_family_i::log_partition)
