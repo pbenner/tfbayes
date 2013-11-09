@@ -37,6 +37,7 @@
 #include <tfbayes/fg/mailbox.hh>
 #include <tfbayes/fg/messages.hh>
 #include <tfbayes/utility/default-operator.hh>
+#include <tfbayes/utility/debug.hh>
 #include <tfbayes/utility/observable.hh>
 
 // It is possible to combine different message passing algorithms in
@@ -351,8 +352,11 @@ protected:
                         // release lock
                         this->_inbox[i].unlock();
                 }
+                debug("node type: " << typeid(*this).name() << std::endl);
                 // normalize message
                 new_message.renormalize();
+                debug("-> message mean: " << new_message.template moment<1>() << std::endl);
+                debug(std::endl);
                 // has this message be sent before?
                 return new_message;
         }

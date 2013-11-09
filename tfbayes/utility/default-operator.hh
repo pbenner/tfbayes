@@ -43,7 +43,6 @@
 
 #define derived_assignment_operator(base_t, derived_t)  \
         virtual derived_t& operator=(const derived_t& type) { \
-        std::cout << "DEFAULT ASSIGNMENT" << std::endl; \
                 using std::swap; \
                 derived_t tmp(static_cast<const derived_t&>(type)); \
                 swap(*this, tmp); \

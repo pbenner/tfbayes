@@ -4,6 +4,8 @@
 noinst_HEADERS = \
 	abysmal-stack.hh \
 	clonable.hh \
+	debug.hh \
+	default-operator.hh \
 	distribution.hh \
 	linalg.hh \
 	logarithmetic.hh \

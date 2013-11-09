@@ -31,6 +31,8 @@
 #include <boost/math/special_functions/gamma.hpp>
 
 #include <tfbayes/utility/clonable.hh>
+#include <tfbayes/utility/default-operator.hh>
+#include <tfbayes/utility/debug.hh>
 
 // interface for distributions, in general a distribution might not
 // even have a density (e.g. dirac measure), so this is very limited
@@ -71,16 +73,8 @@ public:
                 using std::swap;
                 swap(left._x, right._x);
         }
+        derived_assignment_operator(distribution_i, dirac_distribution_t)
 
-        virtual distribution_i& operator=(const distribution_i& distribution) {
-                return operator=(static_cast<const dirac_distribution_t&>(distribution));
-        }
-        virtual distribution_i& operator=(const dirac_distribution_t& distribution) {
-                using std::swap;
-                dirac_distribution_t tmp(distribution);
-                swap(*this, tmp);
-                return *this;
-        }
         virtual dirac_distribution_t& operator*=(const distribution_i& rhs) {
                 const dirac_distribution_t& tmp = static_cast<const dirac_distribution_t&>(rhs);
                 // multiplication is just like a logical and
@@ -267,6 +261,7 @@ public:
         }
         normal_distribution_t(double mean, double precision) :
                 base_t() {
+                assert(precision > 0.0);
                 parameters()[0] = mean*precision;
                 parameters()[1] = -0.5*precision;
                 renormalize();
@@ -289,16 +284,7 @@ public:
                 swap(static_cast<base_t&>(left),
                      static_cast<base_t&>(right));
         }
-
-        virtual normal_distribution_t& operator=(const distribution_i& distribution) {
-                return operator=(static_cast<const normal_distribution_t&>(distribution));
-        }
-        virtual normal_distribution_t& operator=(const normal_distribution_t& distribution) {
-                using std::swap;
-                normal_distribution_t tmp(distribution);
-                swap(*this, tmp);
-                return *this;
-        }
+        derived_assignment_operator(distribution_i, normal_distribution_t)
 
         virtual double base_measure(double x) const {
                 return 1.0/std::pow(std::sqrt(2.0*M_PI), n());
@@ -314,6 +300,9 @@ public:
                 }
                 const double& p1 = parameters()[0];
                 const double& p2 = parameters()[1];
+                debug("-> normal parameters:" << std::endl);
+                debug("-> p1: " << p1 << std::endl);
+                debug("-> p2: " << p2 << std::endl);
                 _log_partition =  -1.0/4.0*std::pow(p1/p2, 2.0)*p2 -
                         0.5*std::log(-2.0*p2);
                 return true;
@@ -339,6 +328,8 @@ public:
         }
         gamma_distribution_t(double shape, double rate) :
                 base_t(1.0, positive_domain()) {
+                assert(shape > 0.0);
+                assert(rate  > 0.0);
                 parameters()[0] = shape-1.0;
                 parameters()[1] = rate;
                 renormalize();
@@ -361,16 +352,7 @@ public:
                 swap(static_cast<base_t&>(left),
                      static_cast<base_t&>(right));
         }
-
-        virtual gamma_distribution_t& operator=(const distribution_i& distribution) {
-                return operator=(static_cast<const gamma_distribution_t&>(distribution));
-        }
-        virtual gamma_distribution_t& operator=(const gamma_distribution_t& distribution) {
-                using std::swap;
-                gamma_distribution_t tmp(distribution);
-                swap(*this, tmp);
-                return *this;
-        }
+        derived_assignment_operator(distribution_i, gamma_distribution_t)
 
         virtual double base_measure(double x) const {
                 return 1.0;
@@ -386,6 +368,9 @@ public:
                 }
                 const double& a1 = parameters()[0]+1.0;
                 const double& a2 = parameters()[1];
+                debug("-> gamma parameters:" << std::endl);
+                debug("-> a1: " << a1 << std::endl);
+                debug("-> a2: " << a2 << std::endl);
                 _log_partition =  std::log(boost::math::tgamma(a1)) -
                         (a1)*std::log(a2);
                 return true;

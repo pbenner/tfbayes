@@ -16,6 +16,7 @@
  */
 
 #include <tfbayes/fg/variational.hh>
+#include <tfbayes/utility/debug.hh>
 
 using namespace std;
 
@@ -28,9 +29,9 @@ normal_fnode_t::normal_fnode_t(double mean, double precision,
         dmean        (mean),
         dprecision   (precision),
         // initial distributions
-        distribution1(0,1),
-        distribution2(0,1),
-        distribution3(1,1) {
+        distribution1(0,0.01),
+        distribution2(0,0.01),
+        distribution3(1,0.5) {
         // set the inbox to the given parameters, however,
         // once a node is connected to a slot, the respective
         // parameter (represented by the dirac distribution)
@@ -98,7 +99,9 @@ normal_fnode_t::message1() {
         double mean      = _inbox[1]().moment<1>();
         double precision = _inbox[2]().moment<1>();
 
+        debug("normal message 1 (normal): " << this->name() << endl);
         distribution1 = normal_distribution_t(mean, precision);
+        debug(endl);
 
         return distribution1;
 }
@@ -108,7 +111,9 @@ normal_fnode_t::message2() {
         double mean      = _inbox[0]().moment<1>();
         double precision = _inbox[2]().moment<1>();
 
+        debug("normal message 2 (normal): " << this->name() << endl);
         distribution2 = normal_distribution_t(mean, precision);
+        debug(endl);
 
         return distribution2;
 }
@@ -122,10 +127,18 @@ normal_fnode_t::message3() {
         double mu2 = _inbox[1]().moment<2>();
         // parameters of the gamma distribution
         double shape = 1.5;
-        double rate  = 0.5*(y2 - 2.0*y*mu + mu2);
+        double rate  = std::max(1e-10, 0.5*(y2 - 2.0*y*mu + mu2));
 
+        debug("normal message 3 (gamma): " << this->name() << endl);
+        debug("-> y    : " << y     << endl);
+        debug("-> y2   : " << y2    << endl);
+        debug("-> mu   : " << mu    << endl);
+        debug("-> mu2  : " << mu2   << endl);
+        debug("-> shape: " << shape << endl);
+        debug("-> rate : " << rate  << endl);
         // replace distribution
         distribution3 = gamma_distribution_t(shape, rate);
+        debug(endl);
 
         return distribution3;
 }
@@ -205,7 +218,9 @@ gamma_fnode_t::message1() {
         double shape = _inbox[1]().moment<1>();
         double rate  = _inbox[2]().moment<1>();
 
+        debug("gamma message 1 (gamma): " << this->name() << endl);
         distribution1 = gamma_distribution_t(shape, rate);
+        debug(endl);
 
         return distribution1;
 }
@@ -215,7 +230,9 @@ gamma_fnode_t::message3() {
         double shape =   _inbox[1]().moment<1>() + 1.0;
         double rate  = - _inbox[0]().moment<1>();
 
+        debug("gamma message 1 (gamma): " << this->name() << endl);
         distribution3 = gamma_distribution_t(shape, rate);
+        debug(endl);
 
         return distribution3;
 }
