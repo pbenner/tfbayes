@@ -155,8 +155,6 @@ public:
                 using std::swap;
                 swap(static_cast<observable_t&>(left),
                      static_cast<observable_t&>(right));
-                swap(left._inbox,     right._inbox);
-                swap(left.outbox,     right.outbox);
                 swap(left._neighbors, right._neighbors);
                 swap(left._name,      right._name);
         }

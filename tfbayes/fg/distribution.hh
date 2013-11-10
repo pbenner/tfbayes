@@ -357,15 +357,17 @@ public:
                 const double& mu  = -0.5*parameters()[0]/parameters()[1];
                 const double& tau = -2.0*parameters()[1];
                 debug("-> normal parameters:" << std::endl);
-                debug("-> mean     : " << p1 << std::endl);
-                debug("-> precision: " << p2 << std::endl);
+                debug("-> mean     : " << mu  << std::endl);
+                debug("-> precision: " << tau << std::endl);
                 _log_partition = 1.0/2.0*(tau*mu*mu - std::log(tau));
                 return true;
         }
 protected:
         virtual void update_moments() {
-                this->_moment_first [0] = -0.5*parameters()[0]/parameters()[1];
-                this->_moment_second[0] = -0.5/parameters()[1];
+                const double& mu  = -0.5*parameters()[0]/parameters()[1];
+                const double& tau = -2.0*parameters()[1];
+                this->_moment_first [0] = mu;
+                this->_moment_second[0] = mu*mu + 1.0/(tau*tau);
         }
 };
 
@@ -427,18 +429,20 @@ public:
                 const double& mu  = -0.5*parameters()[0]/parameters()[1];
                 const double& tau = -2.0*parameters()[1];
                 debug("-> normal parameters:" << std::endl);
-                debug("-> mean     : " << p1 << std::endl);
-                debug("-> precision: " << p2 << std::endl);
+                debug("-> mean     : " << mu  << std::endl);
+                debug("-> precision: " << tau << std::endl);
                 _log_partition = static_cast<double>(dimension())/2.0*tau*mu*mu -
                         static_cast<double>(dimension())/2.0*std::log(tau);
                 return true;
         }
 protected:
         virtual void update_moments() {
+                const double& mu  = -0.5*parameters()[0]/parameters()[1];
+                const double& tau = -2.0*parameters()[1];
                 // on a product space, moments are the same in every dimension
                 for (size_t i = 0; i < dimension(); i++) {
-                        this->_moment_first [i] = -0.5*parameters()[0]/parameters()[1];
-                        this->_moment_second[i] = -0.5/parameters()[1];
+                        this->_moment_first [i] = mu;
+                        this->_moment_second[i] = mu*mu + 1.0/(tau*tau);
                 }
         }
 };

@@ -164,10 +164,10 @@ BOOST_PYTHON_MODULE(interface)
                 .def(init<double, double>())
                 .def(init<double, double, std::string>())
                 ;
-        // class_<pnormal_fnode_t, bases<factor_node_i> >("pnormal_fnode_t", no_init)
-        //         .def(init<size_t, double, double>())
-        //         .def(init<size_t, double, double, std::string>())
-        //         ;
+        class_<pnormal_fnode_t, bases<factor_node_i> >("pnormal_fnode_t", no_init)
+                .def(init<size_t, double, double>())
+                .def(init<size_t, double, double, std::string>())
+                ;
         class_<gamma_fnode_t, bases<factor_node_i> >("gamma_fnode_t", no_init)
                 .def(init<double, double>())
                 .def(init<double, double, std::string>())
