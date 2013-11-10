@@ -38,6 +38,7 @@
 
 // interface for distributions, in general a distribution might not
 // even have a density (e.g. dirac measure), so this is very limited
+////////////////////////////////////////////////////////////////////////////////
 class distribution_i : public virtual clonable {
 public:
         virtual distribution_i* clone() const = 0;
@@ -60,6 +61,8 @@ protected:
         virtual const std::vector<double>& moment_second() const = 0;
 };
 
+// the simplest distribution is a dirac measure
+////////////////////////////////////////////////////////////////////////////////
 class dirac_distribution_t : public distribution_i {
 public:
         typedef std::vector<double> x_t;
@@ -135,6 +138,7 @@ protected:
 };
 
 // what every exponential family should provide
+////////////////////////////////////////////////////////////////////////////////
 class exponential_family_i : public distribution_i {
 public:
         virtual exponential_family_i* clone() const = 0;
@@ -158,6 +162,7 @@ inline const std::vector<double>& distribution_i::moment<2>() const {
 }
 
 // implement what is common to most exponential families
+////////////////////////////////////////////////////////////////////////////////
 template <size_t D>
 class exponential_family_t : public exponential_family_i {
 public:
@@ -170,7 +175,8 @@ public:
                   _domain       (domain),
                   _n            (n),
                   _moment_first (dim, 0.0),
-                  _moment_second(dim, 0.0)
+                  _moment_second(dim, 0.0),
+                  _dimension    (dim)
                 { }
         exponential_family_t(const exponential_family_t& e)
                 : _parameters   (e._parameters),
@@ -178,7 +184,8 @@ public:
                   _domain       (e._domain),
                   _n            (e._n),
                   _moment_first (e._moment_first),
-                  _moment_second(e._moment_second)
+                  _moment_second(e._moment_second),
+                  _dimension    (e._dimension)
                 { }
 
         // clone object
@@ -193,11 +200,15 @@ public:
                 swap(left._n,             right._n);
                 swap(left._moment_first,  right._moment_first);
                 swap(left._moment_second, right._moment_second);
+                swap(left._dimension,     right._dimension);
         }
 
         // operators
         virtual bool operator==(const distribution_i& rhs) const {
                 const exponential_family_t<D>& tmp = static_cast<const exponential_family_t<D>&>(rhs);
+                if (dimension() != tmp.dimension()) {
+                        return false;
+                }
                 for (size_t i = 0; i < D; i++) {
                         if (std::abs(parameters()[i] - tmp.parameters()[i]) > 1.0e-10) {
                                 return false;
@@ -256,6 +267,9 @@ public:
                 _n = 1.0;
                 return true;
         }
+        virtual size_t dimension() const {
+                return _dimension;
+        }
 protected:
         // access methods
         virtual array_t& parameters() {
@@ -286,8 +300,13 @@ protected:
         // precomputed moments
         std::vector<double> _moment_first;
         std::vector<double> _moment_second;
+        // dimension of the space where this distribution is defined
+        // on
+        size_t _dimension;
 };
 
+// the normal distribution
+////////////////////////////////////////////////////////////////////////////////
 class normal_distribution_t : public exponential_family_t<2> {
 public:
         typedef exponential_family_t<2> base_t;
@@ -303,12 +322,6 @@ public:
                 assert(precision > 0.0);
                 parameters()[0] = mean*precision;
                 parameters()[1] = -0.5*precision;
-                renormalize();
-                update_moments();
-        }
-        normal_distribution_t(const base_t::array_t parameters) :
-                base_t() {
-                this->parameters() = parameters;
                 renormalize();
                 update_moments();
         }
@@ -329,10 +342,10 @@ public:
         derived_assignment_operator(distribution_i, normal_distribution_t)
 
         virtual double base_measure(const std::vector<double>& x) const {
-                return 1.0/std::pow(std::sqrt(2.0*M_PI), n());
+                return std::pow(2.0*M_PI, -1.0/2.0*static_cast<double>(n()));
         }
         virtual const array_t& statistics(const std::vector<double>& x) const {
-                assert(x.size() == 1);
+                assert(x.size() == dimension());
                 _T[0] = x[0];
                 _T[1] = std::pow(x[0], 2.0);
                 return _T;
@@ -341,17 +354,13 @@ public:
                 if (!base_t::renormalize()) {
                         return false;
                 }
-                const double& p1 = parameters()[0];
-                const double& p2 = parameters()[1];
+                const double& mu  = -0.5*parameters()[0]/parameters()[1];
+                const double& tau = -2.0*parameters()[1];
                 debug("-> normal parameters:" << std::endl);
-                debug("-> p1: " << p1 << std::endl);
-                debug("-> p2: " << p2 << std::endl);
-                _log_partition =  -1.0/4.0*std::pow(p1/p2, 2.0)*p2 -
-                        0.5*std::log(-2.0*p2);
+                debug("-> mean     : " << p1 << std::endl);
+                debug("-> precision: " << p2 << std::endl);
+                _log_partition = 1.0/2.0*(tau*mu*mu - std::log(tau));
                 return true;
-        }
-        virtual size_t dimension() const {
-                return 1;
         }
 protected:
         virtual void update_moments() {
@@ -360,6 +369,82 @@ protected:
         }
 };
 
+// a multivariate normal distribution on a simple product space
+////////////////////////////////////////////////////////////////////////////////
+class pnormal_distribution_t : public exponential_family_t<2> {
+public:
+        typedef exponential_family_t<2> base_t;
+
+        // void object
+        pnormal_distribution_t() :
+                base_t(1, 0.0, real_domain(1)) {
+                parameters()[0] = 0.0;
+                parameters()[1] = 0.0;
+        }
+        pnormal_distribution_t(size_t dim, double mean, double precision) :
+                base_t(dim, 1.0, real_domain(dim)) {
+                assert(dim > 0);
+                assert(precision > 0.0);
+                parameters()[0] = mean*precision;
+                parameters()[1] = -0.5*precision;
+                renormalize();
+                update_moments();
+        }
+        pnormal_distribution_t(const pnormal_distribution_t& normal_distribution)
+                : base_t(normal_distribution)
+                { }
+
+        virtual pnormal_distribution_t* clone() const {
+                return new pnormal_distribution_t(*this);
+        }
+
+        friend void swap(pnormal_distribution_t& left,
+                         pnormal_distribution_t& right) {
+                using std::swap;
+                swap(static_cast<base_t&>(left),
+                     static_cast<base_t&>(right));
+        }
+        derived_assignment_operator(distribution_i, pnormal_distribution_t)
+
+        virtual double base_measure(const std::vector<double>& x) const {
+                return std::pow(2.0*M_PI, -static_cast<double>(dimension())/2.0*static_cast<double>(n()));
+        }
+        virtual const array_t& statistics(const std::vector<double>& x) const {
+                assert(x.size() == dimension());
+                // reset statistics
+                _T[0] = 0.0;
+                _T[1] = 0.0;
+                for (size_t i = 0; i < dimension(); i++) {
+                        _T[0] += x[i];
+                        _T[1] += std::pow(x[i], 2.0);
+                }
+                return _T;
+        }
+        virtual bool renormalize() {
+                if (!base_t::renormalize()) {
+                        return false;
+                }
+                const double& mu  = -0.5*parameters()[0]/parameters()[1];
+                const double& tau = -2.0*parameters()[1];
+                debug("-> normal parameters:" << std::endl);
+                debug("-> mean     : " << p1 << std::endl);
+                debug("-> precision: " << p2 << std::endl);
+                _log_partition = static_cast<double>(dimension())/2.0*tau*mu*mu -
+                        static_cast<double>(dimension())/2.0*std::log(tau);
+                return true;
+        }
+protected:
+        virtual void update_moments() {
+                // on a product space, moments are the same in every dimension
+                for (size_t i = 0; i < dimension(); i++) {
+                        this->_moment_first [i] = -0.5*parameters()[0]/parameters()[1];
+                        this->_moment_second[i] = -0.5/parameters()[1];
+                }
+        }
+};
+
+// the gamma distribution
+////////////////////////////////////////////////////////////////////////////////
 class gamma_distribution_t : public exponential_family_t<2> {
 public:
         typedef exponential_family_t<2> base_t;
@@ -376,12 +461,6 @@ public:
                 assert(rate  > 0.0);
                 parameters()[0] = shape-1.0;
                 parameters()[1] = rate;
-                renormalize();
-                update_moments();
-        }
-        gamma_distribution_t(const base_t::array_t parameters) :
-                base_t(1, 1.0, positive_domain(1)) {
-                this->parameters() = parameters;
                 renormalize();
                 update_moments();
         }
@@ -405,7 +484,7 @@ public:
                 return 1.0;
         }
         virtual const array_t& statistics(const std::vector<double>& x) const {
-                assert(x.size() == 1);
+                assert(x.size() == dimension());
                 _T[0] = std::log(x[0]);
                 _T[1] = -x[0];
                 return _T;
@@ -422,9 +501,6 @@ public:
                 _log_partition =  std::log(boost::math::tgamma(a1)) -
                         (a1)*std::log(a2);
                 return true;
-        }
-        virtual size_t dimension() const {
-                return 1;
         }
 protected:
         virtual void update_moments() {

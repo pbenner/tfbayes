@@ -133,6 +133,7 @@ BOOST_PYTHON_MODULE(interface)
         // ---------------------------------------------------------------------
         class_<distribution_i, boost::noncopyable>("distribution_i", no_init)
                 .def("moment", &distribution_moment)
+                .def("dimension", &distribution_i::dimension)
                 ;
         class_<dirac_distribution_t, bases<distribution_i> >("dirac_distribution_t", no_init)
                 .def(init<std::vector<double> >())
@@ -148,6 +149,9 @@ BOOST_PYTHON_MODULE(interface)
         class_<normal_distribution_t, bases<exponential_family_i> >("normal_distribution_t")
                 .def(init<double, double>())
                 ;
+        class_<pnormal_distribution_t, bases<exponential_family_i> >("pnormal_distribution_t")
+                .def(init<size_t, double, double>())
+                ;
         class_<gamma_distribution_t, bases<exponential_family_i> >("gamma_distribution_t")
                 .def(init<double, double>())
                 ;
@@ -160,6 +164,10 @@ BOOST_PYTHON_MODULE(interface)
                 .def(init<double, double>())
                 .def(init<double, double, std::string>())
                 ;
+        // class_<pnormal_fnode_t, bases<factor_node_i> >("pnormal_fnode_t", no_init)
+        //         .def(init<size_t, double, double>())
+        //         .def(init<size_t, double, double, std::string>())
+        //         ;
         class_<gamma_fnode_t, bases<factor_node_i> >("gamma_fnode_t", no_init)
                 .def(init<double, double>())
                 .def(init<double, double, std::string>())
