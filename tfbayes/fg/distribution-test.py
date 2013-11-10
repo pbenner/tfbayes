@@ -11,12 +11,12 @@ from tfbayes.fg import *
 def integrate(d, x_from, x_to, n=1001):
     step = (float(x_to) - float(x_from))/(n-1.0)
     x = np.linspace(x_from, x_to, num=n)
-    y = map(d.density, x)
+    y = map(lambda xp: d.density([xp]), x)
     return sum(y)*step
 
 def plot_density(d, x_from, x_to, n=1001):
     x = np.linspace(x_from, x_to, num=n)
-    y = map(d.density, x)
+    y = map(lambda xp: d.density([xp]), x)
     p = plt.plot(x,y)
     plt.show()
 
@@ -26,7 +26,7 @@ def plot_density_list(d_list, x_from, x_to, labels=None, xlab="x", ylab="density
     ax = plt.subplot(1,1,1)
     for i, d in enumerate(d_list):
         x = np.linspace(x_from, x_to, num=n)
-        y = map(d.density, x)
+        y = map(lambda xp: d.density([xp]), x)
         if labels:
             p_list.append(ax.plot(x,y,label=labels[i]))
         else:
@@ -39,7 +39,7 @@ def plot_density_list(d_list, x_from, x_to, labels=None, xlab="x", ylab="density
 # test moments
 ################################################################################
 
-d = dirac_distribution_t(2)
+d = dirac_distribution_t([2])
 d.moment(1)
 d.moment(2)
 

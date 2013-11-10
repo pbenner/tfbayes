@@ -10,7 +10,7 @@ from tfbayes.fg import *
 
 def construct_fg1():
     f1 = normal_fnode_t(0, 0, "f1")
-    v1 = data_vnode_t(3, "v1")
+    v1 = data_vnode_t([3], "v1")
     f2 = normal_fnode_t(0, 0.01, "f2")
     v2 = normal_vnode_t("v2")
     f3 = gamma_fnode_t(1, 2, "f3")
@@ -24,7 +24,7 @@ def construct_fg1():
 
 def construct_fg2():
     f1 = normal_fnode_t(0, 0.5, "f1")
-    v1 = data_vnode_t(3, "v1")
+    v1 = data_vnode_t([3], "v1")
     f2 = normal_fnode_t(0, 0.01, "f2")
     v2 = normal_vnode_t("v2")
     f1.link("output", v1)
@@ -34,7 +34,7 @@ def construct_fg2():
 
 def construct_fg3():
     f1 = normal_fnode_t(0, 0.5, "f1")
-    v1 = data_vnode_t(3, "v1")
+    v1 = data_vnode_t([3], "v1")
     f3 = gamma_fnode_t(1, 2, "f3")
     v3 = gamma_vnode_t("v3")
     f1.link("output", v1)
@@ -51,7 +51,7 @@ def plot_density_list(d_list, x_from, x_to, labels=None, xlab="x", ylab="density
     ax = plt.subplot(1,1,1)
     for i, d in enumerate(d_list):
         x = np.linspace(x_from, x_to, num=n)
-        y = map(d.density, x)
+        y = map(lambda xp: d.density([xp]), x)
         if labels:
             p_list.append(ax.plot(x,y,label=labels[i]))
         else:
