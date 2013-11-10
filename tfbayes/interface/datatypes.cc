@@ -21,6 +21,7 @@
 #include <cctype>
 #include <list>
 #include <string>
+#include <sstream>
 
 #include <boost/python/module.hpp>
 #include <boost/python/tuple.hpp>
@@ -55,6 +56,22 @@ list vector_to_list(std::vector<double>& v)
         object iter = get_iter(v);
         list l(iter);
         return l;
+}
+
+std::string vector_to_string(std::vector<double>& v)
+{
+        std::stringstream ss;
+
+        ss << "[";
+        for (size_t i = 0; i < v.size(); i++) {
+                ss << v[i];
+                if (i < v.size()-1) {
+                        ss << ", ";
+                }
+        }
+        ss << "]";
+
+        return ss.str();
 }
 
 // matrix class
@@ -158,6 +175,7 @@ BOOST_PYTHON_MODULE(datatypes)
         class_<std::vector<double> >("vector")
                 .def(vector_indexing_suite<std::vector<double> >() )
                 .def("__init__", make_constructor(vector_from_list))
+                .def("__repr__", &vector_to_string)
                 .def("export", vector_to_list)
                 ;
         class_<std::matrix<double> >("matrix")

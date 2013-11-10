@@ -254,10 +254,8 @@ public:
                 using std::swap;
                 swap(static_cast<observable_t&>(left),
                      static_cast<observable_t&>(right));
-                swap(left._inbox,          right._inbox);
-                swap(left.outbox,          right.outbox);
                 swap(left.current_message, right.current_message);
-                swap(left.messages,        right.messages);
+                swap(left._name,           right._name);
         }
 
         virtual const T& operator()() const {
@@ -340,6 +338,12 @@ public:
         virtual exponential_vnode_t* clone() const {
                 return new exponential_vnode_t(*this);
         }
+        friend void swap(exponential_vnode_t& left, exponential_vnode_t& right) {
+                using std::swap;
+                swap(static_cast<base_t&>(left),
+                     static_cast<base_t&>(right));
+                swap(left.new_message, right.new_message);
+        }
         derived_assignment_operator(variable_node_i, exponential_vnode_t)
 protected:
         virtual const T& message() {
@@ -357,7 +361,6 @@ protected:
                 debug("node type: " << typeid(*this).name() << std::endl);
                 // normalize message
                 new_message.renormalize();
-                debug("-> message mean: " << new_message.template moment<1>() << std::endl);
                 debug(std::endl);
                 // has this message be sent before?
                 return new_message;
@@ -369,25 +372,29 @@ class data_vnode_t : public variable_node_t<dirac_distribution_t> {
 public:
         typedef variable_node_t<dirac_distribution_t> base_t;
 
-        data_vnode_t(double x, const std::string& name = "") :
+        data_vnode_t(const std::vector<double>& x, const std::string& name = "") :
                 base_t(name),
-                data(x) {
+                new_message(x) {
         }
         data_vnode_t(const data_vnode_t& data_vnode) :
                 base_t      (data_vnode),
-                data        (data_vnode.data),
                 new_message (data_vnode.new_message) {
         }
         virtual data_vnode_t* clone() const {
                 return new data_vnode_t(*this);
         }
+
+        friend void swap(data_vnode_t& left, data_vnode_t& right) {
+                using std::swap;
+                swap(static_cast<base_t&>(left),
+                     static_cast<base_t&>(right));
+                swap(left.new_message, right.new_message);
+        }
         derived_assignment_operator(variable_node_i, data_vnode_t)
 protected:
         virtual const dirac_distribution_t& message() {
-                new_message = dirac_distribution_t(data);
                 return new_message;
         }
-        double data;
         dirac_distribution_t new_message;
 };
 

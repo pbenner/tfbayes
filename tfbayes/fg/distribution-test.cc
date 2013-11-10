@@ -27,7 +27,7 @@ main()
         normal_distribution_t n(3,1);
 
         cout << "moment: "
-             << n.moment<1>()
+             << n.moment<1>()[0]
              << endl;
 
         return 0;

@@ -22,6 +22,7 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <algorithm>
 #include <limits>
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -30,6 +31,7 @@
 #include <boost/icl/interval_set.hpp>
 #include <boost/math/special_functions/gamma.hpp>
 
+#include <tfbayes/fg/domain.hh>
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/default-operator.hh>
 #include <tfbayes/utility/debug.hh>
@@ -42,27 +44,42 @@ public:
 
         virtual distribution_i& operator=(const distribution_i& distribution) = 0;
 
-        // multiplication of distributions
-        virtual distribution_i& operator*=(const distribution_i& e) = 0;
-
         // comparison operators
         virtual bool operator==(const distribution_i& rhs) const = 0;
         virtual bool operator!=(const distribution_i& rhs) const = 0;
 
-        template<size_t K> double moment() const {
+        // dimension of the space this distribution is defined on
+        virtual size_t dimension() const = 0;
+
+        template<size_t K> const std::vector<double>& moment() const {
                 return std::numeric_limits<double>::infinity();
         }
+        virtual void update_moments() = 0;
 protected:
-        virtual double moment_first () const = 0;
-        virtual double moment_second() const = 0;
+        virtual const std::vector<double>& moment_first () const = 0;
+        virtual const std::vector<double>& moment_second() const = 0;
 };
 
 class dirac_distribution_t : public distribution_i {
 public:
+        typedef std::vector<double> x_t;
+
         dirac_distribution_t() :
-                _x() { }
+                _x            (),
+                _moment_second()
+                { }
+        // one-dimensional dirac
         dirac_distribution_t(double x) :
-                _x(x) { }
+                _x(1, x),
+                _moment_second(1, 0.0) {
+                update_moments();
+        }
+        // n-dimensional dirac
+        dirac_distribution_t(const std::vector<double>& x) :
+                _x(x),
+                _moment_second(x.size(), 0.0) {
+                update_moments();
+        }
 
         virtual dirac_distribution_t* clone() const {
                 return new dirac_distribution_t(*this);
@@ -72,34 +89,49 @@ public:
                          dirac_distribution_t& right) {
                 using std::swap;
                 swap(left._x, right._x);
+                swap(left._moment_second, right._moment_second);
         }
         derived_assignment_operator(distribution_i, dirac_distribution_t)
 
-        virtual dirac_distribution_t& operator*=(const distribution_i& rhs) {
-                const dirac_distribution_t& tmp = static_cast<const dirac_distribution_t&>(rhs);
-                // multiplication is just like a logical and
-                if ((!_x || !tmp._x) || (*_x != tmp._x)) {
-                        _x = boost::optional<double>();
-                }
-                return *this;
-        }
         virtual bool operator==(const distribution_i& rhs) const {
                 const dirac_distribution_t& tmp = static_cast<const dirac_distribution_t&>(rhs);
-                return _x && tmp._x && *_x == *tmp._x;
+                // always false if dimensions do not match
+                if (_x.size() != tmp._x.size()) {
+                        return false;
+                }
+                // compare single values
+                std::vector<double>::const_iterator it = _x.begin();
+                std::vector<double>::const_iterator is = tmp._x.begin();
+                for (; it != _x.end() && is != tmp._x.end(); it++, is++) {
+                        if (*it != *is) {
+                                return false;
+                        }
+                }
+                return true;
         }
         virtual bool operator!=(const distribution_i& rhs) const {
                 return !operator==(rhs);
         }
+        virtual size_t dimension() const {
+                return _x.size();
+        }
 
 protected:
-        virtual double moment_first () const {
-                return _x ? *_x : std::numeric_limits<double>::infinity();
+        virtual const std::vector<double>& moment_first () const {
+                return _x;
         }
-        virtual double moment_second() const {
-                return _x ? (*_x)*(*_x) : std::numeric_limits<double>::infinity();
+        virtual const std::vector<double>& moment_second() const {
+                return _moment_second;
+        }
+        virtual void update_moments() {
+                for (size_t i = 0; i < _x.size(); i++) {
+                        _moment_second[i] = _x[i]*_x[i];
+                }
         }
         // location of the dirac measure
-        boost::optional<double> _x;
+        std::vector<double> _x;
+        // precomputed moment
+        std::vector<double> _moment_second;
 };
 
 // what every exponential family should provide
@@ -107,32 +139,22 @@ class exponential_family_i : public distribution_i {
 public:
         virtual exponential_family_i* clone() const = 0;
 
-        virtual double density(double x) const = 0;
-        virtual double base_measure(double x) const = 0;
+        virtual double density(const std::vector<double>& x) const = 0;
+        virtual double base_measure(const std::vector<double>& x) const = 0;
         virtual double log_partition() const = 0;
         virtual bool renormalize() = 0;
+
+        // multiplication of exponential families
+        virtual exponential_family_i& operator*=(const exponential_family_i& e) = 0;
 };
 
 template<>
-inline double distribution_i::moment<1>() const {
+inline const std::vector<double>& distribution_i::moment<1>() const {
         return moment_first();
 }
 template<>
-inline double distribution_i::moment<2>() const {
+inline const std::vector<double>& distribution_i::moment<2>() const {
         return moment_second();
-}
-
-inline
-boost::icl::interval<double>::type real_domain() {
-        return boost::icl::interval<double>::open(
-                -std::numeric_limits<double>::infinity(),
-                 std::numeric_limits<double>::infinity());
-}
-inline
-boost::icl::interval<double>::type positive_domain() {
-        return boost::icl::interval<double>::open(
-                0,
-                std::numeric_limits<double>::infinity());
 }
 
 // implement what is common to most exponential families
@@ -143,16 +165,20 @@ public:
         typedef boost::array<double, D> array_t;
 
         // constructors
-        exponential_family_t(size_t n = 1.0, boost::icl::interval<double>::type domain = real_domain())
+        exponential_family_t(size_t dim = 1, size_t n = 1.0, const domain_t& domain = real_domain(1))
                 : _log_partition(0.0),
                   _domain       (domain),
-                  _n            (n)
+                  _n            (n),
+                  _moment_first (dim, 0.0),
+                  _moment_second(dim, 0.0)
                 { }
         exponential_family_t(const exponential_family_t& e)
                 : _parameters   (e._parameters),
                   _log_partition(e._log_partition),
                   _domain       (e._domain),
-                  _n            (e._n)
+                  _n            (e._n),
+                  _moment_first (e._moment_first),
+                  _moment_second(e._moment_second)
                 { }
 
         // clone object
@@ -165,6 +191,8 @@ public:
                 swap(left._log_partition, right._log_partition);
                 swap(left._domain,        right._domain);
                 swap(left._n,             right._n);
+                swap(left._moment_first,  right._moment_first);
+                swap(left._moment_second, right._moment_second);
         }
 
         // operators
@@ -182,13 +210,13 @@ public:
         }
 
         // pure functions
-        virtual const array_t& statistics(double x) const = 0;
+        virtual const array_t& statistics(const std::vector<double>& x) const = 0;
 
         // methods
-        virtual double density(double x) const {
+        virtual double density(const std::vector<double>& x) const {
                 const array_t& T = statistics(x);
                 // is x in the domain of this function?
-                if (!boost::icl::contains(_domain, x)) {
+                if (!_domain.element(x)) {
                         return 0.0;
                 }
                 double tmp = 0.0;
@@ -204,7 +232,7 @@ public:
         virtual double log_partition() const {
                 return _log_partition;
         }
-        virtual exponential_family_t& operator*=(const distribution_i& _e) {
+        virtual exponential_family_t& operator*=(const exponential_family_i& _e) {
                 const exponential_family_t& e =
                         static_cast<const exponential_family_t&>(_e);
                 // add parameters
@@ -215,6 +243,8 @@ public:
                 _log_partition += e._log_partition;
                 // increment number of multiplications
                 _n += e._n;
+                // recompute moments
+                update_moments();
                 // and return
                 return *this;
         }
@@ -237,6 +267,12 @@ protected:
         virtual double& n() {
                 return _n;
         }
+        virtual const std::vector<double>& moment_first () const {
+                return _moment_first;
+        }
+        virtual const std::vector<double>& moment_second() const {
+                return _moment_second;
+        }
         // natural parameters
         array_t _parameters;
         // sufficient statistics
@@ -244,9 +280,12 @@ protected:
         // normalization constant
         double _log_partition;
         // domain of the density (compact support)
-        boost::icl::interval<double>::type _domain;
+        domain_t _domain;
         // keep track of the number of multiplications
         double _n;
+        // precomputed moments
+        std::vector<double> _moment_first;
+        std::vector<double> _moment_second;
 };
 
 class normal_distribution_t : public exponential_family_t<2> {
@@ -255,7 +294,7 @@ public:
 
         // void object
         normal_distribution_t() :
-                base_t(0.0) {
+                base_t(1, 0.0) {
                 parameters()[0] = 0.0;
                 parameters()[1] = 0.0;
         }
@@ -265,10 +304,13 @@ public:
                 parameters()[0] = mean*precision;
                 parameters()[1] = -0.5*precision;
                 renormalize();
+                update_moments();
         }
         normal_distribution_t(const base_t::array_t parameters) :
                 base_t() {
                 this->parameters() = parameters;
+                renormalize();
+                update_moments();
         }
         normal_distribution_t(const normal_distribution_t& normal_distribution)
                 : base_t(normal_distribution)
@@ -286,12 +328,13 @@ public:
         }
         derived_assignment_operator(distribution_i, normal_distribution_t)
 
-        virtual double base_measure(double x) const {
+        virtual double base_measure(const std::vector<double>& x) const {
                 return 1.0/std::pow(std::sqrt(2.0*M_PI), n());
         }
-        virtual const array_t& statistics(double x) const {
-                _T[0] = x;
-                _T[1] = std::pow(x, 2.0);
+        virtual const array_t& statistics(const std::vector<double>& x) const {
+                assert(x.size() == 1);
+                _T[0] = x[0];
+                _T[1] = std::pow(x[0], 2.0);
                 return _T;
         }
         virtual bool renormalize() {
@@ -307,12 +350,13 @@ public:
                         0.5*std::log(-2.0*p2);
                 return true;
         }
-protected:
-        virtual double moment_first () const {
-                return -0.5*parameters()[0]/parameters()[1];
+        virtual size_t dimension() const {
+                return 1;
         }
-        virtual double moment_second() const {
-                return -0.5/parameters()[1];
+protected:
+        virtual void update_moments() {
+                this->_moment_first [0] = -0.5*parameters()[0]/parameters()[1];
+                this->_moment_second[0] = -0.5/parameters()[1];
         }
 };
 
@@ -322,21 +366,24 @@ public:
 
         // void object
         gamma_distribution_t() :
-                base_t(0.0, positive_domain()) {
+                base_t(1, 0.0, positive_domain(1)) {
                 parameters()[0] = 0.0;
                 parameters()[1] = 0.0;
         }
         gamma_distribution_t(double shape, double rate) :
-                base_t(1.0, positive_domain()) {
+                base_t(1, 1.0, positive_domain(1)) {
                 assert(shape > 0.0);
                 assert(rate  > 0.0);
                 parameters()[0] = shape-1.0;
                 parameters()[1] = rate;
                 renormalize();
+                update_moments();
         }
         gamma_distribution_t(const base_t::array_t parameters) :
-                base_t(1.0, positive_domain()) {
+                base_t(1, 1.0, positive_domain(1)) {
                 this->parameters() = parameters;
+                renormalize();
+                update_moments();
         }
         gamma_distribution_t(const gamma_distribution_t& gamma_distribution)
                 : base_t(gamma_distribution)
@@ -354,12 +401,13 @@ public:
         }
         derived_assignment_operator(distribution_i, gamma_distribution_t)
 
-        virtual double base_measure(double x) const {
+        virtual double base_measure(const std::vector<double>& x) const {
                 return 1.0;
         }
-        virtual const array_t& statistics(double x) const {
-                _T[0] = std::log(x);
-                _T[1] = -x;
+        virtual const array_t& statistics(const std::vector<double>& x) const {
+                assert(x.size() == 1);
+                _T[0] = std::log(x[0]);
+                _T[1] = -x[0];
                 return _T;
         }
         virtual bool renormalize() {
@@ -375,16 +423,15 @@ public:
                         (a1)*std::log(a2);
                 return true;
         }
-protected:
-        virtual double moment_first () const {
-                const double& a1 = parameters()[0]+1.0;
-                const double& a2 = parameters()[1];
-                return a1/a2;
+        virtual size_t dimension() const {
+                return 1;
         }
-        virtual double moment_second() const {
+protected:
+        virtual void update_moments() {
                 const double& a1 = parameters()[0]+1.0;
                 const double& a2 = parameters()[1];
-                return a1*(a1+1.0)/(a2*a2);
+                this->_moment_first [0] = a1/a2;
+                this->_moment_second[0] = a1*(a1+1.0)/(a2*a2);
         }
 };
 

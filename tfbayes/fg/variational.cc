@@ -86,6 +86,9 @@ normal_fnode_t::initial_message(size_t i) const {
 
 const p_message_t&
 normal_fnode_t::message(size_t i) {
+        assert(_inbox[0]().dimension() == 1);
+        assert(_inbox[1]().dimension() == 1);
+        assert(_inbox[2]().dimension() == 1);
         switch (i) {
         case 0: return message1();
         case 1: return message2();
@@ -96,8 +99,8 @@ normal_fnode_t::message(size_t i) {
 
 const p_message_t&
 normal_fnode_t::message1() {
-        double mean      = _inbox[1]().moment<1>();
-        double precision = _inbox[2]().moment<1>();
+        double mean      = _inbox[1]().moment<1>()[0];
+        double precision = _inbox[2]().moment<1>()[0];
 
         debug("normal message 1 (normal): " << this->name() << endl);
         distribution1 = normal_distribution_t(mean, precision);
@@ -108,8 +111,8 @@ normal_fnode_t::message1() {
 
 const p_message_t&
 normal_fnode_t::message2() {
-        double mean      = _inbox[0]().moment<1>();
-        double precision = _inbox[2]().moment<1>();
+        double mean      = _inbox[0]().moment<1>()[0];
+        double precision = _inbox[2]().moment<1>()[0];
 
         debug("normal message 2 (normal): " << this->name() << endl);
         distribution2 = normal_distribution_t(mean, precision);
@@ -121,10 +124,10 @@ normal_fnode_t::message2() {
 const p_message_t&
 normal_fnode_t::message3() {
         // moments
-        double y   = _inbox[0]().moment<1>();
-        double y2  = _inbox[0]().moment<2>();
-        double mu  = _inbox[1]().moment<1>();
-        double mu2 = _inbox[1]().moment<2>();
+        double y   = _inbox[0]().moment<1>()[0];
+        double y2  = _inbox[0]().moment<2>()[0];
+        double mu  = _inbox[1]().moment<1>()[0];
+        double mu2 = _inbox[1]().moment<2>()[0];
         // parameters of the gamma distribution
         double shape = 1.5;
         double rate  = std::max(1e-10, 0.5*(y2 - 2.0*y*mu + mu2));
@@ -206,6 +209,9 @@ gamma_fnode_t::initial_message(size_t i) const {
 
 const p_message_t&
 gamma_fnode_t::message(size_t i) {
+        assert(_inbox[0]().dimension() == 1);
+        assert(_inbox[1]().dimension() == 1);
+        assert(_inbox[2]().dimension() == 1);
         switch (i) {
         case 0: return message1();
         case 2: return message3();
@@ -215,8 +221,8 @@ gamma_fnode_t::message(size_t i) {
 
 const p_message_t&
 gamma_fnode_t::message1() {
-        double shape = _inbox[1]().moment<1>();
-        double rate  = _inbox[2]().moment<1>();
+        double shape = _inbox[1]().moment<1>()[0];
+        double rate  = _inbox[2]().moment<1>()[0];
 
         debug("gamma message 1 (gamma): " << this->name() << endl);
         distribution1 = gamma_distribution_t(shape, rate);
@@ -227,8 +233,8 @@ gamma_fnode_t::message1() {
 
 const p_message_t&
 gamma_fnode_t::message3() {
-        double shape =   _inbox[1]().moment<1>() + 1.0;
-        double rate  = - _inbox[0]().moment<1>();
+        double shape =   _inbox[1]().moment<1>()[0] + 1.0;
+        double rate  = - _inbox[0]().moment<1>()[0];
 
         debug("gamma message 1 (gamma): " << this->name() << endl);
         distribution3 = gamma_distribution_t(shape, rate);

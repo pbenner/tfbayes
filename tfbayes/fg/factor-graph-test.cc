@@ -29,8 +29,10 @@ main()
         factor_set_t fnodes;
         variable_set_t vnodes;
 
+        vector<double> data(1, 1.42);
+
         fnodes += new normal_fnode_t(1,2, "f1");
-        vnodes += new data_vnode_t(1.42, "v1");
+        vnodes += new data_vnode_t(data, "v1");
 
         fnodes += new normal_fnode_t(2,2, "f2");
         vnodes += new normal_vnode_t("v2");
@@ -49,6 +51,6 @@ main()
 
         fg1();
 
-        cout << "mean: " << fg1["v2"]->moment<1>() << endl
-             << "mean: " << fg1["v3"]->moment<1>() << endl;
+        cout << "mean: " << fg1["v2"]->moment<1>()[0] << endl
+             << "mean: " << fg1["v3"]->moment<1>()[0] << endl;
 }

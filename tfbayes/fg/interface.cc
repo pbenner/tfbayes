@@ -42,7 +42,7 @@ using namespace boost::python;
 // -----------------------------------------------------------------------------
 
 static
-double distribution_moment(const distribution_i& distribution, size_t n)
+std::vector<double> distribution_moment(const distribution_i& distribution, size_t n)
 {
         switch (n) {
         case 1:
@@ -50,7 +50,7 @@ double distribution_moment(const distribution_i& distribution, size_t n)
         case 2:
                 return distribution.moment<2>();
         default:
-                return std::numeric_limits<double>::infinity();
+                return std::vector<double>();
         }
 }
 
@@ -135,7 +135,7 @@ BOOST_PYTHON_MODULE(interface)
                 .def("moment", &distribution_moment)
                 ;
         class_<dirac_distribution_t, bases<distribution_i> >("dirac_distribution_t", no_init)
-                .def(init<double>())
+                .def(init<std::vector<double> >())
                 ;
         class_<exponential_family_i, bases<distribution_i>, boost::noncopyable>("exponential_family_i", no_init)
                 .def("__init__",      make_constructor(&cast_exponential_family))
@@ -170,8 +170,8 @@ BOOST_PYTHON_MODULE(interface)
                 .def("__call__", &variable_node_i::operator(), return_internal_reference<>())
                 ;
         class_<data_vnode_t, bases<variable_node_i> >("data_vnode_t", no_init)
-                .def(init<double>())
-                .def(init<double, std::string>())
+                .def(init<std::vector<double> >())
+                .def(init<std::vector<double>, std::string>())
                 ;
         class_<normal_vnode_t, bases<variable_node_i> >("normal_vnode_t")
                 .def(init<std::string>())
