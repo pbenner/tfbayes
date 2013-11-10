@@ -58,7 +58,7 @@ public:
                 }
                 return boost::optional<const T&>();
         }
-                
+
 protected:
         map_t _map;
 };
