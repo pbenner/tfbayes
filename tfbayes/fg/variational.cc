@@ -156,9 +156,9 @@ pnormal_fnode_t::pnormal_fnode_t(size_t dim, double mean, double precision,
         dmean        (mean),
         dprecision   (precision),
         // initial distributions
-        distribution1(dim,0,1),
-        distribution2(0,1),
-        distribution3(2,1),
+        distribution1(dim,0,0.01),
+        distribution2(0,0.01),
+        distribution3(1,0.5),
         dimension    (dim) {
         assert(dim > 0);
         // set the inbox to the given parameters, however,

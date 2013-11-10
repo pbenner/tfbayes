@@ -502,7 +502,7 @@ public:
                 debug("-> gamma parameters:" << std::endl);
                 debug("-> a1: " << a1 << std::endl);
                 debug("-> a2: " << a2 << std::endl);
-                _log_partition =  std::log(boost::math::tgamma(a1)) -
+                _log_partition =  boost::math::lgamma(a1) -
                         (a1)*std::log(a2);
                 return true;
         }

@@ -106,9 +106,9 @@ fg["v3"].moment(1)
 
 mu    = 1
 sigma = 0.1
-data  = np.random.normal(mu, sigma, 20)
+data  = np.random.normal(mu, sigma, 1000)
 
-plt.hist(data)
+plt.hist(data, 50, normed=1)
 plt.show()
 
 fg = construct_fg1(data)
@@ -117,8 +117,8 @@ fg()
 fg["v2"].moment(1)
 fg["v3"].moment(1)
 
-plot_fg(fg, ["v2", "v3"], 0, 5, labels=["normal","gamma"])
-plt.hist(data, 5, normed=1)
+plot_fg(fg, ["v2", "v3"], 0, 2, labels=["normal","gamma"])
+plt.hist(data, 50, normed=1)
 plt.show()
 
 plot_fg(fg, ["v3"], 0, 100, labels=["gamma"])
