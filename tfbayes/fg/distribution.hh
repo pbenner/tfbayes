@@ -28,7 +28,6 @@
 #include <cmath>
 
 #include <boost/array.hpp>
-#include <boost/icl/interval_set.hpp>
 #include <boost/math/special_functions/gamma.hpp>
 
 #include <tfbayes/fg/domain.hh>

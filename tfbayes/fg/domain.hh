@@ -22,6 +22,10 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <cstddef>
+
+#include <boost/icl/interval_set.hpp>
+
 class domain_t {
 public:
         domain_t(const boost::icl::interval<double>::type& interval,
