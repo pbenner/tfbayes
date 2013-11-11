@@ -137,6 +137,7 @@ public:
                 outbox       (D),
                 _neighbors   (D, NULL),
                 _name        (name) {
+                debug("allocating factor node at " << this << std::endl);
         }
         factor_node_t(const factor_node_t& factor_node) :
                 factor_node_i(factor_node),
@@ -147,6 +148,7 @@ public:
                 outbox       (D),
                 _neighbors   (D, NULL),
                 _name        (factor_node._name) {
+                debug("copying factor node from " << &factor_node << " to " << this << std::endl);
         }
 
         virtual factor_node_t* clone() const = 0;
@@ -176,12 +178,15 @@ public:
         virtual bool link(size_t i, variable_node_i& variable_node) {
                 assert(i < D);
                 // allow only conjugate nodes to connect
+                debug("attempting to link factor node " << this
+                      << " with variable node " << &variable_node << std::endl);
                 if (// variable_node either has to be a conjugate distribution
                     !is_conjugate(i, variable_node) &&
                     // or a dirac distribution if it is connected to
                     // the output variable
                     !(i == 0 &&
                       variable_node.type() == typeid(dirac_distribution_t))) {
+                        debug("-> failed!" << std::endl);
                         return false;
                 }
                 // pointer to the method that notifies the factor
@@ -235,6 +240,7 @@ class variable_node_t : public variable_node_i, public observable_t {
 public:
         variable_node_t(const std::string& name = "") :
                 _name          (name) {
+                debug("allocating variable node at " << this << std::endl);
         }
         variable_node_t(const variable_node_t& variable_node) :
                 variable_node_i(variable_node),
@@ -246,6 +252,7 @@ public:
                 current_message(variable_node.current_message),
                 messages       (),
                 _name          (variable_node._name) {
+                debug("copying variable node from " << &variable_node << " to " << this << std::endl);
         }
 
         friend void swap(variable_node_t& left, variable_node_t& right) {

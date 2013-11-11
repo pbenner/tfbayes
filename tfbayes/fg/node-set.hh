@@ -22,45 +22,60 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <map>
+#include <string>
 
 #include <boost/optional.hpp>
-#include <boost/ptr_container/ptr_vector.hpp>
+#include <boost/iterator/transform_iterator.hpp>
+#include <boost/ptr_container/ptr_map.hpp>
 
 #include <tfbayes/fg/node-types.hh>
 
-template <typename T>
-class node_set_t : public boost::ptr_vector<T> {
-public:
-        typedef boost::ptr_vector<T> base_t;
-        typedef std::map<std::string, size_t> map_t;
+template<typename T1, typename T2>
+T2 get_value(T1 pair) {
+        return *pair.second;
+}
 
+
+template <class T>
+class node_set_t : public boost::ptr_multimap<std::string, T> {
+public:
+        // type of the base class
+        typedef boost::ptr_multimap<std::string, T> base_t;
+
+        // type of the transformed iterator
+        typedef boost::transform_iterator<
+                const T& (*)(typename base_t::const_reference),
+                typename base_t::const_iterator
+                > const_value_iterator;
+        typedef boost::transform_iterator<
+                T& (*)(typename base_t::reference),
+                typename base_t::iterator
+                > value_iterator;
+
+        // access values
+        const_value_iterator operator[](const std::string& name) const {
+                return boost::make_transform_iterator(base_t::find(name), get_value<typename base_t::const_reference, const T&>);
+        }
+        value_iterator operator[](const std::string& name) {
+                return boost::make_transform_iterator(base_t::find(name), get_value<typename base_t::reference, T&>);
+        }
+        const_value_iterator const_vbegin() const {
+                return boost::make_transform_iterator(base_t::begin(), get_value<typename base_t::const_reference, const T&>);
+        }
+        value_iterator vbegin() {
+                return boost::make_transform_iterator(base_t::begin(), get_value<typename base_t::reference, T&>);
+        }
+        const_value_iterator const_vend() const {
+                return boost::make_transform_iterator(base_t::end(), get_value<typename base_t::const_reference, const T&>);
+        }
+        value_iterator vend() {
+                return boost::make_transform_iterator(base_t::end(), get_value<typename base_t::reference, T&>);
+        }
         node_set_t<T>& operator+=(T* node) {
-                base_t::push_back(node);
-                // insert node into the map if a name is available
-                if (node->name() != "") {
-                        _map[node->name()] = base_t::size()-1;
-                }
+                std::string tmp(node->name());
+                base_t::insert(tmp, node);
                 return *this;
         }
-        using base_t::operator[];
-        boost::optional<T&> operator[](const std::string& name) {
-                map_t::iterator it = _map.find(name);
-                if (it != _map.end()) {
-                        return base_t::operator[](it->second);
-                }
-                return boost::optional<T&>();
-        }
-        boost::optional<const T&> operator[](const std::string& name) const {
-                map_t::const_iterator it = _map.find(name);
-                if (it != _map.end()) {
-                        return base_t::operator[](it->second);
-                }
-                return boost::optional<const T&>();
-        }
-
-protected:
-        map_t _map;
 };
 
 typedef node_set_t<factor_node_i> factor_set_t;

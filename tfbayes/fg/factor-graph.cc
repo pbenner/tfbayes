@@ -76,23 +76,22 @@ using namespace std;
 factor_graph_t::factor_graph_t(const factor_set_t& factor_nodes,
                                const variable_set_t& variable_nodes,
                                size_t threads) :
-        // don't initialize lists here since all nodes are cloned later
         _factor_nodes   (),
         _variable_nodes (),
         _threads        (threads)
 {
         void (factor_graph_t::*tmp) (factor_graph_node_i*) = &factor_graph_t::add_node;
 
-        // clone all nodes before proceeding
+        // copy connectivity before proceeding
         clone_nodes(factor_nodes, variable_nodes);
 
-        for (size_t i = 0; i < _variable_nodes.size(); i++) {
-                _variable_nodes[i].observe(
-                        boost::bind(tmp, this, &_variable_nodes[i]));
+        for (variable_set_t::value_iterator it = _variable_nodes.vbegin();
+             it != _variable_nodes.vend(); it++) {
+                it->observe(boost::bind(tmp, this, &*it));
         }
-        for (size_t i = 0; i < _factor_nodes.size(); i++) {
-                _factor_nodes[i].observe(
-                        boost::bind(tmp, this, &_factor_nodes[i]));
+        for (factor_set_t::value_iterator it = _factor_nodes.vbegin();
+             it != _factor_nodes.vend(); it++) {
+                it->observe(boost::bind(tmp, this, &*it));
         }
 }
 
@@ -113,8 +112,9 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
 
         // initialize the network by letting all variable nodes send
         // their messages first
-        for (size_t i = 0; i < _variable_nodes.size(); i++) {
-                _variable_nodes[i].send_messages();
+        for (variable_set_t::value_iterator it = _variable_nodes.vbegin();
+             it != _variable_nodes.vend(); it++) {
+                it->send_messages();
         }
 
         // sample
@@ -130,15 +130,21 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
         }
 }
 
-boost::optional<const distribution_i&>
+static
+const distribution_i& get_distribution(const variable_node_i& node) {
+        return node();
+}
+
+factor_graph_t::dist_iterator
 factor_graph_t::operator[](const std::string& name) const
 {
-        if (_variable_nodes[name]) {
-                return  (*_variable_nodes[name])();
-        }
-        else {
-                return boost::optional<const distribution_i&>();
-        }
+        return boost::make_transform_iterator(_variable_nodes[name], get_distribution);
+}
+
+factor_graph_t::dist_iterator
+factor_graph_t::end() const
+{
+        return boost::make_transform_iterator(_variable_nodes.const_vend(), get_distribution);
 }
 
 void
@@ -155,23 +161,30 @@ factor_graph_t::clone_nodes(const factor_set_t& fnodes,
 {
         // map old nodes to new ones
         std::map<const variable_node_i*, variable_node_i*> vmap;
+        std::map<const factor_node_i*,   factor_node_i*>   fmap;
 
-        for (size_t i = 0; i < vnodes.size(); i++) {
-                _variable_nodes += vnodes[i].clone();
+        for (variable_set_t::const_value_iterator it = vnodes.const_vbegin();
+             it != vnodes.const_vend(); it++) {
+                variable_node_i* node = it->clone();
+                _variable_nodes += node;
                 // keep track of which node replacements
-                vmap[&vnodes[i]] = &_variable_nodes[i];
+                vmap[&*it] = node;
         }
-        for (size_t i = 0; i < fnodes.size(); i++) {
-                _factor_nodes += fnodes[i].clone();
+        for (factor_set_t::const_value_iterator it = fnodes.const_vbegin();
+             it != fnodes.const_vend(); it++) {
+                factor_node_i* node = it->clone();
+                _factor_nodes += node;
+                // keep track of which node replacements
+                fmap[&*it] = node;
         }
-        // find connected nodes and link them
-        for (size_t i = 0; i < fnodes.size(); i++) {
+        for (factor_set_t::const_value_iterator it = fnodes.const_vbegin();
+             it != fnodes.const_vend(); it++) {
                 const vector<variable_node_i*>& neighbors =
-                        fnodes[i].neighbors();
+                        it->neighbors();
                 for (size_t j = 0; j < neighbors.size(); j++) {
                         if (!neighbors[j])
                                 continue;
-                        _factor_nodes[i].link(j, *vmap[neighbors[j]]);
+                        fmap[&*it]->link(j, *vmap[neighbors[j]]);
                 }
         }
 }

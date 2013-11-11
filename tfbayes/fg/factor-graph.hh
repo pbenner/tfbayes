@@ -61,7 +61,13 @@ public:
         void operator()(boost::optional<size_t> n = boost::optional<size_t>());
 
         // get the distribution of a node
-        boost::optional<const distribution_i&> operator[](const std::string& name) const;
+        // type of the transformed iterator
+        typedef boost::transform_iterator<
+                const distribution_i& (*)(const variable_node_i&),
+                variable_set_t::const_value_iterator
+                > dist_iterator;
+        dist_iterator operator[](const std::string& name) const;
+        dist_iterator end() const;
 
 protected:
         factor_set_t _factor_nodes;
