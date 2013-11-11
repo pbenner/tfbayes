@@ -35,6 +35,7 @@
 
 class factor_graph_t {
 public:
+        factor_graph_t(size_t threads = 1);
         factor_graph_t(const factor_set_t& factor_nodes,
                        const variable_set_t& variable_nodes,
                        size_t threads = 1);
@@ -54,8 +55,20 @@ public:
                 swap(left._queue,          right._queue);
                 swap(left._threads,        right._threads);
         }
-
         default_assignment_operator(factor_graph_t)
+
+        // add a node to the factor graph
+        factor_graph_t& operator+=(const factor_node_i& factor_node);
+        factor_graph_t& operator+=(const variable_node_i& variable_node);
+        // add a complete factor graph
+        factor_graph_t& operator+=(const factor_graph_t& factor_graph);
+
+        // replicate the factor graph n times
+        factor_graph_t& replicate(size_t n);
+
+        // link all factor nodes with all variable nodes that have the
+        // given names
+        bool link(const std::string& fname, const std::string&, const std::string& vname);
 
         // execute the message passing algorithm
         void operator()(boost::optional<size_t> n = boost::optional<size_t>());
@@ -77,6 +90,10 @@ protected:
         // number of threads
         size_t _threads;
 private:
+        // insert nodes without cloning them
+        factor_graph_t& operator+=(factor_node_i* factor_node);
+        factor_graph_t& operator+=(variable_node_i* variable_node);
+        // clone a whole network
         void clone_nodes(const factor_set_t& factor_nodes,
                          const variable_set_t& variable_nodes);
         // add a node to the queue

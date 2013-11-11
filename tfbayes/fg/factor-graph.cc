@@ -73,6 +73,13 @@ protected:
 
 using namespace std;
 
+factor_graph_t::factor_graph_t(size_t threads) :
+        _factor_nodes   (),
+        _variable_nodes (),
+        _threads        (threads)
+{
+}
+
 factor_graph_t::factor_graph_t(const factor_set_t& factor_nodes,
                                const variable_set_t& variable_nodes,
                                size_t threads) :
@@ -80,19 +87,8 @@ factor_graph_t::factor_graph_t(const factor_set_t& factor_nodes,
         _variable_nodes (),
         _threads        (threads)
 {
-        void (factor_graph_t::*tmp) (factor_graph_node_i*) = &factor_graph_t::add_node;
-
         // copy connectivity before proceeding
         clone_nodes(factor_nodes, variable_nodes);
-
-        for (variable_set_t::value_iterator it = _variable_nodes.vbegin();
-             it != _variable_nodes.vend(); it++) {
-                it->observe(boost::bind(tmp, this, &*it));
-        }
-        for (factor_set_t::value_iterator it = _factor_nodes.vbegin();
-             it != _factor_nodes.vend(); it++) {
-                it->observe(boost::bind(tmp, this, &*it));
-        }
 }
 
 factor_graph_t::factor_graph_t(const factor_graph_t& factor_graph) :
@@ -104,6 +100,75 @@ factor_graph_t::factor_graph_t(const factor_graph_t& factor_graph) :
         // clone all nodes of the factor graph
         clone_nodes(factor_graph._factor_nodes,
                     factor_graph._variable_nodes);
+}
+
+factor_graph_t&
+factor_graph_t::operator+=(const factor_node_i& factor_node)
+{
+        return operator+=(factor_node.clone());
+}
+
+factor_graph_t&
+factor_graph_t::operator+=(factor_node_i* factor_node)
+{
+        void (factor_graph_t::*tmp) (factor_graph_node_i*) = &factor_graph_t::add_node;
+
+        _factor_nodes += factor_node;
+        factor_node->observe(boost::bind(tmp, this, factor_node));
+
+        return *this;
+}
+
+factor_graph_t&
+factor_graph_t::operator+=(const variable_node_i& variable_node)
+{
+        return operator+=(variable_node.clone());
+}
+
+factor_graph_t&
+factor_graph_t::operator+=(variable_node_i* variable_node)
+{
+        void (factor_graph_t::*tmp) (factor_graph_node_i*) = &factor_graph_t::add_node;
+
+        _variable_nodes += variable_node;
+        variable_node->observe(boost::bind(tmp, this, variable_node));
+
+        return *this;
+}
+
+factor_graph_t&
+factor_graph_t::operator+=(const factor_graph_t& factor_graph)
+{
+        clone_nodes(factor_graph._factor_nodes,
+                    factor_graph._variable_nodes);
+
+        return *this;
+}
+
+factor_graph_t&
+factor_graph_t::replicate(size_t n)
+{
+        factor_graph_t tmp(*this);
+
+        for (size_t i = 0; i < n; i++) {
+                operator+=(tmp);
+        }
+        return *this;
+}
+
+bool
+factor_graph_t::link(const std::string& fname, const std::string& which, const std::string& vname)
+{
+        bool result = false;
+
+        for (factor_set_t::value_iterator it = _factor_nodes[fname];
+             it != _factor_nodes.vend() && it->name() == fname; it++) {
+                for (variable_set_t::value_iterator is = _variable_nodes[vname];
+                     is != _variable_nodes.vend() && is->name() == vname; is++) {
+                        result |= it->link(which, *is);
+                }
+        }
+        return result;
 }
 
 void
@@ -163,20 +228,23 @@ factor_graph_t::clone_nodes(const factor_set_t& fnodes,
         std::map<const variable_node_i*, variable_node_i*> vmap;
         std::map<const factor_node_i*,   factor_node_i*>   fmap;
 
+        // clone variable nodes
         for (variable_set_t::const_value_iterator it = vnodes.const_vbegin();
              it != vnodes.const_vend(); it++) {
                 variable_node_i* node = it->clone();
-                _variable_nodes += node;
+                operator+=(node);
                 // keep track of which node replacements
                 vmap[&*it] = node;
         }
+        // clone factor nodes
         for (factor_set_t::const_value_iterator it = fnodes.const_vbegin();
              it != fnodes.const_vend(); it++) {
                 factor_node_i* node = it->clone();
-                _factor_nodes += node;
+                operator+=(node);
                 // keep track of which node replacements
                 fmap[&*it] = node;
         }
+        // copy connectivity
         for (factor_set_t::const_value_iterator it = fnodes.const_vbegin();
              it != fnodes.const_vend(); it++) {
                 const vector<variable_node_i*>& neighbors =

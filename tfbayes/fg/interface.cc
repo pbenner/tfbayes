@@ -161,16 +161,13 @@ BOOST_PYTHON_MODULE(interface)
                 .def("link", static_cast<bool (factor_node_i::*)(const std::string&, variable_node_i&)>(&factor_node_i::link))
                 ;
         class_<normal_fnode_t, bases<factor_node_i> >("normal_fnode_t", no_init)
-                .def(init<double, double>())
-                .def(init<double, double, std::string>())
+                .def(init<std::string, double, double>())
                 ;
         class_<pnormal_fnode_t, bases<factor_node_i> >("pnormal_fnode_t", no_init)
-                .def(init<size_t, double, double>())
-                .def(init<size_t, double, double, std::string>())
+                .def(init<std::string, size_t, double, double>())
                 ;
         class_<gamma_fnode_t, bases<factor_node_i> >("gamma_fnode_t", no_init)
-                .def(init<double, double>())
-                .def(init<double, double, std::string>())
+                .def(init<std::string, double, double>())
                 ;
         // variable nodes
         // ---------------------------------------------------------------------
@@ -178,8 +175,7 @@ BOOST_PYTHON_MODULE(interface)
                 .def("__call__", &variable_node_i::operator(), return_internal_reference<>())
                 ;
         class_<data_vnode_t, bases<variable_node_i> >("data_vnode_t", no_init)
-                .def(init<std::vector<double> >())
-                .def(init<std::vector<double>, std::string>())
+                .def(init<std::string, std::vector<double> >())
                 ;
         class_<normal_vnode_t, bases<variable_node_i> >("normal_vnode_t")
                 .def(init<std::string>())

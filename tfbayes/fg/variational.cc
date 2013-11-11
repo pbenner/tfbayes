@@ -23,8 +23,8 @@ using namespace std;
 // normal factor node
 ////////////////////////////////////////////////////////////////////////////////
 
-normal_fnode_t::normal_fnode_t(double mean, double precision,
-                               const std::string& name) :
+normal_fnode_t::normal_fnode_t(const std::string& name,
+                               double mean, double precision) :
         base_t       (name),
         dmean        (mean),
         dprecision   (precision),
@@ -150,8 +150,8 @@ normal_fnode_t::message3() {
 // normal factor node
 ////////////////////////////////////////////////////////////////////////////////
 
-pnormal_fnode_t::pnormal_fnode_t(size_t dim, double mean, double precision,
-                                 const std::string& name) :
+pnormal_fnode_t::pnormal_fnode_t(const std::string& name,
+                                 size_t dim, double mean, double precision) :
         base_t       (name),
         dmean        (mean),
         dprecision   (precision),
@@ -290,8 +290,8 @@ pnormal_fnode_t::message3() {
 // gamma factor node
 ////////////////////////////////////////////////////////////////////////////////
 
-gamma_fnode_t::gamma_fnode_t(double shape, double rate,
-                             const std::string& name) :
+gamma_fnode_t::gamma_fnode_t(const std::string& name,
+                             double shape, double rate) :
         base_t (name),
         dshape (shape),
         drate  (rate),

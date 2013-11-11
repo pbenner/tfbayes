@@ -178,8 +178,10 @@ public:
         virtual bool link(size_t i, variable_node_i& variable_node) {
                 assert(i < D);
                 // allow only conjugate nodes to connect
-                debug("attempting to link factor node " << this
-                      << " with variable node " << &variable_node << std::endl);
+                debug(boost::format("attempting to link factor node %s:%x "
+                                    " with variable node %s:%x")
+                      % name() % this % variable_node.name() % &variable_node
+                      << std::endl);
                 if (// variable_node either has to be a conjugate distribution
                     !is_conjugate(i, variable_node) &&
                     // or a dirac distribution if it is connected to
@@ -377,7 +379,7 @@ class data_vnode_t : public variable_node_t<dirac_distribution_t> {
 public:
         typedef variable_node_t<dirac_distribution_t> base_t;
 
-        data_vnode_t(const std::vector<double>& x, const std::string& name = "") :
+        data_vnode_t(const std::string& name, const std::vector<double>& x) :
                 base_t(name),
                 new_message(x) {
         }

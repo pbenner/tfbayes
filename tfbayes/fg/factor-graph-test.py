@@ -12,17 +12,17 @@ from tfbayes.fg import *
 # link every data point to a single node
 def construct_fg0(data):
     d  = len(data)
-    f2 = normal_fnode_t(0, 0.01, "f2")
+    f2 = normal_fnode_t("f2", 0, 0.01)
     v2 = normal_vnode_t("v2")
-    f3 = gamma_fnode_t(1, 2, "f3")
-    v3 = gamma_vnode_t("v3")
+    f3 = gamma_fnode_t ("f3", 1, 2)
+    v3 = gamma_vnode_t ("v3")
     f2.link("output", v2)
     f3.link("output", v3)
     fnodes = [f2, f3]
     vnodes = [v2, v3]
     for x in data:
-        f1 = normal_fnode_t(0, 0, "f1")
-        v1 = data_vnode_t([x], "v1")
+        f1 = normal_fnode_t("f1", 0, 0)
+        v1 = data_vnode_t  ("v1", [x])
         f1.link("output", v1)
         f1.link("mean", v2)
         f1.link("precision", v3)
@@ -33,12 +33,12 @@ def construct_fg0(data):
 # use a product normal distribution
 def construct_fg1(data):
     d  = len(data)
-    f1 = pnormal_fnode_t(d, 0, 0, "f1")
-    v1 = data_vnode_t(data, "v1")
-    f2 = normal_fnode_t(0, 0.01, "f2")
-    v2 = normal_vnode_t("v2")
-    f3 = gamma_fnode_t(1, 2, "f3")
-    v3 = gamma_vnode_t("v3")
+    f1 = pnormal_fnode_t("f1", d, 0, 0)
+    v1 = data_vnode_t   ("v1", data)
+    f2 = normal_fnode_t ("f2", 0, 0.01)
+    v2 = normal_vnode_t ("v2")
+    f3 = gamma_fnode_t  ("f3", 1, 2)
+    v3 = gamma_vnode_t  ("v3")
     f1.link("output", v1)
     f2.link("output", v2)
     f3.link("output", v3)
