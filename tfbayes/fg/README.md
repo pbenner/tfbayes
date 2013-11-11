@@ -30,6 +30,7 @@ Generate some data and run the factor graph
 	fg = construct_fg1(data)
 	fg()
 
+Approximated posterior distribution
 
 ![alt tag](factor-graph-test-1.png)
 
