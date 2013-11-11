@@ -144,6 +144,7 @@ factor_graph_t::operator[](const std::string& name) const
 void
 factor_graph_t::add_node(factor_graph_node_i* node) {
         mtx.lock();
+        debug("adding node " << typeid(*node).name() << endl);
         _queue.push(node);
         mtx.unlock();
 }

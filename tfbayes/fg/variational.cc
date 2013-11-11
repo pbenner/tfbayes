@@ -269,7 +269,8 @@ pnormal_fnode_t::message3() {
         double mu2 = _inbox[1]().moment<2>()[0];
         // parameters of the gamma distribution
         double shape = d/2.0 + 1.0;
-        double rate  = std::max(1e-20, 0.5*(y2 - 2.0*y*mu + d*mu2));
+        double rate  = 0.5*(y2 - 2.0*y*mu + d*mu2);
+        assert(rate > 0.0);
 
         debug("normal message 3 (gamma): " << this->name() << endl);
         debug("-> dim  : " << d     << endl);
