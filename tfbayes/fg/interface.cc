@@ -68,48 +68,57 @@ exponential_family_i* cast_exponential_family(const distribution_i& distribution
 }
 
 static
-factor_graph_t* construct_factor_graph(list& factor_nodes, list& variable_nodes, size_t threads = 1)
+factor_graph_t* construct_factor_graph_1()
 {
-        factor_set_t fnodes;
-        variable_set_t vnodes;
-
-        for (ssize_t i = 0; i < len(factor_nodes); i++) {
-                factor_node_i& ref = extract<factor_node_i&>(factor_nodes[i]);
-                fnodes += &ref;
-        }
-        for (ssize_t i = 0; i < len(variable_nodes); i++) {
-                variable_node_i& ref = extract<variable_node_i&>(variable_nodes[i]);
-                vnodes += &ref;
-        }
-        factor_graph_t* fg = new factor_graph_t(fnodes, vnodes, threads);
-
-        // make sure that no nodes are deleted
-        fnodes.release().release();
-        vnodes.release().release();
-
-        return fg;
+        return new factor_graph_t();
 }
 static
-factor_graph_t* construct_factor_graph_1(list& factor_nodes, list& variable_nodes)
+factor_graph_t* construct_factor_graph_2(size_t threads)
 {
-        return construct_factor_graph(factor_nodes, variable_nodes);
-}
-static
-factor_graph_t* construct_factor_graph_2(list& factor_nodes, list& variable_nodes, size_t threads)
-{
-        return construct_factor_graph(factor_nodes, variable_nodes, threads);
+        return new factor_graph_t(threads);
 }
 
 static
-const distribution_i& access_distribution(const factor_graph_t& factor_graph, const std::string& name)
+const distribution_i& access_distribution(const factor_graph_t& factor_graph, const std::string& name, size_t i)
 {
-        boost::optional<const distribution_i&> result = factor_graph.distribution(name);
+        // receive distribution
+        boost::optional<const distribution_i&> result = factor_graph.distribution(name, i);
 
         if (!result) {
-                raise_IOError(boost::str(boost::format("Variable node `%s' not found in factor graph.")
-                                         % name));
+                raise_IOError(boost::str(boost::format("Variable node `%s:%d' not found in factor graph.")
+                                         % name % i));
         }
         return *result;
+}
+static
+const distribution_i& access_distribution_1(const factor_graph_t& factor_graph, const std::string& name)
+{
+        return access_distribution(factor_graph, name, 0);
+}
+static
+const distribution_i& access_distribution_2(const factor_graph_t& factor_graph, tuple t)
+{
+        std::string name = extract<std::string>(t[0]);
+        size_t i         = extract<size_t>(t[1]);
+        return access_distribution(factor_graph, name, i);
+}
+
+static
+data_vnode_t& access_data_vnode(factor_graph_t& factor_graph, const std::string& name, size_t i)
+{
+        // receive distribution
+        boost::optional<data_vnode_t&> result = factor_graph.data_vnode(name, i);
+
+        if (!result) {
+                raise_IOError(boost::str(boost::format("Variable node `%s:%d' not found in factor graph.")
+                                         % name % i));
+        }
+        return *result;
+}
+static
+data_vnode_t& access_data_vnode(factor_graph_t& factor_graph, const std::string& name)
+{
+        return access_data_vnode(factor_graph, name, 0);
 }
 
 static
@@ -175,7 +184,9 @@ BOOST_PYTHON_MODULE(interface)
                 .def("__call__", &variable_node_i::operator(), return_internal_reference<>())
                 ;
         class_<data_vnode_t, bases<variable_node_i> >("data_vnode_t", no_init)
+                .def(init<std::string>())
                 .def(init<std::string, std::vector<double> >())
+                .def("condition", &data_vnode_t::condition)
                 ;
         class_<normal_vnode_t, bases<variable_node_i> >("normal_vnode_t")
                 .def(init<std::string>())
@@ -190,6 +201,14 @@ BOOST_PYTHON_MODULE(interface)
                 .def("__init__", make_constructor(&construct_factor_graph_2))
                 .def("__call__", static_cast<void (*)(factor_graph_t&)>(&call_factor_graph))
                 .def("__call__", static_cast<void (*)(factor_graph_t&, size_t)>(&call_factor_graph))
-                .def("__getitem__", &access_distribution, return_internal_reference<>())
+                .def("__getitem__", &access_distribution_1, return_internal_reference<>())
+                .def("__getitem__", &access_distribution_2, return_internal_reference<>())
+                .def("__iadd__", static_cast<factor_graph_t& (factor_graph_t::*)(const   factor_node_i&)>(&factor_graph_t::operator+=), return_internal_reference<>())
+                .def("__iadd__", static_cast<factor_graph_t& (factor_graph_t::*)(const variable_node_i&)>(&factor_graph_t::operator+=), return_internal_reference<>())
+                .def(self += self)
+                .def("replicate", &factor_graph_t::replicate, return_internal_reference<>())
+                .def("data_vnode", static_cast<data_vnode_t& (*)(factor_graph_t&, const std::string&)>(&access_data_vnode), return_internal_reference<>())
+                .def("data_vnode", static_cast<data_vnode_t& (*)(factor_graph_t&, const std::string&, size_t)>(&access_data_vnode), return_internal_reference<>())
+                .def("link", &factor_graph_t::link)
                 ;
 }

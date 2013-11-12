@@ -11,40 +11,45 @@ from tfbayes.fg import *
 
 # link every data point to a single node
 def construct_fg0(data):
-    d  = len(data)
-    f2 = normal_fnode_t("f2", 0, 0.01)
-    v2 = normal_vnode_t("v2")
-    f3 = gamma_fnode_t ("f3", 1, 2)
-    v3 = gamma_vnode_t ("v3")
-    f2.link("output", v2)
-    f3.link("output", v3)
-    fnodes = [f2, f3]
-    vnodes = [v2, v3]
-    for x in data:
-        f1 = normal_fnode_t("f1", 0, 0)
-        v1 = data_vnode_t  ("v1", [x])
-        f1.link("output", v1)
-        f1.link("mean", v2)
-        f1.link("precision", v3)
-        fnodes.append(f1)
-        vnodes.append(v1)
-    return factor_graph_t(fnodes, vnodes)
+    fg  = factor_graph_t()
+    # factor graph inside the plate
+    fg += normal_fnode_t("f1", 0, 0)
+    fg += data_vnode_t  ("v1")
+    fg.link("f1", "output",    "v1")
+    # replicate this graph n-1 times
+    fg.replicate(len(data)-1)
+    # construct graph outside the plate
+    fg += normal_fnode_t("f2", 0, 0.01)
+    fg += normal_vnode_t("v2")
+    fg += gamma_fnode_t ("f3", 1, 2)
+    fg += gamma_vnode_t ("v3")
+    fg.link("f2", "output",    "v2")
+    fg.link("f3", "output",    "v3")
+    # connect v2 and v3 to all factors f1
+    # within the plate
+    fg.link("f1", "mean",      "v2")
+    fg.link("f1", "precision", "v3")
+    # loop over all variable nodes v1
+    for i, d in enumerate(data):
+        fg.data_vnode("v1", i).condition([d])
+    return fg
 
 # use a product normal distribution
 def construct_fg1(data):
-    d  = len(data)
-    f1 = pnormal_fnode_t("f1", d, 0, 0)
-    v1 = data_vnode_t   ("v1", data)
-    f2 = normal_fnode_t ("f2", 0, 0.01)
-    v2 = normal_vnode_t ("v2")
-    f3 = gamma_fnode_t  ("f3", 1, 2)
-    v3 = gamma_vnode_t  ("v3")
-    f1.link("output", v1)
-    f2.link("output", v2)
-    f3.link("output", v3)
-    f1.link("mean", v2)
-    f1.link("precision", v3)
-    return factor_graph_t([f1,f2,f3],[v1,v2,v3])
+    fg  = factor_graph_t()
+    fg += pnormal_fnode_t("f1", len(data), 0, 0)
+    fg += data_vnode_t   ("v1")
+    fg += normal_fnode_t ("f2", 0, 0.01)
+    fg += normal_vnode_t ("v2")
+    fg += gamma_fnode_t  ("f3", 1, 2)
+    fg += gamma_vnode_t  ("v3")
+    fg.link("f1", "output",    "v1")
+    fg.link("f2", "output",    "v2")
+    fg.link("f3", "output",    "v3")
+    fg.link("f1", "mean",      "v2")
+    fg.link("f1", "precision", "v3")
+    fg.data_vnode("v1").condition(data)
+    return fg
 
 # utility
 ################################################################################

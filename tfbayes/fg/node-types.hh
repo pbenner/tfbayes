@@ -379,13 +379,9 @@ class data_vnode_t : public variable_node_t<dirac_distribution_t> {
 public:
         typedef variable_node_t<dirac_distribution_t> base_t;
 
-        data_vnode_t(const std::string& name) :
+        data_vnode_t(const std::string& name, const std::vector<double>& x = std::vector<double>()) :
                 base_t(name),
                 new_message() {
-        }
-        data_vnode_t(const std::string& name, const std::vector<double>& x) :
-                base_t(name),
-                new_message(x) {
         }
         data_vnode_t(const data_vnode_t& data_vnode) :
                 base_t      (data_vnode),
