@@ -35,23 +35,13 @@ public:
                 // pointer to a node
                 factor_graph_node_i* job;
                 // get jobs from the queue
-                while (true) {
+                while ((job = queue().pop())) {
                         // stop if maximum number of iterations is reached
                         if (n && (*n) == 0) break;
                         // decrement n
                         if (n) (*n)--;
-                        // lock queue
-                        queue().lock();
-                        // receive objects if queue is not empty
-                        if (queue().empty()) {
-                                queue().unlock();
-                                break;
-                        }
-                        else {
-                                job = queue().pop();
-                                queue().unlock();
-                                job->send_messages();
-                        }
+                        // do the actual work
+                        job->send_messages();
                 }
         }
         fg_queue_t& queue() {
@@ -261,11 +251,9 @@ factor_graph_t::data_vnode(const string& name, size_t i)
 
 void
 factor_graph_t::add_node(factor_graph_node_i* node) {
-        _queue.lock();
         debug(boost::format("*** adding node %s:%x to the queue ***\n")
               % node->name() % node);
         _queue.push(node);
-        _queue.unlock();
 }
 
 void

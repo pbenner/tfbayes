@@ -28,18 +28,28 @@
 
 #include <tfbayes/fg/node-types.hh>
 
-class fg_queue_t : public boost::mutex, public std::set<factor_graph_node_i*> {
+class fg_queue_t : public std::set<factor_graph_node_i*> {
 public:
         typedef std::set<factor_graph_node_i*> base_t;
 
         void push(factor_graph_node_i* node) {
+                mtx.lock();
                 base_t::insert(node);
+                mtx.unlock();
         }
         factor_graph_node_i* pop() {
-                factor_graph_node_i* node = *base_t::begin();
-                base_t::erase(node);
+                factor_graph_node_i* node = NULL;
+                mtx.lock();
+                base_t::iterator it = base_t::begin();
+                if (it != base_t::end()) {
+                        node = *it;
+                        base_t::erase(node);
+                }
+                mtx.unlock();
                 return node;
         }
+private:
+        boost::mutex mtx;
 };
 
 #endif /* __TFBAYES_FG_QUEUE_HH__ */
