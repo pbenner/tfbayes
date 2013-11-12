@@ -16,6 +16,7 @@
  */
 
 #include <iostream>
+#include <iterator>
 
 #include <boost/bind.hpp>
 
@@ -161,10 +162,10 @@ factor_graph_t::link(const std::string& fname, const std::string& which, const s
 {
         bool result = false;
 
-        for (factor_set_t::value_iterator it = _factor_nodes[fname];
-             it != _factor_nodes.vend() && it->name() == fname; it++) {
-                for (variable_set_t::value_iterator is = _variable_nodes[vname];
-                     is != _variable_nodes.vend() && is->name() == vname; is++) {
+        for (factor_set_t::iterator it = _factor_nodes[fname];
+             it != _factor_nodes.end() && it->name() == fname; it++) {
+                for (variable_set_t::iterator is = _variable_nodes[vname];
+                     is != _variable_nodes.end() && is->name() == vname; is++) {
                         result |= it->link(which, *is);
                 }
         }
@@ -177,8 +178,8 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
 
         // initialize the network by letting all variable nodes send
         // their messages first
-        for (variable_set_t::value_iterator it = _variable_nodes.vbegin();
-             it != _variable_nodes.vend(); it++) {
+        for (variable_set_t::iterator it = _variable_nodes.begin();
+             it != _variable_nodes.end(); it++) {
                 it->send_messages();
         }
 
@@ -195,21 +196,75 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
         }
 }
 
-static
-const distribution_i& get_distribution(const variable_node_i& node) {
-        return node();
+boost::optional<const distribution_i&>
+factor_graph_t::distribution(const string& name, size_t i) const
+{
+        variable_set_t::const_iterator it = _variable_nodes[name];
+        // advance iterator i steps
+        advance(it, i);
+
+        if (it == _variable_nodes.cend() ||
+            it->name() != name) {
+                return boost::optional<const distribution_i&>();
+        }
+        return (*it)();
 }
 
-factor_graph_t::dist_iterator
-factor_graph_t::operator[](const std::string& name) const
+boost::optional<const variable_node_i&>
+factor_graph_t::variable_node(const string& name, size_t i) const
 {
-        return boost::make_transform_iterator(_variable_nodes[name], get_distribution);
+        variable_set_t::const_iterator it = _variable_nodes[name];
+        // advance iterator i steps
+        advance(it, i);
+
+        if (it == _variable_nodes.cend() ||
+            it->name() != name) {
+                return boost::optional<const variable_node_i&>();
+        }
+        return *it;
 }
 
-factor_graph_t::dist_iterator
-factor_graph_t::end() const
+boost::optional<variable_node_i&>
+factor_graph_t::variable_node(const string& name, size_t i)
 {
-        return boost::make_transform_iterator(_variable_nodes.const_vend(), get_distribution);
+        variable_set_t::iterator it = _variable_nodes[name];
+        // advance iterator i steps
+        advance(it, i);
+
+        if (it == _variable_nodes.end() ||
+            it->name() != name) {
+                return boost::optional<variable_node_i&>();
+        }
+        return *it;
+}
+
+boost::optional<const data_vnode_t&>
+factor_graph_t::data_vnode(const string& name, size_t i) const
+{
+        variable_set_t::const_iterator it = _variable_nodes[name];
+        // advance iterator i steps
+        advance(it, i);
+
+        if (it == _variable_nodes.cend() ||
+            it->name() != name) {
+                return boost::optional<const data_vnode_t&>();
+        }
+        return static_cast<const data_vnode_t&>(*it);
+}
+
+boost::optional<data_vnode_t&>
+factor_graph_t::data_vnode(const string& name, size_t i)
+{
+        variable_set_t::iterator it = _variable_nodes[name];
+        // advance iterator i steps
+        advance(it, i);
+
+        if (it == _variable_nodes.end() ||
+            it->name() != name          ||
+            typeid(*it) != typeid(data_vnode_t)) {
+                return boost::optional<data_vnode_t&>();
+        }
+        return static_cast<data_vnode_t&>(*it);
 }
 
 void
@@ -229,24 +284,24 @@ factor_graph_t::clone_nodes(const factor_set_t& fnodes,
         std::map<const factor_node_i*,   factor_node_i*>   fmap;
 
         // clone variable nodes
-        for (variable_set_t::const_value_iterator it = vnodes.const_vbegin();
-             it != vnodes.const_vend(); it++) {
+        for (variable_set_t::const_iterator it = vnodes.cbegin();
+             it != vnodes.cend(); it++) {
                 variable_node_i* node = it->clone();
                 operator+=(node);
                 // keep track of which node replacements
                 vmap[&*it] = node;
         }
         // clone factor nodes
-        for (factor_set_t::const_value_iterator it = fnodes.const_vbegin();
-             it != fnodes.const_vend(); it++) {
+        for (factor_set_t::const_iterator it = fnodes.cbegin();
+             it != fnodes.cend(); it++) {
                 factor_node_i* node = it->clone();
                 operator+=(node);
                 // keep track of which node replacements
                 fmap[&*it] = node;
         }
         // copy connectivity
-        for (factor_set_t::const_value_iterator it = fnodes.const_vbegin();
-             it != fnodes.const_vend(); it++) {
+        for (factor_set_t::const_iterator it = fnodes.cbegin();
+             it != fnodes.cend(); it++) {
                 const vector<variable_node_i*>& neighbors =
                         it->neighbors();
                 for (size_t j = 0; j < neighbors.size(); j++) {

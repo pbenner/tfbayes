@@ -24,7 +24,7 @@
 using namespace std;
 
 void
-test()
+test1()
 {
         factor_set_t fnodes;
         variable_set_t vnodes;
@@ -48,13 +48,10 @@ test()
         factor_graph_t fg2(fg1);
 
         fg1();
-
-        cout << "mean: " << fg1["v2"]->moment<1>()[0] << endl
-             << "mean: " << fg1["v3"]->moment<1>()[0] << endl;
 }
 
-int
-main()
+void
+test2()
 {
         factor_graph_t fg;
 
@@ -77,6 +74,46 @@ main()
 
         fg();
 
-        cout << "mean: " << fg["v2"]->moment<1>()[0] << endl
-             << "mean: " << fg["v3"]->moment<1>()[0] << endl;
+        cout << "mean: " << fg.distribution("v2")->moment<1>()[0] << endl
+             << "mean: " << fg.distribution("v3")->moment<1>()[0] << endl;
+}
+
+void
+test3()
+{
+        factor_graph_t fg;
+
+        vector<double> data1(1, 1.42);
+        vector<double> data2(1, 1.81);
+
+        fg += normal_fnode_t("f1", 1, 2);
+        fg += data_vnode_t  ("v1");
+        fg.link("f1", "output",    "v1");
+        fg.replicate(1);
+
+        fg.data_vnode("v1", 0)->condition(data1);
+        fg.data_vnode("v1", 1)->condition(data2);
+
+        fg += normal_fnode_t("f2", 2, 2);
+        fg += normal_vnode_t("v2");
+        fg += gamma_fnode_t ("f3", 1, 2);
+        fg += gamma_vnode_t ("v3");
+
+        fg.link("f1", "mean",      "v2");
+        fg.link("f1", "precision", "v3");
+        fg.link("f2", "output",    "v2");
+        fg.link("f3", "output",    "v3");
+
+        factor_graph_t fg2(fg);
+
+        fg();
+
+        cout << "mean: " << fg.distribution("v2")->moment<1>()[0] << endl
+             << "mean: " << fg.distribution("v3")->moment<1>()[0] << endl;
+}
+
+int
+main()
+{
+        test3();
 }

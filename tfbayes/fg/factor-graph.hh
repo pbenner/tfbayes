@@ -73,14 +73,16 @@ public:
         // execute the message passing algorithm
         void operator()(boost::optional<size_t> n = boost::optional<size_t>());
 
-        // get the distribution of a node
-        // type of the transformed iterator
-        typedef boost::transform_iterator<
-                const distribution_i& (*)(const variable_node_i&),
-                variable_set_t::const_value_iterator
-                > dist_iterator;
-        dist_iterator operator[](const std::string& name) const;
-        dist_iterator end() const;
+        // access distributions of variable nodes
+        boost::optional<const distribution_i&> distribution(const std::string& name, size_t i = 0) const;
+
+        // access variable nodes
+        boost::optional<const variable_node_i&> variable_node(const std::string& name, size_t i = 0) const;
+        boost::optional<variable_node_i&> variable_node(const std::string& name, size_t i = 0);
+
+        // access data vnodes
+        boost::optional<const data_vnode_t&> data_vnode(const std::string& name, size_t i = 0) const;
+        boost::optional<data_vnode_t&> data_vnode(const std::string& name, size_t i = 0);
 
 protected:
         factor_set_t _factor_nodes;

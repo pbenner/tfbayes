@@ -379,6 +379,10 @@ class data_vnode_t : public variable_node_t<dirac_distribution_t> {
 public:
         typedef variable_node_t<dirac_distribution_t> base_t;
 
+        data_vnode_t(const std::string& name) :
+                base_t(name),
+                new_message() {
+        }
         data_vnode_t(const std::string& name, const std::vector<double>& x) :
                 base_t(name),
                 new_message(x) {
@@ -398,6 +402,12 @@ public:
                 swap(left.new_message, right.new_message);
         }
         derived_assignment_operator(variable_node_i, data_vnode_t)
+
+        void condition(const std::vector<double>& x) {
+                debug(boost::format("data_vnode %s:%x is receiving new data")
+                      % name() % this << std::endl);
+                new_message = dirac_distribution_t(x);
+        }
 protected:
         virtual const dirac_distribution_t& message() {
                 return new_message;

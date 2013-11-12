@@ -103,9 +103,9 @@ factor_graph_t* construct_factor_graph_2(list& factor_nodes, list& variable_node
 static
 const distribution_i& access_distribution(const factor_graph_t& factor_graph, const std::string& name)
 {
-        factor_graph_t::dist_iterator result = factor_graph[name];
+        boost::optional<const distribution_i&> result = factor_graph.distribution(name);
 
-        if (result == factor_graph.end()) {
+        if (!result) {
                 raise_IOError(boost::str(boost::format("Variable node `%s' not found in factor graph.")
                                          % name));
         }

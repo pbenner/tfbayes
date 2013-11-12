@@ -24,7 +24,6 @@
 
 #include <string>
 
-#include <boost/optional.hpp>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/ptr_container/ptr_map.hpp>
 
@@ -46,29 +45,29 @@ public:
         typedef boost::transform_iterator<
                 const T& (*)(typename base_t::const_reference),
                 typename base_t::const_iterator
-                > const_value_iterator;
+                > const_iterator;
         typedef boost::transform_iterator<
                 T& (*)(typename base_t::reference),
                 typename base_t::iterator
-                > value_iterator;
+                > iterator;
 
         // access values
-        const_value_iterator operator[](const std::string& name) const {
+        const_iterator operator[](const std::string& name) const {
                 return boost::make_transform_iterator(base_t::find(name), get_value<typename base_t::const_reference, const T&>);
         }
-        value_iterator operator[](const std::string& name) {
+        iterator operator[](const std::string& name) {
                 return boost::make_transform_iterator(base_t::find(name), get_value<typename base_t::reference, T&>);
         }
-        const_value_iterator const_vbegin() const {
+        const_iterator cbegin() const {
                 return boost::make_transform_iterator(base_t::begin(), get_value<typename base_t::const_reference, const T&>);
         }
-        value_iterator vbegin() {
+        iterator begin() {
                 return boost::make_transform_iterator(base_t::begin(), get_value<typename base_t::reference, T&>);
         }
-        const_value_iterator const_vend() const {
+        const_iterator cend() const {
                 return boost::make_transform_iterator(base_t::end(), get_value<typename base_t::const_reference, const T&>);
         }
-        value_iterator vend() {
+        iterator end() {
                 return boost::make_transform_iterator(base_t::end(), get_value<typename base_t::reference, T&>);
         }
         node_set_t<T>& operator+=(T* node) {
