@@ -167,6 +167,9 @@ public:
                 lock_inbox();
                 for (size_t i = 0; i < D; i++) {
                         if (outbox[i]) {
+                                debug(boost::format("factor node %s:%x is sending a message "
+                                                    "to variable node %s:%x\n")
+                                      % name() % this % _neighbors[i]->name() % _neighbors[i]);
                                 outbox[i]->lock();
                                 outbox[i]->replace(message(i));
                                 outbox[i]->notify();
@@ -277,9 +280,13 @@ public:
                 // check if this message was sent before
                 if (!current_message) {
                         mtx.unlock();
+                        debug(boost::format("variable node %s:%x has no new message\n")
+                              % name() % this);
                         return;
                 }
                 // lock all connected nodes
+                debug(boost::format("variable node %s:%x is sending messages\n")
+                      % name() % this);
                 for (size_t i = 0; i < outbox.size(); i++) {
                         outbox[i]->lock();
                         messages[i] = current_message;
@@ -365,7 +372,6 @@ protected:
                         // release lock
                         this->_inbox[i].unlock();
                 }
-                debug("node type: " << typeid(*this).name() << std::endl);
                 // normalize message
                 new_message.renormalize();
                 debug(std::endl);

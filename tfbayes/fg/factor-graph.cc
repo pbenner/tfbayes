@@ -27,10 +27,8 @@
 
 class factor_graph_thread_t {
 public:
-        factor_graph_thread_t(std::queue<factor_graph_node_i*>& queue,
-                              boost::mutex& mtx) :
-                _queue(&queue),
-                _mtx  (&mtx)
+        factor_graph_thread_t(fg_queue_t& queue) :
+                _queue(&queue)
                 { }
 
         void operator()(boost::optional<size_t> n = boost::optional<size_t>()) {
@@ -43,30 +41,24 @@ public:
                         // decrement n
                         if (n) (*n)--;
                         // lock queue
-                        mtx().lock();
+                        queue().lock();
                         // receive objects if queue is not empty
                         if (queue().empty()) {
-                                mtx().unlock();
+                                queue().unlock();
                                 break;
                         }
                         else {
-                                job = queue().front();
-                                queue().pop();
-                                mtx().unlock();
+                                job = queue().pop();
+                                queue().unlock();
                                 job->send_messages();
                         }
                 }
         }
-        std::queue<factor_graph_node_i*>& queue() {
+        fg_queue_t& queue() {
                 return *_queue;
         }
-        boost::mutex& mtx() {
-                return *_mtx;
-        }
-
 protected:
-        std::queue<factor_graph_node_i*>* _queue;
-        boost::mutex* _mtx;
+        fg_queue_t* _queue;
 };
 
 // the factor graph
@@ -185,7 +177,7 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
 
         // sample
         for (size_t i = 0; i < _threads; i++) {
-                threads[i] = new boost::thread(factor_graph_thread_t(_queue, mtx), n);
+                threads[i] = new boost::thread(factor_graph_thread_t(_queue), n);
         }
         // join threads
         for (size_t i = 0; i < _threads; i++) {
@@ -269,10 +261,11 @@ factor_graph_t::data_vnode(const string& name, size_t i)
 
 void
 factor_graph_t::add_node(factor_graph_node_i* node) {
-        mtx.lock();
-        debug("adding node " << typeid(*node).name() << endl);
+        _queue.lock();
+        debug(boost::format("*** adding node %s:%x to the queue ***\n")
+              % node->name() % node);
         _queue.push(node);
-        mtx.unlock();
+        _queue.unlock();
 }
 
 void

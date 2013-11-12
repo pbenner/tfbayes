@@ -31,6 +31,7 @@
 
 #include <tfbayes/fg/node-set.hh>
 #include <tfbayes/fg/node-types.hh>
+#include <tfbayes/fg/queue.hh>
 #include <tfbayes/utility/default-operator.hh>
 
 class factor_graph_t {
@@ -52,7 +53,6 @@ public:
                 using std::swap;
                 swap(left._variable_nodes, right._variable_nodes);
                 swap(left._factor_nodes,   right._factor_nodes);
-                swap(left._queue,          right._queue);
                 swap(left._threads,        right._threads);
         }
         default_assignment_operator(factor_graph_t)
@@ -88,7 +88,7 @@ protected:
         factor_set_t _factor_nodes;
         variable_set_t _variable_nodes;
         // queue of nodes that need to send messages
-        std::queue<factor_graph_node_i*> _queue;
+        fg_queue_t _queue;
         // number of threads
         size_t _threads;
 private:
@@ -100,8 +100,6 @@ private:
                          const variable_set_t& variable_nodes);
         // add a node to the queue
         void add_node(factor_graph_node_i* node);
-        // lock for the queue
-        mutable boost::mutex mtx;
 };
 
 #endif /* __TFBAYES_FG_FACTOR_GRAPH_HH__ */
