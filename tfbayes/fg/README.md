@@ -7,18 +7,18 @@ Construct a factor graph with normal distributed observations, a normal prior fo
 
 	def construct_fg1(data):
 	    fg  = factor_graph_t()
-	    fg += pnormal_fnode_t("f1", len(data), 0, 0)
-	    fg += data_vnode_t   ("v1")
-	    fg += normal_fnode_t ("f2", 0, 0.01)
-	    fg += normal_vnode_t ("v2")
-	    fg += gamma_fnode_t  ("f3", 1, 2)
-	    fg += gamma_vnode_t  ("v3")
+	    fg += normal_fnode_t("f1", 0, 0, len(data))
+	    fg += normal_data_t ("v1")
+	    fg += normal_fnode_t("f2", 0, 0.01)
+	    fg += normal_vnode_t("v2")
+	    fg += gamma_fnode_t ("f3", 1, 2)
+	    fg += gamma_vnode_t ("v3")
 	    fg.link("f1", "output",    "v1")
 	    fg.link("f2", "output",    "v2")
 	    fg.link("f3", "output",    "v3")
 	    fg.link("f1", "mean",      "v2")
 	    fg.link("f1", "precision", "v3")
-	    fg.data_vnode("v1").condition(data)
+	    fg.variable_node("v1").condition(data)
 	    return fg
 
 Generate some data and run the factor graph
@@ -40,7 +40,7 @@ Instead of having a product normal distribution it is also possible to construct
 	    fg  = factor_graph_t()
 	    # factor graph inside the plate
 	    fg += normal_fnode_t("f1", 0, 0)
-	    fg += data_vnode_t  ("v1")
+	    fg += normal_data_t ("v1")
 	    fg.link("f1", "output",    "v1")
 	    # replicate this graph n-1 times
 	    fg.replicate(len(data)-1)
@@ -57,7 +57,7 @@ Instead of having a product normal distribution it is also possible to construct
 	    fg.link("f1", "precision", "v3")
 	    # loop over all variable nodes v1
 	    for i, d in enumerate(data):
-	        fg.data_vnode("v1", i).condition([d])
+	        fg.variable_node("v1", i).condition([d])
 	    return fg
 
 ### Example: Distributions
