@@ -14,7 +14,7 @@ def construct_fg0(data):
     fg  = factor_graph_t()
     # factor graph inside the plate
     fg += normal_fnode_t("f1", 0, 0)
-    fg += data_vnode_t  ("v1")
+    fg += normal_data_t ("v1")
     fg.link("f1", "output",    "v1")
     # replicate this graph n-1 times
     fg.replicate(len(data)-1)
@@ -31,24 +31,24 @@ def construct_fg0(data):
     fg.link("f1", "precision", "v3")
     # loop over all variable nodes v1
     for i, d in enumerate(data):
-        fg.data_vnode("v1", i).condition([d])
+        fg.variable_node("v1", i).condition([d])
     return fg
 
 # use a product normal distribution
 def construct_fg1(data):
     fg  = factor_graph_t()
-    fg += pnormal_fnode_t("f1", len(data), 0, 0)
-    fg += data_vnode_t   ("v1")
-    fg += normal_fnode_t ("f2", 0, 0.01)
-    fg += normal_vnode_t ("v2")
-    fg += gamma_fnode_t  ("f3", 1, 2)
-    fg += gamma_vnode_t  ("v3")
+    fg += normal_fnode_t("f1", 0, 0, len(data))
+    fg += normal_data_t ("v1")
+    fg += normal_fnode_t("f2", 0, 0.01)
+    fg += normal_vnode_t("v2")
+    fg += gamma_fnode_t ("f3", 1, 2)
+    fg += gamma_vnode_t ("v3")
     fg.link("f1", "output",    "v1")
     fg.link("f2", "output",    "v2")
     fg.link("f3", "output",    "v3")
     fg.link("f1", "mean",      "v2")
     fg.link("f1", "precision", "v3")
-    fg.data_vnode("v1").condition(data)
+    fg.variable_node("v1").condition(data)
     return fg
 
 # utility
@@ -92,11 +92,11 @@ fg = construct_fg1(data)
 fg()
 
 # obtain estimates
-e_mu  = fg["v2"].moment(1)[0]
-e_tau = fg["v3"].moment(1)[0]
+e_mu  = fg["v2"].moments(0)
+e_tau = fg["v3"].moments(1)
 d     = normal_distribution_t(e_mu, e_tau)
-d1    = exponential_family_i(fg["v2"])
-d2    = exponential_family_i(fg["v3"])
+d1    = fg["v2"]
+d2    = fg["v3"]
 
 # plot result
 plt.clf()

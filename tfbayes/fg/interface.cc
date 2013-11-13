@@ -42,6 +42,18 @@ using namespace boost::python;
 // -----------------------------------------------------------------------------
 
 static
+double get_moment(const exponential_family_i& distribution, size_t i)
+{
+        const sufficient_moments_i& moments = distribution.moments();
+
+        if (i >= moments.n()) {
+                raise_IOError(boost::str(boost::format("Moment `%d' is not available.")
+                                         % i));
+        }
+        return moments[i];
+}
+
+static
 factor_graph_t* construct_factor_graph_1()
 {
         return new factor_graph_t();
@@ -120,7 +132,7 @@ BOOST_PYTHON_MODULE(interface)
                 .def(init<std::vector<double> >())
                 ;
         class_<exponential_family_i, bases<distribution_i>, boost::noncopyable>("exponential_family_i", no_init)
-                .def("moment",        &exponential_family_i::moments, return_internal_reference<>())
+                .def("moments",       &get_moment)
                 .def("density",       &exponential_family_i::density)
                 .def("base_measure",  &exponential_family_i::base_measure)
                 .def("log_partition", &exponential_family_i::log_partition)
@@ -178,8 +190,8 @@ BOOST_PYTHON_MODULE(interface)
                 .def("__iadd__", static_cast<factor_graph_t& (factor_graph_t::*)(const variable_node_i&)>(&factor_graph_t::operator+=), return_internal_reference<>())
                 .def(self += self)
                 .def("replicate", &factor_graph_t::replicate, return_internal_reference<>())
-                .def("data_vnode", static_cast<variable_node_i& (*)(factor_graph_t&, const std::string&)>(&access_variable_node), return_internal_reference<>())
-                .def("data_vnode", static_cast<variable_node_i& (*)(factor_graph_t&, const std::string&, size_t)>(&access_variable_node), return_internal_reference<>())
+                .def("variable_node", static_cast<variable_node_i& (*)(factor_graph_t&, const std::string&)>(&access_variable_node), return_internal_reference<>())
+                .def("variable_node", static_cast<variable_node_i& (*)(factor_graph_t&, const std::string&, size_t)>(&access_variable_node), return_internal_reference<>())
                 .def("link", &factor_graph_t::link)
                 ;
 }

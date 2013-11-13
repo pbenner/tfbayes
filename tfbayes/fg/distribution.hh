@@ -115,6 +115,8 @@ public:
 
         virtual bool operator==(const sufficient_moments_i& rhs) const = 0;
         virtual bool operator!=(const sufficient_moments_i& rhs) const = 0;
+
+        virtual size_t n() const = 0;
 };
 
 template <size_t D>
@@ -146,6 +148,9 @@ public:
         }
         virtual bool operator!=(const sufficient_moments_i& rhs) const {
                 return !operator==(rhs);
+        }
+        virtual size_t n() const {
+                return D;
         }
 };
 
