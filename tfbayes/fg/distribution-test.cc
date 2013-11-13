@@ -24,11 +24,20 @@ using namespace std;
 int
 main()
 {
-        normal_distribution_t n(3,1);
+        normal_distribution_t n(3.0,1.0);
 
-        cout << "moment: "
-             << n.moment<1>()[0]
-             << endl;
+        cout << "sufficient moment 1: " << n.moments()[0] << endl
+             << "sufficient moment 2: " << n.moments()[1] << endl;
+
+        normal_distribution_t m(n);
+
+        cout << "sufficient moment 1: " << m.moments()[0] << endl
+             << "sufficient moment 2: " << m.moments()[1] << endl;
+
+        m = n;
+
+        cout << "sufficient moment 1: " << m.moments()[0] << endl
+             << "sufficient moment 2: " << m.moments()[1] << endl;
 
         return 0;
 }

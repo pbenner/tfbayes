@@ -30,6 +30,9 @@
 typedef exponential_vnode_t<normal_distribution_t> normal_vnode_t;
 typedef exponential_vnode_t< gamma_distribution_t>  gamma_vnode_t;
 
+typedef data_vnode_t<normal_distribution_t> normal_data_t;
+typedef data_vnode_t< gamma_distribution_t>  gamma_data_t;
+
 // factor node specializations
 ////////////////////////////////////////////////////////////////////////////////
 class normal_fnode_t : public factor_node_t<3> {
@@ -37,7 +40,7 @@ public:
         typedef factor_node_t<3> base_t;
 
         normal_fnode_t(const std::string& name,
-                       double mean, double precision);
+                       double mean, double precision, size_t dim = 1);
         normal_fnode_t(const normal_fnode_t& normal_fnode);
 
         virtual normal_fnode_t* clone() const;
@@ -52,6 +55,7 @@ public:
                 swap(left.distribution1, right.distribution1);
                 swap(left.distribution2, right.distribution2);
                 swap(left.distribution3, right.distribution3);
+                swap(left.dimension,     right.dimension);
         }
         derived_assignment_operator(factor_node_i, normal_fnode_t)
 
@@ -67,58 +71,13 @@ protected:
         const p_message_t& message3();
 
         // parameters
-        dirac_distribution_t dmean;
-        dirac_distribution_t dprecision;
+        normal_moments_t dmean;
+         gamma_moments_t dprecision;
 
         // messages
         normal_distribution_t distribution1;
         normal_distribution_t distribution2;
          gamma_distribution_t distribution3;
-};
-
-class pnormal_fnode_t : public factor_node_t<3> {
-public:
-        typedef factor_node_t<3> base_t;
-
-        pnormal_fnode_t(const std::string& name,
-                        size_t dim, double mean, double precision);
-        pnormal_fnode_t(const pnormal_fnode_t& normal_fnode);
-
-        virtual pnormal_fnode_t* clone() const;
-
-        friend void swap(pnormal_fnode_t& left,
-                         pnormal_fnode_t& right) {
-                using std::swap;
-                swap(static_cast<base_t&>(left),
-                     static_cast<base_t&>(right));
-                swap(left.dmean,         right.dmean);
-                swap(left.dprecision,    right.dprecision);
-                swap(left.distribution1, right.distribution1);
-                swap(left.distribution2, right.distribution2);
-                swap(left.distribution3, right.distribution3);
-                swap(left.dimension,     right.dimension);
-        }
-        derived_assignment_operator(factor_node_i, pnormal_fnode_t)
-
-        virtual bool link(const std::string& id, variable_node_i& variable_node);
-protected:
-        virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
-        virtual const p_message_t& initial_message(size_t i) const;
-        virtual const p_message_t& message(size_t i);
-
-        // message preparation
-        const p_message_t& message1();
-        const p_message_t& message2();
-        const p_message_t& message3();
-
-        // parameters
-        dirac_distribution_t dmean;
-        dirac_distribution_t dprecision;
-
-        // messages
-        pnormal_distribution_t distribution1;
-         normal_distribution_t distribution2;
-          gamma_distribution_t distribution3;
 
         // dimension of the space this node lives on
         size_t dimension;
@@ -129,7 +88,7 @@ public:
         typedef factor_node_t<3> base_t;
 
         gamma_fnode_t(const std::string& name,
-                      double shape, double rate);
+                      double shape, double rate, size_t dim = 1);
         gamma_fnode_t(const gamma_fnode_t& gamma_fnode);
 
         virtual gamma_fnode_t* clone() const;
@@ -143,6 +102,7 @@ public:
                 swap(left.drate,         right.drate);
                 swap(left.distribution1, right.distribution1);
                 swap(left.distribution3, right.distribution3);
+                swap(left.dimension,     right.dimension);
         }
         derived_assignment_operator(factor_node_i, gamma_fnode_t)
 
@@ -157,12 +117,15 @@ protected:
         const p_message_t& message3();
 
         // parameters
-        dirac_distribution_t dshape;
-        dirac_distribution_t drate;
+        gamma_moments_t dshape;
+        gamma_moments_t drate;
 
         // messages
         gamma_distribution_t distribution1;
         gamma_distribution_t distribution3;
+
+        // dimension of the space this node lives on
+        size_t dimension;
 };
 
 #endif /* __TFBAYES_FG_VARIATIONAL_HH__ */

@@ -100,7 +100,7 @@ public:
         virtual variable_node_i& operator=(const variable_node_i& variable_node) = 0;
 
         // get current message
-        virtual const q_message_t& operator()() const = 0;
+        virtual const exponential_family_i& operator()() const = 0;
 
         // send messages to all connected factor nodes
         virtual void send_messages() = 0;
@@ -110,6 +110,9 @@ public:
 
         // get the type of the distribution this node represents
         virtual const std::type_info& type() const = 0;
+
+        // condition this node on some data
+        virtual void condition(const std::vector<double>& x) = 0;
 
 protected:
         // prepare the q message
@@ -268,9 +271,6 @@ public:
                 swap(left._name,           right._name);
         }
 
-        virtual const T& operator()() const {
-                return current_message;
-        }
         virtual void send_messages() {
                 // lock this method to prevent other threads entering
                 // here at the same time
@@ -301,7 +301,7 @@ public:
                 size_t i = _inbox.size();
                 void (observable_t::*tmp) () const = &variable_node_t::notify;
                 // allocate a new message
-                messages.push_back(new T());
+                messages.push_back(new typename T::moments_t());
                 // save slot to the outbox
                 outbox.push_back(slot);
                 // put the current message into the box
@@ -320,14 +320,14 @@ public:
 
 protected:
         // prepare the q message
-        virtual const T& message() = 0;
+        virtual const typename T::moments_t& message() = 0;
         // mailboxes
         _inbox_t<p_message_t> _inbox;
         outbox_t<q_message_t> outbox;
         // messages
-        hotnews_t<T> current_message;
+        hotnews_t<typename T::moments_t> current_message;
         // keep a message for each node
-        boost::ptr_vector<T> messages;
+        boost::ptr_vector<typename T::moments_t> messages;
         // lock this node
         boost::mutex mtx;
         // id of this node
@@ -359,33 +359,44 @@ public:
                 swap(left.new_message, right.new_message);
         }
         derived_assignment_operator(variable_node_i, exponential_vnode_t)
+
+        virtual void condition(const std::vector<double>& x) {
+        }
+        virtual const T& operator()() const {
+                return distribution;
+        }
 protected:
-        virtual const T& message() {
-                // reset new_message
-                new_message = T();
+        virtual const typename T::moments_t& message() {
+                // get a new exponential family
+                distribution = T();
                 // loop over all slots of the mailbox
                 for (size_t i = 0; i < this->_inbox.size(); i++) {
                         // lock this slot
                         this->_inbox[i].lock();
                         // and get the message
-                        new_message *= this->_inbox[i]();
+                        distribution *= this->_inbox[i]();
                         // release lock
                         this->_inbox[i].unlock();
                 }
                 // normalize message
-                new_message.renormalize();
+                distribution.renormalize();
                 debug(std::endl);
+                // the new message is the moments of the exponential
+                // family
+                new_message = distribution.moments();
                 // has this message be sent before?
                 return new_message;
         }
-        T new_message;
+        T distribution;
+        typename T::moments_t new_message;
 };
 
-class data_vnode_t : public variable_node_t<dirac_distribution_t> {
+template <typename T>
+class data_vnode_t : public variable_node_t<T> {
 public:
-        typedef variable_node_t<dirac_distribution_t> base_t;
+        typedef variable_node_t<T> base_t;
 
-        data_vnode_t(const std::string& name, const std::vector<double>& x = std::vector<double>()) :
+        data_vnode_t(const std::string& name) :
                 base_t(name),
                 new_message() {
         }
@@ -407,14 +418,20 @@ public:
 
         void condition(const std::vector<double>& x) {
                 debug(boost::format("data_vnode %s:%x is receiving new data")
-                      % name() % this << std::endl);
+                      % base_t::name() % this << std::endl);
                 new_message = dirac_distribution_t(x);
         }
+        virtual const T& operator()() const {
+                return distribution;
+        }
 protected:
-        virtual const dirac_distribution_t& message() {
+        virtual const typename T::moments_t& message() {
                 return new_message;
         }
-        dirac_distribution_t new_message;
+        // this is only a dummy distribution that is not needed
+        T distribution;
+        // the actual message
+        typename T::moments_t new_message;
 };
 
 #endif /* __TFBAYES_FG_NODE_TYPES_HH__ */

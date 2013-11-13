@@ -178,7 +178,7 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
         }
 }
 
-boost::optional<const distribution_i&>
+boost::optional<const exponential_family_i&>
 factor_graph_t::distribution(const string& name, size_t i) const
 {
         variable_set_t::const_iterator it = _variable_nodes[name];
@@ -187,7 +187,7 @@ factor_graph_t::distribution(const string& name, size_t i) const
 
         if (it == _variable_nodes.cend() ||
             it->name() != name) {
-                return boost::optional<const distribution_i&>();
+                return boost::optional<const exponential_family_i&>();
         }
         return (*it)();
 }
@@ -218,35 +218,6 @@ factor_graph_t::variable_node(const string& name, size_t i)
                 return boost::optional<variable_node_i&>();
         }
         return *it;
-}
-
-boost::optional<const data_vnode_t&>
-factor_graph_t::data_vnode(const string& name, size_t i) const
-{
-        variable_set_t::const_iterator it = _variable_nodes[name];
-        // advance iterator i steps
-        advance(it, i);
-
-        if (it == _variable_nodes.cend() ||
-            it->name() != name) {
-                return boost::optional<const data_vnode_t&>();
-        }
-        return static_cast<const data_vnode_t&>(*it);
-}
-
-boost::optional<data_vnode_t&>
-factor_graph_t::data_vnode(const string& name, size_t i)
-{
-        variable_set_t::iterator it = _variable_nodes[name];
-        // advance iterator i steps
-        advance(it, i);
-
-        if (it == _variable_nodes.end() ||
-            it->name() != name          ||
-            typeid(*it) != typeid(data_vnode_t)) {
-                return boost::optional<data_vnode_t&>();
-        }
-        return static_cast<data_vnode_t&>(*it);
 }
 
 void

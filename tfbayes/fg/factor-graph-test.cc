@@ -32,7 +32,7 @@ test1()
         vector<double> data(1, 1.42);
 
         fnodes += new normal_fnode_t("f1", 1, 2);
-        vnodes += new data_vnode_t  ("v1", data);
+        vnodes += new normal_data_t ("v1");
         fnodes += new normal_fnode_t("f2", 2, 2);
         vnodes += new normal_vnode_t("v2");
         fnodes += new gamma_fnode_t ("f3", 1, 2);
@@ -43,6 +43,8 @@ test1()
         fnodes["f1"]->link("precision", *vnodes["v3"]);
         fnodes["f2"]->link("output",    *vnodes["v2"]);
         fnodes["f3"]->link("output",    *vnodes["v3"]);
+
+        vnodes["v1"]->condition(data);
 
         factor_graph_t fg1(fnodes, vnodes, 1);
         factor_graph_t fg2(fg1);
@@ -55,10 +57,13 @@ test2()
 {
         factor_graph_t fg;
 
-        vector<double> data(1, 1.42);
+        vector<double> data;
 
-        fg += normal_fnode_t("f1", 1, 2);
-        fg += data_vnode_t  ("v1", data);
+        data.push_back(1.42);
+        data.push_back(1.81);
+
+        fg += normal_fnode_t("f1", 1, 2, 2);
+        fg += normal_data_t ("v1");
         fg += normal_fnode_t("f2", 2, 2);
         fg += normal_vnode_t("v2");
         fg += gamma_fnode_t ("f3", 1, 2);
@@ -70,12 +75,14 @@ test2()
         fg.link("f2", "output",    "v2");
         fg.link("f3", "output",    "v3");
 
+        fg.variable_node("v1")->condition(data);
+
         factor_graph_t fg2(fg);
 
         fg();
 
-        cout << "mean: " << fg.distribution("v2")->moment<1>()[0] << endl
-             << "mean: " << fg.distribution("v3")->moment<1>()[0] << endl;
+        cout << "mean: " << fg.distribution("v2")->moments()[0] << endl
+             << "mean: " << fg.distribution("v3")->moments()[0] << endl;
 }
 
 void
@@ -87,12 +94,12 @@ test3()
         vector<double> data2(1, 1.81);
 
         fg += normal_fnode_t("f1", 1, 2);
-        fg += data_vnode_t  ("v1");
-        fg.link("f1", "output",    "v1");
+        fg += normal_data_t ("v1");
+        fg.link("f1", "output", "v1");
         fg.replicate(1);
 
-        fg.data_vnode("v1", 0)->condition(data1);
-        fg.data_vnode("v1", 1)->condition(data2);
+        fg.variable_node("v1", 0)->condition(data1);
+        fg.variable_node("v1", 1)->condition(data2);
 
         fg += normal_fnode_t("f2", 2, 2);
         fg += normal_vnode_t("v2");
@@ -108,8 +115,8 @@ test3()
 
         fg();
 
-        cout << "mean: " << fg.distribution("v2")->moment<1>()[0] << endl
-             << "mean: " << fg.distribution("v3")->moment<1>()[0] << endl;
+        cout << "mean: " << fg.distribution("v2")->moments()[0] << endl
+             << "mean: " << fg.distribution("v3")->moments()[0] << endl;
 }
 
 int

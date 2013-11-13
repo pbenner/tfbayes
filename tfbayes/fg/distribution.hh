@@ -29,6 +29,7 @@
 
 #include <boost/array.hpp>
 #include <boost/math/special_functions/gamma.hpp>
+#include <boost/math/special_functions/digamma.hpp>
 
 #include <tfbayes/fg/domain.hh>
 #include <tfbayes/utility/clonable.hh>
@@ -50,14 +51,6 @@ public:
 
         // dimension of the space this distribution is defined on
         virtual size_t dimension() const = 0;
-
-        template<size_t K> const std::vector<double>& moment() const {
-                return std::numeric_limits<double>::infinity();
-        }
-        virtual void update_moments() = 0;
-protected:
-        virtual const std::vector<double>& moment_first () const = 0;
-        virtual const std::vector<double>& moment_second() const = 0;
 };
 
 // the simplest distribution is a dirac measure
@@ -67,21 +60,13 @@ public:
         typedef std::vector<double> x_t;
 
         dirac_distribution_t() :
-                _x            (),
-                _moment_second()
-                { }
+                _x(){ }
         // one-dimensional dirac
         dirac_distribution_t(double x) :
-                _x(1, x),
-                _moment_second(1, 0.0) {
-                update_moments();
-        }
+                _x(1, x) { }
         // n-dimensional dirac
         dirac_distribution_t(const std::vector<double>& x) :
-                _x(x),
-                _moment_second(x.size(), 0.0) {
-                update_moments();
-        }
+                _x(x) { }
 
         virtual dirac_distribution_t* clone() const {
                 return new dirac_distribution_t(*this);
@@ -91,25 +76,13 @@ public:
                          dirac_distribution_t& right) {
                 using std::swap;
                 swap(left._x, right._x);
-                swap(left._moment_second, right._moment_second);
         }
         derived_assignment_operator(distribution_i, dirac_distribution_t)
 
         virtual bool operator==(const distribution_i& rhs) const {
-                const dirac_distribution_t& tmp = static_cast<const dirac_distribution_t&>(rhs);
-                // always false if dimensions do not match
-                if (_x.size() != tmp._x.size()) {
-                        return false;
-                }
-                // compare single values
-                std::vector<double>::const_iterator it = _x.begin();
-                std::vector<double>::const_iterator is = tmp._x.begin();
-                for (; it != _x.end() && is != tmp._x.end(); it++, is++) {
-                        if (*it != *is) {
-                                return false;
-                        }
-                }
-                return true;
+                const dirac_distribution_t& tmp =
+                        static_cast<const dirac_distribution_t&>(rhs);
+                return std::equal(_x.begin(), _x.end(), tmp._x.begin());
         }
         virtual bool operator!=(const distribution_i& rhs) const {
                 return !operator==(rhs);
@@ -117,23 +90,135 @@ public:
         virtual size_t dimension() const {
                 return _x.size();
         }
+        virtual double operator[](size_t i) const {
+                return _x[i];
+        }
 
 protected:
-        virtual const std::vector<double>& moment_first () const {
-                return _x;
-        }
-        virtual const std::vector<double>& moment_second() const {
-                return _moment_second;
-        }
-        virtual void update_moments() {
-                for (size_t i = 0; i < _x.size(); i++) {
-                        _moment_second[i] = _x[i]*_x[i];
-                }
-        }
         // location of the dirac measure
         std::vector<double> _x;
-        // precomputed moment
-        std::vector<double> _moment_second;
+};
+
+// a class that carries the first moments of the sufficient statistics
+////////////////////////////////////////////////////////////////////////////////
+
+class sufficient_moments_i : public virtual clonable {
+public:
+        virtual ~sufficient_moments_i() { }
+
+        virtual sufficient_moments_i* clone() const = 0;
+
+        virtual sufficient_moments_i& operator=(const sufficient_moments_i& sufficient_moments) = 0;
+
+        virtual const double& operator[](size_t i) const = 0;
+        virtual double& operator[](size_t i) = 0;
+
+        virtual bool operator==(const sufficient_moments_i& rhs) const = 0;
+        virtual bool operator!=(const sufficient_moments_i& rhs) const = 0;
+};
+
+template <size_t D>
+class sufficient_moments_t : public sufficient_moments_i, public boost::array<double, D> {
+public:
+        typedef boost::array<double, D> base_t;
+
+        virtual sufficient_moments_t* clone() const = 0;
+
+        virtual sufficient_moments_t& operator=(const sufficient_moments_i& sufficient_moments) = 0;
+
+        friend void swap(sufficient_moments_t& left, sufficient_moments_t& right) {
+                using std::swap;
+                swap(static_cast<base_t&>(left), static_cast<base_t&>(right));
+        }
+
+        virtual const double& operator[](size_t i) const {
+                return base_t::operator[](i);
+        }
+        virtual double& operator[](size_t i) {
+                return base_t::operator[](i);
+        }
+        virtual bool operator==(const sufficient_moments_i& rhs) const {
+                bool result = true;
+                for (size_t i = 0; i < D; i++) {
+                        result &= std::abs(base_t::operator[](i) - rhs[i]) < 1e-20;
+                }
+                return result;
+        }
+        virtual bool operator!=(const sufficient_moments_i& rhs) const {
+                return !operator==(rhs);
+        }
+};
+
+class normal_moments_t : public sufficient_moments_t<2> {
+public:
+        typedef sufficient_moments_t<2> base_t;
+        typedef boost::array<double, 2> parameters_t;
+
+        virtual normal_moments_t* clone() const {
+                return new normal_moments_t(*this);
+        }
+
+        friend void swap(normal_moments_t& left, normal_moments_t& right) {
+                using std::swap;
+                swap(static_cast<base_t&>(left), static_cast<base_t&>(right));
+        }
+        derived_assignment_operator(sufficient_moments_i, normal_moments_t)
+
+        normal_moments_t() { }
+        normal_moments_t(double mean, double precision) {
+                this->operator[](0) = mean;
+                this->operator[](1) = mean*mean + 1.0/(precision*precision);
+        }
+        normal_moments_t(const parameters_t& parameters) {
+                const double mean      = -0.5*parameters[0]/parameters[1];
+                const double precision = -2.0*parameters[1];
+                this->operator[](0) = mean;
+                this->operator[](1) = mean*mean + 1.0/(precision*precision);
+        }
+        normal_moments_t(const dirac_distribution_t& dirac) {
+                this->operator[](0) = 0.0;
+                this->operator[](1) = 0.0;
+                for (size_t i = 0; i < dirac.dimension(); i++) {
+                        this->operator[](0) += dirac[i];
+                        this->operator[](1) += dirac[i]*dirac[i];
+                }
+        }
+};
+
+class gamma_moments_t : public sufficient_moments_t<2> {
+public:
+        typedef sufficient_moments_t<2> base_t;
+        typedef boost::array<double, 2> parameters_t;
+
+        virtual gamma_moments_t* clone() const {
+                return new gamma_moments_t(*this);
+        }
+
+        friend void swap(gamma_moments_t& left, gamma_moments_t& right) {
+                using std::swap;
+                swap(static_cast<base_t&>(left), static_cast<base_t&>(right));
+        }
+        derived_assignment_operator(sufficient_moments_i, gamma_moments_t)
+
+        gamma_moments_t() { }
+        gamma_moments_t(double shape, double rate) {
+                this->operator[](0) = shape-1.0;
+                this->operator[](1) = -rate;
+        }
+        gamma_moments_t(const parameters_t& parameters) {
+                const double a1 =  parameters[0]+1.0;
+                const double a2 = -parameters[1];
+                this->operator[](0) = boost::math::digamma(a1) - std::log(a2);
+                this->operator[](1) = a1/a2;
+        }
+        gamma_moments_t(const dirac_distribution_t& dirac) {
+                this->operator[](0) = 0.0;
+                this->operator[](1) = 0.0;
+                for (size_t i = 0; i < dirac.dimension(); i++) {
+                        this->operator[](0) += std::log(dirac[i]);
+                        this->operator[](1) += dirac[i];
+                }
+        }
 };
 
 // what every exponential family should provide
@@ -149,42 +234,36 @@ public:
 
         // multiplication of exponential families
         virtual exponential_family_i& operator*=(const exponential_family_i& e) = 0;
-};
 
-template<>
-inline const std::vector<double>& distribution_i::moment<1>() const {
-        return moment_first();
-}
-template<>
-inline const std::vector<double>& distribution_i::moment<2>() const {
-        return moment_second();
-}
+        virtual const sufficient_moments_i& moments() const = 0;
+protected:
+        virtual void update_moments() = 0;
+};
 
 // implement what is common to most exponential families
 ////////////////////////////////////////////////////////////////////////////////
-template <size_t D>
+template <size_t D, typename M>
 class exponential_family_t : public exponential_family_i {
 public:
         // typedefs
         typedef boost::array<double, D> array_t;
+        typedef M moments_t;
 
         // constructors
         exponential_family_t(size_t dim = 1, size_t n = 1.0, const domain_t& domain = real_domain(1))
                 : _log_partition(0.0),
                   _domain       (domain),
                   _n            (n),
-                  _moment_first (dim, 0.0),
-                  _moment_second(dim, 0.0),
-                  _dimension    (dim)
-                { }
+                  _dimension    (dim) {
+                assert(dim > 0);
+        }
         exponential_family_t(const exponential_family_t& e)
                 : _parameters   (e._parameters),
                   _log_partition(e._log_partition),
                   _domain       (e._domain),
                   _n            (e._n),
-                  _moment_first (e._moment_first),
-                  _moment_second(e._moment_second),
-                  _dimension    (e._dimension)
+                  _dimension    (e._dimension),
+                  _moments      (e._moments)
                 { }
 
         // clone object
@@ -197,14 +276,13 @@ public:
                 swap(left._log_partition, right._log_partition);
                 swap(left._domain,        right._domain);
                 swap(left._n,             right._n);
-                swap(left._moment_first,  right._moment_first);
-                swap(left._moment_second, right._moment_second);
                 swap(left._dimension,     right._dimension);
+                swap(left._moments,       right._moments);
         }
 
         // operators
         virtual bool operator==(const distribution_i& rhs) const {
-                const exponential_family_t<D>& tmp = static_cast<const exponential_family_t<D>&>(rhs);
+                const exponential_family_t& tmp = static_cast<const exponential_family_t&>(rhs);
                 if (dimension() != tmp.dimension()) {
                         return false;
                 }
@@ -269,7 +347,13 @@ public:
         virtual size_t dimension() const {
                 return _dimension;
         }
+        const moments_t& moments() const {
+                return _moments;
+        }
 protected:
+        virtual void update_moments() {
+                _moments = moments_t(parameters());
+        }
         // access methods
         virtual array_t& parameters() {
                 return _parameters;
@@ -279,12 +363,6 @@ protected:
         }
         virtual double& n() {
                 return _n;
-        }
-        virtual const std::vector<double>& moment_first () const {
-                return _moment_first;
-        }
-        virtual const std::vector<double>& moment_second() const {
-                return _moment_second;
         }
         // natural parameters
         array_t _parameters;
@@ -296,28 +374,27 @@ protected:
         domain_t _domain;
         // keep track of the number of multiplications
         double _n;
-        // precomputed moments
-        std::vector<double> _moment_first;
-        std::vector<double> _moment_second;
         // dimension of the space where this distribution is defined
         // on
         size_t _dimension;
+        // moments of the sufficient statistics
+        moments_t _moments;
 };
 
-// the normal distribution
+// a multivariate normal distribution on a simple product space
 ////////////////////////////////////////////////////////////////////////////////
-class normal_distribution_t : public exponential_family_t<2> {
+class normal_distribution_t : public exponential_family_t<2, normal_moments_t> {
 public:
-        typedef exponential_family_t<2> base_t;
+        typedef exponential_family_t<2, normal_moments_t> base_t;
 
         // void object
         normal_distribution_t() :
-                base_t(1, 0.0) {
+                base_t(1, 0.0, real_domain(1)) {
                 parameters()[0] = 0.0;
                 parameters()[1] = 0.0;
         }
-        normal_distribution_t(double mean, double precision) :
-                base_t() {
+        normal_distribution_t(double mean, double precision, size_t dim = 1) :
+                base_t(dim, 1.0, real_domain(dim)) {
                 assert(precision > 0.0);
                 parameters()[0] = mean*precision;
                 parameters()[1] = -0.5*precision;
@@ -339,73 +416,6 @@ public:
                      static_cast<base_t&>(right));
         }
         derived_assignment_operator(distribution_i, normal_distribution_t)
-
-        virtual double base_measure(const std::vector<double>& x) const {
-                return std::pow(2.0*M_PI, -1.0/2.0*static_cast<double>(n()));
-        }
-        virtual const array_t& statistics(const std::vector<double>& x) const {
-                assert(x.size() == dimension());
-                _T[0] = x[0];
-                _T[1] = std::pow(x[0], 2.0);
-                return _T;
-        }
-        virtual bool renormalize() {
-                if (!base_t::renormalize()) {
-                        return false;
-                }
-                const double& mu  = -0.5*parameters()[0]/parameters()[1];
-                const double& tau = -2.0*parameters()[1];
-                debug("-> normal parameters:" << std::endl);
-                debug("-> mean     : " << mu  << std::endl);
-                debug("-> precision: " << tau << std::endl);
-                _log_partition = 1.0/2.0*(tau*mu*mu - std::log(tau));
-                return true;
-        }
-protected:
-        virtual void update_moments() {
-                const double& mu  = -0.5*parameters()[0]/parameters()[1];
-                const double& tau = -2.0*parameters()[1];
-                this->_moment_first [0] = mu;
-                this->_moment_second[0] = mu*mu + 1.0/(tau*tau);
-        }
-};
-
-// a multivariate normal distribution on a simple product space
-////////////////////////////////////////////////////////////////////////////////
-class pnormal_distribution_t : public exponential_family_t<2> {
-public:
-        typedef exponential_family_t<2> base_t;
-
-        // void object
-        pnormal_distribution_t() :
-                base_t(1, 0.0, real_domain(1)) {
-                parameters()[0] = 0.0;
-                parameters()[1] = 0.0;
-        }
-        pnormal_distribution_t(size_t dim, double mean, double precision) :
-                base_t(dim, 1.0, real_domain(dim)) {
-                assert(dim > 0);
-                assert(precision > 0.0);
-                parameters()[0] = mean*precision;
-                parameters()[1] = -0.5*precision;
-                renormalize();
-                update_moments();
-        }
-        pnormal_distribution_t(const pnormal_distribution_t& normal_distribution)
-                : base_t(normal_distribution)
-                { }
-
-        virtual pnormal_distribution_t* clone() const {
-                return new pnormal_distribution_t(*this);
-        }
-
-        friend void swap(pnormal_distribution_t& left,
-                         pnormal_distribution_t& right) {
-                using std::swap;
-                swap(static_cast<base_t&>(left),
-                     static_cast<base_t&>(right));
-        }
-        derived_assignment_operator(distribution_i, pnormal_distribution_t)
 
         virtual double base_measure(const std::vector<double>& x) const {
                 return std::pow(2.0*M_PI, -static_cast<double>(dimension())/2.0*static_cast<double>(n()));
@@ -434,23 +444,13 @@ public:
                         static_cast<double>(dimension())/2.0*std::log(tau);
                 return true;
         }
-protected:
-        virtual void update_moments() {
-                const double& mu  = -0.5*parameters()[0]/parameters()[1];
-                const double& tau = -2.0*parameters()[1];
-                // on a product space, moments are the same in every dimension
-                for (size_t i = 0; i < dimension(); i++) {
-                        this->_moment_first [i] = mu;
-                        this->_moment_second[i] = mu*mu + 1.0/(tau*tau);
-                }
-        }
 };
 
 // the gamma distribution
 ////////////////////////////////////////////////////////////////////////////////
-class gamma_distribution_t : public exponential_family_t<2> {
+class gamma_distribution_t : public exponential_family_t<2, gamma_moments_t> {
 public:
-        typedef exponential_family_t<2> base_t;
+        typedef exponential_family_t<2, gamma_moments_t> base_t;
 
         // void object
         gamma_distribution_t() :
@@ -458,12 +458,12 @@ public:
                 parameters()[0] = 0.0;
                 parameters()[1] = 0.0;
         }
-        gamma_distribution_t(double shape, double rate) :
-                base_t(1, 1.0, positive_domain(1)) {
+        gamma_distribution_t(double shape, double rate, size_t dim = 1) :
+                base_t(dim, 1.0, positive_domain(1)) {
                 assert(shape > 0.0);
                 assert(rate  > 0.0);
-                parameters()[0] = shape-1.0;
-                parameters()[1] = rate;
+                parameters()[0] =  shape-1.0;
+                parameters()[1] = -rate;
                 renormalize();
                 update_moments();
         }
@@ -488,8 +488,13 @@ public:
         }
         virtual const array_t& statistics(const std::vector<double>& x) const {
                 assert(x.size() == dimension());
-                _T[0] = std::log(x[0]);
-                _T[1] = -x[0];
+                // reset statistics
+                _T[0] = 0.0;
+                _T[1] = 0.0;
+                for (size_t i = 0; i < dimension(); i++) {
+                        _T[0] += std::log(x[i]);
+                        _T[1] += x[i];
+                }
                 return _T;
         }
         virtual bool renormalize() {
@@ -497,20 +502,13 @@ public:
                         return false;
                 }
                 const double& a1 = parameters()[0]+1.0;
-                const double& a2 = parameters()[1];
+                const double& a2 = -parameters()[1];
                 debug("-> gamma parameters:" << std::endl);
                 debug("-> a1: " << a1 << std::endl);
                 debug("-> a2: " << a2 << std::endl);
                 _log_partition =  boost::math::lgamma(a1) -
                         (a1)*std::log(a2);
                 return true;
-        }
-protected:
-        virtual void update_moments() {
-                const double& a1 = parameters()[0]+1.0;
-                const double& a2 = parameters()[1];
-                this->_moment_first [0] = a1/a2;
-                this->_moment_second[0] = a1*(a1+1.0)/(a2*a2);
         }
 };
 
