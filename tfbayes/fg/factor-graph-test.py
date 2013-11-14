@@ -84,11 +84,8 @@ mu    = 1
 sigma = 0.1
 data  = np.random.normal(mu, sigma, 1000)
 
-plt.hist(data, 50, normed=1)
-plt.show()
-
 # construct and execute the factor graph
-fg = construct_fg1(data)
+fg = construct_fg1(data, threads=10)
 fg()
 
 # obtain estimates

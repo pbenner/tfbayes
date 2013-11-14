@@ -125,9 +125,13 @@ public:
                                         if (limit && *limit == 0) {
                                                 done = true;
                                         }
+                                        debug("################################################################################"
+                                              << std::endl);
                                         // switch to other queue
                                         which = false;
                                         // save free energy
+                                        debug(boost::format("summed free energy is: %d\n")
+                                              % partial_result());
                                         history.push_back(partial_result());
                                 }
                         }
@@ -149,6 +153,8 @@ public:
                                         if (limit && *limit == 0) {
                                                 done = true;
                                         }
+                                        debug("################################################################################"
+                                              << std::endl);
                                         // switch to other queue
                                         which = true;
                                 }

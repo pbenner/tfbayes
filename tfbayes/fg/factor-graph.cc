@@ -158,15 +158,14 @@ vector<double>
 factor_graph_t::operator()(boost::optional<size_t> n) {
         vector<boost::thread*> threads(_threads);
 
+        // limit the number of jobs
+        _queue.set_limit(n);
         // initialize the network by letting all variable nodes send
         // their messages first
         for (variable_set_t::iterator it = _variable_nodes.begin();
              it != _variable_nodes.end(); it++) {
                 _queue.push_variable(&*it);
         }
-        // limit the number of jobs
-        _queue.set_limit(n);
-
         // sample
         for (size_t i = 0; i < _threads; i++) {
                 threads[i] = new boost::thread(factor_graph_thread_t(_queue), n);

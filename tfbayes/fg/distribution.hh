@@ -154,6 +154,30 @@ public:
         }
 };
 
+class dirac_moments_t : public sufficient_moments_t<1> {
+public:
+        typedef sufficient_moments_t<1> base_t;
+        typedef boost::array<double, 1> parameters_t;
+
+        virtual dirac_moments_t* clone() const {
+                return new dirac_moments_t(*this);
+        }
+
+        friend void swap(dirac_moments_t& left, dirac_moments_t& right) {
+                using std::swap;
+                swap(static_cast<base_t&>(left), static_cast<base_t&>(right));
+        }
+        derived_assignment_operator(sufficient_moments_i, dirac_moments_t)
+
+        dirac_moments_t() { }
+        dirac_moments_t(const dirac_distribution_t& dirac) {
+                this->operator[](0) = 0.0;
+                for (size_t i = 0; i < dirac.dimension(); i++) {
+                        this->operator[](0) += dirac[i];
+                }
+        }
+};
+
 class normal_moments_t : public sufficient_moments_t<2> {
 public:
         typedef sufficient_moments_t<2> base_t;
@@ -425,7 +449,9 @@ public:
         derived_assignment_operator(distribution_i, normal_distribution_t)
 
         virtual double base_measure(const std::vector<double>& x) const {
-                return std::pow(2.0*M_PI, -static_cast<double>(dimension())/2.0*static_cast<double>(n()));
+                const double d = static_cast<double>(dimension());
+                const double m = static_cast<double>(n());
+                return std::pow(2.0*M_PI, -d*m/2.0);
         }
         virtual const array_t& statistics(const std::vector<double>& x) const {
                 assert(x.size() == dimension());
@@ -442,18 +468,19 @@ public:
                 if (!base_t::renormalize()) {
                         return false;
                 }
+                const double d   = static_cast<double>(dimension());
                 const double mu  = -0.5*parameters()[0]/parameters()[1];
                 const double tau = -2.0*parameters()[1];
                 debug("-> normal parameters:" << std::endl);
                 debug("-> mean     : " << mu  << std::endl);
                 debug("-> precision: " << tau << std::endl);
-                _log_partition = static_cast<double>(dimension())/2.0*tau*mu*mu -
-                        static_cast<double>(dimension())/2.0*std::log(tau);
+                _log_partition = d/2.0*(tau*mu*mu - std::log(tau));
                 return true;
         }
         virtual double entropy() const {
+                const double d   = static_cast<double>(dimension());
                 const double tau = -2.0*parameters()[1];
-                return 0.5+0.5*std::log(2.0*M_PI*1.0/tau);
+                return d/2.0*(1.0 + std::log(2.0*M_PI*1.0/tau));
         }
 };
 
@@ -512,19 +539,22 @@ public:
                 if (!base_t::renormalize()) {
                         return false;
                 }
-                const double a1 = parameters()[0]+1.0;
+                const double a1 =  parameters()[0]+1.0;
                 const double a2 = -parameters()[1];
                 debug("-> gamma parameters:" << std::endl);
-                debug("-> a1: " << a1 << std::endl);
-                debug("-> a2: " << a2 << std::endl);
+                debug("-> shape: " << a1 << std::endl);
+                debug("-> rate : " << a2 << std::endl);
                 _log_partition =  boost::math::lgamma(a1) -
                         (a1)*std::log(a2);
                 return true;
         }
         virtual double entropy() const {
-                const double a1 = parameters()[0]+1.0;
+                // TODO
+                assert(dimension() == 1);
+                const double a1 =  parameters()[0]+1.0;
                 const double a2 = -parameters()[1];
-                return a1 + boost::math::lgamma(a1) - std::log(a2);
+                return a1 + boost::math::lgamma(a1) - std::log(a2)
+                        + (1.0-a1)*boost::math::digamma(a1);
         }
 };
 

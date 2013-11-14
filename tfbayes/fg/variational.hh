@@ -121,7 +121,7 @@ protected:
         const p_message_t& message3();
 
         // parameters
-        gamma_moments_t dshape;
+        dirac_moments_t dshape;
         gamma_moments_t drate;
 
         // messages

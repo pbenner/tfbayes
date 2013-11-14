@@ -169,6 +169,8 @@ public:
                                       % name() % this % _neighbors[i]->name() % _neighbors[i]);
                                 outbox[i]->replace(message(i));
                                 outbox[i]->notify();
+                                debug("................................................................................"
+                                      << std::endl);
                         }
                 }
         }
@@ -179,12 +181,8 @@ public:
                                     " with variable node %s:%x")
                       % name() % this % variable_node.name() % &variable_node
                       << std::endl);
-                if (// variable_node either has to be a conjugate distribution
-                    !is_conjugate(i, variable_node) &&
-                    // or a dirac distribution if it is connected to
-                    // the output variable
-                    !(i == 0 &&
-                      variable_node.type() == typeid(dirac_distribution_t))) {
+                if (// variable_node has to be a conjugate distribution
+                    !is_conjugate(i, variable_node)) {
                         debug("-> failed!" << std::endl);
                         return false;
                 }
@@ -250,11 +248,15 @@ public:
 
         virtual void send_messages() {
                 // compute new q-message
+                debug(boost::format("variable node %s:%x is preparing a new message\n")
+                      % name() % this);
                 current_message = message();
                 // check if this message was sent before
                 if (!current_message) {
                         debug(boost::format("variable node %s:%x has no new message\n")
                               % name() % this);
+                        debug("--------------------------------------------------------------------------------"
+                              << std::endl);
                         return;
                 }
                 debug(boost::format("variable node %s:%x is sending messages\n")
@@ -273,8 +275,6 @@ public:
                 messages.push_back(new typename T::moments_t());
                 // save slot to the outbox
                 outbox.push_back(slot);
-                // put the current message into the box
-                slot.replace(messages[i]);
                 // and prepare a new inbox for this node
                 _inbox++;
                 _inbox[i].observe(boost::bind(tmp, this));
@@ -332,6 +332,10 @@ public:
                 return distribution;
         }
         virtual double free_energy() const {
+                debug(boost::format("variable node %s:%x computed entropy: %d\n")
+                      % base_t::name() % this % distribution.entropy());
+                debug("--------------------------------------------------------------------------------"
+                      << std::endl);
                 return distribution.entropy();
         }
 protected:
@@ -390,6 +394,8 @@ public:
                 return distribution;
         }
         virtual double free_energy() const {
+                debug("--------------------------------------------------------------------------------"
+                      << std::endl);
                 return 0.0;
         }
 protected:

@@ -15,6 +15,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include <tfbayes/fg/variational.hh>
 #include <tfbayes/utility/debug.hh>
 
@@ -31,7 +34,7 @@ normal_fnode_t::normal_fnode_t(const std::string& name,
         // initial distributions
         distribution1(0,0.01,dim),
         distribution2(0,0.01),
-        distribution3(1,0.5),
+        distribution3(1,0.01),
         dimension    (dim) {
         assert(dimension > 0);
         // set the inbox to the given parameters, however,
@@ -71,7 +74,35 @@ normal_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
 double
 normal_fnode_t::free_energy() const
 {
-        return 0.0;
+        double d       = static_cast<double>(dimension);
+        double y       = _inbox[0]()[0];
+        double y2      = _inbox[0]()[1];
+        double mu      = _inbox[1]()[0];
+        double mu2     = _inbox[1]()[1];
+        double log_tau = _inbox[2]()[0];
+        double tau     = _inbox[2]()[1];
+        double result  = 0.0;
+
+        cout << "y : " << y  << endl;
+        cout << "y2: " << y2 << endl;
+        // log base measure
+        result -= d/2.0*std::log(2.0*M_PI);
+        cout << "partial result: " << result << endl;
+        // log partition
+        result -= 0.5*mu2*tau - 0.5*log_tau;
+        cout << "partial result: " << result << endl;
+        // parameters * statistics
+        result += mu*tau*y;
+        cout << "partial result: " << result << endl;
+        result -= 0.5*tau*y2;
+        cout << "partial result: " << result << endl;
+
+        debug(boost::format("factor node %s:%x computed free energy: %d\n")
+              % base_t::name() % this % result);
+        debug("--------------------------------------------------------------------------------"
+              << std::endl);
+
+        return result;
 }
 
 bool
@@ -166,8 +197,8 @@ gamma_fnode_t::gamma_fnode_t(const std::string& name,
         dshape       (dirac_distribution_t(shape)),
         drate        (dirac_distribution_t(rate)),
         // initial distributions
-        distribution1(1.0,1.0,dim),
-        distribution3(1.0,1.0),
+        distribution1(1.0,0.001,dim),
+        distribution3(1.0,0.001),
         dimension    (dim) {
         assert(dimension > 0);
         // set the inbox to the given parameters, however,
@@ -198,7 +229,6 @@ gamma_fnode_t::clone() const {
 bool
 gamma_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
         if      (id == "output") return base_t::link(0, variable_node);
-        else if (id == "shape" ) return base_t::link(1, variable_node);
         else if (id == "rate"  ) return base_t::link(2, variable_node);
         else return false;
 }
@@ -206,7 +236,23 @@ gamma_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
 double
 gamma_fnode_t::free_energy() const
 {
-        return 0.0;
+        double log_tau = _inbox[0]()[0];
+        double tau     = _inbox[0]()[1];
+        double shape   = _inbox[1]()[0];
+        double rate    = _inbox[2]()[1];
+        double result  = 0.0;
+
+        // log partition
+        result -= boost::math::lgamma(shape) - shape*std::log(rate);
+        result += (shape-1.0)*log_tau;
+        result -= rate*tau;
+
+        debug(boost::format("factor node %s:%x computed free energy: %d\n")
+              % base_t::name() % this % result);
+        debug("--------------------------------------------------------------------------------"
+              << std::endl);
+
+        return result;
 }
 
 bool
@@ -239,7 +285,7 @@ gamma_fnode_t::message(size_t i) {
 
 const p_message_t&
 gamma_fnode_t::message1() {
-        double shape = _inbox[1]()[1];
+        double shape = _inbox[1]()[0];
         double rate  = _inbox[2]()[1];
 
         debug("gamma message 1 (gamma): " << this->name() << endl);
@@ -251,7 +297,7 @@ gamma_fnode_t::message1() {
 
 const p_message_t&
 gamma_fnode_t::message3() {
-        double shape =   _inbox[1]()[1] + 1.0;
+        double shape =   _inbox[1]()[0] + 1.0;
         double rate  = - _inbox[0]()[1];
 
         debug("gamma message 1 (gamma): " << this->name() << endl);
