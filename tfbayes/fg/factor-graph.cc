@@ -33,11 +33,13 @@ public:
 
         void operator()(boost::optional<size_t> n = boost::optional<size_t>()) {
                 // pointer to a node
-                factor_graph_node_i* job;
+                fg_node_i* job;
                 // get jobs from the queue
                 while ((job = queue().pop())) {
                         // do the actual work
                         job->send_messages();
+                        // update free energy
+                        queue().save_result(job, job->free_energy());
                 }
         }
         fg_queue_t& queue() {
@@ -152,7 +154,7 @@ factor_graph_t::link(const std::string& fname, const std::string& which, const s
         return result;
 }
 
-void
+vector<double>
 factor_graph_t::operator()(boost::optional<size_t> n) {
         vector<boost::thread*> threads(_threads);
 
@@ -176,6 +178,7 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
         for (size_t i = 0; i < _threads; i++) {
                 delete(threads[i]);
         }
+        return _queue.history;
 }
 
 boost::optional<const exponential_family_i&>

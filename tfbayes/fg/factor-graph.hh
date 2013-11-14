@@ -71,7 +71,7 @@ public:
         bool link(const std::string& fname, const std::string&, const std::string& vname);
 
         // execute the message passing algorithm
-        void operator()(boost::optional<size_t> n = boost::optional<size_t>());
+        std::vector<double> operator()(boost::optional<size_t> n = boost::optional<size_t>());
 
         // access distributions of variable nodes
         boost::optional<const exponential_family_i&> distribution(const std::string& name, size_t i = 0) const;

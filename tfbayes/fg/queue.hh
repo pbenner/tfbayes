@@ -29,6 +29,29 @@
 
 #include <tfbayes/fg/node-types.hh>
 
+class partial_result_t : std::map<const fg_node_i*, double> {
+public:
+        typedef std::map<const fg_node_i*, double> base_t;
+
+        partial_result_t() :
+                sum(0.0) {
+        }
+        void update(const fg_node_i* node, double new_value) {
+                mtx.lock();
+                double old_value = base_t::operator[](node);
+                sum -= old_value;
+                sum += new_value;
+                base_t::operator[](node) = new_value;
+                mtx.unlock();
+        }
+        double operator()() const {
+                return sum;
+        }
+protected:
+        double sum;
+        boost::mutex mtx;
+};
+
 template <typename T>
 class node_queue_t : std::set<T*> {
 public:
@@ -57,7 +80,7 @@ private:
 
 class fg_queue_t {
 public:
-        typedef std::set<factor_graph_node_i*> base_t;
+        typedef std::set<fg_node_i*> base_t;
 
         fg_queue_t(size_t threads) :
                 barrier(threads),
@@ -80,8 +103,8 @@ public:
                 variable_queue.push(node);
                 mtx.unlock();
         }
-        factor_graph_node_i* pop() {
-                factor_graph_node_i* node = NULL;
+        fg_node_i* pop() {
+                fg_node_i* node = NULL;
                 while (node == NULL) {
                         mtx.lock();
                         if (which && factor_queue.empty()) {
@@ -104,6 +127,8 @@ public:
                                         }
                                         // switch to other queue
                                         which = false;
+                                        // save free energy
+                                        history.push_back(partial_result());
                                 }
                         }
                         if (!which && variable_queue.empty()) {
@@ -134,8 +159,8 @@ public:
                         }
                         // get job
                         node = which
-                                ? static_cast<factor_graph_node_i*>(factor_queue.pop())
-                                : static_cast<factor_graph_node_i*>(variable_queue.pop());
+                                ? static_cast<fg_node_i*>(factor_queue.pop())
+                                : static_cast<fg_node_i*>(variable_queue.pop());
                         if (node != NULL) {
                                 if (limit && *limit > 0) {
                                         *limit -= 1;
@@ -145,7 +170,12 @@ public:
                 }
                 return node;
         }
-private:
+        void save_result(fg_node_i* job, double result) {
+                partial_result.update(job, result);
+        }
+        // record free energy
+        std::vector<double> history;
+protected:
         // thread barrier
         boost::barrier barrier;
         // from which queue to receive jobs
@@ -157,6 +187,8 @@ private:
         bool done;
         // maximum number of jobs to process
         boost::optional<size_t> limit;
+        // partial results
+        partial_result_t partial_result;
         // the two queues
         node_queue_t<  factor_node_i> factor_queue;
         node_queue_t<variable_node_i> variable_queue;

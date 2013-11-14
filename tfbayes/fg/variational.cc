@@ -68,6 +68,12 @@ normal_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
         else return false;
 }
 
+double
+normal_fnode_t::free_energy() const
+{
+        return 0.0;
+}
+
 bool
 normal_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
         switch (i) {
@@ -195,6 +201,12 @@ gamma_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
         else if (id == "shape" ) return base_t::link(1, variable_node);
         else if (id == "rate"  ) return base_t::link(2, variable_node);
         else return false;
+}
+
+double
+gamma_fnode_t::free_energy() const
+{
+        return 0.0;
 }
 
 bool

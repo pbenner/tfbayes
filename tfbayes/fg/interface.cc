@@ -108,14 +108,14 @@ variable_node_i& access_variable_node(factor_graph_t& factor_graph, const std::s
 }
 
 static
-void call_factor_graph(factor_graph_t& factor_graph)
+std::vector<double> call_factor_graph(factor_graph_t& factor_graph)
 {
-        factor_graph();
+        return factor_graph();
 }
 static
-void call_factor_graph(factor_graph_t& factor_graph, size_t n)
+std::vector<double> call_factor_graph(factor_graph_t& factor_graph, size_t n)
 {
-        factor_graph(n);
+        return factor_graph(n);
 }
 
 // interface
@@ -183,8 +183,8 @@ BOOST_PYTHON_MODULE(interface)
         class_<factor_graph_t>("factor_graph_t", no_init)
                 .def("__init__", make_constructor(&construct_factor_graph_1))
                 .def("__init__", make_constructor(&construct_factor_graph_2))
-                .def("__call__", static_cast<void (*)(factor_graph_t&)>(&call_factor_graph))
-                .def("__call__", static_cast<void (*)(factor_graph_t&, size_t)>(&call_factor_graph))
+                .def("__call__", static_cast<std::vector<double> (*)(factor_graph_t&)>(&call_factor_graph))
+                .def("__call__", static_cast<std::vector<double> (*)(factor_graph_t&, size_t)>(&call_factor_graph))
                 .def("__getitem__", &access_distribution_1, return_internal_reference<>())
                 .def("__getitem__", &access_distribution_2, return_internal_reference<>())
                 .def("__iadd__", static_cast<factor_graph_t& (factor_graph_t::*)(const   factor_node_i&)>(&factor_graph_t::operator+=), return_internal_reference<>())

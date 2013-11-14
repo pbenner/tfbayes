@@ -53,12 +53,15 @@
 
 // a general node in a factor graph must be clonable, observable,
 // and be able to send messages to neighboring nodes
-class factor_graph_node_i : public virtual clonable, public virtual observable_i {
+class fg_node_i : public virtual clonable, public virtual observable_i {
 public:
-        virtual ~factor_graph_node_i() { }
+        virtual ~fg_node_i() { }
 
         // send messages to all connected variable nodes
         virtual void send_messages() = 0;
+
+        // compute free energy
+        virtual double free_energy() const = 0;
 
         // a node might have an identifier
         virtual const std::string& name() const = 0;
@@ -67,7 +70,7 @@ public:
 class   factor_node_i;
 class variable_node_i;
 
-class factor_node_i : public factor_graph_node_i {
+class factor_node_i : public fg_node_i {
 public:
         virtual ~factor_node_i() { }
 
@@ -91,7 +94,7 @@ protected:
         virtual const p_message_t& message(size_t i) = 0;
 };
 
-class variable_node_i : public virtual factor_graph_node_i {
+class variable_node_i : public virtual fg_node_i {
 public:
         virtual ~variable_node_i() { }
 
@@ -101,9 +104,6 @@ public:
 
         // get current message
         virtual const exponential_family_i& operator()() const = 0;
-
-        // send messages to all connected factor nodes
-        virtual void send_messages() = 0;
 
         // link a factor node to this variable node
         virtual mailbox_slot_t<p_message_t>& link(mailbox_slot_t<q_message_t>& slot) = 0;
@@ -217,7 +217,6 @@ public:
         virtual const std::string& name() const {
                 return _name;
         }
-
 protected:
         // initialize outbox i
         virtual const p_message_t& initial_message(size_t i) const = 0;
@@ -317,7 +316,6 @@ public:
         virtual const std::string& name() const {
                 return _name;
         }
-
 protected:
         // prepare the q message
         virtual const typename T::moments_t& message() = 0;
@@ -364,6 +362,9 @@ public:
         }
         virtual const T& operator()() const {
                 return distribution;
+        }
+        virtual double free_energy() const {
+                return distribution.entropy();
         }
 protected:
         virtual const typename T::moments_t& message() {
@@ -423,6 +424,9 @@ public:
         }
         virtual const T& operator()() const {
                 return distribution;
+        }
+        virtual double free_energy() const {
+                return 0.0;
         }
 protected:
         virtual const typename T::moments_t& message() {

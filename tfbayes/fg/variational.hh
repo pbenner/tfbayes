@@ -60,6 +60,8 @@ public:
         derived_assignment_operator(factor_node_i, normal_fnode_t)
 
         virtual bool link(const std::string& id, variable_node_i& variable_node);
+        virtual double free_energy() const;
+
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
         virtual const p_message_t& initial_message(size_t i) const;
@@ -107,6 +109,8 @@ public:
         derived_assignment_operator(factor_node_i, gamma_fnode_t)
 
         virtual bool link(const std::string& id, variable_node_i& variable_node);
+        virtual double free_energy() const;
+
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
         virtual const p_message_t& initial_message(size_t i) const;
