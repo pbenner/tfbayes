@@ -94,8 +94,9 @@ private:
         // clone a whole network
         void clone_nodes(const factor_set_t& factor_nodes,
                          const variable_set_t& variable_nodes);
-        // add a node to the queue
-        void add_node(factor_graph_node_i* node);
+        // add a nodes to the queue
+        void add_factor_node(factor_node_i* factor_node);
+        void add_variable_node(variable_node_i* variable_node);
 };
 
 #endif /* __TFBAYES_FG_FACTOR_GRAPH_HH__ */

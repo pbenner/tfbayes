@@ -36,10 +36,6 @@ public:
                 factor_graph_node_i* job;
                 // get jobs from the queue
                 while ((job = queue().pop())) {
-                        // stop if maximum number of iterations is reached
-                        if (n && (*n) == 0) break;
-                        // decrement n
-                        if (n) (*n)--;
                         // do the actual work
                         job->send_messages();
                 }
@@ -59,6 +55,7 @@ using namespace std;
 factor_graph_t::factor_graph_t(size_t threads) :
         _factor_nodes   (),
         _variable_nodes (),
+        _queue          (threads),
         _threads        (threads)
 {
 }
@@ -68,6 +65,7 @@ factor_graph_t::factor_graph_t(const factor_set_t& factor_nodes,
                                size_t threads) :
         _factor_nodes   (),
         _variable_nodes (),
+        _queue          (threads),
         _threads        (threads)
 {
         // copy connectivity before proceeding
@@ -77,7 +75,7 @@ factor_graph_t::factor_graph_t(const factor_set_t& factor_nodes,
 factor_graph_t::factor_graph_t(const factor_graph_t& factor_graph) :
         _factor_nodes   (),
         _variable_nodes (),
-        _queue          (),
+        _queue          (factor_graph._threads),
         _threads        (factor_graph._threads)
 {
         // clone all nodes of the factor graph
@@ -94,7 +92,7 @@ factor_graph_t::operator+=(const factor_node_i& factor_node)
 factor_graph_t&
 factor_graph_t::operator+=(factor_node_i* factor_node)
 {
-        void (factor_graph_t::*tmp) (factor_graph_node_i*) = &factor_graph_t::add_node;
+        void (factor_graph_t::*tmp) (factor_node_i*) = &factor_graph_t::add_factor_node;
 
         _factor_nodes += factor_node;
         factor_node->observe(boost::bind(tmp, this, factor_node));
@@ -111,7 +109,7 @@ factor_graph_t::operator+=(const variable_node_i& variable_node)
 factor_graph_t&
 factor_graph_t::operator+=(variable_node_i* variable_node)
 {
-        void (factor_graph_t::*tmp) (factor_graph_node_i*) = &factor_graph_t::add_node;
+        void (factor_graph_t::*tmp) (variable_node_i*) = &factor_graph_t::add_variable_node;
 
         _variable_nodes += variable_node;
         variable_node->observe(boost::bind(tmp, this, variable_node));
@@ -162,8 +160,10 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
         // their messages first
         for (variable_set_t::iterator it = _variable_nodes.begin();
              it != _variable_nodes.end(); it++) {
-                it->send_messages();
+                _queue.push_variable(&*it);
         }
+        // limit the number of jobs
+        _queue.set_limit(n);
 
         // sample
         for (size_t i = 0; i < _threads; i++) {
@@ -221,10 +221,17 @@ factor_graph_t::variable_node(const string& name, size_t i)
 }
 
 void
-factor_graph_t::add_node(factor_graph_node_i* node) {
-        debug(boost::format("*** adding node %s:%x to the queue ***\n")
-              % node->name() % node);
-        _queue.push(node);
+factor_graph_t::add_factor_node(factor_node_i* factor_node) {
+        debug(boost::format("*** adding factor node %s:%x to the queue ***\n")
+              % factor_node->name() % factor_node);
+        _queue.push_factor(factor_node);
+}
+
+void
+factor_graph_t::add_variable_node(variable_node_i* variable_node) {
+        debug(boost::format("*** adding variable node %s:%x to the queue ***\n")
+              % variable_node->name() % variable_node);
+        _queue.push_variable(variable_node);
 }
 
 void

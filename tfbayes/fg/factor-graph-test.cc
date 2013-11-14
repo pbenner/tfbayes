@@ -88,7 +88,7 @@ test2()
 void
 test3()
 {
-        factor_graph_t fg;
+        factor_graph_t fg(10);
 
         vector<double> data1(1, 1.42);
         vector<double> data2(1, 1.81);
