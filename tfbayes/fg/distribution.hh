@@ -240,6 +240,8 @@ public:
         // multiplication of exponential families
         virtual exponential_family_i& operator*=(const exponential_family_i& e) = 0;
 
+        virtual double entropy() const = 0;
+
         virtual const sufficient_moments_i& moments() const = 0;
 protected:
         virtual void update_moments() = 0;
@@ -440,14 +442,18 @@ public:
                 if (!base_t::renormalize()) {
                         return false;
                 }
-                const double& mu  = -0.5*parameters()[0]/parameters()[1];
-                const double& tau = -2.0*parameters()[1];
+                const double mu  = -0.5*parameters()[0]/parameters()[1];
+                const double tau = -2.0*parameters()[1];
                 debug("-> normal parameters:" << std::endl);
                 debug("-> mean     : " << mu  << std::endl);
                 debug("-> precision: " << tau << std::endl);
                 _log_partition = static_cast<double>(dimension())/2.0*tau*mu*mu -
                         static_cast<double>(dimension())/2.0*std::log(tau);
                 return true;
+        }
+        virtual double entropy() const {
+                const double tau = -2.0*parameters()[1];
+                return 0.5+0.5*std::log(2.0*M_PI*1.0/tau);
         }
 };
 
@@ -506,14 +512,19 @@ public:
                 if (!base_t::renormalize()) {
                         return false;
                 }
-                const double& a1 = parameters()[0]+1.0;
-                const double& a2 = -parameters()[1];
+                const double a1 = parameters()[0]+1.0;
+                const double a2 = -parameters()[1];
                 debug("-> gamma parameters:" << std::endl);
                 debug("-> a1: " << a1 << std::endl);
                 debug("-> a2: " << a2 << std::endl);
                 _log_partition =  boost::math::lgamma(a1) -
                         (a1)*std::log(a2);
                 return true;
+        }
+        virtual double entropy() const {
+                const double a1 = parameters()[0]+1.0;
+                const double a2 = -parameters()[1];
+                return a1 + boost::math::lgamma(a1) - std::log(a2);
         }
 };
 
