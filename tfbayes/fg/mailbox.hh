@@ -24,7 +24,6 @@
 
 #include <vector>
 
-#include <boost/thread.hpp>
 #include <boost/function.hpp>
 #include <boost/optional.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
@@ -32,7 +31,7 @@
 #include <tfbayes/utility/observable.hh>
 
 template <typename T>
-class mailbox_slot_t : public boost::mutex, public observable_t {
+class mailbox_slot_t : public observable_t {
 public:
         // access the contents
         const T& operator()() const {

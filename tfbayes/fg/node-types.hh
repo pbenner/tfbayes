@@ -29,9 +29,6 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
-// std::mutex does not work with Mac OS X, so instead
-// we use boost::mutex
-#include <boost/thread.hpp>
 
 #include <tfbayes/fg/hotnews.hh>
 #include <tfbayes/fg/mailbox.hh>
@@ -165,21 +162,15 @@ public:
         }
 
         virtual void send_messages() {
-                // since the whole inbox is locket, it is not
-                // necessary to also lock this method seperately
-                lock_inbox();
                 for (size_t i = 0; i < D; i++) {
                         if (outbox[i]) {
                                 debug(boost::format("factor node %s:%x is sending a message "
                                                     "to variable node %s:%x\n")
                                       % name() % this % _neighbors[i]->name() % _neighbors[i]);
-                                outbox[i]->lock();
                                 outbox[i]->replace(message(i));
                                 outbox[i]->notify();
-                                outbox[i]->unlock();
                         }
                 }
-                unlock_inbox();
         }
         virtual bool link(size_t i, variable_node_i& variable_node) {
                 assert(i < D);
@@ -227,19 +218,6 @@ protected:
         std::vector<variable_node_i*> _neighbors;
         // id of this node
         std::string _name;
-private:
-        // lock every slot in the mailbox, so that we can prepare a
-        // new message without receiving new mail while doing so
-        void lock_inbox() {
-                for (size_t i = 0; i < D; i++) {
-                        _inbox[i].lock();
-                }
-        }
-        void unlock_inbox() {
-                for (size_t i = 0; i < D; i++) {
-                        _inbox[i].unlock();
-                }
-        }
 };
 
 template <typename T>
@@ -271,30 +249,22 @@ public:
         }
 
         virtual void send_messages() {
-                // lock this method to prevent other threads entering
-                // here at the same time
-                mtx.lock();
                 // compute new q-message
                 current_message = message();
                 // check if this message was sent before
                 if (!current_message) {
-                        mtx.unlock();
                         debug(boost::format("variable node %s:%x has no new message\n")
                               % name() % this);
                         return;
                 }
-                // lock all connected nodes
                 debug(boost::format("variable node %s:%x is sending messages\n")
                       % name() % this);
                 for (size_t i = 0; i < outbox.size(); i++) {
-                        outbox[i]->lock();
                         messages[i] = current_message;
                         // the link is already present
                         outbox[i]->replace(messages[i]);
                         outbox[i]->notify();
-                        outbox[i]->unlock();
                 }
-                mtx.unlock();
         }
         virtual mailbox_slot_t<p_message_t>& link(mailbox_slot_t<q_message_t>& slot) {
                 size_t i = _inbox.size();
@@ -326,8 +296,6 @@ protected:
         hotnews_t<typename T::moments_t> current_message;
         // keep a message for each node
         boost::ptr_vector<typename T::moments_t> messages;
-        // lock this node
-        boost::mutex mtx;
         // id of this node
         std::string _name;
 };
@@ -372,12 +340,8 @@ protected:
                 distribution = T();
                 // loop over all slots of the mailbox
                 for (size_t i = 0; i < this->_inbox.size(); i++) {
-                        // lock this slot
-                        this->_inbox[i].lock();
-                        // and get the message
+                        // get the message
                         distribution *= this->_inbox[i]();
-                        // release lock
-                        this->_inbox[i].unlock();
                 }
                 // normalize message
                 distribution.renormalize();

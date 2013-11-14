@@ -10,8 +10,8 @@ from tfbayes.fg import *
 ################################################################################
 
 # link every data point to a single node
-def construct_fg0(data):
-    fg  = factor_graph_t()
+def construct_fg0(data, threads=1):
+    fg  = factor_graph_t(threads)
     # factor graph inside the plate
     fg += normal_fnode_t("f1", 0, 0)
     fg += normal_data_t ("v1")
@@ -35,8 +35,8 @@ def construct_fg0(data):
     return fg
 
 # use a product normal distribution
-def construct_fg1(data):
-    fg  = factor_graph_t()
+def construct_fg1(data, threads=1):
+    fg  = factor_graph_t(threads)
     fg += normal_fnode_t("f1", 0, 0, len(data))
     fg += normal_data_t ("v1")
     fg += normal_fnode_t("f2", 0, 0.01)
@@ -67,14 +67,14 @@ def plot_density(ax, d, x_limits, xlab="", ylab="", n=1001):
 fg = construct_fg1([3.0])
 
 fg()
-fg["v2"].moment(1)
-fg["v3"].moment(1)
+fg["v2"].moments(0)
+fg["v3"].moments(1)
 
 fg = construct_fg0([3.0])
 
 fg()
-fg["v2"].moment(1)
-fg["v3"].moment(1)
+fg["v2"].moments(0)
+fg["v3"].moments(1)
 
 # test 2
 ################################################################################
