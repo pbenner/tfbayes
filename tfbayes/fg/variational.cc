@@ -41,8 +41,8 @@ normal_fnode_t::normal_fnode_t(const std::string& name,
         // once a node is connected to a slot, the respective
         // parameter (represented by the dirac distribution)
         // is replaced
-        _inbox[1].replace(dmean);
-        _inbox[2].replace(dprecision);
+        _inbox[1].replace(new normal_moments_t(dmean));
+        _inbox[2].replace(new  gamma_moments_t(dprecision));
 }
 
 normal_fnode_t::normal_fnode_t(const normal_fnode_t& normal_fnode) :
@@ -54,8 +54,8 @@ normal_fnode_t::normal_fnode_t(const normal_fnode_t& normal_fnode) :
         distribution3(normal_fnode.distribution3),
         dimension    (normal_fnode.dimension) {
         assert(dimension > 0);
-        _inbox[1].replace(dmean);
-        _inbox[2].replace(dprecision);
+        _inbox[1].replace(new normal_moments_t(dmean));
+        _inbox[2].replace(new  gamma_moments_t(dprecision));
 }
 
 normal_fnode_t*
@@ -109,8 +109,8 @@ bool
 normal_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
         switch (i) {
         case 0: return variable_node.type() == typeid(normal_distribution_t);
-        case 1: return variable_node.type() == typeid( normal_distribution_t);
-        case 2: return variable_node.type() == typeid(  gamma_distribution_t);
+        case 1: return variable_node.type() == typeid(normal_distribution_t);
+        case 2: return variable_node.type() == typeid( gamma_distribution_t);
         default: assert(false);
         }
 }
@@ -205,8 +205,8 @@ gamma_fnode_t::gamma_fnode_t(const std::string& name,
         // once a node is connected to a slot, the respective
         // parameter (represented by the dirac distribution)
         // is replaced
-        _inbox[1].replace(dshape);
-        _inbox[2].replace(drate);
+        _inbox[1].replace(new dirac_moments_t(dshape));
+        _inbox[2].replace(new gamma_moments_t(drate));
 }
 
 gamma_fnode_t::gamma_fnode_t(const gamma_fnode_t& gamma_fnode) :
@@ -217,8 +217,8 @@ gamma_fnode_t::gamma_fnode_t(const gamma_fnode_t& gamma_fnode) :
         distribution3(gamma_fnode.distribution3),
         dimension    (gamma_fnode.dimension) {
         assert(dimension > 0);
-        _inbox[1].replace(dshape);
-        _inbox[2].replace(drate);
+        _inbox[1].replace(new dirac_moments_t(dshape));
+        _inbox[2].replace(new gamma_moments_t(drate));
 }
 
 gamma_fnode_t*

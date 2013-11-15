@@ -167,8 +167,8 @@ public:
                                 debug(boost::format("factor node %s:%x is sending a message "
                                                     "to variable node %s:%x\n")
                                       % name() % this % _neighbors[i]->name() % _neighbors[i]);
-                                outbox[i]->replace(message(i));
-                                outbox[i]->notify();
+                                (*outbox[i])() = message(i);
+                                  outbox[i]->notify();
                                 debug("................................................................................"
                                       << std::endl);
                         }
@@ -194,7 +194,7 @@ public:
                 // exchange mailbox slots
                 outbox[i] = variable_node.link(_inbox[i]);
                 // initialize outbox
-                outbox[i]->replace(initial_message(i));
+//                outbox[i] = initial_message(i);
                 // save neighbor
                 _neighbors[i] = &variable_node;
                 // return that the nodes were successfully linked
@@ -233,7 +233,6 @@ public:
                 _inbox         (),
                 outbox         (),
                 current_message(variable_node.current_message),
-                messages       (),
                 _name          (variable_node._name) {
                 debug("copying variable node from " << &variable_node << " to " << this << std::endl);
         }
@@ -262,23 +261,20 @@ public:
                 debug(boost::format("variable node %s:%x is sending messages\n")
                       % name() % this);
                 for (size_t i = 0; i < outbox.size(); i++) {
-                        messages[i] = current_message;
-                        // the link is already present
-                        outbox[i]->replace(messages[i]);
-                        outbox[i]->notify();
+                        (*outbox[i])() = current_message;
+                          outbox[i]->notify();
                 }
         }
         virtual mailbox_slot_t<p_message_t>& link(mailbox_slot_t<q_message_t>& slot) {
                 size_t i = _inbox.size();
                 void (observable_t::*tmp) () const = &variable_node_t::notify;
-                // allocate a new message
-                messages.push_back(new typename T::moments_t());
                 // save slot to the outbox
                 outbox.push_back(slot);
                 // put the current message into the box
-                slot.replace(messages[i]);
+                outbox[i]->replace(new typename T::moments_t());
                 // and prepare a new inbox for this node
                 _inbox++;
+                _inbox[i].replace(new T());
                 _inbox[i].observe(boost::bind(tmp, this));
                 return _inbox[i];
         }
@@ -296,8 +292,6 @@ protected:
         outbox_t<q_message_t> outbox;
         // messages
         hotnews_t<typename T::moments_t> current_message;
-        // keep a message for each node
-        boost::ptr_vector<typename T::moments_t> messages;
         // id of this node
         std::string _name;
 };

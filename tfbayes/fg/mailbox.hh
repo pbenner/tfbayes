@@ -28,22 +28,66 @@
 #include <boost/optional.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 
+#include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/observable.hh>
 
 template <typename T>
-class mailbox_slot_t : public observable_t {
+class mailbox_slot_t : public virtual clonable, public observable_t {
 public:
+        mailbox_slot_t() :
+                observable_t(),
+                _ptr_       (NULL) {
+        }
+        mailbox_slot_t(const mailbox_slot_t& mailbox_slot) :
+                observable_t(mailbox_slot),
+                _ptr_       (mailbox_slot._ptr_->clone()) {
+        }
+        virtual ~mailbox_slot_t() {
+                if (_ptr_ != NULL) {
+                        delete(_ptr_);
+                }
+        }
+
+        mailbox_slot_t* clone() const {
+                return new mailbox_slot_t(*this);
+        }
+        friend void swap(mailbox_slot_t& left, mailbox_slot_t& right) {
+                using std::swap;
+                swap(static_cast<observable_t&>(left),
+                     static_cast<observable_t&>(right));
+                swap(left._ptr_, right._ptr_);
+        }
+        virtual_assignment_operator(mailbox_slot_t)
+
         // access the contents
         const T& operator()() const {
                 return *_ptr_;
         }
+        T& operator()() {
+                return *_ptr_;
+        }
         // replace contents
-        void replace(const T& ptr) {
+        void replace(T& ptr) {
+                if (_ptr_ != NULL) {
+                        delete(_ptr_);
+                }
                 _ptr_ = &ptr;
         }
+        void replace(T* ptr) {
+                if (_ptr_ != NULL) {
+                        delete(_ptr_);
+                }
+                _ptr_ = ptr;
+        }
 protected:
-        const T* _ptr_;
+        T* _ptr_;
 };
+
+template<typename T>
+mailbox_slot_t<T>* new_clone(const mailbox_slot_t<T>& a)
+{
+    return a.clone();
+}
 
 // For variable nodes, it is necessary that the inbox is able to have
 // as many slots as factor nodes are connected to the variable nodes,
