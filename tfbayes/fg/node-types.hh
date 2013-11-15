@@ -144,7 +144,7 @@ public:
                 observable_t (factor_node),
                 // do not copy the mailer and mailbox, since they should be
                 // populated manually to create a new network
-                _inbox       (D),
+                _inbox       (factor_node._inbox),
                 outbox       (D),
                 _neighbors   (D, NULL),
                 _name        (factor_node._name) {
@@ -159,6 +159,7 @@ public:
                      static_cast<observable_t&>(right));
                 swap(left._neighbors, right._neighbors);
                 swap(left._name,      right._name);
+                swap(left._inbox,     right._inbox);
         }
         factor_node_t& operator=(const factor_node_t& factor_node) = delete;
 
@@ -272,8 +273,6 @@ public:
                 void (observable_t::*tmp) () const = &variable_node_t::notify;
                 // save slot to the outbox
                 outbox.push_back(slot);
-                // put the current message into the box
-                outbox[i]->replace(new typename T::moments_t());
                 // and prepare a new inbox for this node
                 _inbox++;
                 _inbox[i].replace(new T());

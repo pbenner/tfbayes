@@ -166,6 +166,7 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
              it != _variable_nodes.end(); it++) {
                 _queue.push_variable(&*it);
         }
+        //_variable_nodes["v1"]->send_messages();
         // sample
         for (size_t i = 0; i < _threads; i++) {
                 threads[i] = new boost::thread(factor_graph_thread_t(_queue), n);

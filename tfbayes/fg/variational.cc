@@ -37,10 +37,12 @@ normal_fnode_t::normal_fnode_t(const std::string& name,
         distribution3(1,0.01),
         dimension    (dim) {
         assert(dimension > 0);
+        assert(precision > 0.0);
         // set the inbox to the given parameters, however,
         // once a node is connected to a slot, the respective
         // parameter (represented by the dirac distribution)
         // is replaced
+        _inbox[0].replace(new normal_moments_t());
         _inbox[1].replace(new normal_moments_t(dmean));
         _inbox[2].replace(new  gamma_moments_t(dprecision));
 }
@@ -54,8 +56,6 @@ normal_fnode_t::normal_fnode_t(const normal_fnode_t& normal_fnode) :
         distribution3(normal_fnode.distribution3),
         dimension    (normal_fnode.dimension) {
         assert(dimension > 0);
-        _inbox[1].replace(new normal_moments_t(dmean));
-        _inbox[2].replace(new  gamma_moments_t(dprecision));
 }
 
 normal_fnode_t*
@@ -205,6 +205,7 @@ gamma_fnode_t::gamma_fnode_t(const std::string& name,
         // once a node is connected to a slot, the respective
         // parameter (represented by the dirac distribution)
         // is replaced
+        _inbox[0].replace(new gamma_moments_t());
         _inbox[1].replace(new dirac_moments_t(dshape));
         _inbox[2].replace(new gamma_moments_t(drate));
 }
@@ -217,8 +218,6 @@ gamma_fnode_t::gamma_fnode_t(const gamma_fnode_t& gamma_fnode) :
         distribution3(gamma_fnode.distribution3),
         dimension    (gamma_fnode.dimension) {
         assert(dimension > 0);
-        _inbox[1].replace(new dirac_moments_t(dshape));
-        _inbox[2].replace(new gamma_moments_t(drate));
 }
 
 gamma_fnode_t*

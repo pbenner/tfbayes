@@ -40,7 +40,10 @@ public:
         }
         mailbox_slot_t(const mailbox_slot_t& mailbox_slot) :
                 observable_t(mailbox_slot),
-                _ptr_       (mailbox_slot._ptr_->clone()) {
+                _ptr_       (NULL) {
+                if (mailbox_slot._ptr_ != NULL) {
+                        _ptr_ = mailbox_slot._ptr_->clone();
+                }
         }
         virtual ~mailbox_slot_t() {
                 if (_ptr_ != NULL) {
