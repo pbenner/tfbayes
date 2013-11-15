@@ -275,6 +275,8 @@ public:
                 messages.push_back(new typename T::moments_t());
                 // save slot to the outbox
                 outbox.push_back(slot);
+                // put the current message into the box
+                slot.replace(messages[i]);
                 // and prepare a new inbox for this node
                 _inbox++;
                 _inbox[i].observe(boost::bind(tmp, this));
