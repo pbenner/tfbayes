@@ -89,7 +89,7 @@ normal_fnode_t::free_energy() const
         result -= d/2.0*std::log(2.0*M_PI);
         cout << "partial result: " << result << endl;
         // log partition
-        result -= 0.5*mu2*tau - 0.5*log_tau;
+        result -= d/2.0*mu2*tau - d/2.0*log_tau;
         cout << "partial result: " << result << endl;
         // parameters * statistics
         result += mu*tau*y;
