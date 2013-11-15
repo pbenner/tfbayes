@@ -151,6 +151,7 @@ BOOST_PYTHON_MODULE(interface)
         // ---------------------------------------------------------------------
         class_<factor_node_i, boost::noncopyable>("factor_node_i", no_init)
                 .def("link", static_cast<bool (factor_node_i::*)(const std::string&, variable_node_i&)>(&factor_node_i::link))
+                .def("free_energy", &factor_node_i::free_energy)
                 ;
         class_<normal_fnode_t, bases<factor_node_i> >("normal_fnode_t", no_init)
                 .def(init<std::string, double, double>())
@@ -163,8 +164,9 @@ BOOST_PYTHON_MODULE(interface)
         // variable nodes
         // ---------------------------------------------------------------------
         class_<variable_node_i, boost::noncopyable>("variable_node_i", no_init)
-                .def("__call__",  &variable_node_i::operator(), return_internal_reference<>())
-                .def("condition", &variable_node_i::condition)
+                .def("__call__",    &variable_node_i::operator(), return_internal_reference<>())
+                .def("condition",   &variable_node_i::condition)
+                .def("free_energy", &variable_node_i::free_energy)
                 ;
         class_<normal_data_t, bases<variable_node_i> >("normal_data_t", no_init)
                 .def(init<std::string>())
