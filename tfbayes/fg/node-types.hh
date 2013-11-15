@@ -160,6 +160,7 @@ public:
                 swap(left._neighbors, right._neighbors);
                 swap(left._name,      right._name);
         }
+        factor_node_t& operator=(const factor_node_t& factor_node) = delete;
 
         virtual void send_messages() {
                 for (size_t i = 0; i < D; i++) {
@@ -194,7 +195,7 @@ public:
                 // exchange mailbox slots
                 outbox[i] = variable_node.link(_inbox[i]);
                 // initialize outbox
-//                outbox[i] = initial_message(i);
+                (*outbox[i])() = initial_message(i);
                 // save neighbor
                 _neighbors[i] = &variable_node;
                 // return that the nodes were successfully linked
@@ -244,6 +245,7 @@ public:
                 swap(left.current_message, right.current_message);
                 swap(left._name,           right._name);
         }
+        variable_node_t& operator=(const variable_node_t& variable_node) = delete;
 
         virtual void send_messages() {
                 // compute new q-message
@@ -320,7 +322,8 @@ public:
                      static_cast<base_t&>(right));
                 swap(left.new_message, right.new_message);
         }
-        derived_assignment_operator(variable_node_i, exponential_vnode_t)
+        virtual_assignment_operator(exponential_vnode_t)
+        derived_assignment_operator(exponential_vnode_t, variable_node_i)
 
         virtual void condition(const std::vector<double>& x) {
         }
@@ -379,7 +382,8 @@ public:
                      static_cast<base_t&>(right));
                 swap(left.new_message, right.new_message);
         }
-        derived_assignment_operator(variable_node_i, data_vnode_t)
+        virtual_assignment_operator(data_vnode_t)
+        derived_assignment_operator(data_vnode_t, variable_node_i)
 
         void condition(const std::vector<double>& x) {
                 debug(boost::format("data_vnode %s:%x is receiving new data")

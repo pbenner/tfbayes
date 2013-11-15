@@ -41,13 +41,7 @@
                 return *this; \
         }
 
-#define derived_assignment_operator(base_t, derived_t)  \
-        virtual derived_t& operator=(const derived_t& type) { \
-                using std::swap; \
-                derived_t tmp(static_cast<const derived_t&>(type)); \
-                swap(*this, tmp); \
-                return *this; \
-        } \
+#define derived_assignment_operator(derived_t, base_t) \
         virtual derived_t& operator=(const base_t& type) { \
                 return operator=(static_cast<const derived_t&>(type));  \
         }

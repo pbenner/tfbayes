@@ -77,7 +77,8 @@ public:
                 using std::swap;
                 swap(left._x, right._x);
         }
-        derived_assignment_operator(distribution_i, dirac_distribution_t)
+        virtual_assignment_operator(dirac_distribution_t)
+        derived_assignment_operator(dirac_distribution_t, distribution_i)
 
         virtual bool operator==(const distribution_i& rhs) const {
                 const dirac_distribution_t& tmp =
@@ -124,6 +125,11 @@ class sufficient_moments_t : public sufficient_moments_i, public boost::array<do
 public:
         typedef boost::array<double, D> base_t;
 
+        sufficient_moments_t() {
+                std::fill(base_t::begin(), base_t::end(),
+                          std::numeric_limits<double>::infinity());
+        }
+
         virtual sufficient_moments_t* clone() const = 0;
 
         virtual sufficient_moments_t& operator=(const sufficient_moments_i& sufficient_moments) = 0;
@@ -167,7 +173,8 @@ public:
                 using std::swap;
                 swap(static_cast<base_t&>(left), static_cast<base_t&>(right));
         }
-        derived_assignment_operator(sufficient_moments_i, dirac_moments_t)
+        virtual_assignment_operator(dirac_moments_t)
+        derived_assignment_operator(dirac_moments_t, sufficient_moments_i)
 
         dirac_moments_t() { }
         dirac_moments_t(const dirac_distribution_t& dirac) {
@@ -191,7 +198,8 @@ public:
                 using std::swap;
                 swap(static_cast<base_t&>(left), static_cast<base_t&>(right));
         }
-        derived_assignment_operator(sufficient_moments_i, normal_moments_t)
+        virtual_assignment_operator(normal_moments_t)
+        derived_assignment_operator(normal_moments_t, sufficient_moments_i)
 
         normal_moments_t() { }
         normal_moments_t(double mean, double precision) {
@@ -227,7 +235,8 @@ public:
                 using std::swap;
                 swap(static_cast<base_t&>(left), static_cast<base_t&>(right));
         }
-        derived_assignment_operator(sufficient_moments_i, gamma_moments_t)
+        virtual_assignment_operator(gamma_moments_t)
+        derived_assignment_operator(gamma_moments_t, sufficient_moments_i)
 
         gamma_moments_t() { }
         gamma_moments_t(double shape, double rate) {
@@ -255,6 +264,8 @@ public:
 class exponential_family_i : public distribution_i {
 public:
         virtual exponential_family_i* clone() const = 0;
+
+        virtual exponential_family_i& operator=(const exponential_family_i& exponential_family) = 0;
 
         virtual double density(const std::vector<double>& x) const = 0;
         virtual double base_measure(const std::vector<double>& x) const = 0;
@@ -446,7 +457,9 @@ public:
                 swap(static_cast<base_t&>(left),
                      static_cast<base_t&>(right));
         }
-        derived_assignment_operator(distribution_i, normal_distribution_t)
+        virtual_assignment_operator(normal_distribution_t)
+        derived_assignment_operator(normal_distribution_t, distribution_i)
+        derived_assignment_operator(normal_distribution_t, exponential_family_i)
 
         virtual double base_measure(const std::vector<double>& x) const {
                 const double d = static_cast<double>(dimension());
@@ -519,7 +532,9 @@ public:
                 swap(static_cast<base_t&>(left),
                      static_cast<base_t&>(right));
         }
-        derived_assignment_operator(distribution_i, gamma_distribution_t)
+        virtual_assignment_operator(gamma_distribution_t)
+        derived_assignment_operator(gamma_distribution_t, distribution_i)
+        derived_assignment_operator(gamma_distribution_t, exponential_family_i)
 
         virtual double base_measure(const std::vector<double>& x) const {
                 return 1.0;

@@ -40,9 +40,7 @@ public:
                 swap(left.hot, right.hot);
         }
 
-        // standard assignment operator
-        default_assignment_operator(hotnews_t)
-
+        hotnews_t& operator=(const hotnews_t& rhs) = delete;
         hotnews_t& operator=(const T& rhs) {
                 // if we receive the same news twice, it starts to
                 // stink a little
