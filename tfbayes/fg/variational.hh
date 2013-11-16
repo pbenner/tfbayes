@@ -40,7 +40,7 @@ public:
         typedef factor_node_t<3> base_t;
 
         normal_fnode_t(const std::string& name,
-                       double mean, double precision, size_t dim = 1);
+                       double mean, double precision, size_t dimension = 1);
         normal_fnode_t(const normal_fnode_t& normal_fnode);
 
         virtual normal_fnode_t* clone() const;
@@ -74,8 +74,8 @@ protected:
         const p_message_t& message3();
 
         // parameters
-        normal_moments_t dmean;
-         gamma_moments_t dprecision;
+        q_message_t dmean;
+        q_message_t dprecision;
 
         // messages
         normal_distribution_t distribution1;
@@ -91,7 +91,7 @@ public:
         typedef factor_node_t<3> base_t;
 
         gamma_fnode_t(const std::string& name,
-                      double shape, double rate, size_t dim = 1);
+                      double shape, double rate, size_t dimension = 1);
         gamma_fnode_t(const gamma_fnode_t& gamma_fnode);
 
         virtual gamma_fnode_t* clone() const;
@@ -123,8 +123,8 @@ protected:
         const p_message_t& message3();
 
         // parameters
-        dirac_moments_t dshape;
-        gamma_moments_t drate;
+        q_message_t dshape;
+        q_message_t drate;
 
         // messages
         gamma_distribution_t distribution1;

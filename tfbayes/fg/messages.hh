@@ -27,6 +27,6 @@
 // a message from a factor node to a variable node
 typedef exponential_family_i p_message_t;
 // a message from a variable node to a factor node
-typedef sufficient_moments_i q_message_t;
+typedef exponential_family_i::vector_t q_message_t;
 
 #endif /* __TFBAYES_FG_MESSAGES_HH__ */

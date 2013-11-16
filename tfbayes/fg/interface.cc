@@ -44,9 +44,9 @@ using namespace boost::python;
 static
 double get_moment(const exponential_family_i& distribution, size_t i)
 {
-        const sufficient_moments_i& moments = distribution.moments();
+        exponential_family_i::vector_t moments = distribution.moments();
 
-        if (i >= moments.n()) {
+        if (i >= moments.size()) {
                 raise_IOError(boost::str(boost::format("Moment `%d' is not available.")
                                          % i));
         }
@@ -125,19 +125,14 @@ BOOST_PYTHON_MODULE(interface)
 {
         // distributions
         // ---------------------------------------------------------------------
-        class_<distribution_i, boost::noncopyable>("distribution_i", no_init)
-                .def("dimension", &distribution_i::dimension)
-                ;
-        class_<dirac_distribution_t, bases<distribution_i> >("dirac_distribution_t", no_init)
-                .def(init<std::vector<double> >())
-                ;
-        class_<exponential_family_i, bases<distribution_i>, boost::noncopyable>("exponential_family_i", no_init)
+        class_<exponential_family_i, boost::noncopyable>("exponential_family_i", no_init)
                 .def("moments",       &get_moment)
                 .def("density",       &exponential_family_i::density)
                 .def("base_measure",  &exponential_family_i::base_measure)
                 .def("log_partition", &exponential_family_i::log_partition)
                 .def("renormalize",   &exponential_family_i::renormalize)
                 .def("entropy",       &exponential_family_i::entropy)
+                .def("dimension",     &exponential_family_i::dimension)
                 .def(self *= self)
                 ;
         class_<normal_distribution_t, bases<exponential_family_i> >("normal_distribution_t")

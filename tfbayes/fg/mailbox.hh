@@ -42,7 +42,8 @@ public:
                 observable_t(mailbox_slot),
                 _ptr_       (NULL) {
                 if (mailbox_slot._ptr_ != NULL) {
-                        _ptr_ = mailbox_slot._ptr_->clone();
+                        using boost::new_clone;
+                        _ptr_ = new_clone(*mailbox_slot._ptr_);
                 }
         }
         virtual ~mailbox_slot_t() {

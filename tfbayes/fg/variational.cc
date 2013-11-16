@@ -27,24 +27,24 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 normal_fnode_t::normal_fnode_t(const std::string& name,
-                               double mean, double precision, size_t dim) :
+                               double mean, double precision, size_t dimension) :
         base_t       (name),
-        dmean        (dirac_distribution_t(mean)),
-        dprecision   (dirac_distribution_t(precision)),
+        dmean        (normal_distribution_t().statistics(mean)),
+        dprecision   ( gamma_distribution_t().statistics(precision)),
         // initial distributions
-        distribution1(0,0.01,dim),
+        distribution1(0,0.01,dimension),
         distribution2(0,0.01),
         distribution3(1,0.01),
-        dimension    (dim) {
+        dimension    (dimension) {
         assert(dimension > 0);
         assert(precision > 0.0);
         // set the inbox to the given parameters, however,
         // once a node is connected to a slot, the respective
         // parameter (represented by the dirac distribution)
         // is replaced
-        _inbox[0].replace(new normal_moments_t());
-        _inbox[1].replace(new normal_moments_t(dmean));
-        _inbox[2].replace(new  gamma_moments_t(dprecision));
+        _inbox[0].replace(new q_message_t(2, 0.0));
+        _inbox[1].replace(new q_message_t(dmean));
+        _inbox[2].replace(new q_message_t(dprecision));
 }
 
 normal_fnode_t::normal_fnode_t(const normal_fnode_t& normal_fnode) :
@@ -134,6 +134,8 @@ normal_fnode_t::message1() {
         double mean      = _inbox[1]()[0];
         double precision = _inbox[2]()[1];
 
+        cout << "f fnode -> dimension: " << dimension << endl;
+
         debug("normal message 1 (normal): " << this->name() << endl);
         distribution1 = normal_distribution_t(mean, precision, dimension);
         debug(endl);
@@ -146,6 +148,8 @@ normal_fnode_t::message2() {
         double d         = static_cast<double>(dimension);
         double mean      = 1.0/d * _inbox[0]()[0];
         double precision =     d * _inbox[2]()[1];
+
+        cout << "f fnode -> dimension: " << dimension << endl;
 
         debug("normal message 2 (normal): " << this->name() << endl);
         distribution2 = normal_distribution_t(mean, precision);
@@ -167,6 +171,8 @@ normal_fnode_t::message3() {
         double rate  = 0.5*(y2 - 2.0*y*mu + d*mu2);
         assert(rate > 0.0);
 
+        cout << "f fnode -> dimension: " << dimension << endl;
+
         debug("normal message 3 (gamma): " << this->name() << endl);
         // replace distribution
         distribution3 = gamma_distribution_t(shape, rate);
@@ -179,22 +185,22 @@ normal_fnode_t::message3() {
 ////////////////////////////////////////////////////////////////////////////////
 
 gamma_fnode_t::gamma_fnode_t(const std::string& name,
-                             double shape, double rate, size_t dim) :
+                             double shape, double rate, size_t dimension) :
         base_t       (name),
-        dshape       (dirac_distribution_t(shape)),
-        drate        (dirac_distribution_t(rate)),
+        dshape       (1, shape),
+        drate        (gamma_distribution_t().statistics(rate)),
         // initial distributions
-        distribution1(1.0,0.001,dim),
+        distribution1(1.0,0.001,dimension),
         distribution3(1.0,0.001),
-        dimension    (dim) {
+        dimension    (dimension) {
         assert(dimension > 0);
         // set the inbox to the given parameters, however,
         // once a node is connected to a slot, the respective
         // parameter (represented by the dirac distribution)
         // is replaced
-        _inbox[0].replace(new gamma_moments_t());
-        _inbox[1].replace(new dirac_moments_t(dshape));
-        _inbox[2].replace(new gamma_moments_t(drate));
+        _inbox[0].replace(new q_message_t(2, 0.0));
+        _inbox[1].replace(new q_message_t(dshape));
+        _inbox[2].replace(new q_message_t(drate));
 }
 
 gamma_fnode_t::gamma_fnode_t(const gamma_fnode_t& gamma_fnode) :
@@ -276,6 +282,8 @@ gamma_fnode_t::message1() {
         double shape = _inbox[1]()[0];
         double rate  = _inbox[2]()[1];
 
+        cout << "g fnode -> dimension: " << dimension << endl;
+
         debug("gamma message 1 (gamma): " << this->name() << endl);
         distribution1 = gamma_distribution_t(shape, rate, dimension);
         debug(endl);
@@ -287,6 +295,8 @@ const p_message_t&
 gamma_fnode_t::message3() {
         double shape =   _inbox[1]()[0] + 1.0;
         double rate  = - _inbox[0]()[1];
+
+        cout << "g fnode -> dimension: " << dimension << endl;
 
         debug("gamma message 1 (gamma): " << this->name() << endl);
         distribution3 = gamma_distribution_t(shape, rate);

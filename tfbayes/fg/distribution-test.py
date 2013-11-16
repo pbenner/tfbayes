@@ -40,7 +40,10 @@ def plot_density_list(d_list, x_from, x_to, labels=None, xlab="x", ylab="density
 # test moments
 ################################################################################
 
-d = dirac_distribution_t([2])
+d = normal_distribution_t(1,2)
+
+d.moments(0)
+d.moments(1)
 
 # test if density is normalized
 ################################################################################

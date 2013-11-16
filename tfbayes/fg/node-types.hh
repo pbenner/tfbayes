@@ -287,12 +287,12 @@ public:
         }
 protected:
         // prepare the q message
-        virtual const typename T::moments_t& message() = 0;
+        virtual const q_message_t& message() = 0;
         // mailboxes
         _inbox_t<p_message_t> _inbox;
         outbox_t<q_message_t> outbox;
         // messages
-        hotnews_t<typename T::moments_t> current_message;
+        hotnews_t<q_message_t> current_message;
         // id of this node
         std::string _name;
 };
@@ -337,7 +337,7 @@ public:
                 return distribution.entropy();
         }
 protected:
-        virtual const typename T::moments_t& message() {
+        virtual const q_message_t& message() {
                 // get a new exponential family
                 distribution = T();
                 // loop over all slots of the mailbox
@@ -355,7 +355,7 @@ protected:
                 return new_message;
         }
         T distribution;
-        typename T::moments_t new_message;
+        q_message_t new_message;
 };
 
 template <typename T>
@@ -387,7 +387,7 @@ public:
         void condition(const std::vector<double>& x) {
                 debug(boost::format("data_vnode %s:%x is receiving new data")
                       % base_t::name() % this << std::endl);
-                new_message = dirac_distribution_t(x);
+                new_message = T().statistics(x);
         }
         virtual const T& operator()() const {
                 return distribution;
@@ -398,13 +398,13 @@ public:
                 return 0.0;
         }
 protected:
-        virtual const typename T::moments_t& message() {
+        virtual const q_message_t& message() {
                 return new_message;
         }
         // this is only a dummy distribution that is not needed
         T distribution;
         // the actual message
-        typename T::moments_t new_message;
+        q_message_t new_message;
 };
 
 #endif /* __TFBAYES_FG_NODE_TYPES_HH__ */
