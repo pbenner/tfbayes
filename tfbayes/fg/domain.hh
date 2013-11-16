@@ -50,7 +50,7 @@ protected:
 inline
 domain_t real_domain(size_t n) {
         return domain_t(boost::icl::interval<double>::open(
-                                -std::numeric_limits<double>::infinity(),
+                               -std::numeric_limits<double>::infinity(),
                                 std::numeric_limits<double>::infinity()),
                         n);
 }
