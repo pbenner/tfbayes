@@ -57,9 +57,10 @@ public:
                 swap(left.distribution3, right.distribution3);
                 swap(left.dimension,     right.dimension);
         }
-        virtual_assignment_operator(normal_fnode_t)
-        derived_assignment_operator(normal_fnode_t, factor_node_i)
+        virtual_assignment_operator(normal_fnode_t);
+        derived_assignment_operator(normal_fnode_t, factor_node_i);
 
+        using base_t::link;
         virtual bool link(const std::string& id, variable_node_i& variable_node);
         virtual double free_energy() const;
 
@@ -107,9 +108,10 @@ public:
                 swap(left.distribution3, right.distribution3);
                 swap(left.dimension,     right.dimension);
         }
-        virtual_assignment_operator(gamma_fnode_t)
-        derived_assignment_operator(gamma_fnode_t, factor_node_i)
+        virtual_assignment_operator(gamma_fnode_t);
+        derived_assignment_operator(gamma_fnode_t, factor_node_i);
 
+        using base_t::link;
         virtual bool link(const std::string& id, variable_node_i& variable_node);
         virtual double free_energy() const;
 
