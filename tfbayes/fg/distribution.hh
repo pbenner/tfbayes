@@ -55,18 +55,18 @@ public:
 
 // the simplest distribution is a dirac measure
 ////////////////////////////////////////////////////////////////////////////////
-class dirac_distribution_t : public distribution_i {
+class dirac_distribution_t : public distribution_i, public std::vector<double> {
 public:
-        typedef std::vector<double> x_t;
+        typedef std::vector<double> base_t;
 
         dirac_distribution_t() :
-                _x(){ }
+                base_t() { }
         // one-dimensional dirac
         dirac_distribution_t(double x) :
-                _x(1, x) { }
+                base_t(1, x) { }
         // n-dimensional dirac
         dirac_distribution_t(const std::vector<double>& x) :
-                _x(x) { }
+                base_t(x) { }
 
         virtual dirac_distribution_t* clone() const {
                 return new dirac_distribution_t(*this);
@@ -75,7 +75,7 @@ public:
         friend void swap(dirac_distribution_t& left,
                          dirac_distribution_t& right) {
                 using std::swap;
-                swap(left._x, right._x);
+                swap(static_cast<base_t&>(left), static_cast<base_t&>(right));
         }
         virtual_assignment_operator(dirac_distribution_t)
         derived_assignment_operator(dirac_distribution_t, distribution_i)
@@ -83,21 +83,17 @@ public:
         virtual bool operator==(const distribution_i& rhs) const {
                 const dirac_distribution_t& tmp =
                         static_cast<const dirac_distribution_t&>(rhs);
-                return std::equal(_x.begin(), _x.end(), tmp._x.begin());
+                return std::equal(base_t::begin(), base_t::end(), tmp.begin());
         }
         virtual bool operator!=(const distribution_i& rhs) const {
                 return !operator==(rhs);
         }
         virtual size_t dimension() const {
-                return _x.size();
+                return base_t::size();
         }
         virtual double operator[](size_t i) const {
-                return _x[i];
+                return base_t::operator[](i);
         }
-
-protected:
-        // location of the dirac measure
-        std::vector<double> _x;
 };
 
 // a class that carries the first moments of the sufficient statistics
@@ -202,10 +198,6 @@ public:
         derived_assignment_operator(normal_moments_t, sufficient_moments_i)
 
         normal_moments_t() { }
-        normal_moments_t(double mean, double precision) {
-                this->operator[](0) = mean;
-                this->operator[](1) = mean*mean + 1.0/(precision*precision);
-        }
         normal_moments_t(const parameters_t& parameters) {
                 const double mean      = -0.5*parameters[0]/parameters[1];
                 const double precision = -2.0*parameters[1];
@@ -239,10 +231,6 @@ public:
         derived_assignment_operator(gamma_moments_t, sufficient_moments_i)
 
         gamma_moments_t() { }
-        gamma_moments_t(double shape, double rate) {
-                this->operator[](0) = shape-1.0;
-                this->operator[](1) = -rate;
-        }
         gamma_moments_t(const parameters_t& parameters) {
                 const double a1 =  parameters[0]+1.0;
                 const double a2 = -parameters[1];
@@ -340,11 +328,12 @@ public:
         }
 
         // pure functions
-        virtual const array_t& statistics(const std::vector<double>& x) const = 0;
-
+        virtual array_t statistics(const std::vector<double>& x) const {
+                return moments_t(dirac_distribution_t(x));
+        }
         // methods
         virtual double density(const std::vector<double>& x) const {
-                const array_t& T = statistics(x);
+                array_t T = statistics(x);
                 // is x in the domain of this function?
                 if (!_domain.element(x)) {
                         return 0.0;
@@ -408,8 +397,6 @@ protected:
         }
         // natural parameters
         array_t _parameters;
-        // sufficient statistics
-        mutable array_t _T;
         // normalization constant
         double _log_partition;
         // domain of the density (compact support)
@@ -465,17 +452,6 @@ public:
                 const double d = static_cast<double>(dimension());
                 const double m = static_cast<double>(n());
                 return std::pow(2.0*M_PI, -d*m/2.0);
-        }
-        virtual const array_t& statistics(const std::vector<double>& x) const {
-                assert(x.size() == dimension());
-                // reset statistics
-                _T[0] = 0.0;
-                _T[1] = 0.0;
-                for (size_t i = 0; i < dimension(); i++) {
-                        _T[0] += x[i];
-                        _T[1] += std::pow(x[i], 2.0);
-                }
-                return _T;
         }
         virtual bool renormalize() {
                 if (!base_t::renormalize()) {
@@ -538,17 +514,6 @@ public:
 
         virtual double base_measure(const std::vector<double>& x) const {
                 return 1.0;
-        }
-        virtual const array_t& statistics(const std::vector<double>& x) const {
-                assert(x.size() == dimension());
-                // reset statistics
-                _T[0] = 0.0;
-                _T[1] = 0.0;
-                for (size_t i = 0; i < dimension(); i++) {
-                        _T[0] += std::log(x[i]);
-                        _T[1] += x[i];
-                }
-                return _T;
         }
         virtual bool renormalize() {
                 if (!base_t::renormalize()) {

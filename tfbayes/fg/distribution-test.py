@@ -41,8 +41,6 @@ def plot_density_list(d_list, x_from, x_to, labels=None, xlab="x", ylab="density
 ################################################################################
 
 d = dirac_distribution_t([2])
-d.moment(1)
-d.moment(2)
 
 # test if density is normalized
 ################################################################################
