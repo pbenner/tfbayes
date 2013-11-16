@@ -510,7 +510,7 @@ public:
                 parameters()[1] = 0.0;
         }
         gamma_distribution_t(double shape, double rate, size_t dim = 1) :
-                base_t(dim, 1.0, positive_domain(1)) {
+                base_t(dim, 1.0, positive_domain(dim)) {
                 assert(shape > 0.0);
                 assert(rate  > 0.0);
                 parameters()[0] =  shape-1.0;
@@ -554,22 +554,22 @@ public:
                 if (!base_t::renormalize()) {
                         return false;
                 }
+                const double d  = static_cast<double>(dimension());
                 const double a1 =  parameters()[0]+1.0;
                 const double a2 = -parameters()[1];
                 debug("-> gamma parameters:" << std::endl);
                 debug("-> shape: " << a1 << std::endl);
                 debug("-> rate : " << a2 << std::endl);
-                _log_partition =  boost::math::lgamma(a1) -
-                        (a1)*std::log(a2);
+                _log_partition =  d*(boost::math::lgamma(a1) - (a1)*std::log(a2));
                 return true;
         }
         virtual double entropy() const {
-                // TODO
                 assert(dimension() == 1);
+                const double d  = static_cast<double>(dimension());
                 const double a1 =  parameters()[0]+1.0;
                 const double a2 = -parameters()[1];
-                return a1 + boost::math::lgamma(a1) - std::log(a2)
-                        + (1.0-a1)*boost::math::digamma(a1);
+                return d*(a1 + boost::math::lgamma(a1) - std::log(a2)
+                          + (1.0-a1)*boost::math::digamma(a1));
         }
 };
 

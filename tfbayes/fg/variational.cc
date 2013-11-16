@@ -86,9 +86,9 @@ normal_fnode_t::free_energy() const
         // log base measure
         result -= d/2.0*std::log(2.0*M_PI);
         // log partition
-        result -= d/2.0*mu2*tau - d/2.0*log_tau;
+        result -= d/2.0*(mu2*tau - log_tau);
         // parameters * statistics
-        result += mu*tau*y;
+        result +=  mu*tau*y;
         result -= 0.5*tau*y2;
 
         debug(boost::format("factor node %s:%x computed free energy: %d\n")
@@ -222,6 +222,7 @@ gamma_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
 double
 gamma_fnode_t::free_energy() const
 {
+        double d       = static_cast<double>(dimension);
         double log_tau = _inbox[0]()[0];
         double tau     = _inbox[0]()[1];
         double shape   = _inbox[1]()[0];
@@ -229,7 +230,7 @@ gamma_fnode_t::free_energy() const
         double result  = 0.0;
 
         // log partition
-        result -= boost::math::lgamma(shape) - shape*std::log(rate);
+        result -= d*(boost::math::lgamma(shape) - shape*std::log(rate));
         // parameters * statistics
         result += (shape-1.0)*log_tau;
         result -= rate*tau;

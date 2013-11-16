@@ -146,6 +146,7 @@ BOOST_PYTHON_MODULE(interface)
                 ;
         class_<gamma_distribution_t, bases<exponential_family_i> >("gamma_distribution_t")
                 .def(init<double, double>())
+                .def(init<double, double, size_t>())
                 ;
         // factor nodes
         // ---------------------------------------------------------------------
