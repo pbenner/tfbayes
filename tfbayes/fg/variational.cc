@@ -134,8 +134,6 @@ normal_fnode_t::message1() {
         double mean      = _inbox[1]()[0];
         double precision = _inbox[2]()[1];
 
-        cout << "f fnode -> dimension: " << dimension << endl;
-
         debug("normal message 1 (normal): " << this->name() << endl);
         distribution1 = normal_distribution_t(mean, precision, dimension);
         debug(endl);
@@ -148,8 +146,6 @@ normal_fnode_t::message2() {
         double d         = static_cast<double>(dimension);
         double mean      = 1.0/d * _inbox[0]()[0];
         double precision =     d * _inbox[2]()[1];
-
-        cout << "f fnode -> dimension: " << dimension << endl;
 
         debug("normal message 2 (normal): " << this->name() << endl);
         distribution2 = normal_distribution_t(mean, precision);
@@ -170,8 +166,6 @@ normal_fnode_t::message3() {
         double shape = d/2.0 + 1.0;
         double rate  = 0.5*(y2 - 2.0*y*mu + d*mu2);
         assert(rate > 0.0);
-
-        cout << "f fnode -> dimension: " << dimension << endl;
 
         debug("normal message 3 (gamma): " << this->name() << endl);
         // replace distribution
@@ -282,8 +276,6 @@ gamma_fnode_t::message1() {
         double shape = _inbox[1]()[0];
         double rate  = _inbox[2]()[1];
 
-        cout << "g fnode -> dimension: " << dimension << endl;
-
         debug("gamma message 1 (gamma): " << this->name() << endl);
         distribution1 = gamma_distribution_t(shape, rate, dimension);
         debug(endl);
@@ -295,8 +287,6 @@ const p_message_t&
 gamma_fnode_t::message3() {
         double shape =   _inbox[1]()[0] + 1.0;
         double rate  = - _inbox[0]()[1];
-
-        cout << "g fnode -> dimension: " << dimension << endl;
 
         debug("gamma message 1 (gamma): " << this->name() << endl);
         distribution3 = gamma_distribution_t(shape, rate);
