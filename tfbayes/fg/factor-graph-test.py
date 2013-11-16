@@ -13,7 +13,7 @@ from tfbayes.fg import *
 def construct_fg0(data, threads=1):
     fg  = factor_graph_t(threads)
     # factor graph inside the plate
-    fg += normal_fnode_t("f1", 0, 0)
+    fg += normal_fnode_t("f1", 0, 1)
     fg += normal_data_t ("v1")
     fg.link("f1", "output",    "v1")
     # replicate this graph n-1 times
@@ -37,7 +37,7 @@ def construct_fg0(data, threads=1):
 # use a product normal distribution
 def construct_fg1(data, threads=1):
     fg  = factor_graph_t(threads)
-    fg += normal_fnode_t("f1", 0, 0, len(data))
+    fg += normal_fnode_t("f1", 0, 1, len(data))
     fg += normal_data_t ("v1")
     fg += normal_fnode_t("f2", 0, 0.01)
     fg += normal_vnode_t("v2")

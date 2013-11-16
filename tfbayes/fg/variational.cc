@@ -83,19 +83,13 @@ normal_fnode_t::free_energy() const
         double tau     = _inbox[2]()[1];
         double result  = 0.0;
 
-        cout << "y : " << y  << endl;
-        cout << "y2: " << y2 << endl;
         // log base measure
         result -= d/2.0*std::log(2.0*M_PI);
-        cout << "partial result: " << result << endl;
         // log partition
         result -= d/2.0*mu2*tau - d/2.0*log_tau;
-        cout << "partial result: " << result << endl;
         // parameters * statistics
         result += mu*tau*y;
-        cout << "partial result: " << result << endl;
         result -= 0.5*tau*y2;
-        cout << "partial result: " << result << endl;
 
         debug(boost::format("factor node %s:%x computed free energy: %d\n")
               % base_t::name() % this % result);
@@ -174,13 +168,6 @@ normal_fnode_t::message3() {
         assert(rate > 0.0);
 
         debug("normal message 3 (gamma): " << this->name() << endl);
-        debug("-> dim  : " << d     << endl);
-        debug("-> y    : " << y     << endl);
-        debug("-> y2   : " << y2    << endl);
-        debug("-> mu   : " << mu    << endl);
-        debug("-> mu2  : " << mu2   << endl);
-        debug("-> shape: " << shape << endl);
-        debug("-> rate : " << rate  << endl);
         // replace distribution
         distribution3 = gamma_distribution_t(shape, rate);
         debug(endl);
@@ -243,6 +230,7 @@ gamma_fnode_t::free_energy() const
 
         // log partition
         result -= boost::math::lgamma(shape) - shape*std::log(rate);
+        // parameters * statistics
         result += (shape-1.0)*log_tau;
         result -= rate*tau;
 
