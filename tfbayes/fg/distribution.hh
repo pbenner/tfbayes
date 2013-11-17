@@ -38,7 +38,7 @@
 
 // what every exponential family should provide
 ////////////////////////////////////////////////////////////////////////////////
-class exponential_family_i {
+class exponential_family_i : public virtual clonable {
 public:
         typedef std::vector<double> vector_t;
 
