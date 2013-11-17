@@ -126,22 +126,22 @@ BOOST_PYTHON_MODULE(interface)
         // distributions
         // ---------------------------------------------------------------------
         class_<exponential_family_i, boost::noncopyable>("exponential_family_i", no_init)
-                .def("moments",       &get_moment)
-                .def("density",       &exponential_family_i::density)
+                .def("__call__",      &exponential_family_i::operator())
                 .def("base_measure",  &exponential_family_i::base_measure)
                 .def("log_partition", &exponential_family_i::log_partition)
                 .def("renormalize",   &exponential_family_i::renormalize)
                 .def("entropy",       &exponential_family_i::entropy)
-                .def("dimension",     &exponential_family_i::dimension)
+                .def("moments",       &get_moment)
                 .def(self *= self)
                 ;
         class_<normal_distribution_t, bases<exponential_family_i> >("normal_distribution_t")
                 .def(init<double, double>())
-                .def(init<double, double, size_t>())
                 ;
         class_<gamma_distribution_t, bases<exponential_family_i> >("gamma_distribution_t")
                 .def(init<double, double>())
-                .def(init<double, double, size_t>())
+                ;
+        class_<dirichlet_distribution_t, bases<exponential_family_i> >("dirichlet_distribution_t")
+                .def(init<std::vector<double> >())
                 ;
         // factor nodes
         // ---------------------------------------------------------------------

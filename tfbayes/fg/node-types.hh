@@ -35,6 +35,7 @@
 #include <tfbayes/fg/messages.hh>
 #include <tfbayes/utility/default-operator.hh>
 #include <tfbayes/utility/debug.hh>
+#include <tfbayes/utility/linalg.hh>
 #include <tfbayes/utility/observable.hh>
 
 // It is possible to combine different message passing algorithms in
@@ -109,7 +110,7 @@ public:
         virtual const std::type_info& type() const = 0;
 
         // condition this node on some data
-        virtual void condition(const std::vector<double>& x) = 0;
+        virtual void condition(const std::matrix<double>& x) = 0;
 
 protected:
         // prepare the q message
@@ -324,7 +325,7 @@ public:
         virtual_assignment_operator(exponential_vnode_t)
         derived_assignment_operator(exponential_vnode_t, variable_node_i)
 
-        virtual void condition(const std::vector<double>& x) {
+        virtual void condition(const std::matrix<double>& x) {
         }
         virtual const T& operator()() const {
                 return distribution;
@@ -358,10 +359,10 @@ protected:
         q_message_t new_message;
 };
 
-template <typename T>
-class data_vnode_t : public variable_node_t<T> {
+template <typename D>
+class data_vnode_t : public variable_node_t<D> {
 public:
-        typedef variable_node_t<T> base_t;
+        typedef variable_node_t<D> base_t;
 
         data_vnode_t(const std::string& name) :
                 base_t(name),
@@ -384,12 +385,21 @@ public:
         virtual_assignment_operator(data_vnode_t)
         derived_assignment_operator(data_vnode_t, variable_node_i)
 
-        void condition(const std::vector<double>& x) {
+        void condition(const std::matrix<double>& x) {
                 debug(boost::format("data_vnode %s:%x is receiving new data")
                       % base_t::name() % this << std::endl);
-                new_message = T().statistics(x);
+                new_message = q_message_t(D().k(), 0.0);
+                for (size_t i = 0; i < x.size(); i++) {
+                        std::vector<double> T = D().statistics(x[i]);
+                        std::cout << "adding " << x[i][0] << std::endl;
+                        for (size_t i = 0; i < new_message.size(); i++) {
+                                new_message[i] += T[i];
+                        }
+                }
+                std::cout << "result: " << new_message[0] << std::endl;
+                std::cout << "result: " << new_message[1] << std::endl;
         }
-        virtual const T& operator()() const {
+        virtual const D& operator()() const {
                 return distribution;
         }
         virtual double free_energy() const {
@@ -402,7 +412,7 @@ protected:
                 return new_message;
         }
         // this is only a dummy distribution that is not needed
-        T distribution;
+        D distribution;
         // the actual message
         q_message_t new_message;
 };

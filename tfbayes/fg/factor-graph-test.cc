@@ -29,7 +29,8 @@ test1()
         factor_set_t fnodes;
         variable_set_t vnodes;
 
-        vector<double> data(1, 1.42);
+        matrix<double> data(1, 1);
+        data[0][0] = 1.42;
 
         fnodes += new normal_fnode_t("f1", 1, 2);
         vnodes += new normal_data_t ("v1");
@@ -57,10 +58,9 @@ test2()
 {
         factor_graph_t fg;
 
-        vector<double> data;
-
-        data.push_back(1.42);
-        data.push_back(1.81);
+        matrix<double> data(2, 1);
+        data[0][0] = 1.42;
+        data[1][0] = 1.81;
 
         fg += normal_fnode_t("f1", 1, 2, 2);
         fg += normal_data_t ("v1");
@@ -90,8 +90,10 @@ test3()
 {
         factor_graph_t fg(10);
 
-        vector<double> data1(1, 1.42);
-        vector<double> data2(1, 1.81);
+        matrix<double> data1(1, 1);
+        data1[0][0] = 1.42;
+        matrix<double> data2(1, 1);
+        data2[0][0] = 1.81;
 
         fg += normal_fnode_t("f1", 1, 2);
         fg += normal_data_t ("v1");

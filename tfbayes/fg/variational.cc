@@ -32,7 +32,7 @@ normal_fnode_t::normal_fnode_t(const std::string& name,
         dmean        (normal_distribution_t().statistics(mean)),
         dprecision   ( gamma_distribution_t().statistics(precision)),
         // initial distributions
-        distribution1(0,0.01,dimension),
+        distribution1(0,0.01),
         distribution2(0,0.01),
         distribution3(1,0.01),
         dimension    (dimension) {
@@ -135,7 +135,7 @@ normal_fnode_t::message1() {
         double precision = _inbox[2]()[1];
 
         debug("normal message 1 (normal): " << this->name() << endl);
-        distribution1 = normal_distribution_t(mean, precision, dimension);
+        distribution1 = normal_distribution_t(mean, precision);
         debug(endl);
 
         return distribution1;
@@ -184,7 +184,7 @@ gamma_fnode_t::gamma_fnode_t(const std::string& name,
         dshape       (1, shape),
         drate        (gamma_distribution_t().statistics(rate)),
         // initial distributions
-        distribution1(1.0,0.001,dimension),
+        distribution1(1.0,0.001),
         distribution3(1.0,0.001),
         dimension    (dimension) {
         assert(dimension > 0);
@@ -277,7 +277,7 @@ gamma_fnode_t::message1() {
         double rate  = _inbox[2]()[1];
 
         debug("gamma message 1 (gamma): " << this->name() << endl);
-        distribution1 = gamma_distribution_t(shape, rate, dimension);
+        distribution1 = gamma_distribution_t(shape, rate);
         debug(endl);
 
         return distribution1;

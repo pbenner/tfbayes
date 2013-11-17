@@ -11,6 +11,7 @@ from tfbayes.fg import *
 
 # link every data point to a single node
 def construct_fg0(data, threads=1):
+    data = map(lambda x: [x], data)
     fg  = factor_graph_t(threads)
     # factor graph inside the plate
     fg += normal_fnode_t("f1", 0, 1)
@@ -36,6 +37,7 @@ def construct_fg0(data, threads=1):
 
 # use a product normal distribution
 def construct_fg1(data, threads=1):
+    data = map(lambda x: [x], data)
     fg  = factor_graph_t(threads)
     fg += normal_fnode_t("f1", 0, 1, len(data))
     fg += normal_data_t ("v1")
@@ -56,12 +58,12 @@ def construct_fg1(data, threads=1):
 
 def plot_density(ax, d, x_limits, xlab="", ylab="", n=1001):
     x = np.linspace(x_limits[0], x_limits[1], num=n)
-    y = map(lambda xp: d.density([xp]), x)
+    y = map(lambda xp: d([xp]), x)
     ax.set_xlabel(xlab)
     ax.set_ylabel(ylab)
     return ax.plot(x,y)
 
-def plot_fg(fg, bound):
+def plot_fg(fg, data, bound):
     # obtain estimates
     e_mu  = fg["v2"].moments(0)
     e_tau = fg["v3"].moments(1)
@@ -109,4 +111,4 @@ data  = np.random.normal(mu, sigma, 1000)
 fg = construct_fg1(data, threads=10)
 bound = fg()
 
-plot_fg(fg, bound)
+plot_fg(fg, data, bound)
