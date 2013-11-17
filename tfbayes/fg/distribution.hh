@@ -69,12 +69,15 @@ inline exponential_family_i* new_clone(const exponential_family_i& a)
 
 // implement what is common to most exponential families
 ////////////////////////////////////////////////////////////////////////////////
-template <size_t D>
 class exponential_family_t : public exponential_family_i {
 public:
         // constructors
-        exponential_family_t(size_t dimension = 1, size_t n = 1.0, const domain_t& domain = real_domain(1))
-                : _parameters   (D, 0.0),
+        // dimension: dimension of the product space
+        // n        : number of times the distribution has been multiplied
+        // k        : number of parameters
+        exponential_family_t(size_t k, size_t dimension = 1, size_t n = 1.0,
+                             const domain_t& domain = real_domain(1))
+                : _parameters   (k, 0.0),
                   _log_partition(0.0),
                   _domain       (domain),
                   _n            (n),
@@ -108,7 +111,7 @@ public:
                 if (dimension() != tmp.dimension()) {
                         return false;
                 }
-                for (size_t i = 0; i < D; i++) {
+                for (size_t i = 0; i < parameters().size(); i++) {
                         if (std::abs(parameters()[i] - tmp.parameters()[i]) > 1.0e-10) {
                                 return false;
                         }
@@ -132,7 +135,7 @@ public:
                 }
                 double tmp = 0.0;
                 // compute dot product
-                for (size_t i = 0; i < D; i++) {
+                for (size_t i = 0; i < parameters().size(); i++) {
                         tmp += parameters()[i]*T[i];
                 }
                 return base_measure(x)*std::exp(tmp - log_partition());
@@ -147,7 +150,7 @@ public:
                 const exponential_family_t& e =
                         static_cast<const exponential_family_t&>(_e);
                 // add parameters
-                for (size_t i = 0; i < D; i++) {
+                for (size_t i = 0; i < parameters().size(); i++) {
                         _parameters[i] += e.parameters()[i];
                 }
                 // add normalization constants
@@ -193,18 +196,18 @@ protected:
 
 // a multivariate normal distribution on a simple product space
 ////////////////////////////////////////////////////////////////////////////////
-class normal_distribution_t : public exponential_family_t<2> {
+class normal_distribution_t : public exponential_family_t {
 public:
-        typedef exponential_family_t<2> base_t;
+        typedef exponential_family_t base_t;
 
         // void object
         normal_distribution_t() :
-                base_t(1, 0.0, real_domain(1)) {
+                base_t(2, 1, 0.0, real_domain(1)) {
                 parameters()[0] = 0.0;
                 parameters()[1] = 0.0;
         }
-        normal_distribution_t(double mean, double precision, size_t dim = 1) :
-                base_t(dim, 1.0, real_domain(dim)) {
+        normal_distribution_t(double mean, double precision, size_t dimension = 1) :
+                base_t(2, dimension, 1.0, real_domain(dimension)) {
                 assert(precision > 0.0);
                 parameters()[0] = mean*precision;
                 parameters()[1] = -0.5*precision;
@@ -271,18 +274,18 @@ public:
 
 // the gamma distribution
 ////////////////////////////////////////////////////////////////////////////////
-class gamma_distribution_t : public exponential_family_t<2> {
+class gamma_distribution_t : public exponential_family_t {
 public:
-        typedef exponential_family_t<2> base_t;
+        typedef exponential_family_t base_t;
 
         // void object
         gamma_distribution_t() :
-                base_t(1, 0.0, positive_domain(1)) {
+                base_t(2, 1, 0.0, positive_domain(1)) {
                 parameters()[0] = 0.0;
                 parameters()[1] = 0.0;
         }
-        gamma_distribution_t(double shape, double rate, size_t dim = 1) :
-                base_t(dim, 1.0, positive_domain(dim)) {
+        gamma_distribution_t(double shape, double rate, size_t dimension = 1) :
+                base_t(2, dimension, 1.0, positive_domain(dimension)) {
                 assert(shape > 0.0);
                 assert(rate  > 0.0);
                 parameters()[0] =  shape-1.0;
