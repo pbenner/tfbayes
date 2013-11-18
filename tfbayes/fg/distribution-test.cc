@@ -39,5 +39,8 @@ main()
         cout << "sufficient moment 1: " << m.moments()[0] << endl
              << "sufficient moment 2: " << m.moments()[1] << endl;
 
+        cout << "density: " << n(std::vector<double>(1, 0.1))
+             << endl;
+
         return 0;
 }

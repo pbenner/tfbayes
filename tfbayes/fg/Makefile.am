@@ -6,6 +6,7 @@ AM_CXXFLAGS = $(CXXFLAGS_NORTTI) -DDEBUG
 noinst_PROGRAMS = distribution-test factor-graph-test
 
 distribution_test_SOURCES = distribution-test.cc
+distribution_test_LDADD   = libtfbayes-fg.la
 factor_graph_test_SOURCES = factor-graph-test.cc
 factor_graph_test_LDADD   = libtfbayes-fg.la
 
@@ -13,6 +14,7 @@ factor_graph_test_LDADD   = libtfbayes-fg.la
 lib_LTLIBRARIES = libtfbayes-fg.la
 libtfbayes_fg_la_SOURCES = \
 	distribution.hh \
+	distribution.cc \
 	factor-graph.cc \
 	factor-graph.hh \
 	hotnews.hh \

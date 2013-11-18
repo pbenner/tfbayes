@@ -28,6 +28,7 @@
 #include <cmath>
 
 #include <boost/array.hpp>
+#include <boost/function.hpp>
 #include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/special_functions/digamma.hpp>
 
@@ -41,6 +42,7 @@
 class exponential_family_i : public virtual clonable {
 public:
         typedef std::vector<double> vector_t;
+        typedef boost::function<vector_t (const vector_t&)> statistics_f;
 
         virtual ~exponential_family_i() { }
 
@@ -53,7 +55,6 @@ public:
         virtual bool renormalize() = 0;
         virtual double entropy() const = 0;
         virtual vector_t moments() const = 0;
-        virtual vector_t statistics(const vector_t& x) const = 0;
         // number of parameters
         virtual size_t k() const = 0;
         // for continuous distributions this is the density function,
@@ -75,15 +76,17 @@ public:
         // constructors
         // n        : number of times the distribution has been multiplied
         // k        : number of parameters
-        exponential_family_t(size_t k, size_t n = 1.0,
+        exponential_family_t(size_t k, statistics_f statistics, size_t n = 1.0,
                              const domain_t& domain = real_domain(1))
                 : _parameters   (k, 0.0),
+                  _statistics   (statistics),
                   _log_partition(0.0),
                   _domain       (domain),
                   _n            (n) {
         }
         exponential_family_t(const exponential_family_t& e)
                 : _parameters   (e._parameters),
+                  _statistics   (e._statistics),
                   _log_partition(e._log_partition),
                   _domain       (e._domain),
                   _n            (e._n)
@@ -96,6 +99,7 @@ public:
                          exponential_family_t& right) {
                 using std::swap;
                 swap(left._parameters,    right._parameters);
+                swap(left._statistics,    right._statistics);
                 swap(left._log_partition, right._log_partition);
                 swap(left._domain,        right._domain);
                 swap(left._n,             right._n);
@@ -117,11 +121,14 @@ public:
 
         // methods
         virtual double operator()(const vector_t& x) const {
-                vector_t T = statistics(x);
                 // is x in the domain of this function?
                 if (!_domain.element(x)) {
                         return 0.0;
                 }
+                vector_t T = _statistics(x);
+                // check dimensionality
+                assert(T.size() == k());
+                // compute density or probability
                 double tmp = 0.0;
                 // compute dot product
                 for (size_t i = 0; i < k(); i++) {
@@ -172,6 +179,8 @@ protected:
         }
         // natural parameters
         vector_t _parameters;
+        // function computing the natural statistics
+        statistics_f _statistics;
         // normalization constant
         double _log_partition;
         // domain of the density (compact support)
@@ -188,12 +197,14 @@ public:
 
         // void object
         normal_distribution_t() :
-                base_t(2, 0.0, real_domain(1)) {
+                base_t(2, static_cast<vector_t (*)(const vector_t&)>(&statistics),
+                       0.0, real_domain(1)) {
                 parameters()[0] = 0.0;
                 parameters()[1] = 0.0;
         }
         normal_distribution_t(double mean, double precision) :
-                base_t(2, 1.0, real_domain(1)) {
+                base_t(2, static_cast<vector_t (*)(const vector_t&)>(&statistics)
+                       , 1.0, real_domain(1)) {
                 assert(precision > 0.0);
                 parameters()[0] = mean*precision;
                 parameters()[1] = -0.5*precision;
@@ -220,15 +231,6 @@ public:
                 const double m = static_cast<double>(n());
                 return std::pow(2.0*M_PI, -m/2.0);
         }
-        virtual vector_t statistics(double x) const {
-                vector_t T(2, 0.0);
-                T[0] += x;
-                T[1] += x*x;
-                return T;
-        }
-        virtual vector_t statistics(const vector_t& x) const {
-                return statistics(x[0]);
-        }
         virtual bool renormalize() {
                 if (!base_t::renormalize()) {
                         return false;
@@ -253,6 +255,8 @@ public:
                 const double tau = -2.0*parameters()[1];
                 return 1.0/2.0*(1.0 + std::log(2.0*M_PI*1.0/tau));
         }
+        static vector_t statistics(double x);
+        static vector_t statistics(const vector_t& x);
 };
 
 // the gamma distribution
@@ -263,12 +267,14 @@ public:
 
         // void object
         gamma_distribution_t() :
-                base_t(2, 0.0, positive_domain(1)) {
+                base_t(2, static_cast<vector_t (*)(const vector_t&)>(&statistics),
+                       0.0, positive_domain(1)) {
                 parameters()[0] = 0.0;
                 parameters()[1] = 0.0;
         }
         gamma_distribution_t(double shape, double rate) :
-                base_t(2, 1.0, positive_domain(1)) {
+                base_t(2, static_cast<vector_t (*)(const vector_t&)>(&statistics),
+                       1.0, positive_domain(1)) {
                 assert(shape > 0.0);
                 assert(rate  > 0.0);
                 parameters()[0] =  shape-1.0;
@@ -294,15 +300,6 @@ public:
 
         virtual double base_measure(const vector_t& x) const {
                 return 1.0;
-        }
-        virtual vector_t statistics(double x) const {
-                vector_t T(2, 0.0);
-                T[0] += std::log(x);
-                T[1] += x;
-                return T;
-        }
-        virtual vector_t statistics(const vector_t& x) const {
-                return statistics(x[0]);
         }
         virtual bool renormalize() {
                 if (!base_t::renormalize()) {
@@ -330,6 +327,8 @@ public:
                 return a1 + boost::math::lgamma(a1) - std::log(a2)
                         + (1.0-a1)*boost::math::digamma(a1);
         }
+        static vector_t statistics(double x);
+        static vector_t statistics(const vector_t& x);
 };
 
 // the dirichlet distribution
@@ -340,11 +339,11 @@ public:
 
         // void object
         dirichlet_distribution_t() :
-                base_t(0, 0.0, positive_domain(1)) {
+                base_t(0, &statistics, 0.0, positive_domain(1)) {
                 std::fill(parameters().begin(), parameters().end(), 0.0);
         }
         dirichlet_distribution_t(vector_t alpha) :
-                base_t(alpha.size(), 1.0, positive_domain(alpha.size())) {
+                base_t(alpha.size(), &statistics, 1.0, positive_domain(alpha.size())) {
                 for (size_t i = 0; i < alpha.size(); i++) {
                         assert(alpha[i] > 0.0);
                         parameters()[i] = alpha[i]-1.0;
@@ -370,14 +369,6 @@ public:
 
         virtual double base_measure(const vector_t& x) const {
                 return 1.0;
-        }
-        virtual vector_t statistics(const vector_t& x) const {
-                assert(x.size() == k());
-                vector_t T(k(), 0.0);
-                for (size_t i = 0; i < k(); i++) {
-                        T[i] = std::log(x[i]);
-                }
-                return T;
         }
         virtual bool renormalize() {
                 if (!base_t::renormalize()) {
@@ -412,6 +403,7 @@ public:
                 }
                 return h;
         }
+        static vector_t statistics(const vector_t& x);
 };
 
 #endif /* __TFBAYES_FG_DISTRIBUTION_HH__ */
