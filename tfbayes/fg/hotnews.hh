@@ -33,6 +33,10 @@ public:
         hotnews_t() :
                 hot(false) {
         }
+        hotnews_t(const T& t) :
+                T(t),
+                hot(false) {
+        }
 
         friend void swap(hotnews_t& left, hotnews_t& right) {
                 using std::swap;

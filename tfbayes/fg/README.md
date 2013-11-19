@@ -60,6 +60,8 @@ Instead of having a product normal distribution it is also possible to construct
 	        fg.variable_node("v1", i).condition([d])
 	    return fg
 
+![alt tag](factor-graph-test-2.png)
+
 ### Example: Distributions
 
 Create two normal distributions with different mean and variance. The two distributions are multiplied and the resulting distribution is shown after renormalization.
