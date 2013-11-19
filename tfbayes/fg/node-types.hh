@@ -195,7 +195,7 @@ public:
                         return false;
                 }
                 // exchange mailbox slots
-                _links[i] = variable_node.link(*this, boost::bind(&factor_node_i::operator(), this, i));
+                _links[i] = variable_node.link(*this, boost::bind(&factor_node_t::operator(), this, i));
                 // save neighbor
                 _neighbors[i] = &variable_node;
                 // return that the nodes were successfully linked
