@@ -31,7 +31,6 @@
 #include <boost/ptr_container/ptr_vector.hpp>
 
 #include <tfbayes/fg/hotnews.hh>
-#include <tfbayes/fg/mailbox.hh>
 #include <tfbayes/fg/messages.hh>
 #include <tfbayes/utility/default-operator.hh>
 #include <tfbayes/utility/debug.hh>
@@ -68,22 +67,24 @@ public:
 
 // a general node in a factor graph must be clonable, observable,
 // and be able to send messages to neighboring nodes
-class fg_node_i : public virtual clonable, public virtual observable_i {
+class fg_node_i : public virtual clonable {
 public:
         virtual ~fg_node_i() { }
 
-        // compute free energy
-        virtual double free_energy() const = 0;
-
         // a node might have an identifier
         virtual const std::string& name() const = 0;
+
+        // compute free energy
+        virtual double free_energy() const = 0;
 };
 
 class   factor_node_i;
 class variable_node_i;
 
-class factor_node_i : public fg_node_i {
+class factor_node_i : public virtual fg_node_i {
 public:
+        typedef std::vector<variable_node_i*> neighbors_t;
+
         virtual ~factor_node_i() { }
 
         virtual factor_node_i* clone() const = 0;
@@ -95,7 +96,10 @@ public:
         virtual bool link(const std::string& id, variable_node_i& variable_node) = 0;
 
         // neighboring variable nodes
-        virtual const std::vector<variable_node_i*>& neighbors() const = 0;
+        virtual const neighbors_t& neighbors() const = 0;
+
+        // notify neighbors
+        virtual void notify(const variable_node_i& variable_node) const = 0;
 
 protected:
         // check conjugacy of connecting nodes
@@ -106,8 +110,10 @@ protected:
         virtual const p_message_t& operator()(size_t i) = 0;
 };
 
-class variable_node_i : public virtual fg_node_i {
+class variable_node_i : public virtual fg_node_i, public virtual observable_i  {
 public:
+        typedef std::vector<factor_node_i*> neighbors_t;
+
         virtual ~variable_node_i() { }
 
         virtual variable_node_i* clone() const = 0;
@@ -119,35 +125,36 @@ public:
 
         virtual const exponential_family_i& distribution() const = 0;
 
+        virtual void update() = 0;
+
         // add some data to the variable node
         virtual void condition(const std::matrix<double>& x) = 0;
 
-        // update node by receiving messages from neighboring factor
-        // nodes
-        virtual void update() = 0;
-
         // link a factor node to this variable node
-        virtual q_link_t link(p_link_t f) = 0;
+        virtual q_link_t link(factor_node_i& factor_node, p_link_t f) = 0;
 
         // get the type of the distribution this node represents
         virtual const std::type_info& type() const = 0;
+
+        // neighboring factor nodes
+        virtual const neighbors_t& neighbors() const = 0;
 };
 
 // tell boost how to clone nodes
 inline factor_node_i* new_clone(const factor_node_i& a)
 {
-    return a.clone();
+        return a.clone();
 }
 inline variable_node_i* new_clone(const variable_node_i& a)
 {
-    return a.clone();
+        return a.clone();
 }
 
 // basic implementations of factor and variable nodes
 ////////////////////////////////////////////////////////////////////////////////
 
 template <size_t D>
-class factor_node_t : public factor_node_i, public observable_t {
+class factor_node_t : public factor_node_i {
 public:
         factor_node_t(const std::string& name = "") :
                 _links       (D),
@@ -157,7 +164,6 @@ public:
         }
         factor_node_t(const factor_node_t& factor_node) :
                 factor_node_i(factor_node),
-                observable_t (factor_node),
                 // do not copy the mailer and mailbox, since they should be
                 // populated manually to create a new network
                 _links       (D),
@@ -170,8 +176,6 @@ public:
 
         friend void swap(factor_node_t& left, factor_node_t& right) {
                 using std::swap;
-                swap(static_cast<observable_t&>(left),
-                     static_cast<observable_t&>(right));
                 swap(left._neighbors, right._neighbors);
                 swap(left._name,      right._name);
                 swap(left._links,     right._links);
@@ -191,19 +195,31 @@ public:
                         return false;
                 }
                 // exchange mailbox slots
-                _links[i] = variable_node.link(boost::bind(&factor_node_i::operator(), this, i));
+                _links[i] = variable_node.link(*this, boost::bind(&factor_node_i::operator(), this, i));
                 // save neighbor
                 _neighbors[i] = &variable_node;
                 // return that the nodes were successfully linked
                 return true;
         }
-        virtual const std::vector<variable_node_i*>& neighbors() const {
-                return _neighbors;
-        }
         virtual const std::string& name() const {
                 return _name;
         }
+        virtual const p_message_t& operator()(size_t i) {
+                return message(i);
+        }
+        virtual void notify(const variable_node_i& variable_node) const {
+                // notify all other neighbors about an update at node i
+                for (size_t i = 0; i < _neighbors.size(); i++) {
+                        if (_neighbors[i] != NULL && _neighbors[i] != &variable_node) {
+                                _neighbors[i]->notify();
+                        }
+                }
+        }
+        virtual const std::vector<variable_node_i*>& neighbors() const {
+                return _neighbors;
+        }
 protected:
+        virtual const p_message_t& message(size_t i) = 0;
         // links to neighboring nodes
         links_t<q_link_t> _links;
         // keep track of neighboring nodes for cloning whole networks
@@ -225,6 +241,7 @@ public:
                 // do not copy any links, since they should be
                 // populated manually to create a new network
                 _links         (),
+                _neighbors     (),
                 _name          (variable_node._name) {
                 debug("copying variable node from " << &variable_node << " to " << this << std::endl);
         }
@@ -233,12 +250,14 @@ public:
                 using std::swap;
                 swap(static_cast<observable_t&>(left),
                      static_cast<observable_t&>(right));
-                swap(left._name,    right._name);
+                swap(left._name,      right._name);
+                swap(left._neighbors, right._neighbors);
         }
         variable_node_t& operator=(const variable_node_t& variable_node) = delete;
 
-        virtual q_link_t link(p_link_t f) {
+        virtual q_link_t link(factor_node_i& factor_node, p_link_t f) {
                 _links.push_back(f);
+                _neighbors.push_back(&factor_node);
                 // return a lambda to the call operator
                 return boost::bind(&variable_node_t::operator(), this);
         }
@@ -248,9 +267,14 @@ public:
         virtual const std::string& name() const {
                 return _name;
         }
+        virtual const std::vector<factor_node_i*>& neighbors() const {
+                return _neighbors;
+        }
 protected:
         // links to neighboring nodes
         links_t<p_link_t> _links;
+        // keep track of neighboring nodes for cloning whole networks
+        std::vector<factor_node_i*> _neighbors;
         // id of this node
         std::string _name;
 };
@@ -314,16 +338,19 @@ public:
                       << (bool)_message << std::endl);
                 debug("--------------------------------------------------------------------------------"
                       << std::endl);
+                if (_message) {
+                        for (size_t i = 0; i < base_t::neighbors().size(); i++) {
+                                base_t::neighbors()[i]->notify(*this);
+                        }
+                }
+        }
+        virtual double free_energy() const {
+                return _distribution.entropy();
         }
         virtual void condition(const std::matrix<double>& x) {
         }
         virtual const T& distribution() const {
                 return _distribution;
-        }
-        virtual double free_energy() const {
-                debug(boost::format("variable node %s:%x computed entropy: %d\n")
-                      % base_t::name() % this % _distribution.entropy());
-                return _distribution.entropy();
         }
 protected:
         // save current distribution to compute the entropy
@@ -365,6 +392,9 @@ public:
         }
         virtual void update() {
         }
+        virtual double free_energy() const {
+                return 0.0;
+        }
         virtual void condition(const std::matrix<double>& x) {
                 debug(boost::format("data_vnode %s:%x is receiving new data")
                       % base_t::name() % this << std::endl);
@@ -384,9 +414,6 @@ public:
         }
         virtual const T& distribution() const {
                 return _distribution;
-        }
-        virtual double free_energy() const {
-                return 0.0;
         }
 protected:
         // some dummy distribution

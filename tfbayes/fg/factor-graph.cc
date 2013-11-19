@@ -22,33 +22,6 @@
 
 #include <factor-graph.hh>
 
-// class that implements threads on factor graphs
-////////////////////////////////////////////////////////////////////////////////
-
-// class factor_graph_thread_t {
-// public:
-//         factor_graph_thread_t(fg_queue_t& queue) :
-//                 _queue(&queue)
-//                 { }
-
-//         void operator()(boost::optional<size_t> n = boost::optional<size_t>()) {
-//                 // pointer to a node
-//                 fg_node_i* job;
-//                 // get jobs from the queue
-//                 while ((job = queue().pop())) {
-//                         // do the actual work
-//                         job->send_messages();
-//                         // update free energy
-//                         queue().save_result(job, job->free_energy());
-//                 }
-//         }
-//         fg_queue_t& queue() {
-//                 return *_queue;
-//         }
-// protected:
-//         fg_queue_t* _queue;
-// };
-
 // the factor graph
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -80,10 +53,7 @@ factor_graph_t::operator+=(const factor_node_i& factor_node)
 factor_graph_t&
 factor_graph_t::operator+=(factor_node_i* factor_node)
 {
-        void (factor_graph_t::*tmp) (factor_node_i*) = &factor_graph_t::add_factor_node;
-
         _factor_nodes += factor_node;
-        factor_node->observe(boost::bind(tmp, this, factor_node));
 
         return *this;
 }
@@ -142,60 +112,35 @@ factor_graph_t::link(const std::string& fname, const std::string& which, const s
 
 vector<double>
 factor_graph_t::operator()(boost::optional<size_t> n) {
+        // a cache for the free energy
+        cache_t free_energy;
+        // and a thread safe vector for the results
+        vector<double> history;
         // limit the number of jobs
         _queue.set_limit(n);
-        // initialize the network by letting all variable nodes send
-        // their messages first
-        {
-                        cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
-                        // compute free energy
-                        double sum = 0.0;
-                        for (variable_set_t::iterator it = _variable_nodes.begin();
-                             it != _variable_nodes.end(); it++) {
-                                sum += it->free_energy();
-                        }
-                        for (factor_set_t::iterator it = _factor_nodes.begin();
-                             it != _factor_nodes.end(); it++) {
-                                sum += it->free_energy();
-                        }
-                        cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
-                        cout << "SUM: " << sum << endl;
-                        _queue.history.push_back(sum);
+        // initialize queue
+        for (factor_set_t::iterator it = _factor_nodes.begin();
+             it != _factor_nodes.end(); it++) {
+                free_energy.update(&*it, it->free_energy());
         }
-        for (size_t i = 0; i < *n; i++) {
-                for (variable_set_t::iterator it = _variable_nodes.begin();
-                     it != _variable_nodes.end(); it++) {
-                        it->update();
-
-                cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
-                // compute free energy
-                double sum = 0.0;
-                for (variable_set_t::iterator it = _variable_nodes.begin();
-                     it != _variable_nodes.end(); it++) {
-                        sum += it->free_energy();
-                }
-                for (factor_set_t::iterator it = _factor_nodes.begin();
-                     it != _factor_nodes.end(); it++) {
-                        sum += it->free_energy();
-                }
-                cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
-                cout << "SUM: " << sum << endl;
-                _queue.history.push_back(sum);
-                }
+        for (variable_set_t::iterator it = _variable_nodes.begin();
+             it != _variable_nodes.end(); it++) {
+                free_energy.update(&*it, it->free_energy());
+                _queue.push(&*it);
         }
-        //_variable_nodes["v1"]->send_messages();
-        // sample
-        // for (size_t i = 0; i < _threads; i++) {
-        //         threads[i] = new boost::thread(factor_graph_thread_t(_queue), n);
-        // }
-        // // join threads
-        // for (size_t i = 0; i < _threads; i++) {
-        //         threads[i]->join();
-        // }
-        // for (size_t i = 0; i < _threads; i++) {
-        //         delete(threads[i]);
-        // }
-        return _queue.history;
+        // iterate network
+        while (variable_node_i* job = _queue.pop()) {
+                // do the actual work
+                job->update();
+                // update free energy
+                free_energy.update(job, job->free_energy());
+                for (variable_node_i::neighbors_t::const_iterator it = job->neighbors().begin();
+                     it != job->neighbors().end(); it++) {
+                        free_energy.update(*it, (*it)->free_energy());
+                }
+                history.push_back(free_energy());
+        }
+        return history;
 }
 
 boost::optional<const exponential_family_i&>
@@ -241,17 +186,10 @@ factor_graph_t::variable_node(const string& name, size_t i)
 }
 
 void
-factor_graph_t::add_factor_node(factor_node_i* factor_node) {
-        debug(boost::format("*** adding factor node %s:%x to the queue ***\n")
-              % factor_node->name() % factor_node);
-        _queue.push_factor(factor_node);
-}
-
-void
 factor_graph_t::add_variable_node(variable_node_i* variable_node) {
         debug(boost::format("*** adding variable node %s:%x to the queue ***\n")
               % variable_node->name() % variable_node);
-        _queue.push_variable(variable_node);
+        _queue.push(variable_node);
 }
 
 void

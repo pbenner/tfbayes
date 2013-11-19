@@ -81,6 +81,8 @@ def plot_fg(fg, data, bound):
     plot_density(ax3, d2, [50, 90], xlab=r'$\tau$')
     ax1.hist(data, 50, normed=1)
     ax4.plot(bound)
+    ax4.set_xlabel("iteration")
+    ax4.set_ylabel("bound")
     #plt.savefig("factor-graph-test-1.png")
     plt.show()
 
@@ -104,11 +106,11 @@ fg["v3"].moments(1)
 
 # generate some data
 mu    = 1
-sigma = 1
-data  = np.random.normal(mu, sigma, 100)
+sigma = 0.1
+data  = np.random.normal(mu, sigma, 1000)
 
 # construct and execute the factor graph
 fg = construct_fg1(data)
-bound = fg(10)
+bound = fg()
 
-plot_fg(fg, data, bound)
+plot_fg(fg, data, bound[1:])

@@ -29,11 +29,11 @@
 
 #include <tfbayes/fg/node-types.hh>
 
-class partial_result_t : std::map<const fg_node_i*, double> {
+class cache_t : std::map<const fg_node_i*, double> {
 public:
         typedef std::map<const fg_node_i*, double> base_t;
 
-        partial_result_t() :
+        cache_t() :
                 sum(0.0) {
         }
         void update(const fg_node_i* node, double new_value) {
@@ -45,6 +45,8 @@ public:
                 mtx.unlock();
         }
         double operator()() const {
+                // save free energy
+                debug(boost::format("summed free energy is: %d\n") % sum);
                 return sum;
         }
 protected:
@@ -52,89 +54,34 @@ protected:
         boost::mutex mtx;
 };
 
-template <typename T>
-class node_queue_t : std::set<T*> {
+class fg_queue_t : std::set<variable_node_i*> {
 public:
-        typedef std::set<T*> base_t;
-
-        using base_t::empty;
-        void push(T* node) {
-                mtx.lock();
-                base_t::insert(node);
-                mtx.unlock();
-        }
-        T* pop() {
-                T* node = NULL;
-                mtx.lock();
-                typename base_t::iterator it = base_t::begin();
-                if (it != base_t::end()) {
-                        node = *it;
-                        base_t::erase(node);
-                }
-                mtx.unlock();
-                return node;
-        }
-private:
-        boost::mutex mtx;
-};
-
-class fg_queue_t {
-public:
-        typedef std::set<fg_node_i*> base_t;
+        typedef std::set<variable_node_i*> base_t;
 
         void set_limit(boost::optional<size_t> n = boost::optional<size_t>()) {
                 limit = n;
         }
-        void push_factor(factor_node_i* node) {
-                mtx.lock();
-                factor_queue.push(node);
-                mtx.unlock();
+        void push(variable_node_i* node) {
+                base_t::insert(node);
         }
-        void push_variable(variable_node_i* node) {
-                mtx.lock();
-                variable_queue_new.push(node);
-                mtx.unlock();
-        }
-        fg_node_i* pop() {
-                mtx.lock();
-                fg_node_i* node = NULL;
-                if (!factor_queue.empty()) {
-                        node = factor_queue.pop();
-                }
-                else
-                if (!variable_queue.empty()) {
-                        if (!limit || *limit != 0) {
-                                node = variable_queue.pop();
+        variable_node_i* pop() {
+                variable_node_i* node = NULL;
+                if (!limit || *limit != 0) {
+                        base_t::iterator it = base_t::begin();
+                        if (it != base_t::end()) {
+                                node = *it;
+                                base_t::erase(node);
                         }
-                        // update limit
-                        if (limit && *limit > 0) {
-                                *limit -= 1;
-                        }
-                        // save free energy
-                        debug(boost::format("summed free energy is: %d\n")
-                              % partial_result());
-                        history.push_back(partial_result());
-                        // 
                 }
-                mtx.unlock();
-
+                // update limit
+                if (limit && *limit > 0) {
+                        *limit -= 1;
+                }
                 return node;
         }
-        void save_result(fg_node_i* job, double result) {
-                partial_result.update(job, result);
-        }
-        // record free energy
-        std::vector<double> history;
-        // partial results
-        partial_result_t partial_result;
 protected:
         // maximum number of jobs to process
         boost::optional<size_t> limit;
-        // the two queues
-        node_queue_t<  factor_node_i> factor_queue;
-        node_queue_t<variable_node_i> variable_queue;
-        node_queue_t<variable_node_i> variable_queue_new;
-        boost::mutex mtx;
 };
 
 #endif /* __TFBAYES_FG_QUEUE_HH__ */

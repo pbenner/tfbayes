@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 AM_CPPFLAGS = -I$(top_srcdir)
-AM_CXXFLAGS = $(CXXFLAGS_NORTTI) -DDEBUG
+AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
 noinst_PROGRAMS = distribution-test factor-graph-test
 
@@ -34,7 +34,7 @@ libtfbayes_fg_la_LDFLAGS += -version-info 0:0:0
 pkgpython_LTLIBRARIES = interface.la
 
 interface_la_CPPFLAGS = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS)
-interface_la_CXXFLAGS = -DDEBUG
+interface_la_CXXFLAGS =
 interface_la_SOURCES  = \
 	interface.cc
 interface_la_LIBADD   = libtfbayes-fg.la

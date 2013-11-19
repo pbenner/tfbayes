@@ -95,7 +95,7 @@ public:
 
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
-        virtual const p_message_t& operator()(size_t i);
+        virtual const p_message_t& message(size_t i);
 
         // message preparation
         const p_message_t& message1();
@@ -145,7 +145,7 @@ public:
 
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
-        virtual const p_message_t& operator()(size_t i);
+        virtual const p_message_t& message(size_t i);
 
         // message preparation
         const p_message_t& message1();
