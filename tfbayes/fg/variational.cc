@@ -150,7 +150,9 @@ normal_fnode_t::message3() {
         // parameters of the gamma distribution
         double shape = d/2.0 + 1.0;
         double rate  = 0.5*(y2 - 2.0*y*mu + d*mu2);
-        assert(rate > 0.0);
+        assert(rate >= 0.0);
+        // in case we have some strange data
+        rate = std::max(1e-20, rate);
 
         debug("normal message 3 (gamma): " << this->name() << endl);
         // replace distribution

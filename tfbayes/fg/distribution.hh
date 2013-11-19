@@ -249,7 +249,7 @@ public:
                 const double mean      = -0.5*parameters()[0]/parameters()[1];
                 const double precision = -2.0*parameters()[1];
                 m[0] = mean;
-                m[1] = mean*mean + 1.0/(precision*precision);
+                m[1] = mean*mean + 1.0/precision;
                 return m;
         }
         virtual double entropy() const {
