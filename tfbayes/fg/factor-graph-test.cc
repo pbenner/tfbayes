@@ -26,45 +26,19 @@ using namespace std;
 void
 test1()
 {
-        factor_set_t fnodes;
-        variable_set_t vnodes;
-
-        matrix<double> data(1, 1);
-        data[0][0] = 1.42;
-
-        fnodes += new normal_fnode_t("f1", 1, 2);
-        vnodes += new normal_data_t ("v1");
-        fnodes += new normal_fnode_t("f2", 2, 2);
-        vnodes += new normal_vnode_t("v2");
-        fnodes += new gamma_fnode_t ("f3", 1, 2);
-        vnodes += new gamma_vnode_t ("v3");
-
-        fnodes["f1"]->link("output",    *vnodes["v1"]);
-        fnodes["f1"]->link("mean",      *vnodes["v2"]);
-        fnodes["f1"]->link("precision", *vnodes["v3"]);
-        fnodes["f2"]->link("output",    *vnodes["v2"]);
-        fnodes["f3"]->link("output",    *vnodes["v3"]);
-
-        vnodes["v1"]->condition(data);
-
-        factor_graph_t fg1(fnodes, vnodes, 1);
-        factor_graph_t fg2(fg1);
-
-        fg1();
-}
-
-void
-test2()
-{
         factor_graph_t fg;
 
         matrix<double> data(2, 1);
         data[0][0] = 1.42;
         data[1][0] = 1.81;
 
+        cout << "test 1" << endl;
         fg += normal_fnode_t("f1", 1, 2, 2);
+        cout << "test 2" << endl;
         fg += normal_data_t ("v1");
+        cout << "test 3" << endl;
         fg += normal_fnode_t("f2", 2, 2);
+        cout << "test 4" << endl;
         fg += normal_vnode_t("v2");
         fg += gamma_fnode_t ("f3", 1, 2);
         fg += gamma_vnode_t ("v3");
@@ -77,18 +51,18 @@ test2()
 
         fg.variable_node("v1")->condition(data);
 
-        factor_graph_t fg2(fg);
+//        factor_graph_t fg2(fg);
 
-        fg();
+        fg(5);
 
         cout << "mean: " << fg.distribution("v2")->moments()[0] << endl
              << "mean: " << fg.distribution("v3")->moments()[0] << endl;
 }
 
 void
-test3()
+test2()
 {
-        factor_graph_t fg(10);
+        factor_graph_t fg;
 
         matrix<double> data1(1, 1);
         data1[0][0] = 1.42;

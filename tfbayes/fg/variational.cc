@@ -29,22 +29,17 @@ using namespace std;
 normal_fnode_t::normal_fnode_t(const std::string& name,
                                double mean, double precision, size_t dimension) :
         base_t       (name),
-        dmean        (normal_distribution_t().statistics(mean)),
-        dprecision   ( gamma_distribution_t().statistics(precision)),
+        dmean        (normal_distribution_t::statistics(mean)),
+        dprecision   ( gamma_distribution_t::statistics(precision)),
         // initial distributions
-        distribution1(0,0.01),
-        distribution2(0,0.01),
-        distribution3(1,0.01),
+        distribution1(),
+        distribution2(),
+        distribution3(),
         dimension    (dimension) {
+        _links[1] = boost::bind(&normal_fnode_t::dmean, this);
+        _links[2] = boost::bind(&normal_fnode_t::dprecision, this);
         assert(dimension > 0);
         assert(precision > 0.0);
-        // set the inbox to the given parameters, however,
-        // once a node is connected to a slot, the respective
-        // parameter (represented by the dirac distribution)
-        // is replaced
-        _inbox[0].replace(new q_message_t(2, 0.0));
-        _inbox[1].replace(new q_message_t(dmean));
-        _inbox[2].replace(new q_message_t(dprecision));
 }
 
 normal_fnode_t::normal_fnode_t(const normal_fnode_t& normal_fnode) :
@@ -56,6 +51,8 @@ normal_fnode_t::normal_fnode_t(const normal_fnode_t& normal_fnode) :
         distribution3(normal_fnode.distribution3),
         dimension    (normal_fnode.dimension) {
         assert(dimension > 0);
+        _links[1] = boost::bind(&normal_fnode_t::dmean, this);
+        _links[2] = boost::bind(&normal_fnode_t::dprecision, this);
 }
 
 normal_fnode_t*
@@ -75,12 +72,12 @@ double
 normal_fnode_t::free_energy() const
 {
         double d       = static_cast<double>(dimension);
-        double y       = _inbox[0]()[0];
-        double y2      = _inbox[0]()[1];
-        double mu      = _inbox[1]()[0];
-        double mu2     = _inbox[1]()[1];
-        double log_tau = _inbox[2]()[0];
-        double tau     = _inbox[2]()[1];
+        double y       = _links[0]()[0];
+        double y2      = _links[0]()[1];
+        double mu      = _links[1]()[0];
+        double mu2     = _links[1]()[1];
+        double log_tau = _links[2]()[0];
+        double tau     = _links[2]()[1];
         double result  = 0.0;
 
         // log base measure
@@ -93,8 +90,6 @@ normal_fnode_t::free_energy() const
 
         debug(boost::format("factor node %s:%x computed free energy: %d\n")
               % base_t::name() % this % result);
-        debug("--------------------------------------------------------------------------------"
-              << std::endl);
 
         return result;
 }
@@ -110,17 +105,7 @@ normal_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
 }
 
 const p_message_t&
-normal_fnode_t::initial_message(size_t i) const {
-        switch (i) {
-        case 0: return distribution1;
-        case 1: return distribution2;
-        case 2: return distribution3;
-        default: assert(false);
-        }
-}
-
-const p_message_t&
-normal_fnode_t::message(size_t i) {
+normal_fnode_t::operator()(size_t i) {
         switch (i) {
         case 0: return message1();
         case 1: return message2();
@@ -131,8 +116,8 @@ normal_fnode_t::message(size_t i) {
 
 const p_message_t&
 normal_fnode_t::message1() {
-        double mean      = _inbox[1]()[0];
-        double precision = _inbox[2]()[1];
+        double mean      = _links[1]()[0];
+        double precision = _links[2]()[1];
 
         debug("normal message 1 (normal): " << this->name() << endl);
         distribution1 = normal_distribution_t(mean, precision);
@@ -144,8 +129,8 @@ normal_fnode_t::message1() {
 const p_message_t&
 normal_fnode_t::message2() {
         double d         = static_cast<double>(dimension);
-        double mean      = 1.0/d * _inbox[0]()[0];
-        double precision =     d * _inbox[2]()[1];
+        double mean      = 1.0/d * _links[0]()[0];
+        double precision =     d * _links[2]()[1];
 
         debug("normal message 2 (normal): " << this->name() << endl);
         distribution2 = normal_distribution_t(mean, precision);
@@ -158,10 +143,10 @@ const p_message_t&
 normal_fnode_t::message3() {
         // moments
         double d   = static_cast<double>(dimension);
-        double y   = _inbox[0]()[0];
-        double y2  = _inbox[0]()[1];
-        double mu  = _inbox[1]()[0];
-        double mu2 = _inbox[1]()[1];
+        double y   = _links[0]()[0];
+        double y2  = _links[0]()[1];
+        double mu  = _links[1]()[0];
+        double mu2 = _links[1]()[1];
         // parameters of the gamma distribution
         double shape = d/2.0 + 1.0;
         double rate  = 0.5*(y2 - 2.0*y*mu + d*mu2);
@@ -182,19 +167,14 @@ gamma_fnode_t::gamma_fnode_t(const std::string& name,
                              double shape, double rate, size_t dimension) :
         base_t       (name),
         dshape       (1, shape),
-        drate        (gamma_distribution_t().statistics(rate)),
+        drate        (gamma_distribution_t::statistics(rate)),
         // initial distributions
-        distribution1(1.0,0.001),
-        distribution3(1.0,0.001),
+        distribution1(),
+        distribution3(),
         dimension    (dimension) {
         assert(dimension > 0);
-        // set the inbox to the given parameters, however,
-        // once a node is connected to a slot, the respective
-        // parameter (represented by the dirac distribution)
-        // is replaced
-        _inbox[0].replace(new q_message_t(2, 0.0));
-        _inbox[1].replace(new q_message_t(dshape));
-        _inbox[2].replace(new q_message_t(drate));
+        _links[1] = boost::bind(&gamma_fnode_t::dshape, this);
+        _links[2] = boost::bind(&gamma_fnode_t::drate,  this);
 }
 
 gamma_fnode_t::gamma_fnode_t(const gamma_fnode_t& gamma_fnode) :
@@ -205,6 +185,8 @@ gamma_fnode_t::gamma_fnode_t(const gamma_fnode_t& gamma_fnode) :
         distribution3(gamma_fnode.distribution3),
         dimension    (gamma_fnode.dimension) {
         assert(dimension > 0);
+        _links[1] = boost::bind(&gamma_fnode_t::dshape, this);
+        _links[2] = boost::bind(&gamma_fnode_t::drate,  this);
 }
 
 gamma_fnode_t*
@@ -223,10 +205,10 @@ double
 gamma_fnode_t::free_energy() const
 {
         double d       = static_cast<double>(dimension);
-        double log_tau = _inbox[0]()[0];
-        double tau     = _inbox[0]()[1];
-        double shape   = _inbox[1]()[0];
-        double rate    = _inbox[2]()[1];
+        double log_tau = _links[0]()[0];
+        double tau     = _links[0]()[1];
+        double shape   = _links[1]()[0];
+        double rate    = _links[2]()[1];
         double result  = 0.0;
 
         // log partition
@@ -237,8 +219,6 @@ gamma_fnode_t::free_energy() const
 
         debug(boost::format("factor node %s:%x computed free energy: %d\n")
               % base_t::name() % this % result);
-        debug("--------------------------------------------------------------------------------"
-              << std::endl);
 
         return result;
 }
@@ -254,16 +234,7 @@ gamma_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
 }
 
 const p_message_t&
-gamma_fnode_t::initial_message(size_t i) const {
-        switch (i) {
-        case 0: return distribution1;
-        case 2: return distribution3;
-        default: assert(false);
-        }
-}
-
-const p_message_t&
-gamma_fnode_t::message(size_t i) {
+gamma_fnode_t::operator()(size_t i) {
         switch (i) {
         case 0: return message1();
         case 2: return message3();
@@ -273,8 +244,8 @@ gamma_fnode_t::message(size_t i) {
 
 const p_message_t&
 gamma_fnode_t::message1() {
-        double shape = _inbox[1]()[0];
-        double rate  = _inbox[2]()[1];
+        double shape = _links[1]()[0];
+        double rate  = _links[2]()[1];
 
         debug("gamma message 1 (gamma): " << this->name() << endl);
         distribution1 = gamma_distribution_t(shape, rate);
@@ -285,8 +256,8 @@ gamma_fnode_t::message1() {
 
 const p_message_t&
 gamma_fnode_t::message3() {
-        double shape =   _inbox[1]()[0] + 1.0;
-        double rate  = - _inbox[0]()[1];
+        double shape =   _links[1]()[0] + 1.0;
+        double rate  = - _links[0]()[1];
 
         debug("gamma message 1 (gamma): " << this->name() << endl);
         distribution3 = gamma_distribution_t(shape, rate);

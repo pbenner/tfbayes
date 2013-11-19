@@ -186,6 +186,7 @@ AS_IF([test "x$enable_native" = "xyes"],
   [AX_CXXFLAGS_GCC_OPTION([-march=native])])
 
 AX_CXXFLAGS_GCC_OPTION([-std=c++11])
+AX_CXXFLAGS_GCC_OPTION([-std=c++0x])
 AX_CXXFLAGS_GCC_OPTION([-Wall])
 AX_CXXFLAGS_GCC_OPTION([-Wwrite-strings])
 AX_CXXFLAGS_GCC_OPTION([-Wstrict-prototypes])

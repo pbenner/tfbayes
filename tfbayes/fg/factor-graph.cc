@@ -25,60 +25,46 @@
 // class that implements threads on factor graphs
 ////////////////////////////////////////////////////////////////////////////////
 
-class factor_graph_thread_t {
-public:
-        factor_graph_thread_t(fg_queue_t& queue) :
-                _queue(&queue)
-                { }
+// class factor_graph_thread_t {
+// public:
+//         factor_graph_thread_t(fg_queue_t& queue) :
+//                 _queue(&queue)
+//                 { }
 
-        void operator()(boost::optional<size_t> n = boost::optional<size_t>()) {
-                // pointer to a node
-                fg_node_i* job;
-                // get jobs from the queue
-                while ((job = queue().pop())) {
-                        // do the actual work
-                        job->send_messages();
-                        // update free energy
-                        queue().save_result(job, job->free_energy());
-                }
-        }
-        fg_queue_t& queue() {
-                return *_queue;
-        }
-protected:
-        fg_queue_t* _queue;
-};
+//         void operator()(boost::optional<size_t> n = boost::optional<size_t>()) {
+//                 // pointer to a node
+//                 fg_node_i* job;
+//                 // get jobs from the queue
+//                 while ((job = queue().pop())) {
+//                         // do the actual work
+//                         job->send_messages();
+//                         // update free energy
+//                         queue().save_result(job, job->free_energy());
+//                 }
+//         }
+//         fg_queue_t& queue() {
+//                 return *_queue;
+//         }
+// protected:
+//         fg_queue_t* _queue;
+// };
 
 // the factor graph
 ////////////////////////////////////////////////////////////////////////////////
 
 using namespace std;
 
-factor_graph_t::factor_graph_t(size_t threads) :
+factor_graph_t::factor_graph_t() :
         _factor_nodes   (),
         _variable_nodes (),
-        _queue          (threads),
-        _threads        (threads)
+        _queue          ()
 {
-}
-
-factor_graph_t::factor_graph_t(const factor_set_t& factor_nodes,
-                               const variable_set_t& variable_nodes,
-                               size_t threads) :
-        _factor_nodes   (),
-        _variable_nodes (),
-        _queue          (threads),
-        _threads        (threads)
-{
-        // copy connectivity before proceeding
-        clone_nodes(factor_nodes, variable_nodes);
 }
 
 factor_graph_t::factor_graph_t(const factor_graph_t& factor_graph) :
         _factor_nodes   (),
         _variable_nodes (),
-        _queue          (factor_graph._threads),
-        _threads        (factor_graph._threads)
+        _queue          ()
 {
         // clone all nodes of the factor graph
         clone_nodes(factor_graph._factor_nodes,
@@ -156,28 +142,59 @@ factor_graph_t::link(const std::string& fname, const std::string& which, const s
 
 vector<double>
 factor_graph_t::operator()(boost::optional<size_t> n) {
-        vector<boost::thread*> threads(_threads);
-
         // limit the number of jobs
         _queue.set_limit(n);
         // initialize the network by letting all variable nodes send
         // their messages first
-        for (variable_set_t::iterator it = _variable_nodes.begin();
-             it != _variable_nodes.end(); it++) {
-                _queue.push_variable(&*it);
+        {
+                        cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
+                        // compute free energy
+                        double sum = 0.0;
+                        for (variable_set_t::iterator it = _variable_nodes.begin();
+                             it != _variable_nodes.end(); it++) {
+                                sum += it->free_energy();
+                        }
+                        for (factor_set_t::iterator it = _factor_nodes.begin();
+                             it != _factor_nodes.end(); it++) {
+                                sum += it->free_energy();
+                        }
+                        cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
+                        cout << "SUM: " << sum << endl;
+                        _queue.history.push_back(sum);
+        }
+        for (size_t i = 0; i < *n; i++) {
+                for (variable_set_t::iterator it = _variable_nodes.begin();
+                     it != _variable_nodes.end(); it++) {
+                        it->update();
+
+                cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
+                // compute free energy
+                double sum = 0.0;
+                for (variable_set_t::iterator it = _variable_nodes.begin();
+                     it != _variable_nodes.end(); it++) {
+                        sum += it->free_energy();
+                }
+                for (factor_set_t::iterator it = _factor_nodes.begin();
+                     it != _factor_nodes.end(); it++) {
+                        sum += it->free_energy();
+                }
+                cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
+                cout << "SUM: " << sum << endl;
+                _queue.history.push_back(sum);
+                }
         }
         //_variable_nodes["v1"]->send_messages();
         // sample
-        for (size_t i = 0; i < _threads; i++) {
-                threads[i] = new boost::thread(factor_graph_thread_t(_queue), n);
-        }
-        // join threads
-        for (size_t i = 0; i < _threads; i++) {
-                threads[i]->join();
-        }
-        for (size_t i = 0; i < _threads; i++) {
-                delete(threads[i]);
-        }
+        // for (size_t i = 0; i < _threads; i++) {
+        //         threads[i] = new boost::thread(factor_graph_thread_t(_queue), n);
+        // }
+        // // join threads
+        // for (size_t i = 0; i < _threads; i++) {
+        //         threads[i]->join();
+        // }
+        // for (size_t i = 0; i < _threads; i++) {
+        //         delete(threads[i]);
+        // }
         return _queue.history;
 }
 
@@ -192,7 +209,7 @@ factor_graph_t::distribution(const string& name, size_t i) const
             it->name() != name) {
                 return boost::optional<const exponential_family_i&>();
         }
-        return (*it)();
+        return it->distribution();
 }
 
 boost::optional<const variable_node_i&>

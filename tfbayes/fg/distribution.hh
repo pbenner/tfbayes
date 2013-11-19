@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <numeric>
 #define _USE_MATH_DEFINES
 #include <cmath>
 

@@ -10,9 +10,9 @@ from tfbayes.fg import *
 ################################################################################
 
 # link every data point to a single node
-def construct_fg0(data, threads=1):
+def construct_fg0(data):
     data = map(lambda x: [x], data)
-    fg  = factor_graph_t(threads)
+    fg  = factor_graph_t()
     # factor graph inside the plate
     fg += normal_fnode_t("f1", 0, 1)
     fg += normal_data_t ("v1")
@@ -36,9 +36,9 @@ def construct_fg0(data, threads=1):
     return fg
 
 # use a product normal distribution
-def construct_fg1(data, threads=1):
+def construct_fg1(data):
     data = map(lambda x: [x], data)
-    fg  = factor_graph_t(threads)
+    fg  = factor_graph_t()
     fg += normal_fnode_t("f1", 0, 1, len(data))
     fg += normal_data_t ("v1")
     fg += normal_fnode_t("f2", 0, 0.01)
@@ -104,11 +104,11 @@ fg["v3"].moments(1)
 
 # generate some data
 mu    = 1
-sigma = 0.1
-data  = np.random.normal(mu, sigma, 1000)
+sigma = 1
+data  = np.random.normal(mu, sigma, 100)
 
 # construct and execute the factor graph
-fg = construct_fg1(data, threads=10)
-bound = fg()
+fg = construct_fg1(data)
+bound = fg(10)
 
 plot_fg(fg, data, bound)

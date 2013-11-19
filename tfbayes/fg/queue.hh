@@ -82,14 +82,6 @@ class fg_queue_t {
 public:
         typedef std::set<fg_node_i*> base_t;
 
-        fg_queue_t(size_t threads) :
-                barrier(threads),
-                // variable nodes should go first
-                which  (false),
-                first1 (false),
-                first2 (false),
-                done   (false) {
-        }
         void set_limit(boost::optional<size_t> n = boost::optional<size_t>()) {
                 limit = n;
         }
@@ -100,80 +92,32 @@ public:
         }
         void push_variable(variable_node_i* node) {
                 mtx.lock();
-                variable_queue.push(node);
+                variable_queue_new.push(node);
                 mtx.unlock();
         }
         fg_node_i* pop() {
+                mtx.lock();
                 fg_node_i* node = NULL;
-                while (node == NULL) {
-                        mtx.lock();
-                        if (which && factor_queue.empty()) {
-                                first1 = true;
-                                mtx.unlock();
-                                // barrier (wait for all other threads to
-                                // arrive here)
-                                barrier.wait();
-                                mtx.lock();
-                                // is this thread the first to exit
-                                // the barrier?
-                                if (first1) {
-                                        first1 = false;
-                                        // check if all jobs are done
-                                        if (variable_queue.empty()) {
-                                                done = true;
-                                        }
-                                        if (limit && *limit == 0) {
-                                                done = true;
-                                        }
-                                        debug("################################################################################"
-                                              << std::endl);
-                                        // switch to other queue
-                                        which = false;
-                                        // save free energy
-                                        debug(boost::format("summed free energy is: %d\n")
-                                              % partial_result());
-                                        history.push_back(partial_result());
-                                }
-                        }
-                        if (!which && variable_queue.empty()) {
-                                first2 = true;
-                                mtx.unlock();
-                                // barrier (wait for all other threads to
-                                // arrive here)
-                                barrier.wait();
-                                mtx.lock();
-                                // is this thread the first to exit
-                                // the barrier?
-                                if (first2) {
-                                        first2 = false;
-                                        // check if all jobs are done
-                                        if (factor_queue.empty()) {
-                                                done = true;
-                                        }
-                                        if (limit && *limit == 0) {
-                                                done = true;
-                                        }
-                                        debug("################################################################################"
-                                              << std::endl);
-                                        // switch to other queue
-                                        which = true;
-                                }
-                        }
-                        if (done) {
-                                mtx.unlock();
-                                return NULL;
-                        }
-                        // get job
-                        node = which
-                                ? static_cast<fg_node_i*>(factor_queue.pop())
-                                : static_cast<fg_node_i*>(variable_queue.pop());
-                        if (node != NULL) {
-                                if (limit && *limit > 0) {
-                                        *limit -= 1;
-                                }
-                        }
-                        mtx.unlock();
+                if (!factor_queue.empty()) {
+                        node = factor_queue.pop();
                 }
+                else
+                if (!variable_queue.empty()) {
+                        if (!limit || *limit != 0) {
+                                node = variable_queue.pop();
+                        }
+                        // update limit
+                        if (limit && *limit > 0) {
+                                *limit -= 1;
+                        }
+                        // save free energy
+                        debug(boost::format("summed free energy is: %d\n")
+                              % partial_result());
+                        history.push_back(partial_result());
+                        // 
+                }
+                mtx.unlock();
+
                 return node;
         }
         void save_result(fg_node_i* job, double result) {
@@ -181,23 +125,15 @@ public:
         }
         // record free energy
         std::vector<double> history;
-protected:
-        // thread barrier
-        boost::barrier barrier;
-        // from which queue to receive jobs
-        bool which;
-        // indicators for whether a thread leaves the barrier first
-        bool first1;
-        bool first2;
-        // indicates whether all jobs have been processed
-        bool done;
-        // maximum number of jobs to process
-        boost::optional<size_t> limit;
         // partial results
         partial_result_t partial_result;
+protected:
+        // maximum number of jobs to process
+        boost::optional<size_t> limit;
         // the two queues
         node_queue_t<  factor_node_i> factor_queue;
         node_queue_t<variable_node_i> variable_queue;
+        node_queue_t<variable_node_i> variable_queue_new;
         boost::mutex mtx;
 };
 

@@ -27,11 +27,40 @@
 
 // variable node specializations
 ////////////////////////////////////////////////////////////////////////////////
-typedef exponential_vnode_t<normal_distribution_t> normal_vnode_t;
-typedef exponential_vnode_t< gamma_distribution_t>  gamma_vnode_t;
+class normal_vnode_t : public exponential_vnode_t<normal_distribution_t> {
+public:
+        typedef exponential_vnode_t<normal_distribution_t> base_t;
 
-typedef data_vnode_t<normal_distribution_t> normal_data_t;
-typedef data_vnode_t< gamma_distribution_t>  gamma_data_t;
+        normal_vnode_t(std::string name)
+                : base_t(normal_distribution_t(0, 0.1), name)
+                { }
+};
+class gamma_vnode_t : public exponential_vnode_t<gamma_distribution_t> {
+public:
+        typedef exponential_vnode_t<gamma_distribution_t> base_t;
+
+        gamma_vnode_t(std::string name)
+                : base_t(gamma_distribution_t(1, 0.1), name)
+                { }
+};
+
+class normal_data_t : public data_vnode_t<normal_distribution_t> {
+public:
+        typedef data_vnode_t<normal_distribution_t> base_t;
+
+        normal_data_t(std::string name)
+                : base_t(2, name)
+                { }
+};
+
+class gamma_data_t : public data_vnode_t<gamma_distribution_t> {
+public:
+        typedef data_vnode_t<gamma_distribution_t> base_t;
+
+        gamma_data_t(std::string name)
+                : base_t(2, name)
+                { }
+};
 
 // factor node specializations
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,8 +95,7 @@ public:
 
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
-        virtual const p_message_t& initial_message(size_t i) const;
-        virtual const p_message_t& message(size_t i);
+        virtual const p_message_t& operator()(size_t i);
 
         // message preparation
         const p_message_t& message1();
@@ -117,8 +145,7 @@ public:
 
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
-        virtual const p_message_t& initial_message(size_t i) const;
-        virtual const p_message_t& message(size_t i);
+        virtual const p_message_t& operator()(size_t i);
 
         // message preparation
         const p_message_t& message1();

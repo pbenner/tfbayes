@@ -54,17 +54,6 @@ double get_moment(const exponential_family_i& distribution, size_t i)
 }
 
 static
-factor_graph_t* construct_factor_graph_1()
-{
-        return new factor_graph_t();
-}
-static
-factor_graph_t* construct_factor_graph_2(size_t threads)
-{
-        return new factor_graph_t(threads);
-}
-
-static
 const exponential_family_i& access_distribution(const factor_graph_t& factor_graph, const std::string& name, size_t i)
 {
         // receive distribution
@@ -170,17 +159,15 @@ BOOST_PYTHON_MODULE(interface)
         class_<gamma_data_t, bases<variable_node_i> >("gamma_data_t", no_init)
                 .def(init<std::string>())
                 ;
-        class_<normal_vnode_t, bases<variable_node_i> >("normal_vnode_t")
+        class_<normal_vnode_t, bases<variable_node_i> >("normal_vnode_t", no_init)
                 .def(init<std::string>())
                 ;
-        class_<gamma_vnode_t, bases<variable_node_i> >("gamma_vnode_t")
+        class_<gamma_vnode_t, bases<variable_node_i> >("gamma_vnode_t", no_init)
                 .def(init<std::string>())
                 ;
         // factor graph
         // ---------------------------------------------------------------------
-        class_<factor_graph_t>("factor_graph_t", no_init)
-                .def("__init__", make_constructor(&construct_factor_graph_1))
-                .def("__init__", make_constructor(&construct_factor_graph_2))
+        class_<factor_graph_t>("factor_graph_t", init<>())
                 .def("__call__", static_cast<std::vector<double> (*)(factor_graph_t&)>(&call_factor_graph))
                 .def("__call__", static_cast<std::vector<double> (*)(factor_graph_t&, size_t)>(&call_factor_graph))
                 .def("__getitem__", &access_distribution_1, return_internal_reference<>())

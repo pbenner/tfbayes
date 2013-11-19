@@ -36,10 +36,7 @@
 
 class factor_graph_t {
 public:
-        factor_graph_t(size_t threads = 1);
-        factor_graph_t(const factor_set_t& factor_nodes,
-                       const variable_set_t& variable_nodes,
-                       size_t threads = 1);
+        factor_graph_t();
         factor_graph_t(const factor_graph_t& factor_graph);
 
         virtual ~factor_graph_t() { }
@@ -53,7 +50,6 @@ public:
                 using std::swap;
                 swap(left._variable_nodes, right._variable_nodes);
                 swap(left._factor_nodes,   right._factor_nodes);
-                swap(left._threads,        right._threads);
         }
         default_assignment_operator(factor_graph_t)
 
@@ -85,8 +81,6 @@ protected:
         variable_set_t _variable_nodes;
         // queue of nodes that need to send messages
         fg_queue_t _queue;
-        // number of threads
-        size_t _threads;
 private:
         // insert nodes without cloning them
         factor_graph_t& operator+=(factor_node_i* factor_node);
