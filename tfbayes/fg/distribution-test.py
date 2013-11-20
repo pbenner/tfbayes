@@ -88,27 +88,3 @@ n0.renormalize()
 
 plot_density_list([n0,n1,n2], -5, 5, ["n0", "n1", "n2"])
 plt.savefig("distribution-test.png")
-
-# distribution on a product space
-################################################################################
-
-d = pnormal_distribution_t(2, 1, 2)
-
-delta = 0.05
-x = np.arange(-1.0, 3.0, delta)
-y = np.arange(-1.0, 3.0, delta)
-
-z = []
-for xp in x:
-    for yp in y:
-        z.append(d.density([xp, yp]))
-
-z = np.array(z)
-z = z.reshape(len(x), len(y))
-
-cmap = cm.get_cmap(name='YlOrBr', lut=None)
-p = plt.imshow(z, cmap=cmap, origin='lower',
-               vmin=z.min(), vmax=z.max(),
-               extent=[x.min(), x.max(), y.min(), y.max()])
-plt.colorbar()
-plt.show()

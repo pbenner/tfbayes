@@ -132,6 +132,9 @@ BOOST_PYTHON_MODULE(interface)
         class_<dirichlet_distribution_t, bases<exponential_family_i> >("dirichlet_distribution_t")
                 .def(init<std::vector<double> >())
                 ;
+        class_<discrete_distribution_t, bases<exponential_family_i> >("discrete_distribution_t")
+                .def(init<std::vector<double> >())
+                ;
         // factor nodes
         // ---------------------------------------------------------------------
         class_<factor_node_i, boost::noncopyable>("factor_node_i", no_init)

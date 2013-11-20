@@ -343,7 +343,7 @@ public:
                 base_t(0, &statistics, 0.0, positive_domain(1)) {
                 std::fill(parameters().begin(), parameters().end(), 0.0);
         }
-        dirichlet_distribution_t(vector_t alpha) :
+        dirichlet_distribution_t(const vector_t& alpha) :
                 base_t(alpha.size(), &statistics, 1.0, positive_domain(alpha.size())) {
                 for (size_t i = 0; i < alpha.size(); i++) {
                         assert(alpha[i] > 0.0);
@@ -403,6 +403,74 @@ public:
                         h -= (alpha-1)*boost::math::digamma(alpha);
                 }
                 return h;
+        }
+        static vector_t statistics(const vector_t& x);
+};
+
+// the discrete distribution
+////////////////////////////////////////////////////////////////////////////////
+class discrete_distribution_t : public exponential_family_t {
+public:
+        typedef exponential_family_t base_t;
+
+        // void object
+        discrete_distribution_t() :
+                base_t(0, &statistics, 0.0, positive_domain(1)) {
+                std::fill(parameters().begin(), parameters().end(), 0.0);
+        }
+        discrete_distribution_t(const vector_t& theta) :
+                base_t(theta.size(), &statistics, 1.0, positive_domain(theta.size())) {
+                for (size_t i = 0; i < theta.size(); i++) {
+                        assert(theta[i] > 0.0);
+                        parameters()[i] = std::log(theta[i]);
+                }
+                renormalize();
+        }
+        discrete_distribution_t(const discrete_distribution_t& discrete_distribution)
+                : base_t(discrete_distribution)
+                { }
+
+        virtual discrete_distribution_t* clone() const {
+                return new discrete_distribution_t(*this);
+        }
+
+        friend void swap(discrete_distribution_t& left,
+                         discrete_distribution_t& right) {
+                using std::swap;
+                swap(static_cast<base_t&>(left),
+                     static_cast<base_t&>(right));
+        }
+        virtual_assignment_operator(discrete_distribution_t)
+        derived_assignment_operator(discrete_distribution_t, exponential_family_i)
+
+        virtual double base_measure(const vector_t& x) const {
+                return 1.0;
+        }
+        virtual bool renormalize() {
+                if (!base_t::renormalize()) {
+                        return false;
+                }
+                double sum = 0.0;
+                debug("-> discrete parameters:" << std::endl);
+                for (size_t i = 0; i < k(); i++) {
+                        debug(boost::format("-> theta[%i]: %d\n") % i % std::exp(parameters()[i]));
+                        sum += std::exp(parameters()[i]);
+                }
+                for (size_t i = 0; i < k(); i++) {
+                        parameters()[i] -= std::log(sum);
+                }
+                _log_partition = 0.0;
+                return true;
+        }
+        virtual vector_t moments() const {
+                vector_t m(k(), 0.0);
+                for (size_t i = 0; i < k(); i++) {
+                        m[i] = std::exp(parameters()[i]);
+                }
+                return m;
+        }
+        virtual double entropy() const {
+                return 0.0;
         }
         static vector_t statistics(const vector_t& x);
 };
