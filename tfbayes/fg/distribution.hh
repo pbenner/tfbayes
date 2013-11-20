@@ -55,6 +55,7 @@ public:
         virtual double log_partition() const = 0;
         virtual bool renormalize() = 0;
         virtual double entropy() const = 0;
+        // these are the moments of the sufficient statistics
         virtual vector_t moments() const = 0;
         // number of parameters
         virtual size_t k() const = 0;
@@ -78,20 +79,23 @@ public:
         // n        : number of times the distribution has been multiplied
         // k        : number of parameters
         exponential_family_t(size_t k, statistics_f statistics, size_t n = 1.0,
-                             const domain_t& domain = real_domain(1))
+                             const domain_i& domain = real_domain(1))
                 : _parameters   (k, 0.0),
                   _statistics   (statistics),
                   _log_partition(0.0),
-                  _domain       (domain),
+                  _domain       (domain.clone()),
                   _n            (n) {
         }
         exponential_family_t(const exponential_family_t& e)
                 : _parameters   (e._parameters),
                   _statistics   (e._statistics),
                   _log_partition(e._log_partition),
-                  _domain       (e._domain),
+                  _domain       (e._domain->clone()),
                   _n            (e._n)
                 { }
+        virtual ~exponential_family_t() {
+                delete(_domain);
+        }
 
         // clone object
         virtual exponential_family_t* clone() const = 0;
@@ -123,7 +127,7 @@ public:
         // methods
         virtual double operator()(const vector_t& x) const {
                 // is x in the domain of this function?
-                if (!_domain.element(x)) {
+                if (!domain().element(x)) {
                         return 0.0;
                 }
                 vector_t T = _statistics(x);
@@ -172,6 +176,9 @@ protected:
         virtual vector_t& parameters() {
                 return _parameters;
         }
+        virtual const domain_i& domain() const {
+                return *_domain;
+        }
         virtual const double& n() const {
                 return _n;
         }
@@ -185,7 +192,7 @@ protected:
         // normalization constant
         double _log_partition;
         // domain of the density (compact support)
-        domain_t _domain;
+        domain_i* _domain;
         // keep track of the number of multiplications
         double _n;
 };
@@ -340,11 +347,11 @@ public:
 
         // void object
         dirichlet_distribution_t() :
-                base_t(0, &statistics, 0.0, positive_domain(1)) {
+                base_t(0, &statistics, 0.0, simplex_t(0)) {
                 std::fill(parameters().begin(), parameters().end(), 0.0);
         }
         dirichlet_distribution_t(const vector_t& alpha) :
-                base_t(alpha.size(), &statistics, 1.0, positive_domain(alpha.size())) {
+                base_t(alpha.size(), &statistics, 1.0, simplex_t(alpha.size())) {
                 for (size_t i = 0; i < alpha.size(); i++) {
                         assert(alpha[i] > 0.0);
                         parameters()[i] = alpha[i]-1.0;
@@ -415,11 +422,11 @@ public:
 
         // void object
         discrete_distribution_t() :
-                base_t(0, &statistics, 0.0, positive_domain(1)) {
+                base_t(0, &statistics, 0.0, discrete_domain_t(1)) {
                 std::fill(parameters().begin(), parameters().end(), 0.0);
         }
         discrete_distribution_t(const vector_t& theta) :
-                base_t(theta.size(), &statistics, 1.0, positive_domain(theta.size())) {
+                base_t(theta.size(), &statistics, 1.0, discrete_domain_t(theta.size())) {
                 for (size_t i = 0; i < theta.size(); i++) {
                         assert(theta[i] > 0.0);
                         parameters()[i] = std::log(theta[i]);

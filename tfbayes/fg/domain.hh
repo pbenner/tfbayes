@@ -22,19 +22,42 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <numeric>
+#include <cmath>
 #include <cstddef>
+
+#include <tfbayes/utility/clonable.hh>
 
 #include <boost/icl/interval_set.hpp>
 
-class domain_t {
+class domain_i : public virtual clonable {
 public:
-        domain_t(const boost::icl::interval<double>::type& interval,
-                 size_t n) :
-                n       (n),
-                interval(interval) {
+        virtual ~domain_i() { }
+
+        virtual domain_i* clone() const = 0;
+
+        virtual bool element(const std::vector<double>& x) const = 0;
+};
+
+class real_domain_t : public domain_i {
+public:
+        real_domain_t(const boost::icl::interval<double>::type& interval, size_t n = 1) :
+                interval(interval),
+                n       (n)
+                { }
+        real_domain_t(const real_domain_t& real_domain) :
+                interval(real_domain.interval),
+                n       (real_domain.n)
+                { }
+
+        virtual real_domain_t* clone() const {
+                return new real_domain_t(*this);
         }
-        bool element(const std::vector<double>& x) const {
-                assert(x.size() == n);
+
+        virtual bool element(const std::vector<double>& x) const {
+                if (x.size() != n) {
+                        return false;
+                }
                 for (size_t i = 0; i < x.size(); i++) {
                         if (!boost::icl::contains(interval, x[i])) {
                                 return false;
@@ -43,23 +66,77 @@ public:
                 return true;
         }
 protected:
-        size_t n;
         boost::icl::interval<double>::type interval;
+        size_t n;
 };
 
 inline
-domain_t real_domain(size_t n) {
-        return domain_t(boost::icl::interval<double>::open(
-                               -std::numeric_limits<double>::infinity(),
-                                std::numeric_limits<double>::infinity()),
-                        n);
+real_domain_t real_domain(size_t n) {
+        return real_domain_t(boost::icl::interval<double>::open(
+                                     -std::numeric_limits<double>::infinity(),
+                                      std::numeric_limits<double>::infinity()), n);
 }
 inline
-domain_t positive_domain(size_t n) {
-        return domain_t(boost::icl::interval<double>::open(
-                                0,
-                                std::numeric_limits<double>::infinity()),
-                        n);
+real_domain_t positive_domain(size_t n) {
+        return real_domain_t(boost::icl::interval<double>::open(
+                                     0,
+                                     std::numeric_limits<double>::infinity()), n);
 }
+
+class discrete_domain_t : public domain_i {
+public:
+        discrete_domain_t(size_t n) :
+                n       (n)
+                { }
+        discrete_domain_t(const discrete_domain_t& discrete_domain) :
+                n       (discrete_domain.n)
+                { }
+
+        virtual discrete_domain_t* clone() const {
+                return new discrete_domain_t(*this);
+        }
+
+        virtual bool element(const std::vector<double>& x) const {
+                double tmp;
+                if (x.size() != n) {
+                        return false;
+                }
+                for (size_t i = 0; i < x.size(); i++) {
+                        if (std::modf(x[i], &tmp) != 0.0) {
+                                return false;
+                        }
+                }
+                return true;
+        }
+protected:
+        size_t n;
+};
+
+class simplex_t : public domain_i {
+public:
+        simplex_t(size_t n) :
+                n(n)
+                { }
+        simplex_t(const simplex_t& simplex) :
+                n(simplex.n)
+                { }
+
+        virtual simplex_t* clone() const {
+                return new simplex_t(*this);
+        }
+
+        virtual bool element(const std::vector<double>& x) const {
+                if (x.size() != n) {
+                        return false;
+                }
+                double sum = std::accumulate(x.begin(), x.end(), 0.0);
+                if (std::abs(sum - 1.0) > 1.0e-10) {
+                        return false;
+                }
+                return true;
+        }
+protected:
+        size_t n;
+};
 
 #endif /* __TFBAYES_FG_DOMAIN_HH__ */

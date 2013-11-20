@@ -66,5 +66,5 @@ dirichlet_distribution_t::statistics(const vector_t& x) {
 
 exponential_family_i::vector_t
 discrete_distribution_t::statistics(const vector_t& x) {
-        return vector_t(x);
+        return x;
 }
