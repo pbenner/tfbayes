@@ -105,7 +105,7 @@ normal_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
 }
 
 const p_message_t&
-normal_fnode_t::message(size_t i) {
+normal_fnode_t::operator()(size_t i) {
         switch (i) {
         case 0: return message1();
         case 1: return message2();
@@ -236,7 +236,7 @@ gamma_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
 }
 
 const p_message_t&
-gamma_fnode_t::message(size_t i) {
+gamma_fnode_t::operator()(size_t i) {
         switch (i) {
         case 0: return message1();
         case 2: return message3();

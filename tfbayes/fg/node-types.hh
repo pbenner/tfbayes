@@ -195,7 +195,7 @@ public:
                         return false;
                 }
                 // exchange mailbox slots
-                _links[i] = variable_node.link(*this, boost::bind(&factor_node_i::operator(), this, i));
+                _links[i] = variable_node.link(*this, boost::bind(&factor_node_t::operator(), this, i));
                 // save neighbor
                 _neighbors[i] = &variable_node;
                 // return that the nodes were successfully linked
@@ -203,9 +203,6 @@ public:
         }
         virtual const std::string& name() const {
                 return _name;
-        }
-        virtual const p_message_t& operator()(size_t i) {
-                return message(i);
         }
         virtual void notify(const variable_node_i& variable_node) const {
                 // notify all other neighbors about an update at node i
@@ -219,7 +216,6 @@ public:
                 return _neighbors;
         }
 protected:
-        virtual const p_message_t& message(size_t i) = 0;
         // links to neighboring nodes
         links_t<q_link_t> _links;
         // keep track of neighboring nodes for cloning whole networks
@@ -291,8 +287,7 @@ public:
                             const std::string& name = "") :
                 base_t       (name), 
                 _distribution(distribution),
-                _message     () {
-                _message = distribution.moments();
+                _message     (distribution.moments()) {
         }
         exponential_vnode_t(const exponential_vnode_t& exponential_vnode) :
                 base_t        (exponential_vnode),
@@ -319,16 +314,14 @@ public:
                 // compute new q-message
                 debug(boost::format("variable node %s:%x is preparing a new message\n")
                       % base_t::name() % this);
-                // get a new exponential family
+                // update distribution
                 _distribution = T();
-                // loop over all slots of the mailbox
                 for (size_t i = 0; i < base_t::_links.size(); i++) {
                         // get the message
                         _distribution *= base_t::_links[i]();
                 }
                 // normalize message
                 _distribution.renormalize();
-                debug(std::endl);
                 // the new message is the moments of the
                 // sufficient statistics
                 _message = _distribution.moments();
@@ -338,11 +331,7 @@ public:
                       << (bool)_message << std::endl);
                 debug("--------------------------------------------------------------------------------"
                       << std::endl);
-                if (_message) {
-                        for (size_t i = 0; i < base_t::neighbors().size(); i++) {
-                                base_t::neighbors()[i]->notify(*this);
-                        }
-                }
+                if (_message) notify_neighbors();
         }
         virtual double free_energy() const {
                 return _distribution.entropy();
@@ -353,6 +342,11 @@ public:
                 return _distribution;
         }
 protected:
+        void notify_neighbors() const {
+                for (size_t i = 0; i < base_t::neighbors().size(); i++) {
+                        base_t::neighbors()[i]->notify(*this);
+                }
+        }
         // save current distribution to compute the entropy
         T _distribution;
         // current message

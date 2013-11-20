@@ -6,6 +6,7 @@
 Construct a factor graph with normal distributed observations, a normal prior for the mean and a gamma prior for the precision parameter.
 
 	def construct_fg1(data):
+	    data = map(lambda x: [x], data)
 	    fg  = factor_graph_t()
 	    fg += normal_fnode_t("f1", 0, 0, len(data))
 	    fg += normal_data_t ("v1")
@@ -37,6 +38,7 @@ Approximated posterior distribution
 Instead of having a product normal distribution it is also possible to construct a variable and factor node for each observation.
 
 	def construct_fg0(data):
+	    data = map(lambda x: [x], data)
 	    fg  = factor_graph_t()
 	    # factor graph inside the plate
 	    fg += normal_fnode_t("f1", 0, 0)
@@ -59,6 +61,8 @@ Instead of having a product normal distribution it is also possible to construct
 	    for i, d in enumerate(data):
 	        fg.variable_node("v1", i).condition([d])
 	    return fg
+
+![alt tag](factor-graph-test-2.png)
 
 ### Example: Distributions
 

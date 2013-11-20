@@ -22,11 +22,31 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <cmath>
+
 #include <tfbayes/fg/distribution.hh>
 
 // a message from a factor node to a variable node
 typedef exponential_family_i p_message_t;
 // a message from a variable node to a factor node
 typedef exponential_family_i::vector_t q_message_t;
+
+inline
+bool operator==(const q_message_t& rhs, const q_message_t& lhs) {
+        if (rhs.size() != lhs.size()) {
+                return false;
+        }
+        for (size_t i = 0; i < rhs.size(); i++) {
+                if (std::abs(rhs[i] - lhs[i]) > 1.0e-10) {
+                        return false;
+                }
+        }
+        return true;
+}
+
+inline
+bool operator!=(const q_message_t& rhs, const q_message_t& lhs) {
+        return !operator==(rhs, lhs);
+}
 
 #endif /* __TFBAYES_FG_MESSAGES_HH__ */
