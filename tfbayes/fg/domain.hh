@@ -41,7 +41,14 @@ public:
 
 class real_domain_t : public domain_i {
 public:
-        real_domain_t(const boost::icl::interval<double>::type& interval, size_t n = 1) :
+        typedef boost::icl::interval<double> interval_t;
+        typedef std::numeric_limits<double> limits_t;
+
+        real_domain_t(size_t n) :
+                interval(interval_t::open(-limits_t::infinity(), limits_t::infinity())),
+                n       (n)
+                { }
+        real_domain_t(size_t n, const interval_t::type& interval) :
                 interval(interval),
                 n       (n)
                 { }
@@ -66,21 +73,16 @@ public:
                 return true;
         }
 protected:
-        boost::icl::interval<double>::type interval;
+        interval_t::type interval;
         size_t n;
 };
 
 inline
-real_domain_t real_domain(size_t n) {
-        return real_domain_t(boost::icl::interval<double>::open(
-                                     -std::numeric_limits<double>::infinity(),
-                                      std::numeric_limits<double>::infinity()), n);
-}
-inline
-real_domain_t positive_domain(size_t n) {
-        return real_domain_t(boost::icl::interval<double>::open(
+real_domain_t positive_domain_t(size_t n) {
+        return real_domain_t(n,
+                             boost::icl::interval<double>::open(
                                      0,
-                                     std::numeric_limits<double>::infinity()), n);
+                                     std::numeric_limits<double>::infinity()));
 }
 
 class discrete_domain_t : public domain_i {

@@ -79,7 +79,7 @@ public:
         // n        : number of times the distribution has been multiplied
         // k        : number of parameters
         exponential_family_t(size_t k, statistics_f statistics, size_t n = 1.0,
-                             const domain_i& domain = real_domain(1))
+                             const domain_i& domain = real_domain_t(1))
                 : _parameters   (k, 0.0),
                   _statistics   (statistics),
                   _log_partition(0.0),
@@ -206,13 +206,13 @@ public:
         // void object
         normal_distribution_t() :
                 base_t(2, static_cast<vector_t (*)(const vector_t&)>(&statistics),
-                       0.0, real_domain(1)) {
+                       0.0, real_domain_t(1)) {
                 parameters()[0] = 0.0;
                 parameters()[1] = 0.0;
         }
         normal_distribution_t(double mean, double precision) :
                 base_t(2, static_cast<vector_t (*)(const vector_t&)>(&statistics)
-                       , 1.0, real_domain(1)) {
+                       , 1.0, real_domain_t(1)) {
                 assert(precision > 0.0);
                 parameters()[0] = mean*precision;
                 parameters()[1] = -0.5*precision;
@@ -276,13 +276,13 @@ public:
         // void object
         gamma_distribution_t() :
                 base_t(2, static_cast<vector_t (*)(const vector_t&)>(&statistics),
-                       0.0, positive_domain(1)) {
+                       0.0, positive_domain_t(1)) {
                 parameters()[0] = 0.0;
                 parameters()[1] = 0.0;
         }
         gamma_distribution_t(double shape, double rate) :
                 base_t(2, static_cast<vector_t (*)(const vector_t&)>(&statistics),
-                       1.0, positive_domain(1)) {
+                       1.0, positive_domain_t(1)) {
                 assert(shape > 0.0);
                 assert(rate  > 0.0);
                 parameters()[0] =  shape-1.0;
