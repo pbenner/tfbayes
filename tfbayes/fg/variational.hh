@@ -163,4 +163,44 @@ protected:
         size_t dimension;
 };
 
+class dirichlet_fnode_t : public factor_node_t<1> {
+public:
+        typedef factor_node_t<1> base_t;
+
+        dirichlet_fnode_t(const std::string& name,
+                          const std::vector<double>& alpha,
+                          size_t dimension = 1);
+        dirichlet_fnode_t(const dirichlet_fnode_t& dirichlet_fnode);
+
+        virtual dirichlet_fnode_t* clone() const;
+
+        friend void swap(dirichlet_fnode_t& left,
+                         dirichlet_fnode_t& right) {
+                using std::swap;
+                swap(static_cast<base_t&>(left),
+                     static_cast<base_t&>(right));
+                swap(left.distribution1, right.distribution1);
+                swap(left.dimension,     right.dimension);
+        }
+        virtual_assignment_operator(dirichlet_fnode_t);
+        derived_assignment_operator(dirichlet_fnode_t, factor_node_i);
+
+        using base_t::link;
+        virtual bool link(const std::string& id, variable_node_i& variable_node);
+        virtual double free_energy() const;
+
+protected:
+        virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
+        virtual const p_message_t& operator()(size_t i);
+
+        // message preparation
+        const p_message_t& message1();
+
+        // messages
+        dirichlet_distribution_t distribution1;
+
+        // dimension of the space this node lives on
+        size_t dimension;
+};
+
 #endif /* __TFBAYES_FG_VARIATIONAL_HH__ */

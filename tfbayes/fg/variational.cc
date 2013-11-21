@@ -267,3 +267,72 @@ gamma_fnode_t::message3() {
 
         return distribution3;
 }
+
+// dirichlet factor node
+////////////////////////////////////////////////////////////////////////////////
+
+dirichlet_fnode_t::dirichlet_fnode_t(const std::string& name,
+                                     const std::vector<double>& alpha,
+                                     size_t dimension) :
+        base_t       (name),
+        // initial distributions
+        distribution1(alpha),
+        dimension    (dimension) {
+        assert(dimension > 0);
+}
+
+dirichlet_fnode_t::dirichlet_fnode_t(const dirichlet_fnode_t& dirichlet_fnode) :
+        base_t       (dirichlet_fnode),
+        distribution1(dirichlet_fnode.distribution1),
+        dimension    (dirichlet_fnode.dimension) {
+        assert(dimension > 0);
+}
+
+dirichlet_fnode_t*
+dirichlet_fnode_t::clone() const {
+        return new dirichlet_fnode_t(*this);
+}
+
+bool
+dirichlet_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
+        if      (id == "output") return base_t::link(0, variable_node);
+        else return false;
+}
+
+double
+dirichlet_fnode_t::free_energy() const
+{
+        double d       = static_cast<double>(dimension);
+        double result  = 0.0;
+
+        // since there is no prior for the dirichlet parameters, it is
+        // not necessary to compute the free energy
+        debug(boost::format("factor node %s:%x computed free energy: %d\n")
+              % base_t::name() % this % result);
+
+        return result;
+}
+
+bool
+dirichlet_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
+        switch (i) {
+        case 0: return variable_node.type() == typeid(dirichlet_distribution_t);
+        default: assert(false);
+        }
+}
+
+const p_message_t&
+dirichlet_fnode_t::operator()(size_t i) {
+        switch (i) {
+        case 0: return message1();
+        default: assert(false);
+        }
+}
+
+const p_message_t&
+dirichlet_fnode_t::message1() {
+        debug("dirichlet message 1 (dirichlet): " << this->name() << endl);
+        debug(endl);
+
+        return distribution1;
+}
