@@ -165,10 +165,11 @@ protected:
 
 class dirichlet_fnode_t : public factor_node_t<1> {
 public:
+        typedef exponential_family_i::vector_t vector_t;
         typedef factor_node_t<1> base_t;
 
         dirichlet_fnode_t(const std::string& name,
-                          const std::vector<double>& alpha,
+                          const vector_t& alpha,
                           size_t dimension = 1);
         dirichlet_fnode_t(const dirichlet_fnode_t& dirichlet_fnode);
 
@@ -179,6 +180,7 @@ public:
                 using std::swap;
                 swap(static_cast<base_t&>(left),
                      static_cast<base_t&>(right));
+                swap(left.dalpha,        right.dalpha);
                 swap(left.distribution1, right.distribution1);
                 swap(left.dimension,     right.dimension);
         }
@@ -192,6 +194,9 @@ public:
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
         virtual const p_message_t& operator()(size_t i);
+
+        // parameters
+        q_message_t dalpha;
 
         // message preparation
         const p_message_t& message1();

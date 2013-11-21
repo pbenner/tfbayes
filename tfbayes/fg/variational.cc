@@ -275,6 +275,7 @@ dirichlet_fnode_t::dirichlet_fnode_t(const std::string& name,
                                      const std::vector<double>& alpha,
                                      size_t dimension) :
         base_t       (name),
+        dalpha       (alpha),
         // initial distributions
         distribution1(alpha),
         dimension    (dimension) {
@@ -283,6 +284,7 @@ dirichlet_fnode_t::dirichlet_fnode_t(const std::string& name,
 
 dirichlet_fnode_t::dirichlet_fnode_t(const dirichlet_fnode_t& dirichlet_fnode) :
         base_t       (dirichlet_fnode),
+        dalpha       (dirichlet_fnode.dalpha),
         distribution1(dirichlet_fnode.distribution1),
         dimension    (dirichlet_fnode.dimension) {
         assert(dimension > 0);
@@ -302,11 +304,21 @@ dirichlet_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
 double
 dirichlet_fnode_t::free_energy() const
 {
-        double d       = static_cast<double>(dimension);
-        double result  = 0.0;
+        vector_t log_theta = _links[0]();
+        assert(log_theta.size() == dalpha.size());
+        double result = 0.0;
 
-        // since there is no prior for the dirichlet parameters, it is
-        // not necessary to compute the free energy
+        // log partition
+        double sum = std::accumulate(dalpha.begin(), dalpha.end(), 0.0);
+        for (size_t i = 0; i < dalpha.size(); i++) {
+                result -= boost::math::lgamma(dalpha[i]);
+        }
+        result += boost::math::lgamma(sum);
+        // statistics & parameters
+        for (size_t i = 0; i < dalpha.size(); i++) {
+                result += (dalpha[i]-1.0)*log_theta[i];
+        }
+
         debug(boost::format("factor node %s:%x computed free energy: %d\n")
               % base_t::name() % this % result);
 
