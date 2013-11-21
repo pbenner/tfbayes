@@ -185,8 +185,12 @@ AS_IF([test "x$enable_profile_use" = "xyes"],
 AS_IF([test "x$enable_native" = "xyes"],
   [AX_CXXFLAGS_GCC_OPTION([-march=native])])
 
-AX_CXXFLAGS_GCC_OPTION([-std=c++11])
-AX_CXXFLAGS_GCC_OPTION([-std=c++0x])
+AX_CXX_COMPILE_STDCXX_0X
+if test "$ax_cv_cxx_compile_cxx0x_native" = no &&
+   test "$ax_cv_cxx_compile_cxx0x_cxx" = yes; then
+   CXXFLAGS="$CXXFLAGS -std=gnu++0x"
+fi
+
 AX_CXXFLAGS_GCC_OPTION([-Wall])
 AX_CXXFLAGS_GCC_OPTION([-Wwrite-strings])
 AX_CXXFLAGS_GCC_OPTION([-Wstrict-prototypes])

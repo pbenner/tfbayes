@@ -44,7 +44,9 @@ public:
                 swap(left.hot, right.hot);
         }
 
+#ifdef HAVE_STDCXX_0X
         hotnews_t& operator=(const hotnews_t& rhs) = delete;
+#endif /* HAVE_STDCXX_0X */
         hotnews_t& operator=(const T& rhs) {
                 // if we receive the same news twice, it starts to
                 // stink a little

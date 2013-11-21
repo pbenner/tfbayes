@@ -180,7 +180,9 @@ public:
                 swap(left._name,      right._name);
                 swap(left._links,     right._links);
         }
+#ifdef HAVE_STDCXX_0X
         factor_node_t& operator=(const factor_node_t& factor_node) = delete;
+#endif /* HAVE_STDCXX_0X */
 
         virtual bool link(size_t i, variable_node_i& variable_node) {
                 assert(i < D);
@@ -249,7 +251,9 @@ public:
                 swap(left._name,      right._name);
                 swap(left._neighbors, right._neighbors);
         }
+#ifdef HAVE_STDCXX_0X
         variable_node_t& operator=(const variable_node_t& variable_node) = delete;
+#endif /* HAVE_STDCXX_0X */
 
         virtual q_link_t link(factor_node_i& factor_node, p_link_t f) {
                 _links.push_back(f);
