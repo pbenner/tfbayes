@@ -414,18 +414,18 @@ public:
         static vector_t statistics(const vector_t& x);
 };
 
-// the discrete distribution
+// the categorical distribution
 ////////////////////////////////////////////////////////////////////////////////
-class discrete_distribution_t : public exponential_family_t {
+class categorical_distribution_t : public exponential_family_t {
 public:
         typedef exponential_family_t base_t;
 
         // void object
-        discrete_distribution_t() :
+        categorical_distribution_t() :
                 base_t(0, &statistics, 0.0, discrete_domain_t(1)) {
                 std::fill(parameters().begin(), parameters().end(), 0.0);
         }
-        discrete_distribution_t(const vector_t& theta) :
+        categorical_distribution_t(const vector_t& theta) :
                 base_t(theta.size(), &statistics, 1.0, discrete_domain_t(theta.size())) {
                 for (size_t i = 0; i < theta.size(); i++) {
                         assert(theta[i] > 0.0);
@@ -433,22 +433,22 @@ public:
                 }
                 renormalize();
         }
-        discrete_distribution_t(const discrete_distribution_t& discrete_distribution)
-                : base_t(discrete_distribution)
+        categorical_distribution_t(const categorical_distribution_t& categorical_distribution)
+                : base_t(categorical_distribution)
                 { }
 
-        virtual discrete_distribution_t* clone() const {
-                return new discrete_distribution_t(*this);
+        virtual categorical_distribution_t* clone() const {
+                return new categorical_distribution_t(*this);
         }
 
-        friend void swap(discrete_distribution_t& left,
-                         discrete_distribution_t& right) {
+        friend void swap(categorical_distribution_t& left,
+                         categorical_distribution_t& right) {
                 using std::swap;
                 swap(static_cast<base_t&>(left),
                      static_cast<base_t&>(right));
         }
-        virtual_assignment_operator(discrete_distribution_t)
-        derived_assignment_operator(discrete_distribution_t, exponential_family_i)
+        virtual_assignment_operator(categorical_distribution_t)
+        derived_assignment_operator(categorical_distribution_t, exponential_family_i)
 
         virtual double base_measure(const vector_t& x) const {
                 return 1.0;
@@ -458,7 +458,7 @@ public:
                         return false;
                 }
                 double sum = 0.0;
-                debug("-> discrete parameters:" << std::endl);
+                debug("-> categorical parameters:" << std::endl);
                 for (size_t i = 0; i < k(); i++) {
                         debug(boost::format("-> theta[%i]: %d\n") % i % std::exp(parameters()[i]));
                         sum += std::exp(parameters()[i]);
@@ -477,7 +477,11 @@ public:
                 return m;
         }
         virtual double entropy() const {
-                return 0.0;
+                double h = 0.0;
+                for (size_t i = 0; i < k(); i++) {
+                        h -= std::exp(parameters()[i])*parameters()[i];
+                }
+                return h;
         }
         static vector_t statistics(const vector_t& x);
 };
