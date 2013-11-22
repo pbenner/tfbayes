@@ -22,7 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <algorithm>
+#include <algorithm>    // std::transform
+#include <functional>   // std::plus
 #include <limits>
 #include <numeric>
 #define _USE_MATH_DEFINES
@@ -37,6 +38,40 @@
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/default-operator.hh>
 #include <tfbayes/utility/debug.hh>
+
+// data type for saving natural statistics
+////////////////////////////////////////////////////////////////////////////////
+
+class statistics_t : public std::vector<double> {
+public:
+        typedef std::vector<double> base_t;
+
+        statistics_t() :
+                base_t(),
+                n     (0)
+                { }
+        statistics_t(size_t k) :
+                base_t(k, 0.0),
+                n     (0)
+                { }
+        statistics_t(const std::vector<double>& v) :
+                base_t(v),
+                n     (1)
+                { }
+        statistics_t& operator+=(const statistics_t& rhs) {
+                assert(base_t::size() == rhs.size());
+                std::transform(rhs.begin(), rhs.end(), base_t::begin(), base_t::begin(),
+                               std::plus<double>());
+                n += rhs.n;
+                return *this;
+        }
+        void clear() {
+                std::fill(base_t::begin(), base_t::end(), 0.0);
+                n = 0;
+        }
+        // the number of data points this statistics was computed from
+        size_t n;
+};
 
 // what every exponential family should provide
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +89,7 @@ public:
         virtual double log_partition() const = 0;
         virtual bool renormalize() = 0;
         virtual double entropy() const = 0;
-        virtual vector_t statistics(const vector_t& x) const = 0;
+        virtual statistics_t statistics(const vector_t& x) const = 0;
         // these are the moments of the sufficient statistics
         virtual vector_t moments() const = 0;
         // number of parameters
@@ -132,7 +167,7 @@ public:
                 if (!domain().element(x)) {
                         return 0.0;
                 }
-                vector_t T = statistics(x);
+                statistics_t T = statistics(x);
                 // check dimensionality
                 assert(T.size() == k());
                 // compute density or probability
@@ -261,13 +296,14 @@ public:
                 const double tau = -2.0*parameters()[1];
                 return 1.0/2.0*(1.0 + std::log(2.0*M_PI*1.0/tau));
         }
-        virtual vector_t statistics(double x) const {
-                vector_t T(2, 0.0);
+        virtual statistics_t statistics(double x) const {
+                statistics_t T(2);
                 T[0] += x;
                 T[1] += x*x;
+                T.n   = 1;
                 return T;
         }
-        virtual vector_t statistics(const vector_t& x) const {
+        virtual statistics_t statistics(const vector_t& x) const {
                 return statistics(x[0]);
         }
 };
@@ -338,13 +374,14 @@ public:
                 return a1 + boost::math::lgamma(a1) - std::log(a2)
                         + (1.0-a1)*boost::math::digamma(a1);
         }
-        virtual vector_t statistics(double x) const {
-                vector_t T(2, 0.0);
+        virtual statistics_t statistics(double x) const {
+                statistics_t T(2);
                 T[0] += std::log(x);
                 T[1] += x;
+                T.n   = 1;
                 return T;
         }
-        virtual vector_t statistics(const vector_t& x) const {
+        virtual statistics_t statistics(const vector_t& x) const {
                 return statistics(x[0]);
         }
 };
@@ -420,12 +457,13 @@ public:
                 }
                 return h;
         }
-        virtual vector_t statistics(const vector_t& x) const {
+        virtual statistics_t statistics(const vector_t& x) const {
                 assert(x.size() == k());
-                vector_t T(k(), 0.0);
+                statistics_t T(k());
                 for (size_t i = 0; i < x.size(); i++) {
                         T[i] = std::log(x[i]);
                 }
+                T.n = 1;
                 return T;
         }
 };
@@ -498,12 +536,13 @@ public:
                 }
                 return h;
         }
-        virtual vector_t statistics(const vector_t& x) const {
-                vector_t T(k(), 0.0);
+        virtual statistics_t statistics(const vector_t& x) const {
+                statistics_t T(k());
                 for (size_t i = 0; i < x.size(); i++) {
                         assert(x[i] < k());
                         T[x[i]] += 1.0;
                 }
+                T.n = 1;
                 return T;
         }
 };

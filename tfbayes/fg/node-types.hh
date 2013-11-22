@@ -397,18 +397,17 @@ public:
                 debug(boost::format("data_vnode %s:%x is receiving new data")
                       % base_t::name() % this << std::endl);
                 // reset message
-                std::fill(_message.begin(), _message.end(), 0.0);
+                _message.clear();
                 // loop over data points
                 for (size_t i = 0; i < x.size(); i++) {
                         // compute statistics of a single data point
-                        std::vector<double> statistics = _distribution.statistics(x[i]);
+                        statistics_t statistics = _distribution.statistics(x[i]);
                         // make sure we're talking the same language
                         assert(statistics.size() == _message.size());
-                        // loop over dimension
-                        for (size_t i = 0; i < _message.size(); i++) {
-                                _message[i] += statistics[i];
-                        }
+                        // add to current message
+                        _message += statistics;
                 }
+                assert(x.size() == _message.n);
         }
         virtual const T& distribution() const {
                 return _distribution;

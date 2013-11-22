@@ -106,7 +106,7 @@ public:
         typedef factor_node_t<3> base_t;
 
         normal_fnode_t(const std::string& name,
-                       double mean, double precision, size_t dimension = 1);
+                       double mean, double precision);
         normal_fnode_t(const normal_fnode_t& normal_fnode);
 
         virtual normal_fnode_t* clone() const;
@@ -121,7 +121,6 @@ public:
                 swap(left.distribution1, right.distribution1);
                 swap(left.distribution2, right.distribution2);
                 swap(left.distribution3, right.distribution3);
-                swap(left.dimension,     right.dimension);
         }
         virtual_assignment_operator(normal_fnode_t);
         derived_assignment_operator(normal_fnode_t, factor_node_i);
@@ -147,9 +146,6 @@ protected:
         normal_distribution_t distribution1;
         normal_distribution_t distribution2;
          gamma_distribution_t distribution3;
-
-        // dimension of the space this node lives on
-        size_t dimension;
 };
 
 class gamma_fnode_t : public factor_node_t<3> {
@@ -157,7 +153,7 @@ public:
         typedef factor_node_t<3> base_t;
 
         gamma_fnode_t(const std::string& name,
-                      double shape, double rate, size_t dimension = 1);
+                      double shape, double rate);
         gamma_fnode_t(const gamma_fnode_t& gamma_fnode);
 
         virtual gamma_fnode_t* clone() const;
@@ -171,7 +167,6 @@ public:
                 swap(left.drate,         right.drate);
                 swap(left.distribution1, right.distribution1);
                 swap(left.distribution3, right.distribution3);
-                swap(left.dimension,     right.dimension);
         }
         virtual_assignment_operator(gamma_fnode_t);
         derived_assignment_operator(gamma_fnode_t, factor_node_i);
@@ -195,9 +190,6 @@ protected:
         // messages
         gamma_distribution_t distribution1;
         gamma_distribution_t distribution3;
-
-        // dimension of the space this node lives on
-        size_t dimension;
 };
 
 class dirichlet_fnode_t : public factor_node_t<1> {
@@ -206,8 +198,7 @@ public:
         typedef factor_node_t<1> base_t;
 
         dirichlet_fnode_t(const std::string& name,
-                          const vector_t& alpha,
-                          size_t dimension = 1);
+                          const vector_t& alpha);
         dirichlet_fnode_t(const dirichlet_fnode_t& dirichlet_fnode);
 
         virtual dirichlet_fnode_t* clone() const;
@@ -219,7 +210,6 @@ public:
                      static_cast<base_t&>(right));
                 swap(left.dalpha,        right.dalpha);
                 swap(left.distribution1, right.distribution1);
-                swap(left.dimension,     right.dimension);
         }
         virtual_assignment_operator(dirichlet_fnode_t);
         derived_assignment_operator(dirichlet_fnode_t, factor_node_i);
@@ -240,9 +230,6 @@ protected:
 
         // messages
         dirichlet_distribution_t distribution1;
-
-        // dimension of the space this node lives on
-        size_t dimension;
 };
 
 class categorical_fnode_t : public factor_node_t<2> {
@@ -251,8 +238,7 @@ public:
         typedef factor_node_t<2> base_t;
 
         categorical_fnode_t(const std::string& name,
-                          const vector_t& theta,
-                          size_t dimension = 1);
+                          const vector_t& theta);
         categorical_fnode_t(const categorical_fnode_t& categorical_fnode);
 
         virtual categorical_fnode_t* clone() const;
@@ -265,7 +251,6 @@ public:
                 swap(left.dtheta,        right.dtheta);
                 swap(left.distribution1, right.distribution1);
                 swap(left.distribution2, right.distribution2);
-                swap(left.dimension,     right.dimension);
         }
         virtual_assignment_operator(categorical_fnode_t);
         derived_assignment_operator(categorical_fnode_t, factor_node_i);
@@ -288,9 +273,6 @@ protected:
         // messages
         categorical_distribution_t distribution1;
           dirichlet_distribution_t distribution2;
-
-        // dimension of the space this node lives on
-        size_t dimension;
 };
 
 #endif /* __TFBAYES_FG_VARIATIONAL_HH__ */

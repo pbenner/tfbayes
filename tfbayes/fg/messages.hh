@@ -29,7 +29,7 @@
 // a message from a factor node to a variable node
 typedef exponential_family_i p_message_t;
 // a message from a variable node to a factor node
-typedef exponential_family_i::vector_t q_message_t;
+typedef statistics_t q_message_t;
 
 inline
 bool operator==(const q_message_t& rhs, const q_message_t& lhs) {

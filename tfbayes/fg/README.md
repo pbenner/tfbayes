@@ -8,7 +8,7 @@ Construct a factor graph with normal distributed observations, a normal prior fo
 	def construct_fg1(data):
 	    data = map(lambda x: [x], data)
 	    fg  = factor_graph_t()
-	    fg += normal_fnode_t("f1", 0, 0, len(data))
+	    fg += normal_fnode_t("f1", 0, 0)
 	    fg += normal_data_t ("v1")
 	    fg += normal_fnode_t("f2", 0, 0.01)
 	    fg += normal_vnode_t("v2")

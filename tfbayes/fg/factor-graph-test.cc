@@ -32,13 +32,9 @@ test1()
         data[0][0] = 1.42;
         data[1][0] = 1.81;
 
-        cout << "test 1" << endl;
-        fg += normal_fnode_t("f1", 1, 2, 2);
-        cout << "test 2" << endl;
+        fg += normal_fnode_t("f1", 1, 2);
         fg += normal_data_t ("v1");
-        cout << "test 3" << endl;
         fg += normal_fnode_t("f2", 2, 2);
-        cout << "test 4" << endl;
         fg += normal_vnode_t("v2");
         fg += gamma_fnode_t ("f3", 1, 2);
         fg += gamma_vnode_t ("v3");

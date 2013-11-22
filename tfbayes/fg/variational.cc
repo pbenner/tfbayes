@@ -27,22 +27,20 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 normal_fnode_t::normal_fnode_t(const std::string& name,
-                               double mean, double precision, size_t dimension) :
+                               double mean, double precision) :
         base_t       (name),
         dmean        (),
         dprecision   (),
         // initial distributions
         distribution1(),
         distribution2(),
-        distribution3(),
-        dimension    (dimension) {
+        distribution3() {
         // initialize parameters
         dmean      = distribution2.statistics(mean);
         dprecision = distribution3.statistics(precision);
         // initialize links
         _links[1] = boost::bind(&normal_fnode_t::dmean, this);
         _links[2] = boost::bind(&normal_fnode_t::dprecision, this);
-        assert(dimension > 0);
         assert(precision > 0.0);
 }
 
@@ -52,9 +50,7 @@ normal_fnode_t::normal_fnode_t(const normal_fnode_t& normal_fnode) :
         dprecision   (normal_fnode.dprecision),
         distribution1(normal_fnode.distribution1),
         distribution2(normal_fnode.distribution2),
-        distribution3(normal_fnode.distribution3),
-        dimension    (normal_fnode.dimension) {
-        assert(dimension > 0);
+        distribution3(normal_fnode.distribution3) {
         _links[1] = boost::bind(&normal_fnode_t::dmean, this);
         _links[2] = boost::bind(&normal_fnode_t::dprecision, this);
 }
@@ -75,7 +71,7 @@ normal_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
 double
 normal_fnode_t::free_energy() const
 {
-        double d       = static_cast<double>(dimension);
+        double d       = _links[0]().n;
         double y       = _links[0]()[0];
         double y2      = _links[0]()[1];
         double mu      = _links[1]()[0];
@@ -132,7 +128,7 @@ normal_fnode_t::message1() {
 
 const p_message_t&
 normal_fnode_t::message2() {
-        double d         = static_cast<double>(dimension);
+        double d         = _links[0]().n;
         double mean      = 1.0/d * _links[0]()[0];
         double precision =     d * _links[2]()[1];
 
@@ -146,7 +142,7 @@ normal_fnode_t::message2() {
 const p_message_t&
 normal_fnode_t::message3() {
         // moments
-        double d   = static_cast<double>(dimension);
+        double d   = _links[0]().n;
         double y   = _links[0]()[0];
         double y2  = _links[0]()[1];
         double mu  = _links[1]()[0];
@@ -170,16 +166,16 @@ normal_fnode_t::message3() {
 ////////////////////////////////////////////////////////////////////////////////
 
 gamma_fnode_t::gamma_fnode_t(const std::string& name,
-                             double shape, double rate, size_t dimension) :
+                             double shape, double rate) :
         base_t       (name),
-        dshape       (1, shape),
+        dshape       (1),
         drate        (),
         // initial distributions
         distribution1(),
-        distribution3(),
-        dimension    (dimension) {
-        assert(dimension > 0);
+        distribution3() {
         // initialize parameters
+        dshape[0] = shape;
+        dshape.n  = 1;
         drate = distribution3.statistics(rate);
         // initialize links
         _links[1] = boost::bind(&gamma_fnode_t::dshape, this);
@@ -191,9 +187,7 @@ gamma_fnode_t::gamma_fnode_t(const gamma_fnode_t& gamma_fnode) :
         dshape       (gamma_fnode.dshape),
         drate        (gamma_fnode.drate),
         distribution1(gamma_fnode.distribution1),
-        distribution3(gamma_fnode.distribution3),
-        dimension    (gamma_fnode.dimension) {
-        assert(dimension > 0);
+        distribution3(gamma_fnode.distribution3) {
         _links[1] = boost::bind(&gamma_fnode_t::dshape, this);
         _links[2] = boost::bind(&gamma_fnode_t::drate,  this);
 }
@@ -213,7 +207,7 @@ gamma_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
 double
 gamma_fnode_t::free_energy() const
 {
-        double d       = static_cast<double>(dimension);
+        double d       = _links[0]().n;
         double log_tau = _links[0]()[0];
         double tau     = _links[0]()[1];
         double shape   = _links[1]()[0];
@@ -279,22 +273,17 @@ gamma_fnode_t::message3() {
 ////////////////////////////////////////////////////////////////////////////////
 
 dirichlet_fnode_t::dirichlet_fnode_t(const std::string& name,
-                                     const vector_t& alpha,
-                                     size_t dimension) :
+                                     const vector_t& alpha) :
         base_t       (name),
         dalpha       (alpha),
         // initial distributions
-        distribution1(alpha),
-        dimension    (dimension) {
-        assert(dimension > 0);
+        distribution1(alpha) {
 }
 
 dirichlet_fnode_t::dirichlet_fnode_t(const dirichlet_fnode_t& dirichlet_fnode) :
         base_t       (dirichlet_fnode),
         dalpha       (dirichlet_fnode.dalpha),
-        distribution1(dirichlet_fnode.distribution1),
-        dimension    (dirichlet_fnode.dimension) {
-        assert(dimension > 0);
+        distribution1(dirichlet_fnode.distribution1) {
 }
 
 dirichlet_fnode_t*
@@ -361,15 +350,12 @@ dirichlet_fnode_t::message1() {
 ////////////////////////////////////////////////////////////////////////////////
 
 categorical_fnode_t::categorical_fnode_t(const std::string& name,
-                                         const vector_t& theta,
-                                         size_t dimension) :
+                                         const vector_t& theta) :
         base_t       (name),
         dtheta       (),
         // initial distributions
         distribution1(theta.size()),
-        distribution2(theta.size()),
-        dimension    (dimension) {
-        assert(dimension > 0);
+        distribution2(theta.size()) {
         // initialize parameters
         dtheta = distribution2.statistics(theta);
         // initialize links
@@ -380,9 +366,7 @@ categorical_fnode_t::categorical_fnode_t(const categorical_fnode_t& categorical_
         base_t       (categorical_fnode),
         dtheta       (categorical_fnode.dtheta),
         distribution1(categorical_fnode.distribution1),
-        distribution2(categorical_fnode.distribution2),
-        dimension    (categorical_fnode.dimension) {
-        assert(dimension > 0);
+        distribution2(categorical_fnode.distribution2) {
         _links[1] = boost::bind(&categorical_fnode_t::dtheta, this);
 }
 
