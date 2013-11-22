@@ -284,7 +284,7 @@ dirichlet_fnode_t::dirichlet_fnode_t(const std::string& name,
         base_t       (name),
         dalpha       (alpha),
         // initial distributions
-        distribution1(alpha.size()),
+        distribution1(alpha),
         dimension    (dimension) {
         assert(dimension > 0);
 }
@@ -351,6 +351,7 @@ dirichlet_fnode_t::operator()(size_t i) {
 const p_message_t&
 dirichlet_fnode_t::message1() {
         debug("dirichlet message 1 (dirichlet): " << this->name() << endl);
+        distribution1.renormalize();
         debug(endl);
 
         return distribution1;
@@ -453,5 +454,5 @@ categorical_fnode_t::message2() {
         distribution2 = dirichlet_distribution_t(alpha);
         debug(endl);
 
-        return distribution1;
+        return distribution2;
 }
