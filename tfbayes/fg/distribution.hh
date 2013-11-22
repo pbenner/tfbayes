@@ -43,7 +43,6 @@
 class exponential_family_i : public virtual clonable {
 public:
         typedef std::vector<double> vector_t;
-        typedef boost::function<vector_t (const vector_t&)> statistics_f;
 
         virtual ~exponential_family_i() { }
 
@@ -55,6 +54,7 @@ public:
         virtual double log_partition() const = 0;
         virtual bool renormalize() = 0;
         virtual double entropy() const = 0;
+        virtual vector_t statistics(const vector_t& x) const = 0;
         // these are the moments of the sufficient statistics
         virtual vector_t moments() const = 0;
         // number of parameters
@@ -78,17 +78,15 @@ public:
         // constructors
         // n        : number of times the distribution has been multiplied
         // k        : number of parameters
-        exponential_family_t(size_t k, statistics_f statistics, size_t n = 1.0,
+        exponential_family_t(size_t k, size_t n = 1,
                              const domain_i& domain = real_domain_t(1))
                 : _parameters   (k, 0.0),
-                  _statistics   (statistics),
                   _log_partition(0.0),
                   _domain       (domain.clone()),
                   _n            (n) {
         }
         exponential_family_t(const exponential_family_t& e)
                 : _parameters   (e._parameters),
-                  _statistics   (e._statistics),
                   _log_partition(e._log_partition),
                   _domain       (e._domain->clone()),
                   _n            (e._n)
@@ -104,7 +102,6 @@ public:
                          exponential_family_t& right) {
                 using std::swap;
                 swap(left._parameters,    right._parameters);
-                swap(left._statistics,    right._statistics);
                 swap(left._log_partition, right._log_partition);
                 swap(left._domain,        right._domain);
                 swap(left._n,             right._n);
@@ -125,12 +122,17 @@ public:
         }
 
         // methods
+        virtual void clear() {
+                std::fill(_parameters.begin(), _parameters.end(), 0.0);
+                _log_partition = 0.0;
+                _n = 0;
+        }
         virtual double operator()(const vector_t& x) const {
                 // is x in the domain of this function?
                 if (!domain().element(x)) {
                         return 0.0;
                 }
-                vector_t T = _statistics(x);
+                vector_t T = statistics(x);
                 // check dimensionality
                 assert(T.size() == k());
                 // compute density or probability
@@ -187,8 +189,6 @@ protected:
         }
         // natural parameters
         vector_t _parameters;
-        // function computing the natural statistics
-        statistics_f _statistics;
         // normalization constant
         double _log_partition;
         // domain of the density (compact support)
@@ -205,14 +205,12 @@ public:
 
         // void object
         normal_distribution_t() :
-                base_t(2, static_cast<vector_t (*)(const vector_t&)>(&statistics),
-                       0.0, real_domain_t(1)) {
+                base_t(2, 0, real_domain_t(1)) {
                 parameters()[0] = 0.0;
                 parameters()[1] = 0.0;
         }
         normal_distribution_t(double mean, double precision) :
-                base_t(2, static_cast<vector_t (*)(const vector_t&)>(&statistics)
-                       , 1.0, real_domain_t(1)) {
+                base_t(2, 1, real_domain_t(1)) {
                 assert(precision > 0.0);
                 parameters()[0] = mean*precision;
                 parameters()[1] = -0.5*precision;
@@ -263,8 +261,15 @@ public:
                 const double tau = -2.0*parameters()[1];
                 return 1.0/2.0*(1.0 + std::log(2.0*M_PI*1.0/tau));
         }
-        static vector_t statistics(double x);
-        static vector_t statistics(const vector_t& x);
+        virtual vector_t statistics(double x) const {
+                vector_t T(2, 0.0);
+                T[0] += x;
+                T[1] += x*x;
+                return T;
+        }
+        virtual vector_t statistics(const vector_t& x) const {
+                return statistics(x[0]);
+        }
 };
 
 // the gamma distribution
@@ -275,14 +280,12 @@ public:
 
         // void object
         gamma_distribution_t() :
-                base_t(2, static_cast<vector_t (*)(const vector_t&)>(&statistics),
-                       0.0, positive_domain_t(1)) {
+                base_t(2, 0, positive_domain_t(1)) {
                 parameters()[0] = 0.0;
                 parameters()[1] = 0.0;
         }
         gamma_distribution_t(double shape, double rate) :
-                base_t(2, static_cast<vector_t (*)(const vector_t&)>(&statistics),
-                       1.0, positive_domain_t(1)) {
+                base_t(2, 1, positive_domain_t(1)) {
                 assert(shape > 0.0);
                 assert(rate  > 0.0);
                 parameters()[0] =  shape-1.0;
@@ -335,8 +338,15 @@ public:
                 return a1 + boost::math::lgamma(a1) - std::log(a2)
                         + (1.0-a1)*boost::math::digamma(a1);
         }
-        static vector_t statistics(double x);
-        static vector_t statistics(const vector_t& x);
+        virtual vector_t statistics(double x) const {
+                vector_t T(2, 0.0);
+                T[0] += std::log(x);
+                T[1] += x;
+                return T;
+        }
+        virtual vector_t statistics(const vector_t& x) const {
+                return statistics(x[0]);
+        }
 };
 
 // the dirichlet distribution
@@ -346,12 +356,11 @@ public:
         typedef exponential_family_t base_t;
 
         // void object
-        dirichlet_distribution_t() :
-                base_t(0, &statistics, 0.0, simplex_t(0)) {
-                std::fill(parameters().begin(), parameters().end(), 0.0);
+        dirichlet_distribution_t(size_t k) :
+                base_t(k, 0, simplex_t(k)) {
         }
         dirichlet_distribution_t(const vector_t& alpha) :
-                base_t(alpha.size(), &statistics, 1.0, simplex_t(alpha.size())) {
+                base_t(alpha.size(), 1, simplex_t(alpha.size())) {
                 for (size_t i = 0; i < alpha.size(); i++) {
                         assert(alpha[i] > 0.0);
                         parameters()[i] = alpha[i]-1.0;
@@ -411,7 +420,14 @@ public:
                 }
                 return h;
         }
-        static vector_t statistics(const vector_t& x);
+        virtual vector_t statistics(const vector_t& x) const {
+                assert(x.size() == k());
+                vector_t T(k(), 0.0);
+                for (size_t i = 0; i < x.size(); i++) {
+                        T[i] = std::log(x[i]);
+                }
+                return T;
+        }
 };
 
 // the categorical distribution
@@ -421,12 +437,11 @@ public:
         typedef exponential_family_t base_t;
 
         // void object
-        categorical_distribution_t() :
-                base_t(0, &statistics, 0.0, discrete_domain_t(1)) {
-                std::fill(parameters().begin(), parameters().end(), 0.0);
+        categorical_distribution_t(size_t k) :
+                base_t(k, 0, discrete_domain_t(k)) {
         }
         categorical_distribution_t(const vector_t& theta) :
-                base_t(theta.size(), &statistics, 1.0, discrete_domain_t(theta.size())) {
+                base_t(theta.size(), 1.0, discrete_domain_t(theta.size())) {
                 for (size_t i = 0; i < theta.size(); i++) {
                         assert(theta[i] > 0.0);
                         parameters()[i] = std::log(theta[i]);
@@ -483,7 +498,14 @@ public:
                 }
                 return h;
         }
-        static vector_t statistics(const vector_t& x);
+        virtual vector_t statistics(const vector_t& x) const {
+                vector_t T(x.size(), 0.0);
+                for (size_t i = 0; i < x.size(); i++) {
+                        assert(x[i] < k());
+                        T[x[i]] += 1.0;
+                }
+                return x;
+        }
 };
 
 #endif /* __TFBAYES_FG_DISTRIBUTION_HH__ */

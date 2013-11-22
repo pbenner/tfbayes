@@ -29,13 +29,17 @@ using namespace std;
 normal_fnode_t::normal_fnode_t(const std::string& name,
                                double mean, double precision, size_t dimension) :
         base_t       (name),
-        dmean        (normal_distribution_t::statistics(mean)),
-        dprecision   ( gamma_distribution_t::statistics(precision)),
+        dmean        (),
+        dprecision   (),
         // initial distributions
         distribution1(),
         distribution2(),
         distribution3(),
         dimension    (dimension) {
+        // initialize parameters
+        dmean      = distribution2.statistics(mean);
+        dprecision = distribution3.statistics(precision);
+        // initialize links
         _links[1] = boost::bind(&normal_fnode_t::dmean, this);
         _links[2] = boost::bind(&normal_fnode_t::dprecision, this);
         assert(dimension > 0);
@@ -169,12 +173,15 @@ gamma_fnode_t::gamma_fnode_t(const std::string& name,
                              double shape, double rate, size_t dimension) :
         base_t       (name),
         dshape       (1, shape),
-        drate        (gamma_distribution_t::statistics(rate)),
+        drate        (),
         // initial distributions
         distribution1(),
         distribution3(),
         dimension    (dimension) {
         assert(dimension > 0);
+        // initialize parameters
+        drate = distribution3.statistics(rate);
+        // initialize links
         _links[1] = boost::bind(&gamma_fnode_t::dshape, this);
         _links[2] = boost::bind(&gamma_fnode_t::drate,  this);
 }
@@ -277,7 +284,7 @@ dirichlet_fnode_t::dirichlet_fnode_t(const std::string& name,
         base_t       (name),
         dalpha       (alpha),
         // initial distributions
-        distribution1(alpha),
+        distribution1(alpha.size()),
         dimension    (dimension) {
         assert(dimension > 0);
 }
@@ -356,12 +363,15 @@ categorical_fnode_t::categorical_fnode_t(const std::string& name,
                                          const vector_t& theta,
                                          size_t dimension) :
         base_t       (name),
-        dtheta       (dtheta),
+        dtheta       (),
         // initial distributions
-        distribution1(),
-        distribution2(),
+        distribution1(theta.size()),
+        distribution2(theta.size()),
         dimension    (dimension) {
         assert(dimension > 0);
+        // initialize parameters
+        dtheta = distribution2.statistics(theta);
+        // initialize links
         _links[1] = boost::bind(&categorical_fnode_t::dtheta, this);
 }
 

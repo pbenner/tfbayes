@@ -129,11 +129,13 @@ BOOST_PYTHON_MODULE(interface)
         class_<gamma_distribution_t, bases<exponential_family_i> >("gamma_distribution_t")
                 .def(init<double, double>())
                 ;
-        class_<dirichlet_distribution_t, bases<exponential_family_i> >("dirichlet_distribution_t")
+        class_<dirichlet_distribution_t, bases<exponential_family_i> >("dirichlet_distribution_t", no_init)
                 .def(init<std::vector<double> >())
+                .def(init<size_t>())
                 ;
-        class_<categorical_distribution_t, bases<exponential_family_i> >("categorical_distribution_t")
+        class_<categorical_distribution_t, bases<exponential_family_i> >("categorical_distribution_t", no_init)
                 .def(init<std::vector<double> >())
+                .def(init<size_t>())
                 ;
         // factor nodes
         // ---------------------------------------------------------------------

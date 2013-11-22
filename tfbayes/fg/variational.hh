@@ -35,6 +35,7 @@ public:
                 : base_t(normal_distribution_t(0, 0.1), name)
                 { }
 };
+
 class gamma_vnode_t : public exponential_vnode_t<gamma_distribution_t> {
 public:
         typedef exponential_vnode_t<gamma_distribution_t> base_t;
@@ -44,12 +45,30 @@ public:
                 { }
 };
 
+class dirichlet_vnode_t : public exponential_vnode_t<dirichlet_distribution_t> {
+public:
+        typedef exponential_vnode_t<dirichlet_distribution_t> base_t;
+
+        dirichlet_vnode_t(std::string name, size_t k)
+                : base_t(dirichlet_distribution_t(std::vector<double>(k, 1.0)), name)
+                { }
+};
+
+class categorical_vnode_t : public exponential_vnode_t<categorical_distribution_t> {
+public:
+        typedef exponential_vnode_t<categorical_distribution_t> base_t;
+
+        categorical_vnode_t(std::string name, size_t k)
+                : base_t(categorical_distribution_t(std::vector<double>(k, 1.0/static_cast<double>(k))), name)
+                { }
+};
+
 class normal_data_t : public data_vnode_t<normal_distribution_t> {
 public:
         typedef data_vnode_t<normal_distribution_t> base_t;
 
         normal_data_t(std::string name)
-                : base_t(2, name)
+                : base_t(normal_distribution_t(), name)
                 { }
 };
 
@@ -58,7 +77,25 @@ public:
         typedef data_vnode_t<gamma_distribution_t> base_t;
 
         gamma_data_t(std::string name)
-                : base_t(2, name)
+                : base_t(gamma_distribution_t(), name)
+                { }
+};
+
+class dirichlet_data_t : public data_vnode_t<dirichlet_distribution_t> {
+public:
+        typedef data_vnode_t<dirichlet_distribution_t> base_t;
+
+        dirichlet_data_t(std::string name, size_t k)
+                : base_t(dirichlet_distribution_t(k), name)
+                { }
+};
+
+class categorical_data_t : public data_vnode_t<categorical_distribution_t> {
+public:
+        typedef data_vnode_t<categorical_distribution_t> base_t;
+
+        categorical_data_t(std::string name, size_t k)
+                : base_t(categorical_distribution_t(k), name)
                 { }
 };
 

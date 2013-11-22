@@ -287,8 +287,7 @@ class exponential_vnode_t : public variable_node_t<T> {
 public:
         typedef variable_node_t<T> base_t;
 
-        exponential_vnode_t(const T& distribution,
-                            const std::string& name = "") :
+        exponential_vnode_t(const T& distribution, const std::string& name) :
                 base_t       (name), 
                 _distribution(distribution),
                 _message     (distribution.moments()) {
@@ -319,7 +318,7 @@ public:
                 debug(boost::format("variable node %s:%x is preparing a new message\n")
                       % base_t::name() % this);
                 // update distribution
-                _distribution = T();
+                _distribution.clear();
                 for (size_t i = 0; i < base_t::_links.size(); i++) {
                         // get the message
                         _distribution *= base_t::_links[i]();
@@ -362,9 +361,10 @@ class data_vnode_t : public variable_node_t<T> {
 public:
         typedef variable_node_t<T> base_t;
 
-        data_vnode_t(size_t k, const std::string& name) :
-                base_t  (name),
-                _message(k, 0.0) {
+        data_vnode_t(const T& distribution, const std::string& name) :
+                base_t       (name),
+                _distribution(distribution),
+                _message     (distribution.moments()) {
         }
         data_vnode_t(const data_vnode_t& data_vnode) :
                 base_t       (data_vnode),
@@ -401,7 +401,7 @@ public:
                 // loop over data points
                 for (size_t i = 0; i < x.size(); i++) {
                         // compute statistics of a single data point
-                        std::vector<double> statistics = T::statistics(x[i]);
+                        std::vector<double> statistics = _distribution.statistics(x[i]);
                         // make sure we're talking the same language
                         assert(statistics.size() == _message.size());
                         // loop over dimension
