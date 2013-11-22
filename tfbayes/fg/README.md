@@ -66,7 +66,7 @@ Instead of having a product normal distribution it is also possible to construct
 
 ### Example: Categorical data
 
-	def construct_fg1(data):
+	def construct_fg3(data):
 	    data = map(lambda x: [x], data)
 	    fg  = factor_graph_t()
 	    fg += categorical_fnode_t("f1", [0,0,0])
