@@ -37,7 +37,7 @@ Approximated posterior distribution
 
 Instead of having a product normal distribution it is also possible to construct a variable and factor node for each observation.
 
-	def construct_fg0(data):
+	def construct_fg3(data):
 	    data = map(lambda x: [x], data)
 	    fg  = factor_graph_t()
 	    # factor graph inside the plate
@@ -63,6 +63,25 @@ Instead of having a product normal distribution it is also possible to construct
 	    return fg
 
 ![alt tag](factor-graph-test-2.png)
+
+### Example: Categorical data
+
+	def construct_fg1(data):
+	    data = map(lambda x: [x], data)
+	    fg  = factor_graph_t()
+	    fg += categorical_fnode_t("f1", [0,0,0])
+	    fg += categorical_data_t ("v1", 3)
+	    fg += dirichlet_fnode_t  ("f2", [2,1,2])
+	    fg += dirichlet_vnode_t  ("v2", 3)
+	    fg.link("f1", "output", "v1")
+	    fg.link("f1", "theta",  "v2")
+	    fg.link("f2", "output", "v2")
+	    fg.variable_node("v1").condition(data)
+	    return fg
+
+	data = [0,0,0,1,1,2,1,1,2,0]
+	fg = construct_fg3(data)
+	fg()
 
 ### Example: Distributions
 
