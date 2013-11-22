@@ -120,6 +120,7 @@ BOOST_PYTHON_MODULE(interface)
                 .def("log_partition", &exponential_family_i::log_partition)
                 .def("renormalize",   &exponential_family_i::renormalize)
                 .def("entropy",       &exponential_family_i::entropy)
+                .def("statistics",    &exponential_family_i::statistics)
                 .def("moments",       &get_moment)
                 .def(self *= self)
                 ;

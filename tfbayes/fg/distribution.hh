@@ -499,12 +499,12 @@ public:
                 return h;
         }
         virtual vector_t statistics(const vector_t& x) const {
-                vector_t T(x.size(), 0.0);
+                vector_t T(k(), 0.0);
                 for (size_t i = 0; i < x.size(); i++) {
                         assert(x[i] < k());
                         T[x[i]] += 1.0;
                 }
-                return x;
+                return T;
         }
 };
 
