@@ -245,13 +245,13 @@ protected:
         size_t dimension;
 };
 
-class categorical_fnode_t : public factor_node_t<1> {
+class categorical_fnode_t : public factor_node_t<2> {
 public:
         typedef exponential_family_i::vector_t vector_t;
-        typedef factor_node_t<1> base_t;
+        typedef factor_node_t<2> base_t;
 
         categorical_fnode_t(const std::string& name,
-                          const vector_t& alpha,
+                          const vector_t& theta,
                           size_t dimension = 1);
         categorical_fnode_t(const categorical_fnode_t& categorical_fnode);
 

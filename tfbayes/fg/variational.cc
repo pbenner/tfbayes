@@ -304,7 +304,7 @@ dirichlet_fnode_t::clone() const {
 
 bool
 dirichlet_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
-        if      (id == "output") return base_t::link(0, variable_node);
+        if (id == "output") return base_t::link(0, variable_node);
         else return false;
 }
 
@@ -393,7 +393,7 @@ categorical_fnode_t::clone() const {
 bool
 categorical_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
         if      (id == "output") return base_t::link(0, variable_node);
-        if      (id == "theta")  return base_t::link(1, variable_node);
+        else if (id == "theta")  return base_t::link(1, variable_node);
         else return false;
 }
 

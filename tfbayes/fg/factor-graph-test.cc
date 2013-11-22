@@ -95,8 +95,37 @@ test2()
              << "mean: " << fg.distribution("v3")->moments()[0] << endl;
 }
 
+void
+test3()
+{
+        factor_graph_t fg;
+
+        matrix<double> data(5,1);
+        data[0][0] = 1;
+        data[1][0] = 1;
+        data[2][0] = 2;
+        data[3][0] = 0;
+        data[4][0] = 1;
+
+        vector<double> theta(3, 0.0);
+        vector<double> alpha(3, 1.0);
+
+        fg += categorical_fnode_t("f1", theta);
+        fg += categorical_data_t ("v1", 3);
+        fg += dirichlet_fnode_t("f2", alpha);
+        fg += dirichlet_vnode_t("v2", 3);
+
+        fg.link("f1", "output",  "v1");
+        fg.link("f1", "theta",   "v2");
+        fg.link("f2", "output",  "v2");
+
+        fg.variable_node("v1", 0)->condition(data);
+
+        fg();
+}
+
 int
 main()
 {
-        test1();
+        test3();
 }
