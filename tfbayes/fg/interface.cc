@@ -168,11 +168,23 @@ BOOST_PYTHON_MODULE(interface)
         class_<gamma_data_t, bases<variable_node_i> >("gamma_data_t", no_init)
                 .def(init<std::string>())
                 ;
+        class_<dirichlet_data_t, bases<variable_node_i> >("dirichlet_data_t", no_init)
+                .def(init<std::string, size_t>())
+                ;
+        class_<categorical_data_t, bases<variable_node_i> >("categorical_data_t", no_init)
+                .def(init<std::string, size_t>())
+                ;
         class_<normal_vnode_t, bases<variable_node_i> >("normal_vnode_t", no_init)
                 .def(init<std::string>())
                 ;
         class_<gamma_vnode_t, bases<variable_node_i> >("gamma_vnode_t", no_init)
                 .def(init<std::string>())
+                ;
+        class_<dirichlet_vnode_t, bases<variable_node_i> >("dirichlet_vnode_t", no_init)
+                .def(init<std::string, size_t>())
+                ;
+        class_<categorical_vnode_t, bases<variable_node_i> >("categorical_vnode_t", no_init)
+                .def(init<std::string, size_t>())
                 ;
         // factor graph
         // ---------------------------------------------------------------------
