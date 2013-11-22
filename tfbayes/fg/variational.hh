@@ -208,4 +208,52 @@ protected:
         size_t dimension;
 };
 
+class categorical_fnode_t : public factor_node_t<1> {
+public:
+        typedef exponential_family_i::vector_t vector_t;
+        typedef factor_node_t<1> base_t;
+
+        categorical_fnode_t(const std::string& name,
+                          const vector_t& alpha,
+                          size_t dimension = 1);
+        categorical_fnode_t(const categorical_fnode_t& categorical_fnode);
+
+        virtual categorical_fnode_t* clone() const;
+
+        friend void swap(categorical_fnode_t& left,
+                         categorical_fnode_t& right) {
+                using std::swap;
+                swap(static_cast<base_t&>(left),
+                     static_cast<base_t&>(right));
+                swap(left.dtheta,        right.dtheta);
+                swap(left.distribution1, right.distribution1);
+                swap(left.distribution2, right.distribution2);
+                swap(left.dimension,     right.dimension);
+        }
+        virtual_assignment_operator(categorical_fnode_t);
+        derived_assignment_operator(categorical_fnode_t, factor_node_i);
+
+        using base_t::link;
+        virtual bool link(const std::string& id, variable_node_i& variable_node);
+        virtual double free_energy() const;
+
+protected:
+        virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
+        virtual const p_message_t& operator()(size_t i);
+
+        // parameters
+        q_message_t dtheta;
+
+        // message preparation
+        const p_message_t& message1();
+        const p_message_t& message2();
+
+        // messages
+        categorical_distribution_t distribution1;
+          dirichlet_distribution_t distribution2;
+
+        // dimension of the space this node lives on
+        size_t dimension;
+};
+
 #endif /* __TFBAYES_FG_VARIATIONAL_HH__ */

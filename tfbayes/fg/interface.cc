@@ -148,6 +148,12 @@ BOOST_PYTHON_MODULE(interface)
                 .def(init<std::string, double, double>())
                 .def(init<std::string, double, double, size_t>())
                 ;
+        class_<dirichlet_fnode_t, bases<factor_node_i> >("dirichlet_fnode_t", no_init)
+                .def(init<std::string, std::vector<double> >())
+                ;
+        class_<categorical_fnode_t, bases<factor_node_i> >("categorical_fnode_t", no_init)
+                .def(init<std::string, std::vector<double> >())
+                ;
         // variable nodes
         // ---------------------------------------------------------------------
         class_<variable_node_i, boost::noncopyable>("variable_node_i", no_init)

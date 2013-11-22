@@ -272,7 +272,7 @@ gamma_fnode_t::message3() {
 ////////////////////////////////////////////////////////////////////////////////
 
 dirichlet_fnode_t::dirichlet_fnode_t(const std::string& name,
-                                     const std::vector<double>& alpha,
+                                     const vector_t& alpha,
                                      size_t dimension) :
         base_t       (name),
         dalpha       (alpha),
@@ -344,6 +344,103 @@ dirichlet_fnode_t::operator()(size_t i) {
 const p_message_t&
 dirichlet_fnode_t::message1() {
         debug("dirichlet message 1 (dirichlet): " << this->name() << endl);
+        debug(endl);
+
+        return distribution1;
+}
+
+// categorical factor node
+////////////////////////////////////////////////////////////////////////////////
+
+categorical_fnode_t::categorical_fnode_t(const std::string& name,
+                                         const vector_t& theta,
+                                         size_t dimension) :
+        base_t       (name),
+        dtheta       (dtheta),
+        // initial distributions
+        distribution1(),
+        distribution2(),
+        dimension    (dimension) {
+        assert(dimension > 0);
+        _links[1] = boost::bind(&categorical_fnode_t::dtheta, this);
+}
+
+categorical_fnode_t::categorical_fnode_t(const categorical_fnode_t& categorical_fnode) :
+        base_t       (categorical_fnode),
+        dtheta       (categorical_fnode.dtheta),
+        distribution1(categorical_fnode.distribution1),
+        distribution2(categorical_fnode.distribution2),
+        dimension    (categorical_fnode.dimension) {
+        assert(dimension > 0);
+        _links[1] = boost::bind(&categorical_fnode_t::dtheta, this);
+}
+
+categorical_fnode_t*
+categorical_fnode_t::clone() const {
+        return new categorical_fnode_t(*this);
+}
+
+bool
+categorical_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
+        if      (id == "output") return base_t::link(0, variable_node);
+        if      (id == "theta")  return base_t::link(1, variable_node);
+        else return false;
+}
+
+double
+categorical_fnode_t::free_energy() const
+{
+        const vector_t counts    = _links[0]();
+        const vector_t log_theta = _links[1]();
+        assert(counts.size() == log_theta.size());
+        double result = 0.0;
+
+        // statistics & parameters
+        for (size_t i = 0; i < counts.size(); i++) {
+                result += counts[i]*log_theta[i];
+        }
+
+        debug(boost::format("factor node %s:%x computed free energy: %d\n")
+              % base_t::name() % this % result);
+
+        return result;
+}
+
+bool
+categorical_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
+        switch (i) {
+        case 0: return variable_node.type() == typeid(categorical_distribution_t);
+        case 1: return variable_node.type() == typeid(  dirichlet_distribution_t);
+        default: assert(false);
+        }
+}
+
+const p_message_t&
+categorical_fnode_t::operator()(size_t i) {
+        switch (i) {
+        case 0: return message1();
+        case 1: return message2();
+        default: assert(false);
+        }
+}
+
+const p_message_t&
+categorical_fnode_t::message1() {
+        const vector_t theta = _links[1]();
+
+        debug("categorical message 1 (categorical): " << this->name() << endl);
+        distribution1 = categorical_distribution_t(theta);
+        debug(endl);
+
+        return distribution1;
+}
+
+const p_message_t&
+categorical_fnode_t::message2() {
+        const vector_t alpha = _links[0]();
+
+        debug("categorical message 2 (dirichlet): " << this->name() << endl);
+        distribution2 = dirichlet_distribution_t(alpha);
         debug(endl);
 
         return distribution1;

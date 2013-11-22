@@ -205,7 +205,7 @@ factor_graph_t::clone_nodes(const factor_set_t& fnodes,
              it != vnodes.cend(); it++) {
                 variable_node_i* node = it->clone();
                 operator+=(node);
-                // keep track of which node replacements
+                // keep track of node replacements
                 vmap[&*it] = node;
         }
         // clone factor nodes
@@ -213,7 +213,7 @@ factor_graph_t::clone_nodes(const factor_set_t& fnodes,
              it != fnodes.cend(); it++) {
                 factor_node_i* node = it->clone();
                 operator+=(node);
-                // keep track of which node replacements
+                // keep track of node replacements
                 fmap[&*it] = node;
         }
         // copy connectivity
