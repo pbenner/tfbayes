@@ -63,36 +63,36 @@ public:
                 { }
 };
 
-class normal_data_t : public data_vnode_t<normal_distribution_t> {
+class normal_data_t : public data_node_t<normal_distribution_t> {
 public:
-        typedef data_vnode_t<normal_distribution_t> base_t;
+        typedef data_node_t<normal_distribution_t> base_t;
 
         normal_data_t(std::string name)
                 : base_t(normal_distribution_t(), name)
                 { }
 };
 
-class gamma_data_t : public data_vnode_t<gamma_distribution_t> {
+class gamma_data_t : public data_node_t<gamma_distribution_t> {
 public:
-        typedef data_vnode_t<gamma_distribution_t> base_t;
+        typedef data_node_t<gamma_distribution_t> base_t;
 
         gamma_data_t(std::string name)
                 : base_t(gamma_distribution_t(), name)
                 { }
 };
 
-class dirichlet_data_t : public data_vnode_t<dirichlet_distribution_t> {
+class dirichlet_data_t : public data_node_t<dirichlet_distribution_t> {
 public:
-        typedef data_vnode_t<dirichlet_distribution_t> base_t;
+        typedef data_node_t<dirichlet_distribution_t> base_t;
 
         dirichlet_data_t(std::string name, size_t k)
                 : base_t(dirichlet_distribution_t(k), name)
                 { }
 };
 
-class categorical_data_t : public data_vnode_t<categorical_distribution_t> {
+class categorical_data_t : public data_node_t<categorical_distribution_t> {
 public:
-        typedef data_vnode_t<categorical_distribution_t> base_t;
+        typedef data_node_t<categorical_distribution_t> base_t;
 
         categorical_data_t(std::string name, size_t k)
                 : base_t(categorical_distribution_t(k), name)

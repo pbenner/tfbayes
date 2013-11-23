@@ -334,19 +334,19 @@ public:
         hotnews_t<q_message_t> _message;
 };
 
-// specializations of the variable node
+// variable node specialization for holding data
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-class data_vnode_t : public variable_node_t<T> {
+class data_node_t : public variable_node_t<T> {
 public:
         typedef variable_node_t<T> base_t;
 
-        data_vnode_t(const T& distribution, const std::string& name) :
+        data_node_t(const T& distribution, const std::string& name) :
                 base_t(distribution, name) {
         }
-        virtual data_vnode_t* clone() const {
-                return new data_vnode_t(*this);
+        virtual data_node_t* clone() const {
+                return new data_node_t(*this);
         }
         virtual void update() {
         }
@@ -354,7 +354,7 @@ public:
                 return 0.0;
         }
         virtual void condition(const std::matrix<double>& x) {
-                debug(boost::format("data_vnode %s:%x is receiving new data")
+                debug(boost::format("data_node %s:%x is receiving new data")
                       % base_t::name() % this << std::endl);
                 // reset message
                 base_t::_message.clear();
