@@ -343,10 +343,7 @@ public:
         typedef variable_node_t<T> base_t;
 
         data_vnode_t(const T& distribution, const std::string& name) :
-                base_t       (distribution, name) {
-        }
-        data_vnode_t(const data_vnode_t& data_vnode) :
-                base_t       (data_vnode) {
+                base_t(distribution, name) {
         }
         virtual data_vnode_t* clone() const {
                 return new data_vnode_t(*this);
