@@ -318,7 +318,7 @@ public:
                         neighbors()[i]->notify(*this);
                 }
         }
-//protected:
+protected:
         // links to neighboring nodes
         links_t<p_link_t> _links;
         // keep track of neighboring nodes for cloning whole networks
