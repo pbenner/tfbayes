@@ -107,7 +107,7 @@ test3()
         vector<double> alpha(3, 1.0);
 
         fg += categorical_fnode_t("f1", theta);
-        fg += categorical_data_t ("v1", 3);
+        fg += categorical_data_t("v1", 3);
         fg += dirichlet_fnode_t("f2", alpha);
         fg += dirichlet_vnode_t("v2", 3);
 

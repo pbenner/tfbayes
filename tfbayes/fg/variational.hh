@@ -27,36 +27,36 @@
 
 // variable node specializations
 ////////////////////////////////////////////////////////////////////////////////
-class normal_vnode_t : public exponential_vnode_t<normal_distribution_t> {
+class normal_vnode_t : public variable_node_t<normal_distribution_t> {
 public:
-        typedef exponential_vnode_t<normal_distribution_t> base_t;
+        typedef variable_node_t<normal_distribution_t> base_t;
 
         normal_vnode_t(std::string name)
                 : base_t(normal_distribution_t(0, 0.1), name)
                 { }
 };
 
-class gamma_vnode_t : public exponential_vnode_t<gamma_distribution_t> {
+class gamma_vnode_t : public variable_node_t<gamma_distribution_t> {
 public:
-        typedef exponential_vnode_t<gamma_distribution_t> base_t;
+        typedef variable_node_t<gamma_distribution_t> base_t;
 
         gamma_vnode_t(std::string name)
                 : base_t(gamma_distribution_t(1, 0.1), name)
                 { }
 };
 
-class dirichlet_vnode_t : public exponential_vnode_t<dirichlet_distribution_t> {
+class dirichlet_vnode_t : public variable_node_t<dirichlet_distribution_t> {
 public:
-        typedef exponential_vnode_t<dirichlet_distribution_t> base_t;
+        typedef variable_node_t<dirichlet_distribution_t> base_t;
 
         dirichlet_vnode_t(std::string name, size_t k)
                 : base_t(dirichlet_distribution_t(std::vector<double>(k, 1.0)), name)
                 { }
 };
 
-class categorical_vnode_t : public exponential_vnode_t<categorical_distribution_t> {
+class categorical_vnode_t : public variable_node_t<categorical_distribution_t> {
 public:
-        typedef exponential_vnode_t<categorical_distribution_t> base_t;
+        typedef variable_node_t<categorical_distribution_t> base_t;
 
         categorical_vnode_t(std::string name, size_t k)
                 : base_t(categorical_distribution_t(std::vector<double>(k, 1.0/static_cast<double>(k))), name)

@@ -229,8 +229,10 @@ protected:
 template <typename T>
 class variable_node_t : public variable_node_i, public observable_t {
 public:
-        variable_node_t(const std::string& name = "") :
-                _name    (name) {
+        variable_node_t(const T& distribution, const std::string& name = "") :
+                _name          (name),
+                _distribution  (distribution),
+                _message       (distribution.moments()) {
                 debug("allocating variable node at " << this << std::endl);
         }
         variable_node_t(const variable_node_t& variable_node) :
@@ -240,20 +242,30 @@ public:
                 // populated manually to create a new network
                 _links         (),
                 _neighbors     (),
-                _name          (variable_node._name) {
+                _name          (variable_node._name),
+                _distribution  (variable_node._distribution),
+                _message       (variable_node._message) {
                 debug("copying variable node from " << &variable_node << " to " << this << std::endl);
+        }
+
+        virtual variable_node_t* clone() const {
+                return new variable_node_t(*this);
         }
 
         friend void swap(variable_node_t& left, variable_node_t& right) {
                 using std::swap;
                 swap(static_cast<observable_t&>(left),
                      static_cast<observable_t&>(right));
-                swap(left._name,      right._name);
-                swap(left._neighbors, right._neighbors);
+                swap(left._name,         right._name);
+                swap(left._neighbors,    right._neighbors);
+                swap(left._distribution, right._distribution);
+                swap(left._message,      right._message);
         }
 #ifdef HAVE_STDCXX_0X
         variable_node_t& operator=(const variable_node_t& variable_node) = delete;
 #endif /* HAVE_STDCXX_0X */
+        virtual_assignment_operator(variable_node_t)
+        derived_assignment_operator(variable_node_t, variable_node_i)
 
         virtual q_link_t link(factor_node_i& factor_node, p_link_t f) {
                 _links.push_back(f);
@@ -270,58 +282,18 @@ public:
         virtual const std::vector<factor_node_i*>& neighbors() const {
                 return _neighbors;
         }
-protected:
-        // links to neighboring nodes
-        links_t<p_link_t> _links;
-        // keep track of neighboring nodes for cloning whole networks
-        std::vector<factor_node_i*> _neighbors;
-        // id of this node
-        std::string _name;
-};
-
-// specializations of the variable node
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename T>
-class exponential_vnode_t : public variable_node_t<T> {
-public:
-        typedef variable_node_t<T> base_t;
-
-        exponential_vnode_t(const T& distribution, const std::string& name) :
-                base_t       (name), 
-                _distribution(distribution),
-                _message     (distribution.moments()) {
-        }
-        exponential_vnode_t(const exponential_vnode_t& exponential_vnode) :
-                base_t        (exponential_vnode),
-                _distribution (exponential_vnode._distribution),
-                _message      (exponential_vnode._message) {
-        }
-        virtual exponential_vnode_t* clone() const {
-                return new exponential_vnode_t(*this);
-        }
-        friend void swap(exponential_vnode_t& left, exponential_vnode_t& right) {
-                using std::swap;
-                swap(static_cast<base_t&>(left),
-                     static_cast<base_t&>(right));
-                swap(left._distribution, right._distribution);
-                swap(left._message,      right._message);
-        }
-        virtual_assignment_operator(exponential_vnode_t)
-        derived_assignment_operator(exponential_vnode_t, variable_node_i)
-
         virtual const q_message_t& operator()() const {
                 return static_cast<const q_message_t&>(_message);
         }
         virtual void update() {
                 // compute new q-message
                 debug(boost::format("variable node %s:%x is preparing a new message\n")
-                      % base_t::name() % this);
+                      % name() % this);
                 // update distribution
                 _distribution.clear();
-                for (size_t i = 0; i < base_t::_links.size(); i++) {
+                for (size_t i = 0; i < _links.size(); i++) {
                         // get the message
-                        _distribution *= base_t::_links[i]();
+                        _distribution *= _links[i]();
                 }
                 // normalize message
                 _distribution.renormalize();
@@ -330,31 +302,40 @@ public:
                 _message = _distribution.moments();
                 // check if this message was sent before
                 debug(boost::format("variable node %s:%x has new message: ")
-                      % base_t::name() % this << std::boolalpha
+                      % name() % this << std::boolalpha
                       << (bool)_message << std::endl);
                 debug("--------------------------------------------------------------------------------"
                       << std::endl);
                 if (_message) notify_neighbors();
         }
+        virtual void condition(const std::matrix<double>& x) {
+        }
         virtual double free_energy() const {
                 return _distribution.entropy();
-        }
-        virtual void condition(const std::matrix<double>& x) {
         }
         virtual const T& distribution() const {
                 return _distribution;
         }
-protected:
         void notify_neighbors() const {
-                for (size_t i = 0; i < base_t::neighbors().size(); i++) {
-                        base_t::neighbors()[i]->notify(*this);
+                for (size_t i = 0; i < neighbors().size(); i++) {
+                        neighbors()[i]->notify(*this);
                 }
         }
+//protected:
+        // links to neighboring nodes
+        links_t<p_link_t> _links;
+        // keep track of neighboring nodes for cloning whole networks
+        std::vector<factor_node_i*> _neighbors;
+        // id of this node
+        std::string _name;
         // save current distribution to compute the entropy
         T _distribution;
         // current message
         hotnews_t<q_message_t> _message;
 };
+
+// specializations of the variable node
+////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 class data_vnode_t : public variable_node_t<T> {
@@ -362,31 +343,13 @@ public:
         typedef variable_node_t<T> base_t;
 
         data_vnode_t(const T& distribution, const std::string& name) :
-                base_t       (name),
-                _distribution(distribution),
-                _message     (distribution.moments()) {
+                base_t       (distribution, name) {
         }
         data_vnode_t(const data_vnode_t& data_vnode) :
-                base_t       (data_vnode),
-                _distribution(data_vnode._distribution),
-                _message     (data_vnode._message) {
+                base_t       (data_vnode) {
         }
         virtual data_vnode_t* clone() const {
                 return new data_vnode_t(*this);
-        }
-
-        friend void swap(data_vnode_t& left, data_vnode_t& right) {
-                using std::swap;
-                swap(static_cast<base_t&>(left),
-                     static_cast<base_t&>(right));
-                swap(left._distribution, right._distribution);
-                swap(left._message,      right._message);
-        }
-        virtual_assignment_operator(data_vnode_t)
-        derived_assignment_operator(data_vnode_t, variable_node_i)
-
-        virtual const q_message_t& operator()() const {
-                return _message;
         }
         virtual void update() {
         }
@@ -397,26 +360,18 @@ public:
                 debug(boost::format("data_vnode %s:%x is receiving new data")
                       % base_t::name() % this << std::endl);
                 // reset message
-                _message.clear();
+                base_t::_message.clear();
                 // loop over data points
                 for (size_t i = 0; i < x.size(); i++) {
                         // compute statistics of a single data point
-                        statistics_t statistics = _distribution.statistics(x[i]);
+                        statistics_t statistics = base_t::_distribution.statistics(x[i]);
                         // make sure we're talking the same language
-                        assert(statistics.size() == _message.size());
+                        assert(statistics.size() == base_t::_message.size());
                         // add to current message
-                        _message += statistics;
+                        base_t::_message += statistics;
                 }
-                assert(x.size() == _message.n);
+                assert(x.size() == base_t::_message.n);
         }
-        virtual const T& distribution() const {
-                return _distribution;
-        }
-protected:
-        // some dummy distribution
-        T _distribution;
-        // the current message
-        q_message_t _message;
 };
 
 #endif /* __TFBAYES_FG_NODE_TYPES_HH__ */
