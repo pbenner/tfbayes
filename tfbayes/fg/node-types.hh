@@ -261,9 +261,6 @@ public:
                 swap(left._distribution, right._distribution);
                 swap(left._message,      right._message);
         }
-#ifdef HAVE_STDCXX_0X
-        variable_node_t& operator=(const variable_node_t& variable_node) = delete;
-#endif /* HAVE_STDCXX_0X */
         virtual_assignment_operator(variable_node_t)
         derived_assignment_operator(variable_node_t, variable_node_i)
 
