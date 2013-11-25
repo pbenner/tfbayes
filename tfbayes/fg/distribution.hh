@@ -92,6 +92,8 @@ public:
         virtual statistics_t statistics(const vector_t& x) const = 0;
         // these are the moments of the sufficient statistics
         virtual vector_t moments() const = 0;
+        virtual const vector_t& parameters() const = 0;
+        virtual vector_t& parameters() = 0;
         // number of parameters
         virtual size_t k() const = 0;
         // for continuous distributions this is the density function,
@@ -181,6 +183,9 @@ public:
         virtual const vector_t& parameters() const {
                 return _parameters;
         }
+        virtual vector_t& parameters() {
+                return _parameters;
+        }
         virtual double log_partition() const {
                 return _log_partition;
         }
@@ -210,9 +215,6 @@ public:
                 return _parameters.size();
         }
 protected:
-        virtual vector_t& parameters() {
-                return _parameters;
-        }
         virtual const domain_i& domain() const {
                 return *_domain;
         }
