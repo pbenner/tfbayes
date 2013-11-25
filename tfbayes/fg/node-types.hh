@@ -153,12 +153,11 @@ inline variable_node_i* new_clone(const variable_node_i& a)
 // basic implementations of factor and variable nodes
 ////////////////////////////////////////////////////////////////////////////////
 
-template <size_t D>
 class factor_node_t : public factor_node_i {
 public:
-        factor_node_t(const std::string& name = "") :
-                _links       (D),
-                _neighbors   (D, NULL),
+        factor_node_t(size_t k, const std::string& name = "") :
+                _links       (k),
+                _neighbors   (k, NULL),
                 _name        (name) {
                 debug("allocating factor node at " << this << std::endl);
         }
@@ -166,8 +165,8 @@ public:
                 factor_node_i(factor_node),
                 // do not copy the mailer and mailbox, since they should be
                 // populated manually to create a new network
-                _links       (D),
-                _neighbors   (D, NULL),
+                _links       (factor_node._links.size()),
+                _neighbors   (factor_node._links.size(), NULL),
                 _name        (factor_node._name) {
                 debug("copying factor node from " << &factor_node << " to " << this << std::endl);
         }
@@ -185,7 +184,7 @@ public:
 #endif /* HAVE_STDCXX_0X */
 
         virtual bool link(size_t i, variable_node_i& variable_node) {
-                assert(i < D);
+                assert(i < _links.size());
                 // allow only conjugate nodes to connect
                 debug(boost::format("attempting to link factor node %s:%x "
                                     " with variable node %s:%x")

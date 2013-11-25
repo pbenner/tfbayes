@@ -101,9 +101,9 @@ public:
 
 // factor node specializations
 ////////////////////////////////////////////////////////////////////////////////
-class normal_fnode_t : public factor_node_t<3> {
+class normal_fnode_t : public factor_node_t {
 public:
-        typedef factor_node_t<3> base_t;
+        typedef factor_node_t base_t;
 
         normal_fnode_t(const std::string& name,
                        double mean, double precision);
@@ -148,9 +148,9 @@ protected:
          gamma_distribution_t distribution3;
 };
 
-class gamma_fnode_t : public factor_node_t<3> {
+class gamma_fnode_t : public factor_node_t {
 public:
-        typedef factor_node_t<3> base_t;
+        typedef factor_node_t base_t;
 
         gamma_fnode_t(const std::string& name,
                       double shape, double rate);
@@ -192,10 +192,10 @@ protected:
         gamma_distribution_t distribution3;
 };
 
-class dirichlet_fnode_t : public factor_node_t<1> {
+class dirichlet_fnode_t : public factor_node_t {
 public:
         typedef exponential_family_i::vector_t vector_t;
-        typedef factor_node_t<1> base_t;
+        typedef factor_node_t base_t;
 
         dirichlet_fnode_t(const std::string& name,
                           const vector_t& alpha);
@@ -232,10 +232,10 @@ protected:
         dirichlet_distribution_t distribution1;
 };
 
-class categorical_fnode_t : public factor_node_t<2> {
+class categorical_fnode_t : public factor_node_t {
 public:
         typedef exponential_family_i::vector_t vector_t;
-        typedef factor_node_t<2> base_t;
+        typedef factor_node_t base_t;
 
         categorical_fnode_t(const std::string& name,
                           const vector_t& theta);
@@ -274,5 +274,44 @@ protected:
         categorical_distribution_t distribution1;
           dirichlet_distribution_t distribution2;
 };
+
+// class gate_fnode_t : public factor_node_t<2> {
+// public:
+//         typedef exponential_family_i::vector_t vector_t;
+//         typedef factor_node_t<2> base_t;
+
+//         gate_fnode_t(const std::string& name,
+//                           const vector_t& theta);
+//         gate_fnode_t(const gate_fnode_t& gate_fnode);
+
+//         virtual gate_fnode_t* clone() const;
+
+//         friend void swap(gate_fnode_t& left,
+//                          gate_fnode_t& right) {
+//                 using std::swap;
+//                 swap(static_cast<base_t&>(left),
+//                      static_cast<base_t&>(right));
+//                 swap(left.dtheta,        right.dtheta);
+//                 swap(left.distribution1, right.distribution1);
+//                 swap(left.distribution2, right.distribution2);
+//         }
+//         virtual_assignment_operator(gate_fnode_t);
+//         derived_assignment_operator(gate_fnode_t, factor_node_i);
+
+//         using base_t::link;
+//         virtual bool link(const std::string& id, variable_node_i& variable_node);
+//         virtual double free_energy() const;
+
+// protected:
+//         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
+//         virtual const p_message_t& operator()(size_t i);
+
+//         // message preparation
+//         const p_message_t& message1();
+//         const p_message_t& message2();
+
+//         // messages
+//         categorical_distribution_t distribution1;
+// };
 
 #endif /* __TFBAYES_FG_VARIATIONAL_HH__ */

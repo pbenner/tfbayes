@@ -28,7 +28,7 @@ using namespace std;
 
 normal_fnode_t::normal_fnode_t(const std::string& name,
                                double mean, double precision) :
-        base_t       (name),
+        base_t       (3, name),
         dmean        (),
         dprecision   (),
         // initial distributions
@@ -167,7 +167,7 @@ normal_fnode_t::message3() {
 
 gamma_fnode_t::gamma_fnode_t(const std::string& name,
                              double shape, double rate) :
-        base_t       (name),
+        base_t       (3, name),
         dshape       (1),
         drate        (),
         // initial distributions
@@ -274,7 +274,7 @@ gamma_fnode_t::message3() {
 
 dirichlet_fnode_t::dirichlet_fnode_t(const std::string& name,
                                      const vector_t& alpha) :
-        base_t       (name),
+        base_t       (1, name),
         dalpha       (alpha),
         // initial distributions
         distribution1(alpha) {
@@ -351,7 +351,7 @@ dirichlet_fnode_t::message1() {
 
 categorical_fnode_t::categorical_fnode_t(const std::string& name,
                                          const vector_t& theta) :
-        base_t       (name),
+        base_t       (2, name),
         dtheta       (),
         // initial distributions
         distribution1(theta.size()),
