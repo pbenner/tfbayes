@@ -64,7 +64,7 @@ public:
 
         // link all factor nodes with all variable nodes that have the
         // given names
-        bool link(const std::string& fname, const std::string&, const std::string& vname);
+        bool link(const std::string& fname, const std::string& which, const std::string& vname);
 
         // execute the message passing algorithm
         std::vector<double> operator()(boost::optional<size_t> n = boost::optional<size_t>());
@@ -89,7 +89,6 @@ private:
         void clone_nodes(const factor_set_t& factor_nodes,
                          const variable_set_t& variable_nodes);
         // add a nodes to the queue
-        void add_factor_node(factor_node_i* factor_node);
         void add_variable_node(variable_node_i* variable_node);
 };
 
