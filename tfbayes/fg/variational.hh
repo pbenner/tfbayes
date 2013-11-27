@@ -22,6 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <boost/ptr_container/ptr_vector.hpp>
+
 #include <tfbayes/fg/node-set.hh>
 #include <tfbayes/fg/node-types.hh>
 #include <tfbayes/utility/default-operator.hh>
@@ -271,6 +273,7 @@ protected:
 class mixture_fnode_t : public factor_node_i {
 public:
         typedef exponential_family_i::vector_t vector_t;
+        typedef boost::ptr_vector<factor_node_i> factor_nodes_t;
         typedef factor_node_i base_t;
 
         mixture_fnode_t(const std::string& name);
@@ -296,6 +299,7 @@ public:
         virtual const neighbors_t& neighbors() const;
         virtual void notify(const variable_node_i& variable_node) const;
 
+        virtual bool link(const std::string& tag1, const std::string& tag2, variable_node_i& variable_node);
         virtual bool link(const std::string& tag, variable_node_i& variable_node);
         virtual double free_energy() const;
 
@@ -303,7 +307,7 @@ protected:
         virtual const p_message_t& operator()();
 
         // list of factor nodes
-        factor_set_t _factor_nodes;
+        factor_nodes_t _factor_nodes;
 
         // links to neighboring nodes
         links_t<q_link_t> _links;

@@ -464,7 +464,7 @@ void
 mixture_fnode_t::operator+=(const factor_node_i& factor_node)
 {
         // add the factor node to the list of nodes
-        _factor_nodes += factor_node.clone();
+        _factor_nodes.push_back(factor_node.clone());
         // add an additional component to the categorical distribution
         distribution1 = categorical_distribution_t(distribution1.k()+1);
         // copy neighbor tags from factor node
@@ -485,6 +485,18 @@ mixture_fnode_t::notify(const variable_node_i& variable_node) const {
 }
 
 bool
+mixture_fnode_t::link(const std::string& tag1, const std::string& tag2, variable_node_i& variable_node)
+{
+        for (factor_nodes_t::iterator it = _factor_nodes.begin();
+             it != _factor_nodes.end(); it++) {
+                if (it->name() == tag1) {
+                        return it->link(tag2, variable_node);
+                }
+        }
+        return false;
+}
+
+bool
 mixture_fnode_t::link(const std::string& tag, variable_node_i& variable_node)
 {
         if (token_first(tag, ':').size() != 2) {
@@ -497,12 +509,8 @@ mixture_fnode_t::link(const std::string& tag, variable_node_i& variable_node)
         if (i == -1) {
                 return false;
         }
-        for (factor_set_t::iterator it = _factor_nodes[tag1];
-             it != _factor_nodes.end() && it->name() == tag1; it++) {
-                if (it->link(tag2, variable_node)) {
-                        _neighbors[i] = &variable_node;
-                        return true;
-                }
+        if (link(tag1, tag2, variable_node)) {
+                _neighbors[i] = &variable_node;
         }
         return false;
 }
@@ -512,8 +520,8 @@ mixture_fnode_t::free_energy() const
 {
         double result = 0.0;
 
-        for (factor_set_t::const_iterator it = _factor_nodes.cbegin();
-             it != _factor_nodes.cend(); it++) {
+        for (factor_nodes_t::const_iterator it = _factor_nodes.begin();
+             it != _factor_nodes.end(); it++) {
                 result += it->free_energy();
         }
         return result;
@@ -522,7 +530,14 @@ mixture_fnode_t::free_energy() const
 const p_message_t&
 mixture_fnode_t::operator()()
 {
+        vector_t theta;
+
+        for (factor_nodes_t::const_iterator it = _factor_nodes.cbegin();
+             it != _factor_nodes.cend(); it++) {
+                theta.push_back(std::exp(it->free_energy()));
+        }
         debug("mixture message 1 (categorical): " << this->name() << endl);
+        distribution1 = categorical_distribution_t(theta);
         debug(endl);
 
         return distribution1;

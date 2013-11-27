@@ -121,7 +121,7 @@ public:
         using base_t::push_back;
         void push_back(const std::string& tag) {
                 base_t::push_back(named_ptr_t<T>(tag, NULL));
-        }                
+        }
 };
 
 // It is possible to combine different message passing algorithms in
