@@ -39,11 +39,11 @@ test1()
         fg += gamma_fnode_t ("f3", 1, 2);
         fg += gamma_vnode_t ("v3");
 
-        fg.link("f1", "output",    "v1");
-        fg.link("f1", "mean",      "v2");
-        fg.link("f1", "precision", "v3");
-        fg.link("f2", "output",    "v2");
-        fg.link("f3", "output",    "v3");
+        fg.link("f1:output",    "v1");
+        fg.link("f1:mean",      "v2");
+        fg.link("f1:precision", "v3");
+        fg.link("f2:output",    "v2");
+        fg.link("f3:output",    "v3");
 
         fg.variable_node("v1")->condition(data);
 
@@ -67,7 +67,7 @@ test2()
 
         fg += normal_fnode_t("f1", 1, 2);
         fg += normal_data_t ("v1");
-        fg.link("f1", "output", "v1");
+        fg.link("f1:output", "v1");
         fg.replicate(1);
 
         fg.variable_node("v1", 0)->condition(data1);
@@ -78,10 +78,10 @@ test2()
         fg += gamma_fnode_t ("f3", 1, 2);
         fg += gamma_vnode_t ("v3");
 
-        fg.link("f1", "mean",      "v2");
-        fg.link("f1", "precision", "v3");
-        fg.link("f2", "output",    "v2");
-        fg.link("f3", "output",    "v3");
+        fg.link("f1:mean",      "v2");
+        fg.link("f1:precision", "v3");
+        fg.link("f2:output",    "v2");
+        fg.link("f3:output",    "v3");
 
         factor_graph_t fg2(fg);
 
@@ -111,9 +111,9 @@ test3()
         fg += dirichlet_fnode_t("f2", alpha);
         fg += dirichlet_vnode_t("v2", 3);
 
-        fg.link("f1", "output",  "v1");
-        fg.link("f1", "theta",   "v2");
-        fg.link("f2", "output",  "v2");
+        fg.link("f1:output",  "v1");
+        fg.link("f1:theta",   "v2");
+        fg.link("f2:output",  "v2");
 
         fg.variable_node("v1", 0)->condition(data);
 

@@ -19,11 +19,11 @@ def construct_fg1(data):
     fg += normal_vnode_t("v2")
     fg += gamma_fnode_t ("f3", 1, 2)
     fg += gamma_vnode_t ("v3")
-    fg.link("f1", "output",    "v1")
-    fg.link("f2", "output",    "v2")
-    fg.link("f3", "output",    "v3")
-    fg.link("f1", "mean",      "v2")
-    fg.link("f1", "precision", "v3")
+    fg.link("f1:output",    "v1")
+    fg.link("f2:output",    "v2")
+    fg.link("f3:output",    "v3")
+    fg.link("f1:mean",      "v2")
+    fg.link("f1:precision", "v3")
     fg.variable_node("v1").condition(data)
     return fg
 
@@ -34,7 +34,7 @@ def construct_fg2(data):
     # factor graph inside the plate
     fg += normal_fnode_t("f1", 0, 1)
     fg += normal_data_t ("v1")
-    fg.link("f1", "output",    "v1")
+    fg.link("f1:output",    "v1")
     # replicate this graph n-1 times
     fg.replicate(len(data)-1)
     # construct graph outside the plate
@@ -42,12 +42,12 @@ def construct_fg2(data):
     fg += normal_vnode_t("v2")
     fg += gamma_fnode_t ("f3", 1, 2)
     fg += gamma_vnode_t ("v3")
-    fg.link("f2", "output",    "v2")
-    fg.link("f3", "output",    "v3")
+    fg.link("f2:output",    "v2")
+    fg.link("f3:output",    "v3")
     # connect v2 and v3 to all factors f1
     # within the plate
-    fg.link("f1", "mean",      "v2")
-    fg.link("f1", "precision", "v3")
+    fg.link("f1:mean",      "v2")
+    fg.link("f1:precision", "v3")
     # loop over all variable nodes v1
     for i, d in enumerate(data):
         fg.variable_node("v1", i).condition([d])
@@ -61,9 +61,9 @@ def construct_fg3(data):
     fg += categorical_data_t ("v1", 3)
     fg += dirichlet_fnode_t  ("f2", [2,1,2])
     fg += dirichlet_vnode_t  ("v2", 3)
-    fg.link("f1", "output", "v1")
-    fg.link("f1", "theta",  "v2")
-    fg.link("f2", "output", "v2")
+    fg.link("f1:output", "v1")
+    fg.link("f1:theta",  "v2")
+    fg.link("f2:output", "v2")
     fg.variable_node("v1").condition(data)
     return fg
 

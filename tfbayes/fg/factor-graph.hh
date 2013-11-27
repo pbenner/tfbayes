@@ -64,7 +64,7 @@ public:
 
         // link all factor nodes with all variable nodes that have the
         // given names
-        bool link(const std::string& fname, const std::string& which, const std::string& vname);
+        bool link(const std::string& tag, const std::string& vname);
 
         // execute the message passing algorithm
         std::vector<double> operator()(boost::optional<size_t> n = boost::optional<size_t>());

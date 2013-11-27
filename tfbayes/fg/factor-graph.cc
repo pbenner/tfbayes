@@ -20,7 +20,8 @@
 
 #include <boost/bind.hpp>
 
-#include <factor-graph.hh>
+#include <tfbayes/fg/factor-graph.hh>
+#include <tfbayes/utility/strtools.hh>
 
 // the factor graph
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,15 +97,21 @@ factor_graph_t::replicate(size_t n)
 }
 
 bool
-factor_graph_t::link(const std::string& fname, const std::string& which, const std::string& vname)
+factor_graph_t::link(const string& tag, const std::string& vname)
 {
+        if (token_first(tag, ':').size() != 2) {
+                return false;
+        }
+        string tag1 = token_first(tag, ':')[0];
+        string tag2 = token_first(tag, ':')[1];
+
         bool result = false;
 
-        for (factor_set_t::iterator it = _factor_nodes[fname];
-             it != _factor_nodes.end() && it->name() == fname; it++) {
+        for (factor_set_t::iterator it = _factor_nodes[tag1];
+             it != _factor_nodes.end() && it->name() == tag1; it++) {
                 for (variable_set_t::iterator is = _variable_nodes[vname];
                      is != _variable_nodes.end() && is->name() == vname; is++) {
-                        result |= it->link(which, *is);
+                        result |= it->link(tag2, *is);
                 }
         }
         return result;
@@ -219,12 +226,12 @@ factor_graph_t::clone_nodes(const factor_set_t& fnodes,
         // copy connectivity
         for (factor_set_t::const_iterator it = fnodes.cbegin();
              it != fnodes.cend(); it++) {
-                const vector<variable_node_i*>& neighbors =
+                const factor_node_i::neighbors_t& neighbors =
                         it->neighbors();
                 for (size_t j = 0; j < neighbors.size(); j++) {
                         if (!neighbors[j])
                                 continue;
-                        fmap[&*it]->link(j, *vmap[neighbors[j]]);
+                        fmap[&*it]->link(neighbors[j], *vmap[neighbors[j]]);
                 }
         }
 }

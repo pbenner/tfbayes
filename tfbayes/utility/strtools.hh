@@ -36,6 +36,20 @@ const std::string strip(const std::string& str) {
 }
 
 static inline
+std::vector<std::string> token_first(const std::string& str, char t) {
+        std::string token;
+        std::vector<std::string> tokens;
+        std::istringstream iss(str);
+        if (getline(iss, token, t)) {
+                tokens.push_back(strip(token));
+        }
+        if (getline(iss, token, '\0')) {
+                tokens.push_back(strip(token));
+        }
+        return tokens;
+}
+
+static inline
 std::vector<std::string> token(const std::string& str, char t) {
         std::string token;
         std::vector<std::string> tokens;

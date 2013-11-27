@@ -20,15 +20,18 @@
 
 #include <tfbayes/fg/variational.hh>
 #include <tfbayes/utility/debug.hh>
+#include <tfbayes/utility/strtools.hh>
 
 using namespace std;
 
 // normal factor node
 ////////////////////////////////////////////////////////////////////////////////
 
+static const char* normal_tags[] = {"output", "mean", "precision"};
+
 normal_fnode_t::normal_fnode_t(const std::string& name,
                                double mean, double precision) :
-        base_t       (3, name),
+        base_t       (3, normal_tags, name),
         dmean        (),
         dprecision   (),
         // initial distributions
@@ -58,14 +61,6 @@ normal_fnode_t::normal_fnode_t(const normal_fnode_t& normal_fnode) :
 normal_fnode_t*
 normal_fnode_t::clone() const {
         return new normal_fnode_t(*this);
-}
-
-bool
-normal_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
-        if      (id == "output"   ) return base_t::link(0, variable_node);
-        else if (id == "mean"     ) return base_t::link(1, variable_node);
-        else if (id == "precision") return base_t::link(2, variable_node);
-        else return false;
 }
 
 double
@@ -165,9 +160,11 @@ normal_fnode_t::message3() {
 // gamma factor node
 ////////////////////////////////////////////////////////////////////////////////
 
+static const char* gamma_tags[] = {"output", "shape", "rate"};
+
 gamma_fnode_t::gamma_fnode_t(const std::string& name,
                              double shape, double rate) :
-        base_t       (3, name),
+        base_t       (3, gamma_tags, name),
         dshape       (1),
         drate        (),
         // initial distributions
@@ -195,13 +192,6 @@ gamma_fnode_t::gamma_fnode_t(const gamma_fnode_t& gamma_fnode) :
 gamma_fnode_t*
 gamma_fnode_t::clone() const {
         return new gamma_fnode_t(*this);
-}
-
-bool
-gamma_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
-        if      (id == "output") return base_t::link(0, variable_node);
-        else if (id == "rate"  ) return base_t::link(2, variable_node);
-        else return false;
 }
 
 double
@@ -272,9 +262,11 @@ gamma_fnode_t::message3() {
 // dirichlet factor node
 ////////////////////////////////////////////////////////////////////////////////
 
+static const char* dirichlet_tags[] = {"output"};
+
 dirichlet_fnode_t::dirichlet_fnode_t(const std::string& name,
                                      const vector_t& alpha) :
-        base_t       (1, name),
+        base_t       (1, dirichlet_tags, name),
         dalpha       (alpha),
         // initial distributions
         distribution1(alpha) {
@@ -289,12 +281,6 @@ dirichlet_fnode_t::dirichlet_fnode_t(const dirichlet_fnode_t& dirichlet_fnode) :
 dirichlet_fnode_t*
 dirichlet_fnode_t::clone() const {
         return new dirichlet_fnode_t(*this);
-}
-
-bool
-dirichlet_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
-        if (id == "output") return base_t::link(0, variable_node);
-        else return false;
 }
 
 double
@@ -349,9 +335,11 @@ dirichlet_fnode_t::message1() {
 // categorical factor node
 ////////////////////////////////////////////////////////////////////////////////
 
+static const char* categorical_tags[] = {"output", "theta"};
+
 categorical_fnode_t::categorical_fnode_t(const std::string& name,
                                          const vector_t& theta) :
-        base_t       (2, name),
+        base_t       (2, categorical_tags, name),
         dtheta       (),
         // initial distributions
         distribution1(theta.size()),
@@ -373,13 +361,6 @@ categorical_fnode_t::categorical_fnode_t(const categorical_fnode_t& categorical_
 categorical_fnode_t*
 categorical_fnode_t::clone() const {
         return new categorical_fnode_t(*this);
-}
-
-bool
-categorical_fnode_t::link(const std::string& id, variable_node_i& variable_node) {
-        if      (id == "output") return base_t::link(0, variable_node);
-        else if (id == "theta")  return base_t::link(1, variable_node);
-        else return false;
 }
 
 double
@@ -439,4 +420,110 @@ categorical_fnode_t::message2() {
         debug(endl);
 
         return distribution2;
+}
+
+// mixture factor node
+////////////////////////////////////////////////////////////////////////////////
+
+mixture_fnode_t::mixture_fnode_t(const std::string& name) :
+        _name        (name),
+        // initial distributions
+        distribution1(0)
+{
+}
+
+mixture_fnode_t::mixture_fnode_t(const mixture_fnode_t& mixture_fnode) :
+        base_t       (mixture_fnode),
+        _factor_nodes(mixture_fnode._factor_nodes),
+        _links       (mixture_fnode._links),
+        _neighbors   (mixture_fnode._neighbors),
+        _name        (mixture_fnode._name),
+        distribution1(mixture_fnode.distribution1)
+{
+}
+
+mixture_fnode_t*
+mixture_fnode_t::clone() const
+{
+        return new mixture_fnode_t(*this);
+}
+
+const std::string&
+mixture_fnode_t::name() const
+{
+        return _name;
+}
+
+const factor_node_i::neighbors_t&
+mixture_fnode_t::neighbors() const
+{
+        return _neighbors;
+}
+
+void
+mixture_fnode_t::operator+=(const factor_node_i& factor_node)
+{
+        // add the factor node to the list of nodes
+        _factor_nodes += factor_node.clone();
+        // add an additional component to the categorical distribution
+        distribution1 = categorical_distribution_t(distribution1.k()+1);
+        // copy neighbor tags from factor node
+        for (factor_node_i::neighbors_t::const_iterator it = factor_node.neighbors().begin();
+             it != factor_node.neighbors().end(); it++) {
+                _neighbors.push_back(name() + ":" + string(*it));
+        }
+}
+
+void
+mixture_fnode_t::notify(const variable_node_i& variable_node) const {
+        // notify all other neighbors about an update at node i
+        for (size_t i = 0; i < _neighbors.size(); i++) {
+                if (_neighbors[i] != NULL && _neighbors[i] != &variable_node) {
+                        _neighbors[i]->notify();
+                }
+        }
+}
+
+bool
+mixture_fnode_t::link(const std::string& tag, variable_node_i& variable_node)
+{
+        if (token_first(tag, ':').size() != 2) {
+                return false;
+        }
+        string tag1 = token_first(tag, ':')[0];
+        string tag2 = token_first(tag, ':')[1];
+
+        ssize_t i = _neighbors.index(tag);
+        if (i == -1) {
+                return false;
+        }
+        for (factor_set_t::iterator it = _factor_nodes[tag1];
+             it != _factor_nodes.end() && it->name() == tag1; it++) {
+                if (it->link(tag2, variable_node)) {
+                        _neighbors[i] = &variable_node;
+                        return true;
+                }
+        }
+        return false;
+}
+
+double
+mixture_fnode_t::free_energy() const
+{
+        double result = 0.0;
+
+        for (factor_set_t::const_iterator it = _factor_nodes.cbegin();
+             it != _factor_nodes.cend(); it++) {
+                result += it->free_energy();
+        }
+        return result;
+}
+
+const p_message_t&
+mixture_fnode_t::operator()()
+{
+        debug("mixture message 1 (categorical): " << this->name() << endl);
+        debug(endl);
+
+        return distribution1;
 }

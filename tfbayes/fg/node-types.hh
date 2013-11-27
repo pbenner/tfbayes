@@ -46,12 +46,82 @@ typedef boost::function<const q_message_t&()> q_link_t;
 template <typename T>
 class links_t : public std::vector<T> {
 public:
+        typedef std::vector<T> base_t;
+
         links_t() :
-                std::vector<T>()
+                base_t()
                 { }
         links_t(size_t n) :
-                std::vector<T>(n, T())
+                base_t(n, T())
                 { }
+};
+
+template <typename T>
+class named_ptr_t : public std::pair<std::string, T*> {
+public:
+        typedef std::pair<std::string, T*> base_t;
+
+        named_ptr_t() :
+                base_t("", NULL)
+                { }
+        named_ptr_t(std::string tag, T* link) :
+                base_t(tag, link)
+                { }
+
+        named_ptr_t& operator=(const named_ptr_t& neighbor) {
+                base_t::first  = neighbor.first;
+                base_t::second = neighbor.second;
+                return *this;
+        }
+        named_ptr_t& operator=(const std::string& lhs) {
+                base_t::first = lhs;
+                return *this;
+        }
+        named_ptr_t& operator=(T* lhs) {
+                base_t::second = lhs;
+                return *this;
+        }
+        T* operator->() const {
+                return base_t::second;
+        }
+        operator std::string() const {
+                return base_t::first;
+        }
+        operator T*() const {
+                return base_t::second;
+        }
+};
+
+template <typename T>
+class named_ptr_vector_t : public std::vector<named_ptr_t<T> > {
+public:
+        typedef std::vector<named_ptr_t<T> > base_t;
+
+        named_ptr_vector_t() :
+                base_t()
+                { }
+        named_ptr_vector_t(size_t k) :
+                base_t(k)
+                { }
+        named_ptr_vector_t(size_t k, const char *tags[]) :
+                base_t(k) {
+                for (size_t i = 0; i < k; i++) {
+                        base_t::operator[](i) = std::string(tags[i]);
+                }
+        }
+        ssize_t index(const std::string& tag) {
+                for (typename base_t::const_iterator it = base_t::begin();
+                     it != base_t::end(); it++) {
+                        if (static_cast<std::string>(*it) == tag) {
+                                return it - base_t::begin();
+                        }
+                }
+                return -1;
+        }
+        using base_t::push_back;
+        void push_back(const std::string& tag) {
+                base_t::push_back(named_ptr_t<T>(tag, NULL));
+        }                
 };
 
 // It is possible to combine different message passing algorithms in
@@ -83,7 +153,7 @@ class variable_node_i;
 
 class factor_node_i : public virtual fg_node_i {
 public:
-        typedef std::vector<variable_node_i*> neighbors_t;
+        typedef named_ptr_vector_t<variable_node_i> neighbors_t;
 
         virtual ~factor_node_i() { }
 
@@ -92,7 +162,6 @@ public:
         virtual factor_node_i& operator=(const factor_node_i& factor_node) = 0;
 
         // link a variable node to this factor node
-        virtual bool link(size_t i, variable_node_i& variable_node) = 0;
         virtual bool link(const std::string& id, variable_node_i& variable_node) = 0;
 
         // neighboring variable nodes
@@ -100,14 +169,6 @@ public:
 
         // notify neighbors
         virtual void notify(const variable_node_i& variable_node) const = 0;
-
-protected:
-        // check conjugacy of connecting nodes
-        virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const = 0;
-
-        // prepare a message to the i'th connected variable
-        // node (p messages)
-        virtual const p_message_t& operator()(size_t i) = 0;
 };
 
 class variable_node_i : public virtual fg_node_i, public virtual observable_i  {
@@ -155,20 +216,21 @@ inline variable_node_i* new_clone(const variable_node_i& a)
 
 class factor_node_t : public factor_node_i {
 public:
-        factor_node_t(size_t k, const std::string& name = "") :
+        factor_node_t(size_t k, const char* tags[], const std::string& name = "") :
                 _links       (k),
-                _neighbors   (k, NULL),
+                _neighbors   (k, tags),
                 _name        (name) {
                 debug("allocating factor node at " << this << std::endl);
         }
         factor_node_t(const factor_node_t& factor_node) :
                 factor_node_i(factor_node),
-                // do not copy the mailer and mailbox, since they should be
+                // do not copy the links, since they should be
                 // populated manually to create a new network
                 _links       (factor_node._links.size()),
-                _neighbors   (factor_node._links.size(), NULL),
+                _neighbors   (factor_node._neighbors),
                 _name        (factor_node._name) {
-                debug("copying factor node from " << &factor_node << " to " << this << std::endl);
+                debug(boost::format("copying factor node %s:%x to %x\n") 
+                      % factor_node.name() % &factor_node % this);
         }
 
         virtual factor_node_t* clone() const = 0;
@@ -202,6 +264,13 @@ public:
                 // return that the nodes were successfully linked
                 return true;
         }
+        virtual bool link(const std::string& tag, variable_node_i& variable_node) {
+                ssize_t i = _neighbors.index(tag);
+                if (i == -1) {
+                        return false;
+                }
+                return link(i, variable_node);
+        }
         virtual const std::string& name() const {
                 return _name;
         }
@@ -213,14 +282,19 @@ public:
                         }
                 }
         }
-        virtual const std::vector<variable_node_i*>& neighbors() const {
+        virtual const neighbors_t& neighbors() const {
                 return _neighbors;
         }
 protected:
+        // prepare a message to the i'th connected variable
+        // node (p messages)
+        virtual const p_message_t& operator()(size_t i) = 0;
+        // check conjugacy of connecting nodes
+        virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const = 0;
         // links to neighboring nodes
         links_t<q_link_t> _links;
         // keep track of neighboring nodes for cloning whole networks
-        std::vector<variable_node_i*> _neighbors;
+        neighbors_t _neighbors;
         // id of this node
         std::string _name;
 };
@@ -244,7 +318,8 @@ public:
                 _name          (variable_node._name),
                 _distribution  (variable_node._distribution),
                 _message       (variable_node._message) {
-                debug("copying variable node from " << &variable_node << " to " << this << std::endl);
+                debug(boost::format("copying variable node %s:%x to %x\n") 
+                      % variable_node.name() % &variable_node % this);
         }
 
         virtual variable_node_t* clone() const {
@@ -275,7 +350,7 @@ public:
         virtual const std::string& name() const {
                 return _name;
         }
-        virtual const std::vector<factor_node_i*>& neighbors() const {
+        virtual const neighbors_t& neighbors() const {
                 return _neighbors;
         }
         virtual const q_message_t& operator()() const {
@@ -321,7 +396,7 @@ protected:
         // links to neighboring nodes
         links_t<p_link_t> _links;
         // keep track of neighboring nodes for cloning whole networks
-        std::vector<factor_node_i*> _neighbors;
+        neighbors_t _neighbors;
         // id of this node
         std::string _name;
         // save current distribution to compute the entropy
