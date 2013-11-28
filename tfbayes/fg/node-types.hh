@@ -42,9 +42,11 @@
 // links between nodes
 ////////////////////////////////////////////////////////////////////////////////
 
+// access to nodes' messages is implemented by function pointers
 typedef boost::function<const p_message_t&()> p_link_t;
 typedef boost::function<const q_message_t&()> q_link_t;
 
+// transform message before it is sent to a neighboring node
 typedef boost::function<p_message_t&(p_message_t&)> p_map_t;
 
 template <typename T>

@@ -426,10 +426,13 @@ categorical_fnode_t::message2() {
 ////////////////////////////////////////////////////////////////////////////////
 
 mixture_fnode_t::mixture_fnode_t(const std::string& name) :
+        _links       (1),
         _name        (name),
         // initial distributions
         distribution1(0)
 {
+        _neighbors.push_back("output");
+        _neighbors.push_back("indicator");
 }
 
 mixture_fnode_t::mixture_fnode_t(const mixture_fnode_t& mixture_fnode) :
@@ -504,14 +507,37 @@ mixture_fnode_t::link(const std::string& tag, variable_node_i& variable_node, p_
         if (index == -1) {
                 return false;
         }
-        if (token_first(tag, ':').size() != 2) {
-                return false;
-        }
-        string tag1 = token_first(tag, ':')[0];
-        string tag2 = token_first(tag, ':')[1];
-
-        if (link(tag1, tag2, variable_node)) {
+        if (tag == "indicator") {
+                // assure variable node is conjugate
+                if (variable_node.type() == typeid(categorical_distribution_t)) {
+                        return false;
+                }
+                _links[0] = variable_node.link(*this, boost::bind(&mixture_fnode_t::operator(), this));
                 _neighbors[index] = &variable_node;
+        }
+        else if (tag == "output") {
+                for (factor_nodes_t::iterator it = _factor_nodes.begin();
+                     it != _factor_nodes.end(); it++) {
+                        // mixture component number
+                        size_t k = it - _factor_nodes.begin();
+                        // create the link
+                        if (!it->link(tag, variable_node, boost::bind(&mixture_fnode_t::message, this, k, _1))) {
+                                return false;
+                        }
+                }
+                _neighbors[index] = &variable_node;
+        }
+        else {
+                if (token_first(tag, ':').size() != 2) {
+                        return false;
+                }
+                string tag1 = token_first(tag, ':')[0];
+                string tag2 = token_first(tag, ':')[1];
+
+                if (link(tag1, tag2, variable_node)) {
+                        _neighbors[index] = &variable_node;
+                        return true;
+                }
         }
         return false;
 }
@@ -547,5 +573,11 @@ mixture_fnode_t::operator()()
 p_message_t&
 mixture_fnode_t::message(size_t k, p_message_t& p_message)
 {
+        double p = _links[0]()[k];
+
+        for (size_t i = 0; i < p_message.parameters().size(); i++) {
+                p_message.parameters()[i] *= p;
+        }
+
         return p_message;
 }

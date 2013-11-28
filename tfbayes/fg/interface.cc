@@ -155,6 +155,10 @@ BOOST_PYTHON_MODULE(interface)
         class_<categorical_fnode_t, bases<factor_node_i> >("categorical_fnode_t", no_init)
                 .def(init<std::string, std::vector<double> >())
                 ;
+        class_<mixture_fnode_t, bases<factor_node_i> >("mixture_fnode_t", no_init)
+                .def(init<std::string>())
+                .def("__iadd__", &mixture_fnode_t::operator+=)
+                ;
         // variable nodes
         // ---------------------------------------------------------------------
         class_<variable_node_i, boost::noncopyable>("variable_node_i", no_init)
