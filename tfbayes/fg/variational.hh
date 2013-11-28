@@ -293,7 +293,7 @@ public:
         virtual_assignment_operator(mixture_fnode_t);
         derived_assignment_operator(mixture_fnode_t, factor_node_i);
 
-        void operator+=(const factor_node_i& factor_node);
+        mixture_fnode_t& operator+=(const factor_node_i& factor_node);
 
         virtual const std::string& name() const;
         virtual const neighbors_t& neighbors() const;

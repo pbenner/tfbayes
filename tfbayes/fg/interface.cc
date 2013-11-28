@@ -157,7 +157,7 @@ BOOST_PYTHON_MODULE(interface)
                 ;
         class_<mixture_fnode_t, bases<factor_node_i> >("mixture_fnode_t", no_init)
                 .def(init<std::string>())
-                .def("__iadd__", &mixture_fnode_t::operator+=)
+                .def("__iadd__", &mixture_fnode_t::operator+=, return_internal_reference<>())
                 ;
         // variable nodes
         // ---------------------------------------------------------------------

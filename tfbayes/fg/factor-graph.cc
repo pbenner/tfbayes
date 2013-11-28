@@ -99,7 +99,7 @@ factor_graph_t::replicate(size_t n)
 bool
 factor_graph_t::link(const string& tag, const std::string& vname)
 {
-        if (token_first(tag, ':').size() != 2) {
+        if (token_first(tag, ':').size() < 2) {
                 return false;
         }
         string tag1 = token_first(tag, ':')[0];

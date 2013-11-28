@@ -463,7 +463,7 @@ mixture_fnode_t::neighbors() const
         return _neighbors;
 }
 
-void
+mixture_fnode_t&
 mixture_fnode_t::operator+=(const factor_node_i& factor_node)
 {
         // add the factor node to the list of nodes
@@ -473,8 +473,9 @@ mixture_fnode_t::operator+=(const factor_node_i& factor_node)
         // copy neighbor tags from factor node
         for (factor_node_i::neighbors_t::const_iterator it = factor_node.neighbors().begin();
              it != factor_node.neighbors().end(); it++) {
-                _neighbors.push_back(name() + ":" + string(*it));
+                _neighbors.push_back(factor_node.name() + ":" + string(*it));
         }
+        return *this;
 }
 
 void
@@ -505,6 +506,7 @@ mixture_fnode_t::link(const std::string& tag, variable_node_i& variable_node, p_
 {
         ssize_t index = _neighbors.index(tag);
         if (index == -1) {
+                cout << "ERR 1" << endl;
                 return false;
         }
         if (tag == "indicator") {
@@ -528,18 +530,20 @@ mixture_fnode_t::link(const std::string& tag, variable_node_i& variable_node, p_
                 _neighbors[index] = &variable_node;
         }
         else {
-                if (token_first(tag, ':').size() != 2) {
+                if (token_first(tag, ':').size() < 2) {
+                        cout << tag << endl;
+                        cout << "ERR 2" << endl;
                         return false;
                 }
                 string tag1 = token_first(tag, ':')[0];
                 string tag2 = token_first(tag, ':')[1];
 
-                if (link(tag1, tag2, variable_node)) {
-                        _neighbors[index] = &variable_node;
-                        return true;
+                if (!link(tag1, tag2, variable_node)) {
+                        return false;
                 }
+                _neighbors[index] = &variable_node;
         }
-        return false;
+        return true;
 }
 
 double
