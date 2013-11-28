@@ -99,7 +99,7 @@ normal_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
         }
 }
 
-const p_message_t&
+p_message_t&
 normal_fnode_t::operator()(size_t i) {
         switch (i) {
         case 0: return message1();
@@ -109,7 +109,7 @@ normal_fnode_t::operator()(size_t i) {
         }
 }
 
-const p_message_t&
+p_message_t&
 normal_fnode_t::message1() {
         double mean      = _links[1]()[0];
         double precision = _links[2]()[1];
@@ -121,7 +121,7 @@ normal_fnode_t::message1() {
         return distribution1;
 }
 
-const p_message_t&
+p_message_t&
 normal_fnode_t::message2() {
         double d         = _links[0]().n;
         double mean      = 1.0/d * _links[0]()[0];
@@ -134,7 +134,7 @@ normal_fnode_t::message2() {
         return distribution2;
 }
 
-const p_message_t&
+p_message_t&
 normal_fnode_t::message3() {
         // moments
         double d   = _links[0]().n;
@@ -226,7 +226,7 @@ gamma_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
         }
 }
 
-const p_message_t&
+p_message_t&
 gamma_fnode_t::operator()(size_t i) {
         switch (i) {
         case 0: return message1();
@@ -235,7 +235,7 @@ gamma_fnode_t::operator()(size_t i) {
         }
 }
 
-const p_message_t&
+p_message_t&
 gamma_fnode_t::message1() {
         double shape = _links[1]()[0];
         double rate  = _links[2]()[1];
@@ -247,7 +247,7 @@ gamma_fnode_t::message1() {
         return distribution1;
 }
 
-const p_message_t&
+p_message_t&
 gamma_fnode_t::message3() {
         double shape =   _links[1]()[0] + 1.0;
         double rate  = - _links[0]()[1];
@@ -315,7 +315,7 @@ dirichlet_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const 
         }
 }
 
-const p_message_t&
+p_message_t&
 dirichlet_fnode_t::operator()(size_t i) {
         switch (i) {
         case 0: return message1();
@@ -323,7 +323,7 @@ dirichlet_fnode_t::operator()(size_t i) {
         }
 }
 
-const p_message_t&
+p_message_t&
 dirichlet_fnode_t::message1() {
         debug("dirichlet message 1 (dirichlet): " << this->name() << endl);
         distribution1.renormalize();
@@ -391,7 +391,7 @@ categorical_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) cons
         }
 }
 
-const p_message_t&
+p_message_t&
 categorical_fnode_t::operator()(size_t i) {
         switch (i) {
         case 0: return message1();
@@ -400,7 +400,7 @@ categorical_fnode_t::operator()(size_t i) {
         }
 }
 
-const p_message_t&
+p_message_t&
 categorical_fnode_t::message1() {
         const vector_t theta = _links[1]();
 
@@ -411,7 +411,7 @@ categorical_fnode_t::message1() {
         return distribution1;
 }
 
-const p_message_t&
+p_message_t&
 categorical_fnode_t::message2() {
         const vector_t alpha = _links[0]();
 
@@ -476,11 +476,9 @@ mixture_fnode_t::operator+=(const factor_node_i& factor_node)
 
 void
 mixture_fnode_t::notify(const variable_node_i& variable_node) const {
-        // notify all other neighbors about an update at node i
-        for (size_t i = 0; i < _neighbors.size(); i++) {
-                if (_neighbors[i] != NULL && _neighbors[i] != &variable_node) {
-                        _neighbors[i]->notify();
-                }
+        for (factor_nodes_t::const_iterator it = _factor_nodes.begin();
+             it != _factor_nodes.end(); it++) {
+                it->notify(variable_node);
         }
 }
 
@@ -490,14 +488,17 @@ mixture_fnode_t::link(const std::string& tag1, const std::string& tag2, variable
         for (factor_nodes_t::iterator it = _factor_nodes.begin();
              it != _factor_nodes.end(); it++) {
                 if (it->name() == tag1) {
-                        return it->link(tag2, variable_node);
+                        // mixture component number
+                        size_t k = it - _factor_nodes.begin();
+                        // create the link
+                        return it->link(tag2, variable_node, boost::bind(&mixture_fnode_t::message, this, k, _1));
                 }
         }
         return false;
 }
 
 bool
-mixture_fnode_t::link(const std::string& tag, variable_node_i& variable_node)
+mixture_fnode_t::link(const std::string& tag, variable_node_i& variable_node, p_map_t f)
 {
         ssize_t index = _neighbors.index(tag);
         if (index == -1) {
@@ -527,7 +528,7 @@ mixture_fnode_t::free_energy() const
         return result;
 }
 
-const p_message_t&
+p_message_t&
 mixture_fnode_t::operator()()
 {
         vector_t theta;
@@ -541,4 +542,10 @@ mixture_fnode_t::operator()()
         debug(endl);
 
         return distribution1;
+}
+
+p_message_t&
+mixture_fnode_t::message(size_t k, p_message_t& p_message)
+{
+        return p_message;
 }

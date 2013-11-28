@@ -29,6 +29,7 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
+#include <boost/lambda/lambda.hpp>
 
 #include <tfbayes/fg/hotnews.hh>
 #include <tfbayes/fg/messages.hh>
@@ -42,6 +43,8 @@
 
 typedef boost::function<const p_message_t&()> p_link_t;
 typedef boost::function<const q_message_t&()> q_link_t;
+
+typedef boost::function<p_message_t&(p_message_t&)> p_map_t;
 
 template <typename T>
 class links_t : public std::vector<T> {
@@ -162,7 +165,8 @@ public:
         virtual factor_node_i& operator=(const factor_node_i& factor_node) = 0;
 
         // link a variable node to this factor node
-        virtual bool link(const std::string& id, variable_node_i& variable_node) = 0;
+        virtual bool link(const std::string& id, variable_node_i& variable_node,
+                          p_map_t f = boost::lambda::_1) = 0;
 
         // neighboring variable nodes
         virtual const neighbors_t& neighbors() const = 0;
@@ -245,7 +249,7 @@ public:
         factor_node_t& operator=(const factor_node_t& factor_node) = delete;
 #endif /* HAVE_STDCXX_0X */
 
-        virtual bool link(size_t i, variable_node_i& variable_node) {
+        virtual bool link(size_t i, variable_node_i& variable_node, p_map_t f) {
                 assert(i < _links.size());
                 // allow only conjugate nodes to connect
                 debug(boost::format("attempting to link factor node %s:%x "
@@ -258,18 +262,18 @@ public:
                         return false;
                 }
                 // exchange mailbox slots
-                _links[i] = variable_node.link(*this, boost::bind(&factor_node_t::operator(), this, i));
+                _links[i] = variable_node.link(*this, boost::bind(f, boost::bind(&factor_node_t::operator(), this, i)));
                 // save neighbor
                 _neighbors[i] = &variable_node;
                 // return that the nodes were successfully linked
                 return true;
         }
-        virtual bool link(const std::string& tag, variable_node_i& variable_node) {
+        virtual bool link(const std::string& tag, variable_node_i& variable_node, p_map_t f) {
                 ssize_t i = _neighbors.index(tag);
                 if (i == -1) {
                         return false;
                 }
-                return link(i, variable_node);
+                return link(i, variable_node, f);
         }
         virtual const std::string& name() const {
                 return _name;
@@ -288,7 +292,7 @@ public:
 protected:
         // prepare a message to the i'th connected variable
         // node (p messages)
-        virtual const p_message_t& operator()(size_t i) = 0;
+        virtual p_message_t& operator()(size_t i) = 0;
         // check conjugacy of connecting nodes
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const = 0;
         // links to neighboring nodes

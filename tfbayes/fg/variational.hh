@@ -132,12 +132,12 @@ public:
 
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
-        virtual const p_message_t& operator()(size_t i);
+        virtual p_message_t& operator()(size_t i);
 
         // message preparation
-        const p_message_t& message1();
-        const p_message_t& message2();
-        const p_message_t& message3();
+        p_message_t& message1();
+        p_message_t& message2();
+        p_message_t& message3();
 
         // parameters
         q_message_t dmean;
@@ -176,11 +176,11 @@ public:
 
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
-        virtual const p_message_t& operator()(size_t i);
+        virtual p_message_t& operator()(size_t i);
 
         // message preparation
-        const p_message_t& message1();
-        const p_message_t& message3();
+        p_message_t& message1();
+        p_message_t& message3();
 
         // parameters
         q_message_t dshape;
@@ -217,13 +217,13 @@ public:
 
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
-        virtual const p_message_t& operator()(size_t i);
+        virtual p_message_t& operator()(size_t i);
 
         // parameters
         q_message_t dalpha;
 
         // message preparation
-        const p_message_t& message1();
+        p_message_t& message1();
 
         // messages
         dirichlet_distribution_t distribution1;
@@ -256,14 +256,14 @@ public:
 
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
-        virtual const p_message_t& operator()(size_t i);
+        virtual p_message_t& operator()(size_t i);
 
         // parameters
         q_message_t dtheta;
 
         // message preparation
-        const p_message_t& message1();
-        const p_message_t& message2();
+        p_message_t& message1();
+        p_message_t& message2();
 
         // messages
         categorical_distribution_t distribution1;
@@ -300,11 +300,12 @@ public:
         virtual void notify(const variable_node_i& variable_node) const;
 
         virtual bool link(const std::string& tag1, const std::string& tag2, variable_node_i& variable_node);
-        virtual bool link(const std::string& tag, variable_node_i& variable_node);
+        virtual bool link(const std::string& tag, variable_node_i& variable_node, p_map_t f);
         virtual double free_energy() const;
 
 protected:
-        virtual const p_message_t& operator()();
+        virtual p_message_t& operator()();
+        virtual p_message_t& message(size_t k, p_message_t& p_message);
 
         // list of factor nodes
         factor_nodes_t _factor_nodes;
