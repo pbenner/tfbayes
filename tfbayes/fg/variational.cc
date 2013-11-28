@@ -402,7 +402,11 @@ categorical_fnode_t::operator()(size_t i) {
 
 p_message_t&
 categorical_fnode_t::message1() {
-        const vector_t theta = _links[1]();
+        vector_t theta = _links[1]();
+
+        for (size_t i = 0; i < theta.size(); i++) {
+                theta[i] = std::exp(theta[i]);
+        }
 
         debug("categorical message 1 (categorical): " << this->name() << endl);
         distribution1 = categorical_distribution_t(theta);
@@ -506,12 +510,16 @@ mixture_fnode_t::link(const std::string& tag, variable_node_i& variable_node, p_
 {
         ssize_t index = _neighbors.index(tag);
         if (index == -1) {
-                cout << "ERR 1" << endl;
                 return false;
         }
         if (tag == "indicator") {
                 // assure variable node is conjugate
-                if (variable_node.type() == typeid(categorical_distribution_t)) {
+                debug(boost::format("attempting to link factor node %s:%x "
+                                    " with variable node %s:%x")
+                      % name() % this % variable_node.name() % &variable_node
+                      << std::endl);
+                if (variable_node.type() != typeid(categorical_distribution_t)) {
+                        debug("-> failed!" << std::endl);
                         return false;
                 }
                 _links[0] = variable_node.link(*this, boost::bind(&mixture_fnode_t::operator(), this));
@@ -531,8 +539,6 @@ mixture_fnode_t::link(const std::string& tag, variable_node_i& variable_node, p_
         }
         else {
                 if (token_first(tag, ':').size() < 2) {
-                        cout << tag << endl;
-                        cout << "ERR 2" << endl;
                         return false;
                 }
                 string tag1 = token_first(tag, ':')[0];

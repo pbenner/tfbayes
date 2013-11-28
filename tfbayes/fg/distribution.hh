@@ -515,11 +515,11 @@ public:
                 double sum = 0.0;
                 debug("-> categorical parameters:" << std::endl);
                 for (size_t i = 0; i < k(); i++) {
-                        debug(boost::format("-> theta[%i]: %d\n") % i % std::exp(parameters()[i]));
                         sum += std::exp(parameters()[i]);
                 }
                 for (size_t i = 0; i < k(); i++) {
                         parameters()[i] -= std::log(sum);
+                        debug(boost::format("-> theta[%i]: %d\n") % i % std::exp(parameters()[i]));
                 }
                 _log_partition = 0.0;
                 return true;
