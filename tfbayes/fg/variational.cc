@@ -499,18 +499,18 @@ mixture_fnode_t::link(const std::string& tag1, const std::string& tag2, variable
 bool
 mixture_fnode_t::link(const std::string& tag, variable_node_i& variable_node)
 {
+        ssize_t index = _neighbors.index(tag);
+        if (index == -1) {
+                return false;
+        }
         if (token_first(tag, ':').size() != 2) {
                 return false;
         }
         string tag1 = token_first(tag, ':')[0];
         string tag2 = token_first(tag, ':')[1];
 
-        ssize_t i = _neighbors.index(tag);
-        if (i == -1) {
-                return false;
-        }
         if (link(tag1, tag2, variable_node)) {
-                _neighbors[i] = &variable_node;
+                _neighbors[index] = &variable_node;
         }
         return false;
 }
