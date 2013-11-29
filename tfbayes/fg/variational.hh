@@ -109,7 +109,7 @@ public:
         typedef factor_node_t base_t;
 
         normal_fnode_t(const std::string& name,
-                       double mean, double precision);
+                       double mean = 0.0, double precision = 1.0);
         normal_fnode_t(const normal_fnode_t& normal_fnode);
 
         virtual normal_fnode_t* clone() const;
@@ -154,7 +154,7 @@ public:
         typedef factor_node_t base_t;
 
         gamma_fnode_t(const std::string& name,
-                      double shape, double rate);
+                      double shape = 1.0, double rate = 1.0);
         gamma_fnode_t(const gamma_fnode_t& gamma_fnode);
 
         virtual gamma_fnode_t* clone() const;
@@ -234,8 +234,8 @@ public:
         typedef exponential_family_i::vector_t vector_t;
         typedef factor_node_t base_t;
 
-        categorical_fnode_t(const std::string& name,
-                          const vector_t& theta);
+        categorical_fnode_t(const std::string& name, const vector_t& theta);
+        categorical_fnode_t(const std::string& name, size_t k);
         categorical_fnode_t(const categorical_fnode_t& categorical_fnode);
 
         virtual categorical_fnode_t* clone() const;

@@ -18,6 +18,8 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
+#include <boost/foreach.hpp>
+
 #include <tfbayes/fg/variational.hh>
 #include <tfbayes/utility/debug.hh>
 #include <tfbayes/utility/strtools.hh>
@@ -350,6 +352,19 @@ categorical_fnode_t::categorical_fnode_t(const std::string& name,
         _links[1] = boost::bind(&categorical_fnode_t::dtheta, this);
 }
 
+categorical_fnode_t::categorical_fnode_t(const std::string& name,
+                                         size_t k) :
+        base_t       (2, categorical_tags, name),
+        dtheta       (),
+        // initial distributions
+        distribution1(k),
+        distribution2(k) {
+        // initialize parameters
+        dtheta = distribution2.statistics(vector_t(k, 1.0/(double)k));
+        // initialize links
+        _links[1] = boost::bind(&categorical_fnode_t::dtheta, this);
+}
+
 categorical_fnode_t::categorical_fnode_t(const categorical_fnode_t& categorical_fnode) :
         base_t       (categorical_fnode),
         dtheta       (categorical_fnode.dtheta),
@@ -402,12 +417,12 @@ categorical_fnode_t::operator()(size_t i) {
 
 p_message_t&
 categorical_fnode_t::message1() {
+        // expectation of log theta
         vector_t theta = _links[1]();
 
-        for (size_t i = 0; i < theta.size(); i++) {
-                theta[i] = std::exp(theta[i]);
+        BOOST_FOREACH(double& t, theta) {
+                t = std::max(std::numeric_limits<double>::min(), std::exp(t));
         }
-
         debug("categorical message 1 (categorical): " << this->name() << endl);
         distribution1 = categorical_distribution_t(theta);
         debug(endl);
@@ -417,8 +432,12 @@ categorical_fnode_t::message1() {
 
 p_message_t&
 categorical_fnode_t::message2() {
-        const vector_t alpha = _links[0]();
+        // expectation of alpha-1
+        vector_t alpha = _links[0]();
 
+        BOOST_FOREACH(double& a, alpha) {
+                a += 1.0;
+        }
         debug("categorical message 2 (dirichlet): " << this->name() << endl);
         distribution2 = dirichlet_distribution_t(alpha);
         debug(endl);

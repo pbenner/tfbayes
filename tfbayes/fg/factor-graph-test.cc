@@ -126,7 +126,7 @@ test4()
         factor_graph_t fg;
 
         matrix<double> data(1,1);
-        data[0][0] = 0.5;
+        data[0][0] = 0.0;
 
         vector<double> theta(2, 0.5);
         vector<double> alpha(2, 1.0);
@@ -139,8 +139,8 @@ test4()
         fg += normal_data_t ("x");
         fg += normal_vnode_t("normal_vnode_1");
         fg += normal_vnode_t("normal_vnode_2");
-        fg += normal_fnode_t("normal_fnode_1", 0, 1);
-        fg += normal_fnode_t("normal_fnode_2", 1, 1);
+        fg += normal_fnode_t("normal_fnode_1", 0, 10);
+        fg += normal_fnode_t("normal_fnode_2", 1, 10);
         fg += categorical_fnode_t("categorical_fnode_1", theta);
         fg += categorical_vnode_t("categorical_vnode_1", 2);
         fg += dirichlet_fnode_t("dirichlet_fnode_1", alpha);
