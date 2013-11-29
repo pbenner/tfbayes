@@ -434,7 +434,7 @@ public:
                 debug("-> dirichlet parameters:" << std::endl);
                 _log_partition = 0.0;
                 for (size_t i = 0; i < k(); i++) {
-                        const double alpha = parameters()[i]+1;
+                        const double alpha = parameters()[i]+1.0;
                         debug(boost::format("-> alpha[%i]: %d\n") % i % alpha);
                         _log_partition += boost::math::lgamma(alpha);
                 }
@@ -454,8 +454,8 @@ public:
                 double sum = std::accumulate(parameters().begin(), parameters().end(), 0.0);
                 double h   = log_partition() + sum*boost::math::digamma(sum+k());
                 for (size_t i = 0; i < k(); i++) {
-                        const double alpha = parameters()[i]+1;
-                        h -= (alpha-1)*boost::math::digamma(alpha);
+                        const double alpha = parameters()[i]+1.0;
+                        h -= (alpha-1.0)*boost::math::digamma(alpha);
                 }
                 return h;
         }

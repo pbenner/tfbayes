@@ -135,11 +135,18 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
                 free_energy.update(&*it, it->free_energy());
                 _queue.push(&*it);
         }
+        history.push_back(free_energy());
         // iterate network
         while (variable_node_i* job = _queue.pop()) {
                 // do the actual work
+                debug("node update" << std::endl);
+                debug("--------------------------------------------------------------------------------"
+                      << std::endl);
                 job->update();
                 // update free energy
+                debug("free energy" << std::endl);
+                debug("--------------------------------------------------------------------------------"
+                      << std::endl);
                 free_energy.update(job, job->free_energy());
                 for (variable_node_i::neighbors_t::const_iterator it = job->neighbors().begin();
                      it != job->neighbors().end(); it++) {

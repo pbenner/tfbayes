@@ -314,13 +314,13 @@ public:
                 debug(boost::format("variable node %s:%x has new message: ")
                       % name() % this << std::boolalpha
                       << (bool)_message << std::endl);
-                debug("--------------------------------------------------------------------------------"
-                      << std::endl);
                 if (_message) notify_neighbors();
         }
         virtual void condition(const std::matrix<double>& x) {
         }
         virtual double free_energy() const {
+                debug(boost::format("variable node %s:%x computed free energy: %d\n")
+                      % name() % this % _distribution.entropy());
                 return _distribution.entropy();
         }
         virtual const T& distribution() const {
