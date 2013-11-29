@@ -574,11 +574,12 @@ mixture_fnode_t::link(const std::string& tag, variable_node_i& variable_node, p_
 double
 mixture_fnode_t::free_energy() const
 {
-        double result = 0.0;
+        vector_t theta = _links[0]();
+        double result  = 0.0;
+        assert(_factor_nodes.size() == theta.size());
 
-        for (factor_nodes_t::const_iterator it = _factor_nodes.begin();
-             it != _factor_nodes.end(); it++) {
-                result += it->free_energy();
+        for (size_t i = 0; i < theta.size(); i++) {
+                result += theta[i]*_factor_nodes[i].free_energy();
         }
         return result;
 }
