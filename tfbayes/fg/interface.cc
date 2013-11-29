@@ -153,8 +153,8 @@ BOOST_PYTHON_MODULE(interface)
                 .def(init<std::string, std::vector<double> >())
                 ;
         class_<categorical_fnode_t, bases<factor_node_i> >("categorical_fnode_t", no_init)
-                .def(init<std::string, size_t>())
                 .def(init<std::string, std::vector<double> >())
+                .def(init<std::string, size_t>())
                 ;
         class_<mixture_fnode_t, bases<factor_node_i> >("mixture_fnode_t", no_init)
                 .def(init<std::string>())
