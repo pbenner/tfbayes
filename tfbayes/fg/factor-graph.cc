@@ -143,6 +143,7 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
                 debug("--------------------------------------------------------------------------------"
                       << std::endl);
                 job->update();
+                _energy_cache.update(job, job->free_energy());
                 history.push_back(free_energy());
         }
         return history;
