@@ -48,8 +48,11 @@ public:
 
         friend void swap(factor_graph_t& left, factor_graph_t& right) {
                 using std::swap;
-                swap(left._variable_nodes, right._variable_nodes);
                 swap(left._factor_nodes,   right._factor_nodes);
+                swap(left._variable_nodes, right._variable_nodes);
+                swap(left._factor_queue,   right._factor_queue);
+                swap(left._variable_queue, right._variable_queue);
+                swap(left._energy_cache,   right._energy_cache);
         }
         default_assignment_operator(factor_graph_t)
 
@@ -69,6 +72,9 @@ public:
         // execute the message passing algorithm
         std::vector<double> operator()(boost::optional<size_t> n = boost::optional<size_t>());
 
+        // compute free energy
+        double free_energy();
+
         // access distributions of variable nodes
         boost::optional<const exponential_family_i&> distribution(const std::string& name, size_t i = 0) const;
 
@@ -80,7 +86,10 @@ protected:
         factor_set_t _factor_nodes;
         variable_set_t _variable_nodes;
         // queue of nodes that need to send messages
-        fg_queue_t _queue;
+        fg_queue_t<factor_node_i> _factor_queue;
+        fg_queue_t<variable_node_i> _variable_queue;
+        // cached free energy values
+        cache_t _energy_cache;
 private:
         // insert nodes without cloning them
         factor_graph_t& operator+=(factor_node_i* factor_node);
@@ -89,6 +98,7 @@ private:
         void clone_nodes(const factor_set_t& factor_nodes,
                          const variable_set_t& variable_nodes);
         // add a nodes to the queue
+        void add_factor_node(factor_node_i* factor_node);
         void add_variable_node(variable_node_i* variable_node);
 };
 

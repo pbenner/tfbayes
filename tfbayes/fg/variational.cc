@@ -449,23 +449,37 @@ categorical_fnode_t::message2() {
 ////////////////////////////////////////////////////////////////////////////////
 
 mixture_fnode_t::mixture_fnode_t(const std::string& name) :
+        base_t       (),
         _links       (1),
         _name        (name),
         // initial distributions
         distribution1(0)
 {
+        debug(boost::format("allocating factor node %s:%x\n") 
+              % name % this);
         _neighbors.push_back("output");
         _neighbors.push_back("indicator");
 }
 
 mixture_fnode_t::mixture_fnode_t(const mixture_fnode_t& mixture_fnode) :
         base_t       (mixture_fnode),
-        _factor_nodes(mixture_fnode._factor_nodes),
-        _links       (mixture_fnode._links),
-        _neighbors   (mixture_fnode._neighbors),
+        _links       (1),
         _name        (mixture_fnode._name),
-        distribution1(mixture_fnode.distribution1)
+        distribution1(0)
 {
+        debug(boost::format("copying factor node %s:%x to %x\n") 
+              % name() % &mixture_fnode % this);
+        _neighbors.push_back("output");
+        _neighbors.push_back("indicator");
+        for (factor_nodes_t::const_iterator it = mixture_fnode._factor_nodes.begin();
+             it != mixture_fnode._factor_nodes.end(); it++) {
+                operator+=(*it);
+        }
+}
+
+mixture_fnode_t::~mixture_fnode_t() {
+        debug(boost::format("freeing factor node %s:%x\n") 
+              % name() % this);
 }
 
 mixture_fnode_t*
@@ -489,24 +503,44 @@ mixture_fnode_t::neighbors() const
 mixture_fnode_t&
 mixture_fnode_t::operator+=(const factor_node_i& factor_node)
 {
+        return operator+=(factor_node.clone());
+}
+
+mixture_fnode_t&
+mixture_fnode_t::operator+=(factor_node_i* factor_node)
+{
+        // observe this node
+        factor_node->observe(boost::bind(&mixture_fnode_t::notify, this));
         // add the factor node to the list of nodes
-        _factor_nodes.push_back(factor_node.clone());
+        _factor_nodes.push_back(factor_node);
         // add an additional component to the categorical distribution
         distribution1 = categorical_distribution_t(distribution1.k()+1);
         // copy neighbor tags from factor node
-        for (factor_node_i::neighbors_t::const_iterator it = factor_node.neighbors().begin();
-             it != factor_node.neighbors().end(); it++) {
-                _neighbors.push_back(factor_node.name() + ":" + string(*it));
+        for (factor_node_i::neighbors_t::const_iterator it = factor_node->neighbors().begin();
+             it != factor_node->neighbors().end(); it++) {
+                _neighbors.push_back(factor_node->name() + ":" + string(*it));
         }
         return *this;
 }
 
 void
-mixture_fnode_t::notify(const variable_node_i& variable_node) const {
+mixture_fnode_t::notify() const
+{
+        ssize_t index = _neighbors.index("indicator");
+        if (index != -1 && _neighbors[index] != NULL) {
+                _neighbors[index]->notify();
+        }
+        observable_t::notify();
+}
+
+void
+mixture_fnode_t::notify_neighbors(const variable_node_i& variable_node) const
+{
         for (factor_nodes_t::const_iterator it = _factor_nodes.begin();
              it != _factor_nodes.end(); it++) {
-                it->notify(variable_node);
+                it->notify_neighbors(variable_node);
         }
+        observable_t::notify();
 }
 
 bool
@@ -581,6 +615,9 @@ mixture_fnode_t::free_energy() const
         for (size_t i = 0; i < theta.size(); i++) {
                 result += theta[i]*_factor_nodes[i].free_energy();
         }
+        debug(boost::format("factor node %s:%x computed free energy: %d\n")
+              % name() % this % result);
+
         return result;
 }
 

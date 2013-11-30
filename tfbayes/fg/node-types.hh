@@ -89,7 +89,7 @@ public:
 class   factor_node_i;
 class variable_node_i;
 
-class factor_node_i : public virtual fg_node_i {
+class factor_node_i : public virtual fg_node_i, public virtual observable_i {
 public:
         typedef named_ptr_vector_t<variable_node_i> neighbors_t;
 
@@ -107,7 +107,7 @@ public:
         virtual const neighbors_t& neighbors() const = 0;
 
         // notify neighbors
-        virtual void notify(const variable_node_i& variable_node) const = 0;
+        virtual void notify_neighbors(const variable_node_i& variable_node) const = 0;
 };
 
 class variable_node_i : public virtual fg_node_i, public virtual observable_i  {
@@ -136,6 +136,9 @@ public:
         // get the type of the distribution this node represents
         virtual const std::type_info& type() const = 0;
 
+        // notify neighbors
+        virtual void notify_neighbors() const = 0;
+
         // neighboring factor nodes
         virtual const neighbors_t& neighbors() const = 0;
 };
@@ -153,13 +156,14 @@ inline variable_node_i* new_clone(const variable_node_i& a)
 // basic implementations of factor and variable nodes
 ////////////////////////////////////////////////////////////////////////////////
 
-class factor_node_t : public factor_node_i {
+class factor_node_t : public factor_node_i, public observable_t {
 public:
         factor_node_t(size_t k, const char* tags[], const std::string& name = "") :
                 _links       (k),
                 _neighbors   (k, tags),
                 _name        (name) {
-                debug("allocating factor node at " << this << std::endl);
+                debug(boost::format("allocating factor node %s:%x\n") 
+                      % name % this);
         }
         factor_node_t(const factor_node_t& factor_node) :
                 factor_node_i(factor_node),
@@ -169,13 +173,19 @@ public:
                 _neighbors   (factor_node._neighbors),
                 _name        (factor_node._name) {
                 debug(boost::format("copying factor node %s:%x to %x\n") 
-                      % factor_node.name() % &factor_node % this);
+                      % name() % &factor_node % this);
+        }
+        ~factor_node_t() {
+                debug(boost::format("freeing factor node %s:%x\n") 
+                      % name() % this);
         }
 
         virtual factor_node_t* clone() const = 0;
 
         friend void swap(factor_node_t& left, factor_node_t& right) {
                 using std::swap;
+                swap(static_cast<observable_t&>(left),
+                     static_cast<observable_t&>(right));
                 swap(left._neighbors, right._neighbors);
                 swap(left._name,      right._name);
                 swap(left._links,     right._links);
@@ -213,13 +223,14 @@ public:
         virtual const std::string& name() const {
                 return _name;
         }
-        virtual void notify(const variable_node_i& variable_node) const {
+        virtual void notify_neighbors(const variable_node_i& variable_node) const {
                 // notify all other neighbors about an update at node i
                 for (size_t i = 0; i < _neighbors.size(); i++) {
                         if (_neighbors[i] != NULL && _neighbors[i] != &variable_node) {
                                 _neighbors[i]->notify();
                         }
                 }
+                observable_t::notify();
         }
         virtual const neighbors_t& neighbors() const {
                 return _neighbors;
@@ -245,7 +256,8 @@ public:
                 _name          (name),
                 _distribution  (distribution),
                 _message       (distribution.moments()) {
-                debug("allocating variable node at " << this << std::endl);
+                debug(boost::format("allocating variable node %s:%x\n") 
+                      % name % this);
         }
         variable_node_t(const variable_node_t& variable_node) :
                 variable_node_i(variable_node),
@@ -258,7 +270,11 @@ public:
                 _distribution  (variable_node._distribution),
                 _message       (variable_node._message) {
                 debug(boost::format("copying variable node %s:%x to %x\n") 
-                      % variable_node.name() % &variable_node % this);
+                      % name() % &variable_node % this);
+        }
+        ~variable_node_t() {
+                debug(boost::format("freeing variable node %s:%x\n") 
+                      % name() % this);
         }
 
         virtual variable_node_t* clone() const {
@@ -328,7 +344,7 @@ public:
         }
         void notify_neighbors() const {
                 for (size_t i = 0; i < neighbors().size(); i++) {
-                        neighbors()[i]->notify(*this);
+                        neighbors()[i]->notify_neighbors(*this);
                 }
         }
 protected:
@@ -378,6 +394,8 @@ public:
                         base_t::_message += statistics;
                 }
                 assert(x.size() == base_t::_message.n);
+        }
+        virtual void notify() const {
         }
 };
 

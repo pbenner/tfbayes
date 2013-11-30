@@ -24,9 +24,6 @@
 
 #include <set>
 
-#include <boost/thread.hpp>
-#include <boost/thread/barrier.hpp>
-
 #include <tfbayes/fg/node-types.hh>
 
 class cache_t : std::map<const fg_node_i*, double> {
@@ -37,12 +34,10 @@ public:
                 sum(0.0) {
         }
         void update(const fg_node_i* node, double new_value) {
-                mtx.lock();
                 double old_value = base_t::operator[](node);
                 sum -= old_value;
                 sum += new_value;
                 base_t::operator[](node) = new_value;
-                mtx.unlock();
         }
         double operator()() const {
                 // save free energy
@@ -51,23 +46,23 @@ public:
         }
 protected:
         double sum;
-        boost::mutex mtx;
 };
 
-class fg_queue_t : std::set<variable_node_i*> {
+template <typename T>
+class fg_queue_t : std::set<T*> {
 public:
-        typedef std::set<variable_node_i*> base_t;
+        typedef std::set<T*> base_t;
 
         void set_limit(boost::optional<size_t> n = boost::optional<size_t>()) {
                 limit = n;
         }
-        void push(variable_node_i* node) {
+        void push(T* node) {
                 base_t::insert(node);
         }
-        variable_node_i* pop() {
-                variable_node_i* node = NULL;
+        T* pop() {
+                T* node = NULL;
                 if (!limit || *limit != 0) {
-                        base_t::iterator it = base_t::begin();
+                        typename base_t::iterator it = base_t::begin();
                         if (it != base_t::end()) {
                                 node = *it;
                                 base_t::erase(node);

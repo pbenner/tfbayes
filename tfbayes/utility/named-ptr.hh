@@ -75,7 +75,7 @@ public:
                         base_t::operator[](i) = std::string(tags[i]);
                 }
         }
-        ssize_t index(const std::string& tag) {
+        ssize_t index(const std::string& tag) const {
                 for (typename base_t::const_iterator it = base_t::begin();
                      it != base_t::end(); it++) {
                         if (static_cast<std::string>(*it) == tag) {

@@ -31,14 +31,18 @@ using namespace std;
 factor_graph_t::factor_graph_t() :
         _factor_nodes   (),
         _variable_nodes (),
-        _queue          ()
+        _factor_queue   (),
+        _variable_queue (),
+        _energy_cache   ()
 {
 }
 
 factor_graph_t::factor_graph_t(const factor_graph_t& factor_graph) :
         _factor_nodes   (),
         _variable_nodes (),
-        _queue          ()
+        _factor_queue   (),
+        _variable_queue (),
+        _energy_cache   ()
 {
         // clone all nodes of the factor graph
         clone_nodes(factor_graph._factor_nodes,
@@ -55,6 +59,7 @@ factor_graph_t&
 factor_graph_t::operator+=(factor_node_i* factor_node)
 {
         _factor_nodes += factor_node;
+        factor_node->observe(boost::bind(&factor_graph_t::add_factor_node, this, factor_node));
 
         return *this;
 }
@@ -68,10 +73,8 @@ factor_graph_t::operator+=(const variable_node_i& variable_node)
 factor_graph_t&
 factor_graph_t::operator+=(variable_node_i* variable_node)
 {
-        void (factor_graph_t::*tmp) (variable_node_i*) = &factor_graph_t::add_variable_node;
-
         _variable_nodes += variable_node;
-        variable_node->observe(boost::bind(tmp, this, variable_node));
+        variable_node->observe(boost::bind(&factor_graph_t::add_variable_node, this, variable_node));
 
         return *this;
 }
@@ -120,41 +123,38 @@ factor_graph_t::link(const string& tag, const std::string& vname)
 vector<double>
 factor_graph_t::operator()(boost::optional<size_t> n) {
         // a cache for the free energy
-        cache_t free_energy;
         // and a thread safe vector for the results
         vector<double> history;
         // limit the number of jobs
-        _queue.set_limit(n);
+        _variable_queue.set_limit(n);
         // initialize queue
         for (factor_set_t::iterator it = _factor_nodes.begin();
              it != _factor_nodes.end(); it++) {
-                free_energy.update(&*it, it->free_energy());
+                _energy_cache.update(&*it, it->free_energy());
         }
         for (variable_set_t::iterator it = _variable_nodes.begin();
              it != _variable_nodes.end(); it++) {
-                free_energy.update(&*it, it->free_energy());
-                _queue.push(&*it);
+                it->notify();
+                _energy_cache.update(&*it, it->free_energy());
         }
         history.push_back(free_energy());
         // iterate network
-        while (variable_node_i* job = _queue.pop()) {
-                // do the actual work
-                debug("node update" << std::endl);
+        while (variable_node_i* job = _variable_queue.pop()) {
                 debug("--------------------------------------------------------------------------------"
                       << std::endl);
                 job->update();
-                // update free energy
-                debug("free energy" << std::endl);
-                debug("--------------------------------------------------------------------------------"
-                      << std::endl);
-                free_energy.update(job, job->free_energy());
-                for (variable_node_i::neighbors_t::const_iterator it = job->neighbors().begin();
-                     it != job->neighbors().end(); it++) {
-                        free_energy.update(*it, (*it)->free_energy());
-                }
                 history.push_back(free_energy());
         }
         return history;
+}
+
+double
+factor_graph_t::free_energy()
+{
+        while (factor_node_i* job = _factor_queue.pop()) {
+                _energy_cache.update(job, job->free_energy());
+        }
+        return _energy_cache();
 }
 
 boost::optional<const exponential_family_i&>
@@ -200,10 +200,17 @@ factor_graph_t::variable_node(const string& name, size_t i)
 }
 
 void
+factor_graph_t::add_factor_node(factor_node_i* factor_node) {
+        debug(boost::format("*** adding factor node %s:%x to the queue ***\n")
+              % factor_node->name() % factor_node);
+        _factor_queue.push(factor_node);
+}
+
+void
 factor_graph_t::add_variable_node(variable_node_i* variable_node) {
         debug(boost::format("*** adding variable node %s:%x to the queue ***\n")
               % variable_node->name() % variable_node);
-        _queue.push(variable_node);
+        _variable_queue.push(variable_node);
 }
 
 void

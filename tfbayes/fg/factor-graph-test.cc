@@ -132,8 +132,8 @@ test4()
         vector<double> alpha(2, 1.0);
 
         mixture_fnode_t m("mixture_fnode_1");
-        m += normal_fnode_t("normal_fnode_1");
-        m += normal_fnode_t("normal_fnode_2");
+        m += normal_fnode_t("normal_1");
+        m += normal_fnode_t("normal_2");
 
         fg += m;
         fg += normal_data_t ("x");
@@ -146,15 +146,15 @@ test4()
         fg += dirichlet_fnode_t("dirichlet_fnode_1", alpha);
         fg += dirichlet_vnode_t("dirichlet_vnode_1", 2);
 
-        fg.link("mixture_fnode_1:output",              "x");
-        fg.link("mixture_fnode_1:normal_fnode_1:mean", "normal_vnode_1");
-        fg.link("mixture_fnode_1:normal_fnode_2:mean", "normal_vnode_2");
-        fg.link("mixture_fnode_1:indicator",           "categorical_vnode_1");
-        fg.link("categorical_fnode_1:output",          "categorical_vnode_1");
-        fg.link("categorical_fnode_1:theta",           "dirichlet_vnode_1");
-        fg.link("dirichlet_fnode_1:output",            "dirichlet_vnode_1");
-        fg.link("normal_fnode_1:output",               "normal_vnode_1");
-        fg.link("normal_fnode_2:output",               "normal_vnode_2");
+        fg.link("mixture_fnode_1:output",        "x");
+        fg.link("mixture_fnode_1:normal_1:mean", "normal_vnode_1");
+        fg.link("mixture_fnode_1:normal_2:mean", "normal_vnode_2");
+        fg.link("mixture_fnode_1:indicator",     "categorical_vnode_1");
+        fg.link("categorical_fnode_1:output",    "categorical_vnode_1");
+        fg.link("categorical_fnode_1:theta",     "dirichlet_vnode_1");
+        fg.link("dirichlet_fnode_1:output",      "dirichlet_vnode_1");
+        fg.link("normal_fnode_1:output",         "normal_vnode_1");
+        fg.link("normal_fnode_2:output",         "normal_vnode_2");
 
         fg.variable_node("x", 0)->condition(data);
 

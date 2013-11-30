@@ -132,11 +132,11 @@ BOOST_PYTHON_MODULE(interface)
                 .def(init<double, double>())
                 ;
         class_<dirichlet_distribution_t, bases<exponential_family_i> >("dirichlet_distribution_t", no_init)
-                .def(init<std::vector<double> >())
+                .def(init<const std::vector<double>&>())
                 .def(init<size_t>())
                 ;
         class_<categorical_distribution_t, bases<exponential_family_i> >("categorical_distribution_t", no_init)
-                .def(init<std::vector<double> >())
+                .def(init<const std::vector<double>&>())
                 .def(init<size_t>())
                 ;
         // factor nodes
@@ -150,15 +150,15 @@ BOOST_PYTHON_MODULE(interface)
                 .def(init<std::string, optional<double, double> >())
                 ;
         class_<dirichlet_fnode_t, bases<factor_node_i> >("dirichlet_fnode_t", no_init)
-                .def(init<std::string, std::vector<double> >())
+                .def(init<std::string, const std::vector<double>& >())
                 ;
         class_<categorical_fnode_t, bases<factor_node_i> >("categorical_fnode_t", no_init)
-                .def(init<std::string, std::vector<double> >())
+                .def(init<std::string, const std::vector<double>& >())
                 .def(init<std::string, size_t>())
                 ;
         class_<mixture_fnode_t, bases<factor_node_i> >("mixture_fnode_t", no_init)
                 .def(init<std::string>())
-                .def("__iadd__", &mixture_fnode_t::operator+=, return_internal_reference<>())
+                .def(self += other<factor_node_i>())
                 ;
         // variable nodes
         // ---------------------------------------------------------------------
@@ -197,9 +197,9 @@ BOOST_PYTHON_MODULE(interface)
                 .def("__call__", static_cast<std::vector<double> (*)(factor_graph_t&, size_t)>(&call_factor_graph))
                 .def("__getitem__", &access_distribution_1, return_internal_reference<>())
                 .def("__getitem__", &access_distribution_2, return_internal_reference<>())
-                .def("__iadd__", static_cast<factor_graph_t& (factor_graph_t::*)(const   factor_node_i&)>(&factor_graph_t::operator+=), return_internal_reference<>())
-                .def("__iadd__", static_cast<factor_graph_t& (factor_graph_t::*)(const variable_node_i&)>(&factor_graph_t::operator+=), return_internal_reference<>())
                 .def(self += self)
+                .def(self += other<factor_node_i>())
+                .def(self += other<variable_node_i>())
                 .def("replicate", &factor_graph_t::replicate, return_internal_reference<>())
                 .def("variable_node", static_cast<variable_node_i& (*)(factor_graph_t&, const std::string&)>(&access_variable_node), return_internal_reference<>())
                 .def("variable_node", static_cast<variable_node_i& (*)(factor_graph_t&, const std::string&, size_t)>(&access_variable_node), return_internal_reference<>())

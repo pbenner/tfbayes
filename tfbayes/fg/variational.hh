@@ -270,20 +270,23 @@ protected:
           dirichlet_distribution_t distribution2;
 };
 
-class mixture_fnode_t : public factor_node_i {
+class mixture_fnode_t : public factor_node_i, public observable_t {
 public:
         typedef exponential_family_i::vector_t vector_t;
         typedef boost::ptr_vector<factor_node_i> factor_nodes_t;
-        typedef factor_node_i base_t;
+        typedef observable_t base_t;
 
         mixture_fnode_t(const std::string& name);
         mixture_fnode_t(const mixture_fnode_t& mixture_fnode);
+        virtual ~mixture_fnode_t();
 
         virtual mixture_fnode_t* clone() const;
 
         friend void swap(mixture_fnode_t& left,
                          mixture_fnode_t& right) {
                 using std::swap;
+                swap(static_cast<observable_t&>(left),
+                     static_cast<observable_t&>(right));
                 swap(left._factor_nodes, right._factor_nodes);
                 swap(left._links,        right._links);
                 swap(left._neighbors,    right._neighbors);
@@ -294,10 +297,12 @@ public:
         derived_assignment_operator(mixture_fnode_t, factor_node_i);
 
         mixture_fnode_t& operator+=(const factor_node_i& factor_node);
+        mixture_fnode_t& operator+=(      factor_node_i* factor_node);
 
         virtual const std::string& name() const;
         virtual const neighbors_t& neighbors() const;
-        virtual void notify(const variable_node_i& variable_node) const;
+        virtual void notify() const;
+        virtual void notify_neighbors(const variable_node_i& variable_node) const;
 
         virtual bool link(const std::string& tag1, const std::string& tag2, variable_node_i& variable_node);
         virtual bool link(const std::string& tag, variable_node_i& variable_node, p_map_t f);
