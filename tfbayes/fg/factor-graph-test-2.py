@@ -6,29 +6,10 @@ from matplotlib import cm
 
 from tfbayes.fg import *
 
-# some example factor graphs
+# example factor graph
 ################################################################################
 
-# use a product normal distribution
-def construct_fg1(data):
-    data = map(lambda x: [x], data)
-    fg  = factor_graph_t()
-    fg += normal_fnode_t("f1", 0, 1)
-    fg += normal_data_t ("v1")
-    fg += normal_fnode_t("f2", 0, 0.01)
-    fg += normal_vnode_t("v2")
-    fg += gamma_fnode_t ("f3", 1, 2)
-    fg += gamma_vnode_t ("v3")
-    fg.link("f1:output",    "v1")
-    fg.link("f2:output",    "v2")
-    fg.link("f3:output",    "v3")
-    fg.link("f1:mean",      "v2")
-    fg.link("f1:precision", "v3")
-    fg.variable_node("v1").condition(data)
-    return fg
-
-# link every data point to a single node
-def construct_fg2(data):
+def construct_fg(data):
     data = map(lambda x: [x], data)
     fg  = factor_graph_t()
     # factor graph inside the plate
@@ -51,20 +32,6 @@ def construct_fg2(data):
     # loop over all variable nodes v1
     for i, d in enumerate(data):
         fg.variable_node("v1", i).condition([d])
-    return fg
-
-# categorical example
-def construct_fg3(data):
-    data = map(lambda x: [x], data)
-    fg  = factor_graph_t()
-    fg += categorical_fnode_t("f1", [0,0,0])
-    fg += categorical_data_t ("v1", 3)
-    fg += dirichlet_fnode_t  ("f2", [2,1,2])
-    fg += dirichlet_vnode_t  ("v2", 3)
-    fg.link("f1:output", "v1")
-    fg.link("f1:theta",  "v2")
-    fg.link("f2:output", "v2")
-    fg.variable_node("v1").condition(data)
     return fg
 
 # utility
@@ -100,22 +67,7 @@ def plot_fg(fg, data, bound):
     #plt.savefig("factor-graph-test-1.png")
     plt.show()
 
-# test 1
-################################################################################
-
-fg = construct_fg1([3.0])
-
-fg()
-fg["v2"].moments(0)
-fg["v3"].moments(1)
-
-fg = construct_fg2([3.0])
-
-fg()
-fg["v2"].moments(0)
-fg["v3"].moments(1)
-
-# test 2
+# test
 ################################################################################
 
 # generate some data
@@ -124,16 +76,7 @@ sigma = 0.1
 data  = np.random.normal(mu, sigma, 1000)
 
 # construct and execute the factor graph
-fg = construct_fg1(data)
+fg = construct_fg(data)
 bound = fg()
 
-plot_fg(fg, data, bound[1:])
-
-# test 3
-################################################################################
-
-data = [0,0,0,1,1,2,1,1,2,0]
-
-# construct and execute the factor graph
-fg = construct_fg3(data)
-bound = fg()
+plot_fg(fg, data, bound)
