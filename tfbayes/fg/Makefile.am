@@ -50,3 +50,9 @@ pkgpython_PYTHON = __init__.py
 ## clean python files
 clean-local:
 	$(RM) *.pyc
+
+## dot
+DOT_PNG = factor-graph-test-5-fg.png
+
+$(DOT_PNG): %.png: %.dot
+	fdp -Tpng -o $@ $<

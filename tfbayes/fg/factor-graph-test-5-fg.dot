@@ -1,0 +1,40 @@
+graph G {
+	{ rank = same;
+		z   [shape=ellipse];
+		cat [shape=box]}
+	cat -- z;
+	// allow edges to target clusters	
+	compound=true;
+	subgraph cluster_B {
+		subgraph cluster_A {
+			style = filled;
+			color = lightgray;
+			node [shape = box];
+			n3 [label = "Normal 3"];
+			n4 [label = "Normal 4"];
+			label = "Mixture";
+		}
+		x [label = "x"];
+		n3 -- x;
+		n4 -- x;
+		label = "K";
+	}
+	node [shape = ellipse];
+	mu1 [label = "&mu; 1"];
+	mu2 [label = "&mu; 2"];
+	z  [label = "Z"];
+	t  [label = "&theta;"];
+	node [shape = box];
+	n1 [label = "Normal 1"];
+	n2 [label = "Normal 2"];
+	cat [label = "Categorical"];
+	dir [label = "Dirichlet"];
+	z -- n3 [constraint = false,lhead=cluster_A];
+
+	n1 -- mu1;
+	n2 -- mu2;
+	mu1 -- n3;
+	mu2 -- n4;
+	t -- cat;
+	dir -- t;
+}

@@ -83,6 +83,10 @@ Instead of having a product normal distribution it is also possible to construct
 	fg = construct_fg3(data)
 	fg()
 
+### Example: Normal mixture
+
+![alt tag](factor-graph-test-5-fg.png)
+
 ### Example: Distributions
 
 Create two normal distributions with different mean and variance. The two distributions are multiplied and the resulting distribution is shown after renormalization.
