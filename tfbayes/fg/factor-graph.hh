@@ -89,7 +89,7 @@ protected:
         fg_queue_t<factor_node_i> _factor_queue;
         fg_queue_t<variable_node_i> _variable_queue;
         // cached free energy values
-        cache_t _energy_cache;
+        cache_t<fg_node_i> _energy_cache;
 private:
         // insert nodes without cloning them
         factor_graph_t& operator+=(factor_node_i* factor_node);

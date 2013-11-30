@@ -142,8 +142,7 @@ factor_graph_t::operator()(boost::optional<size_t> n) {
         while (variable_node_i* job = _variable_queue.pop()) {
                 debug("--------------------------------------------------------------------------------"
                       << std::endl);
-                job->update();
-                _energy_cache.update(job, job->free_energy());
+                _energy_cache.update(job, job->update());
                 history.push_back(free_energy());
         }
         return history;

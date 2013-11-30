@@ -26,14 +26,15 @@
 
 #include <tfbayes/fg/node-types.hh>
 
-class cache_t : std::map<const fg_node_i*, double> {
+template <typename T>
+class cache_t : std::map<const T*, double> {
 public:
-        typedef std::map<const fg_node_i*, double> base_t;
+        typedef std::map<const T*, double> base_t;
 
         cache_t() :
                 sum(0.0) {
         }
-        void update(const fg_node_i* node, double new_value) {
+        void update(const T* node, double new_value) {
                 double old_value = base_t::operator[](node);
                 sum -= old_value;
                 sum += new_value;

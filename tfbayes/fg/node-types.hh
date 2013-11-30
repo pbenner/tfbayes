@@ -125,7 +125,7 @@ public:
 
         virtual const exponential_family_i& distribution() const = 0;
 
-        virtual void update() = 0;
+        virtual double update() = 0;
 
         // add some data to the variable node
         virtual void condition(const std::matrix<double>& x) = 0;
@@ -311,7 +311,7 @@ public:
         virtual const q_message_t& operator()() const {
                 return static_cast<const q_message_t&>(_message);
         }
-        virtual void update() {
+        virtual double update() {
                 // compute new q-message
                 debug(boost::format("variable node %s:%x is preparing a new message\n")
                       % name() % this);
@@ -331,13 +331,14 @@ public:
                       % name() % this << std::boolalpha
                       << (bool)_message << std::endl);
                 if (_message) notify_neighbors();
-        }
-        virtual void condition(const std::matrix<double>& x) {
-        }
-        virtual double free_energy() const {
                 debug(boost::format("variable node %s:%x computed free energy: %d\n")
                       % name() % this % _distribution.entropy());
                 return _distribution.entropy();
+        }
+        virtual double free_energy() const {
+                return _distribution.entropy();
+        }
+        virtual void condition(const std::matrix<double>& x) {
         }
         virtual const T& distribution() const {
                 return _distribution;
@@ -374,9 +375,7 @@ public:
         virtual data_node_t* clone() const {
                 return new data_node_t(*this);
         }
-        virtual void update() {
-        }
-        virtual double free_energy() const {
+        virtual double update() {
                 return 0.0;
         }
         virtual void condition(const std::matrix<double>& x) {
@@ -396,6 +395,9 @@ public:
                 assert(x.size() == base_t::_message.n);
         }
         virtual void notify() const {
+        }
+        virtual double free_energy() const {
+                return 0.0;
         }
 };
 
