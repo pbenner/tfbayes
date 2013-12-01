@@ -22,6 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <map>
+#include <queue>
 #include <set>
 
 #include <tfbayes/fg/node-types.hh>
