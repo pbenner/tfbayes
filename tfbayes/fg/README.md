@@ -87,6 +87,40 @@ Instead of having a product normal distribution it is also possible to construct
 
 ![alt tag](factor-graph-test-5-fg.png)
 
+	def construct_fg(data):
+	    # prepare the mixture node
+	    m   = mixture_fnode_t("mixture")
+	    m  += normal_fnode_t("normal1", 0, 100)
+	    m  += normal_fnode_t("normal2", 0, 100)
+	    # construct graph inside the plate
+	    fg  = factor_graph_t()
+	    fg += m
+	    fg += normal_data_t("x")
+	    fg += categorical_fnode_t("categorical", 2)
+	    fg += categorical_vnode_t("z", 2)
+	    fg.link("mixture:indicator",  "z")
+	    fg.link("mixture:output",     "x")
+	    fg.link("categorical:output", "z")
+	    fg.replicate(len(data)-1)
+	    # construct the remaining graph
+	    fg += normal_vnode_t("mu1")
+	    fg += normal_vnode_t("mu2")
+	    fg += normal_fnode_t("normal1", -0.1, 0.01)
+	    fg += normal_fnode_t("normal2",  0.1, 0.01)
+	    fg += dirichlet_fnode_t("dirichlet", [1,1])
+	    fg += dirichlet_vnode_t("theta", 2)
+	    fg.link("dirichlet:output",   "theta")
+	    fg.link("categorical:theta",  "theta")
+	    fg.link("normal1:output", "mu1")
+	    fg.link("normal2:output", "mu2")
+	    fg.link("mixture:normal1:mean", "mu1")
+	    fg.link("mixture:normal2:mean", "mu2")
+	    for i, x in enumerate(data):
+	        fg.variable_node("x", i).condition([[x]])
+	    return fg
+
+![alt tag](factor-graph-test-5.png)
+
 ### Example: Distributions
 
 Create two normal distributions with different mean and variance. The two distributions are multiplied and the resulting distribution is shown after renormalization.
