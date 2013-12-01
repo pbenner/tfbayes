@@ -123,7 +123,7 @@ test3()
 void
 test4()
 {
-        factor_graph_t fg;
+        factor_graph_t fg1;
 
         matrix<double> data(1,1);
         data[0][0] = 0.0;
@@ -135,39 +135,41 @@ test4()
         m += normal_fnode_t("normal_1");
         m += normal_fnode_t("normal_2");
 
-        fg += m;
-        fg += normal_data_t ("x");
-        fg += normal_vnode_t("normal_vnode_1");
-        fg += normal_vnode_t("normal_vnode_2");
-        fg += normal_fnode_t("normal_fnode_1", 0, 10);
-        fg += normal_fnode_t("normal_fnode_2", 0, 10);
-        fg += categorical_fnode_t("categorical_fnode_1", 2);
-        fg += categorical_vnode_t("categorical_vnode_1", 2);
-        fg += dirichlet_fnode_t("dirichlet_fnode_1", alpha);
-        fg += dirichlet_vnode_t("dirichlet_vnode_1", 2);
+        fg1 += m;
+        fg1 += normal_data_t ("x");
+        fg1 += normal_vnode_t("normal_vnode_1");
+        fg1 += normal_vnode_t("normal_vnode_2");
+        fg1 += normal_fnode_t("normal_fnode_1", 0, 10);
+        fg1 += normal_fnode_t("normal_fnode_2", 0, 10);
+        fg1 += categorical_fnode_t("categorical_fnode_1", 2);
+        fg1 += categorical_vnode_t("categorical_vnode_1", 2);
+        fg1 += dirichlet_fnode_t("dirichlet_fnode_1", alpha);
+        fg1 += dirichlet_vnode_t("dirichlet_vnode_1", 2);
 
-        fg.link("mixture_fnode_1:output",        "x");
-        fg.link("mixture_fnode_1:normal_1:mean", "normal_vnode_1");
-        fg.link("mixture_fnode_1:normal_2:mean", "normal_vnode_2");
-        fg.link("mixture_fnode_1:indicator",     "categorical_vnode_1");
-        fg.link("categorical_fnode_1:output",    "categorical_vnode_1");
-        fg.link("categorical_fnode_1:theta",     "dirichlet_vnode_1");
-        fg.link("dirichlet_fnode_1:output",      "dirichlet_vnode_1");
-        fg.link("normal_fnode_1:output",         "normal_vnode_1");
-        fg.link("normal_fnode_2:output",         "normal_vnode_2");
+        fg1.link("mixture_fnode_1:output",        "x");
+        fg1.link("mixture_fnode_1:normal_1:mean", "normal_vnode_1");
+        fg1.link("mixture_fnode_1:normal_2:mean", "normal_vnode_2");
+        fg1.link("mixture_fnode_1:indicator",     "categorical_vnode_1");
+        fg1.link("categorical_fnode_1:output",    "categorical_vnode_1");
+        fg1.link("categorical_fnode_1:theta",     "dirichlet_vnode_1");
+        fg1.link("dirichlet_fnode_1:output",      "dirichlet_vnode_1");
+        fg1.link("normal_fnode_1:output",         "normal_vnode_1");
+        fg1.link("normal_fnode_2:output",         "normal_vnode_2");
 
-        fg.variable_node("x", 0)->condition(data);
+        fg1.variable_node("x", 0)->condition(data);
 
-        vector<double> bound = fg();
+        factor_graph_t fg2 = fg1;
+
+        vector<double> bound = fg2();
 
         for (size_t i = 0; i < bound.size(); i++) {
                 cout << "bound: " << bound[i] << endl;
         }
 
-        cout << "theta: " << fg.distribution("categorical_vnode_1")->moments()[0] << endl
-             << "theta: " << fg.distribution("categorical_vnode_1")->moments()[1] << endl;
-        cout << "alpha: " << fg.distribution("dirichlet_vnode_1")->parameters()[0]+1.0 << endl
-             << "alpha: " << fg.distribution("dirichlet_vnode_1")->parameters()[1]+1.0 << endl;
+        cout << "theta: " << fg2.distribution("categorical_vnode_1")->moments()[0] << endl
+             << "theta: " << fg2.distribution("categorical_vnode_1")->moments()[1] << endl;
+        cout << "alpha: " << fg2.distribution("dirichlet_vnode_1")->parameters()[0]+1.0 << endl
+             << "alpha: " << fg2.distribution("dirichlet_vnode_1")->parameters()[1]+1.0 << endl;
 }
 
 int

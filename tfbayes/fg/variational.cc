@@ -497,11 +497,6 @@ mixture_fnode_t::operator+=(factor_node_i* factor_node)
         _factor_nodes.push_back(factor_node);
         // add an additional component to the categorical distribution
         distribution1 = categorical_distribution_t(distribution1.k()+1);
-        // copy neighbor tags from factor node
-        for (factor_node_i::neighbors_t::const_iterator it = factor_node->neighbors().begin();
-             it != factor_node->neighbors().end(); it++) {
-                _neighbors.push_back(factor_node->name() + ":" + string(*it));
-        }
         return *this;
 }
 
