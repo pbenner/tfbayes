@@ -89,7 +89,7 @@ Instead of having a product normal distribution it is also possible to construct
 
 ### Example: Normal mixture
 
-![alt tag](factor-graph-test-5-fg.png)
+->![alt tag](factor-graph-test-5-fg.png)<-
 
 ### Example: Distributions
 
