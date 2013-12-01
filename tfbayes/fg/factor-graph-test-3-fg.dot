@@ -1,0 +1,19 @@
+graph G {
+	subgraph cluster_A {
+		node [shape = box];
+		c [label = "Categorical"];
+		node [shape = ellipse];
+		x [label = "x"];
+		c -- x;
+		labeljust = "r";
+		labelloc = "b";
+		label = "N";
+	}
+	node [shape = ellipse];
+	theta[label = "&theta;"];
+	node [shape = box];
+	d    [label = "Dirichlet"];
+
+	d -- theta;
+	theta -- c;
+}

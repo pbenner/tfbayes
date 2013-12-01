@@ -52,7 +52,10 @@ clean-local:
 	$(RM) *.pyc
 
 ## dot
-DOT_PNG = factor-graph-test-5-fg.png
+DOT_PNG = \
+	factor-graph-test-1-fg.png \
+	factor-graph-test-3-fg.png \
+	factor-graph-test-5-fg.png
 
 $(DOT_PNG): %.png: %.dot
-	fdp -Tpng -o $@ $<
+	dot -Tpng -o $@ $<

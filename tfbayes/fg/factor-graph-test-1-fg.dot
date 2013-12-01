@@ -1,0 +1,23 @@
+graph G {
+	subgraph cluster_A {
+		node [shape = box];
+		n2 [label = "Normal"];
+		node [shape = ellipse];
+		x [label = "x"];
+		n2 -- x;
+		labeljust = "r";
+		labelloc = "b";
+		label = "N";
+	}
+	node [shape = ellipse];
+	mu [label = "&mu;"];
+	tau[label = "&tau;"];
+	node [shape = box];
+	n1 [label = "Normal"];
+	g1 [label = "Gamma"];
+
+	n1 -- mu;
+	g1 -- tau;
+	mu -- n2;
+	tau -- n2;
+}
