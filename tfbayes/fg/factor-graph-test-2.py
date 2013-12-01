@@ -64,7 +64,8 @@ def plot_fg(fg, data, bound):
     ax4.plot(bound)
     ax4.set_xlabel("iteration")
     ax4.set_ylabel("bound")
-    #plt.savefig("factor-graph-test-1.png")
+    plt.tight_layout()
+    #plt.savefig("factor-graph-test-2.png")
     plt.show()
 
 # test
@@ -79,4 +80,4 @@ data  = np.random.normal(mu, sigma, 1000)
 fg = construct_fg(data)
 bound = fg()
 
-plot_fg(fg, data, bound)
+plot_fg(fg, data, bound[1:])
