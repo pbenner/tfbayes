@@ -46,15 +46,11 @@ public:
                 return new factor_graph_t(*this);
         }
 
-        friend void swap(factor_graph_t& left, factor_graph_t& right) {
-                using std::swap;
-                swap(left._factor_nodes,   right._factor_nodes);
-                swap(left._variable_nodes, right._variable_nodes);
-                swap(left._factor_queue,   right._factor_queue);
-                swap(left._variable_queue, right._variable_queue);
-                swap(left._energy_cache,   right._energy_cache);
-        }
-        default_assignment_operator(factor_graph_t)
+        // nodes maintain a lambda functions to methods of this class,
+        // which makes it hard to copy factor graphs
+#ifdef HAVE_STDCXX_0X
+        factor_graph_t& operator=(const factor_graph_t& factor_graph) = delete;
+#endif /* HAVE_STDCXX_0X */
 
         // add a node to the factor graph
         factor_graph_t& operator+=(const factor_node_i& factor_node);

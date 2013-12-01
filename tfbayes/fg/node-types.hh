@@ -286,6 +286,7 @@ public:
                 swap(static_cast<observable_t&>(left),
                      static_cast<observable_t&>(right));
                 swap(left._name,         right._name);
+                swap(left._links,        right._links);
                 swap(left._neighbors,    right._neighbors);
                 swap(left._distribution, right._distribution);
                 swap(left._message,      right._message);
@@ -372,9 +373,11 @@ public:
         data_node_t(const T& distribution, const std::string& name) :
                 base_t(distribution, name) {
         }
+
         virtual data_node_t* clone() const {
                 return new data_node_t(*this);
         }
+
         virtual double update() {
                 return 0.0;
         }

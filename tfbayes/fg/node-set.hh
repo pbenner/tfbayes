@@ -28,6 +28,7 @@
 #include <boost/ptr_container/ptr_map.hpp>
 
 #include <tfbayes/fg/node-types.hh>
+#include <tfbayes/utility/default-operator.hh>
 
 template<typename T1, typename T2>
 T2 get_value(T1 pair) {
@@ -50,6 +51,13 @@ public:
                 T& (*)(typename base_t::reference),
                 typename base_t::iterator
                 > iterator;
+
+        friend void swap(node_set_t<T>& left, node_set_t<T>& right) {
+                using std::swap;
+                swap(static_cast<base_t&>(left),
+                     static_cast<base_t&>(right));
+        }
+        default_assignment_operator(node_set_t)
 
         // access values
         const_iterator operator[](const std::string& name) const {

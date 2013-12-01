@@ -88,6 +88,17 @@ public:
         void push_back(const std::string& tag) {
                 base_t::push_back(named_ptr_t<T>(tag, NULL));
         }
+        using base_t::operator[];
+        named_ptr_t<T>& operator[](const std::string& tag) {
+                for (typename base_t::iterator it = base_t::begin();
+                     it != base_t::end(); it++) {
+                        if (static_cast<std::string>(*it) == tag) {
+                                return *it;
+                        }
+                }
+                base_t::push_back(named_ptr_t<T>(tag, NULL));
+                return base_t::back();
+        }
 };
 
 #endif /* __TFBAYES_UTILITY_NAMED_PTR_HH__ */

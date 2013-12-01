@@ -270,15 +270,14 @@ protected:
           dirichlet_distribution_t distribution2;
 };
 
-class mixture_fnode_t : public factor_node_i, public observable_t {
+class mixture_fnode_t : public factor_node_t {
 public:
         typedef exponential_family_i::vector_t vector_t;
         typedef boost::ptr_vector<factor_node_i> factor_nodes_t;
-        typedef observable_t base_t;
+        typedef factor_node_t base_t;
 
         mixture_fnode_t(const std::string& name);
         mixture_fnode_t(const mixture_fnode_t& mixture_fnode);
-        virtual ~mixture_fnode_t();
 
         virtual mixture_fnode_t* clone() const;
 
@@ -288,9 +287,7 @@ public:
                 swap(static_cast<observable_t&>(left),
                      static_cast<observable_t&>(right));
                 swap(left._factor_nodes, right._factor_nodes);
-                swap(left._links,        right._links);
                 swap(left._neighbors,    right._neighbors);
-                swap(left._name,         right._name);
                 swap(left.distribution1, right.distribution1);
         }
         virtual_assignment_operator(mixture_fnode_t);
@@ -299,7 +296,6 @@ public:
         mixture_fnode_t& operator+=(const factor_node_i& factor_node);
         mixture_fnode_t& operator+=(      factor_node_i* factor_node);
 
-        virtual const std::string& name() const;
         virtual const neighbors_t& neighbors() const;
         virtual void notify() const;
         virtual void notify_neighbors(const variable_node_i& variable_node) const;
@@ -309,20 +305,17 @@ public:
         virtual double free_energy() const;
 
 protected:
-        virtual p_message_t& operator()();
+        virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
+        // message from the mixture node to a connected categorical distribution
+        virtual p_message_t& operator()(size_t i);
+        // relay for messages sent to factors inside the mixture
         virtual p_message_t& message(size_t k, p_message_t& p_message);
 
         // list of factor nodes
         factor_nodes_t _factor_nodes;
 
-        // links to neighboring nodes
-        links_t<q_link_t> _links;
-
         // keep track of neighboring nodes for cloning whole networks
         neighbors_t _neighbors;
-
-        // id of this node
-        std::string _name;
 
         // messages
         categorical_distribution_t distribution1;

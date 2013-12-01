@@ -26,33 +26,33 @@ using namespace std;
 void
 test1()
 {
-        factor_graph_t fg;
+        factor_graph_t fg1;
 
         matrix<double> data(2, 1);
         data[0][0] = 1.42;
         data[1][0] = 1.81;
 
-        fg += normal_fnode_t("f1", 1, 2);
-        fg += normal_data_t ("v1");
-        fg += normal_fnode_t("f2", 2, 2);
-        fg += normal_vnode_t("v2");
-        fg += gamma_fnode_t ("f3", 1, 2);
-        fg += gamma_vnode_t ("v3");
+        fg1 += normal_fnode_t("f1", 1, 2);
+        fg1 += normal_data_t ("v1");
+        fg1 += normal_fnode_t("f2", 2, 2);
+        fg1 += normal_vnode_t("v2");
+        fg1 += gamma_fnode_t ("f3", 1, 2);
+        fg1 += gamma_vnode_t ("v3");
 
-        fg.link("f1:output",    "v1");
-        fg.link("f1:mean",      "v2");
-        fg.link("f1:precision", "v3");
-        fg.link("f2:output",    "v2");
-        fg.link("f3:output",    "v3");
+        fg1.link("f1:output",    "v1");
+        fg1.link("f1:mean",      "v2");
+        fg1.link("f1:precision", "v3");
+        fg1.link("f2:output",    "v2");
+        fg1.link("f3:output",    "v3");
 
-        fg.variable_node("v1")->condition(data);
+        fg1.variable_node("v1")->condition(data);
 
-//        factor_graph_t fg2(fg);
+        factor_graph_t fg2 = fg1;
 
-        fg(5);
+        fg2(5);
 
-        cout << "mean: " << fg.distribution("v2")->moments()[0] << endl
-             << "mean: " << fg.distribution("v3")->moments()[0] << endl;
+        cout << "mean: " << fg2.distribution("v2")->moments()[0] << endl
+             << "mean: " << fg2.distribution("v3")->moments()[0] << endl;
 }
 
 void

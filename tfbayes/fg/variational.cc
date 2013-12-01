@@ -448,50 +448,32 @@ categorical_fnode_t::message2() {
 // mixture factor node
 ////////////////////////////////////////////////////////////////////////////////
 
+static const char* mixture_tags[] = {"indicator"};
+
 mixture_fnode_t::mixture_fnode_t(const std::string& name) :
-        base_t       (),
-        _links       (1),
-        _name        (name),
+        base_t       (1, mixture_tags, name),
         // initial distributions
         distribution1(0)
 {
-        debug(boost::format("allocating factor node %s:%x\n") 
-              % name % this);
-        _neighbors.push_back("output");
         _neighbors.push_back("indicator");
 }
 
 mixture_fnode_t::mixture_fnode_t(const mixture_fnode_t& mixture_fnode) :
         base_t       (mixture_fnode),
-        _links       (1),
-        _name        (mixture_fnode._name),
         distribution1(0)
 {
-        debug(boost::format("copying factor node %s:%x to %x\n") 
-              % name() % &mixture_fnode % this);
-        _neighbors.push_back("output");
         _neighbors.push_back("indicator");
+        // clone all factor nodes
         for (factor_nodes_t::const_iterator it = mixture_fnode._factor_nodes.begin();
              it != mixture_fnode._factor_nodes.end(); it++) {
                 operator+=(*it);
         }
 }
 
-mixture_fnode_t::~mixture_fnode_t() {
-        debug(boost::format("freeing factor node %s:%x\n") 
-              % name() % this);
-}
-
 mixture_fnode_t*
 mixture_fnode_t::clone() const
 {
         return new mixture_fnode_t(*this);
-}
-
-const std::string&
-mixture_fnode_t::name() const
-{
-        return _name;
 }
 
 const factor_node_i::neighbors_t&
@@ -530,7 +512,7 @@ mixture_fnode_t::notify() const
         if (index != -1 && _neighbors[index] != NULL) {
                 _neighbors[index]->notify();
         }
-        observable_t::notify();
+        base_t::notify();
 }
 
 void
@@ -540,7 +522,7 @@ mixture_fnode_t::notify_neighbors(const variable_node_i& variable_node) const
              it != _factor_nodes.end(); it++) {
                 it->notify_neighbors(variable_node);
         }
-        observable_t::notify();
+        base_t::notify();
 }
 
 bool
@@ -561,34 +543,20 @@ mixture_fnode_t::link(const std::string& tag1, const std::string& tag2, variable
 bool
 mixture_fnode_t::link(const std::string& tag, variable_node_i& variable_node, p_map_t f)
 {
-        ssize_t index = _neighbors.index(tag);
-        if (index == -1) {
-                return false;
-        }
         if (tag == "indicator") {
-                // assure variable node is conjugate
-                debug(boost::format("attempting to link factor node %s:%x "
-                                    " with variable node %s:%x")
-                      % name() % this % variable_node.name() % &variable_node
-                      << std::endl);
-                if (variable_node.type() != typeid(categorical_distribution_t)) {
-                        debug("-> failed!" << std::endl);
+                if (!base_t::link(tag, variable_node, f)) {
                         return false;
                 }
-                _links[0] = variable_node.link(*this, boost::bind(&mixture_fnode_t::operator(), this));
-                _neighbors[index] = &variable_node;
+                _neighbors[tag] = &variable_node;
         }
         else if (tag == "output") {
                 for (factor_nodes_t::iterator it = _factor_nodes.begin();
                      it != _factor_nodes.end(); it++) {
-                        // mixture component number
-                        size_t k = it - _factor_nodes.begin();
-                        // create the link
-                        if (!it->link(tag, variable_node, boost::bind(&mixture_fnode_t::message, this, k, _1))) {
+                        if (!link(it->name(), "output", variable_node)) {
                                 return false;
                         }
+                        _neighbors[it->name() + ":output"] = &variable_node;
                 }
-                _neighbors[index] = &variable_node;
         }
         else {
                 if (token_first(tag, ':').size() < 2) {
@@ -600,8 +568,9 @@ mixture_fnode_t::link(const std::string& tag, variable_node_i& variable_node, p_
                 if (!link(tag1, tag2, variable_node)) {
                         return false;
                 }
-                _neighbors[index] = &variable_node;
+                _neighbors[tag] = &variable_node;
         }
+        // node was successfully linked
         return true;
 }
 
@@ -621,9 +590,18 @@ mixture_fnode_t::free_energy() const
         return result;
 }
 
+bool
+mixture_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
+        switch (i) {
+        case 0: return variable_node.type() == typeid(categorical_distribution_t);
+        default: assert(false);
+        }
+}
+
 p_message_t&
-mixture_fnode_t::operator()()
+mixture_fnode_t::operator()(size_t i)
 {
+        assert(i == 0);
         vector_t theta;
 
         for (factor_nodes_t::const_iterator it = _factor_nodes.cbegin();
