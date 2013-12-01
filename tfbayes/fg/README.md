@@ -33,10 +33,6 @@ Generate some data and run the factor graph
 	fg = construct_fg(data)
 	fg()
 
-Approximated posterior distribution
-
-![example1](factor-graph-test-1.png)
-
 Instead of having a product normal distribution it is also possible to construct a variable and factor node for each observation.
 
 	def construct_fg(data):
