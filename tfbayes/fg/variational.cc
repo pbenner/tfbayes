@@ -615,9 +615,7 @@ mixture_fnode_t::message(size_t k, p_message_t& p_message)
 {
         double p = _links[0]()[k];
 
-        for (size_t i = 0; i < p_message.parameters().size(); i++) {
-                p_message.parameters()[i] *= p;
-        }
+        p_message.pow(p);
 
         return p_message;
 }

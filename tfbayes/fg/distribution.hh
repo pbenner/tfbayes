@@ -96,6 +96,7 @@ public:
         virtual vector_t& parameters() = 0;
         // number of parameters
         virtual size_t k() const = 0;
+        virtual exponential_family_i& pow(double d) = 0;
         // for continuous distributions this is the density function,
         // otherwise the call operator returns a probability
         virtual double operator()(const vector_t& x) const = 0;
@@ -188,6 +189,15 @@ public:
         }
         virtual double log_partition() const {
                 return _log_partition;
+        }
+        virtual exponential_family_i& pow(double d) {
+                for (size_t i = 0; i < k(); i++) {
+                        _parameters[i] *= d;
+                }
+                // add normalization constants
+                _log_partition *= d;
+                // recompute moments
+                return *this;
         }
         virtual exponential_family_t& operator*=(const exponential_family_i& _e) {
                 const exponential_family_t& e =
