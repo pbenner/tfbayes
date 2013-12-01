@@ -62,7 +62,7 @@ Instead of having a product normal distribution it is also possible to construct
 
 ![alt tag](factor-graph-test-2.png)
 
-### Example: Categorical data
+### Example: Categorical distribution with dirichlet prior
 
 ![example3-fg](factor-graph-test-3-fg.png)
 
@@ -83,7 +83,7 @@ Instead of having a product normal distribution it is also possible to construct
 	fg = construct_fg(data)
 	fg()
 
-### Example: Normal mixture
+### Example: Normal mixture with unknown means
 
 ![alt tag](factor-graph-test-5-fg.png)
 
