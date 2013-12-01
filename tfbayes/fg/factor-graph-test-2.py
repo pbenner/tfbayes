@@ -13,25 +13,25 @@ def construct_fg(data):
     data = map(lambda x: [x], data)
     fg  = factor_graph_t()
     # factor graph inside the plate
-    fg += normal_fnode_t("f1", 0, 1)
-    fg += normal_data_t ("v1")
-    fg.link("f1:output",    "v1")
+    fg += normal_fnode_t("normal1")
+    fg += normal_data_t ("x")
+    fg.link("normal1:output", "x")
     # replicate this graph n-1 times
     fg.replicate(len(data)-1)
     # construct graph outside the plate
-    fg += normal_fnode_t("f2", 0, 0.01)
-    fg += normal_vnode_t("v2")
-    fg += gamma_fnode_t ("f3", 1, 2)
-    fg += gamma_vnode_t ("v3")
-    fg.link("f2:output",    "v2")
-    fg.link("f3:output",    "v3")
+    fg += normal_fnode_t("normal2", 0, 0.01)
+    fg += normal_vnode_t("mu")
+    fg += gamma_fnode_t ("gamma", 1, 2)
+    fg += gamma_vnode_t ("tau")
+    fg.link("normal2:output", "mu")
+    fg.link("gamma:output",   "tau")
     # connect v2 and v3 to all factors f1
     # within the plate
-    fg.link("f1:mean",      "v2")
-    fg.link("f1:precision", "v3")
+    fg.link("normal1:mean",      "mu")
+    fg.link("normal1:precision", "tau")
     # loop over all variable nodes v1
     for i, d in enumerate(data):
-        fg.variable_node("v1", i).condition([d])
+        fg.variable_node("x", i).condition([d])
     return fg
 
 # utility
@@ -46,11 +46,11 @@ def plot_density(ax, d, x_limits, xlab="", ylab="", n=1001):
 
 def plot_fg(fg, data, bound):
     # obtain estimates
-    e_mu  = fg["v2"].moments(0)
-    e_tau = fg["v3"].moments(1)
+    e_mu  = fg["mu" ].moments(0)
+    e_tau = fg["tau"].moments(1)
     d     = normal_distribution_t(e_mu, e_tau)
-    d1    = fg["v2"]
-    d2    = fg["v3"]
+    d1    = fg["mu" ]
+    d2    = fg["tau"]
     # plot result
     plt.clf()
     ax1 = plt.subplot2grid((3,2), (0,0), colspan=2)
