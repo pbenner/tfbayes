@@ -50,24 +50,25 @@ protected:
 };
 
 template <typename T>
-class fg_queue_t : std::set<T*> {
+class fg_queue_t : std::queue<T*> {
 public:
-        typedef std::set<T*> base_t;
+        typedef std::queue<T*> base_t;
 
         void set_limit(boost::optional<size_t> n = boost::optional<size_t>()) {
                 limit = n;
         }
         void push(T* node) {
-                base_t::insert(node);
+                if (set.find(node) == set.end()) {
+                        base_t::push(node);
+                        set.insert(node);
+                }
         }
         T* pop() {
                 T* node = NULL;
-                if (!limit || *limit != 0) {
-                        typename base_t::iterator it = base_t::begin();
-                        if (it != base_t::end()) {
-                                node = *it;
-                                base_t::erase(node);
-                        }
+                if ((!limit || *limit != 0) && !base_t::empty()) {
+                        node = base_t::front();
+                               base_t::pop();
+                        set.erase(node);
                 }
                 // update limit
                 if (limit && *limit > 0) {
@@ -76,6 +77,8 @@ public:
                 return node;
         }
 protected:
+        // assure that every job is queued only once
+        std::set<T*> set;
         // maximum number of jobs to process
         boost::optional<size_t> limit;
 };
