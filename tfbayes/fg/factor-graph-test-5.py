@@ -17,7 +17,7 @@ def construct_fg(data):
     # construct graph inside the plate
     fg  = factor_graph_t()
     fg += m
-    fg += normal_data_t("x")
+    fg += normal_vnode_t("x")
     fg += categorical_fnode_t("categorical", 2)
     fg += categorical_vnode_t("z", 2)
     fg.link("mixture:indicator",  "z")

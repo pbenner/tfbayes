@@ -11,7 +11,7 @@ Construct a factor graph with normal distributed observations, a normal prior fo
 	    data = map(lambda x: [x], data)
 	    fg  = factor_graph_t()
 	    fg += normal_fnode_t("normal1")
-	    fg += normal_data_t ("x")
+	    fg += normal_vnode_t("x")
 	    fg += normal_fnode_t("normal2", 0, 0.01)
 	    fg += normal_vnode_t("mu")
 	    fg += gamma_fnode_t ("gamma", 1, 2)
@@ -40,7 +40,7 @@ Instead of having a product normal distribution it is also possible to construct
 	    fg  = factor_graph_t()
 	    # factor graph inside the plate
 	    fg += normal_fnode_t("normal1")
-	    fg += normal_data_t ("x")
+	    fg += normal_vnode_t("x")
 	    fg.link("normal1:output", "x")
 	    # replicate this graph n-1 times
 	    fg.replicate(len(data)-1)
@@ -70,7 +70,7 @@ Instead of having a product normal distribution it is also possible to construct
 	    data = map(lambda x: [x], data)
 	    fg  = factor_graph_t()
 	    fg += categorical_fnode_t("categorical", 3)
-	    fg += categorical_data_t ("x", 3)
+	    fg += categorical_vnode_t("x", 3)
 	    fg += dirichlet_fnode_t  ("dirichlet", [2,1,2])
 	    fg += dirichlet_vnode_t  ("theta", 3)
 	    fg.link("categorical:output", "x")
@@ -95,7 +95,7 @@ Instead of having a product normal distribution it is also possible to construct
 	    # construct graph inside the plate
 	    fg  = factor_graph_t()
 	    fg += m
-	    fg += normal_data_t("x")
+	    fg += normal_vnode_t("x")
 	    fg += categorical_fnode_t("categorical", 2)
 	    fg += categorical_vnode_t("z", 2)
 	    fg.link("mixture:indicator",  "z")

@@ -13,7 +13,7 @@ def construct_fg(data):
     data = map(lambda x: [x], data)
     fg  = factor_graph_t()
     fg += categorical_fnode_t("categorical", 3)
-    fg += categorical_data_t ("x", 3)
+    fg += categorical_vnode_t("x", 3)
     fg += dirichlet_fnode_t  ("dirichlet", [2,1,2])
     fg += dirichlet_vnode_t  ("theta", 3)
     fg.link("categorical:output", "x")

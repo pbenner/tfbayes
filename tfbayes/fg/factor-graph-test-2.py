@@ -14,7 +14,7 @@ def construct_fg(data):
     fg  = factor_graph_t()
     # factor graph inside the plate
     fg += normal_fnode_t("normal1")
-    fg += normal_data_t ("x")
+    fg += normal_vnode_t("x")
     fg.link("normal1:output", "x")
     # replicate this graph n-1 times
     fg.replicate(len(data)-1)

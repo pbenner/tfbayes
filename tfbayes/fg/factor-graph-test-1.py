@@ -13,7 +13,7 @@ def construct_fg(data):
     data = map(lambda x: [x], data)
     fg  = factor_graph_t()
     fg += normal_fnode_t("normal1")
-    fg += normal_data_t ("x")
+    fg += normal_vnode_t("x")
     fg += normal_fnode_t("normal2", 0, 0.01)
     fg += normal_vnode_t("mu")
     fg += gamma_fnode_t ("gamma", 1, 2)

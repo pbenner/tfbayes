@@ -16,7 +16,7 @@ def construct_fg(data):
     m  += normal_fnode_t("f2")
     fg  = factor_graph_t()
     fg += m
-    fg += normal_data_t("x")
+    fg += normal_vnode_t("x")
     fg += normal_vnode_t("vmu1")
     fg += normal_vnode_t("vmu2")
     fg += normal_fnode_t("fmu1", 0, 10)

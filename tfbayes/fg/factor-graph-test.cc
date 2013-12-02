@@ -66,7 +66,7 @@ test2()
         data2[0][0] = 1.81;
 
         fg += normal_fnode_t("f1", 1, 2);
-        fg += normal_data_t ("v1");
+        fg += normal_vnode_t("v1");
         fg.link("f1:output", "v1");
         fg.replicate(1);
 
@@ -107,7 +107,7 @@ test3()
         vector<double> alpha(3, 1.0);
 
         fg += categorical_fnode_t("f1", theta);
-        fg += categorical_data_t("v1", 3);
+        fg += categorical_vnode_t("v1", 3);
         fg += dirichlet_fnode_t("f2", alpha);
         fg += dirichlet_vnode_t("v2", 3);
 
@@ -175,5 +175,5 @@ test4()
 int
 main()
 {
-        test1();
+        test4();
 }

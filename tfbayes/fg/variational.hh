@@ -66,42 +66,6 @@ public:
                 { }
 };
 
-class normal_data_t : public data_node_t<normal_distribution_t> {
-public:
-        typedef data_node_t<normal_distribution_t> base_t;
-
-        normal_data_t(std::string name)
-                : base_t(normal_distribution_t(), name)
-                { }
-};
-
-class gamma_data_t : public data_node_t<gamma_distribution_t> {
-public:
-        typedef data_node_t<gamma_distribution_t> base_t;
-
-        gamma_data_t(std::string name)
-                : base_t(gamma_distribution_t(), name)
-                { }
-};
-
-class dirichlet_data_t : public data_node_t<dirichlet_distribution_t> {
-public:
-        typedef data_node_t<dirichlet_distribution_t> base_t;
-
-        dirichlet_data_t(std::string name, size_t k)
-                : base_t(dirichlet_distribution_t(k), name)
-                { }
-};
-
-class categorical_data_t : public data_node_t<categorical_distribution_t> {
-public:
-        typedef data_node_t<categorical_distribution_t> base_t;
-
-        categorical_data_t(std::string name, size_t k)
-                : base_t(categorical_distribution_t(k), name)
-                { }
-};
-
 // factor node specializations
 ////////////////////////////////////////////////////////////////////////////////
 class normal_fnode_t : public factor_node_t {
@@ -284,8 +248,8 @@ public:
         friend void swap(mixture_fnode_t& left,
                          mixture_fnode_t& right) {
                 using std::swap;
-                swap(static_cast<observable_t&>(left),
-                     static_cast<observable_t&>(right));
+                swap(static_cast<base_t&>(left),
+                     static_cast<base_t&>(right));
                 swap(left._factor_nodes, right._factor_nodes);
                 swap(left._neighbors,    right._neighbors);
                 swap(left.distribution1, right.distribution1);

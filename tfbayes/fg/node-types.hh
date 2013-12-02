@@ -264,8 +264,8 @@ public:
         variable_node_t(const variable_node_t& variable_node) :
                 variable_node_i(variable_node),
                 observable_t   (variable_node),
-                _links         (variable_node._links),
-                _neighbors     (variable_node._neighbors),
+                _links         (),
+                _neighbors     (),
                 _name          (variable_node._name),
                 _distribution  (variable_node._distribution),
                 _message       (variable_node._message) {
@@ -415,8 +415,13 @@ variable_node_t<T>::condition(const std::matrix<double>& x) {
         assert(sizeof(variable_node_t<T>) == sizeof(data_node_t<T>));
         // smalltalk "become"
         variable_node_t<T>* tmp = clone();
+        // save neighbors and links
+        tmp->_links     = _links;
+        tmp->_neighbors = _neighbors;
         this->~variable_node_t<T>();
         new (this) data_node_t<T>(*tmp);
+        _links     = tmp->_links;
+        _neighbors = tmp->_neighbors;
         delete(tmp);
         this->condition(x);
 }
