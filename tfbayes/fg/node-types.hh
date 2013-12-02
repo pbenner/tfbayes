@@ -327,10 +327,10 @@ public:
                 // the new message is the moments of the
                 // sufficient statistics
                 _message = _distribution.moments();
-                // check if this message was sent before
                 debug(boost::format("variable node %s:%x has new message: ")
                       % name() % this << std::boolalpha
                       << (bool)_message << std::endl);
+                // check if this message was sent before
                 if (_message) notify_neighbors();
                 debug(boost::format("variable node %s:%x computed free energy: %d\n")
                       % name() % this % _distribution.entropy());
