@@ -75,7 +75,7 @@ public:
 
 // a general node in a factor graph must be clonable, observable,
 // and be able to send messages to neighboring nodes
-class fg_node_i : public virtual clonable {
+class fg_node_i : public virtual clonable, public virtual observable_i {
 public:
         virtual ~fg_node_i() { }
 
@@ -89,7 +89,7 @@ public:
 class   factor_node_i;
 class variable_node_i;
 
-class factor_node_i : public virtual fg_node_i, public virtual observable_i {
+class factor_node_i : public virtual fg_node_i {
 public:
         typedef named_ptr_vector_t<variable_node_i> neighbors_t;
 
@@ -110,7 +110,7 @@ public:
         virtual void notify_neighbors(const variable_node_i& variable_node) const = 0;
 };
 
-class variable_node_i : public virtual fg_node_i, public virtual observable_i  {
+class variable_node_i : public virtual fg_node_i {
 public:
         typedef std::vector<factor_node_i*> neighbors_t;
 
@@ -253,6 +253,8 @@ template <typename T>
 class variable_node_t : public variable_node_i, public observable_t {
 public:
         variable_node_t(const T& distribution, const std::string& name = "") :
+                variable_node_i(),
+                observable_t   (),
                 _name          (name),
                 _distribution  (distribution),
                 _message       (distribution.moments()) {
@@ -262,10 +264,8 @@ public:
         variable_node_t(const variable_node_t& variable_node) :
                 variable_node_i(variable_node),
                 observable_t   (variable_node),
-                // do not copy any links, since they should be
-                // populated manually to create a new network
-                _links         (),
-                _neighbors     (),
+                _links         (variable_node._links),
+                _neighbors     (variable_node._neighbors),
                 _name          (variable_node._name),
                 _distribution  (variable_node._distribution),
                 _message       (variable_node._message) {
@@ -339,8 +339,7 @@ public:
         virtual double free_energy() const {
                 return _distribution.entropy();
         }
-        virtual void condition(const std::matrix<double>& x) {
-        }
+        virtual void condition(const std::matrix<double>& x);
         virtual const T& distribution() const {
                 return _distribution;
         }
@@ -373,6 +372,9 @@ public:
         data_node_t(const T& distribution, const std::string& name) :
                 base_t(distribution, name) {
         }
+        data_node_t(const variable_node_t<T>& variable_node) :
+                base_t(variable_node) {
+        }
 
         virtual data_node_t* clone() const {
                 return new data_node_t(*this);
@@ -403,5 +405,20 @@ public:
                 return 0.0;
         }
 };
+
+// convert a variable node to a data node
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+void
+variable_node_t<T>::condition(const std::matrix<double>& x) {
+        assert(sizeof(variable_node_t<T>) == sizeof(data_node_t<T>));
+        // smalltalk "become"
+        variable_node_t<T>* tmp = clone();
+        this->~variable_node_t<T>();
+        new (this) data_node_t<T>(*tmp);
+        delete(tmp);
+        this->condition(x);
+}
 
 #endif /* __TFBAYES_FG_NODE_TYPES_HH__ */

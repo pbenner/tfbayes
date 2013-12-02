@@ -33,7 +33,7 @@ test1()
         data[1][0] = 1.81;
 
         fg1 += normal_fnode_t("f1", 1, 2);
-        fg1 += normal_data_t ("v1");
+        fg1 += normal_vnode_t("v1");
         fg1 += normal_fnode_t("f2", 2, 2);
         fg1 += normal_vnode_t("v2");
         fg1 += gamma_fnode_t ("f3", 1, 2);
@@ -136,7 +136,7 @@ test4()
         m += normal_fnode_t("normal_2");
 
         fg1 += m;
-        fg1 += normal_data_t ("x");
+        fg1 += normal_vnode_t("x");
         fg1 += normal_vnode_t("normal_vnode_1");
         fg1 += normal_vnode_t("normal_vnode_2");
         fg1 += normal_fnode_t("normal_fnode_1", 0, 10);
@@ -175,5 +175,5 @@ test4()
 int
 main()
 {
-        test4();
+        test1();
 }
