@@ -194,25 +194,6 @@ public:
         factor_node_t& operator=(const factor_node_t& factor_node) = delete;
 #endif /* HAVE_STDCXX_0X */
 
-        virtual bool link(size_t i, variable_node_i& variable_node, p_map_t f) {
-                assert(i < _links.size());
-                // allow only conjugate nodes to connect
-                debug(boost::format("attempting to link factor node %s:%x "
-                                    " with variable node %s:%x")
-                      % name() % this % variable_node.name() % &variable_node
-                      << std::endl);
-                if (// variable_node has to be a conjugate distribution
-                    !is_conjugate(i, variable_node)) {
-                        debug("-> failed!" << std::endl);
-                        return false;
-                }
-                // exchange mailbox slots
-                _links[i] = variable_node.link(*this, boost::bind(f, boost::bind(&factor_node_t::operator(), this, i)));
-                // save neighbor
-                _neighbors[i] = &variable_node;
-                // return that the nodes were successfully linked
-                return true;
-        }
         virtual bool link(const std::string& tag, variable_node_i& variable_node, p_map_t f) {
                 ssize_t i = _neighbors.index(tag);
                 if (i == -1) {
@@ -236,6 +217,25 @@ public:
                 return _neighbors;
         }
 protected:
+        bool link(size_t i, variable_node_i& variable_node, p_map_t f) {
+                assert(i < _links.size());
+                // allow only conjugate nodes to connect
+                debug(boost::format("attempting to link factor node %s:%x "
+                                    " with variable node %s:%x")
+                      % name() % this % variable_node.name() % &variable_node
+                      << std::endl);
+                if (// variable_node has to be a conjugate distribution
+                    !is_conjugate(i, variable_node)) {
+                        debug("-> failed!" << std::endl);
+                        return false;
+                }
+                // exchange mailbox slots
+                _links[i] = variable_node.link(*this, boost::bind(f, boost::bind(&factor_node_t::operator(), this, i)));
+                // save neighbor
+                _neighbors[i] = &variable_node;
+                // return that the nodes were successfully linked
+                return true;
+        }
         // prepare a message to the i'th connected variable
         // node (p messages)
         virtual p_message_t& operator()(size_t i) = 0;
