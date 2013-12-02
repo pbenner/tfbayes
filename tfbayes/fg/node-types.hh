@@ -74,7 +74,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 // a general node in a factor graph must be clonable, observable,
-// and be able to send messages to neighboring nodes
+// and be able to compute it's contribution to the free energy
 class fg_node_i : public virtual clonable, public virtual observable_i {
 public:
         virtual ~fg_node_i() { }
