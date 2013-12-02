@@ -414,15 +414,12 @@ void
 variable_node_t<T>::condition(const std::matrix<double>& x) {
         assert(sizeof(variable_node_t<T>) == sizeof(data_node_t<T>));
         // smalltalk "become"
-        variable_node_t<T>* tmp = clone();
+        variable_node_t<T> tmp(*this);
         // save neighbors and links
-        tmp->_links     = _links;
-        tmp->_neighbors = _neighbors;
+        swap(tmp, *this);
         this->~variable_node_t<T>();
-        new (this) data_node_t<T>(*tmp);
-        _links     = tmp->_links;
-        _neighbors = tmp->_neighbors;
-        delete(tmp);
+        new (this) data_node_t<T>(tmp);
+        swap(tmp, *this);
         this->condition(x);
 }
 
