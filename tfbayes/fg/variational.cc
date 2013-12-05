@@ -36,16 +36,18 @@ using namespace std;
 
 double
 normal_vnode_t::rand_mean() {
-        std::default_random_engine generator;
-        std::normal_distribution<double> distribution(0.0, 1.0);
+        default_random_engine generator;
+        generator.seed(rand());
+        normal_distribution<double> distribution(0.0, 1.0);
         return distribution(generator);
 }
 
 double
 gamma_vnode_t::rand_rate() {
-        std::default_random_engine generator;
-        std::normal_distribution<double> distribution(0.0, 1.0);
-        return std::abs(distribution(generator));
+        default_random_engine generator;
+        generator.seed(rand());
+        normal_distribution<double> distribution(0.0, 1.0);
+        return abs(distribution(generator));
 }
 
 vector<double>
@@ -53,8 +55,9 @@ dirichlet_vnode_t::rand_alpha(size_t k) {
         vector<double> result(k);
         double init[] = {1.0, 1.0, 1.0, 1.0};
 
-        std::default_random_engine generator;
-        std::discrete_distribution<int> distribution(init, init+4);
+        default_random_engine generator;
+        generator.seed(rand());
+        discrete_distribution<int> distribution(init, init+4);
 
         for (size_t i = 0; i < k; i++) {
                 result[i] = distribution(generator)+1.0;
@@ -72,7 +75,7 @@ categorical_vnode_t::rand_theta(size_t k) {
 
         T = gsl_rng_default;
         r = gsl_rng_alloc (T);
-        gsl_rng_set(r, static_cast<double>(std::abs(rand())));
+        gsl_rng_set(r, static_cast<double>(abs(rand())));
 
         for (size_t i = 0; i < k; i++) {
                 alpha[i] = 10.0;
@@ -89,7 +92,7 @@ categorical_vnode_t::rand_theta(size_t k) {
 
 static const char* normal_tags[] = {"output", "mean", "precision"};
 
-normal_fnode_t::normal_fnode_t(const std::string& name,
+normal_fnode_t::normal_fnode_t(const string& name,
                                double mean, double precision) :
         base_t       (3, normal_tags, name),
         dmean        (),
@@ -136,7 +139,7 @@ normal_fnode_t::free_energy() const
         double result  = 0.0;
 
         // log base measure
-        result -= d/2.0*std::log(2.0*M_PI);
+        result -= d/2.0*log(2.0*M_PI);
         // log partition
         result -= d/2.0*(mu2*tau - log_tau);
         // parameters * statistics
@@ -207,7 +210,7 @@ normal_fnode_t::message3() {
         double rate  = 0.5*(y2 - 2.0*y*mu + d*mu2);
         assert(rate >= 0.0);
         // in case we have some strange data
-        rate = std::max(1e-20, rate);
+        rate = max(1e-20, rate);
 
         debug("normal message 3 (gamma): " << this->name() << endl);
         // replace distribution
@@ -222,7 +225,7 @@ normal_fnode_t::message3() {
 
 static const char* gamma_tags[] = {"output", "shape", "rate"};
 
-gamma_fnode_t::gamma_fnode_t(const std::string& name,
+gamma_fnode_t::gamma_fnode_t(const string& name,
                              double shape, double rate) :
         base_t       (3, gamma_tags, name),
         dshape       (1),
@@ -265,7 +268,7 @@ gamma_fnode_t::free_energy() const
         double result  = 0.0;
 
         // log partition
-        result -= d*(boost::math::lgamma(shape) - shape*std::log(rate));
+        result -= d*(boost::math::lgamma(shape) - shape*log(rate));
         // parameters * statistics
         result += (shape-1.0)*log_tau;
         result -= rate*tau;
@@ -324,7 +327,7 @@ gamma_fnode_t::message3() {
 
 static const char* dirichlet_tags[] = {"output"};
 
-dirichlet_fnode_t::dirichlet_fnode_t(const std::string& name,
+dirichlet_fnode_t::dirichlet_fnode_t(const string& name,
                                      const vector_t& alpha) :
         base_t       (1, dirichlet_tags, name),
         dalpha       (alpha),
@@ -351,7 +354,7 @@ dirichlet_fnode_t::free_energy() const
         double result = 0.0;
 
         // log partition
-        double sum = std::accumulate(dalpha.begin(), dalpha.end(), 0.0);
+        double sum = accumulate(dalpha.begin(), dalpha.end(), 0.0);
         for (size_t i = 0; i < dalpha.size(); i++) {
                 result -= boost::math::lgamma(dalpha[i]);
         }
@@ -397,7 +400,7 @@ dirichlet_fnode_t::message1() {
 
 static const char* categorical_tags[] = {"output", "theta"};
 
-categorical_fnode_t::categorical_fnode_t(const std::string& name,
+categorical_fnode_t::categorical_fnode_t(const string& name,
                                          const vector_t& theta) :
         base_t       (2, categorical_tags, name),
         dtheta       (),
@@ -410,7 +413,7 @@ categorical_fnode_t::categorical_fnode_t(const std::string& name,
         _links[1] = boost::bind(&categorical_fnode_t::dtheta, this);
 }
 
-categorical_fnode_t::categorical_fnode_t(const std::string& name,
+categorical_fnode_t::categorical_fnode_t(const string& name,
                                          size_t k) :
         base_t       (2, categorical_tags, name),
         dtheta       (),
@@ -479,7 +482,7 @@ categorical_fnode_t::message1() {
         vector_t theta = _links[1]();
 
         BOOST_FOREACH(double& t, theta) {
-                t = std::max(std::numeric_limits<double>::min(), std::exp(t));
+                t = max(numeric_limits<double>::min(), exp(t));
         }
         debug("categorical message 1 (categorical): " << this->name() << endl);
         distribution1 = categorical_distribution_t(theta);
@@ -508,7 +511,7 @@ categorical_fnode_t::message2() {
 
 static const char* mixture_tags[] = {"indicator"};
 
-mixture_fnode_t::mixture_fnode_t(const std::string& name) :
+mixture_fnode_t::mixture_fnode_t(const string& name) :
         base_t       (1, mixture_tags, name),
         // initial distributions
         distribution1(0)
@@ -579,7 +582,7 @@ mixture_fnode_t::notify_neighbors(const variable_node_i& variable_node) const
 }
 
 bool
-mixture_fnode_t::link(const std::string& tag1, const std::string& tag2, variable_node_i& variable_node)
+mixture_fnode_t::link(const string& tag1, const string& tag2, variable_node_i& variable_node)
 {
         for (factor_nodes_t::iterator it = _factor_nodes.begin();
              it != _factor_nodes.end(); it++) {
@@ -594,7 +597,7 @@ mixture_fnode_t::link(const std::string& tag1, const std::string& tag2, variable
 }
 
 bool
-mixture_fnode_t::link(const std::string& tag, variable_node_i& variable_node, p_map_t f)
+mixture_fnode_t::link(const string& tag, variable_node_i& variable_node, p_map_t f)
 {
         if (tag == "indicator") {
                 if (!base_t::link(tag, variable_node, f)) {
@@ -659,7 +662,7 @@ mixture_fnode_t::operator()(size_t i)
 
         for (factor_nodes_t::const_iterator it = _factor_nodes.cbegin();
              it != _factor_nodes.cend(); it++) {
-                theta.push_back(std::exp(it->free_energy()));
+                theta.push_back(exp(it->free_energy()));
         }
         debug("mixture message 1 (categorical): " << this->name() << endl);
         distribution1 = categorical_distribution_t(theta);
