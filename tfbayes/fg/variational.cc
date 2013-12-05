@@ -15,8 +15,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <array>
+#include <vector>
+#include <cstdlib>
 #define _USE_MATH_DEFINES
 #include <cmath>
+
+#include <gsl/gsl_randist.h>
 
 #include <boost/foreach.hpp>
 
@@ -25,6 +30,59 @@
 #include <tfbayes/utility/strtools.hh>
 
 using namespace std;
+
+// variable node specializations
+////////////////////////////////////////////////////////////////////////////////
+
+double
+normal_vnode_t::rand_mean() {
+        std::default_random_engine generator;
+        std::normal_distribution<double> distribution(0.0, 1.0);
+        return distribution(generator);
+}
+
+double
+gamma_vnode_t::rand_rate() {
+        std::default_random_engine generator;
+        std::normal_distribution<double> distribution(0.0, 1.0);
+        return std::abs(distribution(generator));
+}
+
+vector<double>
+dirichlet_vnode_t::rand_alpha(size_t k) {
+        vector<double> result(k);
+        double init[] = {1.0, 1.0, 1.0, 1.0};
+
+        std::default_random_engine generator;
+        std::discrete_distribution<int> distribution(init, init+4);
+
+        for (size_t i = 0; i < k; i++) {
+                result[i] = distribution(generator)+1.0;
+        }
+        return result;
+}
+
+vector<double>
+categorical_vnode_t::rand_theta(size_t k) {
+        double alpha[k];
+        double theta[k];
+
+        const gsl_rng_type * T;
+        gsl_rng * r;
+
+        T = gsl_rng_default;
+        r = gsl_rng_alloc (T);
+        gsl_rng_set(r, static_cast<double>(std::abs(rand())));
+
+        for (size_t i = 0; i < k; i++) {
+                alpha[i] = 10.0;
+        }
+        gsl_ran_dirichlet(r, k, alpha, theta);
+
+        gsl_rng_free (r);
+
+        return vector<double>(theta, theta + k);
+}
 
 // normal factor node
 ////////////////////////////////////////////////////////////////////////////////

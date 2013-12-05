@@ -22,6 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <random>
+
 #include <boost/ptr_container/ptr_vector.hpp>
 
 #include <tfbayes/fg/node-set.hh>
@@ -35,8 +37,10 @@ public:
         typedef variable_node_t<normal_distribution_t> base_t;
 
         normal_vnode_t(std::string name)
-                : base_t(normal_distribution_t(0, 0.1), name)
+                : base_t(normal_distribution_t(rand_mean(), 1.0), name)
                 { }
+
+        static double rand_mean();
 };
 
 class gamma_vnode_t : public variable_node_t<gamma_distribution_t> {
@@ -44,8 +48,10 @@ public:
         typedef variable_node_t<gamma_distribution_t> base_t;
 
         gamma_vnode_t(std::string name)
-                : base_t(gamma_distribution_t(1, 0.1), name)
+                : base_t(gamma_distribution_t(1.0, rand_rate()), name)
                 { }
+
+        static double rand_rate();
 };
 
 class dirichlet_vnode_t : public variable_node_t<dirichlet_distribution_t> {
@@ -53,8 +59,10 @@ public:
         typedef variable_node_t<dirichlet_distribution_t> base_t;
 
         dirichlet_vnode_t(std::string name, size_t k)
-                : base_t(dirichlet_distribution_t(std::vector<double>(k, 1.0)), name)
+                : base_t(dirichlet_distribution_t(rand_alpha(k)), name)
                 { }
+
+        static std::vector<double> rand_alpha(size_t k);
 };
 
 class categorical_vnode_t : public variable_node_t<categorical_distribution_t> {
@@ -62,8 +70,10 @@ public:
         typedef variable_node_t<categorical_distribution_t> base_t;
 
         categorical_vnode_t(std::string name, size_t k)
-                : base_t(categorical_distribution_t(std::vector<double>(k, 1.0/static_cast<double>(k))), name)
+                : base_t(categorical_distribution_t(rand_theta(k)), name)
                 { }
+
+        static std::vector<double> rand_theta(size_t k);
 };
 
 // factor node specializations

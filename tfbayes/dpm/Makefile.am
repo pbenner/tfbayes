@@ -94,7 +94,7 @@ pkgpythondir = $(pyexecdir)/tfbayes/dpm
 pkgpython_PYTHON = __init__.py
 
 ## scripts
-dist_bin_SCRIPTS = \
+noinst_PYTHON = \
 	dpm-gaussian-demo \
 	dpm-tfbs-demo
 

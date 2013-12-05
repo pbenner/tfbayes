@@ -10,6 +10,8 @@ from tfbayes.fg import *
 ################################################################################
 
 def construct_fg(data):
+    categorical_vnode_t("z", 3)
+    categorical_vnode_t("z", 3)
     # prepare the mixture node
     m   = mixture_fnode_t("mixture")
     m  += normal_fnode_t("normal1", 0, 100)
@@ -27,8 +29,8 @@ def construct_fg(data):
     # construct the remaining graph
     fg += normal_vnode_t("mu1")
     fg += normal_vnode_t("mu2")
-    fg += normal_fnode_t("normal1", -0.1, 0.01)
-    fg += normal_fnode_t("normal2",  0.1, 0.01)
+    fg += normal_fnode_t("normal1", 0.0, 0.01)
+    fg += normal_fnode_t("normal2", 0.0, 0.01)
     fg += dirichlet_fnode_t("dirichlet", [1,1])
     fg += dirichlet_vnode_t("theta", 2)
     fg.link("dirichlet:output",   "theta")
@@ -53,12 +55,16 @@ def plot_density(ax, d, x_limits, xlab="", ylab="", n=1001):
 
 def plot_fg(fg, data1, data2, bound):
     # obtain estimates
-    d1    = fg["mu1"]
-    d2    = fg["mu2"]
     e_mu1 = fg["mu1"].moments(0)
     e_mu2 = fg["mu2"].moments(0)
     e_d1  = normal_distribution_t(e_mu1, 100)
     e_d2  = normal_distribution_t(e_mu2, 100)
+    if e_mu1 < e_mu2:
+        d1 = fg["mu1"]
+        d2 = fg["mu2"]
+    else:
+        d1 = fg["mu2"]
+        d2 = fg["mu1"]
     # plot result
     plt.clf()
     ax1 = plt.subplot2grid((3,2), (0,0), colspan=2)
