@@ -22,8 +22,6 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <random>
-
 #include <boost/ptr_container/ptr_vector.hpp>
 
 #include <tfbayes/fg/node-set.hh>

@@ -15,7 +15,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <array>
 #include <vector>
 #include <cstdlib>
 #define _USE_MATH_DEFINES
@@ -24,6 +23,9 @@
 #include <gsl/gsl_randist.h>
 
 #include <boost/foreach.hpp>
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+#include <boost/random/mersenne_twister.hpp>
 
 #include <tfbayes/fg/variational.hh>
 #include <tfbayes/utility/debug.hh>
@@ -36,31 +38,30 @@ using namespace std;
 
 double
 normal_vnode_t::rand_mean() {
-        default_random_engine generator;
+        boost::random::mt19937 generator;
         generator.seed(rand());
-        normal_distribution<double> distribution(0.0, 1.0);
+        boost::random::normal_distribution<double> distribution(0.0, 1.0);
         return distribution(generator);
 }
 
 double
 gamma_vnode_t::rand_rate() {
-        default_random_engine generator;
+        boost::random::mt19937 generator;
         generator.seed(rand());
-        normal_distribution<double> distribution(0.0, 1.0);
+        boost::random::normal_distribution<double> distribution(0.0, 1.0);
         return abs(distribution(generator));
 }
 
 vector<double>
 dirichlet_vnode_t::rand_alpha(size_t k) {
         vector<double> result(k);
-        double init[] = {1.0, 1.0, 1.0, 1.0};
 
-        default_random_engine generator;
+        boost::random::mt19937 generator;
         generator.seed(rand());
-        discrete_distribution<int> distribution(init, init+4);
+        boost::random::uniform_int_distribution<> distribution(1,6);
 
         for (size_t i = 0; i < k; i++) {
-                result[i] = distribution(generator)+1.0;
+                result[i] = distribution(generator);
         }
         return result;
 }
