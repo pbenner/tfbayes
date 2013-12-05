@@ -105,8 +105,8 @@ Instead of having a product normal distribution it is also possible to construct
 	    # construct the remaining graph
 	    fg += normal_vnode_t("mu1")
 	    fg += normal_vnode_t("mu2")
-	    fg += normal_fnode_t("normal1", -0.1, 0.01)
-	    fg += normal_fnode_t("normal2",  0.1, 0.01)
+	    fg += normal_fnode_t("normal1", 0.0, 0.01)
+	    fg += normal_fnode_t("normal2", 0.0, 0.01)
 	    fg += dirichlet_fnode_t("dirichlet", [1,1])
 	    fg += dirichlet_vnode_t("theta", 2)
 	    fg.link("dirichlet:output",   "theta")
