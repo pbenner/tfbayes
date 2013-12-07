@@ -70,7 +70,7 @@ categorical_vnode_t::init(boost::random::mt19937& generator) {
 
         T = gsl_rng_default;
         r = gsl_rng_alloc (T);
-        gsl_rng_set(r, abs(rand()));
+        gsl_rng_set(r, generator());
 
         for (size_t i = 0; i < k; i++) {
                 alpha[i] = 10.0;
