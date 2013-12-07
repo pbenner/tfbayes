@@ -340,7 +340,7 @@ public:
         virtual const T& distribution() const {
                 return _distribution;
         }
-        void notify_neighbors() const {
+        virtual void notify_neighbors() const {
                 for (size_t i = 0; i < neighbors().size(); i++) {
                         neighbors()[i]->notify_neighbors(*this);
                 }
