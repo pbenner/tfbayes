@@ -25,7 +25,6 @@
 #include <boost/foreach.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
-#include <boost/random/mersenne_twister.hpp>
 
 #include <tfbayes/fg/variational.hh>
 #include <tfbayes/utility/debug.hh>
@@ -37,37 +36,32 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 double
-normal_vnode_t::rand_mean() {
-        boost::random::mt19937 generator;
-        generator.seed(rand());
+normal_vnode_t::init(boost::random::mt19937& generator) {
         boost::random::normal_distribution<double> distribution(0.0, 1.0);
-        return distribution(generator);
+        return base_t::init(normal_distribution_t(distribution(generator), 1.0));
 }
 
 double
-gamma_vnode_t::rand_rate() {
-        boost::random::mt19937 generator;
-        generator.seed(rand());
+gamma_vnode_t::init(boost::random::mt19937& generator) {
         boost::random::normal_distribution<double> distribution(0.0, 1.0);
-        return abs(distribution(generator));
+        return base_t::init(gamma_distribution_t(1.0, abs(distribution(generator))));
 }
 
-vector<double>
-dirichlet_vnode_t::rand_alpha(size_t k) {
-        vector<double> result(k);
+double
+dirichlet_vnode_t::init(boost::random::mt19937& generator) {
+        vector<double> result(base_t::_distribution.k());
 
-        boost::random::mt19937 generator;
-        generator.seed(rand());
         boost::random::uniform_int_distribution<> distribution(1,6);
 
-        for (size_t i = 0; i < k; i++) {
+        for (size_t i = 0; i < base_t::_distribution.k(); i++) {
                 result[i] = distribution(generator);
         }
-        return result;
+        return base_t::init(dirichlet_distribution_t(result));
 }
 
-vector<double>
-categorical_vnode_t::rand_theta(size_t k) {
+double
+categorical_vnode_t::init(boost::random::mt19937& generator) {
+        size_t k = base_t::_distribution.k();
         double alpha[k];
         double theta[k];
 
@@ -76,7 +70,7 @@ categorical_vnode_t::rand_theta(size_t k) {
 
         T = gsl_rng_default;
         r = gsl_rng_alloc (T);
-        gsl_rng_set(r, static_cast<double>(abs(rand())));
+        gsl_rng_set(r, abs(rand()));
 
         for (size_t i = 0; i < k; i++) {
                 alpha[i] = 10.0;
@@ -85,7 +79,7 @@ categorical_vnode_t::rand_theta(size_t k) {
 
         gsl_rng_free (r);
 
-        return vector<double>(theta, theta + k);
+        return base_t::init(categorical_distribution_t(vector<double>(theta, theta + k)));
 }
 
 // normal factor node
@@ -128,7 +122,7 @@ normal_fnode_t::clone() const {
 }
 
 double
-normal_fnode_t::free_energy() const
+normal_fnode_t::operator()()
 {
         double d       = _links[0]().n;
         double y       = _links[0]()[0];
@@ -164,7 +158,7 @@ normal_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
 }
 
 p_message_t&
-normal_fnode_t::operator()(size_t i) {
+normal_fnode_t::message(size_t i) {
         switch (i) {
         case 0: return message1();
         case 1: return message2();
@@ -259,7 +253,7 @@ gamma_fnode_t::clone() const {
 }
 
 double
-gamma_fnode_t::free_energy() const
+gamma_fnode_t::operator()()
 {
         double d       = _links[0]().n;
         double log_tau = _links[0]()[0];
@@ -291,7 +285,7 @@ gamma_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
 }
 
 p_message_t&
-gamma_fnode_t::operator()(size_t i) {
+gamma_fnode_t::message(size_t i) {
         switch (i) {
         case 0: return message1();
         case 2: return message3();
@@ -348,7 +342,7 @@ dirichlet_fnode_t::clone() const {
 }
 
 double
-dirichlet_fnode_t::free_energy() const
+dirichlet_fnode_t::operator()()
 {
         vector_t log_theta = _links[0]();
         assert(log_theta.size() == dalpha.size());
@@ -380,7 +374,7 @@ dirichlet_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const 
 }
 
 p_message_t&
-dirichlet_fnode_t::operator()(size_t i) {
+dirichlet_fnode_t::message(size_t i) {
         switch (i) {
         case 0: return message1();
         default: assert(false);
@@ -441,7 +435,7 @@ categorical_fnode_t::clone() const {
 }
 
 double
-categorical_fnode_t::free_energy() const
+categorical_fnode_t::operator()()
 {
         const vector_t counts    = _links[0]();
         const vector_t log_theta = _links[1]();
@@ -469,7 +463,7 @@ categorical_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) cons
 }
 
 p_message_t&
-categorical_fnode_t::operator()(size_t i) {
+categorical_fnode_t::message(size_t i) {
         switch (i) {
         case 0: return message1();
         case 1: return message2();
@@ -632,14 +626,14 @@ mixture_fnode_t::link(const string& tag, variable_node_i& variable_node, p_map_t
 }
 
 double
-mixture_fnode_t::free_energy() const
+mixture_fnode_t::operator()()
 {
         vector_t theta = _links[0]();
         double result  = 0.0;
         assert(_factor_nodes.size() == theta.size());
 
         for (size_t i = 0; i < theta.size(); i++) {
-                result += theta[i]*_factor_nodes[i].free_energy();
+                result += theta[i]*_factor_nodes[i]();
         }
         debug(boost::format("factor node %s:%x computed free energy: %d\n")
               % name() % this % result);
@@ -656,14 +650,14 @@ mixture_fnode_t::is_conjugate(size_t i, variable_node_i& variable_node) const {
 }
 
 p_message_t&
-mixture_fnode_t::operator()(size_t i)
+mixture_fnode_t::message(size_t i)
 {
         assert(i == 0);
         vector_t theta;
 
-        for (factor_nodes_t::const_iterator it = _factor_nodes.cbegin();
-             it != _factor_nodes.cend(); it++) {
-                theta.push_back(exp(it->free_energy()));
+        for (factor_nodes_t::iterator it = _factor_nodes.begin();
+             it != _factor_nodes.end(); it++) {
+                theta.push_back(exp((*it)()));
         }
         debug("mixture message 1 (categorical): " << this->name() << endl);
         distribution1 = categorical_distribution_t(theta);

@@ -37,7 +37,7 @@ bool operator==(const q_message_t& rhs, const q_message_t& lhs) {
                 return false;
         }
         for (size_t i = 0; i < rhs.size(); i++) {
-                if (std::abs(rhs[i] - lhs[i]) > 1.0e-10) {
+                if (std::abs(rhs[i] - lhs[i]) > 1.0e-8) {
                         return false;
                 }
         }

@@ -163,7 +163,6 @@ BOOST_PYTHON_MODULE(interface)
         // variable nodes
         // ---------------------------------------------------------------------
         class_<variable_node_i, boost::noncopyable>("variable_node_i", no_init)
-                .def("__call__",    &variable_node_i::operator(), return_internal_reference<>())
                 .def("condition",   &variable_node_i::condition)
                 ;
         class_<normal_vnode_t, bases<variable_node_i> >("normal_vnode_t", no_init)

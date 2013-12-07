@@ -30,6 +30,7 @@
 #include <boost/bind.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <boost/random/mersenne_twister.hpp>
 
 #include <tfbayes/fg/hotnews.hh>
 #include <tfbayes/fg/messages.hh>
@@ -82,8 +83,11 @@ public:
         // a node might have an identifier
         virtual const std::string& name() const = 0;
 
-        // compute free energy
-        virtual double free_energy() const = 0;
+        // execute learning algorithm
+        virtual double operator()() = 0;
+
+        // initialize node randomly
+        virtual double init(boost::random::mt19937& generator) = 0;
 };
 
 class   factor_node_i;
@@ -96,8 +100,6 @@ public:
         virtual ~factor_node_i() { }
 
         virtual factor_node_i* clone() const = 0;
-
-        virtual factor_node_i& operator=(const factor_node_i& factor_node) = 0;
 
         // link a variable node to this factor node
         virtual bool link(const std::string& id, variable_node_i& variable_node,
@@ -118,14 +120,9 @@ public:
 
         virtual variable_node_i* clone() const = 0;
 
-        virtual variable_node_i& operator=(const variable_node_i& variable_node) = 0;
-
-        // get current message
-        virtual const q_message_t& operator()() const = 0;
-
+        // access methods
+        virtual const q_message_t& message() const = 0;
         virtual const exponential_family_i& distribution() const = 0;
-
-        virtual double update() = 0;
 
         // add some data to the variable node
         virtual void condition(const std::matrix<double>& x) = 0;
@@ -190,9 +187,6 @@ public:
                 swap(left._name,      right._name);
                 swap(left._links,     right._links);
         }
-#ifdef HAVE_STDCXX_0X
-        factor_node_t& operator=(const factor_node_t& factor_node) = delete;
-#endif /* HAVE_STDCXX_0X */
 
         virtual bool link(const std::string& tag, variable_node_i& variable_node, p_map_t f) {
                 ssize_t i = _neighbors.index(tag);
@@ -216,6 +210,9 @@ public:
         virtual const neighbors_t& neighbors() const {
                 return _neighbors;
         }
+        virtual double init(boost::random::mt19937& generator) {
+                return operator()();
+        }
 protected:
         bool link(size_t i, variable_node_i& variable_node, p_map_t f) {
                 assert(i < _links.size());
@@ -230,7 +227,7 @@ protected:
                         return false;
                 }
                 // exchange mailbox slots
-                _links[i] = variable_node.link(*this, boost::bind(f, boost::bind(&factor_node_t::operator(), this, i)));
+                _links[i] = variable_node.link(*this, boost::bind(f, boost::bind(&factor_node_t::message, this, i)));
                 // save neighbor
                 _neighbors[i] = &variable_node;
                 // return that the nodes were successfully linked
@@ -238,7 +235,7 @@ protected:
         }
         // prepare a message to the i'th connected variable
         // node (p messages)
-        virtual p_message_t& operator()(size_t i) = 0;
+        virtual p_message_t& message(size_t i) = 0;
         // check conjugacy of connecting nodes
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const = 0;
         // links to neighboring nodes
@@ -257,9 +254,12 @@ public:
                 observable_t   (),
                 _name          (name),
                 _distribution  (distribution),
-                _message       (distribution.moments()) {
+                _message       (q_message_t(distribution.k())) {
                 debug(boost::format("allocating variable node %s:%x\n") 
                       % name % this);
+                if (distribution) {
+                        _message = distribution.moments();
+                }
         }
         variable_node_t(const variable_node_t& variable_node) :
                 variable_node_i(variable_node),
@@ -276,7 +276,7 @@ public:
                 debug(boost::format("freeing variable node %s:%x\n") 
                       % name() % this);
         }
-
+        // only derived classes should be cloned
         virtual variable_node_t* clone() const {
                 return new variable_node_t(*this);
         }
@@ -298,7 +298,7 @@ public:
                 _links.push_back(f);
                 _neighbors.push_back(&factor_node);
                 // return a lambda to the call operator
-                return boost::bind(&variable_node_t::operator(), this);
+                return boost::bind(&variable_node_t::message, this);
         }
         virtual const std::type_info& type() const {
                 return typeid(T);
@@ -309,10 +309,10 @@ public:
         virtual const neighbors_t& neighbors() const {
                 return _neighbors;
         }
-        virtual const q_message_t& operator()() const {
+        virtual const q_message_t& message() const {
                 return static_cast<const q_message_t&>(_message);
         }
-        virtual double update() {
+        virtual double operator()() {
                 // compute new q-message
                 debug(boost::format("variable node %s:%x is preparing a new message\n")
                       % name() % this);
@@ -336,9 +336,6 @@ public:
                       % name() % this % _distribution.entropy());
                 return _distribution.entropy();
         }
-        virtual double free_energy() const {
-                return _distribution.entropy();
-        }
         virtual void condition(const std::matrix<double>& x);
         virtual const T& distribution() const {
                 return _distribution;
@@ -347,6 +344,14 @@ public:
                 for (size_t i = 0; i < neighbors().size(); i++) {
                         neighbors()[i]->notify_neighbors(*this);
                 }
+        }
+        virtual double init(const T& distribution) {
+                _distribution = distribution;
+                _message      = distribution.moments();
+                return distribution.entropy();
+        }
+        virtual double init(boost::random::mt19937& generator) {
+                return 0.0;
         }
 protected:
         // links to neighboring nodes
@@ -365,26 +370,26 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-class data_node_t : public variable_node_t<T> {
+class data_vnode_t : public variable_node_t<T> {
 public:
         typedef variable_node_t<T> base_t;
 
-        data_node_t(const T& distribution, const std::string& name) :
+        data_vnode_t(const T& distribution, const std::string& name) :
                 base_t(distribution, name) {
         }
-        data_node_t(const variable_node_t<T>& variable_node) :
+        data_vnode_t(const variable_node_t<T>& variable_node) :
                 base_t(variable_node) {
         }
 
-        virtual data_node_t* clone() const {
-                return new data_node_t(*this);
+        virtual data_vnode_t* clone() const {
+                return new data_vnode_t(*this);
         }
 
-        virtual double update() {
+        virtual double operator()() {
                 return 0.0;
         }
         virtual void condition(const std::matrix<double>& x) {
-                debug(boost::format("data_node %s:%x is receiving new data")
+                debug(boost::format("data_vnode %s:%x is receiving new data")
                       % base_t::name() % this << std::endl);
                 // reset message
                 base_t::_message.clear();
@@ -401,9 +406,6 @@ public:
         }
         virtual void notify() const {
         }
-        virtual double free_energy() const {
-                return 0.0;
-        }
 };
 
 // convert a variable node to a data node
@@ -412,13 +414,13 @@ public:
 template <typename T>
 void
 variable_node_t<T>::condition(const std::matrix<double>& x) {
-        assert(sizeof(variable_node_t<T>) == sizeof(data_node_t<T>));
+        assert(sizeof(variable_node_t<T>) == sizeof(data_vnode_t<T>));
         // smalltalk "become"
         variable_node_t<T> tmp(*this);
         // save neighbors and links
         swap(tmp, *this);
         this->~variable_node_t<T>();
-        new (this) data_node_t<T>(tmp);
+        new (this) data_vnode_t<T>(tmp);
         swap(tmp, *this);
         this->condition(x);
 }

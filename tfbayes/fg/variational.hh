@@ -35,10 +35,14 @@ public:
         typedef variable_node_t<normal_distribution_t> base_t;
 
         normal_vnode_t(std::string name)
-                : base_t(normal_distribution_t(rand_mean(), 1.0), name)
+                : base_t(normal_distribution_t(), name)
                 { }
 
-        static double rand_mean();
+        virtual normal_vnode_t* clone() const {
+                return new normal_vnode_t(*this);
+        }
+
+        virtual double init(boost::random::mt19937& generator);
 };
 
 class gamma_vnode_t : public variable_node_t<gamma_distribution_t> {
@@ -46,10 +50,14 @@ public:
         typedef variable_node_t<gamma_distribution_t> base_t;
 
         gamma_vnode_t(std::string name)
-                : base_t(gamma_distribution_t(1.0, rand_rate()), name)
+                : base_t(gamma_distribution_t(), name)
                 { }
 
-        static double rand_rate();
+        virtual gamma_vnode_t* clone() const {
+                return new gamma_vnode_t(*this);
+        }
+
+        virtual double init(boost::random::mt19937& generator);
 };
 
 class dirichlet_vnode_t : public variable_node_t<dirichlet_distribution_t> {
@@ -57,10 +65,14 @@ public:
         typedef variable_node_t<dirichlet_distribution_t> base_t;
 
         dirichlet_vnode_t(std::string name, size_t k)
-                : base_t(dirichlet_distribution_t(rand_alpha(k)), name)
+                : base_t(dirichlet_distribution_t(k), name)
                 { }
 
-        static std::vector<double> rand_alpha(size_t k);
+        virtual dirichlet_vnode_t* clone() const {
+                return new dirichlet_vnode_t(*this);
+        }
+
+        virtual double init(boost::random::mt19937& generator);
 };
 
 class categorical_vnode_t : public variable_node_t<categorical_distribution_t> {
@@ -68,10 +80,14 @@ public:
         typedef variable_node_t<categorical_distribution_t> base_t;
 
         categorical_vnode_t(std::string name, size_t k)
-                : base_t(categorical_distribution_t(rand_theta(k)), name)
+                : base_t(categorical_distribution_t(k), name)
                 { }
 
-        static std::vector<double> rand_theta(size_t k);
+        virtual categorical_vnode_t* clone() const {
+                return new categorical_vnode_t(*this);
+        }
+
+        virtual double init(boost::random::mt19937& generator);
 };
 
 // factor node specializations
@@ -100,11 +116,11 @@ public:
         virtual_assignment_operator(normal_fnode_t);
         derived_assignment_operator(normal_fnode_t, factor_node_i);
 
-        virtual double free_energy() const;
+        virtual double operator()();
 
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
-        virtual p_message_t& operator()(size_t i);
+        virtual p_message_t& message(size_t i);
 
         // message preparation
         p_message_t& message1();
@@ -144,11 +160,11 @@ public:
         virtual_assignment_operator(gamma_fnode_t);
         derived_assignment_operator(gamma_fnode_t, factor_node_i);
 
-        virtual double free_energy() const;
+        virtual double operator()();
 
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
-        virtual p_message_t& operator()(size_t i);
+        virtual p_message_t& message(size_t i);
 
         // message preparation
         p_message_t& message1();
@@ -185,11 +201,11 @@ public:
         virtual_assignment_operator(dirichlet_fnode_t);
         derived_assignment_operator(dirichlet_fnode_t, factor_node_i);
 
-        virtual double free_energy() const;
+        virtual double operator()();
 
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
-        virtual p_message_t& operator()(size_t i);
+        virtual p_message_t& message(size_t i);
 
         // parameters
         q_message_t dalpha;
@@ -224,11 +240,11 @@ public:
         virtual_assignment_operator(categorical_fnode_t);
         derived_assignment_operator(categorical_fnode_t, factor_node_i);
 
-        virtual double free_energy() const;
+        virtual double operator()();
 
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
-        virtual p_message_t& operator()(size_t i);
+        virtual p_message_t& message(size_t i);
 
         // parameters
         q_message_t dtheta;
@@ -274,12 +290,12 @@ public:
 
         virtual bool link(const std::string& tag1, const std::string& tag2, variable_node_i& variable_node);
         virtual bool link(const std::string& tag, variable_node_i& variable_node, p_map_t f);
-        virtual double free_energy() const;
+        virtual double operator()();
 
 protected:
         virtual bool is_conjugate(size_t i, variable_node_i& variable_node) const;
         // message from the mixture node to a connected categorical distribution
-        virtual p_message_t& operator()(size_t i);
+        virtual p_message_t& message(size_t i);
         // relay for messages sent to factors inside the mixture
         virtual p_message_t& message(size_t k, p_message_t& p_message);
 

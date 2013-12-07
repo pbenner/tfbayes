@@ -122,27 +122,29 @@ factor_graph_t::link(const string& tag, const std::string& vname)
 
 vector<double>
 factor_graph_t::operator()(boost::optional<size_t> n) {
+        boost::random::mt19937 generator;
+        generator.seed(rand());
         // a cache for the free energy
         // and a thread safe vector for the results
         vector<double> history;
         // limit the number of jobs
         _variable_queue.set_limit(n);
         // initialize queue
-        for (factor_set_t::iterator it = _factor_nodes.begin();
-             it != _factor_nodes.end(); it++) {
-                _energy_cache.update(&*it, it->free_energy());
-        }
         for (variable_set_t::iterator it = _variable_nodes.begin();
              it != _variable_nodes.end(); it++) {
+                _energy_cache.update(&*it, it->init(generator));
                 it->notify();
-                _energy_cache.update(&*it, it->free_energy());
+        }
+        for (factor_set_t::iterator it = _factor_nodes.begin();
+             it != _factor_nodes.end(); it++) {
+                _energy_cache.update(&*it, it->init(generator));
         }
         history.push_back(free_energy());
         // iterate network
         while (variable_node_i* job = _variable_queue.pop()) {
                 debug("--------------------------------------------------------------------------------"
                       << std::endl);
-                _energy_cache.update(job, job->update());
+                _energy_cache.update(job, (*job)());
                 history.push_back(free_energy());
         }
         return history;
@@ -152,7 +154,7 @@ double
 factor_graph_t::free_energy()
 {
         while (factor_node_i* job = _factor_queue.pop()) {
-                _energy_cache.update(job, job->free_energy());
+                _energy_cache.update(job, (*job)());
         }
         return _energy_cache();
 }

@@ -103,6 +103,8 @@ public:
         virtual exponential_family_i& operator*=(const exponential_family_i& e) = 0;
         virtual bool operator==(const exponential_family_i& rhs) const = 0;
         virtual bool operator!=(const exponential_family_i& rhs) const = 0;
+        // the distribution is false if it is not properly initialized
+        virtual operator bool() const = 0;
 };
 inline exponential_family_i* new_clone(const exponential_family_i& a)
 {
@@ -223,6 +225,9 @@ public:
         }
         virtual size_t k() const {
                 return _parameters.size();
+        }
+        virtual operator bool() const {
+                return n() != 0;
         }
 protected:
         virtual const domain_i& domain() const {
