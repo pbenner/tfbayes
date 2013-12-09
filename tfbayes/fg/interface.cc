@@ -128,6 +128,9 @@ BOOST_PYTHON_MODULE(interface)
         class_<normal_distribution_t, bases<exponential_family_i> >("normal_distribution_t")
                 .def(init<double, double>())
                 ;
+        class_<binormal_distribution_t, bases<exponential_family_i> >("binormal_distribution_t")
+                .def(init<double, double, double, double, double>())
+                ;
         class_<gamma_distribution_t, bases<exponential_family_i> >("gamma_distribution_t")
                 .def(init<double, double>())
                 ;

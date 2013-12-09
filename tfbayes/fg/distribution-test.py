@@ -19,7 +19,18 @@ def plot_density(d, x_from, x_to, n=1001):
     x = np.linspace(x_from, x_to, num=n)
     y = map(lambda xp: d([xp]), x)
     p = plt.plot(x,y)
-    plt.show()
+
+def plot_density_2d(d, xlim, ylim, xlab="x", ylab="y", n=101):
+    plt.clf()
+    ax = plt.subplot(1,1,1)
+    x = np.linspace(xlim[0], xlim[1], num=n)
+    y = np.linspace(ylim[0], ylim[1], num=n)
+    z = []
+    for xi in x:
+        z.append(map(lambda yp: d([xi, yp]), y))
+    p = ax.imshow(z, origin='lower', cmap='Reds', extent=[xlim[0],xlim[1],ylim[0],ylim[1]])
+    ax.set_xlabel(xlab)
+    ax.set_ylabel(ylab)
 
 def plot_density_list(d_list, x_from, x_to, labels=None, xlab="x", ylab="density", n=1001):
     plt.clf()
@@ -87,4 +98,12 @@ n0 *= n2
 n0.renormalize()
 
 plot_density_list([n0,n1,n2], -5, 5, ["n0", "n1", "n2"])
-plt.savefig("distribution-test.png")
+plt.savefig("distribution-test-1.png")
+
+# bivariate normal distribution
+################################################################################
+
+d = binormal_distribution_t(2, 2, 1, 0.9, 0.8)
+d([2,2])
+plot_density_2d(d, [0,4], [0,4])
+plt.savefig("distribution-test-2.png")

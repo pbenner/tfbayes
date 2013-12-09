@@ -132,4 +132,10 @@ Create two normal distributions with different mean and variance. The two distri
 	n0 *= n2
 	n0.renormalize()
 
-![alt tag](distribution-test.png)
+![alt tag](distribution-test-1.png)
+
+Construct a bivariate normal distribution
+
+	d = binormal_distribution_t(2, 2, 1, 0.9, 0.8)
+
+![alt tag](distribution-test-2.png)

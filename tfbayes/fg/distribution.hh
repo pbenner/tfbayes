@@ -249,7 +249,7 @@ protected:
         double _n;
 };
 
-// a multivariate normal distribution on a simple product space
+// the normal distribution
 ////////////////////////////////////////////////////////////////////////////////
 class normal_distribution_t : public exponential_family_t {
 public:
@@ -258,8 +258,6 @@ public:
         // void object
         normal_distribution_t() :
                 base_t(2, 0, real_domain_t(1)) {
-                parameters()[0] = 0.0;
-                parameters()[1] = 0.0;
         }
         normal_distribution_t(double mean, double precision) :
                 base_t(2, 1, real_domain_t(1)) {
@@ -322,6 +320,109 @@ public:
         }
         virtual statistics_t statistics(const vector_t& x) const {
                 return statistics(x[0]);
+        }
+};
+
+// the bivariate normal distribution
+////////////////////////////////////////////////////////////////////////////////
+class binormal_distribution_t : public exponential_family_t {
+public:
+        typedef exponential_family_t base_t;
+
+        // void object
+        binormal_distribution_t() :
+                base_t(6, 0, real_domain_t(2)) {
+        }
+        binormal_distribution_t(double mux, double muy,
+                                double sx, double sy, double rho) :
+                base_t(6, 1, real_domain_t(2)) {
+                assert(sx > 0.0);
+                assert(sy > 0.0);
+                assert(-1.0 < rho && rho < 1.0);
+                parameters()[0] = 1.0/(1.0 - rho*rho)*(mux*sy - muy*sx*rho)/(sx*sx*sy);
+                parameters()[1] = 1.0/(1.0 - rho*rho)*(muy*sx - mux*sy*rho)/(sx*sy*sy);
+                parameters()[2] = 1.0/(1.0 - rho*rho)*(-1.0/(2.0*sx*sx));
+                parameters()[3] = 1.0/(1.0 - rho*rho)*(rho/(2.0*sx*sy));
+                parameters()[4] = 1.0/(1.0 - rho*rho)*(rho/(2.0*sx*sy));
+                parameters()[5] = 1.0/(1.0 - rho*rho)*(-1.0/(2.0*sy*sy));
+                renormalize();
+        }
+        binormal_distribution_t(const binormal_distribution_t& binormal_distribution)
+                : base_t(binormal_distribution)
+                { }
+
+        virtual binormal_distribution_t* clone() const {
+                return new binormal_distribution_t(*this);
+        }
+
+        friend void swap(binormal_distribution_t& left,
+                         binormal_distribution_t& right) {
+                using std::swap;
+                swap(static_cast<base_t&>(left),
+                     static_cast<base_t&>(right));
+        }
+        virtual_assignment_operator(binormal_distribution_t)
+        derived_assignment_operator(binormal_distribution_t, exponential_family_i)
+
+        virtual double base_measure(const vector_t& x) const {
+                const double m = static_cast<double>(n());
+                return std::pow(2.0*M_PI, -m);
+        }
+        virtual bool renormalize() {
+                if (!base_t::renormalize()) {
+                        return false;
+                }
+                const double e1 = parameters()[0];
+                const double e2 = parameters()[1];
+                const double e3 = parameters()[2];
+                const double e4 = parameters()[3];
+                const double e5 = parameters()[4];
+                const double e6 = parameters()[5];
+                _log_partition  = 0.0;
+                _log_partition +=  1.0/4.0*(e2*e2*e3 - e1*e2*(e4 + e5) + e1*e1*e6)/(e4*e5 - e3*e6);
+                _log_partition += -1.0/2.0*std::log(4.0*e3*e6 - 4.0*e4*e5);
+                return true;
+        }
+        virtual vector_t moments() const {
+                vector_t m(6, 0.0);
+                const double e1 = parameters()[0];
+                const double e2 = parameters()[1];
+                const double e3 = parameters()[2];
+                const double e4 = parameters()[3];
+                const double e5 = parameters()[4];
+                const double e6 = parameters()[5];
+                const double rho = std::sqrt((e4*e5)/(e3*e6));
+                const double sx  = std::sqrt(-1.0/(2.0*(1.0-rho*rho)*e3));
+                const double sy  = std::sqrt(-1.0/(2.0*(1.0-rho*rho)*e6));
+                const double mux = sx*(    e1*sx + rho*e2*sy);
+                const double muy = sy*(rho*e1*sx +     e2*sy);
+                m[0] = mux;
+                m[1] = muy;
+                m[2] = mux*mux + sx*sx;
+                m[3] = mux*muy + rho*sx*sy;
+                m[4] = mux*muy + rho*sx*sy;
+                m[5] = muy*muy + sy*sy;
+                return m;
+        }
+        virtual double entropy() const {
+                const double e3 = parameters()[2];
+                const double e4 = parameters()[3];
+                const double e5 = parameters()[4];
+                const double e6 = parameters()[5];
+                return 1.0 + std::log(2.0*M_PI) - 1.0/2.0*std::log(4.0*e3*e6 - 4.0*e4*e5);
+        }
+        virtual statistics_t statistics(const vector_t& x) const {
+                const double x1 = x[0];
+                const double x2 = x[1];
+                statistics_t T(6);
+                T[0] = x1;
+                T[1] = x2;
+                T[2] = x1*x1;
+                T[3] = x1*x2;
+                T[4] = x2*x1;
+                T[5] = x2*x2;
+                T.n = 1;
+                return T;
         }
 };
 
