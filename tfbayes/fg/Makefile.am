@@ -14,10 +14,12 @@ factor_graph_test_LDADD   = libtfbayes-fg.la
 lib_LTLIBRARIES = libtfbayes-fg.la
 libtfbayes_fg_la_SOURCES = \
 	distribution.hh \
+	domain.hh \
 	factor-graph.cc \
 	factor-graph.hh \
 	hotnews.hh \
 	messages.hh \
+	node-set.hh \
 	node-types.hh \
 	queue.hh \
 	variational.hh \
@@ -50,6 +52,23 @@ pkgpython_PYTHON = __init__.py
 ## clean python files
 clean-local:
 	$(RM) *.pyc
+
+EXTRA_DIST = \
+	README.md \
+	factor-graph-test-1-fg.dot \
+	factor-graph-test-1-fg.png \
+	factor-graph-test-1.png \
+	factor-graph-test-1.py \
+	factor-graph-test-2.png \
+	factor-graph-test-2.py \
+	factor-graph-test-3-fg.dot \
+	factor-graph-test-3-fg.png \
+	factor-graph-test-3.py \
+	factor-graph-test-4.py \
+	factor-graph-test-5-fg.dot \
+	factor-graph-test-5-fg.png \
+	factor-graph-test-5.png \
+	factor-graph-test-5.py
 
 ## dot
 DOT_PNG = \
