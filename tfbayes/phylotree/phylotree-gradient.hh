@@ -152,20 +152,20 @@ private:
                          */
                         if (&node.left() == which) {
                                 for (size_t i = 0; i < AS; i++) {
-                                        partial.derivatives[which][i] += dpn_left*pn_right*partial_left[AS]*partial_right[i];
-                                        partial.derivatives[which][i] += dpm_left*pn_right*poly_sum_left              *partial_right[i];
-                                        partial.derivatives[which][i] += dpn_left*pn_right*partial_left[i]            *partial_right[AS];
-                                        partial.derivatives[which][i] += dpn_left*pm_right*partial_left[i]            *poly_sum_right;
-                                        partial.derivatives[which][i] += dpn_left*pn_right*partial_left[i]            *partial_right[i];
+                                        partial.derivatives[which][i] += dpn_left*pn_right*partial_left[AS]*partial_right[ i];
+                                        partial.derivatives[which][i] += dpm_left*pn_right*poly_sum_left   *partial_right[ i];
+                                        partial.derivatives[which][i] += dpn_left*pn_right*partial_left[ i]*partial_right[AS];
+                                        partial.derivatives[which][i] += dpn_left*pm_right*partial_left[ i]*poly_sum_right;
+                                        partial.derivatives[which][i] += dpn_left*pn_right*partial_left[ i]*partial_right[ i];
                                 }
                         }
                         else if (&node.right() == which) {
                                 for (size_t i = 0; i < AS; i++) {
-                                        partial.derivatives[which][i] +=  pn_left*dpn_right*partial_left[i]            *partial_right[AS];
-                                        partial.derivatives[which][i] +=  pn_left*dpm_right*partial_left[i]            *poly_sum_right;
-                                        partial.derivatives[which][i] +=  pn_left*dpn_right*partial_left[AS]*partial_right[i];
-                                        partial.derivatives[which][i] +=  pm_left*dpn_right*poly_sum_left              *partial_right[i];
-                                        partial.derivatives[which][i] +=  pn_left*dpn_right*partial_left[i]            *partial_right[i];
+                                        partial.derivatives[which][i] +=  pn_left*dpn_right*partial_left[ i]*partial_right[AS];
+                                        partial.derivatives[which][i] +=  pn_left*dpm_right*partial_left[ i]*poly_sum_right;
+                                        partial.derivatives[which][i] +=  pn_left*dpn_right*partial_left[AS]*partial_right[ i];
+                                        partial.derivatives[which][i] +=  pm_left*dpn_right*poly_sum_left   *partial_right[ i];
+                                        partial.derivatives[which][i] +=  pn_left*dpn_right*partial_left[ i]*partial_right[ i];
                                 }
                         }
                         else {
@@ -173,17 +173,17 @@ private:
                                         partial.derivatives[which][i] += pn_left *pn_right*partial_left[i]*partial_right.derivatives[which][AS];
                                         partial.derivatives[which][i] += pn_left *pm_right*partial_left[i]*deri_sum_right;
 
-                                        partial.derivatives[which][i] += pn_right*pn_left*partial_right[i]*partial_left.derivatives[which] [AS];
+                                        partial.derivatives[which][i] += pn_right*pn_left*partial_right[i]*partial_left .derivatives[which][AS];
                                         partial.derivatives[which][i] += pn_right*pm_left*partial_right[i]*deri_sum_left;
 
-                                        partial.derivatives[which][i] += pn_right*pn_left*partial_right.derivatives[which][i]*partial_left [AS];
+                                        partial.derivatives[which][i] += pn_right*pn_left*partial_right.derivatives[which][i]*partial_left[AS];
                                         partial.derivatives[which][i] += pn_right*pm_left*partial_right.derivatives[which][i]*poly_sum_left;
 
                                         partial.derivatives[which][i] += pn_left *pn_right*partial_left.derivatives[which][i]*partial_right[AS];
                                         partial.derivatives[which][i] += pn_left *pm_right*partial_left.derivatives[which][i]*poly_sum_right;
 
                                         partial.derivatives[which][i] += pn_left *pn_right*partial_left [i]*partial_right.derivatives[which][i];
-                                        partial.derivatives[which][i] += pn_left *pn_right*partial_right[i]*partial_left.derivatives[which][i];
+                                        partial.derivatives[which][i] += pn_left *pn_right*partial_right[i]*partial_left .derivatives[which][i];
                                 }
                         }
                 }
