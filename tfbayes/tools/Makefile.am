@@ -11,6 +11,7 @@ tfbayes_generate_alignment_LDADD   = ../phylotree/libtfbayes-phylotree.la
 tfbayes_treespace_optimize_SOURCES  = tfbayes-treespace-optimize.cc
 tfbayes_treespace_optimize_LDADD    = ../phylotree/libtfbayes-phylotree.la
 tfbayes_treespace_optimize_LDADD   += ../fasta/libtfbayes-fasta.la
+tfbayes_treespace_optimize_LDADD   += ../fastarithmetics/libtfbayes-fastarithmetics.la
 tfbayes_treespace_optimize_LDADD   += $(LIB_PTHREAD)
 tfbayes_treespace_optimize_LDADD   += $(BOOST_SYSTEM_LIB)
 tfbayes_treespace_optimize_LDADD   += $(BOOST_THREAD_LIB)

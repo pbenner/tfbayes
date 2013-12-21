@@ -97,7 +97,8 @@ public:
         }
         alignment_t(const std::string& filename,
                     boost::optional<const pt_root_t&> tree = boost::optional<const pt_root_t&>(),
-                    alphabet_t alphabet = nucleotide_alphabet_t())
+                    alphabet_t alphabet = nucleotide_alphabet_t(),
+                    bool verbose = false)
                 : std::matrix<AC>(),
                   // we have as many sequences in this alignment as
                   // there are leaves in the tree
@@ -114,7 +115,7 @@ public:
                 // of species in the alignment
                 _n_species = _taxon_map.size();
                 // parse fasta file
-                std::matrix<AC> tmp = parse_fasta(filename);
+                std::matrix<AC> tmp = parse_fasta(filename, verbose);
                 // check that all lengths are consistent
                 init_alignment(tmp);
         }
@@ -296,15 +297,17 @@ protected:
                         _taxon_map[tmp[i]] = i;
                 }
         }
-        std::matrix<AC> parse_fasta(const std::string& filename) {
+        std::matrix<AC> parse_fasta(const std::string& filename, bool verbose = false) {
                 FastaParser parser(filename);
 
                 std::matrix<AC> tmp(n_species(), 0);
                 std::string line;
 
                 for (size_t i = 1; parser; i++) {
-                        std::cerr << boost::format("Reading sequence %d...") % i
-                                  << std::endl;
+                        if (verbose) {
+                                std::cerr << boost::format("Reading sequence %d...") % i
+                                          << std::endl;
+                        }
                         line = parser();
                         if (line == "")
                                 continue;

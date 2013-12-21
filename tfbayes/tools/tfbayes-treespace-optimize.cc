@@ -27,6 +27,7 @@
 #include <getopt.h>
 
 #include <tfbayes/alignment/alignment.hh>
+#include <tfbayes/fastarithmetics/fast-lnbeta.hh>
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/phylotree-parser.hh>
 #include <tfbayes/phylotree/phylotree-sampler.hh>
@@ -110,7 +111,6 @@ void init() {
 
 typedef struct _options_t {
         double alpha;
-        size_t burnin;
         double lambda;
         double r;
         size_t max_steps;
@@ -119,9 +119,9 @@ typedef struct _options_t {
         double sigma;
         string posterior;
         size_t jobs;
+        bool   verbose;
         _options_t()
                 : alpha(0.2),
-                  burnin(1000),
                   lambda(0.1),
                   r(1.0),
                   max_steps(1000),
@@ -129,7 +129,8 @@ typedef struct _options_t {
                   epsilon(0.001),
                   sigma(0.01),
                   posterior(""),
-                  jobs(1)
+                  jobs(1),
+                  verbose(false)
                 { }
 } options_t;
 
@@ -137,16 +138,16 @@ static options_t options;
 
 ostream&
 operator<<(std::ostream& o, const options_t& options) {
-        o << "Options:"              << endl
+        o << "Options:"                                                   << endl
           << "-> alpha                 = " << options.alpha               << endl
-          << "-> burnin                = " << options.burnin              << endl
           << "-> gamma scale           = " << options.lambda              << endl
           << "-> gamma shape           = " << options.r                   << endl
           << "-> max steps             = " << options.max_steps           << endl
           << "-> min change            = " << options.min_change          << endl
           << "-> gradient step size    = " << options.epsilon             << endl
           << "-> proposal variance     = " << options.sigma               << endl
-          << "-> save posterior values = " << options.posterior           << endl;
+          << "-> save posterior values = " << options.posterior           << endl
+          << "-> verbose               = " << options.verbose             << endl;
         return o;
 }
 
@@ -162,7 +163,6 @@ void print_usage(char *pname, FILE *fp)
                       "\n"
                       "Options:\n"
                       "             -a DOUBLE       - pseudo count\n"
-                      "             -b INTEGER      - number of burn-in samples for metropolis-hastings\n"
                       "             -m INTEGER      - maximum number of steps\n"
                       "             -n DOUBLE       - stop gradient ascent if change is smaller than this value\n"
                       "             -e DOUBLE       - gradient ascent step size\n"
@@ -172,6 +172,7 @@ void print_usage(char *pname, FILE *fp)
                       "                               for each sample to FILE\n"
                       "             -s DOUBLE       - sigma^2 parameter for proposal distribution\n"
                       "             -j INTEGER      - number of parallel jobs\n"
+                      "             -v              - be verbose\n"
                       "\n"
                       "   --help                    - print help and exit\n"
                       "   --version                 - print version information and exit\n\n");
@@ -223,7 +224,7 @@ void run_optimization(const string& method, const char* file_tree, const char* f
         }
 
         /* alignment */
-        alignment_t<> alignment(file_alignment, pt_root);
+        alignment_t<> alignment(file_alignment, pt_root, nucleotide_alphabet_t(), options.verbose);
         assert(alignment.length() > 0);
 
         if (method == "gradient-ascent") {
@@ -235,7 +236,7 @@ void run_optimization(const string& method, const char* file_tree, const char* f
 //                gamma_jump_t jump(1.6, 0.4);
                 pt_metropolis_hastings_t<alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
                 pt_pmcmc_hastings_t<alphabet_size> pmcmc(options.jobs, pt_metropolis_hastings);
-                pmcmc(options.max_steps, options.burnin);
+                pmcmc(options.max_steps, options.verbose);
                 /* print posterior values to separate file */
                 if (options.posterior != "") {
                         ofstream csv(options.posterior.c_str());
@@ -267,10 +268,10 @@ int main(int argc, char *argv[])
                 int c, option_index = 0;
                 static struct option long_options[] = {
                         { "help",            0, 0, 'h' },
-                        { "version",         0, 0, 'v' }
+                        { "version",         0, 0, 'x' }
                 };
 
-                c = getopt_long(argc, argv, "a:b:e:m:n:r:l:p:s:j:hv",
+                c = getopt_long(argc, argv, "a:e:m:n:r:l:p:s:j:hv",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -280,9 +281,6 @@ int main(int argc, char *argv[])
                 switch(c) {
                 case 'a':
                         options.alpha = atof(optarg);
-                        break;
-                case 'b':
-                        options.burnin = atoi(optarg);
                         break;
                 case 'e':
                         options.epsilon = atof(optarg);
@@ -308,10 +306,13 @@ int main(int argc, char *argv[])
                 case 'j':
                         options.jobs = atoi(optarg);
                         break;
+                case 'v':
+                        options.verbose = true;
+                        break;
                 case 'h':
                         print_usage(argv[0], stdout);
                         exit(EXIT_SUCCESS);
-                case 'v':
+                case 'x':
                         print_version(stdout);
                         exit(EXIT_SUCCESS);
                 default:
@@ -329,7 +330,8 @@ int main(int argc, char *argv[])
         file_alignment = argv[optind+2];
 
         // print options
-        cerr << options << endl;
+        if (options.verbose)
+                cerr << options << endl;
 
         run_optimization(method, file_tree, file_alignment);
 

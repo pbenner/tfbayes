@@ -43,6 +43,8 @@
 #include <tfbayes/utility/polynomial.hh>
 #include <tfbayes/utility/progress.hh>
 
+#include <gperftools/profiler.h>
+
 /* AS: ALPHABET SIZE
  * AC: ALPHABET CODE TYPE
  * PC: POLYNOMIAL CODE TYPE
@@ -51,6 +53,8 @@
 class jumping_distribution_t : public virtual clonable
 {
 public:
+        virtual ~jumping_distribution_t() { }
+
         jumping_distribution_t* clone() const = 0;
 
         virtual double p(double d_old, double d_new) const = 0;
@@ -198,6 +202,7 @@ public:
                 double result = -std::numeric_limits<double>::infinity();
                 for (typename polynomial_t<AS, PC>::const_iterator ut = polynomial.begin();
                      ut != polynomial.end(); ut++) {
+//                        result = logadd(result, log(ut->coefficient()) + fast_lnbeta(ut->exponent(), alpha) - fast_lnbeta(alpha));
                         result = logadd(result, log(ut->coefficient()) + mbeta_log(ut->exponent(), alpha) - mbeta_log(alpha));
                 }
                 return result;
@@ -212,16 +217,6 @@ public:
         }
         void update_samples() {
                 samples.push_back(tree);
-        }
-        void update_steps() {
-                for (pt_node_t::id_t id = 1; id < tree.n_nodes; id++) {
-                        if (acceptance[id] > acceptance_rate) {
-                                jumping_distributions[id]->increase_jump(fabs(acceptance[id]-acceptance_rate));
-                        }
-                        else {
-                                jumping_distributions[id]->decrease_jump(fabs(acceptance[id]-acceptance_rate));
-                        }
-                }
         }
         void update_acceptance(pt_node_t::id_t id, bool accepted) {
                 // estimate acceptance rate
@@ -303,26 +298,13 @@ public:
                 std::cerr << progress_t((i+1.0)/(double)n);
                 funlockfile(stderr);
         }
-        void burnin(size_t n, bool progress = true) {
-                // burn in
-                for (size_t i = 0; i < n; i++) {
-                        if (progress) print_progress(i, n);
-                        generate_sample();
-                        update_steps();
-                }
-                step = 0;
-        }
-        void sample(size_t n, bool progress = true) {
+        void operator()(size_t n, bool progress = true) {
                 // sample n times
                 for (size_t i = 0; i < n; i++) {
                         if (progress) print_progress(i, n);
                         generate_sample();
                 }
                 if (progress) std::cerr << std::endl;
-        }
-        void operator()(size_t n, size_t m, bool progress = true) {
-                burnin(m, progress);
-                sample(n, progress);
         }
 
         std::vector<double> acceptance;
@@ -377,13 +359,13 @@ public:
 
         // sampling methods
         ////////////////////////////////////////////////////////////////////////////////
-        void operator()(size_t samples, size_t burnin) {
+        void operator()(size_t samples, bool verbose = true) {
 
                 std::vector<boost::thread*> threads(population.size());
 
                 // sample
                 for (size_t i = 0; i < population.size(); i++) {
-                        threads[i] = new boost::thread(boost::ref(*population[i]), samples, burnin, i==0);
+                        threads[i] = new boost::thread(boost::ref(*population[i]), samples, i==0 && verbose);
                 }
                 // join threads
                 for (size_t i = 0; i < population.size(); i++) {
