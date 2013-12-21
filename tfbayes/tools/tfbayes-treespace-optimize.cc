@@ -210,6 +210,41 @@ pt_root_t parse_tree_file(const string& filename)
         return tree_list.front();
 }
 
+void run_gradient_ascent(
+        const pt_root_t& pt_root,
+        const exponent_t<alphabet_size>& alpha,
+        const alignment_t<>& alignment)
+{
+        pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(pt_root, alignment, alpha, options.r, options.lambda, options.epsilon);
+        pt_gradient_ascent.run(options.max_steps, options.min_change);
+}
+
+void run_mcmc(
+        const pt_root_t& pt_root,
+        const exponent_t<alphabet_size>& alpha,
+        const alignment_t<>& alignment)
+{
+        normal_jump_t jump(options.sigma);
+//        gamma_jump_t jump(1.6, 0.4);
+        pt_metropolis_hastings_t<alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
+        pt_pmcmc_hastings_t<alphabet_size> pmcmc(options.jobs, pt_metropolis_hastings);
+        pmcmc(options.max_steps, options.verbose);
+        /* print posterior values to separate file */
+        if (options.posterior != "") {
+                ofstream csv(options.posterior.c_str());
+                if (!csv.is_open()) {
+                        cerr << "Unable to open file: "
+                             << options.posterior
+                             << endl;
+                        exit(EXIT_FAILURE);
+                }
+                csv << posterior_values(pmcmc) << endl;
+                csv.close();
+        }
+        /* print tree samples */
+        cout << pmcmc;
+}
+
 void run_optimization(const string& method, const char* file_tree, const char* file_alignment)
 {
         init();
@@ -228,29 +263,10 @@ void run_optimization(const string& method, const char* file_tree, const char* f
         assert(alignment.length() > 0);
 
         if (method == "gradient-ascent") {
-                pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(pt_root, alignment, alpha, options.r, options.lambda, options.epsilon);
-                pt_gradient_ascent.run(options.max_steps, options.min_change);
+                run_gradient_ascent(pt_root, alpha, alignment);
         }
         else if (method == "metropolis-hastings") {
-                normal_jump_t jump(options.sigma);
-//                gamma_jump_t jump(1.6, 0.4);
-                pt_metropolis_hastings_t<alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
-                pt_pmcmc_hastings_t<alphabet_size> pmcmc(options.jobs, pt_metropolis_hastings);
-                pmcmc(options.max_steps, options.verbose);
-                /* print posterior values to separate file */
-                if (options.posterior != "") {
-                        ofstream csv(options.posterior.c_str());
-                        if (!csv.is_open()) {
-                                cerr << "Unable to open file: "
-                                     << options.posterior
-                                     << endl;
-                                exit(EXIT_FAILURE);
-                        }
-                        csv << posterior_values(pmcmc) << endl;
-                        csv.close();
-                }
-                /* print tree samples */
-                cout << pmcmc;
+                run_mcmc(pt_root, alpha, alignment);
         }
         else {
                 cerr << "Unknown optimization method: " << method
