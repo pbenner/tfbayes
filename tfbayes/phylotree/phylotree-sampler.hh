@@ -244,9 +244,7 @@ public:
                         default: break;
                         }
                 }
-                if (d_new < 0.0) {
-                        d_new = -d_new;
-                }
+                d_new  = std::abs(d_new);
                 node.d = d_new;
 
                 // compute new log likelihood
