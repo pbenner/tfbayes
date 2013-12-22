@@ -223,6 +223,16 @@ pt_node_t::move_b()
         }
 }
 
+void
+pt_node_t::move(size_t which)
+{
+        switch (which) {
+        case 0: move_a(); break;
+        case 1: move_b(); break;
+        default: break;
+        }
+}
+
 // pt_leaf_t
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -227,11 +227,7 @@ public:
                 if (!node.leaf() && (d_new < 0.0 || bernoulli(rng))) {
                         // propose new topology
                         which = bernoulli(rng);
-                        switch (which) {
-                        case 0: node.move_a(); break;
-                        case 1: node.move_b(); break;
-                        default: break;
-                        }
+                        node.move(which);
                 }
                 d_new  = std::abs(d_new);
                 node.d = d_new;
@@ -250,11 +246,8 @@ public:
                         // sample rejected
                         node.d = d_old;
                         // if topology changed then switch it back
-                        switch (which) {
-                        case 0: node.move_a(); break;
-                        case 1: node.move_b(); break;
-                        default: break;
-                        }
+                        node.move(which);
+
                         return log_posterior_ref;
                 }
         }
