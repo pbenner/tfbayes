@@ -328,8 +328,6 @@ class pt_pmcmc_hastings_t
 public:
         pt_pmcmc_hastings_t(size_t n, const pt_metropolis_hastings_t<AS, AC, PC>& mh) {
 
-                assert(n > 0);
-
                 for (size_t i = 0; i < n; i++) {
                         population.push_back(mh.clone());
                 }
