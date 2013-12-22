@@ -30,16 +30,19 @@
 #include <sys/time.h>
 #include <limits>
 
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/bernoulli_distribution.hpp>
+#include <boost/random/gamma_distribution.hpp>
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/uniform_01.hpp>
+#include <boost/math/distributions/gamma.hpp>
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-
-#include <gsl/gsl_randist.h>
 
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/phylotree-polynomial.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
-#include <tfbayes/utility/distribution.hh>
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/polynomial.hh>
 #include <tfbayes/utility/progress.hh>
@@ -57,8 +60,7 @@ public:
         jumping_distribution_t* clone() const = 0;
 
         virtual double p(double d_old, double d_new) const = 0;
-        virtual double sample(gsl_rng * rng, double d_old) const = 0;
-        virtual double sample(gsl_rng * rng, double d_old, double sigma) const = 0;
+        virtual double sample(boost::random::mt19937& rng, double d_old) const = 0;
         virtual void increase_jump(double eta) = 0;
         virtual void decrease_jump(double eta) = 0;
 };
@@ -66,8 +68,8 @@ public:
 class normal_jump_t : public jumping_distribution_t
 {
 public:
-        normal_jump_t(double sigma_square = 0.05)
-                : sigma_square(sigma_square) { }
+        normal_jump_t(double sigma_square = 0.2)
+                : sigma(std::sqrt(sigma_square)) { }
 
         normal_jump_t* clone() const {
                 return new normal_jump_t(*this);
@@ -76,20 +78,18 @@ public:
         double p(double d_old, double d_new) const {
                 return 1.0;
         }
-        double sample(gsl_rng * rng, double d_old) const {
-                return d_old+gsl_ran_gaussian(rng, sigma_square);
-        }
-        double sample(gsl_rng * rng, double d_old, double sigma) const {
-                return d_old+gsl_ran_gaussian(rng, sigma);
+        double sample(boost::random::mt19937& rng, double d_old) const {
+                boost::random::normal_distribution<> dist(0.0, sigma);
+                return d_old+dist(rng);
         }
         void increase_jump(double eta) {
-                sigma_square = sigma_square+eta;
+                sigma = sigma+eta;
         }
         void decrease_jump(double eta) {
-                sigma_square = std::max(sigma_square-eta, 0.0);
+                sigma = std::max(sigma-eta, 0.0);
         }
 private:
-        double sigma_square;
+        double sigma;
 };
 
 class gamma_jump_t : public jumping_distribution_t
@@ -105,20 +105,21 @@ public:
         // p(d_new -> d_old)/p(d_old -> d_new) = p(d_old)/p(d_new)
         double p(double d_old, double d_new) const {
                 
-                return gamma_distribution.pdf(d_old)/gamma_distribution.pdf(d_new);
+                return boost::math::pdf(gamma_distribution, d_old)/
+                        boost::math::pdf(gamma_distribution, d_new);
         }
-        double sample(gsl_rng * rng, double d_old) const {
-                return gamma_distribution.sample(rng);
-        }
-        double sample(gsl_rng * rng, double d_old, double sigma) const {
-                return gamma_distribution.sample(rng);
+        double sample(boost::random::mt19937& rng, double d_old) const {
+                boost::random::gamma_distribution<> dist(
+                        gamma_distribution.shape(),
+                        gamma_distribution.scale());
+                return dist(rng);
         }
         void increase_jump(double eta) {
         }
         void decrease_jump(double eta) {
         }
 private:
-        gamma_distribution_t gamma_distribution;
+        boost::math::gamma_distribution<> gamma_distribution;
 };
 
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
@@ -126,18 +127,17 @@ class pt_metropolis_hastings_t : public virtual clonable
 {
 public:
         typedef std::map<std::vector<AC>, double> alignment_map_t;
+        typedef boost::math::gamma_distribution<> gamma_distribution_t;
 
         pt_metropolis_hastings_t(const pt_root_t& tree,
                                  const alignment_t<AC>& alignment,
                                  const exponent_t<AS, PC>& alpha,
-                                 double r, double lambda,
-                                 const jumping_distribution_t& jumping_distribution,
-                                 double acceptance_rate = 0.7)
+                                 const gamma_distribution_t& gamma_distribution,
+                                 const jumping_distribution_t& jumping_distribution)
                 : acceptance(tree.n_nodes, 0.0),
                   samples(),
                   alpha(alpha),
-                  gamma_distribution(r, lambda),
-                  acceptance_rate(acceptance_rate),
+                  gamma_distribution(gamma_distribution),
                   step(0),
                   tree(tree) {
 
@@ -147,11 +147,7 @@ public:
                 // initialize random generator
                 struct timeval tv;
                 gettimeofday(&tv, NULL);
-                time_t seed = tv.tv_sec*tv.tv_usec;
-
-                srand(seed);
-                rng = gsl_rng_alloc(gsl_rng_default);
-                gsl_rng_set(rng, seed);
+                rng.seed(tv.tv_sec*tv.tv_usec);
 
                 // initialize jumping distributions
                 for (pt_node_t::id_t id = 0; id < tree.n_nodes; id++) {
@@ -170,19 +166,17 @@ public:
                   alpha(mh.alpha),
                   gamma_distribution(mh.gamma_distribution),
                   jumping_distributions(mh.jumping_distributions),
-                  acceptance_rate(mh.acceptance_rate),
                   step(mh.step),
                   tree(mh.tree)
                 {
 
+                // sleep for a millisecond to make sure that we get
+                // a unique seed
+                boost::this_thread::sleep(boost::posix_time::milliseconds(1));
                 // initialize random generator
                 struct timeval tv;
                 gettimeofday(&tv, NULL);
-                time_t seed = tv.tv_sec*tv.tv_usec;
-
-                srand(seed);
-                rng = gsl_rng_alloc(gsl_rng_default);
-                gsl_rng_set(rng, seed);
+                rng.seed(tv.tv_sec*tv.tv_usec);
 
                 // initialize nodes and jumping distributions
                 for (pt_node_t::id_t id = 0; id < tree.n_nodes; id++) {
@@ -190,8 +184,6 @@ public:
                 }
         }
         virtual ~pt_metropolis_hastings_t() {
-                // free random generator
-                gsl_rng_free(rng);
                 // free jumping distributions
                 for (pt_node_t::id_t id = 0; id < tree.n_nodes; id++) {
                         delete(jumping_distributions[id]);
@@ -215,7 +207,7 @@ public:
                         if ((*it)->root()) {
                                 continue;
                         }
-                        result += std::log(gamma_distribution.pdf((*it)->d));
+                        result += std::log(boost::math::pdf(gamma_distribution, (*it)->d));
                 }
                 return result;
         }
@@ -232,6 +224,9 @@ public:
                 }
         }
         double sample_branch(pt_node_t& node, double log_posterior_ref) {
+                // random number generators
+                boost::random::bernoulli_distribution<> bernoulli(0.5);
+                boost::random::uniform_01<> uniform;
                 double rho;
                 double x;
                 double log_posterior_new;
@@ -240,9 +235,9 @@ public:
                 // generate a proposal
                 double d_old = node.d;
                 double d_new = jumping_distributions[node.id]->sample(rng, d_old);
-                if (!node.leaf() && (d_new < 0.0 ||  gsl_ran_bernoulli(rng, 0.5))) {
+                if (!node.leaf() && (d_new < 0.0 || bernoulli(rng))) {
                         // propose new topology
-                        which = gsl_ran_bernoulli(rng, 0.5);
+                        which = bernoulli(rng);
                         switch (which) {
                         case 0: node.move_a(); break;
                         case 1: node.move_b(); break;
@@ -260,7 +255,7 @@ public:
                 // compute acceptance probability
                 rho = exp(log_posterior_new-log_posterior_ref)
                         *jumping_distributions[node.id]->p(d_old, d_new);
-                x   = gsl_ran_flat(rng, 0.0, 1.0);
+                x   = uniform(rng);
                 if (x <= std::min(1.0, rho)) {
                         // sample accepted
                         update_acceptance(node.id, true);
@@ -320,9 +315,8 @@ protected:
         gamma_distribution_t gamma_distribution;
 
         std::vector<jumping_distribution_t*> jumping_distributions;
-        double acceptance_rate;
 
-        gsl_rng * rng;
+        boost::random::mt19937 rng;
         size_t step;
 
         pt_root_t tree;

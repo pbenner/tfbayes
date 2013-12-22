@@ -147,6 +147,7 @@ operator<<(std::ostream& o, const options_t& options) {
           << "-> gradient step size    = " << options.epsilon             << endl
           << "-> proposal variance     = " << options.sigma               << endl
           << "-> save posterior values = " << options.posterior           << endl
+          << "-> parallel jobs         = " << options.jobs                << endl
           << "-> verbose               = " << options.verbose             << endl;
         return o;
 }
@@ -224,9 +225,11 @@ void run_mcmc(
         const exponent_t<alphabet_size>& alpha,
         const alignment_t<>& alignment)
 {
+        // prior distribution on branch lengths
+        boost::math::gamma_distribution<> gamma_distribution(options.r, options.lambda);
         normal_jump_t jump(options.sigma);
 //        gamma_jump_t jump(1.6, 0.4);
-        pt_metropolis_hastings_t<alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, options.r, options.lambda, jump, 0.5);
+        pt_metropolis_hastings_t<alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, gamma_distribution, jump);
         pt_pmcmc_hastings_t<alphabet_size> pmcmc(options.jobs, pt_metropolis_hastings);
         pmcmc(options.max_steps, options.verbose);
         /* print posterior values to separate file */
