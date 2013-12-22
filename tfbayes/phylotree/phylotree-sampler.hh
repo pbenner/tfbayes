@@ -125,6 +125,8 @@ template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
 class pt_metropolis_hastings_t : public virtual clonable
 {
 public:
+        typedef std::map<std::vector<AC>, double> alignment_map_t;
+
         pt_metropolis_hastings_t(const pt_root_t& tree,
                                  const alignment_t<AC>& alignment,
                                  const exponent_t<AS, PC>& alpha,
@@ -133,7 +135,6 @@ public:
                                  double acceptance_rate = 0.7)
                 : acceptance(tree.n_nodes, 0.0),
                   samples(),
-                  alignment(alignment),
                   alpha(alpha),
                   gamma_distribution(r, lambda),
                   acceptance_rate(acceptance_rate),
@@ -155,6 +156,11 @@ public:
                 // initialize jumping distributions
                 for (pt_node_t::id_t id = 0; id < tree.n_nodes; id++) {
                         jumping_distributions.push_back(jumping_distribution.clone());
+                }
+                // fill alignment map
+                for (typename alignment_t<AC>::const_iterator it = alignment.begin();
+                     it != alignment.end(); it++) {
+                        this->alignment[*it] += 1.0;
                 }
         }
         pt_metropolis_hastings_t(const pt_metropolis_hastings_t& mh)
@@ -199,8 +205,8 @@ public:
         double log_posterior() {
                 double result = 0;
                 // likelihood
-                for (typename alignment_t<AC>::const_iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        result += pt_marginal_likelihood(tree, *it, alpha);
+                for (typename alignment_map_t::const_iterator it = alignment.begin(); it != alignment.end(); it++) {
+                        result += it->second*pt_marginal_likelihood(tree, it->first, alpha);
                 }
                 // prior on branch lengths
                 for (pt_node_t::nodes_t::iterator it = tree.nodes.begin();
@@ -308,7 +314,7 @@ public:
         std::vector<double> log_posterior_history;
         std::list<pt_root_t> samples;
 protected:
-        const alignment_t<AC>& alignment;
+        alignment_map_t alignment;
         exponent_t<AS, PC> alpha;
 
         gamma_distribution_t gamma_distribution;
