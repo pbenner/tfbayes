@@ -272,7 +272,13 @@ public:
                         return log_posterior_ref;
                 }
         }
-        virtual void generate_sample() {
+        void print_progress(size_t i, size_t n) {
+                flockfile(stderr);
+                fflush(stderr);
+                std::cerr << progress_t((i+1.0)/(double)n);
+                funlockfile(stderr);
+        }
+        virtual void operator()() {
                 double log_posterior_ref = log_posterior();
                 // loop over nodes
                 for (pt_node_t::nodes_t::iterator it = tree.nodes.begin();
@@ -288,17 +294,11 @@ public:
                 log_posterior_history.push_back(log_posterior_ref);
                 step++;
         }
-        void print_progress(size_t i, size_t n) {
-                flockfile(stderr);
-                fflush(stderr);
-                std::cerr << progress_t((i+1.0)/(double)n);
-                funlockfile(stderr);
-        }
-        void operator()(size_t n, bool progress = true) {
+        virtual void operator()(size_t n, bool progress = true) {
                 // sample n times
                 for (size_t i = 0; i < n; i++) {
                         if (progress) print_progress(i, n);
-                        generate_sample();
+                        operator()();
                 }
                 if (progress) std::cerr << std::endl;
         }
