@@ -134,8 +134,7 @@ public:
                                  const exponent_t<AS, PC>& alpha,
                                  const gamma_distribution_t& gamma_distribution,
                                  const jumping_distribution_t& jumping_distribution)
-                : acceptance(tree.n_nodes, 0.0),
-                  samples(),
+                : samples(),
                   alpha(alpha),
                   gamma_distribution(gamma_distribution),
                   step(0),
@@ -160,8 +159,7 @@ public:
                 }
         }
         pt_metropolis_hastings_t(const pt_metropolis_hastings_t& mh)
-                : acceptance(mh.acceptance),
-                  samples(mh.samples),
+                : samples(mh.samples),
                   alignment(mh.alignment),
                   alpha(mh.alpha),
                   gamma_distribution(mh.gamma_distribution),
@@ -214,15 +212,6 @@ public:
         void update_samples() {
                 samples.push_back(tree);
         }
-        void update_acceptance(pt_node_t::id_t id, bool accepted) {
-                // estimate acceptance rate
-                if (accepted) {
-                        acceptance[id] = (acceptance[id]*step + 1.0)/(step+1.0);
-                }
-                else {
-                        acceptance[id] = (acceptance[id]*step)/(step+1.0);
-                }
-        }
         double sample_branch(pt_node_t& node, double log_posterior_ref) {
                 // random number generators
                 boost::random::bernoulli_distribution<> bernoulli(0.5);
@@ -255,8 +244,6 @@ public:
                         *jumping_distributions[node.id]->p(d_old, d_new);
                 x   = uniform(rng);
                 if (x <= std::min(1.0, rho)) {
-                        // sample accepted
-                        update_acceptance(node.id, true);
                         return log_posterior_new;
                 }
                 else {
@@ -268,7 +255,6 @@ public:
                         case 1: node.move_b(); break;
                         default: break;
                         }
-                        update_acceptance(node.id, false);
                         return log_posterior_ref;
                 }
         }
@@ -303,7 +289,6 @@ public:
                 if (progress) std::cerr << std::endl;
         }
 
-        std::vector<double> acceptance;
         std::vector<double> log_posterior_history;
         std::list<pt_root_t> samples;
 protected:
