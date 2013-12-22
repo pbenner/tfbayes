@@ -38,12 +38,11 @@
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/phylotree-polynomial.hh>
+#include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/utility/distribution.hh>
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/polynomial.hh>
 #include <tfbayes/utility/progress.hh>
-
-#include <gperftools/profiler.h>
 
 /* AS: ALPHABET SIZE
  * AC: ALPHABET CODE TYPE
@@ -197,21 +196,20 @@ public:
                 return new pt_metropolis_hastings_t(*this);
         }
 
-        double log_posterior(const polynomial_t<AS, PC>& polynomial) {
-                // loop over monomials
-                double result = -std::numeric_limits<double>::infinity();
-                for (typename polynomial_t<AS, PC>::const_iterator ut = polynomial.begin();
-                     ut != polynomial.end(); ut++) {
-//                        result = logadd(result, log(ut->coefficient()) + fast_lnbeta(ut->exponent(), alpha) - fast_lnbeta(alpha));
-                        result = logadd(result, log(ut->coefficient()) + mbeta_log(ut->exponent(), alpha) - mbeta_log(alpha));
-                }
-                return result;
-        }
         double log_posterior() {
                 double result = 0;
+                // likelihood
                 for (typename alignment_t<AC>::const_iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        const polynomial_t<AS, PC> polynomial = pt_polynomial_t<AS, AC, PC>(tree, *it);
-                        result += log_posterior(polynomial);
+                        result += pt_marginal_likelihood(tree, *it, alpha);
+                }
+                // prior on branch lengths
+                for (pt_node_t::nodes_t::iterator it = tree.nodes.begin();
+                     it != tree.nodes.end(); it++) {
+                        // skip the root
+                        if ((*it)->root()) {
+                                continue;
+                        }
+                        result += std::log(gamma_distribution.pdf((*it)->d));
                 }
                 return result;
         }
@@ -255,7 +253,6 @@ public:
 
                 // compute acceptance probability
                 rho = exp(log_posterior_new-log_posterior_ref)
-                        *gamma_distribution.pdf(d_new)/gamma_distribution.pdf(d_old)
                         *jumping_distributions[node.id]->p(d_old, d_new);
                 x   = gsl_ran_flat(rng, 0.0, 1.0);
                 if (x <= std::min(1.0, rho)) {
