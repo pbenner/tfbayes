@@ -133,12 +133,13 @@ public:
                                  const alignment_t<AC>& alignment,
                                  const exponent_t<AS, PC>& alpha,
                                  const gamma_distribution_t& gamma_distribution,
-                                 const jumping_distribution_t& jumping_distribution)
-                : samples(),
-                  alpha(alpha),
+                                 const jumping_distribution_t& jumping_distribution,
+                                 double temperature = 1.0)
+                : _step_            (0),
+                  _tree_            (tree),
+                  alpha             (alpha),
                   gamma_distribution(gamma_distribution),
-                  step(0),
-                  tree(tree) {
+                  temperature       (temperature) {
 
                 // sleep for a millisecond to make sure that we get
                 // a unique seed
@@ -159,13 +160,15 @@ public:
                 }
         }
         pt_metropolis_hastings_t(const pt_metropolis_hastings_t& mh)
-                : samples(mh.samples),
-                  alignment(mh.alignment),
-                  alpha(mh.alpha),
-                  gamma_distribution(mh.gamma_distribution),
-                  jumping_distributions(mh.jumping_distributions),
-                  step(mh.step),
-                  tree(mh.tree)
+                : _log_posterior_history_(mh._log_posterior_history_),
+                  _samples_              (mh._samples_),
+                  _step_                 (mh._step_),
+                  _tree_                 (mh._tree_),
+                  alignment              (mh.alignment),
+                  alpha                  (mh.alpha),
+                  gamma_distribution     (mh.gamma_distribution),
+                  temperature            (mh.temperature),
+                  jumping_distributions  (mh.jumping_distributions)
                 {
 
                 // sleep for a millisecond to make sure that we get
@@ -177,13 +180,13 @@ public:
                 rng.seed(tv.tv_sec*tv.tv_usec);
 
                 // initialize nodes and jumping distributions
-                for (pt_node_t::id_t id = 0; id < tree.n_nodes; id++) {
+                for (pt_node_t::id_t id = 0; id < _tree_.n_nodes; id++) {
                         jumping_distributions[id] = mh.jumping_distributions[id]->clone();
                 }
         }
         virtual ~pt_metropolis_hastings_t() {
                 // free jumping distributions
-                for (pt_node_t::id_t id = 0; id < tree.n_nodes; id++) {
+                for (pt_node_t::id_t id = 0; id < _tree_.n_nodes; id++) {
                         delete(jumping_distributions[id]);
                 }
         }
@@ -196,23 +199,23 @@ public:
                 double result = 0;
                 // likelihood
                 for (typename alignment_map_t::const_iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        result += it->second*pt_marginal_likelihood(tree, it->first, alpha);
+                        result += it->second*pt_marginal_likelihood(_tree_, it->first, alpha);
                 }
                 // prior on branch lengths
-                for (pt_node_t::nodes_t::iterator it = tree.nodes.begin();
-                     it != tree.nodes.end(); it++) {
+                for (pt_node_t::nodes_t::iterator it = _tree_.nodes.begin();
+                     it != _tree_.nodes.end(); it++) {
                         // skip the root
                         if ((*it)->root()) {
                                 continue;
                         }
                         result += std::log(boost::math::pdf(gamma_distribution, (*it)->d));
                 }
-                return result;
+                return temperature*result;
         }
         void update_history(double log_posterior_ref) {
-                samples.push_back(tree);
-                log_posterior_history.push_back(log_posterior_ref);
-                step++;
+                _samples_.push_back(_tree_);
+                _log_posterior_history_.push_back(log_posterior_ref);
+                _step_++;
         }
         double sample_branch(pt_node_t& node, double log_posterior_ref) {
                 // distributions for drawing random numbers
@@ -261,8 +264,8 @@ public:
         virtual void operator()() {
                 double log_posterior_ref = log_posterior();
                 // loop over nodes
-                for (pt_node_t::nodes_t::iterator it = tree.nodes.begin();
-                     it != tree.nodes.end(); it++) {
+                for (pt_node_t::nodes_t::iterator it = _tree_.nodes.begin();
+                     it != _tree_.nodes.end(); it++) {
                         // skip the root
                         if ((*it)->root()) {
                                 continue;
@@ -280,21 +283,37 @@ public:
                 }
                 if (progress) std::cerr << std::endl;
         }
-
-        std::vector<double> log_posterior_history;
-        std::list<pt_root_t> samples;
+        // access methods
+        ////////////////////////////////////////////////////////////////////////
+        const std::vector<double>& log_posterior_history() const {
+                return _log_posterior_history_;
+        }
+        const std::list<pt_root_t>& samples() const {
+                return _samples_;
+        }
+        const size_t& step() const {
+                return _step_;
+        }
+        const pt_root_t& tree() const {
+                return _tree_;
+        }
 protected:
+        // sampler history
+        std::vector<double> _log_posterior_history_;
+        std::list<pt_root_t> _samples_;
+        // state of the sampler
+        size_t _step_;
+        pt_root_t _tree_;
+        // alignment data
         alignment_map_t alignment;
+        // prior distribution and parameters
         exponent_t<AS, PC> alpha;
-
         gamma_distribution_t gamma_distribution;
-
+        double temperature;
+        // metropolis proposal distribution
         std::vector<jumping_distribution_t*> jumping_distributions;
-
+        // the random number generator
         boost::random::mt19937 rng;
-        size_t step;
-
-        pt_root_t tree;
 };
 
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
@@ -307,14 +326,12 @@ public:
                         population.push_back(mh.clone());
                 }
         }
-        pt_pmcmc_hastings_t(const pt_pmcmc_hastings_t& pmcmc) {
+        pt_pmcmc_hastings_t(const pt_pmcmc_hastings_t& pmcmc)
+                : _samples_              (pmcmc._samples),
+                  _log_posterior_history_(pmcmc._log_posterior_history_) {
+
                 for (size_t i = 0; i < pmcmc.population.size(); i++) {
                         population.push_back(pmcmc.population[i]->clone());
-                }
-                // free tree samples
-                for (std::list<pt_root_t>::const_iterator it = pmcmc.samples.begin();
-                     it != pmcmc.samples.end(); it++) {
-                        samples.push_back(*it);
                 }
         }
         ~pt_pmcmc_hastings_t() {
@@ -352,31 +369,37 @@ public:
                 std::vector<std::list<pt_root_t>::const_iterator> it_vec;
                 for (typename std::vector<pt_sampler_t*>::const_iterator it = population.begin();
                      it != population.end(); it++) {
-                        it_vec.push_back((*it)->samples.begin());
+                        it_vec.push_back((*it)->samples().begin());
                 }
-                while (it_vec[0] != population[0]->samples.end())
+                while (it_vec[0] != population[0]->samples().end())
                 {
                         for (size_t i = 0; i < population.size(); i++) {
-                                samples.push_back(*it_vec[i]);
+                                _samples_.push_back(*it_vec[i]);
                                 // advance iteration for sampler i
                                 it_vec[i]++;
                         }
                 }
         }
-        void delete_history() {
-                log_posterior_history = std::list<std::vector<double> >();
-        }
         void update_history() {
-                delete_history();
+                // reset history
+                _log_posterior_history_ = std::list<std::vector<double> >();
+                // copy history from population
                 for (typename std::vector<pt_sampler_t*>::const_iterator it = population.begin();
                      it != population.end(); it++) {
-                        log_posterior_history.push_back((*it)->log_posterior_history);
+                        _log_posterior_history_.push_back((*it)->log_posterior_history());
                 }
         }
-
-        std::list<pt_root_t> samples;
-        std::list<std::vector<double> > log_posterior_history;
-private:
+        // access methods
+        ////////////////////////////////////////////////////////////////////////
+        const std::list<std::vector<double> >& log_posterior_history() const {
+                return _log_posterior_history_;
+        }
+        const std::list<pt_root_t>& samples() const {
+                return _samples_;
+        }
+protected:
+        std::list<pt_root_t> _samples_;
+        std::list<std::vector<double> > _log_posterior_history_;
         std::vector<pt_sampler_t*> population;
 };
 
