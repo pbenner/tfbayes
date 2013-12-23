@@ -209,17 +209,18 @@ public:
                 }
                 return result;
         }
-        void update_samples() {
+        void update_history(double log_posterior_ref) {
                 samples.push_back(tree);
+                log_posterior_history.push_back(log_posterior_ref);
+                step++;
         }
         double sample_branch(pt_node_t& node, double log_posterior_ref) {
-                // random number generators
+                // distributions for drawing random numbers
                 boost::random::bernoulli_distribution<> bernoulli(0.5);
                 boost::random::uniform_01<> uniform;
-                double rho;
-                double x;
-                double log_posterior_new;
-                int which = -1;
+                // in case the topology is sampled, this variable
+                // indicates the orthant to move to
+                ssize_t which = -1;
 
                 // generate a proposal
                 double d_old = node.d;
@@ -233,12 +234,12 @@ public:
                 node.d = d_new;
 
                 // compute new log likelihood
-                log_posterior_new = log_posterior();
+                const double log_posterior_new = log_posterior();
 
                 // compute acceptance probability
-                rho = exp(log_posterior_new-log_posterior_ref)
+                const double rho = exp(log_posterior_new-log_posterior_ref)
                         *jumping_distributions[node.id]->p(d_old, d_new);
-                x   = uniform(rng);
+                const double x   = uniform(rng);
                 if (x <= std::min(1.0, rho)) {
                         return log_posterior_new;
                 }
@@ -269,9 +270,7 @@ public:
                         // otherwise sample
                         log_posterior_ref = sample_branch(**it, log_posterior_ref);
                 }
-                update_samples();
-                log_posterior_history.push_back(log_posterior_ref);
-                step++;
+                update_history(log_posterior_ref);
         }
         virtual void operator()(size_t n, bool progress = true) {
                 // sample n times
