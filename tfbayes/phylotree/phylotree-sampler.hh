@@ -211,8 +211,9 @@ public:
                 future_vector_t futures(alignment.size());
                 // launch threads to compute the likelihood
                 for (typename alignment_map_t::const_iterator it = alignment.begin(); it != alignment.end(); it++) {
+                        boost::function<double ()> f = boost::bind(&pt_metropolis_hastings_t::log_likelihood, this, it->first, it->second);
                         futures.push_back(new future_t());
-                        futures.back() = boost::move(thread_pool().template schedule<double>(boost::bind(&pt_metropolis_hastings_t::log_likelihood, this, it->first, it->second)));
+                        futures.back() = boost::move(thread_pool().schedule(f));
                 }
                 for (size_t i = 0; i < futures.size(); i++) {
                         result += futures[i].get();
