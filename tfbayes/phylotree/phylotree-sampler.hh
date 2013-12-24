@@ -46,6 +46,7 @@
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/polynomial.hh>
 #include <tfbayes/utility/progress.hh>
+#include <tfbayes/utility/thread-pool.hh>
 
 /* AS: ALPHABET SIZE
  * AC: ALPHABET CODE TYPE
@@ -128,15 +129,19 @@ class pt_metropolis_hastings_t : public virtual clonable
 public:
         typedef std::map<std::vector<AC>, double> alignment_map_t;
         typedef boost::math::gamma_distribution<> gamma_distribution_t;
+        typedef boost::unique_future<double> future_t;
+        typedef boost::ptr_vector<future_t> future_vector_t;
 
         pt_metropolis_hastings_t(const pt_root_t& tree,
                                  const alignment_t<AC>& alignment,
                                  const exponent_t<AS, PC>& alpha,
                                  const gamma_distribution_t& gamma_distribution,
                                  const jumping_distribution_t& jumping_distribution,
+                                 thread_pool_t& thread_pool,
                                  double temperature = 1.0)
                 : _step_            (0),
                   _tree_            (tree),
+                  _thread_pool_     (&thread_pool),
                   alpha             (alpha),
                   gamma_distribution(gamma_distribution),
                   temperature       (temperature) {
@@ -164,6 +169,7 @@ public:
                   _samples_              (mh._samples_),
                   _step_                 (mh._step_),
                   _tree_                 (mh._tree_),
+                  _thread_pool_          (mh._thread_pool_),
                   alignment              (mh.alignment),
                   alpha                  (mh.alpha),
                   gamma_distribution     (mh.gamma_distribution),
@@ -195,11 +201,21 @@ public:
                 return new pt_metropolis_hastings_t(*this);
         }
 
+        double log_likelihood(const std::vector<AC>& column, double n) {
+                return n*pt_marginal_likelihood(_tree_, column, alpha);
+        }
         double log_posterior() {
                 double result = 0;
-                // likelihood
+                // results for each column are stored in a vector of
+                // futures (with pre allocated capacity)
+                future_vector_t futures(alignment.size());
+                // launch threads to compute the likelihood
                 for (typename alignment_map_t::const_iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        result += it->second*pt_marginal_likelihood(_tree_, it->first, alpha);
+                        futures.push_back(new future_t());
+                        futures.back() = boost::move(thread_pool().template schedule<double>(boost::bind(&pt_metropolis_hastings_t::log_likelihood, this, it->first, it->second)));
+                }
+                for (size_t i = 0; i < futures.size(); i++) {
+                        result += futures[i].get();
                 }
                 // prior on branch lengths
                 for (pt_node_t::nodes_t::iterator it = _tree_.nodes.begin();
@@ -298,12 +314,18 @@ public:
                 return _tree_;
         }
 protected:
+        thread_pool_t& thread_pool() {
+                return *_thread_pool_;
+        }
         // sampler history
         std::vector<double> _log_posterior_history_;
         std::list<pt_root_t> _samples_;
         // state of the sampler
         size_t _step_;
         pt_root_t _tree_;
+        // a pool of threads that might be shared among multiple
+        // samplers
+        thread_pool_t* _thread_pool_;
         // alignment data
         alignment_map_t alignment;
         // prior distribution and parameters

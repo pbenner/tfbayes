@@ -15,4 +15,5 @@ noinst_HEADERS = \
 	polynomial.hh \
 	progress.hh \
 	statistics.hh \
-	strtools.hh
+	strtools.hh \
+	thread-pool.hh

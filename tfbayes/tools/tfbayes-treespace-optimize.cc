@@ -118,7 +118,8 @@ typedef struct _options_t {
         double epsilon;
         double sigma;
         string posterior;
-        size_t jobs;
+        size_t chains;
+        size_t threads;
         bool   verbose;
         _options_t()
                 : alpha(0.2),
@@ -129,7 +130,8 @@ typedef struct _options_t {
                   epsilon(0.001),
                   sigma(0.01),
                   posterior(""),
-                  jobs(1),
+                  chains(1),
+                  threads(1),
                   verbose(false)
                 { }
 } options_t;
@@ -147,7 +149,8 @@ operator<<(std::ostream& o, const options_t& options) {
           << "-> gradient step size    = " << options.epsilon             << endl
           << "-> proposal variance     = " << options.sigma               << endl
           << "-> save posterior values = " << options.posterior           << endl
-          << "-> parallel jobs         = " << options.jobs                << endl
+          << "-> parallel chains       = " << options.chains              << endl
+          << "-> number of threads     = " << options.threads             << endl
           << "-> verbose               = " << options.verbose             << endl;
         return o;
 }
@@ -172,7 +175,8 @@ void print_usage(char *pname, FILE *fp)
                       "             -p FILE         - save the value of the log posterior\n"
                       "                               for each sample to FILE\n"
                       "             -s DOUBLE       - sigma^2 parameter for proposal distribution\n"
-                      "             -j INTEGER      - number of parallel jobs\n"
+                      "             -j INTEGER      - number of parallel chains\n"
+                      "             -t INTEGER      - number of threads\n"
                       "             -v              - be verbose\n"
                       "\n"
                       "   --help                    - print help and exit\n"
@@ -225,12 +229,13 @@ void run_mcmc(
         const exponent_t<alphabet_size>& alpha,
         const alignment_t<>& alignment)
 {
+        thread_pool_t thread_pool(options.threads);
         // prior distribution on branch lengths
         boost::math::gamma_distribution<> gamma_distribution(options.r, options.lambda);
         normal_jump_t jump(options.sigma);
 //        gamma_jump_t jump(1.6, 0.4);
-        pt_metropolis_hastings_t<alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, gamma_distribution, jump);
-        pt_pmcmc_hastings_t<alphabet_size> pmcmc(options.jobs, pt_metropolis_hastings);
+        pt_metropolis_hastings_t<alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, gamma_distribution, jump, thread_pool);
+        pt_pmcmc_hastings_t<alphabet_size> pmcmc(options.chains, pt_metropolis_hastings);
         pmcmc(options.max_steps, options.verbose);
         /* print posterior values to separate file */
         if (options.posterior != "") {
@@ -290,7 +295,7 @@ int main(int argc, char *argv[])
                         { "version",         0, 0, 'x' }
                 };
 
-                c = getopt_long(argc, argv, "a:e:m:n:r:l:p:s:j:hv",
+                c = getopt_long(argc, argv, "a:e:m:n:r:l:p:s:j:t:hv",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -323,7 +328,10 @@ int main(int argc, char *argv[])
                         options.posterior = string(optarg);
                         break;
                 case 'j':
-                        options.jobs = atoi(optarg);
+                        options.chains = atoi(optarg);
+                        break;
+                case 't':
+                        options.threads = atoi(optarg);
                         break;
                 case 'v':
                         options.verbose = true;
