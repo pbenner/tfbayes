@@ -122,18 +122,32 @@ private:
         boost::math::gamma_distribution<> gamma_distribution;
 };
 
+// data structure optimized for computing likelihoods
+template <typename AC = alphabet_code_t>
+class alignment_map_t : public std::map<std::vector<AC>, double>
+{
+        typedef std::map<std::vector<AC>, double> base_t;
+public:
+        explicit alignment_map_t(const alignment_t<AC>& alignment)
+                : base_t() {
+                for (typename alignment_t<AC>::const_iterator it = alignment.begin();
+                     it != alignment.end(); it++) {
+                        base_t::operator[](*it) += 1.0;
+                }
+        }
+};
+
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
 class pt_metropolis_hastings_t : public virtual clonable
 {
 public:
         typedef std::vector<double> vector_t;
-        typedef std::map<std::vector<AC>, double> alignment_map_t;
         typedef boost::math::gamma_distribution<> gamma_distribution_t;
         typedef boost::unique_future<double> future_t;
         typedef boost::ptr_vector<future_t> future_vector_t;
 
         pt_metropolis_hastings_t(const pt_root_t& tree,
-                                 const alignment_t<AC>& alignment,
+                                 const alignment_map_t<AC>& alignment,
                                  const std::vector<double>& alpha,
                                  const gamma_distribution_t& gamma_distribution,
                                  const jumping_distribution_t& jumping_distribution,
@@ -141,7 +155,8 @@ public:
                                  double temperature = 1.0)
                 : _step_              (0),
                   _tree_              (tree),
-                  _thread_pool_       (&thread_pool),
+                  _thread_pool_       (thread_pool),
+                  _alignment_         (alignment),
                   _alpha_             (alpha.begin(), alpha.end()),
                   _gamma_distribution_(gamma_distribution),
                   _temperature_       (temperature) {
@@ -149,11 +164,6 @@ public:
                 // initialize jumping distributions
                 for (pt_node_t::id_t id = 0; id < tree.n_nodes; id++) {
                         jumping_distributions.push_back(jumping_distribution.clone());
-                }
-                // fill alignment map
-                for (typename alignment_t<AC>::const_iterator it = alignment.begin();
-                     it != alignment.end(); it++) {
-                        _alignment_[*it] += 1.0;
                 }
         }
         pt_metropolis_hastings_t(const pt_metropolis_hastings_t& mh)
@@ -193,11 +203,11 @@ public:
                 // futures (with pre allocated capacity)
                 future_vector_t futures(_alignment_.size());
                 // launch threads to compute the likelihood
-                for (typename alignment_map_t::const_iterator it = _alignment_.begin();
+                for (typename alignment_map_t<AC>::const_iterator it = _alignment_.begin();
                      it != _alignment_.end(); it++) {
                         boost::function<double ()> f = boost::bind(&pt_metropolis_hastings_t::log_likelihood, this, it->first, it->second);
                         futures.push_back(new future_t());
-                        futures.back() = thread_pool().schedule(f);
+                        futures.back() = _thread_pool_.schedule(f);
                 }
                 for (size_t i = 0; i < futures.size(); i++) {
                         result += futures[i].get();
@@ -308,9 +318,6 @@ public:
                 return _temperature_;
         }
 protected:
-        thread_pool_t& thread_pool() {
-                return *_thread_pool_;
-        }
         // sampler history
         vector_t _log_posterior_history_;
         std::list<pt_root_t> _samples_;
@@ -319,9 +326,9 @@ protected:
         pt_root_t _tree_;
         // a pool of threads that might be shared among multiple
         // samplers
-        thread_pool_t* _thread_pool_;
+        thread_pool_t& _thread_pool_;
         // alignment data
-        alignment_map_t _alignment_;
+        const alignment_map_t<AC>& _alignment_;
         // prior distribution and parameters
         exponent_t<AS, PC> _alpha_;
         gamma_distribution_t _gamma_distribution_;

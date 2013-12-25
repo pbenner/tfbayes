@@ -267,6 +267,8 @@ void run_mcmc(
 {
         boost::random::mt19937 rng;
         seed_rng(rng);
+        // convert alignment
+        alignment_map_t<> alignment_map(alignment);
         // a pool of threads for computing likelihoods
         thread_pool_t thread_pool(options.threads);
         // prior distribution on branch lengths
@@ -274,7 +276,7 @@ void run_mcmc(
         // jumping distribution
         normal_jump_t jump(options.proposal_variance);
         // the metropolis sampler
-        pt_mc_t pt_mc(pt_root, alignment, options.alpha, gamma_distribution, jump, thread_pool);
+        pt_mc_t pt_mc(pt_root, alignment_map, options.alpha, gamma_distribution, jump, thread_pool);
         // parallel chains with different temperatures
         pt_mc3_t<pt_mc_t> pt_mc3(options.temperatures, pt_mc);
         // run several mc3 chains in parallel
