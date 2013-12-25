@@ -380,7 +380,10 @@ public:
                         const double r  = std::min(1.0, std::exp(pi/tj + pj/ti - pi/ti - pj/tj));
                         if (uniform_01(rng) <= r) {
                                 if (verbose) {
-                                        std::cerr << boost::format("\33[2K\rswitched states %i and %i\n")
+                                        std::cerr << boost::format(
+                                                "\x1b[A"
+                                                "\33[2K\r"
+                                                "MC3 switched states %i and %i.\n")
                                                 % i % j;
                                 }
                                 // swap states of the two chains
@@ -470,7 +473,7 @@ public:
                 }
         }
         void operator()(size_t n, boost::random::mt19937& rng, bool verbose = false) {
-
+                if (verbose) std::cerr << std::endl << std::endl;
                 for (size_t i = 0; i < n; i++) {
                         operator()(rng, verbose);
                         if (verbose) {
