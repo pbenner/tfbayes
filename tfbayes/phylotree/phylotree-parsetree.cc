@@ -234,6 +234,9 @@ ostream& print_parsetree(
 // bison/flex interface
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <cerrno>
+#include <cstring>
+
 int yylex_init   (yyscan_t* scanner);
 int yylex_destroy(yyscan_t  scanner);
 void yylex_set_input(yyscan_t scanner, FILE* file);
@@ -267,9 +270,6 @@ list<pt_root_t> parse_tree_list(FILE * file, size_t drop, size_t skip)
  
         return tree_list;
 }
-
-#include <cerrno>
-#include <cstring>
 
 list<pt_root_t> parse_tree_list(const string& filename, size_t drop, size_t skip)
 {
