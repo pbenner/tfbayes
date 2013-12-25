@@ -350,7 +350,6 @@ public:
                         _population_.push_back(mh.clone());
                         _population_[i]->temperature() = temperatures[i];
                 }
-                
         }
         pt_mc3_t(const pt_mc3_t& pt_mc3)
                 : uniform_int(pt_mc3.uniform_int) {
