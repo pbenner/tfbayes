@@ -257,7 +257,7 @@ public:
                         return log_posterior_ref;
                 }
         }
-        void operator()(boost::random::mt19937& rng) {
+        void operator()(boost::random::mt19937& rng, bool verbose = false) {
                 double log_posterior_ref = log_posterior();
                 // loop over nodes
                 for (pt_node_t::nodes_t::iterator it = _tree_.nodes.begin();
@@ -361,7 +361,7 @@ public:
                 return new pt_mc3_t(*this);
         }
 
-        void operator()(boost::random::mt19937& rng) {
+        void operator()(boost::random::mt19937& rng, bool verbose = false) {
                 using std::swap;
                 // execute the metropolis algorithm on each chain
                 for (size_t i = 0; i < _population_.size(); i++) {
@@ -379,8 +379,10 @@ public:
                         // metropolis probability for accepting the swap
                         const double r  = std::min(1.0, std::exp(pi/tj + pj/ti - pi/ti - pj/tj));
                         if (uniform_01(rng) <= r) {
-                                std::cerr << boost::format("\nswitched states %i and %i\n")
-                                        % i % j;
+                                if (verbose) {
+                                        std::cerr << boost::format("\33[2K\rswitched states %i and %i\n")
+                                                % i % j;
+                                }
                                 // swap states of the two chains
                                 swap(_population_[i]->tree(),
                                      _population_[j]->tree());
@@ -462,12 +464,15 @@ public:
                         _log_posterior_history_.push_back((*it)->log_posterior_history());
                 }
         }
+        void operator()(boost::random::mt19937& rng, bool verbose = false) {
+                for (size_t j = 0; j < _population_.size(); j++) {
+                        _population_[j]->operator()(rng, verbose);
+                }
+        }
         void operator()(size_t n, boost::random::mt19937& rng, bool verbose = false) {
 
                 for (size_t i = 0; i < n; i++) {
-                        for (size_t j = 0; j < _population_.size(); j++) {
-                                _population_[j]->operator()(rng);
-                        }
+                        operator()(rng, verbose);
                         if (verbose) {
                                 std::cerr << progress_t((i+1.0)/(double)n);
                         }

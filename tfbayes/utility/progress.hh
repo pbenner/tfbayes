@@ -32,7 +32,7 @@ public:
                 std::stringstream ss;
 
                 // carriage return
-                ss << "\r" << "|";
+                ss << "\33[2K\r" << "|";
                 for (size_t i = 1; i < LINE_WIDTH-1; i++) {
                         if (i/(double)LINE_WIDTH < p) {
                                 ss << ">";
