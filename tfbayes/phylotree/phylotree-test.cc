@@ -75,10 +75,28 @@ void test_tree3() {
         cout << n1 << endl;
 }
 
+void test_tree4() {
+        cout << "Test 4:" << endl << endl;
+
+        pt_leaf_t* n5 = new pt_leaf_t(7.0, "(1)");
+        pt_leaf_t* n4 = new pt_leaf_t(6.0, "(2)");
+        pt_leaf_t* n3 = new pt_leaf_t(3.0, "(3)");
+        pt_node_t* n2 = new pt_node_t(2.0, n4, n5);
+        pt_root_t n1(n3, n2);
+        pt_root_t m1(n1);
+
+        n2->move_b();
+        swap(n1,m1);
+
+        cout << n1 << endl;
+        cout << m1 << endl;
+}
+
 int main(void) {
         test_tree1(); cout << endl;
         test_tree2(); cout << endl;
         test_tree3(); cout << endl;
+        test_tree4(); cout << endl;
 
         return 0.0;
 }

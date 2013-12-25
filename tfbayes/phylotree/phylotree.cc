@@ -87,7 +87,7 @@ pt_node_t::clone() const
         return new pt_node_t(*this);
 }
 
-void swap(pt_node_t& first, pt_node_t&second)
+void swap(pt_node_t& first, pt_node_t& second)
 {
         swap(first.d,         second.d);
         swap(first.name,      second.name);
@@ -97,6 +97,15 @@ void swap(pt_node_t& first, pt_node_t&second)
         swap(first._left,     second._left);
         swap(first._right,    second._right);
         swap(first._ancestor, second._ancestor);
+        // relink ancestors
+        if (!first.leaf()) {
+                first._left ->_ancestor = &first;
+                first._right->_ancestor = &first;
+        }
+        if (!second.leaf()) {
+                second._left ->_ancestor = &second;
+                second._right->_ancestor = &second;
+        }
 }
 
 pt_node_t&
@@ -291,6 +300,8 @@ pt_root_t::pt_root_t(pt_node_t* left,
         : pt_node_t(-numeric_limits<double>::infinity(), left, right, name),
           _outgroup(outgroup)
 {
+        assert(left  != NULL);
+        assert(right != NULL);
         // count outgroup as leaf if present and set the ancestor of
         // the outgroup
         if (outgroup) {
@@ -362,6 +373,11 @@ void swap(pt_root_t& first, pt_root_t&second)
         swap(first.leaves,    second.leaves);
         swap(first.nodes,     second.nodes);
         swap(first._outgroup, second._outgroup);
+        // update maps
+        if (first .name != "") first .node_map[first .name] = &first;
+        if (second.name != "") second.node_map[second.name] = &second;
+        first .nodes[first .id] = &first;
+        second.nodes[second.id] = &second;
 }
 
 pt_root_t&
