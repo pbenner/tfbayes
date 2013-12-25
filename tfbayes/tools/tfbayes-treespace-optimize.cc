@@ -33,14 +33,20 @@
 #include <tfbayes/phylotree/phylotree-sampler.hh>
 #include <tfbayes/phylotree/phylotree-gradient.hh>
 #include <tfbayes/phylotree/phylotree-gradient-ascent.hh>
+#include <tfbayes/utility/strtools.hh>
 
 #define alphabet_size 5
+// type of the metropolis hastings algorithm
+typedef pt_metropolis_hastings_t<alphabet_size> pt_mc_t;
 
 using namespace std;
 
+// format posterior values
+////////////////////////////////////////////////////////////////////////////////
+
 class posterior_values {
 public:
-        posterior_values(const pt_pmcmc_hastings_t<alphabet_size>& mh)
+        posterior_values(const pt_pmcmc_t<pt_mc_t>& mh)
                 : mh(mh) { }
 
         std::ostream& operator()(std::ostream& o) const {
@@ -67,7 +73,7 @@ public:
                 return o;
         }
 protected:
-        const pt_pmcmc_hastings_t<alphabet_size>& mh;
+        const pt_pmcmc_t<pt_mc_t>& mh;
 };
 
 ostream& operator<< (ostream& o, const posterior_values& pv)
@@ -75,7 +81,7 @@ ostream& operator<< (ostream& o, const posterior_values& pv)
         return pv(o);
 }
 
-ostream& operator<< (ostream& o, const pt_pmcmc_hastings_t<alphabet_size>& mh)
+ostream& operator<< (ostream& o, const pt_pmcmc_t<pt_mc_t>& mh)
 {
         // print trees
         for (std::list<pt_root_t>::const_iterator it = mh.samples().begin();
@@ -85,6 +91,9 @@ ostream& operator<< (ostream& o, const pt_pmcmc_hastings_t<alphabet_size>& mh)
 
         return o;
 }
+
+// hashing functions
+////////////////////////////////////////////////////////////////////////////////
 
 size_t hash_value(const exponent_t<alphabet_size>& exponent)
 {
@@ -98,40 +107,34 @@ size_t hash_value(const exponent_t<alphabet_size>& exponent)
         return seed;
 }
 
-void init() {
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        time_t seed = tv.tv_sec*tv.tv_usec;
-
-        srand(seed);
-}
-
-// Options
+// options
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct _options_t {
-        double alpha;
-        double lambda;
-        double r;
+        vector<double> alpha;
+        double scale;
+        double shape;
         size_t max_steps;
         double min_change;
-        double epsilon;
-        double sigma;
-        string posterior;
+        double step_size;
+        double proposal_variance;
+        string save_posterior;
         size_t chains;
         size_t threads;
+        vector<double> temperatures;
         bool   verbose;
         _options_t()
-                : alpha(0.2),
-                  lambda(0.1),
-                  r(1.0),
+                : alpha(alphabet_size, 0.2),
+                  scale(0.1),
+                  shape(1.0),
                   max_steps(1000),
                   min_change(0.0005),
-                  epsilon(0.001),
-                  sigma(0.01),
-                  posterior(""),
+                  step_size(0.001),
+                  proposal_variance(0.01),
+                  save_posterior(""),
                   chains(1),
                   threads(1),
+                  temperatures(1,1),
                   verbose(false)
                 { }
 } options_t;
@@ -139,23 +142,34 @@ typedef struct _options_t {
 static options_t options;
 
 ostream&
+operator<<(std::ostream& o, const vector<double>& v)
+{
+        for (size_t i = 0; i < v.size(); i++) {
+                if (i != 0) o << ":";
+                o << v[i];
+        }
+        return o;
+}
+
+ostream&
 operator<<(std::ostream& o, const options_t& options) {
         o << "Options:"                                                   << endl
-          << "-> alpha                 = " << options.alpha               << endl
-          << "-> gamma scale           = " << options.lambda              << endl
-          << "-> gamma shape           = " << options.r                   << endl
+          << "-> pseudocounts          = " << options.alpha               << endl
+          << "-> gamma scale           = " << options.scale               << endl
+          << "-> gamma shape           = " << options.shape               << endl
           << "-> max steps             = " << options.max_steps           << endl
           << "-> min change            = " << options.min_change          << endl
-          << "-> gradient step size    = " << options.epsilon             << endl
-          << "-> proposal variance     = " << options.sigma               << endl
-          << "-> save posterior values = " << options.posterior           << endl
+          << "-> gradient step size    = " << options.step_size           << endl
+          << "-> proposal variance     = " << options.proposal_variance   << endl
           << "-> parallel chains       = " << options.chains              << endl
           << "-> number of threads     = " << options.threads             << endl
+          << "-> temperatures          = " << options.temperatures        << endl
+          << "-> save posterior values = " << options.save_posterior      << endl
           << "-> verbose               = " << options.verbose             << endl;
         return o;
 }
 
-// Main
+// usage and version information
 ////////////////////////////////////////////////////////////////////////////////
 
 static
@@ -166,23 +180,24 @@ void print_usage(char *pname, FILE *fp)
                       "Methods: gradient-ascent, metropolis-hastings\n"
                       "\n"
                       "Options:\n"
-                      "             -a DOUBLE       - pseudo count\n"
-                      "             -m INTEGER      - maximum number of steps\n"
-                      "             -n DOUBLE       - stop gradient ascent if change is smaller than this value\n"
-                      "             -e DOUBLE       - gradient ascent step size\n"
-                      "             -r DOUBLE       - r parameter (shape) for the gamma prior\n"
-                      "             -l DOUBLE       - lambda parameter (scale) for the gamma prior\n"
-                      "             -p FILE         - save the value of the log posterior\n"
-                      "                               for each sample to FILE\n"
-                      "             -s DOUBLE       - sigma^2 parameter for proposal distribution\n"
-                      "             -j INTEGER      - number of parallel chains\n"
-                      "             -t INTEGER      - number of threads\n"
-                      "             -v              - be verbose\n"
+                      "      --counts=f:f:f:f:f        - pseudo counts\n"
+                      "      --steps=integer           - maximum number of steps\n"
+                      "      --epsilon=float           - stop gradient ascent if change is smaller than this value\n"
+                      "      --step-size=float         - gradient ascent step size\n"
+                      "      --shape=float             - shape parameter for the gamma prior\n"
+                      "      --scale=float             - scale parameter for the gamma prior\n"
+                      "                                  for each sample to FILE\n"
+                      "      --proposal-variance=float - variance of the proposal distribution\n"
+                      "      --chains=integer          - number of parallel chains\n"
+                      "      --threads=integer         - number of threads\n"
+                      "      --save-posterior=file     - save the value of the log posterior\n"
+                      "   -v                           - be verbose\n"
                       "\n"
-                      "   --help                    - print help and exit\n"
-                      "   --version                 - print version information and exit\n\n");
+                      "      --help                    - print help and exit\n"
+                      "      --version                 - print version information and exit\n\n");
 }
 
+static
 void wrong_usage(const char *msg)
 {
 
@@ -215,66 +230,69 @@ pt_root_t parse_tree_file(const string& filename)
         return tree_list.front();
 }
 
+// gradient ascent
+////////////////////////////////////////////////////////////////////////////////
+
 void run_gradient_ascent(
         const pt_root_t& pt_root,
-        const exponent_t<alphabet_size>& alpha,
         const alignment_t<>& alignment)
 {
-        pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(pt_root, alignment, alpha, options.r, options.lambda, options.epsilon);
+        pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(pt_root, alignment, options.alpha, options.shape, options.scale, options.step_size);
         pt_gradient_ascent.run(options.max_steps, options.min_change);
 }
 
-void run_mcmc(
-        const pt_root_t& pt_root,
-        const exponent_t<alphabet_size>& alpha,
-        const alignment_t<>& alignment)
+// sampler
+////////////////////////////////////////////////////////////////////////////////
+
+void save_posterior_values(const pt_pmcmc_t<pt_mc_t>& pmcmc)
 {
-        thread_pool_t thread_pool(options.threads);
-        // prior distribution on branch lengths
-        boost::math::gamma_distribution<> gamma_distribution(options.r, options.lambda);
-        normal_jump_t jump(options.sigma);
-//        gamma_jump_t jump(1.6, 0.4);
-        pt_metropolis_hastings_t<alphabet_size> pt_metropolis_hastings(pt_root, alignment, alpha, gamma_distribution, jump, thread_pool);
-        pt_pmcmc_hastings_t<alphabet_size> pmcmc(options.chains, pt_metropolis_hastings);
-        pmcmc(options.max_steps, options.verbose);
-        /* print posterior values to separate file */
-        if (options.posterior != "") {
-                ofstream csv(options.posterior.c_str());
+        if (options.save_posterior != "") {
+                ofstream csv(options.save_posterior.c_str());
                 if (!csv.is_open()) {
                         cerr << "Unable to open file: "
-                             << options.posterior
+                             << options.save_posterior
                              << endl;
                         exit(EXIT_FAILURE);
                 }
                 csv << posterior_values(pmcmc) << endl;
                 csv.close();
         }
-        /* print tree samples */
+}
+
+void run_mcmc(
+        const pt_root_t& pt_root,
+        const alignment_t<>& alignment)
+{
+        // a pool of threads for computing likelihoods
+        thread_pool_t thread_pool(options.threads);
+        // prior distribution on branch lengths
+        boost::math::gamma_distribution<> gamma_distribution(options.shape, options.scale);
+        // jumping distribution
+        normal_jump_t jump(options.proposal_variance);
+        // sampler
+        pt_mc_t pt_mc(pt_root, alignment, options.alpha, gamma_distribution, jump, thread_pool);
+        pt_pmcmc_t<pt_mc_t> pmcmc(options.chains, pt_mc);
+        pmcmc(options.max_steps, options.verbose);
+        // print posterior values to separate file
+        save_posterior_values(pmcmc);
+        // print tree samples
         cout << pmcmc;
 }
 
 void run_optimization(const string& method, const char* file_tree, const char* file_alignment)
 {
-        init();
-
-        /* phylogenetic tree */
+        // phylogenetic tree
         pt_root_t pt_root = parse_tree_file(file_tree);
 
-        /* pseudo counts */
-        exponent_t<alphabet_size> alpha;
-        for (size_t i = 0; i < alphabet_size; i++) {
-                alpha[i] = options.alpha;
-        }
-
-        /* alignment */
+        // alignment
         alignment_t<> alignment(file_alignment, pt_root, nucleotide_alphabet_t(), options.verbose);
         assert(alignment.length() > 0);
 
         if (method == "gradient-ascent") {
-                run_gradient_ascent(pt_root, alpha, alignment);
+                run_gradient_ascent(pt_root, alignment);
         }
         else if (method == "metropolis-hastings") {
-                run_mcmc(pt_root, alpha, alignment);
+                run_mcmc(pt_root, alignment);
         }
         else {
                 cerr << "Unknown optimization method: " << method
@@ -283,19 +301,33 @@ void run_optimization(const string& method, const char* file_tree, const char* f
         }
 }
 
+// main function
+////////////////////////////////////////////////////////////////////////////////
+
 int main(int argc, char *argv[])
 {
+        vector<string> tokens;
         const char* file_tree;
         const char* file_alignment;
 
         for(;;) {
                 int c, option_index = 0;
                 static struct option long_options[] = {
-                        { "help",            0, 0, 'h' },
-                        { "version",         0, 0, 'x' }
+                        { "counts",            1, 0, 'a' },
+                        { "chains",            1, 0, 'j' },
+                        { "epsilon",           1, 0, 'n' },
+                        { "proposal-variance", 1, 0, 's' },
+                        { "shape",             1, 0, 'r' },
+                        { "scale",             1, 0, 'l' },
+                        { "steps",             1, 0, 'm' },
+                        { "step-size",         1, 0, 'e' },
+                        { "threads",           1, 0, 't' },
+                        { "save-posterior",    1, 0, 'p' },
+                        { "help",              0, 0, 'h' },
+                        { "version",           0, 0, 'x' }
                 };
 
-                c = getopt_long(argc, argv, "a:e:m:n:r:l:p:s:j:t:hv",
+                c = getopt_long(argc, argv, "v",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -304,10 +336,17 @@ int main(int argc, char *argv[])
 
                 switch(c) {
                 case 'a':
-                        options.alpha = atof(optarg);
+                        tokens = token(string(optarg), ':');
+                        if (tokens.size() != alphabet_size) {
+                                wrong_usage(NULL);
+                                exit(EXIT_FAILURE);
+                        }
+                        for (size_t i = 0; i < alphabet_size; i++) {
+                                options.alpha[i] = atof(tokens[i].c_str());
+                        }
                         break;
                 case 'e':
-                        options.epsilon = atof(optarg);
+                        options.step_size = atof(optarg);
                         break;
                 case 'm':
                         options.max_steps = atoi(optarg);
@@ -316,16 +355,16 @@ int main(int argc, char *argv[])
                         options.min_change = atof(optarg);
                         break;
                 case 'r':
-                        options.r = atof(optarg);
+                        options.shape = atof(optarg);
                         break;
                 case 'l':
-                        options.lambda = atof(optarg);
+                        options.scale = atof(optarg);
                         break;
                 case 's':
-                        options.sigma = atof(optarg);
+                        options.proposal_variance = atof(optarg);
                         break;
                 case 'p':
-                        options.posterior = string(optarg);
+                        options.save_posterior = string(optarg);
                         break;
                 case 'j':
                         options.chains = atoi(optarg);

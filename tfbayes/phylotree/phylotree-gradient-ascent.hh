@@ -42,11 +42,18 @@ class pt_gradient_ascent_t
 public:
         pt_gradient_ascent_t(const pt_root_t& tree,
                              const alignment_t<AC>& alignment,
-                             const exponent_t<AS, PC>& alpha,
-                             double r, double lambda,
-                             double epsilon = 0.001, double eta = 0.1)
-                : tree(tree), alignment(alignment), alpha(alpha), gamma_distribution(r, lambda),
-                  epsilon(epsilon), eta(eta) { }
+                             const std::vector<double>& alpha,
+                             double shape,
+                             double scale,
+                             double epsilon = 0.001,
+                             double eta = 0.1)
+                : tree              (tree),
+                  alignment         (alignment),
+                  alpha             (alpha.begin(), alpha.end()),
+                  gamma_distribution(shape, scale),
+                  epsilon           (epsilon),
+                  eta               (eta)
+                { }
 
         /* posterior (not normalized) */
         double log_posterior(const pt_node_t::nodes_t& nodes) {
