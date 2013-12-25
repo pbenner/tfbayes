@@ -246,7 +246,7 @@ public:
                 const double log_posterior_new = log_posterior();
 
                 // compute acceptance probability
-                const double rho = exp(_temperature_*(log_posterior_new-log_posterior_ref))
+                const double rho = exp(1.0/_temperature_*(log_posterior_new-log_posterior_ref))
                         *jumping_distributions[node.id]->p(d_old, d_new);
                 const double x   = uniform(rng);
                 if (x <= std::min(1.0, rho)) {
@@ -384,7 +384,7 @@ public:
                         const double ti = _population_[i]->temperature();
                         const double tj = _population_[j]->temperature();
                         // metropolis probability for accepting the swap
-                        const double r  = std::min(1.0, std::exp(tj*pi + ti*pj - ti*pi - tj*pj));
+                        const double r  = std::min(1.0, std::exp(pi/tj + pj/ti - pi/ti - pj/tj));
                         if (uniform_01(rng) <= r) {
                                 std::cerr << boost::format("\nswitched states %i and %i\n")
                                         % i % j;
