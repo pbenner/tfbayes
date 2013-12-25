@@ -358,6 +358,11 @@ public:
                 }
                 seed_rng(rng);
         }
+        virtual ~pt_mc3_t() {
+                for (size_t i = 0; i < _population_.size(); i++) {
+                        delete(_population_[i]);
+                }
+        }
 
         virtual pt_mc3_t* clone() const {
                 return new pt_mc3_t(*this);
@@ -435,7 +440,7 @@ public:
                         _population_.push_back(pmcmc._population_[i]->clone());
                 }
         }
-        ~pt_pmcmc_t() {
+        virtual ~pt_pmcmc_t() {
                 for (size_t i = 0; i < _population_.size(); i++) {
                         delete(_population_[i]);
                 }
