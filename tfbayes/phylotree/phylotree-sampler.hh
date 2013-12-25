@@ -354,9 +354,13 @@ public:
         pt_mc3_t(const pt_mc3_t& pt_mc3)
                 : uniform_int(pt_mc3.uniform_int) {
                 for (size_t i = 0; i < pt_mc3._population_.size(); i++) {
-                        _population_.push_back(pt_mc3.population[i]->clone());
+                        _population_.push_back(pt_mc3._population_[i]->clone());
                 }
                 seed_rng(rng);
+        }
+
+        virtual pt_mc3_t* clone() const {
+                return new pt_mc3_t(*this);
         }
 
         void operator()() {

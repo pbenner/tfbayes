@@ -46,7 +46,7 @@ using namespace std;
 
 class posterior_values {
 public:
-        posterior_values(const pt_pmcmc_t<pt_mc_t>& mh)
+        explicit posterior_values(const pt_pmcmc_t<pt_mc3_t<pt_mc_t> >& mh)
                 : mh(mh) { }
 
         std::ostream& operator()(std::ostream& o) const {
@@ -73,7 +73,7 @@ public:
                 return o;
         }
 protected:
-        const pt_pmcmc_t<pt_mc_t>& mh;
+        const pt_pmcmc_t<pt_mc3_t<pt_mc_t> >& mh;
 };
 
 ostream& operator<< (ostream& o, const posterior_values& pv)
@@ -81,7 +81,7 @@ ostream& operator<< (ostream& o, const posterior_values& pv)
         return pv(o);
 }
 
-ostream& operator<< (ostream& o, const pt_pmcmc_t<pt_mc_t>& mh)
+ostream& operator<< (ostream& o, const pt_pmcmc_t<pt_mc3_t<pt_mc_t> >& mh)
 {
         // print trees
         for (std::list<pt_root_t>::const_iterator it = mh.samples().begin();
@@ -190,6 +190,7 @@ void print_usage(char *pname, FILE *fp)
                       "      --proposal-variance=float - variance of the proposal distribution\n"
                       "      --chains=integer          - number of parallel chains\n"
                       "      --threads=integer         - number of threads\n"
+                      "      --temperatures=f:f:...    - a list of temperatures for the mc3\n"
                       "      --save-posterior=file     - save the value of the log posterior\n"
                       "   -v                           - be verbose\n"
                       "\n"
@@ -244,7 +245,7 @@ void run_gradient_ascent(
 // sampler
 ////////////////////////////////////////////////////////////////////////////////
 
-void save_posterior_values(const pt_pmcmc_t<pt_mc_t>& pmcmc)
+void save_posterior_values(const pt_pmcmc_t<pt_mc3_t<pt_mc_t> >& pmcmc)
 {
         if (options.save_posterior != "") {
                 ofstream csv(options.save_posterior.c_str());
@@ -269,9 +270,13 @@ void run_mcmc(
         boost::math::gamma_distribution<> gamma_distribution(options.shape, options.scale);
         // jumping distribution
         normal_jump_t jump(options.proposal_variance);
-        // sampler
+        // the metropolis sampler
         pt_mc_t pt_mc(pt_root, alignment, options.alpha, gamma_distribution, jump, thread_pool);
-        pt_pmcmc_t<pt_mc_t> pmcmc(options.chains, pt_mc);
+        // parallel chains with different temperatures
+        pt_mc3_t<pt_mc_t> pt_mc3(options.temperatures, pt_mc);
+        // run several mc3 chains in parallel
+        pt_pmcmc_t<pt_mc3_t<pt_mc_t> > pmcmc(options.chains, pt_mc3);
+        // execute the sampler
         pmcmc(options.max_steps, options.verbose);
         // print posterior values to separate file
         save_posterior_values(pmcmc);
@@ -321,6 +326,7 @@ int main(int argc, char *argv[])
                         { "scale",             1, 0, 'l' },
                         { "steps",             1, 0, 'm' },
                         { "step-size",         1, 0, 'e' },
+                        { "temperatures",      1, 0, 'u' },
                         { "threads",           1, 0, 't' },
                         { "save-posterior",    1, 0, 'p' },
                         { "help",              0, 0, 'h' },
@@ -371,6 +377,13 @@ int main(int argc, char *argv[])
                         break;
                 case 't':
                         options.threads = atoi(optarg);
+                        break;
+                case 'u':
+                        tokens = token(string(optarg), ':');
+                        options.temperatures = vector<double>();
+                        for (size_t i = 0; i < tokens.size(); i++) {
+                                options.temperatures.push_back(atof(tokens[i].c_str()));
+                        }
                         break;
                 case 'v':
                         options.verbose = true;
