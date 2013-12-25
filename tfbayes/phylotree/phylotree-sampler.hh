@@ -43,7 +43,6 @@
 #include <tfbayes/phylotree/phylotree-polynomial.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/utility/clonable.hh>
-#include <tfbayes/utility/random.hh>
 #include <tfbayes/utility/polynomial.hh>
 #include <tfbayes/utility/progress.hh>
 #include <tfbayes/utility/thread-pool.hh>
@@ -147,8 +146,6 @@ public:
                   _gamma_distribution_(gamma_distribution),
                   _temperature_       (temperature) {
 
-                seed_rng(rng);
-
                 // initialize jumping distributions
                 for (pt_node_t::id_t id = 0; id < tree.n_nodes; id++) {
                         jumping_distributions.push_back(jumping_distribution.clone());
@@ -170,8 +167,6 @@ public:
                   _gamma_distribution_   (mh._gamma_distribution_),
                   _temperature_          (mh._temperature_),
                   jumping_distributions  (mh.jumping_distributions) {
-
-                seed_rng(rng);
 
                 // initialize nodes and jumping distributions
                 for (pt_node_t::id_t id = 0; id < _tree_.n_nodes; id++) {
@@ -223,7 +218,8 @@ public:
                 _log_posterior_history_.push_back(log_posterior_ref);
                 _step_++;
         }
-        double sample_branch(pt_node_t& node, double log_posterior_ref) {
+        double sample_branch(pt_node_t& node, double log_posterior_ref,
+                             boost::random::mt19937& rng) {
                 // distributions for drawing random numbers
                 boost::random::bernoulli_distribution<> bernoulli(0.5);
                 boost::random::uniform_01<> uniform;
@@ -261,7 +257,7 @@ public:
                         return log_posterior_ref;
                 }
         }
-        void operator()() {
+        void operator()(boost::random::mt19937& rng) {
                 double log_posterior_ref = log_posterior();
                 // loop over nodes
                 for (pt_node_t::nodes_t::iterator it = _tree_.nodes.begin();
@@ -271,17 +267,17 @@ public:
                                 continue;
                         }
                         // otherwise sample
-                        log_posterior_ref = sample_branch(**it, log_posterior_ref);
+                        log_posterior_ref = sample_branch(**it, log_posterior_ref, rng);
                 }
                 update_history(log_posterior_ref);
         }
-        void operator()(size_t n, bool verbose = true) {
+        void operator()(size_t n, boost::random::mt19937& rng, bool verbose = true) {
                 // sample n times
                 for (size_t i = 0; i < n; i++) {
                         if (verbose) {
                                 std::cerr << progress_t((i+1.0)/(double)n);
                         }
-                        operator()();
+                        operator()(rng);
                 }
                 if (verbose) std::cerr << std::endl;
         }
@@ -332,8 +328,6 @@ protected:
         double _temperature_;
         // metropolis proposal distribution
         std::vector<jumping_distribution_t*> jumping_distributions;
-        // the random number generator
-        boost::random::mt19937 rng;
 };
 
 template <typename T>
@@ -349,14 +343,13 @@ public:
                         _population_.push_back(mh.clone());
                         _population_[i]->temperature() = temperatures[i];
                 }
-                seed_rng(rng);
+                
         }
         pt_mc3_t(const pt_mc3_t& pt_mc3)
                 : uniform_int(pt_mc3.uniform_int) {
                 for (size_t i = 0; i < pt_mc3._population_.size(); i++) {
                         _population_.push_back(pt_mc3._population_[i]->clone());
                 }
-                seed_rng(rng);
         }
         virtual ~pt_mc3_t() {
                 for (size_t i = 0; i < _population_.size(); i++) {
@@ -368,11 +361,11 @@ public:
                 return new pt_mc3_t(*this);
         }
 
-        void operator()() {
+        void operator()(boost::random::mt19937& rng) {
                 using std::swap;
                 // execute the metropolis algorithm on each chain
                 for (size_t i = 0; i < _population_.size(); i++) {
-                        _population_[i]->operator()();
+                        _population_[i]->operator()(rng);
                 }
                 // select two chains at random
                 const size_t i = uniform_int(rng);
@@ -394,13 +387,13 @@ public:
                         }
                 }
         }
-        void operator()(size_t n, bool verbose = false) {
+        void operator()(size_t n, boost::random::mt19937& rng, bool verbose = false) {
                 // sample n times
                 for (size_t i = 0; i < n; i++) {
                         if (verbose) {
                                 std::cerr << progress_t((i+1.0)/(double)n);
                         }
-                        operator()();
+                        operator()(rng);
                 }
                 if (verbose) std::cerr << std::endl;
         }
@@ -418,8 +411,6 @@ protected:
         boost::random::uniform_int_distribution<> uniform_int;
         // distribution for the metropolis update
         boost::random::uniform_01<> uniform_01;
-        // the random number generator
-        boost::random::mt19937 rng;
 };
 
 template <typename T>
@@ -471,11 +462,11 @@ public:
                         _log_posterior_history_.push_back((*it)->log_posterior_history());
                 }
         }
-        void operator()(size_t n, bool verbose = false) {
+        void operator()(size_t n, boost::random::mt19937& rng, bool verbose = false) {
 
                 for (size_t i = 0; i < n; i++) {
                         for (size_t j = 0; j < _population_.size(); j++) {
-                                _population_[j]->operator()();
+                                _population_[j]->operator()(rng);
                         }
                         if (verbose) {
                                 std::cerr << progress_t((i+1.0)/(double)n);

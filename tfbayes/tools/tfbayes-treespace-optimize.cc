@@ -33,6 +33,7 @@
 #include <tfbayes/phylotree/phylotree-sampler.hh>
 #include <tfbayes/phylotree/phylotree-gradient.hh>
 #include <tfbayes/phylotree/phylotree-gradient-ascent.hh>
+#include <tfbayes/utility/random.hh>
 #include <tfbayes/utility/strtools.hh>
 
 #define alphabet_size 5
@@ -264,6 +265,8 @@ void run_mcmc(
         const pt_root_t& pt_root,
         const alignment_t<>& alignment)
 {
+        boost::random::mt19937 rng;
+        seed_rng(rng);
         // a pool of threads for computing likelihoods
         thread_pool_t thread_pool(options.threads);
         // prior distribution on branch lengths
@@ -277,7 +280,7 @@ void run_mcmc(
         // run several mc3 chains in parallel
         pt_pmcmc_t<pt_mc3_t<pt_mc_t> > pmcmc(options.chains, pt_mc3);
         // execute the sampler
-        pmcmc(options.max_steps, options.verbose);
+        pmcmc(options.max_steps, rng, options.verbose);
         // print posterior values to separate file
         save_posterior_values(pmcmc);
         // print tree samples
