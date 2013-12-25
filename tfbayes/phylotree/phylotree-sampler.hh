@@ -381,8 +381,8 @@ public:
                         if (uniform_01(rng) <= r) {
                                 if (verbose) {
                                         std::cerr << boost::format(
-                                                "\x1b[A"
-                                                "\33[2K\r"
+                                                "\x1b[A"   // go up one line
+                                                "\33[2K\r" // delete line
                                                 "MC3 switched states %i and %i.\n")
                                                 % i % j;
                                 }
