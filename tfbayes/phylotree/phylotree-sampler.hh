@@ -52,6 +52,8 @@
  * PC: POLYNOMIAL CODE TYPE
  */
 
+// proposal distributions
+////////////////////////////////////////////////////////////////////////////////
 class proposal_distribution_t : public virtual clonable
 {
 public:
@@ -123,6 +125,7 @@ private:
 };
 
 // data structure optimized for computing likelihoods
+////////////////////////////////////////////////////////////////////////////////
 template <typename AC = alphabet_code_t>
 class alignment_map_t : public std::map<std::vector<AC>, double>
 {
@@ -137,6 +140,8 @@ public:
         }
 };
 
+// sampler
+////////////////////////////////////////////////////////////////////////////////
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
 class pt_metropolis_hastings_t : public virtual clonable
 {
