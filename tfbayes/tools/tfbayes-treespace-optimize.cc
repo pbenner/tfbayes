@@ -93,21 +93,6 @@ ostream& operator<< (ostream& o, const pt_pmcmc_t<pt_mc3_t<pt_mc_t> >& mh)
         return o;
 }
 
-// hashing functions
-////////////////////////////////////////////////////////////////////////////////
-
-size_t hash_value(const exponent_t<alphabet_size>& exponent)
-{
-        size_t seed = 0;
-        seed += (size_t)exponent[0] << 0;
-        seed += (size_t)exponent[1] << 2;
-        seed += (size_t)exponent[2] << 4;
-        seed += (size_t)exponent[3] << 6;
-        seed += (size_t)exponent[4] << 8;
-
-        return seed;
-}
-
 // options
 ////////////////////////////////////////////////////////////////////////////////
 
