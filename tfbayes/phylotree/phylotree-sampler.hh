@@ -199,7 +199,7 @@ public:
                   _alpha_                (mh._alpha_),
                   _gamma_distribution_   (mh._gamma_distribution_),
                   _temperature_          (mh._temperature_),
-                  proposal_distributions  (mh.proposal_distributions) {
+                  proposal_distributions (mh.proposal_distributions) {
 
                 // initialize nodes and proposal distributions
                 for (pt_node_t::id_t id = 0; id < _tree_.n_nodes; id++) {
