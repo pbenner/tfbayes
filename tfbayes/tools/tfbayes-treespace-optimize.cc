@@ -1,4 +1,4 @@
-/* Copyright (C) 2012, 2013 Philipp Benner
+/* Copyright (C) 2012-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -258,10 +258,10 @@ void run_mcmc(
         thread_pool_t thread_pool(options.threads);
         // prior distribution on branch lengths
         boost::math::gamma_distribution<> gamma_distribution(options.shape, options.scale);
-        // jumping distribution
-        normal_jump_t jump(options.proposal_variance);
+        // proposal distribution
+        normal_proposal_t proposal(options.proposal_variance);
         // the metropolis sampler
-        pt_mc_t pt_mc(pt_root, alignment_map, options.alpha, gamma_distribution, jump, thread_pool);
+        pt_mc_t pt_mc(pt_root, alignment_map, options.alpha, gamma_distribution, proposal, thread_pool);
         // parallel chains with different temperatures
         pt_mc3_t<pt_mc_t> pt_mc3(options.temperatures, pt_mc);
         // run several mc3 chains in parallel

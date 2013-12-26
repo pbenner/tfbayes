@@ -52,12 +52,12 @@
  * PC: POLYNOMIAL CODE TYPE
  */
 
-class jumping_distribution_t : public virtual clonable
+class proposal_distribution_t : public virtual clonable
 {
 public:
-        virtual ~jumping_distribution_t() { }
+        virtual ~proposal_distribution_t() { }
 
-        jumping_distribution_t* clone() const = 0;
+        proposal_distribution_t* clone() const = 0;
 
         virtual double p(double d_old, double d_new) const = 0;
         virtual double sample(boost::random::mt19937& rng, double d_old) const = 0;
@@ -65,14 +65,14 @@ public:
         virtual void decrease_jump(double eta) = 0;
 };
 
-class normal_jump_t : public jumping_distribution_t
+class normal_proposal_t : public proposal_distribution_t
 {
 public:
-        normal_jump_t(double sigma_square = 0.2)
+        normal_proposal_t(double sigma_square = 0.2)
                 : sigma(std::sqrt(sigma_square)) { }
 
-        normal_jump_t* clone() const {
-                return new normal_jump_t(*this);
+        normal_proposal_t* clone() const {
+                return new normal_proposal_t(*this);
         }
 
         double p(double d_old, double d_new) const {
@@ -92,14 +92,14 @@ private:
         double sigma;
 };
 
-class gamma_jump_t : public jumping_distribution_t
+class gamma_proposal_t : public proposal_distribution_t
 {
 public:
-        gamma_jump_t(double r, double lambda)
+        gamma_proposal_t(double r, double lambda)
                 : gamma_distribution(r, lambda) { }
 
-        gamma_jump_t* clone() const {
-                return new gamma_jump_t(*this);
+        gamma_proposal_t* clone() const {
+                return new gamma_proposal_t(*this);
         }
 
         // p(d_new -> d_old)/p(d_old -> d_new) = p(d_old)/p(d_new)
@@ -150,7 +150,7 @@ public:
                                  const alignment_map_t<AC>& alignment,
                                  const std::vector<double>& alpha,
                                  const gamma_distribution_t& gamma_distribution,
-                                 const jumping_distribution_t& jumping_distribution,
+                                 const proposal_distribution_t& proposal_distribution,
                                  thread_pool_t& thread_pool,
                                  double temperature = 1.0)
                 : _step_              (0),
@@ -161,9 +161,9 @@ public:
                   _gamma_distribution_(gamma_distribution),
                   _temperature_       (temperature) {
 
-                // initialize jumping distributions
+                // initialize proposal distributions
                 for (pt_node_t::id_t id = 0; id < tree.n_nodes; id++) {
-                        jumping_distributions.push_back(jumping_distribution.clone());
+                        proposal_distributions.push_back(proposal_distribution.clone());
                 }
         }
         pt_metropolis_hastings_t(const pt_metropolis_hastings_t& mh)
@@ -176,17 +176,17 @@ public:
                   _alpha_                (mh._alpha_),
                   _gamma_distribution_   (mh._gamma_distribution_),
                   _temperature_          (mh._temperature_),
-                  jumping_distributions  (mh.jumping_distributions) {
+                  proposal_distributions  (mh.proposal_distributions) {
 
-                // initialize nodes and jumping distributions
+                // initialize nodes and proposal distributions
                 for (pt_node_t::id_t id = 0; id < _tree_.n_nodes; id++) {
-                        jumping_distributions[id] = mh.jumping_distributions[id]->clone();
+                        proposal_distributions[id] = mh.proposal_distributions[id]->clone();
                 }
         }
         virtual ~pt_metropolis_hastings_t() {
-                // free jumping distributions
+                // free proposal distributions
                 for (pt_node_t::id_t id = 0; id < _tree_.n_nodes; id++) {
-                        delete(jumping_distributions[id]);
+                        delete(proposal_distributions[id]);
                 }
         }
 
@@ -239,7 +239,7 @@ public:
 
                 // generate a proposal
                 double d_old = node.d;
-                double d_new = jumping_distributions[node.id]->sample(rng, d_old);
+                double d_new = proposal_distributions[node.id]->sample(rng, d_old);
                 if (!node.leaf() && (d_new < 0.0 || bernoulli(rng))) {
                         // propose new topology
                         which = bernoulli(rng);
@@ -253,7 +253,7 @@ public:
 
                 // compute acceptance probability
                 const double rho = exp(1.0/_temperature_*(log_posterior_new-log_posterior_ref))
-                        *jumping_distributions[node.id]->p(d_old, d_new);
+                        *proposal_distributions[node.id]->p(d_old, d_new);
                 const double x   = uniform(rng);
                 if (x <= std::min(1.0, rho)) {
                         return log_posterior_new;
@@ -334,7 +334,7 @@ protected:
         gamma_distribution_t _gamma_distribution_;
         double _temperature_;
         // metropolis proposal distribution
-        std::vector<jumping_distribution_t*> jumping_distributions;
+        std::vector<proposal_distribution_t*> proposal_distributions;
 };
 
 template <typename T>
