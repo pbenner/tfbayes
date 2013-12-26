@@ -47,7 +47,7 @@ using namespace std;
 
 class posterior_values {
 public:
-        explicit posterior_values(const pt_pmcmc_t<pt_mc3_t<pt_mc_t> >& mh)
+        explicit posterior_values(const pt_pmcmc_t& mh)
                 : mh(mh) { }
 
         std::ostream& operator()(std::ostream& o) const {
@@ -74,7 +74,7 @@ public:
                 return o;
         }
 protected:
-        const pt_pmcmc_t<pt_mc3_t<pt_mc_t> >& mh;
+        const pt_pmcmc_t& mh;
 };
 
 ostream& operator<< (ostream& o, const posterior_values& pv)
@@ -82,7 +82,7 @@ ostream& operator<< (ostream& o, const posterior_values& pv)
         return pv(o);
 }
 
-ostream& operator<< (ostream& o, const pt_pmcmc_t<pt_mc3_t<pt_mc_t> >& mh)
+ostream& operator<< (ostream& o, const pt_pmcmc_t& mh)
 {
         // print trees
         for (std::list<pt_root_t>::const_iterator it = mh.samples().begin();
@@ -231,7 +231,7 @@ void run_gradient_ascent(
 // sampler
 ////////////////////////////////////////////////////////////////////////////////
 
-void save_posterior_values(const pt_pmcmc_t<pt_mc3_t<pt_mc_t> >& pmcmc)
+void save_posterior_values(const pt_pmcmc_t& pmcmc)
 {
         if (options.save_posterior != "") {
                 ofstream csv(options.save_posterior.c_str());
@@ -265,7 +265,7 @@ void run_mcmc(
         // parallel chains with different temperatures
         pt_mc3_t<pt_mc_t> pt_mc3(options.temperatures, pt_mc);
         // run several mc3 chains in parallel
-        pt_pmcmc_t<pt_mc3_t<pt_mc_t> > pmcmc(options.chains, pt_mc3);
+        pt_pmcmc_t pmcmc(options.chains, pt_mc3);
         // execute the sampler
         pmcmc(options.max_steps, rng, options.verbose);
         // print posterior values to separate file

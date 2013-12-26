@@ -140,13 +140,31 @@ public:
         }
 };
 
-// sampler
+// phylotree sampler
 ////////////////////////////////////////////////////////////////////////////////
-template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
-class pt_metropolis_hastings_t : public virtual clonable
+
+class pt_sampler_t : public virtual clonable
 {
 public:
         typedef std::vector<double> vector_t;
+        typedef std::list<pt_root_t> tree_list_t;
+
+        virtual ~pt_sampler_t() { }
+
+        virtual pt_sampler_t* clone() const = 0;
+
+        // execute sampler
+        virtual void operator()(boost::random::mt19937& rng, bool verbose = false) = 0;
+
+        // access methods
+        virtual const vector_t& log_posterior_history() const = 0;
+        virtual const tree_list_t& samples() const = 0;
+};
+
+template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
+class pt_metropolis_hastings_t : public pt_sampler_t
+{
+public:
         typedef boost::math::gamma_distribution<> gamma_distribution_t;
         typedef boost::unique_future<double> future_t;
         typedef boost::ptr_vector<future_t> future_vector_t;
@@ -272,7 +290,7 @@ public:
                         return log_posterior_ref;
                 }
         }
-        void operator()(boost::random::mt19937& rng, bool verbose = false) {
+        virtual void operator()(boost::random::mt19937& rng, bool verbose = false) {
                 double log_posterior_ref = log_posterior();
                 // loop over nodes
                 for (pt_node_t::nodes_t::iterator it = _tree_.nodes.begin();
@@ -286,7 +304,7 @@ public:
                 }
                 update_history(log_posterior_ref);
         }
-        void operator()(size_t n, boost::random::mt19937& rng, bool verbose = true) {
+        virtual void operator()(size_t n, boost::random::mt19937& rng, bool verbose = true) {
                 // sample n times
                 for (size_t i = 0; i < n; i++) {
                         if (verbose) {
@@ -304,7 +322,7 @@ public:
         const vector_t& log_posterior_history() const {
                 return _log_posterior_history_;
         }
-        const std::list<pt_root_t>& samples() const {
+        const tree_list_t& samples() const {
                 return _samples_;
         }
         const size_t& step() const {
@@ -325,7 +343,7 @@ public:
 protected:
         // sampler history
         vector_t _log_posterior_history_;
-        std::list<pt_root_t> _samples_;
+        tree_list_t _samples_;
         // state of the sampler
         size_t _step_;
         pt_root_t _tree_;
@@ -343,9 +361,8 @@ protected:
 };
 
 template <typename T>
-class pt_mc3_t
+class pt_mc3_t : public pt_sampler_t
 {
-        typedef std::vector<double> vector_t;
 public:
         pt_mc3_t(const vector_t& temperatures, const T& mh)
                 : uniform_int(0, temperatures.size()-1) {
@@ -372,7 +389,7 @@ public:
                 return new pt_mc3_t(*this);
         }
 
-        void operator()(boost::random::mt19937& rng, bool verbose = false) {
+        virtual void operator()(boost::random::mt19937& rng, bool verbose = false) {
                 using std::swap;
                 // execute the metropolis algorithm on each chain
                 for (size_t i = 0; i < _population_.size(); i++) {
@@ -403,7 +420,7 @@ public:
                         }
                 }
         }
-        void operator()(size_t n, boost::random::mt19937& rng, bool verbose = false) {
+        virtual void operator()(size_t n, boost::random::mt19937& rng, bool verbose = false) {
                 // sample n times
                 for (size_t i = 0; i < n; i++) {
                         if (verbose) {
@@ -418,7 +435,7 @@ public:
         const vector_t& log_posterior_history() const {
                 return _population_[0]->log_posterior_history();
         }
-        const std::list<pt_root_t>& samples() const {
+        const tree_list_t& samples() const {
                 return _population_[0]->samples();
         }
 protected:
@@ -429,18 +446,17 @@ protected:
         boost::random::uniform_01<> uniform_01;
 };
 
-template <typename T>
 class pt_pmcmc_t
 {
 public:
-        pt_pmcmc_t(size_t n, const T& mh) {
+        pt_pmcmc_t(size_t n, const pt_sampler_t& mh) {
 
                 for (size_t i = 0; i < n; i++) {
                         _population_.push_back(mh.clone());
                 }
         }
         pt_pmcmc_t(const pt_pmcmc_t& pmcmc)
-                : _samples_              (pmcmc._samples),
+                : _samples_              (pmcmc._samples_),
                   _log_posterior_history_(pmcmc._log_posterior_history_) {
 
                 for (size_t i = 0; i < pmcmc._population_.size(); i++) {
@@ -455,8 +471,8 @@ public:
 
         void update_samples() {
                 // fill the list such that the order of samples is preserved
-                std::vector<std::list<pt_root_t>::const_iterator> it_vec;
-                for (typename std::vector<T*>::const_iterator it = _population_.begin();
+                std::vector<pt_sampler_t::tree_list_t::const_iterator> it_vec;
+                for (std::vector<pt_sampler_t*>::const_iterator it = _population_.begin();
                      it != _population_.end(); it++) {
                         it_vec.push_back((*it)->samples().begin());
                 }
@@ -473,7 +489,7 @@ public:
                 // reset history
                 _log_posterior_history_ = std::list<std::vector<double> >();
                 // copy history from population
-                for (typename std::vector<T*>::const_iterator it = _population_.begin();
+                for (std::vector<pt_sampler_t*>::const_iterator it = _population_.begin();
                      it != _population_.end(); it++) {
                         _log_posterior_history_.push_back((*it)->log_posterior_history());
                 }
@@ -500,13 +516,13 @@ public:
         const std::list<std::vector<double> >& log_posterior_history() const {
                 return _log_posterior_history_;
         }
-        const std::list<pt_root_t>& samples() const {
+        const pt_sampler_t::tree_list_t& samples() const {
                 return _samples_;
         }
 protected:
-        std::list<pt_root_t> _samples_;
+        pt_sampler_t::tree_list_t _samples_;
         std::list<std::vector<double> > _log_posterior_history_;
-        std::vector<T*> _population_;
+        std::vector<pt_sampler_t*> _population_;
 };
 
 #endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_SAMPLER_HH__ */
