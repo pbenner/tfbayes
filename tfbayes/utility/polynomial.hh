@@ -82,6 +82,15 @@ public:
         using boost::array<T, S>::operator[];
 };
 
+template<size_t S, typename T>
+size_t hash_value(const exponent_t<S, T>& exponent) {
+        double seed = 0;
+        for (size_t i = 0; i < S; i++) {
+                seed += (size_t)exponent[i] << (2*i);
+        }
+        return seed;
+}
+
 template <size_t S, typename T = double, typename C = double>
 class polynomial_term_t : public std::pair<exponent_t<S, T>, C> {
 public:
@@ -470,6 +479,33 @@ polynomial_t<S, T, C> operator*(const polynomial_t<S, T, C>& poly1, const polyno
         polynomial_t<S, T, C> tmp(poly1);
         tmp *= poly2;
         return tmp;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+#include <iostream>
+
+template <size_t S, typename T, typename C>
+std::ostream& operator<< (std::ostream& o, const polynomial_term_t<S, T, C>& term) {
+        o << term.coefficient()
+          << term.exponent();
+
+        return o;
+}
+
+template <size_t S, typename T, typename C>
+std::ostream& operator<< (std::ostream& o, const polynomial_t<S, T, C>& polynomial) {
+        for (typename polynomial_t<S, T, C>::const_iterator it = polynomial.begin();
+             it != polynomial.end(); it++) {
+                if (it != polynomial.begin()) {
+                        o << " + " << *it;
+                }
+                else {
+                        o << *it;
+                }
+        }
+
+        return o;
 }
 
 #endif /* _POLYNOMIAL_H_ */

@@ -24,58 +24,25 @@
 
 #include <tfbayes/utility/polynomial.hh>
 
-#include <tfbayes/phylotree/incomplete-expression.hh>
+template<typename T>
+std::ostream& operator<< (std::ostream& o, const exponent_t<4, T>& exponent) {
+        if(exponent[0]) o << " Pa^" << exponent[0];
+        if(exponent[1]) o << " Pc^" << exponent[1];
+        if(exponent[2]) o << " Pg^" << exponent[2];
+        if(exponent[3]) o << " Pt^" << exponent[3];
 
-std::ostream& operator<< (std::ostream& o, const exponent_t        <4, char>& exponent);
-std::ostream& operator<< (std::ostream& o, const polynomial_term_t <4, char>& term);
-std::ostream& operator<< (std::ostream& o, const polynomial_t      <4, char>& polynomial);
-std::ostream& operator<< (std::ostream& o, const exponent_t        <5, char>& exponent);
-std::ostream& operator<< (std::ostream& o, const polynomial_term_t <5, char>& term);
-std::ostream& operator<< (std::ostream& o, const polynomial_t      <5, char>& polynomial);
+        return o;
+}
 
-std::ostream& operator<< (std::ostream& o, const exponent_t        <4, short>& exponent);
-std::ostream& operator<< (std::ostream& o, const polynomial_term_t <4, short>& term);
-std::ostream& operator<< (std::ostream& o, const polynomial_t      <4, short>& polynomial);
-std::ostream& operator<< (std::ostream& o, const exponent_t        <5, short>& exponent);
-std::ostream& operator<< (std::ostream& o, const polynomial_term_t <5, short>& term);
-std::ostream& operator<< (std::ostream& o, const polynomial_t      <5, short>& polynomial);
+template<typename T>
+std::ostream& operator<< (std::ostream& o, const exponent_t<5, T>& exponent) {
+        if(exponent[0]) o << " Pa^" << exponent[0];
+        if(exponent[1]) o << " Pc^" << exponent[1];
+        if(exponent[2]) o << " Pg^" << exponent[2];
+        if(exponent[3]) o << " Pt^" << exponent[3];
+        if(exponent[4]) o << " Pn^" << exponent[4];
 
-std::ostream& operator<< (std::ostream& o, const exponent_t        <4, float>& exponent);
-std::ostream& operator<< (std::ostream& o, const polynomial_term_t <4, float>& term);
-std::ostream& operator<< (std::ostream& o, const polynomial_t      <4, float>& polynomial);
-std::ostream& operator<< (std::ostream& o, const exponent_t        <5, float>& exponent);
-std::ostream& operator<< (std::ostream& o, const polynomial_term_t <5, float>& term);
-std::ostream& operator<< (std::ostream& o, const polynomial_t      <5, float>& polynomial);
-
-std::ostream& operator<< (std::ostream& o, const exponent_t        <4, double>& exponent);
-std::ostream& operator<< (std::ostream& o, const polynomial_term_t <4, double>& term);
-std::ostream& operator<< (std::ostream& o, const polynomial_t      <4, double>& polynomial);
-std::ostream& operator<< (std::ostream& o, const exponent_t        <5, double>& exponent);
-std::ostream& operator<< (std::ostream& o, const polynomial_term_t <5, double>& term);
-std::ostream& operator<< (std::ostream& o, const polynomial_t      <5, double>& polynomial);
-
-size_t hash_value(const exponent_t< 2, char>& exponent);
-size_t hash_value(const exponent_t< 3, char>& exponent);
-size_t hash_value(const exponent_t< 4, char>& exponent);
-size_t hash_value(const exponent_t< 5, char>& exponent);
-size_t hash_value(const exponent_t<10, char>& exponent);
-
-size_t hash_value(const exponent_t< 2, short>& exponent);
-size_t hash_value(const exponent_t< 3, short>& exponent);
-size_t hash_value(const exponent_t< 4, short>& exponent);
-size_t hash_value(const exponent_t< 5, short>& exponent);
-size_t hash_value(const exponent_t<10, short>& exponent);
-
-size_t hash_value(const exponent_t< 2, float>& exponent);
-size_t hash_value(const exponent_t< 3, float>& exponent);
-size_t hash_value(const exponent_t< 4, float>& exponent);
-size_t hash_value(const exponent_t< 5, float>& exponent);
-size_t hash_value(const exponent_t<10, float>& exponent);
-
-size_t hash_value(const exponent_t< 2, double>& exponent);
-size_t hash_value(const exponent_t< 3, double>& exponent);
-size_t hash_value(const exponent_t< 4, double>& exponent);
-size_t hash_value(const exponent_t< 5, double>& exponent);
-size_t hash_value(const exponent_t<10, double>& exponent);
+        return o;
+}
 
 #endif /* __TFBAYES_PHYLOTREE_UTILITY_HH__ */
