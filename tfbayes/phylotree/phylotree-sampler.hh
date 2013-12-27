@@ -154,12 +154,13 @@ public:
         samples_t samples;
         // the posterior value for each tree
         values_t values;
-        // rate of accepted proposals
-        double acceptance_rate;
+        // acceptance rates
+        size_t accepted_topologies;
+        size_t accepted_lengths;
+        size_t steps_topology;
+        size_t steps_length;
         // acceptance rate for the mc^3 algorithm
         double acceptance_rate_mc3;
-        // number of steps
-        size_t steps;
 };
 
 // the state of a sampler is a phylogenetic tree paired with its
@@ -285,15 +286,7 @@ public:
                 }
                 return result;
         }
-        void update_history(double k, double n) {
-                const double& l = _history_.steps;
-                _history_.samples.push_back(_state_);
-                _history_.values.push_back(_state_);
-                _history_.steps++;
-                _history_.acceptance_rate =
-                        (l*_history_.acceptance_rate + k/n)/(l+1.0);
-        }
-        bool sample_branch(pt_node_t& node, threaded_rng_t& rng) {
+        void sample_branch(pt_node_t& node, threaded_rng_t& rng) {
                 double log_posterior_ref = _state_;
                 // distributions for drawing random numbers
                 boost::random::bernoulli_distribution<> bernoulli(0.5);
@@ -309,6 +302,11 @@ public:
                         // propose new topology
                         which = bernoulli(rng);
                         node.move(which);
+
+                        _history_.steps_topology++;
+                }
+                else {
+                        _history_.steps_length++;
                 }
                 d_new  = std::abs(d_new);
                 node.d = d_new;
@@ -321,21 +319,21 @@ public:
                         *_proposal_distribution_->p(d_old, d_new);
                 const double x   = uniform(rng);
                 if (x <= std::min(1.0, rho)) {
+                        // sample accepted
                         _state_ = log_posterior_new;
-                        return true;
+                        if (which != -1) {
+                                _history_.accepted_topologies++;
+                        }
+                        _history_.accepted_lengths++;
                 }
                 else {
                         // sample rejected
                         node.d = d_old;
                         // if topology changed then switch it back
                         node.move(which);
-
-                        return false;
                 }
         }
         virtual double operator()(threaded_rng_t& rng, bool verbose = false) {
-                // number of accepted proposals
-                size_t k = 0;
                 // loop over nodes
                 for (pt_node_t::nodes_t::iterator it = _state_.tree().nodes.begin();
                      it != _state_.tree().nodes.end(); it++) {
@@ -343,12 +341,10 @@ public:
                         if ((*it)->root()) {
                                 continue;
                         }
-                        // otherwise sample
-                        if (sample_branch(**it, rng)) {
-                                k++;
-                        }
+                        sample_branch(**it, rng);
                 }
-                update_history(k, _state_.tree().n_nodes-1);
+                _history_.samples.push_back(_state_);
+                _history_.values .push_back(_state_);
                 return _state_;
         }
         // access methods
