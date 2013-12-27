@@ -225,17 +225,14 @@ public:
                                  const proposal_distribution_t& proposal_distribution,
                                  thread_pool_t& thread_pool,
                                  double temperature = 1.0)
-                : _state_             (tree),
-                  _thread_pool_       (thread_pool),
-                  _alignment_         (alignment),
-                  _alpha_             (alpha.begin(), alpha.end()),
-                  _gamma_distribution_(gamma_distribution),
-                  _temperature_       (temperature) {
+                : _state_                (tree),
+                  _thread_pool_          (thread_pool),
+                  _alignment_            (alignment),
+                  _alpha_                (alpha.begin(), alpha.end()),
+                  _gamma_distribution_   (gamma_distribution),
+                  _temperature_          (temperature),
+                  _proposal_distribution_(proposal_distribution.clone()){
 
-                // initialize proposal distributions
-                for (pt_node_t::id_t id = 0; id < tree.n_nodes; id++) {
-                        proposal_distributions.push_back(proposal_distribution.clone());
-                }
                 // compute the posterior value for the initial tree
                 _state_ = log_posterior();
         }
@@ -247,18 +244,11 @@ public:
                   _alpha_                (mh._alpha_),
                   _gamma_distribution_   (mh._gamma_distribution_),
                   _temperature_          (mh._temperature_),
-                  proposal_distributions (mh.proposal_distributions) {
+                  _proposal_distribution_(mh._proposal_distribution_->clone()) {
 
-                // initialize nodes and proposal distributions
-                for (pt_node_t::id_t id = 0; id < _state_.tree().n_nodes; id++) {
-                        proposal_distributions[id] = mh.proposal_distributions[id]->clone();
-                }
         }
         virtual ~pt_metropolis_hastings_t() {
-                // free proposal distributions
-                for (pt_node_t::id_t id = 0; id < _state_.tree().n_nodes; id++) {
-                        delete(proposal_distributions[id]);
-                }
+                delete(_proposal_distribution_);
         }
 
         virtual pt_metropolis_hastings_t* clone() const {
@@ -311,7 +301,7 @@ public:
 
                 // generate a proposal
                 double d_old = node.d;
-                double d_new = proposal_distributions[node.id]->sample(rng, d_old);
+                double d_new = _proposal_distribution_->sample(rng, d_old);
                 if (!node.leaf() && (d_new < 0.0 || bernoulli(rng))) {
                         // propose new topology
                         which = bernoulli(rng);
@@ -325,7 +315,7 @@ public:
 
                 // compute acceptance probability
                 const double rho = exp(1.0/_temperature_*(log_posterior_new-log_posterior_ref))
-                        *proposal_distributions[node.id]->p(d_old, d_new);
+                        *_proposal_distribution_->p(d_old, d_new);
                 const double x   = uniform(rng);
                 if (x <= std::min(1.0, rho)) {
                         _state_ = log_posterior_new;
@@ -391,8 +381,8 @@ protected:
         exponent_t<AS, PC> _alpha_;
         gamma_distribution_t _gamma_distribution_;
         double _temperature_;
-        // metropolis proposal distribution
-        std::vector<proposal_distribution_t*> proposal_distributions;
+        // metropolis-hastings proposal distribution
+        proposal_distribution_t* _proposal_distribution_;
 };
 
 template <typename T>
