@@ -229,7 +229,7 @@ public:
                 // launch threads to compute the likelihood
                 for (typename alignment_map_t<AC>::const_iterator it = _alignment_.begin();
                      it != _alignment_.end(); it++) {
-                        boost::function<double ()> f = boost::bind(&pt_metropolis_hastings_t::log_likelihood, this, it->first, it->second);
+                        boost::function<double ()> f = boost::bind(&pt_metropolis_hastings_t::log_likelihood, this, boost::cref(it->first), it->second);
                         futures[i++] = _thread_pool_.schedule(f);
                 }
                 for (size_t i = 0; i < futures.size(); i++) {
