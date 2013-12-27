@@ -477,7 +477,7 @@ protected:
         boost::random::uniform_01<> uniform_01;
 };
 
-class pt_pmcmc_t
+class pt_pmcmc_t : public pt_sampler_t
 {
 public:
         pt_pmcmc_t(size_t n, const pt_sampler_t& mh)
@@ -500,7 +500,11 @@ public:
                 }
         }
 
-        void operator()(threaded_rng_t& rng, bool verbose = false) {
+        virtual pt_pmcmc_t* clone() const {
+                return new pt_pmcmc_t(*this);
+        }
+
+        virtual double operator()(threaded_rng_t& rng, bool verbose = false) {
                 // future log posterior values
                 future_vector_t<double> futures(_population_.size());
                 // loop over population and execute samplers
@@ -510,8 +514,9 @@ public:
                         futures[i] = _thread_pool_.schedule(f);
                 }
                 futures.wait();
+                return futures[0].get();
         }
-        void operator()(size_t n, threaded_rng_t& rng, bool verbose = false) {
+        virtual void operator()(size_t n, threaded_rng_t& rng, bool verbose = false) {
                 if (verbose) std::cerr << std::endl << std::endl;
                 for (size_t i = 0; i < n; i++) {
                         operator()(rng, verbose);
@@ -523,8 +528,14 @@ public:
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
-        const pt_history_t& history(size_t i) const {
+        virtual const pt_history_t& history() const {
+                return _population_[0]->history();
+        }
+        virtual const pt_history_t& history(size_t i) const {
                 return _population_[i]->history();
+        }
+        virtual const pt_state_t& state() const {
+                return _population_[0]->state();
         }
         size_t size() const {
                 return _population_.size();
