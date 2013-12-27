@@ -285,10 +285,13 @@ public:
                 }
                 return result;
         }
-        void update_history(size_t k, size_t n) {
+        void update_history(double k, double n) {
+                const double& l = _history_.steps;
                 _history_.samples.push_back(_state_);
                 _history_.values.push_back(_state_);
                 _history_.steps++;
+                _history_.acceptance_rate =
+                        (l*_history_.acceptance_rate + k/n)/(l+1.0);
         }
         bool sample_branch(pt_node_t& node, threaded_rng_t& rng) {
                 double log_posterior_ref = _state_;
