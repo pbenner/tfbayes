@@ -45,6 +45,7 @@
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/polynomial.hh>
 #include <tfbayes/utility/progress.hh>
+#include <tfbayes/utility/random.hh>
 #include <tfbayes/utility/thread-pool.hh>
 
 /* AS: ALPHABET SIZE
@@ -62,7 +63,7 @@ public:
         proposal_distribution_t* clone() const = 0;
 
         virtual double p(double d_old, double d_new) const = 0;
-        virtual double sample(boost::random::mt19937& rng, double d_old) const = 0;
+        virtual double sample(threaded_rng_t& rng, double d_old) const = 0;
         virtual void increase_jump(double eta) = 0;
         virtual void decrease_jump(double eta) = 0;
 };
@@ -80,7 +81,7 @@ public:
         double p(double d_old, double d_new) const {
                 return 1.0;
         }
-        double sample(boost::random::mt19937& rng, double d_old) const {
+        double sample(threaded_rng_t& rng, double d_old) const {
                 boost::random::normal_distribution<> dist(0.0, sigma);
                 return d_old+dist(rng);
         }
@@ -110,7 +111,7 @@ public:
                 return boost::math::pdf(gamma_distribution, d_old)/
                         boost::math::pdf(gamma_distribution, d_new);
         }
-        double sample(boost::random::mt19937& rng, double d_old) const {
+        double sample(threaded_rng_t& rng, double d_old) const {
                 boost::random::gamma_distribution<> dist(
                         gamma_distribution.shape(),
                         gamma_distribution.scale());
@@ -154,7 +155,7 @@ public:
         virtual pt_sampler_t* clone() const = 0;
 
         // execute sampler
-        virtual void operator()(boost::random::mt19937& rng, bool verbose = false) = 0;
+        virtual double operator()(thread_pool_t& thread_pool, threaded_rng_t& rng, bool verbose = false) = 0;
 
         // access methods
         virtual const vector_t& log_posterior_history() const = 0;
@@ -166,19 +167,15 @@ class pt_metropolis_hastings_t : public pt_sampler_t
 {
 public:
         typedef boost::math::gamma_distribution<> gamma_distribution_t;
-        typedef boost::unique_future<double> future_t;
-        typedef boost::ptr_vector<future_t> future_vector_t;
 
         pt_metropolis_hastings_t(const pt_root_t& tree,
                                  const alignment_map_t<AC>& alignment,
                                  const std::vector<double>& alpha,
                                  const gamma_distribution_t& gamma_distribution,
                                  const proposal_distribution_t& proposal_distribution,
-                                 thread_pool_t& thread_pool,
                                  double temperature = 1.0)
                 : _step_              (0),
                   _tree_              (tree),
-                  _thread_pool_       (thread_pool),
                   _alignment_         (alignment),
                   _alpha_             (alpha.begin(), alpha.end()),
                   _gamma_distribution_(gamma_distribution),
@@ -194,7 +191,6 @@ public:
                   _samples_              (mh._samples_),
                   _step_                 (mh._step_),
                   _tree_                 (mh._tree_),
-                  _thread_pool_          (mh._thread_pool_),
                   _alignment_            (mh._alignment_),
                   _alpha_                (mh._alpha_),
                   _gamma_distribution_   (mh._gamma_distribution_),
@@ -220,17 +216,18 @@ public:
         double log_likelihood(const std::vector<AC>& column, double n) {
                 return n*pt_marginal_likelihood(_tree_, column, _alpha_);
         }
-        double log_posterior() {
+        double log_posterior(thread_pool_t& thread_pool) {
                 double result = 0;
                 // results for each column are stored in a vector of
                 // futures (with pre allocated capacity)
-                future_vector_t futures(_alignment_.size());
+                future_vector_t<double> futures(_alignment_.size());
+                // current position in the alignment
+                size_t i = 0;
                 // launch threads to compute the likelihood
                 for (typename alignment_map_t<AC>::const_iterator it = _alignment_.begin();
                      it != _alignment_.end(); it++) {
                         boost::function<double ()> f = boost::bind(&pt_metropolis_hastings_t::log_likelihood, this, it->first, it->second);
-                        futures.push_back(new future_t());
-                        futures.back() = _thread_pool_.schedule(f);
+                        futures[i++] = thread_pool.schedule(f);
                 }
                 for (size_t i = 0; i < futures.size(); i++) {
                         result += futures[i].get();
@@ -252,7 +249,8 @@ public:
                 _step_++;
         }
         double sample_branch(pt_node_t& node, double log_posterior_ref,
-                             boost::random::mt19937& rng) {
+                             thread_pool_t& thread_pool,
+                             threaded_rng_t& rng) {
                 // distributions for drawing random numbers
                 boost::random::bernoulli_distribution<> bernoulli(0.5);
                 boost::random::uniform_01<> uniform;
@@ -272,7 +270,7 @@ public:
                 node.d = d_new;
 
                 // compute new log likelihood
-                const double log_posterior_new = log_posterior();
+                const double log_posterior_new = log_posterior(thread_pool);
 
                 // compute acceptance probability
                 const double rho = exp(1.0/_temperature_*(log_posterior_new-log_posterior_ref))
@@ -290,8 +288,8 @@ public:
                         return log_posterior_ref;
                 }
         }
-        virtual void operator()(boost::random::mt19937& rng, bool verbose = false) {
-                double log_posterior_ref = log_posterior();
+        virtual double operator()(thread_pool_t& thread_pool, threaded_rng_t& rng, bool verbose = false) {
+                double log_posterior_ref = log_posterior(thread_pool);
                 // loop over nodes
                 for (pt_node_t::nodes_t::iterator it = _tree_.nodes.begin();
                      it != _tree_.nodes.end(); it++) {
@@ -300,19 +298,10 @@ public:
                                 continue;
                         }
                         // otherwise sample
-                        log_posterior_ref = sample_branch(**it, log_posterior_ref, rng);
+                        log_posterior_ref = sample_branch(**it, log_posterior_ref, thread_pool, rng);
                 }
                 update_history(log_posterior_ref);
-        }
-        virtual void operator()(size_t n, boost::random::mt19937& rng, bool verbose = true) {
-                // sample n times
-                for (size_t i = 0; i < n; i++) {
-                        if (verbose) {
-                                std::cerr << progress_t((i+1.0)/(double)n);
-                        }
-                        operator()(rng);
-                }
-                if (verbose) std::cerr << std::endl;
+                return log_posterior_ref;
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
@@ -347,9 +336,6 @@ protected:
         // state of the sampler
         size_t _step_;
         pt_root_t _tree_;
-        // a pool of threads that might be shared among multiple
-        // samplers
-        thread_pool_t& _thread_pool_;
         // alignment data
         const alignment_map_t<AC>& _alignment_;
         // prior distribution and parameters
@@ -365,7 +351,8 @@ class pt_mc3_t : public pt_sampler_t
 {
 public:
         pt_mc3_t(const vector_t& temperatures, const T& mh)
-                : uniform_int(0, temperatures.size()-1) {
+                : _thread_pool_(temperatures.size()),
+                  uniform_int(0, temperatures.size()-1) {
                 assert(temperatures.size() > 0);
                 assert(temperatures[0] == 1.0);
                 for (size_t i = 0; i < temperatures.size(); i++) {
@@ -374,7 +361,8 @@ public:
                 }
         }
         pt_mc3_t(const pt_mc3_t& pt_mc3)
-                : uniform_int(pt_mc3.uniform_int) {
+                : _thread_pool_(pt_mc3._thread_pool_),
+                  uniform_int(pt_mc3.uniform_int) {
                 for (size_t i = 0; i < pt_mc3._population_.size(); i++) {
                         _population_.push_back(pt_mc3._population_[i]->clone());
                 }
@@ -389,12 +377,18 @@ public:
                 return new pt_mc3_t(*this);
         }
 
-        virtual void operator()(boost::random::mt19937& rng, bool verbose = false) {
+        virtual double operator()(thread_pool_t& thread_pool, threaded_rng_t& rng, bool verbose = false) {
                 using std::swap;
+                // future log posterior values
+                future_vector_t<double> futures(_population_.size());
                 // execute the metropolis algorithm on each chain
                 for (size_t i = 0; i < _population_.size(); i++) {
-                        _population_[i]->operator()(rng);
+                        boost::function<double ()> f = boost::bind(&pt_sampler_t::operator(), _population_[i],
+                                                                   boost::ref(thread_pool), boost::ref(rng), false);
+                        // use local thread pool to execute samplers
+                        futures[i] = _thread_pool_.schedule(f);
                 }
+                futures.wait();
                 // select two chains at random
                 const size_t i = uniform_int(rng);
                 const size_t j = uniform_int(rng);
@@ -419,16 +413,7 @@ public:
                                      _population_[j]->tree());
                         }
                 }
-        }
-        virtual void operator()(size_t n, boost::random::mt19937& rng, bool verbose = false) {
-                // sample n times
-                for (size_t i = 0; i < n; i++) {
-                        if (verbose) {
-                                std::cerr << progress_t((i+1.0)/(double)n);
-                        }
-                        operator()(rng);
-                }
-                if (verbose) std::cerr << std::endl;
+                return futures[0].get();
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
@@ -440,6 +425,8 @@ public:
         }
 protected:
         std::vector<T*> _population_;
+        // a local thread pool
+        thread_pool_t _thread_pool_;
         // distribution for randomly selecting two chains
         boost::random::uniform_int_distribution<> uniform_int;
         // distribution for the metropolis update
@@ -494,15 +481,15 @@ public:
                         _log_posterior_history_.push_back((*it)->log_posterior_history());
                 }
         }
-        void operator()(boost::random::mt19937& rng, bool verbose = false) {
+        void operator()(thread_pool_t& thread_pool, threaded_rng_t& rng, bool verbose = false) {
                 for (size_t j = 0; j < _population_.size(); j++) {
-                        _population_[j]->operator()(rng, verbose);
+                        _population_[j]->operator()(thread_pool, rng, verbose);
                 }
         }
-        void operator()(size_t n, boost::random::mt19937& rng, bool verbose = false) {
+        void operator()(size_t n, thread_pool_t& thread_pool, threaded_rng_t& rng, bool verbose = false) {
                 if (verbose) std::cerr << std::endl << std::endl;
                 for (size_t i = 0; i < n; i++) {
-                        operator()(rng, verbose);
+                        operator()(thread_pool, rng, verbose);
                         if (verbose) {
                                 std::cerr << progress_t((i+1.0)/(double)n);
                         }

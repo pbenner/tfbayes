@@ -30,6 +30,28 @@
 #include <boost/bind.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 
+template<typename T>
+class future_vector_t : public boost::ptr_vector<boost::unique_future<T> >
+{
+        typedef boost::unique_future<T> future_t;
+        typedef boost::ptr_vector<future_t> base_t;
+public:
+        future_vector_t()
+                : base_t()
+                { }
+        future_vector_t(size_t n)
+                : base_t(n) {
+                for (size_t i = 0; i < n; i++) {
+                        base_t::push_back(new future_t());
+                }
+        }
+        void wait() {
+                for (size_t i = 0; i < base_t::size(); i++) {
+                        base_t::operator[](i).wait();
+                }
+        }
+};
+
 class thread_pool_t {
 public:
         thread_pool_t(size_t n = 1)
@@ -55,12 +77,14 @@ public:
 
         template <typename T>
         boost::unique_future<T> schedule(boost::function<T ()> f) {
+                boost::lock_guard<boost::mutex> guard(mtx);
                 typedef boost::packaged_task<T> task_t;
                 boost::shared_ptr<task_t> tmp = boost::make_shared<task_t>(f);
                 io_service.post(boost::bind(&task_t::operator(), tmp));
                 return tmp->get_future();
         }
 protected:
+        boost::mutex mtx;
         boost::thread_group threads;
         boost::asio::io_service io_service;
         boost::asio::io_service::work work;

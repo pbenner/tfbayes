@@ -25,6 +25,20 @@
 #include <sys/time.h>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/thread.hpp>
+
+class threaded_rng_t : public boost::random::mt19937
+{
+        typedef boost::random::mt19937 base_t;
+public:
+        result_type operator()() {
+                boost::lock_guard<boost::mutex> guard(mtx);
+                return base_t::operator()();
+        }
+protected:
+        boost::mutex mtx;
+};
 
 template <typename T>
 void seed_rng(T& rng)
