@@ -45,29 +45,35 @@ using namespace std;
 // format posterior values
 ////////////////////////////////////////////////////////////////////////////////
 
-class posterior_values {
+class print_posterior_values {
 public:
-        explicit posterior_values(const pt_pmcmc_t& mh)
+        explicit print_posterior_values(const pt_pmcmc_t& mh)
                 : mh(mh) { }
 
         std::ostream& operator()(std::ostream& o) const {
-                if (mh.log_posterior_history().begin() ==
-                    mh.log_posterior_history().end()) {
+                if (mh.history(0).values.begin() ==
+                    mh.history(0).values.end()) {
                         return o;
                 }
+                size_t line = 0;
                 // print header
                 o << "x";
-                for (size_t i = 0; i < mh.log_posterior_history().size(); i++) {
+                for (size_t i = 0; i < mh.size(); i++) {
                         o << " y" << (i+1);
                 }
                 o << endl;
-                // print log posterior
-                size_t n = mh.log_posterior_history().begin()->size();
-                for (size_t i = 0; i < n; i++) {
-                        o << (i+1);
-                        for (std::list<vector<double> >::const_iterator it = mh.log_posterior_history().begin();
-                             it != mh.log_posterior_history().end(); it++) {
-                                o << " " << fixed << it->operator[](i);
+                // print the list such that the order of samples is preserved
+                std::vector<pt_history_t::values_t::const_iterator> it_vec(mh.size());
+                for (size_t i = 0; i < mh.size(); i++) {
+                        it_vec[i] = mh.history(i).values.begin();
+                }
+                while (it_vec[0] != mh.history(0).values.end())
+                {
+                        o << (++line);
+                        for (size_t i = 0; i < mh.size(); i++) {
+                                o << " " << fixed << *it_vec[i];
+                                // advance iteration for sampler i
+                                it_vec[i]++;
                         }
                         o << endl;
                 }
@@ -77,20 +83,39 @@ protected:
         const pt_pmcmc_t& mh;
 };
 
-ostream& operator<< (ostream& o, const posterior_values& pv)
+class print_posterior_samples {
+public:
+        explicit print_posterior_samples(const pt_pmcmc_t& mh)
+                : mh(mh) { }
+
+        std::ostream& operator()(std::ostream& o) const {
+                // print the list such that the order of samples is preserved
+                std::vector<pt_history_t::samples_t::const_iterator> it_vec(mh.size());
+                for (size_t i = 0; i < mh.size(); i++) {
+                        it_vec[i] = mh.history(i).samples.begin();
+                }
+                while (it_vec[0] != mh.history(0).samples.end())
+                {
+                        for (size_t i = 0; i < mh.size(); i++) {
+                                o << newick_format(*it_vec[i]) << endl;
+                                // advance iteration for sampler i
+                                it_vec[i]++;
+                        }
+                }
+                return o;
+        }
+protected:
+        const pt_pmcmc_t& mh;
+};
+
+ostream& operator<< (ostream& o, const print_posterior_values& pv)
 {
         return pv(o);
 }
 
-ostream& operator<< (ostream& o, const pt_pmcmc_t& mh)
+ostream& operator<< (ostream& o, const print_posterior_samples& ps)
 {
-        // print trees
-        for (std::list<pt_root_t>::const_iterator it = mh.samples().begin();
-             it != mh.samples().end(); it++) {
-                o << newick_format(*it) << endl;
-        }
-
-        return o;
+        return ps(o);
 }
 
 // options
@@ -241,7 +266,7 @@ void save_posterior_values(const pt_pmcmc_t& pmcmc)
                              << endl;
                         exit(EXIT_FAILURE);
                 }
-                csv << posterior_values(pmcmc) << endl;
+                csv << print_posterior_values(pmcmc) << endl;
                 csv.close();
         }
 }
@@ -271,7 +296,7 @@ void run_mcmc(
         // print posterior values to separate file
         save_posterior_values(pmcmc);
         // print tree samples
-        cout << pmcmc;
+        cout << print_posterior_samples(pmcmc);
 }
 
 void run_optimization(const string& method, const char* file_tree, const char* file_alignment)

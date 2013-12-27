@@ -144,11 +144,61 @@ public:
 // phylotree sampler
 ////////////////////////////////////////////////////////////////////////////////
 
+class pt_history_t
+{
+public:
+        typedef std::list<pt_root_t> samples_t;
+        typedef std::vector<double> values_t;
+
+        // list of tree samples
+        samples_t samples;
+        // the posterior value for each tree
+        values_t values;
+        // rate of accepted proposals
+        double acceptance_rate;
+        // acceptance rate for the mc^3 algorithm
+        double acceptance_rate_mc3;
+        // number of steps
+        size_t steps;
+};
+
+// the state of a sampler is a phylogenetic tree paired with its
+// posterior value
+class pt_state_t : std::pair<pt_root_t, double>
+{
+        typedef std::pair<pt_root_t, double> base_t;
+public:
+        pt_state_t(const pt_root_t& tree)
+                : base_t(tree, 0.0)
+                { }
+        pt_state_t(const pt_state_t& state)
+                : base_t(state)
+                { }
+        pt_state_t& operator=(const pt_root_t& tree) {
+                base_t::first = tree;
+                return *this;
+        }
+        pt_state_t& operator=(double posterior_value) {
+                base_t::second = posterior_value;
+                return *this;
+        }
+        const pt_root_t& tree() const {
+                return base_t::first;
+        }
+        pt_root_t& tree() {
+                return base_t::first;
+        }
+        operator pt_root_t&() {
+                return base_t::first;
+        }
+        operator double&() {
+                return base_t::second;
+        }
+};
+
 class pt_sampler_t : public virtual clonable
 {
 public:
-        typedef std::vector<double> vector_t;
-        typedef std::list<pt_root_t> tree_list_t;
 
         virtual ~pt_sampler_t() { }
 
@@ -158,8 +208,8 @@ public:
         virtual double operator()(threaded_rng_t& rng, bool verbose = false) = 0;
 
         // access methods
-        virtual const vector_t& log_posterior_history() const = 0;
-        virtual const tree_list_t& samples() const = 0;
+        virtual const pt_history_t& history() const = 0;
+        virtual const pt_state_t& state() const = 0;
 };
 
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
@@ -175,8 +225,7 @@ public:
                                  const proposal_distribution_t& proposal_distribution,
                                  thread_pool_t& thread_pool,
                                  double temperature = 1.0)
-                : _step_              (0),
-                  _tree_              (tree),
+                : _state_             (tree),
                   _thread_pool_       (thread_pool),
                   _alignment_         (alignment),
                   _alpha_             (alpha.begin(), alpha.end()),
@@ -187,12 +236,12 @@ public:
                 for (pt_node_t::id_t id = 0; id < tree.n_nodes; id++) {
                         proposal_distributions.push_back(proposal_distribution.clone());
                 }
+                // compute the posterior value for the initial tree
+                _state_ = log_posterior();
         }
         pt_metropolis_hastings_t(const pt_metropolis_hastings_t& mh)
-                : _log_posterior_history_(mh._log_posterior_history_),
-                  _samples_              (mh._samples_),
-                  _step_                 (mh._step_),
-                  _tree_                 (mh._tree_),
+                : _history_              (mh._history_),
+                  _state_                (mh._state_),
                   _thread_pool_          (mh._thread_pool_),
                   _alignment_            (mh._alignment_),
                   _alpha_                (mh._alpha_),
@@ -201,13 +250,13 @@ public:
                   proposal_distributions (mh.proposal_distributions) {
 
                 // initialize nodes and proposal distributions
-                for (pt_node_t::id_t id = 0; id < _tree_.n_nodes; id++) {
+                for (pt_node_t::id_t id = 0; id < _state_.tree().n_nodes; id++) {
                         proposal_distributions[id] = mh.proposal_distributions[id]->clone();
                 }
         }
         virtual ~pt_metropolis_hastings_t() {
                 // free proposal distributions
-                for (pt_node_t::id_t id = 0; id < _tree_.n_nodes; id++) {
+                for (pt_node_t::id_t id = 0; id < _state_.tree().n_nodes; id++) {
                         delete(proposal_distributions[id]);
                 }
         }
@@ -217,7 +266,7 @@ public:
         }
 
         double log_likelihood(const std::vector<AC>& column, double n) {
-                return n*pt_marginal_likelihood(_tree_, column, _alpha_);
+                return n*pt_marginal_likelihood(_state_.tree(), column, _alpha_);
         }
         double log_posterior() {
                 double result = 0;
@@ -236,8 +285,8 @@ public:
                         result += futures[i].get();
                 }
                 // prior on branch lengths
-                for (pt_node_t::nodes_t::iterator it = _tree_.nodes.begin();
-                     it != _tree_.nodes.end(); it++) {
+                for (pt_node_t::nodes_t::iterator it = _state_.tree().nodes.begin();
+                     it != _state_.tree().nodes.end(); it++) {
                         // skip the root
                         if ((*it)->root()) {
                                 continue;
@@ -246,13 +295,13 @@ public:
                 }
                 return result;
         }
-        void update_history(double log_posterior_ref) {
-                _samples_.push_back(_tree_);
-                _log_posterior_history_.push_back(log_posterior_ref);
-                _step_++;
+        void update_history(size_t k, size_t n) {
+                _history_.samples.push_back(_state_);
+                _history_.values.push_back(_state_);
+                _history_.steps++;
         }
-        double sample_branch(pt_node_t& node, double log_posterior_ref,
-                             threaded_rng_t& rng) {
+        bool sample_branch(pt_node_t& node, threaded_rng_t& rng) {
+                double log_posterior_ref = _state_;
                 // distributions for drawing random numbers
                 boost::random::bernoulli_distribution<> bernoulli(0.5);
                 boost::random::uniform_01<> uniform;
@@ -279,7 +328,8 @@ public:
                         *proposal_distributions[node.id]->p(d_old, d_new);
                 const double x   = uniform(rng);
                 if (x <= std::min(1.0, rho)) {
-                        return log_posterior_new;
+                        _state_ = log_posterior_new;
+                        return true;
                 }
                 else {
                         // sample rejected
@@ -287,43 +337,40 @@ public:
                         // if topology changed then switch it back
                         node.move(which);
 
-                        return log_posterior_ref;
+                        return false;
                 }
         }
         virtual double operator()(threaded_rng_t& rng, bool verbose = false) {
-                double log_posterior_ref = log_posterior();
+                // number of accepted proposals
+                size_t k = 0;
                 // loop over nodes
-                for (pt_node_t::nodes_t::iterator it = _tree_.nodes.begin();
-                     it != _tree_.nodes.end(); it++) {
+                for (pt_node_t::nodes_t::iterator it = _state_.tree().nodes.begin();
+                     it != _state_.tree().nodes.end(); it++) {
                         // skip the root
                         if ((*it)->root()) {
                                 continue;
                         }
                         // otherwise sample
-                        log_posterior_ref = sample_branch(**it, log_posterior_ref, rng);
+                        if (sample_branch(**it, rng)) {
+                                k++;
+                        }
                 }
-                update_history(log_posterior_ref);
-                return log_posterior_ref;
+                update_history(k, _state_.tree().n_nodes-1);
+                return _state_;
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
-        const double& log_posterior() const {
-                return _log_posterior_history_.back();
+        virtual const pt_history_t& history() const {
+                return _history_;
         }
-        const vector_t& log_posterior_history() const {
-                return _log_posterior_history_;
+        virtual pt_history_t& history() {
+                return _history_;
         }
-        const tree_list_t& samples() const {
-                return _samples_;
+        virtual const pt_state_t& state() const {
+                return _state_;
         }
-        const size_t& step() const {
-                return _step_;
-        }
-        const pt_root_t& tree() const {
-                return _tree_;
-        }
-        pt_root_t& tree() {
-                return _tree_;
+        virtual pt_state_t& state() {
+                return _state_;
         }
         const double& temperature() const {
                 return _temperature_;
@@ -333,11 +380,9 @@ public:
         }
 protected:
         // sampler history
-        vector_t _log_posterior_history_;
-        tree_list_t _samples_;
+        pt_history_t _history_;
         // state of the sampler
-        size_t _step_;
-        pt_root_t _tree_;
+        pt_state_t _state_;
         // a thread pool for computing likelihoods
         thread_pool_t& _thread_pool_;
         // alignment data
@@ -353,6 +398,7 @@ protected:
 template <typename T>
 class pt_mc3_t : public pt_sampler_t
 {
+        typedef std::vector<double> vector_t;
 public:
         pt_mc3_t(const vector_t& temperatures, const T& mh)
                 : _thread_pool_(temperatures.size()),
@@ -411,8 +457,8 @@ public:
                                                 % i % j;
                                 }
                                 // swap states of the two chains
-                                swap(_population_[i]->tree(),
-                                     _population_[j]->tree());
+                                swap(_population_[i]->state(),
+                                     _population_[j]->state());
                         }
                 }
                 // wait for all processes to finish
@@ -422,11 +468,11 @@ public:
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
-        const vector_t& log_posterior_history() const {
-                return _population_[0]->log_posterior_history();
+        virtual const pt_history_t& history() const {
+                return _population_[0]->history();
         }
-        const tree_list_t& samples() const {
-                return _population_[0]->samples();
+        virtual const pt_state_t& state() const {
+                return _population_[0]->state();
         }
 protected:
         std::vector<T*> _population_;
@@ -449,9 +495,7 @@ public:
                 }
         }
         pt_pmcmc_t(const pt_pmcmc_t& pmcmc)
-                : _samples_              (pmcmc._samples_),
-                  _thread_pool_          (pmcmc._thread_pool_),
-                  _log_posterior_history_(pmcmc._log_posterior_history_) {
+                : _thread_pool_(pmcmc._thread_pool_) {
 
                 for (size_t i = 0; i < pmcmc._population_.size(); i++) {
                         _population_.push_back(pmcmc._population_[i]->clone());
@@ -463,31 +507,6 @@ public:
                 }
         }
 
-        void update_samples() {
-                // fill the list such that the order of samples is preserved
-                std::vector<pt_sampler_t::tree_list_t::const_iterator> it_vec;
-                for (std::vector<pt_sampler_t*>::const_iterator it = _population_.begin();
-                     it != _population_.end(); it++) {
-                        it_vec.push_back((*it)->samples().begin());
-                }
-                while (it_vec[0] != _population_[0]->samples().end())
-                {
-                        for (size_t i = 0; i < _population_.size(); i++) {
-                                _samples_.push_back(*it_vec[i]);
-                                // advance iteration for sampler i
-                                it_vec[i]++;
-                        }
-                }
-        }
-        void update_history() {
-                // reset history
-                _log_posterior_history_ = std::list<std::vector<double> >();
-                // copy history from population
-                for (std::vector<pt_sampler_t*>::const_iterator it = _population_.begin();
-                     it != _population_.end(); it++) {
-                        _log_posterior_history_.push_back((*it)->log_posterior_history());
-                }
-        }
         void operator()(threaded_rng_t& rng, bool verbose = false) {
                 // future log posterior values
                 future_vector_t<double> futures(_population_.size());
@@ -508,22 +527,19 @@ public:
                         }
                 }
                 if (verbose) std::cerr << std::endl;
-                update_samples();
-                update_history();
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
-        const std::list<std::vector<double> >& log_posterior_history() const {
-                return _log_posterior_history_;
+        const pt_history_t& history(size_t i) const {
+                return _population_[i]->history();
         }
-        const pt_sampler_t::tree_list_t& samples() const {
-                return _samples_;
+        size_t size() const {
+                return _population_.size();
         }
 protected:
-        pt_sampler_t::tree_list_t _samples_;
         // a local thread pool
         thread_pool_t _thread_pool_;
-        std::list<std::vector<double> > _log_posterior_history_;
+        // a population of samplers
         std::vector<pt_sampler_t*> _population_;
 };
 
