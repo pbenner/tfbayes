@@ -391,14 +391,13 @@ public:
                         // use local thread pool to execute samplers
                         futures[i] = _thread_pool_.schedule(f);
                 }
-                futures.wait();
                 // select two chains at random
                 const size_t i = uniform_int(rng);
                 const size_t j = uniform_int(rng);
                 if (i != j) {
                         // get probabilities
-                        const double pi = _population_[i]->log_posterior();
-                        const double pj = _population_[j]->log_posterior();
+                        const double pi = futures[i].get();
+                        const double pj = futures[j].get();
                         const double ti = _population_[i]->temperature();
                         const double tj = _population_[j]->temperature();
                         // metropolis probability for accepting the swap
@@ -416,6 +415,9 @@ public:
                                      _population_[j]->tree());
                         }
                 }
+                // wait for all processes to finish
+                futures.wait();
+                // return log posterior
                 return futures[0].get();
         }
         // access methods
