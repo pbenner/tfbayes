@@ -441,7 +441,8 @@ protected:
 class pt_pmcmc_t
 {
 public:
-        pt_pmcmc_t(size_t n, const pt_sampler_t& mh) {
+        pt_pmcmc_t(size_t n, const pt_sampler_t& mh)
+                : _thread_pool_(n) {
 
                 for (size_t i = 0; i < n; i++) {
                         _population_.push_back(mh.clone());
@@ -449,6 +450,7 @@ public:
         }
         pt_pmcmc_t(const pt_pmcmc_t& pmcmc)
                 : _samples_              (pmcmc._samples_),
+                  _thread_pool_          (pmcmc._thread_pool_),
                   _log_posterior_history_(pmcmc._log_posterior_history_) {
 
                 for (size_t i = 0; i < pmcmc._population_.size(); i++) {
@@ -487,9 +489,15 @@ public:
                 }
         }
         void operator()(threaded_rng_t& rng, bool verbose = false) {
-                for (size_t j = 0; j < _population_.size(); j++) {
-                        _population_[j]->operator()(rng, verbose);
+                // future log posterior values
+                future_vector_t<double> futures(_population_.size());
+                // loop over population and execute samplers
+                for (size_t i = 0; i < _population_.size(); i++) {
+                        boost::function<double ()> f = boost::bind(&pt_sampler_t::operator(), _population_[i], boost::ref(rng), verbose);
+                        // use local thread pool to execute samplers
+                        futures[i] = _thread_pool_.schedule(f);
                 }
+                futures.wait();
         }
         void operator()(size_t n, threaded_rng_t& rng, bool verbose = false) {
                 if (verbose) std::cerr << std::endl << std::endl;
@@ -513,6 +521,8 @@ public:
         }
 protected:
         pt_sampler_t::tree_list_t _samples_;
+        // a local thread pool
+        thread_pool_t _thread_pool_;
         std::list<std::vector<double> > _log_posterior_history_;
         std::vector<pt_sampler_t*> _population_;
 };
