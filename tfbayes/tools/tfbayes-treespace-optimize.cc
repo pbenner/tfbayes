@@ -261,13 +261,13 @@ void run_mcmc(
         // proposal distribution
         normal_proposal_t proposal(options.proposal_variance);
         // the metropolis sampler
-        pt_mc_t pt_mc(pt_root, alignment_map, options.alpha, gamma_distribution, proposal);
+        pt_mc_t pt_mc(pt_root, alignment_map, options.alpha, gamma_distribution, proposal, thread_pool);
         // parallel chains with different temperatures
         pt_mc3_t<pt_mc_t> pt_mc3(options.temperatures, pt_mc);
         // run several mc3 chains in parallel
         pt_pmcmc_t pmcmc(options.chains, pt_mc3);
         // execute the sampler
-        pmcmc(options.max_steps, thread_pool, rng, options.verbose);
+        pmcmc(options.max_steps, rng, options.verbose);
         // print posterior values to separate file
         save_posterior_values(pmcmc);
         // print tree samples

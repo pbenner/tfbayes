@@ -155,7 +155,7 @@ public:
         virtual pt_sampler_t* clone() const = 0;
 
         // execute sampler
-        virtual double operator()(thread_pool_t& thread_pool, threaded_rng_t& rng, bool verbose = false) = 0;
+        virtual double operator()(threaded_rng_t& rng, bool verbose = false) = 0;
 
         // access methods
         virtual const vector_t& log_posterior_history() const = 0;
@@ -173,9 +173,11 @@ public:
                                  const std::vector<double>& alpha,
                                  const gamma_distribution_t& gamma_distribution,
                                  const proposal_distribution_t& proposal_distribution,
+                                 thread_pool_t& thread_pool,
                                  double temperature = 1.0)
                 : _step_              (0),
                   _tree_              (tree),
+                  _thread_pool_       (thread_pool),
                   _alignment_         (alignment),
                   _alpha_             (alpha.begin(), alpha.end()),
                   _gamma_distribution_(gamma_distribution),
@@ -191,6 +193,7 @@ public:
                   _samples_              (mh._samples_),
                   _step_                 (mh._step_),
                   _tree_                 (mh._tree_),
+                  _thread_pool_          (mh._thread_pool_),
                   _alignment_            (mh._alignment_),
                   _alpha_                (mh._alpha_),
                   _gamma_distribution_   (mh._gamma_distribution_),
@@ -216,7 +219,7 @@ public:
         double log_likelihood(const std::vector<AC>& column, double n) {
                 return n*pt_marginal_likelihood(_tree_, column, _alpha_);
         }
-        double log_posterior(thread_pool_t& thread_pool) {
+        double log_posterior() {
                 double result = 0;
                 // results for each column are stored in a vector of
                 // futures (with pre allocated capacity)
@@ -227,7 +230,7 @@ public:
                 for (typename alignment_map_t<AC>::const_iterator it = _alignment_.begin();
                      it != _alignment_.end(); it++) {
                         boost::function<double ()> f = boost::bind(&pt_metropolis_hastings_t::log_likelihood, this, it->first, it->second);
-                        futures[i++] = thread_pool.schedule(f);
+                        futures[i++] = _thread_pool_.schedule(f);
                 }
                 for (size_t i = 0; i < futures.size(); i++) {
                         result += futures[i].get();
@@ -249,7 +252,6 @@ public:
                 _step_++;
         }
         double sample_branch(pt_node_t& node, double log_posterior_ref,
-                             thread_pool_t& thread_pool,
                              threaded_rng_t& rng) {
                 // distributions for drawing random numbers
                 boost::random::bernoulli_distribution<> bernoulli(0.5);
@@ -270,7 +272,7 @@ public:
                 node.d = d_new;
 
                 // compute new log likelihood
-                const double log_posterior_new = log_posterior(thread_pool);
+                const double log_posterior_new = log_posterior();
 
                 // compute acceptance probability
                 const double rho = exp(1.0/_temperature_*(log_posterior_new-log_posterior_ref))
@@ -288,8 +290,8 @@ public:
                         return log_posterior_ref;
                 }
         }
-        virtual double operator()(thread_pool_t& thread_pool, threaded_rng_t& rng, bool verbose = false) {
-                double log_posterior_ref = log_posterior(thread_pool);
+        virtual double operator()(threaded_rng_t& rng, bool verbose = false) {
+                double log_posterior_ref = log_posterior();
                 // loop over nodes
                 for (pt_node_t::nodes_t::iterator it = _tree_.nodes.begin();
                      it != _tree_.nodes.end(); it++) {
@@ -298,7 +300,7 @@ public:
                                 continue;
                         }
                         // otherwise sample
-                        log_posterior_ref = sample_branch(**it, log_posterior_ref, thread_pool, rng);
+                        log_posterior_ref = sample_branch(**it, log_posterior_ref, rng);
                 }
                 update_history(log_posterior_ref);
                 return log_posterior_ref;
@@ -336,6 +338,8 @@ protected:
         // state of the sampler
         size_t _step_;
         pt_root_t _tree_;
+        // a thread pool for computing likelihoods
+        thread_pool_t& _thread_pool_;
         // alignment data
         const alignment_map_t<AC>& _alignment_;
         // prior distribution and parameters
@@ -377,14 +381,13 @@ public:
                 return new pt_mc3_t(*this);
         }
 
-        virtual double operator()(thread_pool_t& thread_pool, threaded_rng_t& rng, bool verbose = false) {
+        virtual double operator()(threaded_rng_t& rng, bool verbose = false) {
                 using std::swap;
                 // future log posterior values
                 future_vector_t<double> futures(_population_.size());
                 // execute the metropolis algorithm on each chain
                 for (size_t i = 0; i < _population_.size(); i++) {
-                        boost::function<double ()> f = boost::bind(&pt_sampler_t::operator(), _population_[i],
-                                                                   boost::ref(thread_pool), boost::ref(rng), false);
+                        boost::function<double ()> f = boost::bind(&pt_sampler_t::operator(), _population_[i], boost::ref(rng), false);
                         // use local thread pool to execute samplers
                         futures[i] = _thread_pool_.schedule(f);
                 }
@@ -481,15 +484,15 @@ public:
                         _log_posterior_history_.push_back((*it)->log_posterior_history());
                 }
         }
-        void operator()(thread_pool_t& thread_pool, threaded_rng_t& rng, bool verbose = false) {
+        void operator()(threaded_rng_t& rng, bool verbose = false) {
                 for (size_t j = 0; j < _population_.size(); j++) {
-                        _population_[j]->operator()(thread_pool, rng, verbose);
+                        _population_[j]->operator()(rng, verbose);
                 }
         }
-        void operator()(size_t n, thread_pool_t& thread_pool, threaded_rng_t& rng, bool verbose = false) {
+        void operator()(size_t n, threaded_rng_t& rng, bool verbose = false) {
                 if (verbose) std::cerr << std::endl << std::endl;
                 for (size_t i = 0; i < n; i++) {
-                        operator()(thread_pool, rng, verbose);
+                        operator()(rng, verbose);
                         if (verbose) {
                                 std::cerr << progress_t((i+1.0)/(double)n);
                         }
