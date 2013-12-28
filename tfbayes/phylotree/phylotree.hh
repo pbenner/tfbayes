@@ -89,7 +89,7 @@ public:
         /* moves */
         void move_a();
         void move_b();
-        void move(ssize_t which);
+        void move(size_t which);
 
         /* distance to ancestor */
         double d;

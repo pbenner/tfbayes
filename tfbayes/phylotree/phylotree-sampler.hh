@@ -360,7 +360,7 @@ public:
                 boost::random::bernoulli_distribution<> bernoulli(0.5);
                 boost::random::uniform_01<> uniform;
                 // this variable indicates the orthant to move to
-                ssize_t which = bernoulli(rng);
+                size_t which = bernoulli(rng);
 
                 // alter topology
                 node.move(which);

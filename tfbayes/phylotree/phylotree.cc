@@ -233,7 +233,7 @@ pt_node_t::move_b()
 }
 
 void
-pt_node_t::move(ssize_t which)
+pt_node_t::move(size_t which)
 {
         switch (which) {
         case 0: move_a(); break;
