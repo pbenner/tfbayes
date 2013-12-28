@@ -48,6 +48,9 @@
 #include <tfbayes/utility/random.hh>
 #include <tfbayes/utility/thread-pool.hh>
 
+// misc tools
+////////////////////////////////////////////////////////////////////////////////
+
 #define __line_up__  "\x1b[A"
 #define __line_del__ "\33[2K\r"
 
