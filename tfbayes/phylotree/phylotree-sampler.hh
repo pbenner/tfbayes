@@ -232,7 +232,7 @@ public:
                   _alpha_                (alpha.begin(), alpha.end()),
                   _gamma_distribution_   (gamma_distribution),
                   _temperature_          (temperature),
-                  _proposal_distribution_(proposal_distribution.clone()){
+                  _proposal_distribution_(proposal_distribution.clone()) {
 
                 // compute the posterior value for the initial tree
                 _state_ = log_posterior();
