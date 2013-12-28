@@ -146,6 +146,16 @@ public:
                         base_t::operator[](*it) += 1.0;
                 }
         }
+        explicit alignment_map_t(const alignment_set_t<AC>& alignment_set)
+                : base_t() {
+                for (typename alignment_set_t<AC>::const_iterator it = alignment_set.begin();
+                     it != alignment_set.end(); it++) {
+                        for (typename alignment_t<AC>::const_iterator is = it->begin();
+                             is != it->end(); is++) {
+                                base_t::operator[](*is) += 1.0;
+                        }
+                }
+        }
 };
 
 // sampling history

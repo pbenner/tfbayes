@@ -247,10 +247,10 @@ pt_root_t parse_tree_file(const string& filename)
 
 void run_gradient_ascent(
         const pt_root_t& pt_root,
-        const alignment_t<>& alignment)
+        const alignment_map_t<>& alignment_map)
 {
-        pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(pt_root, alignment, options.alpha, options.shape, options.scale, options.step_size);
-        pt_gradient_ascent.run(options.max_steps, options.min_change);
+//        pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(pt_root, alignment, options.alpha, options.shape, options.scale, options.step_size);
+//        pt_gradient_ascent.run(options.max_steps, options.min_change);
 }
 
 // sampler
@@ -273,12 +273,10 @@ void save_posterior_values(const pt_pmcmc_t& pmcmc)
 
 void run_mcmc(
         const pt_root_t& pt_root,
-        const alignment_t<>& alignment)
+        const alignment_map_t<>& alignment_map)
 {
         threaded_rng_t rng;
         seed_rng(rng);
-        // convert alignment
-        alignment_map_t<> alignment_map(alignment);
         // a pool of threads for computing likelihoods
         thread_pool_t thread_pool(options.threads);
         // prior distribution on branch lengths
@@ -305,14 +303,17 @@ void run_optimization(const string& method, const char* file_tree, const char* f
         pt_root_t pt_root = parse_tree_file(file_tree);
 
         // alignment
-        alignment_t<> alignment(file_alignment, pt_root, nucleotide_alphabet_t(), options.verbose);
-        assert(alignment.length() > 0);
+        alignment_set_t<> alignment_set(file_alignment, pt_root, nucleotide_alphabet_t());
+        assert(alignment_set.size() > 0);
+        assert(alignment_set[0].length() > 0);
+        // convert alignment
+        alignment_map_t<> alignment_map(alignment_set);
 
         if (method == "gradient-ascent") {
-                run_gradient_ascent(pt_root, alignment);
+                run_gradient_ascent(pt_root, alignment_map);
         }
         else if (method == "metropolis-hastings") {
-                run_mcmc(pt_root, alignment);
+                run_mcmc(pt_root, alignment_map);
         }
         else {
                 cerr << "Unknown optimization method: " << method
