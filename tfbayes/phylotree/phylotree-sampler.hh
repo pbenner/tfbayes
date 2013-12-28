@@ -155,8 +155,6 @@ struct pt_history_t
         // acceptance rates
         size_t accepted_topologies;
         size_t accepted_lengths;
-        size_t steps_topology;
-        size_t steps_length;
         size_t steps;
         // list of tree samples
         samples_t samples;
@@ -311,34 +309,24 @@ public:
         }
         virtual void print_progress() const {
                 std::cerr << __line_del__"temperature                    : " << temperature() << std::endl
-                          << __line_del__"acceptance rate (topology)     : " << _history_.accepted_topologies/(double)_history_.steps_topology << std::endl
-                          << __line_del__"acceptance rate (branch length): " << _history_.accepted_lengths   /(double)_history_.steps_length   << std::endl
+                          << __line_del__"acceptance rate (topology)     : " << _history_.accepted_topologies/(double)_history_.steps << std::endl
+                          << __line_del__"acceptance rate (branch length): " << _history_.accepted_lengths   /(double)_history_.steps << std::endl
                           << __line_del__ << std::endl
                           << __line_del__ << std::endl;
         }
-        void sample_branch(pt_node_t& node, threaded_rng_t& rng) {
+        void sample_length(pt_node_t& node, threaded_rng_t& rng) {
                 double log_posterior_ref = _state_;
                 // distributions for drawing random numbers
-                boost::random::bernoulli_distribution<> bernoulli(0.5);
                 boost::random::uniform_01<> uniform;
-                // in case the topology is sampled, this variable
-                // indicates the orthant to move to
-                ssize_t which = -1;
 
                 // generate a proposal
                 double d_old = node.d;
                 double d_new = _proposal_distribution_->sample(rng, d_old);
-                if (!node.leaf() && (d_new < 0.0 || bernoulli(rng))) {
-                        // propose new topology
-                        which = bernoulli(rng);
-                        node.move(which);
-
-                        _history_.steps_topology++;
+                if (d_new < 0.0) {
+                        // the posterior does not have support on
+                        // negative branch lengths, so reject immediately
+                        return;
                 }
-                else {
-                        _history_.steps_length++;
-                }
-                d_new  = std::abs(d_new);
                 node.d = d_new;
 
                 // compute new log likelihood
@@ -351,17 +339,39 @@ public:
                 if (x <= std::min(1.0, rho)) {
                         // sample accepted
                         _state_ = log_posterior_new;
-                        if (which != -1) {
-                                _history_.accepted_topologies++;
-                        }
-                        else {
-                                _history_.accepted_lengths++;
-                        }
+                        _history_.accepted_lengths++;
                 }
                 else {
                         // sample rejected
                         node.d = d_old;
-                        // if topology changed then switch it back
+                }
+        }
+        void sample_topology(pt_node_t& node, threaded_rng_t& rng) {
+                // can't sample leafs
+                if (node.leaf()) return;
+                double log_posterior_ref = _state_;
+                // distributions for drawing random numbers
+                boost::random::bernoulli_distribution<> bernoulli(0.5);
+                boost::random::uniform_01<> uniform;
+                // this variable indicates the orthant to move to
+                ssize_t which = bernoulli(rng);
+
+                // alter topology
+                node.move(which);
+
+                // compute new log likelihood
+                const double log_posterior_new = log_posterior();
+
+                // compute acceptance probability
+                const double rho = exp(1.0/_temperature_*(log_posterior_new-log_posterior_ref));
+                const double x   = uniform(rng);
+                if (x <= std::min(1.0, rho)) {
+                        // sample accepted
+                        _state_ = log_posterior_new;
+                        _history_.accepted_topologies++;
+                }
+                else {
+                        // sample rejected
                         node.move(which);
                 }
         }
@@ -373,15 +383,16 @@ public:
                         if ((*it)->root()) {
                                 continue;
                         }
-                        sample_branch(**it, rng);
-                }
-                if (verbose) {
-                        print_progress();
+                        sample_length  (**it, rng);
+                        sample_topology(**it, rng);
+                        _history_.steps++;
                 }
                 // update history
                 _history_.samples.push_back(_state_);
                 _history_.values .push_back(_state_);
-                _history_.steps++;
+                if (verbose) {
+                        print_progress();
+                }
                 // return posterior value
                 return _state_;
         }
