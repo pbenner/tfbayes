@@ -324,7 +324,9 @@ public:
                         if (which != -1) {
                                 _history_.accepted_topologies++;
                         }
-                        _history_.accepted_lengths++;
+                        else {
+                                _history_.accepted_lengths++;
+                        }
                 }
                 else {
                         // sample rejected
@@ -396,19 +398,14 @@ public:
                 assert(temperatures[0] == 1.0);
                 for (size_t i = 0; i < temperatures.size(); i++) {
                         _population_.push_back(mh.clone());
-                        _population_[i]->temperature() = temperatures[i];
+                        _population_[i].temperature() = temperatures[i];
                 }
         }
         pt_mc3_t(const pt_mc3_t& pt_mc3)
                 : _thread_pool_(pt_mc3._thread_pool_),
                   uniform_int(pt_mc3.uniform_int) {
                 for (size_t i = 0; i < pt_mc3._population_.size(); i++) {
-                        _population_.push_back(pt_mc3._population_[i]->clone());
-                }
-        }
-        virtual ~pt_mc3_t() {
-                for (size_t i = 0; i < _population_.size(); i++) {
-                        delete(_population_[i]);
+                        _population_.push_back(pt_mc3._population_[i].clone());
                 }
         }
 
@@ -422,7 +419,9 @@ public:
                 future_vector_t<double> futures(_population_.size());
                 // execute the metropolis algorithm on each chain
                 for (size_t i = 0; i < _population_.size(); i++) {
-                        boost::function<double ()> f = boost::bind(&pt_sampler_t::operator(), _population_[i], boost::ref(rng), false);
+                        boost::function<double ()> f = boost::bind(&pt_sampler_t::operator(),
+                                                                   boost::ref(_population_[i]),
+                                                                   boost::ref(rng), false);
                         // use local thread pool to execute samplers
                         futures[i] = _thread_pool_.schedule(f);
                 }
@@ -433,8 +432,8 @@ public:
                         // get probabilities
                         const double pi = futures[i].get();
                         const double pj = futures[j].get();
-                        const double ti = _population_[i]->temperature();
-                        const double tj = _population_[j]->temperature();
+                        const double ti = _population_[i].temperature();
+                        const double tj = _population_[j].temperature();
                         // metropolis probability for accepting the swap
                         const double r  = std::min(1.0, std::exp(pi/tj + pj/ti - pi/ti - pj/tj));
                         if (uniform_01(rng) <= r) {
@@ -446,8 +445,8 @@ public:
                                                 % i % j;
                                 }
                                 // swap states of the two chains
-                                swap(_population_[i]->state(),
-                                     _population_[j]->state());
+                                swap(_population_[i].state(),
+                                     _population_[j].state());
                         }
                 }
                 // wait for all processes to finish
@@ -458,13 +457,13 @@ public:
         // access methods
         ////////////////////////////////////////////////////////////////////////
         virtual const pt_history_t& history() const {
-                return _population_[0]->history();
+                return _population_[0].history();
         }
         virtual const pt_state_t& state() const {
-                return _population_[0]->state();
+                return _population_[0].state();
         }
 protected:
-        std::vector<T*> _population_;
+        boost::ptr_vector<T> _population_;
         // a local thread pool
         thread_pool_t _thread_pool_;
         // distribution for randomly selecting two chains
@@ -487,12 +486,7 @@ public:
                 : _thread_pool_(pmcmc._thread_pool_) {
 
                 for (size_t i = 0; i < pmcmc._population_.size(); i++) {
-                        _population_.push_back(pmcmc._population_[i]->clone());
-                }
-        }
-        virtual ~pt_pmcmc_t() {
-                for (size_t i = 0; i < _population_.size(); i++) {
-                        delete(_population_[i]);
+                        _population_.push_back(pmcmc._population_[i].clone());
                 }
         }
 
@@ -505,7 +499,9 @@ public:
                 future_vector_t<double> futures(_population_.size());
                 // loop over population and execute samplers
                 for (size_t i = 0; i < _population_.size(); i++) {
-                        boost::function<double ()> f = boost::bind(&pt_sampler_t::operator(), _population_[i], boost::ref(rng), verbose);
+                        boost::function<double ()> f = boost::bind(&pt_sampler_t::operator(),
+                                                                   boost::ref(_population_[i]),
+                                                                   boost::ref(rng), verbose);
                         // use local thread pool to execute samplers
                         futures[i] = _thread_pool_.schedule(f);
                 }
@@ -525,13 +521,13 @@ public:
         // access methods
         ////////////////////////////////////////////////////////////////////////
         virtual const pt_history_t& history() const {
-                return _population_[0]->history();
+                return _population_[0].history();
         }
         virtual const pt_history_t& history(size_t i) const {
-                return _population_[i]->history();
+                return _population_[i].history();
         }
         virtual const pt_state_t& state() const {
-                return _population_[0]->state();
+                return _population_[0].state();
         }
         size_t size() const {
                 return _population_.size();
@@ -540,7 +536,7 @@ protected:
         // a local thread pool
         thread_pool_t _thread_pool_;
         // a population of samplers
-        std::vector<pt_sampler_t*> _population_;
+        boost::ptr_vector<pt_sampler_t> _population_;
 };
 
 #endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_SAMPLER_HH__ */
