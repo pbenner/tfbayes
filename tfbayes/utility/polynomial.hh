@@ -84,9 +84,9 @@ public:
 
 template<size_t S, typename T>
 size_t hash_value(const exponent_t<S, T>& exponent) {
-        double seed = 0;
+        size_t seed = 0;
         for (size_t i = 0; i < S; i++) {
-                seed += (size_t)exponent[i] << (2*i);
+                boost::hash_combine(seed, boost::hash_value(exponent[i]));
         }
         return seed;
 }
