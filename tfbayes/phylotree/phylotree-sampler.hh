@@ -161,7 +161,8 @@ struct pt_history_t
         // acceptance rates
         size_t accepted_topologies;
         size_t accepted_lengths;
-        size_t steps;
+        size_t steps_topology;
+        size_t steps_length;
         // list of tree samples
         samples_t samples;
         // the posterior value for each tree
@@ -315,8 +316,8 @@ public:
         }
         virtual void print_progress() const {
                 std::cerr << __line_del__"Sampler with temperature "             << temperature() << std::endl
-                          << __line_del__" -> acceptance rate (topology)     : " << __rate__(_history_.accepted_topologies, _history_.steps) << std::endl
-                          << __line_del__" -> acceptance rate (branch length): " << __rate__(_history_.accepted_lengths,    _history_.steps) << std::endl
+                          << __line_del__" -> acceptance rate (topology)     : " << __rate__(_history_.accepted_topologies, _history_.steps_topology) << std::endl
+                          << __line_del__" -> acceptance rate (branch length): " << __rate__(_history_.accepted_lengths,    _history_.steps_length  ) << std::endl
                           << __line_del__ << std::endl
                           << __line_del__ << std::endl;
         }
@@ -351,6 +352,7 @@ public:
                         // sample rejected
                         node.d = d_old;
                 }
+                _history_.steps_length++;
         }
         void sample_topology(pt_node_t& node, threaded_rng_t& rng) {
                 // can't sample leafs
@@ -380,6 +382,7 @@ public:
                         // sample rejected
                         node.move(which);
                 }
+                _history_.steps_topology++;
         }
         virtual double operator()(threaded_rng_t& rng, bool verbose = false) {
                 // loop over nodes
@@ -391,7 +394,6 @@ public:
                         }
                         sample_length  (**it, rng);
                         sample_topology(**it, rng);
-                        _history_.steps++;
                 }
                 // update history
                 _history_.samples.push_back(_state_);
