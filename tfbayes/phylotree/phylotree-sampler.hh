@@ -578,10 +578,16 @@ public:
         virtual void rewind() const {
                 for (size_t i = 0; i < _population_.size(); i++) {
                         _population_[i].rewind();
+                        std::cerr << __line_up__
+                                  << __line_up__
+                                  << __line_up__;
                 }
         }
         virtual void print_progress() const {
                 for (size_t i = 0; i < _population_.size(); i++) {
+                        std::cerr << std::endl
+                                  << "|======================================|"
+                                  << std::endl << std::endl;
                         _population_[i].print_progress();
                 }
         }
@@ -600,11 +606,6 @@ public:
                 return futures[0].get();
         }
         virtual void operator()(size_t n, threaded_rng_t& rng, bool verbose = false) {
-                if (verbose) {
-                        std::cerr << std::endl
-                                  << "|======================================|"
-                                  << std::endl << std::endl;
-                }
                 for (size_t i = 0; i < n; i++) {
                         if (verbose && i != 0)
                                 rewind();
