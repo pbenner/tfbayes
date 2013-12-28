@@ -51,6 +51,12 @@
 #define __line_up__  "\x1b[A"
 #define __line_del__ "\33[2K\r"
 
+inline
+double __rate__(size_t i, size_t n) {
+        if (n == 0) return 0.0;
+        else        return static_cast<double>(i)/static_cast<double>(n);
+}
+
 /* AS: ALPHABET SIZE
  * AC: ALPHABET CODE TYPE
  * PC: POLYNOMIAL CODE TYPE
@@ -309,8 +315,8 @@ public:
         }
         virtual void print_progress() const {
                 std::cerr << __line_del__"temperature                    : " << temperature() << std::endl
-                          << __line_del__"acceptance rate (topology)     : " << _history_.accepted_topologies/(double)_history_.steps << std::endl
-                          << __line_del__"acceptance rate (branch length): " << _history_.accepted_lengths   /(double)_history_.steps << std::endl
+                          << __line_del__"acceptance rate (topology)     : " << __rate__(_history_.accepted_topologies, _history_.steps) << std::endl
+                          << __line_del__"acceptance rate (branch length): " << __rate__(_history_.accepted_lengths,    _history_.steps) << std::endl
                           << __line_del__ << std::endl
                           << __line_del__ << std::endl;
         }
@@ -479,7 +485,7 @@ public:
                 std::cerr << "MC3 swap acceptance rates:" << std::endl;
                 for (size_t i = 0; i < _population_.size(); i++) {
                         std::cerr << boost::format(" -> sampler %3d: %f\n")
-                                % i % (_history_.accepted_swaps[i]/(double)_history_.steps[i]);
+                                % i % __rate__(_history_.accepted_swaps[i], _history_.steps[i]);
                 }
                 std::cerr << std::endl;
         }
