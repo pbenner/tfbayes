@@ -48,6 +48,9 @@
 #include <tfbayes/utility/random.hh>
 #include <tfbayes/utility/thread-pool.hh>
 
+#define __line_up__  "\x1b[A"
+#define __line_del__ "\33[2K\r"
+
 /* AS: ALPHABET SIZE
  * AC: ALPHABET CODE TYPE
  * PC: POLYNOMIAL CODE TYPE
@@ -144,23 +147,32 @@ public:
 // phylotree sampler
 ////////////////////////////////////////////////////////////////////////////////
 
-class pt_history_t
+struct pt_history_t
 {
-public:
         typedef std::list<pt_root_t> samples_t;
         typedef std::vector<double> values_t;
 
-        // list of tree samples
-        samples_t samples;
-        // the posterior value for each tree
-        values_t values;
         // acceptance rates
         size_t accepted_topologies;
         size_t accepted_lengths;
         size_t steps_topology;
         size_t steps_length;
-        // acceptance rate for the mc^3 algorithm
-        double acceptance_rate_mc3;
+        size_t steps;
+        // list of tree samples
+        samples_t samples;
+        // the posterior value for each tree
+        values_t values;
+};
+
+struct pt_history_mc3_t
+{
+        pt_history_mc3_t(size_t k)
+        : accepted_swaps(k, 0),
+          steps         (k, 0)
+                { }
+
+        std::vector<size_t> accepted_swaps;
+        std::vector<size_t> steps;
 };
 
 // the state of a sampler is a phylogenetic tree paired with its
@@ -200,7 +212,6 @@ public:
 class pt_sampler_t : public virtual clonable
 {
 public:
-
         virtual ~pt_sampler_t() { }
 
         virtual pt_sampler_t* clone() const = 0;
@@ -211,6 +222,10 @@ public:
         // access methods
         virtual const pt_history_t& history() const = 0;
         virtual const pt_state_t& state() const = 0;
+
+        // print status
+        virtual void rewind() const = 0;
+        virtual void print_progress() const = 0;
 };
 
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
@@ -226,7 +241,8 @@ public:
                                  const proposal_distribution_t& proposal_distribution,
                                  thread_pool_t& thread_pool,
                                  double temperature = 1.0)
-                : _state_                (tree),
+                : _history_              (), // zero-initialize history
+                  _state_                (tree),
                   _thread_pool_          (thread_pool),
                   _alignment_            (alignment),
                   _alpha_                (alpha.begin(), alpha.end()),
@@ -285,6 +301,20 @@ public:
                         result += std::log(boost::math::pdf(_gamma_distribution_, (*it)->d));
                 }
                 return result;
+        }
+        virtual void rewind() const {
+                std::cerr << __line_up__
+                          << __line_up__
+                          << __line_up__
+                          << __line_up__
+                          << __line_up__;
+        }
+        virtual void print_progress() const {
+                std::cerr << __line_del__"temperature                    : " << temperature() << std::endl
+                          << __line_del__"acceptance rate (topology)     : " << _history_.accepted_topologies/(double)_history_.steps_topology << std::endl
+                          << __line_del__"acceptance rate (branch length): " << _history_.accepted_lengths   /(double)_history_.steps_length   << std::endl
+                          << __line_del__ << std::endl
+                          << __line_del__ << std::endl;
         }
         void sample_branch(pt_node_t& node, threaded_rng_t& rng) {
                 double log_posterior_ref = _state_;
@@ -345,8 +375,14 @@ public:
                         }
                         sample_branch(**it, rng);
                 }
+                if (verbose) {
+                        print_progress();
+                }
+                // update history
                 _history_.samples.push_back(_state_);
                 _history_.values .push_back(_state_);
+                _history_.steps++;
+                // return posterior value
                 return _state_;
         }
         // access methods
@@ -392,8 +428,9 @@ class pt_mc3_t : public pt_sampler_t
         typedef std::vector<double> vector_t;
 public:
         pt_mc3_t(const vector_t& temperatures, const T& mh)
-                : _thread_pool_(temperatures.size()),
-                  uniform_int(0, temperatures.size()-1) {
+                : _history_     (temperatures.size()),
+                  _thread_pool_ (temperatures.size()),
+                  uniform_int   (0, temperatures.size()-1) {
                 assert(temperatures.size() > 0);
                 assert(temperatures[0] == 1.0);
                 for (size_t i = 0; i < temperatures.size(); i++) {
@@ -402,8 +439,9 @@ public:
                 }
         }
         pt_mc3_t(const pt_mc3_t& pt_mc3)
-                : _thread_pool_(pt_mc3._thread_pool_),
-                  uniform_int(pt_mc3.uniform_int) {
+                : _history_     (pt_mc3._history_),
+                  _thread_pool_ (pt_mc3._thread_pool_),
+                  uniform_int   (pt_mc3.uniform_int) {
                 for (size_t i = 0; i < pt_mc3._population_.size(); i++) {
                         _population_.push_back(pt_mc3._population_[i].clone());
                 }
@@ -413,6 +451,27 @@ public:
                 return new pt_mc3_t(*this);
         }
 
+        void rewind() const {
+                for (size_t i = 0; i < _population_.size(); i++) {
+                        _population_[i].rewind();
+                }
+                std::cerr << __line_up__
+                          << __line_up__;
+                for (size_t i = 0; i < _population_.size(); i++) {
+                        std::cerr << __line_up__;
+                }
+        }
+        void print_progress() const {
+                for (size_t i = 0; i < _population_.size(); i++) {
+                        _population_[i].print_progress();
+                }
+                std::cerr << "MC3 swap acceptance rates:" << std::endl;
+                for (size_t i = 0; i < _population_.size(); i++) {
+                        std::cerr << boost::format(" -> sampler %3d: %f\n")
+                                % i % (_history_.accepted_swaps[i]/(double)_history_.steps[i]);
+                }
+                std::cerr << std::endl;
+        }
         virtual double operator()(threaded_rng_t& rng, bool verbose = false) {
                 using std::swap;
                 // future log posterior values
@@ -429,6 +488,9 @@ public:
                 const size_t i = uniform_int(rng);
                 const size_t j = uniform_int(rng);
                 if (i != j) {
+                        // update history
+                        _history_.steps[i]++;
+                        _history_.steps[j]++;
                         // get probabilities
                         const double pi = futures[i].get();
                         const double pj = futures[j].get();
@@ -437,12 +499,11 @@ public:
                         // metropolis probability for accepting the swap
                         const double r  = std::min(1.0, std::exp(pi/tj + pj/ti - pi/ti - pj/tj));
                         if (uniform_01(rng) <= r) {
+                                // update history
+                                _history_.accepted_swaps[i]++;
+                                _history_.accepted_swaps[j]++;
                                 if (verbose) {
-                                        std::cerr << boost::format(
-                                                "\x1b[A"   // go up one line
-                                                "\33[2K\r" // delete line
-                                                "MC3 switched states %i and %i.\n")
-                                                % i % j;
+                                        print_progress();
                                 }
                                 // swap states of the two chains
                                 swap(_population_[i].state(),
@@ -463,6 +524,9 @@ public:
                 return _population_[0].state();
         }
 protected:
+        // mc3 specific history
+        pt_history_mc3_t _history_;
+        // a population of samplers
         boost::ptr_vector<T> _population_;
         // a local thread pool
         thread_pool_t _thread_pool_;
@@ -494,6 +558,16 @@ public:
                 return new pt_pmcmc_t(*this);
         }
 
+        virtual void rewind() const {
+                for (size_t i = 0; i < _population_.size(); i++) {
+                        _population_[i].rewind();
+                }
+        }
+        virtual void print_progress() const {
+                for (size_t i = 0; i < _population_.size(); i++) {
+                        _population_[i].print_progress();
+                }
+        }
         virtual double operator()(threaded_rng_t& rng, bool verbose = false) {
                 // future log posterior values
                 future_vector_t<double> futures(_population_.size());
@@ -501,7 +575,7 @@ public:
                 for (size_t i = 0; i < _population_.size(); i++) {
                         boost::function<double ()> f = boost::bind(&pt_sampler_t::operator(),
                                                                    boost::ref(_population_[i]),
-                                                                   boost::ref(rng), verbose);
+                                                                   boost::ref(rng), false);
                         // use local thread pool to execute samplers
                         futures[i] = _thread_pool_.schedule(f);
                 }
@@ -509,14 +583,20 @@ public:
                 return futures[0].get();
         }
         virtual void operator()(size_t n, threaded_rng_t& rng, bool verbose = false) {
-                if (verbose) std::cerr << std::endl << std::endl;
+                if (verbose) {
+                        std::cerr << std::endl
+                                  << "|======================================|"
+                                  << std::endl << std::endl;
+                }
                 for (size_t i = 0; i < n; i++) {
+                        if (verbose && i != 0)
+                                rewind();
                         operator()(rng, verbose);
                         if (verbose) {
+                                print_progress();
                                 std::cerr << progress_t((i+1.0)/(double)n);
                         }
                 }
-                if (verbose) std::cerr << std::endl;
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
