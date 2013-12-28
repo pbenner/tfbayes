@@ -57,11 +57,6 @@ double __rate__(size_t i, size_t n) {
         else        return static_cast<double>(i)/static_cast<double>(n);
 }
 
-/* AS: ALPHABET SIZE
- * AC: ALPHABET CODE TYPE
- * PC: POLYNOMIAL CODE TYPE
- */
-
 // proposal distributions
 ////////////////////////////////////////////////////////////////////////////////
 class proposal_distribution_t : public virtual clonable
@@ -150,7 +145,7 @@ public:
         }
 };
 
-// phylotree sampler
+// sampling history
 ////////////////////////////////////////////////////////////////////////////////
 
 struct pt_history_t
@@ -182,6 +177,7 @@ struct pt_history_mc3_t
 
 // the state of a sampler is a phylogenetic tree paired with its
 // posterior value
+////////////////////////////////////////////////////////////////////////////////
 class pt_state_t : std::pair<pt_root_t, double>
 {
         typedef std::pair<pt_root_t, double> base_t;
@@ -214,6 +210,9 @@ public:
         }
 };
 
+// phylotree sampler
+////////////////////////////////////////////////////////////////////////////////
+
 class pt_sampler_t : public virtual clonable
 {
 public:
@@ -232,6 +231,11 @@ public:
         virtual void rewind() const = 0;
         virtual void print_progress() const = 0;
 };
+
+/* AS: ALPHABET SIZE
+ * AC: ALPHABET CODE TYPE
+ * PC: POLYNOMIAL CODE TYPE
+ */
 
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
 class pt_metropolis_hastings_t : public pt_sampler_t
