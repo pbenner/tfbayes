@@ -314,9 +314,9 @@ public:
                           << __line_up__;
         }
         virtual void print_progress() const {
-                std::cerr << __line_del__"temperature                    : " << temperature() << std::endl
-                          << __line_del__"acceptance rate (topology)     : " << __rate__(_history_.accepted_topologies, _history_.steps) << std::endl
-                          << __line_del__"acceptance rate (branch length): " << __rate__(_history_.accepted_lengths,    _history_.steps) << std::endl
+                std::cerr << __line_del__"Sampler with temperature "             << temperature() << std::endl
+                          << __line_del__" -> acceptance rate (topology)     : " << __rate__(_history_.accepted_topologies, _history_.steps) << std::endl
+                          << __line_del__" -> acceptance rate (branch length): " << __rate__(_history_.accepted_lengths,    _history_.steps) << std::endl
                           << __line_del__ << std::endl
                           << __line_del__ << std::endl;
         }
