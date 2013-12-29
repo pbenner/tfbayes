@@ -13,6 +13,7 @@ alignment_hmm_test_LDADD   = -lm
 alignment_hmm_test_LDADD  += $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
 alignment_hmm_test_LDADD  += $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
 alignment_hmm_test_LDADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
+alignment_hmm_test_LDADD  += $(BOOST_SYSTEM_LIB)
 
 alignment_test_SOURCES = alignment-test.cc
 alignment_test_LDADD   = $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
