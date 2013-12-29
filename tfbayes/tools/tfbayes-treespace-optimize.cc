@@ -249,8 +249,8 @@ void run_gradient_ascent(
         const pt_root_t& pt_root,
         const alignment_map_t<>& alignment_map)
 {
-//        pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(pt_root, alignment, options.alpha, options.shape, options.scale, options.step_size);
-//        pt_gradient_ascent.run(options.max_steps, options.min_change);
+        pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(pt_root, alignment_map, options.alpha, options.shape, options.scale, options.step_size);
+        pt_gradient_ascent.run(options.max_steps, options.min_change);
 }
 
 // sampler

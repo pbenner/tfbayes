@@ -434,7 +434,7 @@ public:
                 return new pt_mc3_t(*this);
         }
 
-        void rewind() const {
+        virtual void rewind() const {
                 for (size_t i = 0; i < _population_.size(); i++) {
                         _population_[i].rewind();
                 }
@@ -444,7 +444,7 @@ public:
                         std::cerr << __line_up__;
                 }
         }
-        void print_progress() const {
+        virtual void print_progress() const {
                 for (size_t i = 0; i < _population_.size(); i++) {
                         _population_[i].print_progress();
                 }

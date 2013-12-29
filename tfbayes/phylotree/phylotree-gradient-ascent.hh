@@ -1,4 +1,4 @@
-/* Copyright (C) 2012 Philipp Benner
+/* Copyright (C) 2012-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ class pt_gradient_ascent_t
 {
 public:
         pt_gradient_ascent_t(const pt_root_t& tree,
-                             const alignment_t<AC>& alignment,
+                             const alignment_map_t<AC>& alignment,
                              const std::vector<double>& alpha,
                              double shape,
                              double scale,
@@ -55,27 +55,6 @@ public:
                   eta               (eta)
                 { }
 
-        /* posterior (not normalized) */
-        double log_posterior(const pt_node_t::nodes_t& nodes) {
-                double result = 0;
-                // initialize sum with gradients of the gamma distribution
-                for (pt_node_t::nodes_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
-                        result += log(gamma_distribution.pdf((*it)->d));
-                }
-
-                for (typename alignment_t<AC>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        const polynomial_t<AS, PC> polynomial = pt_polynomial_t<AS, AC, PC>(tree, *it);
-                        // loop over monomials
-                        double tmp = -std::numeric_limits<double>::infinity();
-                        for (typename polynomial_t<AS, PC>::const_iterator ut = polynomial.begin();
-                             ut != polynomial.end(); ut++) {
-                                tmp = logadd(tmp, log(ut->coefficient()) + mbeta_log(ut->exponent(), alpha) - mbeta_log(alpha));
-                        }
-                        result += tmp;
-                }
-                return result;
-        }
-
         double run(const pt_node_t::nodes_t& nodes) {
                 boost::unordered_map<pt_node_t*, double> sum;
                 double total = 0.0;
@@ -85,8 +64,9 @@ public:
                         sum[*it] = gamma_distribution.log_gradient((*it)->d);
                 }
                 // loop through the alignment
-                for (typename alignment_t<AC>::iterator it = alignment.begin(); it != alignment.end(); it++) {
-                        pt_gradient_t<AS, AC, PC> gradient(tree, *it);
+                for (typename alignment_map_t<AC>::const_iterator it = alignment.begin();
+                     it != alignment.end(); it++) {
+                        pt_gradient_t<AS, AC, PC> gradient(tree, it->first);
 
                         double norm = 0.0;
                         // loop over monomials
@@ -102,7 +82,7 @@ public:
                                      ut != gradient[*is].end(); ut++) {
                                         result += ut->coefficient()*exp(mbeta_log(ut->exponent(), alpha));
                                 }
-                                sum[*is] += result/norm;
+                                sum[*is] += it->second*result/norm;
                         }
                 }
                 // apply result
@@ -127,7 +107,7 @@ public:
 
                 return total;
         }
-        void run(size_t max, double stop = 0.0, bool print = true) {
+        void run(size_t max, double stop = 0.0, bool verbose = true) {
                 pt_node_t::nodes_t nodes = tree.nodes;
                 for (pt_node_t::nodes_t::const_iterator is = tree.nodes.begin();
                      is != tree.nodes.end(); is++) {
@@ -135,7 +115,7 @@ public:
                 }
                 for (size_t i = 0; i < max; i++) {
                         double total = run(nodes);
-                        if (print) {
+                        if (verbose) {
                                 std::cout << "total change:  "   << total << std::endl
                                           << newick_format(tree) << std::endl;
                                 if (total < stop) {
@@ -145,9 +125,9 @@ public:
                 }
         }
 
-private:
+protected:
         pt_root_t tree;
-        alignment_t<AC> alignment;
+        const alignment_map_t<AC>& alignment;
         exponent_t<AS, PC> alpha;
         gamma_distribution_t gamma_distribution;
         double epsilon;
