@@ -89,7 +89,7 @@ def alignment_approximate(multiple_alignment, phylotree):
     # alignment type
     alignment = alignment_t(multiple_alignment, phylotree)
 
-    return alignment.approximate(phylotree)
+    return approximate(phylotree, alignment)
 
 # parse alignment
 # ------------------------------------------------------------------------------
