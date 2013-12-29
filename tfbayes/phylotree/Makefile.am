@@ -26,10 +26,12 @@ phylotree_expected_terms_LDADD  += libtfbayes-phylotree.la
 phylotree_parser_test_SOURCES = phylotree-parser-test.cc
 phylotree_parser_test_LDADD   = -lm
 phylotree_parser_test_LDADD  += libtfbayes-phylotree.la
+phylotree_parser_test_LDADD  += $(BOOST_SYSTEM_LIB)
 
 phylotree_approximation_test_SOURCES = phylotree-approximation-test.cc
 phylotree_approximation_test_LDADD   = -lm
 phylotree_approximation_test_LDADD  += libtfbayes-phylotree.la
+phylotree_approximation_test_LDADD  += $(BOOST_SYSTEM_LIB)
 
 likelihood_test_SOURCES = likelihood-test.cc
 likelihood_test_LDADD   = -lm
@@ -42,6 +44,7 @@ likelihood_prime_test_LDADD  += libtfbayes-phylotree.la
 marginal_likelihood_test_SOURCES = marginal-likelihood-test.cc
 marginal_likelihood_test_LDADD   = -lm
 marginal_likelihood_test_LDADD  += libtfbayes-phylotree.la
+marginal_likelihood_test_LDADD  += $(BOOST_SYSTEM_LIB)
 
 treespace_test_SOURCES = treespace-test.cc
 treespace_test_LDADD   = -lm

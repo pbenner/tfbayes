@@ -25,6 +25,7 @@
 #include <limits>
 
 #include <boost/array.hpp>
+#include <boost/math/distributions/gamma.hpp>
 
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
