@@ -1,4 +1,4 @@
-/* Copyright (C) 2012 Philipp Benner
+/* Copyright (C) 2012-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,14 +26,37 @@
 
 #include <boost/array.hpp>
 
+#include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/statistics.hh>
+#include <tfbayes/utility/thread-pool.hh>
 
 /* AS: ALPHABET SIZE
  * AC: ALPHABET CODE TYPE
  * PC: POLYNOMIAL CODE TYPE
  */
+
+template <size_t AS, typename AC, typename PC>
+double pt_posterior(
+        const pt_root_t& tree,
+        const alignment_map_t<AC>& alignment,
+        const exponent_t<AS, PC>& alpha,
+        const boost::math::gamma_distribution<>& gamma_prior,
+        thread_pool_t& thread_pool
+        ) {
+        double result = pt_marginal_likelihood(tree, alignment, alpha, thread_pool);
+        // prior on branch lengths
+        for (pt_node_t::nodes_t::const_iterator it = tree.nodes.begin();
+             it != tree.nodes.end(); it++) {
+                // skip the root
+                if ((*it)->root()) {
+                        continue;
+                }
+                result += std::log(boost::math::pdf(gamma_prior, (*it)->d));
+        }
+        return result;
+}
 
 template <size_t AS, typename PC>
 boost::array<double, AS> pt_posterior_expectation(

@@ -41,7 +41,7 @@
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/phylotree-polynomial.hh>
-#include <tfbayes/phylotree/marginal-likelihood.hh>
+#include <tfbayes/phylotree/posterior.hh>
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/polynomial.hh>
 #include <tfbayes/utility/progress.hh>
@@ -130,32 +130,6 @@ public:
         }
 private:
         boost::math::gamma_distribution<> gamma_distribution;
-};
-
-// data structure optimized for computing likelihoods
-////////////////////////////////////////////////////////////////////////////////
-template <typename AC = alphabet_code_t>
-class alignment_map_t : public std::map<std::vector<AC>, double>
-{
-        typedef std::map<std::vector<AC>, double> base_t;
-public:
-        explicit alignment_map_t(const alignment_t<AC>& alignment)
-                : base_t() {
-                for (typename alignment_t<AC>::const_iterator it = alignment.begin();
-                     it != alignment.end(); it++) {
-                        base_t::operator[](*it) += 1.0;
-                }
-        }
-        explicit alignment_map_t(const alignment_set_t<AC>& alignment_set)
-                : base_t() {
-                for (typename alignment_set_t<AC>::const_iterator it = alignment_set.begin();
-                     it != alignment_set.end(); it++) {
-                        for (typename alignment_t<AC>::const_iterator is = it->begin();
-                             is != it->end(); is++) {
-                                base_t::operator[](*is) += 1.0;
-                        }
-                }
-        }
 };
 
 // sampling history
@@ -294,36 +268,6 @@ public:
                 return new pt_metropolis_hastings_t(*this);
         }
 
-        double log_likelihood(const std::vector<AC>& column, double n) {
-                return n*pt_marginal_likelihood(_state_.tree(), column, _alpha_);
-        }
-        double log_posterior() {
-                double result = 0;
-                // results for each column are stored in a vector of
-                // futures (with pre allocated capacity)
-                future_vector_t<double> futures(_alignment_.size());
-                // current position in the alignment
-                size_t i = 0;
-                // launch threads to compute the likelihood
-                for (typename alignment_map_t<AC>::const_iterator it = _alignment_.begin();
-                     it != _alignment_.end(); it++) {
-                        boost::function<double ()> f = boost::bind(&pt_metropolis_hastings_t::log_likelihood, this, boost::cref(it->first), it->second);
-                        futures[i++] = _thread_pool_.schedule(f);
-                }
-                for (size_t i = 0; i < futures.size(); i++) {
-                        result += futures[i].get();
-                }
-                // prior on branch lengths
-                for (pt_node_t::nodes_t::iterator it = _state_.tree().nodes.begin();
-                     it != _state_.tree().nodes.end(); it++) {
-                        // skip the root
-                        if ((*it)->root()) {
-                                continue;
-                        }
-                        result += std::log(boost::math::pdf(_gamma_distribution_, (*it)->d));
-                }
-                return result;
-        }
         virtual void rewind() const {
                 std::cerr << __line_up__
                           << __line_up__
@@ -337,6 +281,9 @@ public:
                           << __line_del__" -> acceptance rate (branch length): " << __rate__(_history_.accepted_lengths,    _history_.steps_length  ) << std::endl
                           << __line_del__ << std::endl
                           << __line_del__ << std::endl;
+        }
+        double log_posterior() {
+                return pt_posterior<AS, AC, PC>(_state_.tree(), _alignment_, _alpha_, _gamma_distribution_, _thread_pool_);
         }
         void sample_length(pt_node_t& node, threaded_rng_t& rng) {
                 double log_posterior_ref = _state_;
@@ -501,9 +448,9 @@ public:
                 for (size_t i = 0; i < _population_.size(); i++) {
                         _population_[i].print_progress();
                 }
-                std::cerr << "MC3 swap acceptance rates:" << std::endl;
+                std::cerr << __line_del__"MC3 swap acceptance rates:" << std::endl;
                 for (size_t i = 0; i < _population_.size(); i++) {
-                        std::cerr << boost::format(" -> sampler %3d: %f\n")
+                        std::cerr << boost::format(__line_del__" -> sampler %3d: %f\n")
                                 % i % __rate__(_history_.accepted_swaps[i], _history_.steps[i]);
                 }
                 std::cerr << std::endl;

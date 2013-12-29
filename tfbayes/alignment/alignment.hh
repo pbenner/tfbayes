@@ -33,8 +33,8 @@
 
 #include <tfbayes/fasta/fasta.hh>
 #include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/phylotree-approximation.hh>
-#include <tfbayes/phylotree/marginal-likelihood.hh>
+//#include <tfbayes/phylotree/phylotree-approximation.hh>
+//#include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/linalg.hh>
 #include <tfbayes/utility/strtools.hh>
@@ -187,90 +187,90 @@ public:
         }
         // Methods
         ////////////////////////////////////////////////////////////////////////
-        template<size_t AS, typename PC>
-        std::matrix<double> approximate(const pt_root_t& tree) {
-                std::matrix<double> result(length(), AS);
+        // template<size_t AS, typename PC>
+        // std::matrix<double> approximate(const pt_root_t& tree) {
+        //         std::matrix<double> result(length(), AS);
 
-                for (size_t i = 0; i < length(); i++) {
-                        // compute the polynomial
-                        polynomial_t<AS, PC> poly = pt_polynomial_t<AS, AC, PC>(tree, operator[](i));
-                        polynomial_t<AS, PC> variational
-                                = dkl_approximate<AS, PC>(poly);
+        //         for (size_t i = 0; i < length(); i++) {
+        //                 // compute the polynomial
+        //                 polynomial_t<AS, PC> poly = pt_polynomial_t<AS, AC, PC>(tree, operator[](i));
+        //                 polynomial_t<AS, PC> variational
+        //                         = dkl_approximate<AS, PC>(poly);
 
-                        for (size_t j = 0; j < AS; j++) {
-                                result[i][j] = variational.begin()->exponent()[j];
-                        }
-                }
-                return result;
-        }
-        template<typename PC>
-        std::matrix<double> approximate(const pt_root_t& tree) {
-                switch (alphabet().size()) {
-                case 5: return approximate<5, PC>(tree); break;
-                default: 
-                        std::cerr << "scan(): Invalid alphabet size."
-                                  << std::endl;
-                        exit(EXIT_FAILURE);
-                }
-        }
-        template<size_t AS, typename PC>
-        std::vector<double> scan(const pt_root_t& tree, std::matrix<PC>& counts) {
-                std::vector<double> result(length(), 0);
-                std::vector<exponent_t<AS, PC> > exponents;
+        //                 for (size_t j = 0; j < AS; j++) {
+        //                         result[i][j] = variational.begin()->exponent()[j];
+        //                 }
+        //         }
+        //         return result;
+        // }
+        // template<typename PC>
+        // std::matrix<double> approximate(const pt_root_t& tree) {
+        //         switch (alphabet().size()) {
+        //         case 5: return approximate<5, PC>(tree); break;
+        //         default: 
+        //                 std::cerr << "scan(): Invalid alphabet size."
+        //                           << std::endl;
+        //                 exit(EXIT_FAILURE);
+        //         }
+        // }
+        // template<size_t AS, typename PC>
+        // std::vector<double> scan(const pt_root_t& tree, std::matrix<PC>& counts) {
+        //         std::vector<double> result(length(), 0);
+        //         std::vector<exponent_t<AS, PC> > exponents;
 
-                for (size_t j = 0; j < counts.size(); j++) {
-                        exponent_t<AS, PC> tmp
-                                (counts[j].begin(), counts[j].end());
-                        exponents.push_back(tmp);
-                }
+        //         for (size_t j = 0; j < counts.size(); j++) {
+        //                 exponent_t<AS, PC> tmp
+        //                         (counts[j].begin(), counts[j].end());
+        //                 exponents.push_back(tmp);
+        //         }
 
-                for (iterator it = begin(); it != end(); it++) {
-                        result[it - begin()] = 0;
-                        if (it - begin() + counts.size() > length()) {
-                                // do not exit the loop here so that every
-                                // position is initialized
-                                continue;
-                        }
-                        for (iterator is(it); is < it + counts.size(); is++) {
-                                result[it - begin()] += pt_marginal_likelihood<AS, AC, PC>(
-                                        tree, *is, exponents[is-it]);
-                        }
-                }
-                return result;
-        }
-        template<typename PC>
-        std::vector<double> scan(const pt_root_t& tree, std::matrix<PC>& counts) {
-                switch (alphabet().size()) {
-                case 5: return scan<5, PC>(tree, counts); break;
-                default: 
-                        std::cerr << "scan(): Invalid alphabet size."
-                                  << std::endl;
-                        exit(EXIT_FAILURE);
-                }
-        }
-        template<size_t AS, typename PC>
-        std::vector<double> marginal_likelihood(const pt_root_t& tree, const std::vector<PC>& prior) {
-                exponent_t<AS, PC> alpha(prior.begin(), prior.end());
-                std::vector<double> result;
+        //         for (iterator it = begin(); it != end(); it++) {
+        //                 result[it - begin()] = 0;
+        //                 if (it - begin() + counts.size() > length()) {
+        //                         // do not exit the loop here so that every
+        //                         // position is initialized
+        //                         continue;
+        //                 }
+        //                 for (iterator is(it); is < it + counts.size(); is++) {
+        //                         result[it - begin()] += pt_marginal_likelihood<AS, AC, PC>(
+        //                                 tree, *is, exponents[is-it]);
+        //                 }
+        //         }
+        //         return result;
+        // }
+        // template<typename PC>
+        // std::vector<double> scan(const pt_root_t& tree, std::matrix<PC>& counts) {
+        //         switch (alphabet().size()) {
+        //         case 5: return scan<5, PC>(tree, counts); break;
+        //         default: 
+        //                 std::cerr << "scan(): Invalid alphabet size."
+        //                           << std::endl;
+        //                 exit(EXIT_FAILURE);
+        //         }
+        // }
+        // template<size_t AS, typename PC>
+        // std::vector<double> marginal_likelihood(const pt_root_t& tree, const std::vector<PC>& prior) {
+        //         exponent_t<AS, PC> alpha(prior.begin(), prior.end());
+        //         std::vector<double> result;
 
-                /* go through the alignment and compute the marginal
-                 * likelihood for each position */
-                for (iterator it = begin(); it != end(); it++) {
-                        result.push_back(pt_marginal_likelihood<AS, AC, PC>
-                                         (tree, *it, alpha));
-                }
-                return result;
-        }
-        template<typename PC>
-        std::vector<double> marginal_likelihood(const pt_root_t& tree, const std::vector<PC>& prior) {
-                switch (alphabet().size()) {
-                case 5: return marginal_likelihood<5, PC>(tree, prior); break;
-                default: 
-                        std::cerr << "scan(): Invalid alphabet size."
-                                  << std::endl;
-                        exit(EXIT_FAILURE);
-                }
-        }
+        //         /* go through the alignment and compute the marginal
+        //          * likelihood for each position */
+        //         for (iterator it = begin(); it != end(); it++) {
+        //                 result.push_back(pt_marginal_likelihood<AS, AC, PC>
+        //                                  (tree, *it, alpha));
+        //         }
+        //         return result;
+        // }
+        // template<typename PC>
+        // std::vector<double> marginal_likelihood(const pt_root_t& tree, const std::vector<PC>& prior) {
+        //         switch (alphabet().size()) {
+        //         case 5: return marginal_likelihood<5, PC>(tree, prior); break;
+        //         default: 
+        //                 std::cerr << "scan(): Invalid alphabet size."
+        //                           << std::endl;
+        //                 exit(EXIT_FAILURE);
+        //         }
+        // }
 protected:
         // Methods for Initializations
         ////////////////////////////////////////////////////////////////////////
@@ -477,6 +477,34 @@ protected:
         }
 };
 
+// data structure optimized for computing likelihoods
+////////////////////////////////////////////////////////////////////////////////
+template <typename AC = alphabet_code_t>
+class alignment_map_t : public std::map<std::vector<AC>, double>
+{
+        typedef std::map<std::vector<AC>, double> base_t;
+public:
+        explicit alignment_map_t(const alignment_t<AC>& alignment)
+                : base_t() {
+                for (typename alignment_t<AC>::const_iterator it = alignment.begin();
+                     it != alignment.end(); it++) {
+                        base_t::operator[](*it) += 1.0;
+                }
+        }
+        explicit alignment_map_t(const alignment_set_t<AC>& alignment_set)
+                : base_t() {
+                for (typename alignment_set_t<AC>::const_iterator it = alignment_set.begin();
+                     it != alignment_set.end(); it++) {
+                        for (typename alignment_t<AC>::const_iterator is = it->begin();
+                             is != it->end(); is++) {
+                                base_t::operator[](*is) += 1.0;
+                        }
+                }
+        }
+};
+
+// i/o streams
+////////////////////////////////////////////////////////////////////////////////
 template <typename AC>
 class print_alignment_t {
 public:
