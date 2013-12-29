@@ -573,9 +573,9 @@ public:
         }
         virtual void operator()(size_t n, threaded_rng_t& rng, bool verbose = false) {
                 for (size_t i = 0; i < n; i++) {
+                        operator()(rng, verbose);
                         if (verbose && i != 0)
                                 rewind();
-                        operator()(rng, verbose);
                         if (verbose) {
                                 print_progress();
                                 std::cerr << progress_t((i+1.0)/(double)n);

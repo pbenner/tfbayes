@@ -53,9 +53,10 @@ public:
         using std::matrix<AC>::end;
         // Typedefs
         ////////////////////////////////////////////////////////////////////////
+        typedef std::matrix<AC> base_t;
         typedef boost::unordered_map<std::string, pt_node_t::id_t> taxon_map_t;
-        typedef typename std::matrix<AC>::iterator iterator;
-        typedef typename std::matrix<AC>::const_iterator const_iterator;
+        typedef typename base_t::iterator iterator;
+        typedef typename base_t::const_iterator const_iterator;
 
         // Constructors
         ////////////////////////////////////////////////////////////////////////
@@ -63,7 +64,7 @@ public:
                     const pt_root_t& tree,
                     AC init = -1,
                     alphabet_t alphabet = nucleotide_alphabet_t())
-                : std::matrix<AC>(length, tree.n_leaves, init),
+                : base_t     (length, tree.n_leaves, init),
                   _n_species (tree.n_leaves),
                   _length    (length),
                   _alphabet  (alphabet) {
@@ -73,7 +74,7 @@ public:
         alignment_t(const std::matrix<AC>& sequences,
                     const taxon_map_t& taxon_map,
                     alphabet_t alphabet = nucleotide_alphabet_t())
-                : std::matrix<AC>(sequences),
+                : base_t     (sequences),
                   _n_species (taxon_map.size()),
                   // the length is initialized later
                   _length    (0),
@@ -85,7 +86,7 @@ public:
         alignment_t(const std::matrix<AC>& sequences,
                     const pt_root_t& tree,
                     alphabet_t alphabet = nucleotide_alphabet_t())
-                : std::matrix<AC>(sequences),
+                : base_t     (sequences),
                   _n_species (tree.n_leaves),
                   _length    (0),
                   _alphabet  (alphabet) {
@@ -97,7 +98,7 @@ public:
                     boost::optional<const pt_root_t&> tree = boost::optional<const pt_root_t&>(),
                     alphabet_t alphabet = nucleotide_alphabet_t(),
                     bool verbose = false)
-                : std::matrix<AC>(),
+                : base_t(),
                   // we have as many sequences in this alignment as
                   // there are leaves in the tree
                   _n_species (0),
@@ -118,7 +119,7 @@ public:
                 init_alignment(tmp);
         }
         alignment_t(const alignment_t& alignment)
-                : std::matrix<AC>(alignment),
+                : base_t(alignment),
                   _n_species (alignment._n_species),
                   _length    (alignment._length),
                   _taxon_map (alignment._taxon_map),
@@ -128,8 +129,8 @@ public:
         }
 
         friend void swap(alignment_t& first, alignment_t&second) {
-                std::swap(static_cast<std::matrix<AC>&>(first),
-                          static_cast<std::matrix<AC>&>(second));
+                std::swap(static_cast<base_t&>(first),
+                          static_cast<base_t&>(second));
                 std::swap(first._length,    second._length);
                 std::swap(first._n_species, second._n_species);
                 std::swap(first._taxon_map, second._taxon_map);
@@ -144,13 +145,13 @@ public:
                 return *this;
         }
         // use the access operator from base class to read/write columns
-        using std::matrix<AC>::operator[];
+        using base_t::operator[];
         // define new access operators to access individual cells
         const AC& operator[](const alignment_index_t& index) const {
-                return std::matrix<AC>::operator[](index[1])[index[0]];
+                return base_t::operator[](index[1])[index[0]];
         }
               AC& operator[](const alignment_index_t& index) {
-                return std::matrix<AC>::operator[](index[1])[index[0]];
+                return base_t::operator[](index[1])[index[0]];
         }
         // and to obtain full sequences for one species
         sequence_t<AC> operator[](const std::string& taxon) const {
@@ -251,7 +252,7 @@ protected:
         void init_alignment(const std::matrix<AC>& sequences) {
                 std::matrix<AC> tmp(sequences);
                 // initialize length
-                for (typename std::matrix<AC>::const_iterator it = tmp.begin();
+                for (typename base_t::const_iterator it = tmp.begin();
                      it != tmp.end(); it++) {
                         // update length if necessary
                         if (it->size() > length()) {
@@ -276,7 +277,7 @@ protected:
                         }
                 }
                 // assign contents of tmp to this object
-                std::matrix<AC>::operator=(tmp.transpose());
+                base_t::operator=(tmp.transpose());
         }
         // Fields
         ////////////////////////////////////////////////////////////////////////
@@ -298,14 +299,19 @@ public:
 
         // Typedefs
         ////////////////////////////////////////////////////////////////////////
+        typedef std::vector<alignment_t<AC> > base_t;
         typedef boost::unordered_map<std::string, pt_node_t::id_t> taxon_map_t;
 
         // Constructors
         ////////////////////////////////////////////////////////////////////////
-        alignment_set_t() { };
+        alignment_set_t()
+                : base_t()
+                { };
         alignment_set_t(const std::string& filename,
                         boost::optional<const pt_root_t&> tree = boost::optional<const pt_root_t&>(),
-                        alphabet_t alphabet = nucleotide_alphabet_t()) {
+                        alphabet_t alphabet = nucleotide_alphabet_t(),
+                        bool verbose = false)
+                : base_t() {
                 /* first check what species are available */
                 taxon_map_t taxon_map = tree ?
                         create_taxon_map(*tree   ):
@@ -342,16 +348,29 @@ public:
                         }
                         if (occurred.find(parser.taxon()) != occurred.end()) {
                                 // push alignment
-                                std::cerr << boost::format("Reading alignment %d...") % i++
-                                          << std::endl;
+                                if (verbose) {
+                                        std::cerr << boost::format("Reading alignment %d...") % i++
+                                                  << std::endl;
+                                }
                                 push_back(alignment_t<AC>(sequences, taxon_map, alphabet));
                                 // reset occurrences
                                 occurred.clear();
                                 // start new alignment
                                 sequences = std::matrix<AC>(n, 0);
                         }
-                        occurred.insert(parser.taxon());
-                        sequences[taxon_map[parser.taxon()]] = sequence_t<AC>(line);
+                        taxon_map_t::const_iterator it = taxon_map.find(parser.taxon());
+                        if (it != taxon_map.end()) {
+                                occurred.insert(parser.taxon());
+                                sequences[it->second] = sequence_t<AC>(line);
+                        }
+                        else {
+                                std::cerr << boost::format("Warning: taxon `%s' not found in the phylogenetic tree.") % parser.taxon()
+                                          << std::endl;
+                        }
+                }
+                if (verbose) {
+                        std::cerr << boost::format("Reading alignment %d...") % (base_t::size()+1)
+                                  << std::endl;
                 }
                 push_back(alignment_t<AC>(sequences, taxon_map, alphabet));
         }
@@ -411,6 +430,11 @@ public:
                              is != it->end(); is++) {
                                 base_t::operator[](*is) += 1.0;
                         }
+                }
+                size_t s = 0;
+                for (typename alignment_set_t<AC>::const_iterator it = alignment_set.begin();
+                     it != alignment_set.end(); it++) {
+                        s += it->length();
                 }
         }
 };

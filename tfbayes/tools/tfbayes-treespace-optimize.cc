@@ -303,7 +303,7 @@ void run_optimization(const string& method, const char* file_tree, const char* f
         pt_root_t pt_root = parse_tree_file(file_tree);
 
         // alignment
-        alignment_set_t<> alignment_set(file_alignment, pt_root, nucleotide_alphabet_t());
+        alignment_set_t<> alignment_set(file_alignment, pt_root, nucleotide_alphabet_t(), options.verbose);
         assert(alignment_set.size() > 0);
         assert(alignment_set[0].length() > 0);
         // convert alignment
