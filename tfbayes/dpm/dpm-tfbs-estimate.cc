@@ -26,6 +26,7 @@
 #include <tfbayes/dpm/dpm-tfbs.hh>
 #include <tfbayes/dpm/dpm-sampling-history.hh>
 #include <tfbayes/utility/progress.hh>
+#include <tfbayes/utility/statistics.hh>
 
 using namespace std;
 

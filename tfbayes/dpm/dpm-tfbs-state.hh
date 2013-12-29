@@ -24,6 +24,8 @@
 
 #include <vector>
 
+#include <boost/random/mersenne_twister.hpp>
+
 #include <tfbayes/dpm/cluster.hh>
 #include <tfbayes/dpm/data-tfbs.hh>
 #include <tfbayes/dpm/mixture-state.hh>
