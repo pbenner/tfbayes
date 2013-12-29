@@ -54,11 +54,13 @@ public:
                   _alpha_             (alpha.begin(), alpha.end()),
                   _gamma_distribution_(shape, scale),
                   _epsilon_           (epsilon),
-                  _eta_               (eta)
+                  _eta_               (eta),
+                  node_epsilon        (tree.n_nodes),
+                  sum_prev            (tree.n_nodes)
                 { }
 
         double run(const pt_node_t::nodes_t& nodes) {
-                boost::unordered_map<pt_node_t::id_t, double> sum;
+                std::vector<double> sum(nodes.size());
                 double total = 0.0;
 
                 // initialize sum with gradients of the gamma distribution
@@ -138,8 +140,8 @@ protected:
         gamma_distribution_t _gamma_distribution_;
         double _epsilon_;
         double _eta_;
-        boost::unordered_map<pt_node_t::id_t, double> node_epsilon;
-        boost::unordered_map<pt_node_t::id_t, double> sum_prev;
+        std::vector<double> node_epsilon;
+        std::vector<double> sum_prev;
 };
 
 #endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_GRADIENT_HH__ */

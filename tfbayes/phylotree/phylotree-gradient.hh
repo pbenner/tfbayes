@@ -22,10 +22,10 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <set>
-#include <boost/unordered_map.hpp>
-#include <cmath>
 #include <algorithm> /* std::min */
+#include <cmath>
+#include <vector>
+#include <set>
 
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/phylotree.hh>
@@ -35,14 +35,15 @@
 #include <tfbayes/utility/polynomial.hh>
 
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
-class pt_gradient_t : public boost::unordered_map<pt_node_t::id_t, polynomial_t<AS, PC> > {
+class pt_gradient_t : public std::vector<polynomial_t<AS, PC> > {
 public:
-        typedef boost::unordered_map<pt_node_t::id_t, polynomial_t<AS, PC> > base_t;
+        typedef std::vector<polynomial_t<AS, PC> > base_t;
 
         pt_gradient_t(const pt_root_t& root, const std::vector<AC>& observations)
-                : base_t() { 
+                : base_t  (root.n_nodes),
+                  _nodes  (root.nodes),
+                  _n_nodes(root.n_nodes) {
 
-                _nodes = root.nodes;
                 partial_t partial = gradient_rec(root, observations);
                 _likelihood = poly_sum(partial);
 
@@ -58,12 +59,16 @@ public:
         }
 
 protected:
-        typedef boost::unordered_map<pt_node_t::id_t, polynomial_t<AS, PC> > derivatives_t;
+        typedef std::vector<polynomial_t<AS, PC> > derivatives_t;
         typedef boost::array<polynomial_t<AS, PC>, AS+1> carry_t;
 
         class partial_t : public carry_t {
         public:
-                boost::unordered_map<pt_node_t::id_t, carry_t> derivatives;
+                partial_t(size_t n)
+                        : derivatives(n)
+                        { }
+
+                std::vector<carry_t> derivatives;
         };
 
         polynomial_t<AS, PC> poly_sum(const carry_t& carry) {
@@ -86,7 +91,7 @@ protected:
         partial_t gradient_leaf(
                 const pt_leaf_t& leaf,
                 const std::vector<AC>& observations) {
-                partial_t partial;
+                partial_t partial(_n_nodes);
                 partial[observations[leaf.id]] += 1.0;
                 return partial;
         }
@@ -106,7 +111,7 @@ protected:
                 double dpn_left  = -pn_left;
                 double dpn_right = -pn_right;
 
-                partial_t partial;
+                partial_t partial(_n_nodes);
                 const polynomial_t<AS, PC> poly_sum_left  = poly_sum(partial_left);
                 const polynomial_t<AS, PC> poly_sum_right = poly_sum(partial_right);
 
@@ -203,8 +208,9 @@ protected:
                 }
         }
 
-        pt_node_t::nodes_t _nodes;
         polynomial_t<AS, PC> _likelihood;
+        pt_node_t::nodes_t _nodes;
+        size_t _n_nodes;
 };
 
 #endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_HH__ */
