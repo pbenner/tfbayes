@@ -70,11 +70,11 @@ public:
                      it != _alignment_.end(); it++) {
                         pt_gradient_t<AS, AC, PC> gradient(_tree_, it->first);
 
-                        double norm = 0.0;
+                        double likelihood = 0.0;
                         // loop over monomials
-                        for (typename polynomial_t<AS, PC>::const_iterator ut = gradient.normalization().begin();
-                             ut != gradient.normalization().end(); ut++) {
-                                norm += ut->coefficient()*exp(mbeta_log(ut->exponent(), _alpha_));
+                        for (typename polynomial_t<AS, PC>::const_iterator ut = gradient.likelihood().begin();
+                             ut != gradient.likelihood().end(); ut++) {
+                                likelihood += ut->coefficient()*exp(mbeta_log(ut->exponent(), _alpha_));
                         }
                         // loop over nodes
                         for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
@@ -85,7 +85,7 @@ public:
                                      ut != gradient[node.id].end(); ut++) {
                                         result += ut->coefficient()*exp(mbeta_log(ut->exponent(), _alpha_));
                                 }
-                                sum[node.id] += it->second*result/norm;
+                                sum[node.id] += it->second*result/likelihood;
                         }
                 }
                 // apply result

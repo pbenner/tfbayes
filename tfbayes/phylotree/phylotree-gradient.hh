@@ -44,7 +44,7 @@ public:
 
                 _nodes = root.nodes;
                 partial_t partial = gradient_rec(root, observations);
-                _normalization = poly_sum(partial);
+                _likelihood = poly_sum(partial);
 
                 for (pt_node_t::nodes_t::const_iterator it = _nodes.begin(); it != _nodes.end(); it++) {
                         const pt_node_t::id_t id = (*it)->id;
@@ -53,8 +53,8 @@ public:
                 }
         }
 
-        const polynomial_t<AS, PC>& normalization() const {
-                return _normalization;
+        const polynomial_t<AS, PC>& likelihood() const {
+                return _likelihood;
         }
 
 protected:
@@ -204,7 +204,7 @@ protected:
         }
 
         pt_node_t::nodes_t _nodes;
-        polynomial_t<AS, PC> _normalization;
+        polynomial_t<AS, PC> _likelihood;
 };
 
 #endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_HH__ */
