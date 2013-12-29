@@ -40,13 +40,14 @@ public:
         typedef std::vector<polynomial_t<AS, PC> > base_t;
 
         pt_gradient_t(const pt_root_t& root, const std::vector<AC>& observations)
-                : base_t  (root.n_nodes),
-                  _nodes  (root.nodes) {
+                : base_t  (root.n_nodes) {
 
-                partial_t partial = gradient_rec(root, observations);
-                _likelihood = poly_sum(partial);
+                partial_t partial = gradient_rec(root, observations, root.nodes);
 
-                for (pt_node_t::nodes_t::const_iterator it = _nodes.begin(); it != _nodes.end(); it++) {
+                _likelihood_ = poly_sum(partial);
+
+                for (pt_node_t::nodes_t::const_iterator it = root.nodes.begin();
+                     it != root.nodes.end(); it++) {
                         const pt_node_t::id_t id = (*it)->id;
 
                         base_t::operator[](id) = poly_sum(partial.derivatives[id]);
@@ -54,7 +55,7 @@ public:
         }
 
         const polynomial_t<AS, PC>& likelihood() const {
-                return _likelihood;
+                return _likelihood_;
         }
 
 protected:
@@ -98,7 +99,8 @@ protected:
                 const pt_node_t& node,
                 partial_t& partial_left,
                 partial_t& partial_right,
-                const std::vector<AC>& observations) {
+                const std::vector<AC>& observations,
+                const pt_node_t::nodes_t& nodes) {
 
                 double  pm_left  = 1.0-std::exp(-node.left ().d);
                 double  pm_right = 1.0-std::exp(-node.right().d);
@@ -126,7 +128,7 @@ protected:
                         partial[i] += pn_left *pn_right*partial_left [i]*partial_right[i];
                 }
 
-                for (pt_node_t::nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
+                for (pt_node_t::nodes_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
                         const pt_node_t::id_t id = (*it)->id;
 
                         const polynomial_t<AS, PC> deri_sum_left  = poly_sum(partial_left .derivatives[id]);
@@ -195,20 +197,19 @@ protected:
 
         partial_t gradient_rec(
                 const pt_node_t& node,
-                const std::vector<AC>& observations) {
+                const std::vector<AC>& observations,
+                const pt_node_t::nodes_t& nodes) {
                 if (node.leaf()) {
                         return gradient_leaf(static_cast<const pt_leaf_t&>(node), observations);
                 }
                 else {
-                        partial_t partial_left  = gradient_rec(node.left (), observations);
-                        partial_t partial_right = gradient_rec(node.right(), observations);
+                        partial_t partial_left  = gradient_rec(node.left (), observations, nodes);
+                        partial_t partial_right = gradient_rec(node.right(), observations, nodes);
 
-                        return gradient_node(node, partial_left, partial_right, observations);
+                        return gradient_node(node, partial_left, partial_right, observations, nodes);
                 }
         }
-
-        polynomial_t<AS, PC> _likelihood;
-        pt_node_t::nodes_t _nodes;
+        polynomial_t<AS, PC> _likelihood_;
 };
 
 #endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_HH__ */
