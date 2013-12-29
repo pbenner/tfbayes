@@ -84,8 +84,8 @@ public:
                                 const pt_node_t& node = **is;
                                 double result = 0;
                                 // loop over monomials
-                                for (typename polynomial_t<AS, PC>::const_iterator ut = likelihood.derivative(node.id).begin();
-                                     ut != likelihood.derivative(node.id).end(); ut++) {
+                                for (typename polynomial_t<AS, PC>::const_iterator ut = likelihood.derivative()[node.id].begin();
+                                     ut != likelihood.derivative()[node.id].end(); ut++) {
                                         result += ut->coefficient()*exp(mbeta_log(ut->exponent(), _alpha_));
                                 }
                                 sum[node.id] += it->second*result/marginal_likelihood;

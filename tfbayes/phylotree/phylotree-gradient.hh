@@ -55,10 +55,12 @@ public:
                 }
         }
 
-        const polynomial_t<AS, PC>& derivative(size_t i) const {
-                return _derivative_[i];
+        const std::vector<polynomial_t<AS, PC> >& derivative() const {
+                return _derivative_;
         }
-
+        std::vector<polynomial_t<AS, PC> >& derivative() {
+                return _derivative_;
+        }
 protected:
         typedef std::vector<polynomial_t<AS, PC> > derivatives_t;
         typedef boost::array<polynomial_t<AS, PC>, AS+1> carry_t;
