@@ -33,8 +33,6 @@
 
 #include <tfbayes/fasta/fasta.hh>
 #include <tfbayes/phylotree/phylotree.hh>
-//#include <tfbayes/phylotree/phylotree-approximation.hh>
-//#include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/linalg.hh>
 #include <tfbayes/utility/strtools.hh>
