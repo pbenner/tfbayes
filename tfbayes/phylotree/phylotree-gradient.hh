@@ -1,4 +1,4 @@
-/* Copyright (C) 2012 Philipp Benner
+/* Copyright (C) 2012-2013 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -97,8 +97,8 @@ private:
                 partial_t& partial_right,
                 const std::vector<AC>& observations) {
 
-                double  pm_left  = 1.0-exp(-node.left ().d);
-                double  pm_right = 1.0-exp(-node.right().d);
+                double  pm_left  = 1.0-std::exp(-node.left ().d);
+                double  pm_right = 1.0-std::exp(-node.right().d);
                 double  pn_left  = 1.0-pm_left;
                 double  pn_right = 1.0-pm_right;
 

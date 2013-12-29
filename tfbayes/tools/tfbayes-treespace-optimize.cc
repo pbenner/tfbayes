@@ -249,7 +249,12 @@ void run_gradient_ascent(
         const pt_root_t& pt_root,
         const alignment_map_t<>& alignment_map)
 {
-        pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(pt_root, alignment_map, options.alpha, options.shape, options.scale, options.step_size);
+        // a pool of threads for computing likelihoods
+        thread_pool_t thread_pool(options.threads);
+
+        pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(
+                pt_root, alignment_map, options.alpha, options.shape,
+                options.scale, thread_pool, options.step_size);
         pt_gradient_ascent.run(options.max_steps, options.min_change);
 }
 

@@ -45,14 +45,16 @@ public:
                              const std::vector<double>& alpha,
                              double shape,
                              double scale,
+                             thread_pool_t& thread_pool,
                              double epsilon = 0.001,
                              double eta = 0.1)
-                : tree              (tree),
-                  alignment         (alignment),
-                  alpha             (alpha.begin(), alpha.end()),
-                  gamma_distribution(shape, scale),
-                  epsilon           (epsilon),
-                  eta               (eta)
+                : _tree_              (tree),
+                  _alignment_         (alignment),
+                  _thread_pool_       (thread_pool),
+                  _alpha_             (alpha.begin(), alpha.end()),
+                  _gamma_distribution_(shape, scale),
+                  _epsilon_           (epsilon),
+                  _eta_               (eta)
                 { }
 
         double run(const pt_node_t::nodes_t& nodes) {
@@ -61,18 +63,18 @@ public:
 
                 // initialize sum with gradients of the gamma distribution
                 for (pt_node_t::nodes_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
-                        sum[*it] = gamma_distribution.log_gradient((*it)->d);
+                        sum[*it] = _gamma_distribution_.log_gradient((*it)->d);
                 }
                 // loop through the alignment
-                for (typename alignment_map_t<AC>::const_iterator it = alignment.begin();
-                     it != alignment.end(); it++) {
-                        pt_gradient_t<AS, AC, PC> gradient(tree, it->first);
+                for (typename alignment_map_t<AC>::const_iterator it = _alignment_.begin();
+                     it != _alignment_.end(); it++) {
+                        pt_gradient_t<AS, AC, PC> gradient(_tree_, it->first);
 
                         double norm = 0.0;
                         // loop over monomials
                         for (typename polynomial_t<AS, PC>::const_iterator ut = gradient.normalization().begin();
                              ut != gradient.normalization().end(); ut++) {
-                                norm += ut->coefficient()*exp(mbeta_log(ut->exponent(), alpha));
+                                norm += ut->coefficient()*exp(mbeta_log(ut->exponent(), _alpha_));
                         }
                         // loop over nodes
                         for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
@@ -80,7 +82,7 @@ public:
                                 // loop over monomials
                                 for (typename polynomial_t<AS, PC>::const_iterator ut = gradient[*is].begin();
                                      ut != gradient[*is].end(); ut++) {
-                                        result += ut->coefficient()*exp(mbeta_log(ut->exponent(), alpha));
+                                        result += ut->coefficient()*exp(mbeta_log(ut->exponent(), _alpha_));
                                 }
                                 sum[*is] += it->second*result/norm;
                         }
@@ -97,10 +99,10 @@ public:
                         (*is)->d  = std::max(0.0, (*is)->d+step);
                         total    += fabs(step);
                         if (sum_prev[&**is]*sum[&**is] > 0) {
-                                node_epsilon[&**is] *= 1.0+eta;
+                                node_epsilon[&**is] *= 1.0+_eta_;
                         }
                         if (sum_prev[&**is]*sum[&**is] < 0) {
-                                node_epsilon[&**is] *= 1.0-eta;
+                                node_epsilon[&**is] *= 1.0-_eta_;
                         }
                 }
                 sum_prev = sum;
@@ -108,16 +110,16 @@ public:
                 return total;
         }
         void run(size_t max, double stop = 0.0, bool verbose = true) {
-                pt_node_t::nodes_t nodes = tree.nodes;
-                for (pt_node_t::nodes_t::const_iterator is = tree.nodes.begin();
-                     is != tree.nodes.end(); is++) {
-                        node_epsilon[*is] = epsilon;
+                pt_node_t::nodes_t nodes = _tree_.nodes;
+                for (pt_node_t::nodes_t::const_iterator is = _tree_.nodes.begin();
+                     is != _tree_.nodes.end(); is++) {
+                        node_epsilon[*is] = _epsilon_;
                 }
                 for (size_t i = 0; i < max; i++) {
                         double total = run(nodes);
                         if (verbose) {
                                 std::cout << "total change:  "   << total << std::endl
-                                          << newick_format(tree) << std::endl;
+                                          << newick_format(_tree_) << std::endl;
                                 if (total < stop) {
                                         break;
                                 }
@@ -126,12 +128,14 @@ public:
         }
 
 protected:
-        pt_root_t tree;
-        const alignment_map_t<AC>& alignment;
-        exponent_t<AS, PC> alpha;
-        gamma_distribution_t gamma_distribution;
-        double epsilon;
-        double eta;
+        pt_root_t _tree_;
+        const alignment_map_t<AC>& _alignment_;
+        // a thread pool for computing likelihoods
+        thread_pool_t& _thread_pool_;
+        exponent_t<AS, PC> _alpha_;
+        gamma_distribution_t _gamma_distribution_;
+        double _epsilon_;
+        double _eta_;
         boost::unordered_map<pt_node_t*, double> node_epsilon;
         boost::unordered_map<pt_node_t*, double> sum_prev;
 };
