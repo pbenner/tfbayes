@@ -35,27 +35,28 @@
 #include <tfbayes/utility/polynomial.hh>
 
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
-class pt_gradient_t : public std::vector<polynomial_t<AS, PC> > {
+class pt_polynomial_derivative_t : public polynomial_t<AS, PC> {
 public:
-        typedef std::vector<polynomial_t<AS, PC> > base_t;
+        typedef polynomial_t<AS, PC> base_t;
 
-        pt_gradient_t(const pt_root_t& root, const std::vector<AC>& observations)
-                : base_t  (root.n_nodes) {
+        pt_polynomial_derivative_t(const pt_root_t& root, const std::vector<AC>& observations)
+                : base_t      (),
+                  _derivative_(root.n_nodes) {
 
-                partial_t partial = gradient_rec(root, observations, root.nodes);
+                partial_t partial = derivative_rec(root, observations, root.nodes);
 
-                _likelihood_ = poly_sum(partial);
+                base_t::operator=(poly_sum(partial));
 
                 for (pt_node_t::nodes_t::const_iterator it = root.nodes.begin();
                      it != root.nodes.end(); it++) {
                         const pt_node_t::id_t id = (*it)->id;
 
-                        base_t::operator[](id) = poly_sum(partial.derivatives[id]);
+                        _derivative_[id] = poly_sum(partial.derivatives[id]);
                 }
         }
 
-        const polynomial_t<AS, PC>& likelihood() const {
-                return _likelihood_;
+        const polynomial_t<AS, PC>& derivative(size_t i) const {
+                return _derivative_[i];
         }
 
 protected:
@@ -88,14 +89,14 @@ protected:
          * Gradient descent
          ******************************************************************************/
 
-        partial_t gradient_leaf(
+        partial_t derivative_leaf(
                 const pt_leaf_t& leaf,
                 const std::vector<AC>& observations) {
-                partial_t partial(base_t::size());
+                partial_t partial(_derivative_.size());
                 partial[observations[leaf.id]] += 1.0;
                 return partial;
         }
-        partial_t gradient_node(
+        partial_t derivative_node(
                 const pt_node_t& node,
                 partial_t& partial_left,
                 partial_t& partial_right,
@@ -112,7 +113,7 @@ protected:
                 double dpn_left  = -pn_left;
                 double dpn_right = -pn_right;
 
-                partial_t partial(base_t::size());
+                partial_t partial(_derivative_.size());
                 const polynomial_t<AS, PC> poly_sum_left  = poly_sum(partial_left);
                 const polynomial_t<AS, PC> poly_sum_right = poly_sum(partial_right);
 
@@ -133,7 +134,7 @@ protected:
 
                         const polynomial_t<AS, PC> deri_sum_left  = poly_sum(partial_left .derivatives[id]);
                         const polynomial_t<AS, PC> deri_sum_right = poly_sum(partial_right.derivatives[id]);
-                        /* Gradient of sigma
+                        /* Derivative of sigma
                          */
                         if (node.left().id == id) {
                                 partial.derivatives[id][AS] +=
@@ -153,7 +154,7 @@ protected:
                                         (pn_left *partial_left.derivatives [id][AS] + pm_left *deri_sum_left)*
                                         (pn_right*partial_right[AS]                    + pm_right*poly_sum_right);
                         }
-                        /* Gradient of phi
+                        /* Derivative of phi
                          */
                         if (node.left().id == id) {
                                 for (size_t i = 0; i < AS; i++) {
@@ -195,21 +196,21 @@ protected:
                 return partial;
         }
 
-        partial_t gradient_rec(
+        partial_t derivative_rec(
                 const pt_node_t& node,
                 const std::vector<AC>& observations,
                 const pt_node_t::nodes_t& nodes) {
                 if (node.leaf()) {
-                        return gradient_leaf(static_cast<const pt_leaf_t&>(node), observations);
+                        return derivative_leaf(static_cast<const pt_leaf_t&>(node), observations);
                 }
                 else {
-                        partial_t partial_left  = gradient_rec(node.left (), observations, nodes);
-                        partial_t partial_right = gradient_rec(node.right(), observations, nodes);
+                        partial_t partial_left  = derivative_rec(node.left (), observations, nodes);
+                        partial_t partial_right = derivative_rec(node.right(), observations, nodes);
 
-                        return gradient_node(node, partial_left, partial_right, observations, nodes);
+                        return derivative_node(node, partial_left, partial_right, observations, nodes);
                 }
         }
-        polynomial_t<AS, PC> _likelihood_;
+        std::vector<polynomial_t<AS, PC> > _derivative_;
 };
 
 #endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_HH__ */

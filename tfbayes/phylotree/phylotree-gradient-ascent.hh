@@ -70,24 +70,25 @@ public:
                 // loop through the alignment
                 for (typename alignment_map_t<AC>::const_iterator it = _alignment_.begin();
                      it != _alignment_.end(); it++) {
-                        pt_gradient_t<AS, AC, PC> gradient(_tree_, it->first);
+                        // compute the likleihood with gradient information
+                        pt_polynomial_derivative_t<AS, AC, PC> likelihood(_tree_, it->first);
 
-                        double likelihood = 0.0;
+                        double marginal_likelihood = 0.0;
                         // loop over monomials
-                        for (typename polynomial_t<AS, PC>::const_iterator ut = gradient.likelihood().begin();
-                             ut != gradient.likelihood().end(); ut++) {
-                                likelihood += ut->coefficient()*exp(mbeta_log(ut->exponent(), _alpha_));
+                        for (typename polynomial_t<AS, PC>::const_iterator ut = likelihood.begin();
+                             ut != likelihood.end(); ut++) {
+                                marginal_likelihood += ut->coefficient()*exp(mbeta_log(ut->exponent(), _alpha_));
                         }
                         // loop over nodes
                         for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
                                 const pt_node_t& node = **is;
                                 double result = 0;
                                 // loop over monomials
-                                for (typename polynomial_t<AS, PC>::const_iterator ut = gradient[node.id].begin();
-                                     ut != gradient[node.id].end(); ut++) {
+                                for (typename polynomial_t<AS, PC>::const_iterator ut = likelihood.derivative(node.id).begin();
+                                     ut != likelihood.derivative(node.id).end(); ut++) {
                                         result += ut->coefficient()*exp(mbeta_log(ut->exponent(), _alpha_));
                                 }
-                                sum[node.id] += it->second*result/likelihood;
+                                sum[node.id] += it->second*result/marginal_likelihood;
                         }
                 }
                 // apply result
