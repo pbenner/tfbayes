@@ -35,19 +35,21 @@
 #include <tfbayes/utility/polynomial.hh>
 
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
-class pt_gradient_t : public boost::unordered_map<const pt_node_t*, polynomial_t<AS, PC> > {
+class pt_gradient_t : public boost::unordered_map<pt_node_t::id_t, polynomial_t<AS, PC> > {
 public:
+        typedef boost::unordered_map<pt_node_t::id_t, polynomial_t<AS, PC> > base_t;
+
         pt_gradient_t(const pt_root_t& root, const std::vector<AC>& observations)
-                : boost::unordered_map<const pt_node_t*, polynomial_t<AS, PC> >() { 
+                : base_t() { 
 
                 _nodes = root.nodes;
                 partial_t partial = gradient_rec(root, observations);
                 _normalization = poly_sum(partial);
 
-                for (pt_node_t::nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
-                        const pt_node_t* which = *it;
+                for (pt_node_t::nodes_t::const_iterator it = _nodes.begin(); it != _nodes.end(); it++) {
+                        const pt_node_t::id_t id = (*it)->id;
 
-                        operator[](which) = poly_sum(partial.derivatives[which]);
+                        base_t::operator[](id) = poly_sum(partial.derivatives[id]);
                 }
         }
 
@@ -55,16 +57,13 @@ public:
                 return _normalization;
         }
 
-        using boost::unordered_map<const pt_node_t*, polynomial_t<AS, PC> >::operator[];
-        using boost::unordered_map<const pt_node_t*, polynomial_t<AS, PC> >::find;
-
-private:
-        typedef boost::unordered_map<pt_node_t*, polynomial_t<AS, PC> > derivatives_t;
+protected:
+        typedef boost::unordered_map<pt_node_t::id_t, polynomial_t<AS, PC> > derivatives_t;
         typedef boost::array<polynomial_t<AS, PC>, AS+1> carry_t;
 
         class partial_t : public carry_t {
         public:
-                boost::unordered_map<const pt_node_t*, carry_t> derivatives;
+                boost::unordered_map<pt_node_t::id_t, carry_t> derivatives;
         };
 
         polynomial_t<AS, PC> poly_sum(const carry_t& carry) {
@@ -124,66 +123,66 @@ private:
                 }
 
                 for (pt_node_t::nodes_t::iterator it = _nodes.begin(); it != _nodes.end(); it++) {
-                        const pt_node_t* which = *it;
+                        const pt_node_t::id_t id = (*it)->id;
 
-                        const polynomial_t<AS, PC> deri_sum_left  = poly_sum(partial_left .derivatives[which]);
-                        const polynomial_t<AS, PC> deri_sum_right = poly_sum(partial_right.derivatives[which]);
+                        const polynomial_t<AS, PC> deri_sum_left  = poly_sum(partial_left .derivatives[id]);
+                        const polynomial_t<AS, PC> deri_sum_right = poly_sum(partial_right.derivatives[id]);
                         /* Gradient of sigma
                          */
-                        if (&node.left() == which) {
-                                partial.derivatives[which][AS] +=
+                        if (node.left().id == id) {
+                                partial.derivatives[id][AS] +=
                                         (dpn_left*partial_left [AS]  + dpm_left *poly_sum_left)*
                                         (pn_right*partial_right[AS]  +  pm_right*poly_sum_right);
                         }
-                        else if (&node.right() == which) {
-                                partial.derivatives[which][AS] +=
+                        else if (node.right().id == id) {
+                                partial.derivatives[id][AS] +=
                                         ( pn_left *partial_left [AS] +  pm_left *poly_sum_left)*
                                         (dpn_right*partial_right[AS] + dpm_right*poly_sum_right);
                         }
                         else {
-                                partial.derivatives[which][AS] +=
+                                partial.derivatives[id][AS] +=
                                         (pn_left *partial_left [AS]                    + pm_left *poly_sum_left)*
-                                        (pn_right*partial_right.derivatives[which][AS] + pm_right*deri_sum_right);
-                                partial.derivatives[which][AS] +=
-                                        (pn_left *partial_left.derivatives [which][AS] + pm_left *deri_sum_left)*
+                                        (pn_right*partial_right.derivatives[id][AS] + pm_right*deri_sum_right);
+                                partial.derivatives[id][AS] +=
+                                        (pn_left *partial_left.derivatives [id][AS] + pm_left *deri_sum_left)*
                                         (pn_right*partial_right[AS]                    + pm_right*poly_sum_right);
                         }
                         /* Gradient of phi
                          */
-                        if (&node.left() == which) {
+                        if (node.left().id == id) {
                                 for (size_t i = 0; i < AS; i++) {
-                                        partial.derivatives[which][i] += dpn_left*pn_right*partial_left[AS]*partial_right[ i];
-                                        partial.derivatives[which][i] += dpm_left*pn_right*poly_sum_left   *partial_right[ i];
-                                        partial.derivatives[which][i] += dpn_left*pn_right*partial_left[ i]*partial_right[AS];
-                                        partial.derivatives[which][i] += dpn_left*pm_right*partial_left[ i]*poly_sum_right;
-                                        partial.derivatives[which][i] += dpn_left*pn_right*partial_left[ i]*partial_right[ i];
+                                        partial.derivatives[id][i] += dpn_left*pn_right*partial_left[AS]*partial_right[ i];
+                                        partial.derivatives[id][i] += dpm_left*pn_right*poly_sum_left   *partial_right[ i];
+                                        partial.derivatives[id][i] += dpn_left*pn_right*partial_left[ i]*partial_right[AS];
+                                        partial.derivatives[id][i] += dpn_left*pm_right*partial_left[ i]*poly_sum_right;
+                                        partial.derivatives[id][i] += dpn_left*pn_right*partial_left[ i]*partial_right[ i];
                                 }
                         }
-                        else if (&node.right() == which) {
+                        else if (node.right().id == id) {
                                 for (size_t i = 0; i < AS; i++) {
-                                        partial.derivatives[which][i] +=  pn_left*dpn_right*partial_left[ i]*partial_right[AS];
-                                        partial.derivatives[which][i] +=  pn_left*dpm_right*partial_left[ i]*poly_sum_right;
-                                        partial.derivatives[which][i] +=  pn_left*dpn_right*partial_left[AS]*partial_right[ i];
-                                        partial.derivatives[which][i] +=  pm_left*dpn_right*poly_sum_left   *partial_right[ i];
-                                        partial.derivatives[which][i] +=  pn_left*dpn_right*partial_left[ i]*partial_right[ i];
+                                        partial.derivatives[id][i] +=  pn_left*dpn_right*partial_left[ i]*partial_right[AS];
+                                        partial.derivatives[id][i] +=  pn_left*dpm_right*partial_left[ i]*poly_sum_right;
+                                        partial.derivatives[id][i] +=  pn_left*dpn_right*partial_left[AS]*partial_right[ i];
+                                        partial.derivatives[id][i] +=  pm_left*dpn_right*poly_sum_left   *partial_right[ i];
+                                        partial.derivatives[id][i] +=  pn_left*dpn_right*partial_left[ i]*partial_right[ i];
                                 }
                         }
                         else {
                                 for (size_t i = 0; i < AS; i++) {
-                                        partial.derivatives[which][i] += pn_left *pn_right*partial_left[i]*partial_right.derivatives[which][AS];
-                                        partial.derivatives[which][i] += pn_left *pm_right*partial_left[i]*deri_sum_right;
+                                        partial.derivatives[id][i] += pn_left *pn_right*partial_left[i]*partial_right.derivatives[id][AS];
+                                        partial.derivatives[id][i] += pn_left *pm_right*partial_left[i]*deri_sum_right;
 
-                                        partial.derivatives[which][i] += pn_right*pn_left*partial_right[i]*partial_left .derivatives[which][AS];
-                                        partial.derivatives[which][i] += pn_right*pm_left*partial_right[i]*deri_sum_left;
+                                        partial.derivatives[id][i] += pn_right*pn_left*partial_right[i]*partial_left .derivatives[id][AS];
+                                        partial.derivatives[id][i] += pn_right*pm_left*partial_right[i]*deri_sum_left;
 
-                                        partial.derivatives[which][i] += pn_right*pn_left*partial_right.derivatives[which][i]*partial_left[AS];
-                                        partial.derivatives[which][i] += pn_right*pm_left*partial_right.derivatives[which][i]*poly_sum_left;
+                                        partial.derivatives[id][i] += pn_right*pn_left*partial_right.derivatives[id][i]*partial_left[AS];
+                                        partial.derivatives[id][i] += pn_right*pm_left*partial_right.derivatives[id][i]*poly_sum_left;
 
-                                        partial.derivatives[which][i] += pn_left *pn_right*partial_left.derivatives[which][i]*partial_right[AS];
-                                        partial.derivatives[which][i] += pn_left *pm_right*partial_left.derivatives[which][i]*poly_sum_right;
+                                        partial.derivatives[id][i] += pn_left *pn_right*partial_left.derivatives[id][i]*partial_right[AS];
+                                        partial.derivatives[id][i] += pn_left *pm_right*partial_left.derivatives[id][i]*poly_sum_right;
 
-                                        partial.derivatives[which][i] += pn_left *pn_right*partial_left [i]*partial_right.derivatives[which][i];
-                                        partial.derivatives[which][i] += pn_left *pn_right*partial_right[i]*partial_left .derivatives[which][i];
+                                        partial.derivatives[id][i] += pn_left *pn_right*partial_left [i]*partial_right.derivatives[id][i];
+                                        partial.derivatives[id][i] += pn_left *pn_right*partial_right[i]*partial_left .derivatives[id][i];
                                 }
                         }
                 }

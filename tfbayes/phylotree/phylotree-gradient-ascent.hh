@@ -58,12 +58,12 @@ public:
                 { }
 
         double run(const pt_node_t::nodes_t& nodes) {
-                boost::unordered_map<pt_node_t*, double> sum;
+                boost::unordered_map<pt_node_t::id_t, double> sum;
                 double total = 0.0;
 
                 // initialize sum with gradients of the gamma distribution
                 for (pt_node_t::nodes_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
-                        sum[*it] = _gamma_distribution_.log_gradient((*it)->d);
+                        sum[(*it)->id] = _gamma_distribution_.log_gradient((*it)->d);
                 }
                 // loop through the alignment
                 for (typename alignment_map_t<AC>::const_iterator it = _alignment_.begin();
@@ -78,31 +78,33 @@ public:
                         }
                         // loop over nodes
                         for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                                const pt_node_t& node = **is;
                                 double result = 0;
                                 // loop over monomials
-                                for (typename polynomial_t<AS, PC>::const_iterator ut = gradient[*is].begin();
-                                     ut != gradient[*is].end(); ut++) {
+                                for (typename polynomial_t<AS, PC>::const_iterator ut = gradient[node.id].begin();
+                                     ut != gradient[node.id].end(); ut++) {
                                         result += ut->coefficient()*exp(mbeta_log(ut->exponent(), _alpha_));
                                 }
-                                sum[*is] += it->second*result/norm;
+                                sum[node.id] += it->second*result/norm;
                         }
                 }
                 // apply result
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                        pt_node_t& node = **is;
                         double step;
-                        if (sum[*is] > 0) {
-                                step =  node_epsilon[*is];
+                        if (sum[node.id] > 0) {
+                                step =  node_epsilon[node.id];
                         }
                         else {
-                                step = -node_epsilon[*is];
+                                step = -node_epsilon[node.id];
                         }
-                        (*is)->d  = std::max(0.0, (*is)->d+step);
-                        total    += fabs(step);
-                        if (sum_prev[&**is]*sum[&**is] > 0) {
-                                node_epsilon[&**is] *= 1.0+_eta_;
+                        node.d  = std::max(0.0, node.d+step);
+                        total  += std::abs(step);
+                        if (sum_prev[node.id]*sum[node.id] > 0) {
+                                node_epsilon[node.id] *= 1.0+_eta_;
                         }
-                        if (sum_prev[&**is]*sum[&**is] < 0) {
-                                node_epsilon[&**is] *= 1.0-_eta_;
+                        if (sum_prev[node.id]*sum[node.id] < 0) {
+                                node_epsilon[node.id] *= 1.0-_eta_;
                         }
                 }
                 sum_prev = sum;
@@ -113,7 +115,7 @@ public:
                 pt_node_t::nodes_t nodes = _tree_.nodes;
                 for (pt_node_t::nodes_t::const_iterator is = _tree_.nodes.begin();
                      is != _tree_.nodes.end(); is++) {
-                        node_epsilon[*is] = _epsilon_;
+                        node_epsilon[(*is)->id] = _epsilon_;
                 }
                 for (size_t i = 0; i < max; i++) {
                         double total = run(nodes);
@@ -136,8 +138,8 @@ protected:
         gamma_distribution_t _gamma_distribution_;
         double _epsilon_;
         double _eta_;
-        boost::unordered_map<pt_node_t*, double> node_epsilon;
-        boost::unordered_map<pt_node_t*, double> sum_prev;
+        boost::unordered_map<pt_node_t::id_t, double> node_epsilon;
+        boost::unordered_map<pt_node_t::id_t, double> sum_prev;
 };
 
 #endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_GRADIENT_HH__ */
