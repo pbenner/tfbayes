@@ -34,47 +34,30 @@
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/polynomial.hh>
 
-template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
-class pt_polynomial_derivative_t : public polynomial_t<AS, PC> {
-public:
-        typedef polynomial_t<AS, PC> base_t;
-
-        pt_polynomial_derivative_t(const pt_root_t& root, const std::vector<AC>& observations)
-                : base_t      (),
-                  _derivative_(root.n_nodes) {
-
-                partial_t partial = derivative_rec(root, observations, root.nodes);
-
-                base_t::operator=(poly_sum(partial));
-
-                for (pt_node_t::nodes_t::const_iterator it = root.nodes.begin();
-                     it != root.nodes.end(); it++) {
-                        const pt_node_t::id_t id = (*it)->id;
-
-                        _derivative_[id] = poly_sum(partial.derivatives[id]);
-                }
-        }
-
-        const std::vector<polynomial_t<AS, PC> >& derivative() const {
-                return _derivative_;
-        }
-        std::vector<polynomial_t<AS, PC> >& derivative() {
-                return _derivative_;
-        }
-protected:
-        typedef std::vector<polynomial_t<AS, PC> > derivatives_t;
-        typedef boost::array<polynomial_t<AS, PC>, AS+1> carry_t;
-
-        class partial_t : public carry_t {
+namespace detail {
+        template <size_t AS, typename PC>
+        class derivatives_t : public std::vector<polynomial_t<AS, PC> > {
+                derivatives_t()
+                        : std::vector<polynomial_t<AS, PC> >()
+                        { }
+                derivatives_t(size_t k)
+                        : std::vector<polynomial_t<AS, PC> >(k)
+                        { }
+        };
+        template <size_t AS, typename AC, typename PC>
+        class carry_t : public boost::array<polynomial_t<AS, PC>, AS+1>
+        { };
+        template <size_t AS, typename AC, typename PC>
+        class partial_t : public carry_t<AS, AC, PC> {
         public:
                 partial_t(size_t n)
                         : derivatives(n)
                         { }
 
-                std::vector<carry_t> derivatives;
+                std::vector<carry_t<AS, AC, PC> > derivatives;
         };
-
-        polynomial_t<AS, PC> poly_sum(const carry_t& carry) {
+        template <size_t AS, typename AC, typename PC>
+        polynomial_t<AS, PC> poly_sum(const carry_t<AS, AC, PC>& carry) {
                 polynomial_t<AS, PC> poly_sum;
 
                 for (size_t i = 0; i < AS; i++) {
@@ -86,22 +69,20 @@ protected:
 
                 return poly_sum;
         }
-
-        /******************************************************************************
-         * Gradient descent
-         ******************************************************************************/
-
-        partial_t derivative_leaf(
+        template <size_t AS, typename AC, typename PC>
+        partial_t<AS, AC, PC> derivative_leaf(
                 const pt_leaf_t& leaf,
-                const std::vector<AC>& observations) {
-                partial_t partial(_derivative_.size());
+                const std::vector<AC>& observations,
+                const pt_node_t::nodes_t& nodes) {
+                partial_t<AS, AC, PC> partial(nodes.size());
                 partial[observations[leaf.id]] += 1.0;
                 return partial;
         }
-        partial_t derivative_node(
+        template <size_t AS, typename AC, typename PC>
+        partial_t<AS, AC, PC> derivative_node(
                 const pt_node_t& node,
-                partial_t& partial_left,
-                partial_t& partial_right,
+                partial_t<AS, AC, PC>& partial_left,
+                partial_t<AS, AC, PC>& partial_right,
                 const std::vector<AC>& observations,
                 const pt_node_t::nodes_t& nodes) {
 
@@ -115,7 +96,7 @@ protected:
                 double dpn_left  = -pn_left;
                 double dpn_right = -pn_right;
 
-                partial_t partial(_derivative_.size());
+                partial_t<AS, AC, PC> partial(nodes.size());
                 const polynomial_t<AS, PC> poly_sum_left  = poly_sum(partial_left);
                 const polynomial_t<AS, PC> poly_sum_right = poly_sum(partial_right);
 
@@ -130,7 +111,6 @@ protected:
                         partial[i] += pn_right*pm_left *partial_right[i]*poly_sum_left;
                         partial[i] += pn_left *pn_right*partial_left [i]*partial_right[i];
                 }
-
                 for (pt_node_t::nodes_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
                         const pt_node_t::id_t id = (*it)->id;
 
@@ -197,22 +177,90 @@ protected:
                 }
                 return partial;
         }
-
-        partial_t derivative_rec(
+        template <size_t AS, typename AC, typename PC>
+        partial_t<AS, AC, PC> derivative_rec(
                 const pt_node_t& node,
                 const std::vector<AC>& observations,
                 const pt_node_t::nodes_t& nodes) {
                 if (node.leaf()) {
-                        return derivative_leaf(static_cast<const pt_leaf_t&>(node), observations);
+                        return derivative_leaf<AS, AC, PC>(static_cast<const pt_leaf_t&>(node), observations, nodes);
                 }
                 else {
-                        partial_t partial_left  = derivative_rec(node.left (), observations, nodes);
-                        partial_t partial_right = derivative_rec(node.right(), observations, nodes);
+                        partial_t<AS, AC, PC> partial_left  = derivative_rec<AS, AC, PC>(node.left (), observations, nodes);
+                        partial_t<AS, AC, PC> partial_right = derivative_rec<AS, AC, PC>(node.right(), observations, nodes);
 
-                        return derivative_node(node, partial_left, partial_right, observations, nodes);
+                        return derivative_node<AS, AC, PC>(node, partial_left, partial_right, observations, nodes);
                 }
         }
+}
+
+template <size_t AS, typename PC = double>
+class pt_polynomial_derivative_t : public polynomial_t<AS, PC> {
+public:
+        typedef polynomial_t<AS, PC> base_t;
+
+        pt_polynomial_derivative_t()
+                : base_t      (),
+                  _derivative_()
+                { }
+        pt_polynomial_derivative_t(size_t k)
+                : base_t      (),
+                  _derivative_(k)
+                { }
+
+        pt_polynomial_derivative_t operator=(const polynomial_t<AS, PC>& polynomial) {
+                base_t::operator=(polynomial);
+                return *this;
+        }
+        const std::vector<polynomial_t<AS, PC> >& derivative() const {
+                return _derivative_;
+        }
+        std::vector<polynomial_t<AS, PC> >& derivative() {
+                return _derivative_;
+        }
+protected:
         std::vector<polynomial_t<AS, PC> > _derivative_;
 };
+
+class pt_marginal_derivative_t : std::pair<double, std::vector<double> > {
+public:
+        typedef std::pair<double, std::vector<double> > base_t;
+
+        pt_marginal_derivative_t()
+                : base_t()
+                { }
+        pt_marginal_derivative_t(size_t k)
+                : base_t(0.0, std::vector<double>(k))
+                { }
+
+        operator double&() {
+                return base_t::first;
+        }
+        const std::vector<double>& derivative() const {
+                return base_t::second;
+        }
+        std::vector<double>& derivative() {
+                return base_t::second;
+        }
+};
+
+template <size_t AS, typename AC, typename PC>
+pt_polynomial_derivative_t<AS, PC>
+pt_polynomial_derivative(const pt_root_t& root, const std::vector<AC>& observations)
+{
+        pt_polynomial_derivative_t<AS, PC> likelihood(root.n_nodes);
+        
+        detail::partial_t<AS, AC, PC> partial = detail::derivative_rec<AS, AC, PC>(root, observations, root.nodes);
+
+        likelihood = detail::poly_sum(partial);
+ 
+        for (pt_node_t::nodes_t::const_iterator it = root.nodes.begin();
+             it != root.nodes.end(); it++) {
+                const pt_node_t::id_t id = (*it)->id;
+                
+                likelihood.derivative()[id] = detail::poly_sum(partial.derivatives[id]);
+        }
+        return likelihood;
+}
 
 #endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_HH__ */
