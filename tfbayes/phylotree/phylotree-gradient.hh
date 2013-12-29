@@ -41,8 +41,7 @@ public:
 
         pt_gradient_t(const pt_root_t& root, const std::vector<AC>& observations)
                 : base_t  (root.n_nodes),
-                  _nodes  (root.nodes),
-                  _n_nodes(root.n_nodes) {
+                  _nodes  (root.nodes) {
 
                 partial_t partial = gradient_rec(root, observations);
                 _likelihood = poly_sum(partial);
@@ -91,7 +90,7 @@ protected:
         partial_t gradient_leaf(
                 const pt_leaf_t& leaf,
                 const std::vector<AC>& observations) {
-                partial_t partial(_n_nodes);
+                partial_t partial(base_t::size());
                 partial[observations[leaf.id]] += 1.0;
                 return partial;
         }
@@ -111,7 +110,7 @@ protected:
                 double dpn_left  = -pn_left;
                 double dpn_right = -pn_right;
 
-                partial_t partial(_n_nodes);
+                partial_t partial(base_t::size());
                 const polynomial_t<AS, PC> poly_sum_left  = poly_sum(partial_left);
                 const polynomial_t<AS, PC> poly_sum_right = poly_sum(partial_right);
 
@@ -210,7 +209,6 @@ protected:
 
         polynomial_t<AS, PC> _likelihood;
         pt_node_t::nodes_t _nodes;
-        size_t _n_nodes;
 };
 
 #endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_HH__ */
