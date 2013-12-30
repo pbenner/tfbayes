@@ -34,7 +34,7 @@
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/polynomial.hh>
 
-namespace detail {
+namespace tfbayes_detail {
         template <size_t AS, typename PC>
         class derivatives_t : public std::vector<polynomial_t<AS, PC> > {
                 derivatives_t()
@@ -45,9 +45,6 @@ namespace detail {
                         { }
         };
         template <size_t AS, typename AC, typename PC>
-        class carry_t : public boost::array<polynomial_t<AS, PC>, AS+1>
-        { };
-        template <size_t AS, typename AC, typename PC>
         class partial_t : public carry_t<AS, AC, PC> {
         public:
                 partial_t(size_t n)
@@ -56,19 +53,6 @@ namespace detail {
 
                 std::vector<carry_t<AS, AC, PC> > derivatives;
         };
-        template <size_t AS, typename AC, typename PC>
-        polynomial_t<AS, PC> poly_sum(const carry_t<AS, AC, PC>& carry) {
-                polynomial_t<AS, PC> poly_sum;
-
-                for (size_t i = 0; i < AS; i++) {
-                        polynomial_term_t<AS, PC> term(1.0);
-                        term.exponent()[i] = 1;
-                        poly_sum += term*carry[i];
-                }
-                poly_sum += carry[AS];
-
-                return poly_sum;
-        }
         template <size_t AS, typename AC, typename PC>
         partial_t<AS, AC, PC> derivative_leaf(
                 const pt_leaf_t& leaf,
@@ -246,19 +230,20 @@ public:
 
 template <size_t AS, typename AC, typename PC>
 pt_polynomial_derivative_t<AS, PC>
-pt_polynomial_derivative(const pt_root_t& root, const std::vector<AC>& observations)
+pt_likelihood_derivative(const pt_root_t& root, const std::vector<AC>& observations)
 {
         pt_polynomial_derivative_t<AS, PC> likelihood(root.n_nodes);
         
-        detail::partial_t<AS, AC, PC> partial = detail::derivative_rec<AS, AC, PC>(root, observations, root.nodes);
+        tfbayes_detail::partial_t<AS, AC, PC> partial = tfbayes_detail::derivative_rec<AS, AC, PC>(
+                root, observations, root.nodes);
 
-        likelihood = detail::poly_sum(partial);
+        likelihood = tfbayes_detail::poly_sum(partial);
  
         for (pt_node_t::nodes_t::const_iterator it = root.nodes.begin();
              it != root.nodes.end(); it++) {
                 const pt_node_t::id_t id = (*it)->id;
                 
-                likelihood.derivative()[id] = detail::poly_sum(partial.derivatives[id]);
+                likelihood.derivative()[id] = tfbayes_detail::poly_sum(partial.derivatives[id]);
         }
         return likelihood;
 }

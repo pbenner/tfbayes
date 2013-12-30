@@ -102,7 +102,7 @@ boost::array<double, AS> pt_posterior_expectation(
         const std::vector<AC>& observations,
         const exponent_t<AS, AC>& alpha)
 {
-        polynomial_t<AS, PC> polynomial = pt_polynomial_t<AS, AC, PC>(node, observations);
+        polynomial_t<AS, PC> polynomial = pt_likelihood<AS, AC, PC>(node, observations);
 
         return pt_posterior_expectation<AS, PC>(polynomial, alpha);
 }

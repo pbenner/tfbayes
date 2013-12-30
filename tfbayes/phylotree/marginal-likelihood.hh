@@ -61,7 +61,7 @@ double pt_marginal_likelihood(
         const exponent_t<AS, PC>& alpha)
 {
         const polynomial_t<AS, PC> polynomial =
-                pt_polynomial_t<AS, AC, PC>(tree, observations);
+                pt_likelihood<AS, AC, PC>(tree, observations);
 
         return pt_marginal_likelihood<AS, PC>(polynomial, alpha);
 }

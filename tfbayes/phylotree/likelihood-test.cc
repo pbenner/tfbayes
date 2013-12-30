@@ -37,7 +37,8 @@ void test_tree1() {
         observations[n1("n2")->id] = 1;
         observations[n1("n3")->id] = 2;
 
-        polynomial_t<alphabet_size> result = pt_polynomial_t<alphabet_size>(n1, observations);
+        polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                n1, observations);
         cout << result << endl
              << "0.950213 Pc^1 Pg^1 (correct polynomial)"
              << endl << endl;
@@ -52,7 +53,8 @@ void test_tree2() {
         observations[n1("n2")->id] = 1;
         observations[n1("n3")->id] = 1;
 
-        polynomial_t<alphabet_size> result = pt_polynomial_t<alphabet_size>(n1, observations);
+        polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                n1, observations);
         cout << result << endl
              << "0.950213 Pc^2 + 0.0497871 Pc^1 (correct polynomial)"
              << endl << endl;
@@ -70,7 +72,8 @@ void test_tree3() {
         observations[n1("n4")->id] = 1;
         observations[n1("n3")->id] = 2;
 
-        polynomial_t<alphabet_size> result = pt_polynomial_t<alphabet_size>(n1, observations);
+        polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                n1, observations);
         cout << result << endl
              << "0.0386781 Pc^1 Pg^1 + 0.860149 Pc^2 Pg^1 (correct polynomial)"
              << endl << endl;
@@ -91,7 +94,8 @@ void test_tree4() {
         observations[n1("n5")->id] = 1;
         observations[n1("n4")->id] = 1;
 
-        polynomial_t<alphabet_size> result = pt_polynomial_t<alphabet_size>(n1, observations);
+        polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                n1, observations);
         cout << result << endl
              << "0.0163527 Pc^2 + 0.000911882 Pc^1 + 0.842968 Pc^4 + 0.139768 Pc^3 (correct polynomial)"
              << endl << endl;
@@ -112,7 +116,8 @@ void test_tree5() {
         observations[n1("n5")->id] = 2;
         observations[n1("n4")->id] = 3;
 
-        polynomial_t<alphabet_size> result = pt_polynomial_t<alphabet_size>(n1, observations);
+        polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                n1, observations);
         cout << result << endl
              << "0.0399154 Pc^1 Pg^1 Pt^1 + 0.842968 Pc^2 Pg^1 Pt^1 (correct polynomial)"
              << endl << endl;
@@ -136,7 +141,8 @@ void test_tree6() {
         observations[n1("n6")->id] = 0;
         observations[n1("n3")->id] = 0;
 
-        polynomial_t<alphabet_size> result = pt_polynomial_t<alphabet_size>(n1, observations);
+        polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                n1, observations);
         cout << result << endl
              << "0.999997 Pa^2 Pc^1 Pg^1 Pt^1 + 3.05622e-07 Pa^1 Pc^1 Pg^1 Pt^1 (correct polynomial)"
              << endl << endl;
@@ -172,8 +178,10 @@ void test_tree7() {
         observations2[m1("C")->id] = 0;
         observations2[m1("D")->id] = 0;
 
-        polynomial_t<alphabet_size> result1 = pt_polynomial_t<alphabet_size>(n1, observations1);
-        polynomial_t<alphabet_size> result2 = pt_polynomial_t<alphabet_size>(m1, observations2);
+        polynomial_t<alphabet_size> result1 = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                n1, observations1);
+        polynomial_t<alphabet_size> result2 = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                m1, observations2);
 
         cout << result1 << " (first tree)" << endl
              << result2 << " (second tree with root at different location)" << endl
@@ -191,7 +199,8 @@ void test_tree8() {
         observations[n1("n2")->id] = 1;
         observations[n1("n3")->id] = 1;
 
-        polynomial_t<alphabet_size> result = pt_polynomial_t<alphabet_size>(n1, observations);
+        polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                n1, observations);
         cout << result << endl
              << "0.192007 Pc^1 Pg^1 + 0.0799543 Pc^2 Pg^1 (correct polynomial)"
              << endl << endl;
@@ -211,7 +220,8 @@ void test_tree9() {
         observations[n1("n3")->id] = 2;
         observations[n1("n0")->id] = 1;
 
-        polynomial_t<alphabet_size> result = pt_polynomial_t<alphabet_size>(n1, observations);
+        polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                n1, observations);
         cout << result << endl
              << "0.839524 Pc^3 Pg^1 + 0.000950355 Pc^1 Pg^1 + 0.0450738 Pc^2 Pg^1 (correct polynomial)"
              << endl << endl;
@@ -231,7 +241,8 @@ void test_tree10() {
         observations[n2("n3")->id] = 2;
         observations[n2("n0")->id] = 1;
 
-        polynomial_t<alphabet_size> result = pt_polynomial_t<alphabet_size>(n2, observations);
+        polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                n2, observations);
         cout << result << endl
              << "0.839524 Pc^3 Pg^1 + 0.000950355 Pc^1 Pg^1 + 0.0450738 Pc^2 Pg^1 (correct polynomial)"
              << endl << endl;
@@ -254,7 +265,8 @@ void test_tree11() {
         observations[n7("n3")->id] = 1;
         observations[n7("n4")->id] = 3;
 
-        polynomial_t<alphabet_size> result = pt_polynomial_t<alphabet_size>(n7, observations);
+        polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                n7, observations);
         cout << result << endl
              << "0.0665841 Pa^1 Pc^3 Pt^1 + 0.183048 Pa^1 Pc^2 Pt^1 + 0.0174905 Pa^1 Pc^1 Pt^1 (correct polynomial)"
              << endl << endl;
@@ -280,8 +292,10 @@ void test_tree12() {
         observations2[m1("m2")->id] = 1;
         observations2[m1("m3")->id] = 2;
 
-        polynomial_t<alphabet_size> result1 = pt_polynomial_t<alphabet_size>(n1, observations1);
-        polynomial_t<alphabet_size> result2 = pt_polynomial_t<alphabet_size>(m1, observations2);
+        polynomial_t<alphabet_size> result1 = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                n1, observations1);
+        polynomial_t<alphabet_size> result2 = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                m1, observations2);
         cout << result1 << " (observation with gap '-')" << endl
              << result2 << " (tree with leaf removed)"   << endl
              << endl;

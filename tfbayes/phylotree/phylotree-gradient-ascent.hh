@@ -71,7 +71,7 @@ public:
                 for (typename alignment_map_t<AC>::const_iterator it = _alignment_.begin();
                      it != _alignment_.end(); it++) {
                         // compute the likleihood with gradient information
-                        pt_polynomial_derivative_t<AS, PC> likelihood = pt_polynomial_derivative<AS, AC, PC>(_tree_, it->first);
+                        pt_polynomial_derivative_t<AS, PC> likelihood = pt_likelihood_derivative<AS, AC, PC>(_tree_, it->first);
 
                         double marginal_likelihood = 0.0;
                         // loop over monomials
