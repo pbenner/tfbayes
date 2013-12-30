@@ -160,17 +160,17 @@ pt_node_t::create_mappings(leaf_map_t& leaf_map, leaves_t& leaves,
 void
 pt_node_t::set_id(pt_node_t::id_t& leaf_id, pt_node_t::id_t& node_id)
 {
-        id = node_id++;
         left ().set_id(leaf_id, node_id);
         right().set_id(leaf_id, node_id);
+        id = node_id++;
 }
 
 void
 pt_node_t::set_id(const pt_root_t& tree, pt_node_t::id_t& node_id)
 {
-        id = node_id++;
         left ().set_id(tree, node_id);
         right().set_id(tree, node_id);
+        id = node_id++;
 }
 
 void

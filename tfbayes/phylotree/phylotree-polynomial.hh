@@ -53,16 +53,6 @@ namespace tfbayes_detail {
                 return px;
         }
         template <size_t AS, typename AC, typename PC>
-        polynomial_t<AS, PC> mutation_model(const pt_node_t& node, AC x, AC y) {
-                polynomial_t<AS, PC> poly;
-                polynomial_term_t<AS, PC> py = nucleotide_probability<AS, AC, PC>(y);
-                poly += node.mutation_probability()*py;
-                if (x == y) {
-                        poly += (1.0-node.mutation_probability());
-                }
-                return poly;
-        }
-        template <size_t AS, typename AC, typename PC>
         polynomial_t<AS, PC> poly_sum(const carry_t<AS, AC, PC>& carry) {
                 polynomial_t<AS, PC> poly_sum;
 
@@ -70,19 +60,6 @@ namespace tfbayes_detail {
                         poly_sum += nucleotide_probability<AS, AC, PC>(i)*carry[i];
                 }
                 poly_sum += carry[AS];
-
-                return poly_sum;
-        }
-        template <size_t AS, typename AC, typename PC>
-        polynomial_t<AS, PC> poly_sum(const carry_t<AS, AC, PC>& carry, const pt_leaf_t& outgroup,
-                                      const std::vector<AC>& observations) {
-                polynomial_t<AS, PC> poly_sum;
-
-                for (size_t i = 0; i < AS; i++) {
-                        poly_sum += mutation_model<AS, AC, PC>(outgroup, observations[outgroup.id], i)*carry[i];
-                }
-                poly_sum += carry[AS];
-                poly_sum *= nucleotide_probability<AS, AC, PC>(observations[outgroup.id]);
 
                 return poly_sum;
         }
@@ -132,11 +109,41 @@ namespace tfbayes_detail {
                         return likelihood_leaf<AS, AC, PC>(node, observations);
                 }
                 else {
-                        const carry_t<AS, AC, PC> carry_left  = likelihood_rec<AS, AC, PC>(node.left (),  observations);
+                        const carry_t<AS, AC, PC> carry_left  = likelihood_rec<AS, AC, PC>(node.left (), observations);
                         const carry_t<AS, AC, PC> carry_right = likelihood_rec<AS, AC, PC>(node.right(), observations);
 
                         return likelihood_node<AS, AC, PC>(node, carry_left, carry_right, observations);
                 }
+        }
+        template <size_t AS, typename AC, typename PC>
+        carry_t<AS, AC, PC> likelihood_root(
+                const pt_root_t& root,
+                const std::vector<AC>& observations) {
+
+                // if the root has no outgroup then treat it as a
+                // simple node
+                if (!root.outgroup()) {
+                        return likelihood_rec<AS, AC, PC>(root, observations);
+                }
+                const carry_t<AS, AC, PC> carry_left  = likelihood_rec<AS, AC, PC>( root,            observations);
+                const carry_t<AS, AC, PC> carry_right = likelihood_rec<AS, AC, PC>(*root.outgroup(), observations);
+
+                const polynomial_t<AS, PC> poly_sum_left  = poly_sum(carry_left);
+                const polynomial_t<AS, PC> poly_sum_right = poly_sum(carry_right);
+
+                double pm_right = 1.0-exp(-root.outgroup()->d);
+                carry_t<AS, AC, PC> carry;
+
+                carry[AS] +=
+                        carry_left [AS]*((1.0-pm_right)*carry_right[AS] + pm_right*poly_sum_right);
+
+                for (size_t i = 0; i < AS; i++) {
+                        carry[i] += (1.0-pm_right)*carry_left [i]*carry_right[AS];
+                        carry[i] +=      pm_right *carry_left [i]*poly_sum_right;
+                        carry[i] += (1.0-pm_right)*carry_right[i]*carry_left [AS];
+                        carry[i] += (1.0-pm_right)*carry_left [i]*carry_right[i];
+                }
+                return carry;
         }
 }
 
@@ -151,14 +158,8 @@ public:
 template <size_t AS, typename AC, typename PC>
 pt_polynomial_t<AS, PC>
 pt_likelihood(const pt_root_t& root, const std::vector<AC>& observations) {
-        if (root.outgroup() && observations[root.outgroup()->id] != -1) {
-                return tfbayes_detail::poly_sum<AS, AC, PC>(
-                        tfbayes_detail::likelihood_rec<AS, AC, PC>(root, observations), *root.outgroup(), observations);
-        }
-        else {
-                return tfbayes_detail::poly_sum<AS, AC, PC>(
-                        tfbayes_detail::likelihood_rec<AS, AC, PC>(root, observations));
-        }
+        return tfbayes_detail::poly_sum<AS, AC, PC>(
+                tfbayes_detail::likelihood_root<AS, AC, PC>(root, observations));
 }
 
 #endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_POLYNOMIAL_HH__ */

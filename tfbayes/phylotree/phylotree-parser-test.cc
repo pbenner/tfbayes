@@ -90,7 +90,8 @@ int main(void) {
         // cout << "Expanded polynomial:" << endl
         //      << result1                << endl;
 
-        polynomial_t<alphabet_size> result2 = pt_polynomial_t<alphabet_size>(pt_root, observations);
+        polynomial_t<alphabet_size> result2 = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                pt_root, observations);
 
         cout << "Direct polynomial:" << endl
              << result2              << endl;
@@ -104,7 +105,8 @@ int main(void) {
              << endl;
 
         double sum = 0;
-        boost::array<double, alphabet_size> exp = pt_posterior_expectation<alphabet_size>(result2, alpha);
+        boost::array<double, alphabet_size> exp = pt_posterior_expectation<alphabet_size>(
+                result2, alpha);
         for (size_t i = 0; i < alphabet_size; i++) {
                 cout << "Expectation " << i << ": " << exp[i] << endl;
                 sum += exp[i];

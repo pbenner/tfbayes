@@ -130,7 +130,8 @@ int main(void)
         alpha[2] = 1;
         alpha[3] = 1;
 
-        polynomial_t<alphabet_size> result = pt_polynomial_t<alphabet_size>(pt_root, observations);
+        polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                pt_root, observations);
         polynomial_t<alphabet_size> approximation;
         polynomial_t<alphabet_size> variational;
 

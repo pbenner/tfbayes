@@ -60,42 +60,25 @@ public:
                 { }
 
         double run(const pt_node_t::nodes_t& nodes) {
-                std::vector<double> sum(nodes.size());
                 double total = 0.0;
 
+                pt_marginal_derivative_t likelihood
+                        = pt_marginal_derivative(_tree_, _alignment_, _alpha_, _thread_pool_);
                 // initialize sum with gradients of the gamma distribution
                 for (pt_node_t::nodes_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
-                        sum[(*it)->id] = _gamma_distribution_.log_gradient((*it)->d);
-                }
-                // loop through the alignment
-                for (typename alignment_map_t<AC>::const_iterator it = _alignment_.begin();
-                     it != _alignment_.end(); it++) {
-                        // compute the likleihood with gradient information
-                        pt_polynomial_derivative_t<AS, PC> likelihood = pt_likelihood_derivative<AS, AC, PC>(_tree_, it->first);
-
-                        double marginal_likelihood = 0.0;
-                        // loop over monomials
-                        for (typename polynomial_t<AS, PC>::const_iterator ut = likelihood.begin();
-                             ut != likelihood.end(); ut++) {
-                                marginal_likelihood += ut->coefficient()*exp(mbeta_log(ut->exponent(), _alpha_));
+                        if ((*it)->root()) {
+                                continue;
                         }
-                        // loop over nodes
-                        for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
-                                const pt_node_t& node = **is;
-                                double result = 0;
-                                // loop over monomials
-                                for (typename polynomial_t<AS, PC>::const_iterator ut = likelihood.derivative()[node.id].begin();
-                                     ut != likelihood.derivative()[node.id].end(); ut++) {
-                                        result += ut->coefficient()*exp(mbeta_log(ut->exponent(), _alpha_));
-                                }
-                                sum[node.id] += it->second*result/marginal_likelihood;
-                        }
+                        likelihood.derivative()[(*it)->id] += _gamma_distribution_.log_gradient((*it)->d);
                 }
                 // apply result
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
                         pt_node_t& node = **is;
+                        if (node.root()) {
+                                continue;
+                        }
                         double step;
-                        if (sum[node.id] > 0) {
+                        if (likelihood.derivative()[node.id] > 0) {
                                 step =  node_epsilon[node.id];
                         }
                         else {
@@ -103,27 +86,27 @@ public:
                         }
                         node.d  = std::max(0.0, node.d+step);
                         total  += std::abs(step);
-                        if (sum_prev[node.id]*sum[node.id] > 0) {
+                        if (sum_prev[node.id]*likelihood.derivative()[node.id] > 0) {
                                 node_epsilon[node.id] *= 1.0+_eta_;
                         }
-                        if (sum_prev[node.id]*sum[node.id] < 0) {
+                        if (sum_prev[node.id]*likelihood.derivative()[node.id] < 0) {
                                 node_epsilon[node.id] *= 1.0-_eta_;
                         }
                 }
-                sum_prev = sum;
+                sum_prev = likelihood.derivative();
 
                 return total;
         }
         void run(size_t max, double stop = 0.0, bool verbose = true) {
-                pt_node_t::nodes_t nodes = _tree_.nodes;
-                for (pt_node_t::nodes_t::const_iterator is = _tree_.nodes.begin();
-                     is != _tree_.nodes.end(); is++) {
+                pt_node_t::nodes_t& nodes = _tree_.nodes;
+                for (pt_node_t::nodes_t::const_iterator is = nodes.begin();
+                     is != nodes.end(); is++) {
                         node_epsilon[(*is)->id] = _epsilon_;
                 }
                 for (size_t i = 0; i < max; i++) {
                         double total = run(nodes);
                         if (verbose) {
-                                std::cout << "total change:  "   << total << std::endl
+                                std::cout << "total change:  "     << total << std::endl
                                           << newick_format(_tree_) << std::endl;
                                 if (total < stop) {
                                         break;
