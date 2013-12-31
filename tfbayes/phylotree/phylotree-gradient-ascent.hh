@@ -76,7 +76,7 @@ public:
                   derivative_prev     (tree.n_nodes-1)
                 { }
 
-        double optimize(const pt_node_t::nodes_t& nodes) {
+        double optimize(const pt_node_t::nodes_t& nodes, bool verbose) {
                 double total = 0.0;
 
                 pt_marginal_derivative_t posterior
@@ -107,6 +107,11 @@ public:
                 // update history
                 _history_.samples.push_back(_tree_);
                 _history_.values .push_back(posterior);
+                if (verbose) {
+                        std::cerr << "total change:  " << total << std::endl
+                                  << "posterior   :  " << static_cast<double&>(posterior)
+                                  << std::endl << std::endl;
+                }
 
                 return total;
         }
@@ -117,11 +122,7 @@ public:
                         node_epsilon[(*is)->id] = _epsilon_;
                 }
                 for (size_t i = 0; i < max; i++) {
-                        double total = optimize(nodes);
-                        if (verbose) {
-                                std::cerr << "total change:  "
-                                          << total << std::endl;
-                        }
+                        double total = optimize(nodes, verbose);
                         if (total < stop) {
                                 break;
                         }
