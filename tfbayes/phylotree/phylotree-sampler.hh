@@ -135,7 +135,7 @@ private:
 // sampling history
 ////////////////////////////////////////////////////////////////////////////////
 
-struct pt_history_t
+struct pt_history_mh_t
 {
         typedef std::list<pt_root_t> samples_t;
         typedef std::vector<double> values_t;
@@ -211,7 +211,7 @@ public:
         virtual double operator()(threaded_rng_t& rng, bool verbose = false) = 0;
 
         // access methods
-        virtual const pt_history_t& history() const = 0;
+        virtual const pt_history_mh_t& history() const = 0;
         virtual const pt_state_t& state() const = 0;
 
         // print status
@@ -370,10 +370,10 @@ public:
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
-        virtual const pt_history_t& history() const {
+        virtual const pt_history_mh_t& history() const {
                 return _history_;
         }
-        virtual pt_history_t& history() {
+        virtual pt_history_mh_t& history() {
                 return _history_;
         }
         virtual const pt_state_t& state() const {
@@ -390,7 +390,7 @@ public:
         }
 protected:
         // sampler history
-        pt_history_t _history_;
+        pt_history_mh_t _history_;
         // state of the sampler
         pt_state_t _state_;
         // a thread pool for computing likelihoods
@@ -500,7 +500,7 @@ public:
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
-        virtual const pt_history_t& history() const {
+        virtual const pt_history_mh_t& history() const {
                 return _population_[0].history();
         }
         virtual const pt_state_t& state() const {
@@ -584,10 +584,10 @@ public:
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
-        virtual const pt_history_t& history() const {
+        virtual const pt_history_mh_t& history() const {
                 return _population_[0].history();
         }
-        virtual const pt_history_t& history(size_t i) const {
+        virtual const pt_history_mh_t& history(size_t i) const {
                 return _population_[i].history();
         }
         virtual const pt_state_t& state() const {

@@ -48,9 +48,29 @@ using namespace std;
 class print_posterior_values {
 public:
         explicit print_posterior_values(const pt_pmcmc_t& mh)
-                : mh(mh) { }
+                : f(boost::bind(&print_posterior_values::print_mh, this, boost::cref(mh), _1))
+                { }
+        template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
+        explicit print_posterior_values(const pt_gradient_ascent_t<AS, AC, PC>& ga)
+                : f(boost::bind(&print_posterior_values::print_ga<AS, AC, PC>, this, boost::cref(ga), _1))
+                { }
 
         std::ostream& operator()(std::ostream& o) const {
+                return f(o);
+        }
+protected:
+        template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
+        std::ostream& print_ga(const pt_gradient_ascent_t<AS, AC, PC>& ga, std::ostream& o) const {
+                size_t line = 0;
+                // print header
+                o << "x y" << endl;
+                for (pt_history_ga_t::values_t::const_iterator it = ga.history().values.begin();
+                     it != ga.history().values.end(); it++) {
+                        o << ++line << " " << *it << endl;
+                }
+                return o;
+        }
+        std::ostream& print_mh(const pt_pmcmc_t& mh, std::ostream& o) const {
                 if (mh.history(0).values.begin() ==
                     mh.history(0).values.end()) {
                         return o;
@@ -63,7 +83,7 @@ public:
                 }
                 o << endl;
                 // print the list such that the order of samples is preserved
-                std::vector<pt_history_t::values_t::const_iterator> it_vec(mh.size());
+                std::vector<pt_history_mh_t::values_t::const_iterator> it_vec(mh.size());
                 for (size_t i = 0; i < mh.size(); i++) {
                         it_vec[i] = mh.history(i).values.begin();
                 }
@@ -79,8 +99,7 @@ public:
                 }
                 return o;
         }
-protected:
-        const pt_pmcmc_t& mh;
+        boost::function<std::ostream& (std::ostream& o)> f;
 };
 
 class print_posterior_samples {
@@ -90,7 +109,7 @@ public:
 
         std::ostream& operator()(std::ostream& o) const {
                 // print the list such that the order of samples is preserved
-                std::vector<pt_history_t::samples_t::const_iterator> it_vec(mh.size());
+                std::vector<pt_history_mh_t::samples_t::const_iterator> it_vec(mh.size());
                 for (size_t i = 0; i < mh.size(); i++) {
                         it_vec[i] = mh.history(i).samples.begin();
                 }
@@ -245,6 +264,22 @@ pt_root_t parse_tree_file(const string& filename)
 // gradient ascent
 ////////////////////////////////////////////////////////////////////////////////
 
+template<typename T>
+void save_posterior_values(const T& t)
+{
+        if (options.save_posterior != "") {
+                ofstream csv(options.save_posterior.c_str());
+                if (!csv.is_open()) {
+                        cerr << "Unable to open file: "
+                             << options.save_posterior
+                             << endl;
+                        exit(EXIT_FAILURE);
+                }
+                csv << print_posterior_values(t) << endl;
+                csv.close();
+        }
+}
+
 void run_gradient_ascent(
         const pt_root_t& pt_root,
         const alignment_map_t<>& alignment_map)
@@ -258,25 +293,29 @@ void run_gradient_ascent(
                 pt_root, alignment_map, options.alpha, gamma_distribution,
                 thread_pool, options.step_size);
         pt_gradient_ascent(options.max_steps, options.min_change);
+        // print posterior values to separate file
+        save_posterior_values(pt_gradient_ascent);
+        // print tree samples
+//        cout << print_posterior_samples(pmcmc);
 }
 
 // sampler
 ////////////////////////////////////////////////////////////////////////////////
 
-void save_posterior_values(const pt_pmcmc_t& pmcmc)
-{
-        if (options.save_posterior != "") {
-                ofstream csv(options.save_posterior.c_str());
-                if (!csv.is_open()) {
-                        cerr << "Unable to open file: "
-                             << options.save_posterior
-                             << endl;
-                        exit(EXIT_FAILURE);
-                }
-                csv << print_posterior_values(pmcmc) << endl;
-                csv.close();
-        }
-}
+// void save_posterior_values(const pt_pmcmc_t& pmcmc)
+// {
+//         if (options.save_posterior != "") {
+//                 ofstream csv(options.save_posterior.c_str());
+//                 if (!csv.is_open()) {
+//                         cerr << "Unable to open file: "
+//                              << options.save_posterior
+//                              << endl;
+//                         exit(EXIT_FAILURE);
+//                 }
+//                 csv << print_posterior_values(pmcmc) << endl;
+//                 csv.close();
+//         }
+// }
 
 void run_mcmc(
         const pt_root_t& pt_root,
