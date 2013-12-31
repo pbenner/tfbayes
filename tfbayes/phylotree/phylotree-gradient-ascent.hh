@@ -65,7 +65,7 @@ public:
                              double epsilon = 0.001,
                              double eta = 0.1)
                 : _history_           (),
-                  _state_             (tree),
+                  _tree_             (tree),
                   _alignment_         (alignment),
                   _thread_pool_       (thread_pool),
                   _alpha_             (alpha.begin(), alpha.end()),
@@ -80,7 +80,7 @@ public:
                 double total = 0.0;
 
                 pt_marginal_derivative_t posterior
-                        = pt_posterior_derivative(_state_.tree(), _alignment_, _alpha_, _gamma_distribution_, _thread_pool_);
+                        = pt_posterior_derivative(_tree_, _alignment_, _alpha_, _gamma_distribution_, _thread_pool_);
                 // apply result
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
                         pt_node_t& node = **is;
@@ -105,13 +105,13 @@ public:
                 }
                 derivative_prev = posterior.derivative();
                 // update history
-                _history_.samples.push_back(_state_);
-                _history_.values .push_back(_state_);
+                _history_.samples.push_back(_tree_);
+                _history_.values .push_back(posterior);
 
                 return total;
         }
         void operator()(size_t max, double stop = 0.0, bool verbose = true) {
-                pt_node_t::nodes_t& nodes = _state_.tree().nodes;
+                pt_node_t::nodes_t& nodes = _tree_.nodes;
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin();
                      is != nodes.end(); is++) {
                         node_epsilon[(*is)->id] = _epsilon_;
@@ -120,7 +120,7 @@ public:
                         double total = optimize(nodes);
                         if (verbose) {
                                 std::cout << "total change:  "     << total << std::endl
-                                          << newick_format(_state_.tree()) << std::endl;
+                                          << newick_format(_tree_) << std::endl;
                                 if (total < stop) {
                                         break;
                                 }
@@ -135,17 +135,11 @@ public:
         pt_history_ga_t& history() {
                 return _history_;
         }
-        const pt_state_t& state() const {
-                return _state_;
-        }
-        pt_state_t& state() {
-                return _state_;
-        }
 protected:
         // sampler history
         pt_history_ga_t _history_;
         // tree and posterior value
-        pt_state_t _state_;
+        pt_root_t _tree_;
         // data
         const alignment_map_t<AC>& _alignment_;
         // a thread pool for computing likelihoods
