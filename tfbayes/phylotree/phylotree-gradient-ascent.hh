@@ -29,7 +29,6 @@
 #include <limits>
 
 #include <tfbayes/phylotree/phylotree-gradient.hh>
-#include <tfbayes/phylotree/phylotree-sampler.hh>
 #include <tfbayes/phylotree/posterior.hh>
 #include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/distribution.hh>
@@ -94,7 +93,7 @@ public:
                         else {
                                 step = -node_epsilon[node.id];
                         }
-                        node.d  = std::max(0.0, node.d+step);
+                        node.d  = std::max(1.0e-20, node.d+step);
                         total  += std::abs(step);
                         if (derivative_prev[node.id]*posterior.derivative()[node.id] > 0) {
                                 node_epsilon[node.id] *= 1.0+_eta_;
