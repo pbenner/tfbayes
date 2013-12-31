@@ -119,11 +119,11 @@ public:
                 for (size_t i = 0; i < max; i++) {
                         double total = optimize(nodes);
                         if (verbose) {
-                                std::cout << "total change:  "     << total << std::endl
-                                          << newick_format(_tree_) << std::endl;
-                                if (total < stop) {
-                                        break;
-                                }
+                                std::cerr << "total change:  "
+                                          << total << std::endl;
+                        }
+                        if (total < stop) {
+                                break;
                         }
                 }
         }
