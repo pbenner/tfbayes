@@ -65,7 +65,7 @@ public:
                              double epsilon = 0.001,
                              double eta = 0.1)
                 : _history_           (),
-                  _tree_             (tree),
+                  _tree_              (tree),
                   _alignment_         (alignment),
                   _thread_pool_       (thread_pool),
                   _alpha_             (alpha.begin(), alpha.end()),
