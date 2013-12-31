@@ -29,7 +29,9 @@
 #include <limits>
 
 #include <tfbayes/phylotree/phylotree-gradient.hh>
+#include <tfbayes/phylotree/posterior.hh>
 #include <tfbayes/uipac/alphabet.hh>
+#include <tfbayes/utility/distribution.hh>
 #include <tfbayes/utility/statistics.hh>
 
 /* This is a gradient ascent method to compute the maximum posterior
@@ -43,8 +45,7 @@ public:
         pt_gradient_ascent_t(const pt_root_t& tree,
                              const alignment_map_t<AC>& alignment,
                              const std::vector<double>& alpha,
-                             double shape,
-                             double scale,
+                             const boost::math::gamma_distribution<>& gamma_distribution,
                              thread_pool_t& thread_pool,
                              double epsilon = 0.001,
                              double eta = 0.1)
@@ -52,7 +53,7 @@ public:
                   _alignment_         (alignment),
                   _thread_pool_       (thread_pool),
                   _alpha_             (alpha.begin(), alpha.end()),
-                  _gamma_distribution_(shape, scale),
+                  _gamma_distribution_(gamma_distribution),
                   _epsilon_           (epsilon),
                   _eta_               (eta),
                   node_epsilon        (tree.n_nodes),
@@ -62,15 +63,8 @@ public:
         double run(const pt_node_t::nodes_t& nodes) {
                 double total = 0.0;
 
-                pt_marginal_derivative_t likelihood
-                        = pt_marginal_derivative(_tree_, _alignment_, _alpha_, _thread_pool_);
-                // initialize sum with gradients of the gamma distribution
-                for (pt_node_t::nodes_t::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
-                        if ((*it)->root()) {
-                                continue;
-                        }
-                        likelihood.derivative()[(*it)->id] += _gamma_distribution_.log_gradient((*it)->d);
-                }
+                pt_marginal_derivative_t posterior
+                        = pt_posterior_derivative(_tree_, _alignment_, _alpha_, _gamma_distribution_, _thread_pool_);
                 // apply result
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
                         pt_node_t& node = **is;
@@ -78,7 +72,7 @@ public:
                                 continue;
                         }
                         double step;
-                        if (likelihood.derivative()[node.id] > 0) {
+                        if (posterior.derivative()[node.id] > 0) {
                                 step =  node_epsilon[node.id];
                         }
                         else {
@@ -86,18 +80,18 @@ public:
                         }
                         node.d  = std::max(0.0, node.d+step);
                         total  += std::abs(step);
-                        if (sum_prev[node.id]*likelihood.derivative()[node.id] > 0) {
+                        if (sum_prev[node.id]*posterior.derivative()[node.id] > 0) {
                                 node_epsilon[node.id] *= 1.0+_eta_;
                         }
-                        if (sum_prev[node.id]*likelihood.derivative()[node.id] < 0) {
+                        if (sum_prev[node.id]*posterior.derivative()[node.id] < 0) {
                                 node_epsilon[node.id] *= 1.0-_eta_;
                         }
                 }
-                sum_prev = likelihood.derivative();
+                sum_prev = posterior.derivative();
 
                 return total;
         }
-        void run(size_t max, double stop = 0.0, bool verbose = true) {
+        void operator()(size_t max, double stop = 0.0, bool verbose = true) {
                 pt_node_t::nodes_t& nodes = _tree_.nodes;
                 for (pt_node_t::nodes_t::const_iterator is = nodes.begin();
                      is != nodes.end(); is++) {
@@ -121,7 +115,7 @@ protected:
         // a thread pool for computing likelihoods
         thread_pool_t& _thread_pool_;
         exponent_t<AS, PC> _alpha_;
-        gamma_distribution_t _gamma_distribution_;
+        boost::math::gamma_distribution<> _gamma_distribution_;
         double _epsilon_;
         double _eta_;
         std::vector<double> node_epsilon;

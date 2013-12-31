@@ -22,41 +22,29 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <gsl/gsl_sf_gamma.h>
-#include <gsl/gsl_randist.h>
+#include <boost/math/distributions/gamma.hpp>
 
-class distribution_t {
-public:
-        virtual double pdf(const double d) const = 0;
-        virtual double sample(const gsl_rng* rng) const = 0;
-        virtual double log_gradient(const double d) const = 0;
-};
+namespace boost { namespace math {
 
-class gamma_distribution_t : public distribution_t {
-public:
-        gamma_distribution_t(const double r, const double lambda)
-                : r(r), r_gamma(gsl_sf_gamma(r)), lambda(lambda),
-                  lambda_pow_r(pow(lambda, r)) { }
+template <class RealType, class Policy>
+inline RealType pdf_derivative(const gamma_distribution<RealType, Policy>& dist, const RealType& x)
+{
+        RealType a = dist.shape();
+        RealType b = dist.scale();
 
-        double pdf(const double d) const {
-                if (d > 0.0) {
-                        return 1.0/lambda_pow_r * 1.0/r_gamma * pow(d, r-1.0) * exp(-d/lambda);
-                }
-                else {
-                        return 0.0;
-                }
-        }
-        double sample(const gsl_rng* rng) const {
-                return gsl_ran_gamma(rng, r, lambda);
-        }
-        double log_gradient(const double d) const {
-                return (r-1.0)/d - 1.0/lambda;
-        }
+        return ((a-1)/x - 1/b)*pdf(dist, x);
+}
 
-        double r;
-        double r_gamma;
-        double lambda;
-        double lambda_pow_r;
-};
+template <class RealType, class Policy>
+inline RealType log_pdf_derivative(const gamma_distribution<RealType, Policy>& dist, const RealType& x)
+{
+        RealType a = dist.shape();
+        RealType b = dist.scale();
+
+        return ((a-1)/x - 1/b);
+}
+
+} // namespace math
+} // namespace boost
 
 #endif /* __TFBAYES_UTILITY_DISTRIBUTION_HH__ */

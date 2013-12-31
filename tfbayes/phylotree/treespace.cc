@@ -537,7 +537,7 @@ parse_pt_node_t(
         leaf_d    [node.outgroup()->id] = node.outgroup()->d;
         leaf_names[node.outgroup()->id] = node.outgroup()->name;
         // recursive calls
-        parse_pt_node_t(node.n_leaves-1, node.left (),  nedge_set, leaf_d, leaf_names);
+        parse_pt_node_t(node.n_leaves-1, node.left (), nedge_set, leaf_d, leaf_names);
         parse_pt_node_t(node.n_leaves-1, node.right(), nedge_set, leaf_d, leaf_names);
 }
 

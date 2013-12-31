@@ -25,11 +25,11 @@
 #include <limits>
 
 #include <boost/array.hpp>
-#include <boost/math/distributions/gamma.hpp>
 
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/uipac/alphabet.hh>
+#include <tfbayes/utility/distribution.hh>
 #include <tfbayes/utility/statistics.hh>
 #include <tfbayes/utility/thread-pool.hh>
 
@@ -37,6 +37,9 @@
  * AC: ALPHABET CODE TYPE
  * PC: POLYNOMIAL CODE TYPE
  */
+
+// posterior distribution of branch lengths given a full alignment
+////////////////////////////////////////////////////////////////////////////////
 
 template <size_t AS, typename AC, typename PC>
 double pt_posterior(
@@ -58,6 +61,35 @@ double pt_posterior(
         }
         return result;
 }
+
+template <size_t AS, typename AC, typename PC>
+pt_marginal_derivative_t
+pt_posterior_derivative(
+        const pt_root_t& tree,
+        const alignment_map_t<AC>& alignment,
+        const exponent_t<AS, PC>& alpha,
+        const boost::math::gamma_distribution<>& gamma_prior,
+        thread_pool_t& thread_pool
+        ) {
+        pt_marginal_derivative_t result = pt_marginal_derivative(tree, alignment, alpha, thread_pool);
+        // prior on branch lengths
+        for (pt_node_t::nodes_t::const_iterator it = tree.nodes.begin();
+             it != tree.nodes.end(); it++) {
+                // skip the root
+                if ((*it)->root()) {
+                        continue;
+                }
+                // posterior value
+                result += std::log(boost::math::pdf(gamma_prior, (*it)->d));
+                // posterior derivative
+                result.derivative()[(*it)->id]
+                        += boost::math::log_pdf_derivative(gamma_prior, (*it)->d);
+        }
+        return result;
+}
+
+// posterior distribution of one column
+////////////////////////////////////////////////////////////////////////////////
 
 template <size_t AS, typename PC>
 boost::array<double, AS> pt_posterior_expectation(

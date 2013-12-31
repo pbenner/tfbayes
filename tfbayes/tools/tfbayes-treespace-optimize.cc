@@ -249,13 +249,15 @@ void run_gradient_ascent(
         const pt_root_t& pt_root,
         const alignment_map_t<>& alignment_map)
 {
+        // prior distribution on branch lengths
+        boost::math::gamma_distribution<> gamma_distribution(options.shape, options.scale);
         // a pool of threads for computing likelihoods
         thread_pool_t thread_pool(options.threads);
 
         pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(
-                pt_root, alignment_map, options.alpha, options.shape,
-                options.scale, thread_pool, options.step_size);
-        pt_gradient_ascent.run(options.max_steps, options.min_change);
+                pt_root, alignment_map, options.alpha, gamma_distribution,
+                thread_pool, options.step_size);
+        pt_gradient_ascent(options.max_steps, options.min_change);
 }
 
 // sampler
