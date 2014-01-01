@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_GRADIENT_HH__
-#define __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_GRADIENT_HH__
+#ifndef __TFBAYES_PHYLOTREE_GRADIENT_GRADIENT_HH__
+#define __TFBAYES_PHYLOTREE_GRADIENT_GRADIENT_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -28,7 +28,7 @@
 #include <algorithm> /* std::min */
 #include <limits>
 
-#include <tfbayes/phylotree/phylotree-gradient.hh>
+#include <tfbayes/phylotree/gradient.hh>
 #include <tfbayes/phylotree/posterior.hh>
 #include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/distribution.hh>
@@ -154,4 +154,4 @@ protected:
         std::vector<double> derivative_prev;
 };
 
-#endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_GRADIENT_HH__ */
+#endif /* __TFBAYES_PHYLOTREE_GRADIENT_GRADIENT_HH__ */

@@ -29,7 +29,7 @@
 #include <sys/time.h>
 
 #include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/phylotree-parser.hh>
+#include <tfbayes/phylotree/parser.hh>
 #include <tfbayes/phylotree/treespace.hh>
 
 #include <boost/unordered/unordered_map.hpp>

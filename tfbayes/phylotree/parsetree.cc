@@ -22,9 +22,8 @@
 
 #include <boost/format.hpp>
 
-#include <tfbayes/phylotree/phylotree-parser.h>
-#include <tfbayes/phylotree/phylotree-parser.hh>
-#include <tfbayes/phylotree/phylotree-parsetree.hh>
+#include <tfbayes/phylotree/parser.hh>
+#include <tfbayes/phylotree/parsetree.hh>
 
 using namespace std;
 

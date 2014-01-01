@@ -29,7 +29,7 @@
 
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/phylotree-approximation.hh>
+#include <tfbayes/phylotree/approximation.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/phylotree/utility.hh>
 #include <tfbayes/interface/exceptions.hh>
@@ -130,7 +130,7 @@ std::matrix<double> approximate(
 
         for (size_t i = 0; i < alignment.length(); i++) {
                 // compute the polynomial
-                polynomial_t<AS, PC> poly = pt_polynomial_t<AS, AC, PC>(tree, alignment[i]);
+                polynomial_t<AS, PC> poly = pt_likelihood<AS, AC, PC>(tree, alignment[i]);
                 polynomial_t<AS, PC> variational
                         = dkl_approximate<AS, PC>(poly);
 

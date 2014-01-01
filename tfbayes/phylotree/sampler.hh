@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __TFBAYES_PHYLOTREE_PHYLOTREE_SAMPLER_HH__
-#define __TFBAYES_PHYLOTREE_PHYLOTREE_SAMPLER_HH__
+#ifndef __TFBAYES_PHYLOTREE_SAMPLER_HH__
+#define __TFBAYES_PHYLOTREE_SAMPLER_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -40,7 +40,7 @@
 
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/phylotree-polynomial.hh>
+#include <tfbayes/phylotree/polynomial.hh>
 #include <tfbayes/phylotree/posterior.hh>
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/utility/polynomial.hh>
@@ -603,4 +603,4 @@ protected:
         boost::ptr_vector<pt_sampler_t> _population_;
 };
 
-#endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_SAMPLER_HH__ */
+#endif /* __TFBAYES_PHYLOTREE_SAMPLER_HH__ */

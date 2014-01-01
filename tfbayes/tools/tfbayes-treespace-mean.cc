@@ -27,7 +27,7 @@
 #include <glpk.h>
 
 #include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/phylotree-parser.hh>
+#include <tfbayes/phylotree/parser.hh>
 #include <tfbayes/phylotree/treespace.hh>
 #include <tfbayes/utility/progress.hh>
 

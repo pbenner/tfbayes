@@ -21,8 +21,8 @@
 
 #include <iostream>
 
-#include <tfbayes/phylotree/phylotree-expand.hh>
-#include <tfbayes/phylotree/phylotree-simplify.hh>
+#include <tfbayes/phylotree/expand.hh>
+#include <tfbayes/phylotree/simplify.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/phylotree/utility.hh>
 

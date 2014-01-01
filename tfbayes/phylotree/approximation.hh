@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __TFBAYES_PHYLOTREE_PHYLOTREE_APPROXIMATION_HH__
-#define __TFBAYES_PHYLOTREE_PHYLOTREE_APPROXIMATION_HH__
+#ifndef __TFBAYES_PHYLOTREE_APPROXIMATION_HH__
+#define __TFBAYES_PHYLOTREE_APPROXIMATION_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -32,7 +32,7 @@
 #include <gsl/gsl_sf_psi.h>
 
 #include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/phylotree-polynomial.hh>
+#include <tfbayes/phylotree/polynomial.hh>
 #include <tfbayes/phylotree/posterior.hh>
 
 /* AS: ALPHABET SIZE
@@ -415,4 +415,4 @@ dkl_optimize(
         return result;
 }
 
-#endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_APPROXIMATION_HH__ */
+#endif /* __TFBAYES_PHYLOTREE_APPROXIMATION_HH__ */

@@ -47,11 +47,11 @@ using namespace std;
 #include <gsl/gsl_monte_vegas.h>
 #include <gsl/gsl_sf_psi.h>
 
-#include <tfbayes/utility/distribution.hh>
+#include <boost/math/distributions/gamma.hpp>
 
 struct gamma_marginal_data {
         const data_tfbs_t::code_t& counts;
-        const gamma_distribution_t distribution;
+        const boost::math::gamma_distribution<> distribution;
 };
 
 double
@@ -68,7 +68,7 @@ gamma_marginal_f(double * x, size_t dim, void * params)
 
         /* multiply with gamma distribution */
         for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
-                result *= data->distribution.pdf(x[i]);
+                result *= boost::math::pdf(data->distribution, x[i]);
         }
         return result;
 }
@@ -92,7 +92,7 @@ gamma_marginal(
         gsl_monte_function F;
 
         struct gamma_marginal_data data = {
-                counts, gamma_distribution_t(k, g)
+                counts, boost::math::gamma_distribution<>(k, g)
         };
 
         for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {

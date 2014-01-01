@@ -18,7 +18,7 @@
 #include <cstdio>
 
 #include <tfbayes/phylotree/treespace.hh>
-#include <tfbayes/phylotree/phylotree-parser.hh>
+#include <tfbayes/phylotree/parser.hh>
 
 #include <glpk.h>
 

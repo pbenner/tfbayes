@@ -15,15 +15,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __TFBAYES_PHYLOTREE_PHYLOTREE_SIMPLE_POLYNOMIAL_HH__
-#define __TFBAYES_PHYLOTREE_PHYLOTREE_SIMPLE_POLYNOMIAL_HH__
+#ifndef __TFBAYES_PHYLOTREE_SIMPLE_POLYNOMIAL_HH__
+#define __TFBAYES_PHYLOTREE_SIMPLE_POLYNOMIAL_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
 #include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/phylotree-expand.hh>
+#include <tfbayes/phylotree/expand.hh>
 #include <tfbayes/utility/polynomial.hh>
 
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
@@ -107,4 +107,4 @@ protected:
         }
 };
 
-#endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_SIMPLE_POLYNOMIAL_HH__ */
+#endif /* __TFBAYES_PHYLOTREE_SIMPLE_POLYNOMIAL_HH__ */

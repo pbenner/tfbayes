@@ -21,7 +21,7 @@
 
 #include <iostream>
 
-#include <tfbayes/phylotree/phylotree-simplify.hh>
+#include <tfbayes/phylotree/simplify.hh>
 
 using namespace std;
 

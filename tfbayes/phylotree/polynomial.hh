@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __TFBAYES_PHYLOTREE_PHYLOTREE_POLYNOMIAL_HH__
-#define __TFBAYES_PHYLOTREE_PHYLOTREE_POLYNOMIAL_HH__
+#ifndef __TFBAYES_PHYLOTREE_POLYNOMIAL_HH__
+#define __TFBAYES_PHYLOTREE_POLYNOMIAL_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -162,4 +162,4 @@ pt_likelihood(const pt_root_t& root, const std::vector<AC>& observations) {
                 tfbayes_detail::likelihood_root<AS, AC, PC>(root, observations));
 }
 
-#endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_POLYNOMIAL_HH__ */
+#endif /* __TFBAYES_PHYLOTREE_POLYNOMIAL_HH__ */

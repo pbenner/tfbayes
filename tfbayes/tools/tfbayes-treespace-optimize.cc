@@ -29,10 +29,10 @@
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/fastarithmetics/fast-lnbeta.hh>
 #include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/phylotree-parser.hh>
-#include <tfbayes/phylotree/phylotree-sampler.hh>
-#include <tfbayes/phylotree/phylotree-gradient.hh>
-#include <tfbayes/phylotree/phylotree-gradient-ascent.hh>
+#include <tfbayes/phylotree/parser.hh>
+#include <tfbayes/phylotree/sampler.hh>
+#include <tfbayes/phylotree/gradient.hh>
+#include <tfbayes/phylotree/gradient-ascent.hh>
 #include <tfbayes/utility/random.hh>
 #include <tfbayes/utility/strtools.hh>
 

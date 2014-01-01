@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_HH__
-#define __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_HH__
+#ifndef __TFBAYES_PHYLOTREE_GRADIENT_HH__
+#define __TFBAYES_PHYLOTREE_GRADIENT_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -341,4 +341,4 @@ pt_likelihood_derivative(const pt_root_t& root, const std::vector<AC>& observati
         return likelihood;
 }
 
-#endif /* __TFBAYES_PHYLOTREE_PHYLOTREE_GRADIENT_HH__ */
+#endif /* __TFBAYES_PHYLOTREE_GRADIENT_HH__ */

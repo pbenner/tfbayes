@@ -17,7 +17,7 @@
 
 #include <iostream>
 
-#include <tfbayes/phylotree/phylotree-parsetree.hh>
+#include <tfbayes/phylotree/parsetree.hh>
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/alignment/sequence.hh>
 

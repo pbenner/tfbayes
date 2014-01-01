@@ -29,12 +29,12 @@
 #include <boost/unordered_map.hpp>
 
 #include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/phylotree-parser.hh>
-#include <tfbayes/phylotree/phylotree-polynomial.hh>
-#include <tfbayes/phylotree/phylotree-gradient.hh>
-#include <tfbayes/phylotree/phylotree-simplify.hh>
-#include <tfbayes/phylotree/phylotree-expand.hh>
-#include <tfbayes/phylotree/phylotree-approximation.hh>
+#include <tfbayes/phylotree/parser.hh>
+#include <tfbayes/phylotree/polynomial.hh>
+#include <tfbayes/phylotree/gradient.hh>
+#include <tfbayes/phylotree/simplify.hh>
+#include <tfbayes/phylotree/expand.hh>
+#include <tfbayes/phylotree/approximation.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/phylotree/posterior.hh>
 #include <tfbayes/phylotree/utility.hh>

@@ -23,7 +23,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <tfbayes/phylotree/phylotree-parsetree.hh>
+#include <tfbayes/phylotree/parsetree.hh>
 #define YYSTYPE pt_parsetree_t *
 #define YYLEX_PARAM context->scanner
 }
@@ -35,7 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <tfbayes/phylotree/phylotree-parser.h>
+#include <tfbayes/phylotree/parser.hh>
 
 typedef void* yyscan_t;
 char *yyget_text (yyscan_t scanner);

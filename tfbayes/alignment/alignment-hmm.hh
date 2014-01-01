@@ -26,8 +26,8 @@
 
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/phylotree-parser.hh>
-#include <tfbayes/phylotree/phylotree-polynomial.hh>
+#include <tfbayes/phylotree/parser.hh>
+#include <tfbayes/phylotree/polynomial.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/linalg.hh>

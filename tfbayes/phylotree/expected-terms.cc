@@ -24,8 +24,8 @@
 
 #include <sys/time.h>
 
-#include <tfbayes/phylotree/phylotree-polynomial.hh>
-#include <tfbayes/phylotree/phylotree-simple-polynomial.hh>
+#include <tfbayes/phylotree/polynomial.hh>
+#include <tfbayes/phylotree/simple-polynomial.hh>
 #include <tfbayes/phylotree/utility.hh>
 #include <tfbayes/uipac/alphabet.hh>
 

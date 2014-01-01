@@ -30,8 +30,8 @@
 #include <boost/random/mersenne_twister.hpp>
 
 #include <tfbayes/alignment/alignment.hh>
-#include <tfbayes/phylotree/phylotree-parser.hh>
-#include <tfbayes/phylotree/phylotree-generate-observations.hh>
+#include <tfbayes/phylotree/parser.hh>
+#include <tfbayes/phylotree/generate-observations.hh>
 #include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/strtools.hh>
 

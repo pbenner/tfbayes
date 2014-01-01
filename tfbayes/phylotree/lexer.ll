@@ -25,7 +25,7 @@
 
 %{
 #include <stdio.h>
-#include <tfbayes/phylotree/phylotree-parser.h>
+#include <tfbayes/phylotree/parser.hh>
 
 #define YY_USER_ACTION \
 	yylloc->first_line   = yylloc->last_line = yylineno; \

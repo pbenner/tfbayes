@@ -21,7 +21,7 @@
 
 #include <iostream>
 
-#include <tfbayes/phylotree/phylotree-polynomial.hh>
+#include <tfbayes/phylotree/polynomial.hh>
 #include <tfbayes/phylotree/utility.hh>
 
 using namespace std;

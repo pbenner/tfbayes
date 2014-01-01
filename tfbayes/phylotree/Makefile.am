@@ -6,11 +6,11 @@ AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 ## flex/bison
 LEX  = flex
 YACC = bison -y
-BUILT_SOURCES = phylotree-parser.h
+BUILT_SOURCES = parser.hh
 AM_YFLAGS = -d
 AM_LFLAGS = -o$(LEX_OUTPUT_ROOT).c
 
-noinst_PROGRAMS = polynomial-test phylotree-test phylotree-expected-terms phylotree-parser-test phylotree-approximation-test likelihood-test likelihood-prime-test marginal-likelihood-test treespace-test treespace-distance
+noinst_PROGRAMS = polynomial-test phylotree-test expected-terms parser-test approximation-test likelihood-test likelihood-prime-test marginal-likelihood-test treespace-test treespace-distance
 
 polynomial_test_SOURCES = polynomial-test.cc
 polynomial_test_LDADD   = -lm
@@ -19,19 +19,19 @@ phylotree_test_SOURCES = phylotree-test.cc
 phylotree_test_LDADD   = -lm
 phylotree_test_LDADD  += libtfbayes-phylotree.la
 
-phylotree_expected_terms_SOURCES = phylotree-expected-terms.cc
-phylotree_expected_terms_LDADD   = -lm
-phylotree_expected_terms_LDADD  += libtfbayes-phylotree.la
+expected_terms_SOURCES = expected-terms.cc
+expected_terms_LDADD   = -lm
+expected_terms_LDADD  += libtfbayes-phylotree.la
 
-phylotree_parser_test_SOURCES = phylotree-parser-test.cc
-phylotree_parser_test_LDADD   = -lm
-phylotree_parser_test_LDADD  += libtfbayes-phylotree.la
-phylotree_parser_test_LDADD  += $(BOOST_SYSTEM_LIB)
+parser_test_SOURCES = parser-test.cc
+parser_test_LDADD   = -lm
+parser_test_LDADD  += libtfbayes-phylotree.la
+parser_test_LDADD  += $(BOOST_SYSTEM_LIB)
 
-phylotree_approximation_test_SOURCES = phylotree-approximation-test.cc
-phylotree_approximation_test_LDADD   = -lm
-phylotree_approximation_test_LDADD  += libtfbayes-phylotree.la
-phylotree_approximation_test_LDADD  += $(BOOST_SYSTEM_LIB)
+approximation_test_SOURCES = approximation-test.cc
+approximation_test_LDADD   = -lm
+approximation_test_LDADD  += libtfbayes-phylotree.la
+approximation_test_LDADD  += $(BOOST_SYSTEM_LIB)
 
 likelihood_test_SOURCES = likelihood-test.cc
 likelihood_test_LDADD   = -lm
@@ -61,22 +61,21 @@ libtfbayes_phylotree_la_SOURCES = \
 	leafset.hh \
 	phylotree.cc \
 	phylotree.hh \
-	phylotree-approximation.hh \
-	phylotree-expand.hh \
-	phylotree-generate-observations.hh \
-	phylotree-gradient.hh \
-	phylotree-gradient-ascent.hh \
-	phylotree-polynomial.hh \
-	phylotree-sampler.hh \
-	phylotree-lexer.ll \
-	phylotree-parser.h \
-	phylotree-parser.hh \
-	phylotree-parser.yy \
-	phylotree-parsetree.cc \
-	phylotree-parsetree.hh \
-	phylotree-simple-polynomial.hh \
-	phylotree-simplify.cc \
-	phylotree-simplify.hh \
+	approximation.hh \
+	expand.hh \
+	generate-observations.hh \
+	gradient.hh \
+	gradient-ascent.hh \
+	polynomial.hh \
+	sampler.hh \
+	lexer.ll \
+	parser.hh \
+	parser.yy \
+	parsetree.cc \
+	parsetree.hh \
+	simple-polynomial.hh \
+	simplify.cc \
+	simplify.hh \
 	posterior.hh \
 	incomplete-expression.cc \
 	incomplete-expression.hh \

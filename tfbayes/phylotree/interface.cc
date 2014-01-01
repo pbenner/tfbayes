@@ -27,7 +27,7 @@
 #include <boost/python/iterator.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-#include <tfbayes/phylotree/phylotree-parser.h>
+#include <tfbayes/phylotree/parser.hh>
 #include <tfbayes/interface/exceptions.hh>
 #include <tfbayes/interface/utility.hh>
 
