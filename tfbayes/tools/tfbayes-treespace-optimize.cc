@@ -297,6 +297,10 @@ void save_posterior_values(const T& t)
 // gradient ascent
 ////////////////////////////////////////////////////////////////////////////////
 
+// this gradient ascent algorithm is only ment for testing derivative
+// computations, a more powerful algorithm for computing MAP solutions
+// was developed by Felsenstein (i.e. a coordinate ascent algorithm)
+
 void run_gradient_ascent(
         const pt_root_t& pt_root,
         const alignment_map_t<>& alignment_map)
