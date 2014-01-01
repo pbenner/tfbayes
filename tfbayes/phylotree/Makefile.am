@@ -10,7 +10,7 @@ BUILT_SOURCES = parser.hh
 AM_YFLAGS = -d
 AM_LFLAGS = -o$(LEX_OUTPUT_ROOT).c
 
-noinst_PROGRAMS = polynomial-test phylotree-test expected-terms parser-test approximation-test likelihood-test likelihood-prime-test marginal-likelihood-test treespace-test treespace-distance
+noinst_PROGRAMS = polynomial-test phylotree-test expected-terms parser-test approximation-test likelihood-test marginal-likelihood-test treespace-test treespace-distance
 
 polynomial_test_SOURCES = polynomial-test.cc
 polynomial_test_LDADD   = -lm
@@ -37,10 +37,6 @@ likelihood_test_SOURCES = likelihood-test.cc
 likelihood_test_LDADD   = -lm
 likelihood_test_LDADD  += libtfbayes-phylotree.la
 
-likelihood_prime_test_SOURCES = likelihood-prime-test.cc
-likelihood_prime_test_LDADD   = -lm
-likelihood_prime_test_LDADD  += libtfbayes-phylotree.la
-
 marginal_likelihood_test_SOURCES = marginal-likelihood-test.cc
 marginal_likelihood_test_LDADD   = -lm
 marginal_likelihood_test_LDADD  += libtfbayes-phylotree.la
@@ -57,12 +53,9 @@ treespace_distance_LDADD  += libtfbayes-phylotree.la
 lib_LTLIBRARIES = libtfbayes-phylotree.la
 
 libtfbayes_phylotree_la_SOURCES = \
-	leafset.cc \
-	leafset.hh \
 	phylotree.cc \
 	phylotree.hh \
 	approximation.hh \
-	expand.hh \
 	generate-observations.hh \
 	gradient.hh \
 	gradient-ascent.hh \
@@ -74,11 +67,7 @@ libtfbayes_phylotree_la_SOURCES = \
 	parsetree.cc \
 	parsetree.hh \
 	simple-polynomial.hh \
-	simplify.cc \
-	simplify.hh \
 	posterior.hh \
-	incomplete-expression.cc \
-	incomplete-expression.hh \
 	marginal-likelihood.hh \
 	utility.hh \
 	treespace.cc \

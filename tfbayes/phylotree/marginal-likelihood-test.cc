@@ -21,8 +21,6 @@
 
 #include <iostream>
 
-#include <tfbayes/phylotree/expand.hh>
-#include <tfbayes/phylotree/simplify.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/phylotree/utility.hh>
 
@@ -39,10 +37,7 @@ void test_tree1(const exponent_t<alphabet_size> alpha) {
         observations[n1("n2")->id] = 1;
         observations[n1("n3")->id] = 2;
 
-        incomplete_expression_t incomplete_expression = pt_simplify(n1);
-        polynomial_t<alphabet_size> polynomial = pt_expand_t<alphabet_size>(incomplete_expression, observations);
-        //double result = pt_marginal_likelihood<alphabet_size>(n1, alpha);
-        double result = pt_marginal_likelihood<alphabet_size>(polynomial, alpha);
+        double result = pt_marginal_likelihood(n1, observations, alpha);
         cout << result << endl
              << "-3.0468 (correct value)"
              << endl << endl;
@@ -57,7 +52,7 @@ void test_tree2(const exponent_t<alphabet_size> alpha) {
         observations[n1("n2")->id] = 1;
         observations[n1("n3")->id] = 1;
 
-        double result = pt_marginal_likelihood<alphabet_size>(n1, observations, alpha);
+        double result = pt_marginal_likelihood(n1, observations, alpha);
         cout << result << endl
              << "-2.23056 (correct value)"
              << endl << endl;
@@ -75,7 +70,7 @@ void test_tree3(const exponent_t<alphabet_size> alpha) {
         observations[n1("n4")->id] = 1;
         observations[n1("n3")->id] = 2;
 
-        double result = pt_marginal_likelihood<alphabet_size>(n1, observations, alpha);
+        double result = pt_marginal_likelihood(n1, observations, alpha);
         cout << result << endl
              << "-4.11845 (correct value)"
              << endl << endl;
@@ -96,7 +91,7 @@ void test_tree4(const exponent_t<alphabet_size> alpha) {
         observations[n1("n5")->id] = 1;
         observations[n1("n4")->id] = 1;
 
-        double result = pt_marginal_likelihood<alphabet_size>(n1, observations, alpha);
+        double result = pt_marginal_likelihood(n1, observations, alpha);
         cout << result << endl
              << "-3.41318 (correct value)"
              << endl << endl;
@@ -117,7 +112,7 @@ void test_tree5(const exponent_t<alphabet_size> alpha) {
         observations[n1("n5")->id] = 2;
         observations[n1("n4")->id] = 3;
 
-        double result = pt_marginal_likelihood<alphabet_size>(n1, observations, alpha);
+        double result = pt_marginal_likelihood(n1, observations, alpha);
         cout << result << endl
              << "-6.05774 (correct value)"
              << endl << endl;
@@ -141,7 +136,7 @@ void test_tree6(const exponent_t<alphabet_size> alpha) {
         observations[n1("n6")->id] = 0;
         observations[n1("n3")->id] = 0;
 
-        double result = pt_marginal_likelihood<alphabet_size>(n1, observations, alpha);
+        double result = pt_marginal_likelihood(n1, observations, alpha);
         cout << result << endl
              << "-8.1197 (correct value)"
              << endl << endl;

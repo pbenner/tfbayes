@@ -22,8 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <tfbayes/phylotree/model.hh>
 #include <tfbayes/phylotree/phylotree.hh>
-#include <tfbayes/phylotree/expand.hh>
 #include <tfbayes/utility/polynomial.hh>
 
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
