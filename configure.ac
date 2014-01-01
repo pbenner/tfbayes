@@ -23,8 +23,9 @@ AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 AC_CONFIG_SRCDIR([auxtools/compile])
-dnl we have a README.md instead of a README
-AM_INIT_AUTOMAKE([gnu dist-bzip2 foreign])
+dnl we have a README.md instead of a README (foreign)
+dnl and we require automake >= 1.12 for bison
+AM_INIT_AUTOMAKE([gnu dist-bzip2 foreign 1.12])
 dnl find c++ compiler but
 dnl turn of AC_PROG_CC's default behaviour
 : ${CXXFLAGS=""}
