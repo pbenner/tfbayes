@@ -209,7 +209,7 @@ pt_marginal_derivative(
                 result += futures[i].get();
         }
         // derivatives
-        for (ssize_t i = 0; i < result.d(); i++) {
+        for (size_t i = 0; i < result.d(); i++) {
                 for (size_t j = 0; j < futures.size(); j++) {
                         result.derivative()[i] += futures[j].get().derivative()[i];
                 }
