@@ -60,8 +60,8 @@ public:
 
         virtual pt_node_t& operator=(const pt_node_t& pt_node);
 
-        bool leaf() const;
-        bool root() const;
+        virtual bool leaf() const;
+        virtual bool root() const;
 
         const pt_node_t& left () const {
                 return *_left;
@@ -129,6 +129,9 @@ public:
 
         using pt_node_t::operator=;
 
+        virtual bool leaf() const;
+        virtual bool root() const;
+
         virtual void create_mappings(leaf_map_t& leaf_map, leaves_t& leaves,
                                      node_map_t& node_map, nodes_t& nodes);
 
@@ -158,6 +161,9 @@ public:
         friend void swap(pt_root_t& first, pt_root_t&second);
 
         pt_root_t& operator=(const pt_root_t& pt_root);
+
+        virtual bool leaf() const;
+        virtual bool root() const;
 
         id_t get_node_id(const std::string& taxon) const;
         id_t get_leaf_id(const std::string& taxon) const;

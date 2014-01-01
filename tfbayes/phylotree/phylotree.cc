@@ -41,7 +41,9 @@ pt_node_t::pt_node_t(double d,
 {
         assert ((left && right) || (!left && !right));
 
-        if (leaf()) {
+        // don't use leaf() here since virtual dispatch doesn't work
+        // in constructors!
+        if (_left == NULL || _right == NULL) {
                 n_leaves = 1;
                 n_nodes  = 1;
         }
@@ -119,13 +121,13 @@ pt_node_t::operator=(const pt_node_t& pt_node)
 bool
 pt_node_t::leaf() const
 {
-        return _left == NULL && _right == NULL;
+        return false;
 }
 
 bool
 pt_node_t::root() const
 {
-        return _ancestor == NULL;
+        return false;
 }
 
 double
@@ -263,6 +265,18 @@ pt_leaf_t::clone() const
         return new pt_leaf_t(*this);
 }
 
+bool
+pt_leaf_t::leaf() const
+{
+        return true;
+}
+
+bool
+pt_leaf_t::root() const
+{
+        return false;
+}
+
 void
 pt_leaf_t::create_mappings(leaf_map_t& leaf_map, leaves_t& leaves,
                            node_map_t& node_map, nodes_t& nodes)
@@ -386,6 +400,18 @@ pt_root_t::operator=(const pt_root_t& pt_root)
         pt_root_t tmp(pt_root);
         swap(*this, tmp);
         return *this;
+}
+
+bool
+pt_root_t::leaf() const
+{
+        return false;
+}
+
+bool
+pt_root_t::root() const
+{
+        return true;
 }
 
 pt_root_t::id_t
