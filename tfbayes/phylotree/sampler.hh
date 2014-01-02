@@ -22,12 +22,12 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <list>
-#include <vector>
-#include <cmath>
 #include <algorithm> /* std::min */
+#include <cmath>
 #include <iomanip>
-#include <limits>
+#include <list>
+#include <numeric>
+#include <vector>
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/bernoulli_distribution.hpp>
@@ -228,6 +228,15 @@ template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
 class pt_hamiltonian_t : public pt_sampler_t
 {
         typedef std::vector<double> vector_t;
+
+        template<typename T>
+        struct square
+        {
+                T operator()(const T& Left, const T& Right) const {   
+                        return (Left + Right*Right);
+                }
+        };
+
 public:
         typedef boost::math::gamma_distribution<> gamma_distribution_t;
 
@@ -288,16 +297,16 @@ public:
         pt_marginal_derivative_t log_posterior_derivative(const pt_root_t& tree) {
                 return pt_posterior_derivative<AS, AC, PC>(tree, _alignment_, _alpha_, _gamma_distribution_, _thread_pool_);
         }
-        void momentum_step(vector_t& p, pt_root_t& q, double e) {
+        void momentum_step(vector_t& p, pt_root_t& q, double epsilon) {
                 // current posterior value and derivative
                 pt_marginal_derivative_t U = log_posterior_derivative(q);
                 for (size_t i = 0; i < p.size(); i++) {
-                        p[i] = p[i] - e*U.derivative()[i];
+                        p[i] = p[i] - epsilon*U.derivative()[i];
                 }
         }
-        void position_step(vector_t& p, pt_root_t& q, double e) {
+        void position_step(vector_t& p, pt_root_t& q, double epsilon) {
                 for (size_t i = 0; i < p.size(); i++) {
-                        q[i]->d = q[i]->d + e*p[i];
+                        q[i]->d = std::max(1.0e-20, q[i]->d + epsilon*p[i]);
                 }
         }
         void leapfrog(size_t n, vector_t& p, pt_root_t& q) {
@@ -309,14 +318,21 @@ public:
                         position_step(p, q, _epsilon_);
                         momentum_step(p, q, _epsilon_);
                 }
+                // full step for position
+                position_step(p, q, _epsilon_);
                 // half step for momentum
                 momentum_step(p, q, _epsilon_/2.0);
         }
         void sample_length(threaded_rng_t& rng) {
                 size_t n = _state_.tree().n_nodes-1;
+                // distributions for drawing random numbers
+                boost::random::uniform_01<> uniform;
                 // state
                 vector_t  p(n);
                 pt_root_t q(_state_);
+                // current posterior values
+                double current_U = _state_;
+                double current_K = std::accumulate(p.begin(), p.end(), square<double>())/2.0;
                 // sample a new momentum
                 boost::normal_distribution<> nd(0.0, 1.0);
                 for (size_t i = 0; i < n; i++) {
@@ -324,7 +340,20 @@ public:
                 }
                 // simulate Hamiltonian dynamics
                 leapfrog(3, p, q);
-                
+                // Metropolis-Hastings acceptance probability
+                double proposed_U = log_posterior(q);
+                double proposed_K = std::accumulate(p.begin(), p.end(), square<double>())/2.0;
+                double rho = std::exp(current_U - proposed_U + current_K - proposed_K);
+                if (uniform(rng) < rho) {
+                        // accept proposal
+                        _state_ = q;
+                        _state_ = proposed_U;
+                        _history_.accepted_lengths++;
+                }
+                // update history
+                _history_.samples.push_back(_state_);
+                _history_.values .push_back(_state_);
+                _history_.steps_length++;
         }
         void sample_topology(pt_node_t& node, threaded_rng_t& rng) {
                 // can't sample leafs
