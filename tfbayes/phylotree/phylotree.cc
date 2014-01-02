@@ -434,32 +434,32 @@ pt_root_t::get_leaf_id(const std::string& taxon) const
         return -1;
 }
 
-optional<pt_leaf_t&>
-pt_root_t::operator()(const std::string& taxon)
+optional<pt_node_t&>
+pt_root_t::operator[](const std::string& taxon)
 {
-        leaf_map_t::iterator it = leaf_map.find(taxon);
-        if (it != leaf_map.end()) {
+        node_map_t::iterator it = node_map.find(taxon);
+        if (it != node_map.end()) {
                 return *it->second;
         }
-        return optional<pt_leaf_t&>();
+        return optional<pt_node_t&>();
 }
 
-optional<const pt_leaf_t&>
-pt_root_t::operator()(const std::string& taxon) const
+optional<const pt_node_t&>
+pt_root_t::operator[](const std::string& taxon) const
 {
-        return operator()(taxon);
+        return operator[](taxon);
 }
 
-optional<pt_leaf_t&>
-pt_root_t::operator()(id_t id)
+optional<pt_node_t&>
+pt_root_t::operator[](id_t id)
 {
-        return *leaves[id];
+        return *nodes[id];
 }
 
-optional<const pt_leaf_t&>
-pt_root_t::operator()(id_t id) const
+optional<const pt_node_t&>
+pt_root_t::operator[](id_t id) const
 {
-        return operator()(id);
+        return operator[](id);
 }
 
 void

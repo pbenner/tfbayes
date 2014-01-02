@@ -75,13 +75,14 @@ public:
                   derivative_prev     (tree.n_nodes-1)
                 { }
 
-        double optimize(const pt_node_t::nodes_t& nodes, bool verbose) {
+        double optimize(bool verbose) {
                 double total = 0.0;
 
                 pt_marginal_derivative_t posterior
                         = pt_posterior_derivative(_tree_, _alignment_, _alpha_, _gamma_distribution_, _thread_pool_);
                 // apply result
-                for (pt_node_t::nodes_t::const_iterator is = nodes.begin(); is != nodes.end(); is++) {
+                for (pt_node_t::nodes_t::const_iterator is = _tree_.begin_nodes();
+                     is != _tree_.end_nodes(); is++) {
                         pt_node_t& node = **is;
                         if (node.root()) {
                                 continue;
@@ -115,13 +116,12 @@ public:
                 return total;
         }
         void operator()(size_t max, double stop = 0.0, bool verbose = true) {
-                pt_node_t::nodes_t& nodes = _tree_.nodes;
-                for (pt_node_t::nodes_t::const_iterator is = nodes.begin();
-                     is != nodes.end(); is++) {
+                for (pt_node_t::nodes_t::const_iterator is = _tree_.begin_nodes();
+                     is != _tree_.end_nodes(); is++) {
                         node_epsilon[(*is)->id] = _epsilon_;
                 }
                 for (size_t i = 0; i < max; i++) {
-                        double total = optimize(nodes, verbose);
+                        double total = optimize(verbose);
                         if (total < stop) {
                                 break;
                         }

@@ -51,8 +51,8 @@ double pt_posterior(
         ) {
         double result = pt_marginal_likelihood(tree, alignment, alpha, thread_pool);
         // prior on branch lengths
-        for (pt_node_t::nodes_t::const_iterator it = tree.nodes.begin();
-             it != tree.nodes.end(); it++) {
+        for (pt_node_t::nodes_t::const_iterator it = tree.begin_nodes();
+             it != tree.end_nodes(); it++) {
                 // skip the root
                 if ((*it)->root()) {
                         continue;
@@ -73,8 +73,8 @@ pt_posterior_derivative(
         ) {
         pt_marginal_derivative_t result = pt_marginal_derivative(tree, alignment, alpha, thread_pool);
         // prior on branch lengths
-        for (pt_node_t::nodes_t::const_iterator it = tree.nodes.begin();
-             it != tree.nodes.end(); it++) {
+        for (pt_node_t::nodes_t::const_iterator it = tree.begin_nodes();
+             it != tree.end_nodes(); it++) {
                 // skip the root
                 if ((*it)->root()) {
                         continue;

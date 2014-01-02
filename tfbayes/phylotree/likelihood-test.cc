@@ -34,8 +34,8 @@ void test_tree1() {
         pt_leaf_t* n3 = new pt_leaf_t(2.0, "n3");
         pt_root_t n1(n2, n3);
         vector<alphabet_code_t> observations(n1.n_leaves, 0);
-        observations[n1("n2")->id] = 1;
-        observations[n1("n3")->id] = 2;
+        observations[n1["n2"]->id] = 1;
+        observations[n1["n3"]->id] = 2;
 
         polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
                 n1, observations);
@@ -50,8 +50,8 @@ void test_tree2() {
         pt_leaf_t* n3 = new pt_leaf_t(2.0, "n3");
         pt_root_t n1(n2, n3);
         vector<alphabet_code_t> observations(n1.n_leaves, 0);
-        observations[n1("n2")->id] = 1;
-        observations[n1("n3")->id] = 1;
+        observations[n1["n2"]->id] = 1;
+        observations[n1["n3"]->id] = 1;
 
         polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
                 n1, observations);
@@ -68,9 +68,9 @@ void test_tree3() {
         pt_node_t* n2 = new pt_node_t(0.5, n4, n5);
         pt_root_t n1(n2, n3);
         vector<alphabet_code_t> observations(n1.n_leaves, 0);
-        observations[n1("n5")->id] = 1;
-        observations[n1("n4")->id] = 1;
-        observations[n1("n3")->id] = 2;
+        observations[n1["n5"]->id] = 1;
+        observations[n1["n4"]->id] = 1;
+        observations[n1["n3"]->id] = 2;
 
         polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
                 n1, observations);
@@ -89,10 +89,10 @@ void test_tree4() {
         pt_node_t* n2 = new pt_node_t(0.5, n4, n5);
         pt_root_t n1(n2, n3);
         vector<alphabet_code_t> observations(n1.n_leaves, 0);
-        observations[n1("n7")->id] = 1;
-        observations[n1("n6")->id] = 1;
-        observations[n1("n5")->id] = 1;
-        observations[n1("n4")->id] = 1;
+        observations[n1["n7"]->id] = 1;
+        observations[n1["n6"]->id] = 1;
+        observations[n1["n5"]->id] = 1;
+        observations[n1["n4"]->id] = 1;
 
         polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
                 n1, observations);
@@ -111,10 +111,10 @@ void test_tree5() {
         pt_node_t* n2 = new pt_node_t(0.5, n4, n5);
         pt_root_t n1(n2, n3);
         vector<alphabet_code_t> observations(n1.n_leaves, 0);
-        observations[n1("n7")->id] = 1;
-        observations[n1("n6")->id] = 1;
-        observations[n1("n5")->id] = 2;
-        observations[n1("n4")->id] = 3;
+        observations[n1["n7"]->id] = 1;
+        observations[n1["n6"]->id] = 1;
+        observations[n1["n5"]->id] = 2;
+        observations[n1["n4"]->id] = 3;
 
         polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
                 n1, observations);
@@ -135,11 +135,11 @@ void test_tree6() {
         pt_node_t* n2 = new pt_node_t(2.0, n4, n5);
         pt_root_t n1(n2, n3);
         vector<alphabet_code_t> observations(n1.n_leaves, 0);
-        observations[n1("n9")->id] = 3;
-        observations[n1("n8")->id] = 2;
-        observations[n1("n7")->id] = 1;
-        observations[n1("n6")->id] = 0;
-        observations[n1("n3")->id] = 0;
+        observations[n1["n9"]->id] = 3;
+        observations[n1["n8"]->id] = 2;
+        observations[n1["n7"]->id] = 1;
+        observations[n1["n6"]->id] = 0;
+        observations[n1["n3"]->id] = 0;
 
         polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
                 n1, observations);
@@ -160,10 +160,10 @@ void test_tree7() {
         pt_node_t* n2 = new pt_node_t(0.2, nb, n3);
         pt_root_t n1(na, n2);
         vector<alphabet_code_t> observations1(n1.n_leaves, 0);
-        observations1[n1("A")->id] = 0;
-        observations1[n1("B")->id] = 1;
-        observations1[n1("C")->id] = 0;
-        observations1[n1("D")->id] = 0;
+        observations1[n1["A"]->id] = 0;
+        observations1[n1["B"]->id] = 1;
+        observations1[n1["C"]->id] = 0;
+        observations1[n1["D"]->id] = 0;
         // second tree
         pt_leaf_t* ma = new pt_leaf_t(0.3, "A");
         pt_leaf_t* mb = new pt_leaf_t(0.3, "B");
@@ -173,10 +173,10 @@ void test_tree7() {
         pt_node_t* m2 = new pt_node_t(0.2, mc, md);
         pt_root_t m1(m2, m3);
         vector<alphabet_code_t> observations2(m1.n_leaves, 0);
-        observations2[m1("A")->id] = 0;
-        observations2[m1("B")->id] = 1;
-        observations2[m1("C")->id] = 0;
-        observations2[m1("D")->id] = 0;
+        observations2[m1["A"]->id] = 0;
+        observations2[m1["B"]->id] = 1;
+        observations2[m1["C"]->id] = 0;
+        observations2[m1["D"]->id] = 0;
 
         polynomial_t<alphabet_size> result1 = pt_likelihood<alphabet_size, alphabet_code_t, double>(
                 n1, observations1);
@@ -195,9 +195,9 @@ void test_tree8() {
         pt_leaf_t* n0 = new pt_leaf_t(0.3, "n0");
         pt_root_t n1(n2, n3, n0);
         vector<alphabet_code_t> observations(n1.n_leaves, 0);
-        observations[n1("n0")->id] = 2;
-        observations[n1("n2")->id] = 1;
-        observations[n1("n3")->id] = 1;
+        observations[n1["n0"]->id] = 2;
+        observations[n1["n2"]->id] = 1;
+        observations[n1["n3"]->id] = 1;
 
         polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
                 n1, observations);
@@ -215,10 +215,10 @@ void test_tree9() {
         pt_leaf_t* n0 = new pt_leaf_t(3.0, "n0");
         pt_root_t n1(     n2, n3, n0);
         vector<alphabet_code_t> observations(n1.n_leaves, 0);
-        observations[n1("n5")->id] = 1;
-        observations[n1("n4")->id] = 1;
-        observations[n1("n3")->id] = 2;
-        observations[n1("n0")->id] = 1;
+        observations[n1["n5"]->id] = 1;
+        observations[n1["n4"]->id] = 1;
+        observations[n1["n3"]->id] = 2;
+        observations[n1["n0"]->id] = 1;
 
         polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
                 n1, observations);
@@ -236,10 +236,10 @@ void test_tree10() {
         pt_node_t* n1 = new pt_node_t(0.5, n0, n3);
         pt_root_t n2(n1, n5, n4);
         vector<alphabet_code_t> observations(n2.n_leaves, 0);
-        observations[n2("n5")->id] = 1;
-        observations[n2("n4")->id] = 1;
-        observations[n2("n3")->id] = 2;
-        observations[n2("n0")->id] = 1;
+        observations[n2["n5"]->id] = 1;
+        observations[n2["n4"]->id] = 1;
+        observations[n2["n3"]->id] = 2;
+        observations[n2["n0"]->id] = 1;
 
         polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
                 n2, observations);
@@ -259,11 +259,11 @@ void test_tree11() {
         pt_node_t* n6 = new pt_node_t(0.5, n1, n5);
         pt_root_t n7(n6, n4, n0);
         vector<alphabet_code_t> observations(n7.n_leaves, 0);
-        observations[n7("n0")->id] = 1;
-        observations[n7("n1")->id] = 0;
-        observations[n7("n2")->id] = 1;
-        observations[n7("n3")->id] = 1;
-        observations[n7("n4")->id] = 3;
+        observations[n7["n0"]->id] = 1;
+        observations[n7["n1"]->id] = 0;
+        observations[n7["n2"]->id] = 1;
+        observations[n7["n3"]->id] = 1;
+        observations[n7["n4"]->id] = 3;
 
         polynomial_t<alphabet_size> result = pt_likelihood<alphabet_size, alphabet_code_t, double>(
                 n7, observations);
@@ -281,16 +281,16 @@ void test_tree12() {
         pt_node_t* n2 = new pt_node_t(0.5, n4, n5);
         pt_root_t n1(n2, n3);
         vector<alphabet_code_t> observations1(n1.n_leaves, 0);
-        observations1[n1("n5")->id] = -1;
-        observations1[n1("n4")->id] =  1;
-        observations1[n1("n3")->id] =  2;
+        observations1[n1["n5"]->id] = -1;
+        observations1[n1["n4"]->id] =  1;
+        observations1[n1["n3"]->id] =  2;
         // second tree
         pt_leaf_t* m2 = new pt_leaf_t(1.5, "m2");
         pt_leaf_t* m3 = new pt_leaf_t(1.0, "m3");
         pt_root_t m1(m2, m3);
         vector<alphabet_code_t> observations2(m1.n_leaves, 0);
-        observations2[m1("m2")->id] = 1;
-        observations2[m1("m3")->id] = 2;
+        observations2[m1["m2"]->id] = 1;
+        observations2[m1["m3"]->id] = 2;
 
         polynomial_t<alphabet_size> result1 = pt_likelihood<alphabet_size, alphabet_code_t, double>(
                 n1, observations1);

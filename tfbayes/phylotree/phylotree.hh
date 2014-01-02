@@ -175,19 +175,32 @@ public:
                 return _outgroup ? *_outgroup : boost::optional<      pt_leaf_t&>();
         }
 
-        boost::optional<      pt_leaf_t&> operator()(const std::string& taxon);
-        boost::optional<const pt_leaf_t&> operator()(const std::string& taxon) const;
-        boost::optional<      pt_leaf_t&> operator()(id_t id);
-        boost::optional<const pt_leaf_t&> operator()(id_t id) const;
+        boost::optional<      pt_node_t&> operator[](const std::string& taxon);
+        boost::optional<const pt_node_t&> operator[](const std::string& taxon) const;
+        boost::optional<      pt_node_t&> operator[](id_t id);
+        boost::optional<const pt_node_t&> operator[](id_t id) const;
 
-        // leaf or node name -> leaf or node
-        leaf_map_t leaf_map;
-        node_map_t node_map;
+        leaves_t::const_iterator begin_leaves() const {
+                return leaves.begin();
+        }
+        leaves_t::const_iterator end_leaves() const {
+                return leaves.end();
+        }
+        nodes_t::const_iterator begin_nodes() const {
+                return nodes.begin();
+        }
+        nodes_t::const_iterator end_nodes() const {
+                return nodes.end();
+        }
+
+protected:
         // leaf or node id -> leaf or node
         leaves_t leaves;
         nodes_t nodes;
+        // leaf or node name -> leaf or node
+        leaf_map_t leaf_map;
+        node_map_t node_map;
 
-protected:
         virtual void create_mappings(leaf_map_t& leaf_map, leaves_t& leaves,
                                      node_map_t& node_map, nodes_t& nodes);
         virtual void create_mappings();

@@ -188,8 +188,8 @@ protected:
         // Methods for Initializations
         ////////////////////////////////////////////////////////////////////////
         void init_taxon_map(const pt_root_t& tree) {
-                for (pt_node_t::leaves_t::const_iterator it = tree.leaves.begin();
-                     it != tree.leaves.end(); it++) {
+                for (pt_node_t::leaves_t::const_iterator it = tree.begin_leaves();
+                     it != tree.end_leaves(); it++) {
                         _taxon_map[(*it)->name] = (*it)->id;
                 }
         }
@@ -381,8 +381,8 @@ protected:
         taxon_map_t create_taxon_map(const pt_root_t& tree) {
                 taxon_map_t taxon_map;
 
-                for (pt_node_t::leaves_t::const_iterator it = tree.leaves.begin();
-                     it != tree.leaves.end(); it++) {
+                for (pt_node_t::leaves_t::const_iterator it = tree.begin_leaves();
+                     it != tree.end_leaves(); it++) {
                         taxon_map[(*it)->name] = (*it)->id;
                 }
                 return taxon_map;

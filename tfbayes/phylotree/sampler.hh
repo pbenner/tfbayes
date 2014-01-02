@@ -225,6 +225,187 @@ public:
  */
 
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
+class pt_hamiltonian_t : public pt_sampler_t
+{
+        typedef std::vector<double> vector_t;
+public:
+        typedef boost::math::gamma_distribution<> gamma_distribution_t;
+
+        pt_hamiltonian_t(const pt_root_t& tree,
+                         const alignment_map_t<AC>& alignment,
+                         const std::vector<double>& alpha,
+                         const gamma_distribution_t& gamma_distribution,
+                         double epsilon,
+                         thread_pool_t& thread_pool,
+                         double temperature = 1.0)
+                : _history_              (), // zero-initialize history
+                  _state_                (tree),
+                  _thread_pool_          (thread_pool),
+                  _alignment_            (alignment),
+                  _alpha_                (alpha.begin(), alpha.end()),
+                  _gamma_distribution_   (gamma_distribution),
+                  _temperature_          (temperature),
+                  _epsilon_              (epsilon) {
+
+                // compute the posterior value for the initial tree
+                _state_ = log_posterior();
+        }
+        pt_hamiltonian_t(const pt_hamiltonian_t& mh)
+                : _history_              (mh._history_),
+                  _state_                (mh._state_),
+                  _thread_pool_          (mh._thread_pool_),
+                  _alignment_            (mh._alignment_),
+                  _alpha_                (mh._alpha_),
+                  _gamma_distribution_   (mh._gamma_distribution_),
+                  _temperature_          (mh._temperature_),
+                  _epsilon_              (mh._epsilon_) {
+
+        }
+        virtual ~pt_hamiltonian_t()
+                { }
+
+        virtual pt_hamiltonian_t* clone() const {
+                return new pt_hamiltonian_t(*this);
+        }
+
+        virtual void rewind() const {
+                std::cerr << __line_up__
+                          << __line_up__
+                          << __line_up__
+                          << __line_up__
+                          << __line_up__;
+        }
+        virtual void print_progress() const {
+                std::cerr << __line_del__"Sampler with temperature "             << temperature() << std::endl
+                          << __line_del__" -> acceptance rate (topology)     : " << __rate__(_history_.accepted_topologies, _history_.steps_topology) << std::endl
+                          << __line_del__" -> acceptance rate (branch length): " << __rate__(_history_.accepted_lengths,    _history_.steps_length  ) << std::endl
+                          << __line_del__ << std::endl
+                          << __line_del__ << std::endl;
+        }
+        double log_posterior(const pt_root_t& tree) {
+                return pt_posterior<AS, AC, PC>(tree, _alignment_, _alpha_, _gamma_distribution_, _thread_pool_);
+        }
+        pt_marginal_derivative_t log_posterior_derivative(const pt_root_t& tree) {
+                return pt_posterior_derivative<AS, AC, PC>(tree, _alignment_, _alpha_, _gamma_distribution_, _thread_pool_);
+        }
+        void momentum_step(vector_t& p, pt_marginal_derivative_t& U, double e) {
+                for (size_t i = 0; i < p.size(); i++) {
+                        p[i] = p[i] - e*U.derivative()[i];
+                }
+        }
+        void position_step(vector_t& p, pt_root_t& q, double e) {
+                for (size_t i = 0; i < p.size(); i++) {
+                }
+        }
+        pt_root_t leapfrog(size_t n, const vector_t& p) {
+                // current posterior value and derivative
+                pt_marginal_derivative_t U = log_posterior(_state_);
+                // current position
+                pt_root_t q = _state_;
+
+                return q;
+        }
+        void sample_length(threaded_rng_t& rng) {
+                size_t n = _state_.tree().n_nodes-1;
+                // sample a new momentum
+                boost::normal_distribution<> nd(0.0, 1.0);
+                vector_t p(n);
+                for (size_t i = 0; i < n; i++) {
+                        p[i] = nd(rng);
+                }
+                // simulate Hamiltonian dynamics
+                pt_root_t proposal = leapfrog(3, p);
+                
+        }
+        void sample_topology(pt_node_t& node, threaded_rng_t& rng) {
+                // can't sample leafs
+                if (node.leaf()) return;
+                double log_posterior_ref = _state_;
+                // distributions for drawing random numbers
+                boost::random::bernoulli_distribution<> bernoulli(0.5);
+                boost::random::uniform_01<> uniform;
+                // this variable indicates the orthant to move to
+                size_t which = bernoulli(rng);
+
+                // alter topology
+                node.move(which);
+
+                // compute new log likelihood
+                const double log_posterior_new = log_posterior(_state_);
+
+                // compute acceptance probability
+                const double rho = exp(1.0/_temperature_*(log_posterior_new-log_posterior_ref));
+                const double x   = uniform(rng);
+                if (x <= std::min(1.0, rho)) {
+                        // sample accepted
+                        _state_ = log_posterior_new;
+                        _history_.accepted_topologies++;
+                }
+                else {
+                        // sample rejected
+                        node.move(which);
+                }
+                _history_.steps_topology++;
+        }
+        virtual double operator()(threaded_rng_t& rng, bool verbose = false) {
+                // sample branch lengths for the full tree
+                sample_length  (rng);
+                // loop over nodes and sample topologies
+                for (pt_node_t::nodes_t::const_iterator it = _state_.tree().begin_nodes();
+                     it != _state_.tree().end_nodes(); it++) {
+                        // skip the root
+                        if ((*it)->root()) {
+                                continue;
+                        }
+                        sample_topology(**it, rng);
+                }
+                // update history
+                _history_.samples.push_back(_state_);
+                _history_.values .push_back(_state_);
+                if (verbose) {
+                        print_progress();
+                }
+                // return posterior value
+                return _state_;
+        }
+        // access methods
+        ////////////////////////////////////////////////////////////////////////
+        virtual const pt_history_mh_t& history() const {
+                return _history_;
+        }
+        virtual pt_history_mh_t& history() {
+                return _history_;
+        }
+        virtual const pt_state_t& state() const {
+                return _state_;
+        }
+        virtual pt_state_t& state() {
+                return _state_;
+        }
+        const double& temperature() const {
+                return _temperature_;
+        }
+        double& temperature() {
+                return _temperature_;
+        }
+protected:
+        // sampler history
+        pt_history_mh_t _history_;
+        // state of the sampler
+        pt_state_t _state_;
+        // a thread pool for computing likelihoods
+        thread_pool_t& _thread_pool_;
+        // alignment data
+        const alignment_map_t<AC>& _alignment_;
+        // prior distribution and parameters
+        exponent_t<AS, PC> _alpha_;
+        gamma_distribution_t _gamma_distribution_;
+        double _temperature_;
+        // integration step size
+        double _epsilon_;
+};
+
+template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
 class pt_metropolis_hastings_t : public pt_sampler_t
 {
 public:
@@ -350,8 +531,8 @@ public:
         }
         virtual double operator()(threaded_rng_t& rng, bool verbose = false) {
                 // loop over nodes
-                for (pt_node_t::nodes_t::iterator it = _state_.tree().nodes.begin();
-                     it != _state_.tree().nodes.end(); it++) {
+                for (pt_node_t::nodes_t::const_iterator it = _state_.tree().begin_nodes();
+                     it != _state_.tree().end_nodes(); it++) {
                         // skip the root
                         if ((*it)->root()) {
                                 continue;

@@ -34,8 +34,8 @@ void test_tree1(const exponent_t<alphabet_size> alpha) {
         pt_leaf_t* n3 = new pt_leaf_t(2.0, "n3");
         pt_root_t n1(n2, n3);
         vector<alphabet_code_t> observations(n1.n_leaves, 0);
-        observations[n1("n2")->id] = 1;
-        observations[n1("n3")->id] = 2;
+        observations[n1["n2"]->id] = 1;
+        observations[n1["n3"]->id] = 2;
 
         double result = pt_marginal_likelihood(n1, observations, alpha);
         cout << result << endl
@@ -49,8 +49,8 @@ void test_tree2(const exponent_t<alphabet_size> alpha) {
         pt_leaf_t* n3 = new pt_leaf_t(2.0, "n3");
         pt_root_t n1(n2, n3);
         vector<alphabet_code_t> observations(n1.n_leaves, 0);
-        observations[n1("n2")->id] = 1;
-        observations[n1("n3")->id] = 1;
+        observations[n1["n2"]->id] = 1;
+        observations[n1["n3"]->id] = 1;
 
         double result = pt_marginal_likelihood(n1, observations, alpha);
         cout << result << endl
@@ -66,9 +66,9 @@ void test_tree3(const exponent_t<alphabet_size> alpha) {
         pt_node_t* n2 = new pt_node_t(0.5, n4, n5);
         pt_root_t n1(n2, n3);
         vector<alphabet_code_t> observations(n1.n_leaves, 0);
-        observations[n1("n5")->id] = 1;
-        observations[n1("n4")->id] = 1;
-        observations[n1("n3")->id] = 2;
+        observations[n1["n5"]->id] = 1;
+        observations[n1["n4"]->id] = 1;
+        observations[n1["n3"]->id] = 2;
 
         double result = pt_marginal_likelihood(n1, observations, alpha);
         cout << result << endl
@@ -86,10 +86,10 @@ void test_tree4(const exponent_t<alphabet_size> alpha) {
         pt_node_t* n2 = new pt_node_t(0.5, n4, n5);
         pt_root_t n1(n2, n3);
         vector<alphabet_code_t> observations(n1.n_leaves, 0);
-        observations[n1("n7")->id] = 1;
-        observations[n1("n6")->id] = 1;
-        observations[n1("n5")->id] = 1;
-        observations[n1("n4")->id] = 1;
+        observations[n1["n7"]->id] = 1;
+        observations[n1["n6"]->id] = 1;
+        observations[n1["n5"]->id] = 1;
+        observations[n1["n4"]->id] = 1;
 
         double result = pt_marginal_likelihood(n1, observations, alpha);
         cout << result << endl
@@ -107,10 +107,10 @@ void test_tree5(const exponent_t<alphabet_size> alpha) {
         pt_node_t* n2 = new pt_node_t(0.5, n4, n5);
         pt_root_t n1(n2, n3);
         vector<alphabet_code_t> observations(n1.n_leaves, 0);
-        observations[n1("n7")->id] = 1;
-        observations[n1("n6")->id] = 1;
-        observations[n1("n5")->id] = 2;
-        observations[n1("n4")->id] = 3;
+        observations[n1["n7"]->id] = 1;
+        observations[n1["n6"]->id] = 1;
+        observations[n1["n5"]->id] = 2;
+        observations[n1["n4"]->id] = 3;
 
         double result = pt_marginal_likelihood(n1, observations, alpha);
         cout << result << endl
@@ -130,11 +130,11 @@ void test_tree6(const exponent_t<alphabet_size> alpha) {
         pt_node_t* n2 = new pt_node_t(2.0, n4, n5);
         pt_root_t n1(n2, n3);
         vector<alphabet_code_t> observations(n1.n_leaves, 0);
-        observations[n1("n9")->id] = 3;
-        observations[n1("n8")->id] = 2;
-        observations[n1("n7")->id] = 1;
-        observations[n1("n6")->id] = 0;
-        observations[n1("n3")->id] = 0;
+        observations[n1["n9"]->id] = 3;
+        observations[n1["n8"]->id] = 2;
+        observations[n1["n7"]->id] = 1;
+        observations[n1["n6"]->id] = 0;
+        observations[n1["n3"]->id] = 0;
 
         double result = pt_marginal_likelihood(n1, observations, alpha);
         cout << result << endl
