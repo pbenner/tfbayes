@@ -288,33 +288,42 @@ public:
         pt_marginal_derivative_t log_posterior_derivative(const pt_root_t& tree) {
                 return pt_posterior_derivative<AS, AC, PC>(tree, _alignment_, _alpha_, _gamma_distribution_, _thread_pool_);
         }
-        void momentum_step(vector_t& p, pt_marginal_derivative_t& U, double e) {
+        void momentum_step(vector_t& p, pt_root_t& q, double e) {
+                // current posterior value and derivative
+                pt_marginal_derivative_t U = log_posterior_derivative(q);
                 for (size_t i = 0; i < p.size(); i++) {
                         p[i] = p[i] - e*U.derivative()[i];
                 }
         }
         void position_step(vector_t& p, pt_root_t& q, double e) {
                 for (size_t i = 0; i < p.size(); i++) {
+                        q[i]->d = q[i]->d + e*p[i];
                 }
         }
-        pt_root_t leapfrog(size_t n, const vector_t& p) {
-                // current posterior value and derivative
-                pt_marginal_derivative_t U = log_posterior(_state_);
-                // current position
-                pt_root_t q = _state_;
-
-                return q;
+        void leapfrog(size_t n, vector_t& p, pt_root_t& q) {
+                assert(n > 0);
+                // half step for momentum
+                momentum_step(p, q, _epsilon_/2.0);
+                // full steps for momentum and position
+                for (size_t i = 0; i < n-1; i++) {
+                        position_step(p, q, _epsilon_);
+                        momentum_step(p, q, _epsilon_);
+                }
+                // half step for momentum
+                momentum_step(p, q, _epsilon_/2.0);
         }
         void sample_length(threaded_rng_t& rng) {
                 size_t n = _state_.tree().n_nodes-1;
+                // state
+                vector_t  p(n);
+                pt_root_t q(_state_);
                 // sample a new momentum
                 boost::normal_distribution<> nd(0.0, 1.0);
-                vector_t p(n);
                 for (size_t i = 0; i < n; i++) {
                         p[i] = nd(rng);
                 }
                 // simulate Hamiltonian dynamics
-                pt_root_t proposal = leapfrog(3, p);
+                leapfrog(3, p, q);
                 
         }
         void sample_topology(pt_node_t& node, threaded_rng_t& rng) {
