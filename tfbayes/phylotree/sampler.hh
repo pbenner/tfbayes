@@ -332,7 +332,6 @@ public:
                 // state
                 vector_t  p(n);
                 pt_root_t q(_state_);
-                // std::cerr << "state: " << newick_format(q) << std::endl;
                 // sample a new momentum
                 boost::normal_distribution<> nd(0.0, 1.0);
                 for (size_t i = 0; i < n; i++) {
