@@ -300,7 +300,7 @@ public:
                 // current posterior value and derivative
                 pt_marginal_derivative_t U = log_posterior_derivative(q);
                 for (size_t i = 0; i < p.size(); i++) {
-                        p[i] = p[i] - epsilon*U.derivative()[i];
+                        p[i] = p[i] + epsilon*U.derivative()[i];
                 }
         }
         void position_step(vector_t& p, pt_root_t& q, double epsilon) {
@@ -329,24 +329,25 @@ public:
                 // state
                 vector_t  p(n);
                 pt_root_t q(_state_);
-                // current posterior values
-                double current_U = _state_;
-                double current_K = std::accumulate(p.begin(), p.end(), 0.0, square<double>())/2.0;
+                // std::cerr << "state: " << newick_format(q) << std::endl;
                 // sample a new momentum
                 boost::normal_distribution<> nd(0.0, 1.0);
                 for (size_t i = 0; i < n; i++) {
                         p[i] = nd(rng);
                 }
+                // current posterior values
+                double current_U = -_state_;
+                double current_K = std::accumulate(p.begin(), p.end(), 0.0, square<double>())/2.0;
                 // simulate Hamiltonian dynamics
                 leapfrog(1, p, q);
                 // Metropolis-Hastings acceptance probability
-                double proposed_U = log_posterior(q);
+                double proposed_U = -log_posterior(q);
                 double proposed_K = std::accumulate(p.begin(), p.end(), 0.0, square<double>())/2.0;
                 double rho = std::exp(current_U - proposed_U + current_K - proposed_K);
                 if (uniform(rng) < rho) {
                         // accept proposal
                         _state_ = q;
-                        _state_ = proposed_U;
+                        _state_ = -proposed_U;
                         _history_.accepted_lengths++;
                 }
                 // update history
