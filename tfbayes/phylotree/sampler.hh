@@ -236,7 +236,6 @@ class pt_hamiltonian_t : public pt_sampler_t
                         return (Left + Right*Right);
                 }
         };
-
 public:
         typedef boost::math::gamma_distribution<> gamma_distribution_t;
 
@@ -257,7 +256,7 @@ public:
                   _epsilon_              (epsilon) {
 
                 // compute the posterior value for the initial tree
-                _state_ = log_posterior();
+                _state_ = log_posterior(_state_);
         }
         pt_hamiltonian_t(const pt_hamiltonian_t& mh)
                 : _history_              (mh._history_),
@@ -332,7 +331,7 @@ public:
                 pt_root_t q(_state_);
                 // current posterior values
                 double current_U = _state_;
-                double current_K = std::accumulate(p.begin(), p.end(), square<double>())/2.0;
+                double current_K = std::accumulate(p.begin(), p.end(), 0.0, square<double>())/2.0;
                 // sample a new momentum
                 boost::normal_distribution<> nd(0.0, 1.0);
                 for (size_t i = 0; i < n; i++) {
@@ -342,7 +341,7 @@ public:
                 leapfrog(3, p, q);
                 // Metropolis-Hastings acceptance probability
                 double proposed_U = log_posterior(q);
-                double proposed_K = std::accumulate(p.begin(), p.end(), square<double>())/2.0;
+                double proposed_K = std::accumulate(p.begin(), p.end(), 0.0, square<double>())/2.0;
                 double rho = std::exp(current_U - proposed_U + current_K - proposed_K);
                 if (uniform(rng) < rho) {
                         // accept proposal
@@ -387,7 +386,7 @@ public:
         }
         virtual double operator()(threaded_rng_t& rng, bool verbose = false) {
                 // sample branch lengths for the full tree
-                sample_length  (rng);
+                sample_length(rng);
                 // loop over nodes and sample topologies
                 for (pt_node_t::nodes_t::const_iterator it = _state_.tree().begin_nodes();
                      it != _state_.tree().end_nodes(); it++) {

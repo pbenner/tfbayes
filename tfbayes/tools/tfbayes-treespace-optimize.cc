@@ -37,8 +37,6 @@
 #include <tfbayes/utility/strtools.hh>
 
 #define alphabet_size 5
-// type of the metropolis hastings algorithm
-typedef pt_metropolis_hastings_t<alphabet_size> pt_mc_t;
 
 using namespace std;
 
@@ -224,7 +222,9 @@ void print_usage(char *pname, FILE *fp)
 {
         (void)fprintf(fp, "\nUsage: %s [OPTION] METHOD TREE ALIGNMENT\n\n", pname);
         (void)fprintf(fp,
-                      "Methods: gradient-ascent, metropolis-hastings\n"
+                      "Methods: gradient-ascent          (only for testing purposes)\n"
+                      "         metropolis-hastings\n"
+                      "         hamiltonian-mcmc\n"
                       "\n"
                       "Options:\n"
                       "      --counts=f:f:f:f:f        - pseudo counts\n"
@@ -303,13 +303,10 @@ void save_posterior_values(const T& t)
 
 void run_gradient_ascent(
         const pt_root_t& pt_root,
-        const alignment_map_t<>& alignment_map)
+        const alignment_map_t<>& alignment_map,
+        const boost::math::gamma_distribution<>& gamma_distribution,
+        thread_pool_t& thread_pool)
 {
-        // prior distribution on branch lengths
-        boost::math::gamma_distribution<> gamma_distribution(options.shape, options.scale);
-        // a pool of threads for computing likelihoods
-        thread_pool_t thread_pool(options.threads);
-
         pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(
                 pt_root, alignment_map, options.alpha, gamma_distribution,
                 thread_pool, options.step_size);
@@ -323,16 +320,18 @@ void run_gradient_ascent(
 // sampler
 ////////////////////////////////////////////////////////////////////////////////
 
-void run_mcmc(
+// type of the metropolis hastings algorithm
+typedef pt_metropolis_hastings_t<alphabet_size> pt_mc_t;
+typedef pt_hamiltonian_t<alphabet_size> pt_ham_t;
+
+void run_metropolis_hastings(
         const pt_root_t& pt_root,
-        const alignment_map_t<>& alignment_map)
+        const alignment_map_t<>& alignment_map,
+        const boost::math::gamma_distribution<>& gamma_distribution,
+        thread_pool_t& thread_pool)
 {
         threaded_rng_t rng;
         seed_rng(rng);
-        // a pool of threads for computing likelihoods
-        thread_pool_t thread_pool(options.threads);
-        // prior distribution on branch lengths
-        boost::math::gamma_distribution<> gamma_distribution(options.shape, options.scale);
         // proposal distribution
         normal_proposal_t proposal(options.proposal_variance);
         // the metropolis sampler
@@ -349,10 +348,36 @@ void run_mcmc(
         cout << print_posterior_samples(pmcmc);
 }
 
+void run_hamiltonian_mcmc(
+        const pt_root_t& pt_root,
+        const alignment_map_t<>& alignment_map,
+        const boost::math::gamma_distribution<>& gamma_distribution,
+        thread_pool_t& thread_pool)
+{
+        threaded_rng_t rng;
+        seed_rng(rng);
+        // the metropolis sampler
+        pt_ham_t pt_ham(pt_root, alignment_map, options.alpha, gamma_distribution, 0.01, thread_pool);
+        // parallel chains with different temperatures
+        pt_mc3_t<pt_ham_t> pt_mc3(options.temperatures, pt_ham);
+        // run several mc3 chains in parallel
+        pt_pmcmc_t pmcmc(options.chains, pt_mc3);
+        // execute the sampler
+        pmcmc(options.max_steps, rng, options.verbose);
+        // print posterior values to separate file
+        save_posterior_values(pmcmc);
+        // print tree samples
+        cout << print_posterior_samples(pmcmc);
+}
+
 void run_optimization(const string& method, const char* file_tree, const char* file_alignment)
 {
+        // a pool of threads for computing likelihoods
+        thread_pool_t thread_pool(options.threads);
         // phylogenetic tree
         pt_root_t pt_root = parse_tree_file(file_tree);
+        // prior distribution on branch lengths
+        boost::math::gamma_distribution<> gamma_distribution(options.shape, options.scale);
 
         // alignment
         alignment_set_t<> alignment_set(file_alignment, pt_root, nucleotide_alphabet_t(), options.verbose);
@@ -362,10 +387,13 @@ void run_optimization(const string& method, const char* file_tree, const char* f
         alignment_map_t<> alignment_map(alignment_set);
 
         if (method == "gradient-ascent") {
-                run_gradient_ascent(pt_root, alignment_map);
+                run_gradient_ascent(pt_root, alignment_map, gamma_distribution, thread_pool);
         }
         else if (method == "metropolis-hastings") {
-                run_mcmc(pt_root, alignment_map);
+                run_metropolis_hastings(pt_root, alignment_map, gamma_distribution, thread_pool);
+        }
+        else if (method == "hamiltonian-mcmc") {
+                run_hamiltonian_mcmc(pt_root, alignment_map, gamma_distribution, thread_pool);
         }
         else {
                 cerr << "Unknown optimization method: " << method
