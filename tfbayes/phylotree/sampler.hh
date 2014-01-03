@@ -338,7 +338,7 @@ public:
                         p[i] = nd(rng);
                 }
                 // simulate Hamiltonian dynamics
-                leapfrog(3, p, q);
+                leapfrog(1, p, q);
                 // Metropolis-Hastings acceptance probability
                 double proposed_U = log_posterior(q);
                 double proposed_K = std::accumulate(p.begin(), p.end(), 0.0, square<double>())/2.0;

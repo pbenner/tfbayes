@@ -357,7 +357,7 @@ void run_hamiltonian_mcmc(
         threaded_rng_t rng;
         seed_rng(rng);
         // the metropolis sampler
-        pt_ham_t pt_ham(pt_root, alignment_map, options.alpha, gamma_distribution, 0.01, thread_pool);
+        pt_ham_t pt_ham(pt_root, alignment_map, options.alpha, gamma_distribution, 0.001, thread_pool);
         // parallel chains with different temperatures
         pt_mc3_t<pt_ham_t> pt_mc3(options.temperatures, pt_ham);
         // run several mc3 chains in parallel

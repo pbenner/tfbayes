@@ -94,13 +94,18 @@ public:
                         else {
                                 step = -node_epsilon[node.id];
                         }
-                        node.d  = std::max(1.0e-20, node.d+step);
-                        total  += std::abs(step);
-                        if (derivative_prev[node.id]*posterior.derivative()[node.id] > 0) {
-                                node_epsilon[node.id] *= 1.0+_eta_;
+                        if (node.d+step > 0.0) {
+                                node.d  = node.d+step;
+                                total  += std::abs(step);
+                                if (derivative_prev[node.id]*posterior.derivative()[node.id] > 0) {
+                                        node_epsilon[node.id] *= 1.0+_eta_;
+                                }
+                                if (derivative_prev[node.id]*posterior.derivative()[node.id] < 0) {
+                                        node_epsilon[node.id] *= 1.0-_eta_;
+                                }
                         }
-                        if (derivative_prev[node.id]*posterior.derivative()[node.id] < 0) {
-                                node_epsilon[node.id] *= 1.0-_eta_;
+                        else {
+                                node.d = 1.0e-20;
                         }
                 }
                 derivative_prev = posterior.derivative();
