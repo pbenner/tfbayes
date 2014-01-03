@@ -243,7 +243,8 @@ public:
                          const alignment_map_t<AC>& alignment,
                          const std::vector<double>& alpha,
                          const gamma_distribution_t& gamma_distribution,
-                         double epsilon,
+                         double step_size,
+                         size_t steps,
                          thread_pool_t& thread_pool,
                          double temperature = 1.0)
                 : _history_              (), // zero-initialize history
@@ -253,7 +254,8 @@ public:
                   _alpha_                (alpha.begin(), alpha.end()),
                   _gamma_distribution_   (gamma_distribution),
                   _temperature_          (temperature),
-                  _epsilon_              (epsilon) {
+                  _step_size_            (step_size),
+                  _steps_                (steps) {
 
                 // compute the posterior value for the initial tree
                 _state_ = log_posterior(_state_);
@@ -266,7 +268,8 @@ public:
                   _alpha_                (mh._alpha_),
                   _gamma_distribution_   (mh._gamma_distribution_),
                   _temperature_          (mh._temperature_),
-                  _epsilon_              (mh._epsilon_) {
+                  _step_size_            (mh._step_size_),
+                  _steps_                (mh._steps_) {
 
         }
         virtual ~pt_hamiltonian_t()
@@ -311,16 +314,16 @@ public:
         void leapfrog(size_t n, vector_t& p, pt_root_t& q) {
                 assert(n > 0);
                 // half step for momentum
-                momentum_step(p, q, _epsilon_/2.0);
+                momentum_step(p, q, _step_size_/2.0);
                 // full steps for momentum and position
                 for (size_t i = 0; i < n-1; i++) {
-                        position_step(p, q, _epsilon_);
-                        momentum_step(p, q, _epsilon_);
+                        position_step(p, q, _step_size_);
+                        momentum_step(p, q, _step_size_);
                 }
                 // full step for position
-                position_step(p, q, _epsilon_);
+                position_step(p, q, _step_size_);
                 // half step for momentum
-                momentum_step(p, q, _epsilon_/2.0);
+                momentum_step(p, q, _step_size_/2.0);
         }
         void sample_length(threaded_rng_t& rng) {
                 size_t n = _state_.tree().n_nodes-1;
@@ -339,7 +342,7 @@ public:
                 double current_U = -_state_;
                 double current_K = std::accumulate(p.begin(), p.end(), 0.0, square<double>())/2.0;
                 // simulate Hamiltonian dynamics
-                leapfrog(1, p, q);
+                leapfrog(_steps_, p, q);
                 // Metropolis-Hastings acceptance probability
                 double proposed_U = -log_posterior(q);
                 double proposed_K = std::accumulate(p.begin(), p.end(), 0.0, square<double>())/2.0;
@@ -439,8 +442,9 @@ protected:
         exponent_t<AS, PC> _alpha_;
         gamma_distribution_t _gamma_distribution_;
         double _temperature_;
-        // integration step size
-        double _epsilon_;
+        // integration parameters
+        double _step_size_;
+        size_t _steps_;
 };
 
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>

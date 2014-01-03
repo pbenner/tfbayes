@@ -161,6 +161,8 @@ typedef struct _options_t {
         double shape;
         size_t max_steps;
         double min_change;
+        double leapfrog_step_size;
+        size_t leapfrog_steps;
         double step_size;
         double proposal_variance;
         string save_posterior;
@@ -174,6 +176,8 @@ typedef struct _options_t {
                   shape(1.0),
                   max_steps(1000),
                   min_change(0.0005),
+                  leapfrog_step_size(0.01),
+                  leapfrog_steps(1),
                   step_size(0.001),
                   proposal_variance(0.01),
                   save_posterior(""),
@@ -227,15 +231,17 @@ void print_usage(char *pname, FILE *fp)
                       "         hamiltonian-mcmc\n"
                       "\n"
                       "Options:\n"
+                      "      --chains=integer          - number of parallel chains\n"
                       "      --counts=f:f:f:f:f        - pseudo counts\n"
-                      "      --steps=integer           - maximum number of steps\n"
                       "      --epsilon=float           - stop gradient ascent if change is smaller than this value\n"
-                      "      --step-size=float         - gradient ascent step size\n"
+                      "      --leapfrog-step-size      - integration step size for the hamiltonian mcmc\n"
+                      "      --leapfrog-steps          - number of integration steps for the hamiltonian mcmc\n"
+                      "      --proposal-variance=float - variance of the proposal distribution\n"
                       "      --shape=float             - shape parameter for the gamma prior\n"
                       "      --scale=float             - scale parameter for the gamma prior\n"
                       "                                  for each sample to FILE\n"
-                      "      --proposal-variance=float - variance of the proposal distribution\n"
-                      "      --chains=integer          - number of parallel chains\n"
+                      "      --steps=integer           - maximum number of steps\n"
+                      "      --step-size=float         - gradient ascent step size\n"
                       "      --threads=integer         - number of threads\n"
                       "      --temperatures=f:f:...    - a list of temperatures for the mc3\n"
                       "      --save-posterior=file     - save the value of the log posterior\n"
@@ -357,7 +363,8 @@ void run_hamiltonian_mcmc(
         threaded_rng_t rng;
         seed_rng(rng);
         // the metropolis sampler
-        pt_ham_t pt_ham(pt_root, alignment_map, options.alpha, gamma_distribution, 0.01, thread_pool);
+        pt_ham_t pt_ham(pt_root, alignment_map, options.alpha, gamma_distribution,
+                        options.leapfrog_step_size, options.leapfrog_steps, thread_pool);
         // parallel chains with different temperatures
         pt_mc3_t<pt_ham_t> pt_mc3(options.temperatures, pt_ham);
         // run several mc3 chains in parallel
@@ -414,19 +421,21 @@ int main(int argc, char *argv[])
         for(;;) {
                 int c, option_index = 0;
                 static struct option long_options[] = {
-                        { "counts",            1, 0, 'a' },
-                        { "chains",            1, 0, 'j' },
-                        { "epsilon",           1, 0, 'n' },
-                        { "proposal-variance", 1, 0, 's' },
-                        { "shape",             1, 0, 'r' },
-                        { "scale",             1, 0, 'l' },
-                        { "steps",             1, 0, 'm' },
-                        { "step-size",         1, 0, 'e' },
-                        { "temperatures",      1, 0, 'u' },
-                        { "threads",           1, 0, 't' },
-                        { "save-posterior",    1, 0, 'p' },
-                        { "help",              0, 0, 'h' },
-                        { "version",           0, 0, 'x' }
+                        { "counts",             1, 0, 'a' },
+                        { "chains",             1, 0, 'j' },
+                        { "epsilon",            1, 0, 'n' },
+                        { "proposal-variance",  1, 0, 's' },
+                        { "leapfrog-step-size", 1, 0, 'b' },
+                        { "leapfrog-steps",     1, 0, 'c' },
+                        { "shape",              1, 0, 'r' },
+                        { "scale",              1, 0, 'l' },
+                        { "steps",              1, 0, 'm' },
+                        { "step-size",          1, 0, 'e' },
+                        { "temperatures",       1, 0, 'u' },
+                        { "threads",            1, 0, 't' },
+                        { "save-posterior",     1, 0, 'p' },
+                        { "help",               0, 0, 'h' },
+                        { "version",            0, 0, 'x' }
                 };
 
                 c = getopt_long(argc, argv, "v",
@@ -452,6 +461,12 @@ int main(int argc, char *argv[])
                         break;
                 case 'm':
                         options.max_steps = atoi(optarg);
+                        break;
+                case 'b':
+                        options.leapfrog_step_size = atof(optarg);
+                        break;
+                case 'c':
+                        options.leapfrog_steps = atoi(optarg);
                         break;
                 case 'n':
                         options.min_change = atof(optarg);
