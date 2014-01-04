@@ -206,6 +206,8 @@ operator<<(std::ostream& o, const options_t& options) {
           << "-> pseudocounts          = " << options.alpha               << endl
           << "-> gamma scale           = " << options.scale               << endl
           << "-> gamma shape           = " << options.shape               << endl
+          << "-> leapfrog step_size    = " << options.leapfrog_step_size  << endl
+          << "-> leapfrog steps        = " << options.leapfrog_steps      << endl
           << "-> max steps             = " << options.max_steps           << endl
           << "-> min change            = " << options.min_change          << endl
           << "-> gradient step size    = " << options.step_size           << endl
