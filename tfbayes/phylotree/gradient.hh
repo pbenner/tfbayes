@@ -59,7 +59,15 @@ namespace tfbayes_detail {
                 const std::vector<AC>& observations,
                 pt_node_t::id_t n) {
                 partial_t<AS, AC, PC> partial(n);
-                partial[observations[leaf.id]] += 1.0;
+                if (observations[leaf.id] == -1) {
+                        // this leaf should be ignored, no nucleotide
+                        // is present (missing data)
+                        partial[AS] = 1.0;
+                }
+                else {
+                        // leaf is present and has a nucleotide
+                        partial[observations[leaf.id]] += 1.0;
+                }
                 return partial;
         }
         template <size_t AS, typename AC, typename PC>
