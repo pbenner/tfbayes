@@ -76,8 +76,7 @@ def get_alignment(chromosome, seq_start, seq_end):
     idx = alignio.MafIO.MafIndex(mafindex, maf, seqname)
 
     multiple_alignment = idx.get_spliced([seq_start],
-                                         [seq_end],
-                                         strand = "+")
+                                         [seq_end])
 
     return multiple_alignment
 
