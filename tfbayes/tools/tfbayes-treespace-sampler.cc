@@ -261,7 +261,7 @@ void wrong_usage(const char *msg)
                 (void)fprintf(stderr, "%s\n", msg);
         }
         (void)fprintf(stderr,
-                      "Try `tfbayes-treespace-optimize --help' for more information.\n");
+                      "Try `tfbayes-treespace-sampler --help' for more information.\n");
 
         exit(EXIT_FAILURE);
 
