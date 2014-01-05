@@ -19,7 +19,9 @@ AC_DEFUN([AX_BOOST_PYTHON],
 AC_CHECK_LIB(boost_python-gcc-mt, main, BOOST_PYTHON_LIB="-lboost_python-gcc-mt",
   [AC_CHECK_LIB(boost_python-mt, main, BOOST_PYTHON_LIB="-lboost_python-mt",
     [AC_CHECK_LIB(boost_python, main, BOOST_PYTHON_LIB="-lboost_python",
-      [$2])])])
+      [$2],[${PYTHON_LDFLAGS}])],
+    [${PYTHON_LDFLAGS}])],
+  [${PYTHON_LDFLAGS}])
 
 AC_SUBST(BOOST_PYTHON_LIB)
 ])
