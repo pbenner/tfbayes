@@ -162,16 +162,14 @@ struct pt_history_mc3_t
         std::vector<size_t> steps;
 };
 
-// the state of a sampler is a phylogenetic tree paired with its
-// posterior value
-////////////////////////////////////////////////////////////////////////////////
-
 // phylotree sampler
 ////////////////////////////////////////////////////////////////////////////////
 
 class pt_sampler_t : public virtual clonable
 {
 protected:
+        // the state of a sampler is a phylogenetic tree paired with its
+        // posterior value
         class state_t : std::pair<pt_root_t, double>
         {
                 typedef std::pair<pt_root_t, double> base_t;
