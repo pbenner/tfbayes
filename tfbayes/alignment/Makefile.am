@@ -28,6 +28,7 @@ interface_la_CXXFLAGS =
 interface_la_SOURCES  = \
 	interface.cc
 interface_la_LIBADD   = $(BOOST_PYTHON_LIB)
+interface_la_LIBADD  += $(BOOST_SYSTEM_LIB)
 interface_la_LIBADD  += -lm
 interface_la_LIBADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
 interface_la_LIBADD  += $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
