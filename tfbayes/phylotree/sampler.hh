@@ -165,43 +165,44 @@ struct pt_history_mc3_t
 // the state of a sampler is a phylogenetic tree paired with its
 // posterior value
 ////////////////////////////////////////////////////////////////////////////////
-class pt_state_t : std::pair<pt_root_t, double>
-{
-        typedef std::pair<pt_root_t, double> base_t;
-public:
-        pt_state_t(const pt_root_t& tree)
-                : base_t(tree, 0.0)
-                { }
-        pt_state_t(const pt_state_t& state)
-                : base_t(state)
-                { }
-        pt_state_t& operator=(const pt_root_t& tree) {
-                base_t::first = tree;
-                return *this;
-        }
-        pt_state_t& operator=(double posterior_value) {
-                base_t::second = posterior_value;
-                return *this;
-        }
-        const pt_root_t& tree() const {
-                return base_t::first;
-        }
-        pt_root_t& tree() {
-                return base_t::first;
-        }
-        operator pt_root_t&() {
-                return base_t::first;
-        }
-        operator double&() {
-                return base_t::second;
-        }
-};
 
 // phylotree sampler
 ////////////////////////////////////////////////////////////////////////////////
 
 class pt_sampler_t : public virtual clonable
 {
+protected:
+        class state_t : std::pair<pt_root_t, double>
+        {
+                typedef std::pair<pt_root_t, double> base_t;
+        public:
+                state_t(const pt_root_t& tree)
+                        : base_t(tree, 0.0)
+                        { }
+                state_t(const state_t& state)
+                        : base_t(state)
+                        { }
+                state_t& operator=(const pt_root_t& tree) {
+                        base_t::first = tree;
+                        return *this;
+                }
+                state_t& operator=(double posterior_value) {
+                        base_t::second = posterior_value;
+                        return *this;
+                }
+                const pt_root_t& tree() const {
+                        return base_t::first;
+                }
+                pt_root_t& tree() {
+                        return base_t::first;
+                }
+                operator pt_root_t&() {
+                        return base_t::first;
+                }
+                operator double&() {
+                        return base_t::second;
+                }
+        };
 public:
         virtual ~pt_sampler_t() { }
 
@@ -212,7 +213,7 @@ public:
 
         // access methods
         virtual const pt_history_mh_t& history() const = 0;
-        virtual const pt_state_t& state() const = 0;
+        virtual const state_t& state() const = 0;
 
         // print status
         virtual void rewind() const = 0;
@@ -416,10 +417,10 @@ public:
         virtual pt_history_mh_t& history() {
                 return _history_;
         }
-        virtual const pt_state_t& state() const {
+        virtual const state_t& state() const {
                 return _state_;
         }
-        virtual pt_state_t& state() {
+        virtual state_t& state() {
                 return _state_;
         }
         const double& temperature() const {
@@ -432,7 +433,7 @@ protected:
         // sampler history
         pt_history_mh_t _history_;
         // state of the sampler
-        pt_state_t _state_;
+        state_t _state_;
         // a thread pool for computing likelihoods
         thread_pool_t& _thread_pool_;
         // alignment data
@@ -598,10 +599,10 @@ public:
         virtual pt_history_mh_t& history() {
                 return _history_;
         }
-        virtual const pt_state_t& state() const {
+        virtual const state_t& state() const {
                 return _state_;
         }
-        virtual pt_state_t& state() {
+        virtual state_t& state() {
                 return _state_;
         }
         const double& temperature() const {
@@ -614,7 +615,7 @@ protected:
         // sampler history
         pt_history_mh_t _history_;
         // state of the sampler
-        pt_state_t _state_;
+        state_t _state_;
         // a thread pool for computing likelihoods
         thread_pool_t& _thread_pool_;
         // alignment data
@@ -725,7 +726,7 @@ public:
         virtual const pt_history_mh_t& history() const {
                 return _population_[0].history();
         }
-        virtual const pt_state_t& state() const {
+        virtual const state_t& state() const {
                 return _population_[0].state();
         }
 protected:
@@ -812,8 +813,11 @@ public:
         virtual const pt_history_mh_t& history(size_t i) const {
                 return _population_[i].history();
         }
-        virtual const pt_state_t& state() const {
+        virtual const state_t& state() const {
                 return _population_[0].state();
+        }
+        virtual const state_t& state(size_t i) const {
+                return _population_[i].state();
         }
         size_t size() const {
                 return _population_.size();
