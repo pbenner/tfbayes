@@ -674,7 +674,7 @@ public:
                         std::cerr << boost::format(__line_del__" -> sampler %3d: %f\n")
                                 % i % __rate__(_history_.accepted_swaps[i], _history_.steps[i]);
                 }
-                std::cerr << std::endl;
+                std::cerr << __line_del__ << std::endl;
         }
         virtual double operator()(threaded_rng_t& rng, bool verbose = false) {
                 using std::swap;
@@ -772,9 +772,10 @@ public:
         }
         virtual void print_progress() const {
                 for (size_t i = 0; i < _population_.size(); i++) {
-                        std::cerr << std::endl
-                                  << "|======================================|"
-                                  << std::endl << std::endl;
+                        std::cerr << __line_del__ << std::endl
+                                  << __line_del__"|======================================|"
+                                  << __line_del__ << std::endl
+                                  << __line_del__ << std::endl;
                         _population_[i].print_progress();
                 }
         }
