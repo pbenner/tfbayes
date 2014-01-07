@@ -60,6 +60,33 @@ double __rate__(size_t i, size_t n) {
         else        return static_cast<double>(i)/static_cast<double>(n);
 }
 
+template <typename S, typename T>
+class polymorphic_type_t : public std::pair<S, T>
+{
+        typedef std::pair<S, T> base_t;
+public:
+        polymorphic_type_t(const S& s, const T& t)
+                : base_t(s, t)
+                { }
+        polymorphic_type_t(const polymorphic_type_t& type)
+                : base_t(type)
+                { }
+        polymorphic_type_t& operator=(const S& s) {
+                base_t::first = s;
+                return *this;
+        }
+        polymorphic_type_t& operator=(const T& t) {
+                base_t::second = t;
+                return *this;
+        }
+        operator S&() {
+                return base_t::first;
+        }
+        operator T&() {
+                return base_t::second;
+        }
+};
+
 // proposal distributions
 ////////////////////////////////////////////////////////////////////////////////
 class proposal_distribution_t : public virtual clonable
@@ -168,38 +195,11 @@ struct pt_history_mc3_t
 class pt_sampler_t : public virtual clonable
 {
 protected:
-        // the state of a sampler is a phylogenetic tree paired with its
-        // posterior value
-        class state_t : std::pair<pt_root_t, double>
-        {
-                typedef std::pair<pt_root_t, double> base_t;
+        class state_t {
         public:
-                state_t(const pt_root_t& tree)
-                        : base_t(tree, 0.0)
-                        { }
-                state_t(const state_t& state)
-                        : base_t(state)
-                        { }
-                state_t& operator=(const pt_root_t& tree) {
-                        base_t::first = tree;
-                        return *this;
-                }
-                state_t& operator=(double posterior_value) {
-                        base_t::second = posterior_value;
-                        return *this;
-                }
-                const pt_root_t& tree() const {
-                        return base_t::first;
-                }
-                pt_root_t& tree() {
-                        return base_t::first;
-                }
-                operator pt_root_t&() {
-                        return base_t::first;
-                }
-                operator double&() {
-                        return base_t::second;
-                }
+                virtual ~state_t() { }
+
+                virtual void swap(state_t& state) = 0;
         };
 public:
         virtual ~pt_sampler_t() { }
@@ -235,6 +235,22 @@ class pt_hamiltonian_t : public pt_sampler_t
                         return (Left + Right*Right);
                 }
         };
+        class state_t : public pt_sampler_t::state_t
+        {
+        public:
+                state_t(const pt_root_t& tree)
+                        : q(tree, 0.0),
+                          p(tree.n_nodes-1)
+                        { }
+
+                virtual void swap(pt_sampler_t::state_t& state) {
+                        using std::swap;
+                        swap(*this, static_cast<state_t&>(state));
+                }
+
+                polymorphic_type_t<pt_root_t, double> q;
+                vector_t p;
+        };
 public:
         typedef boost::math::gamma_distribution<> gamma_distribution_t;
 
@@ -257,7 +273,7 @@ public:
                   _steps_                (steps) {
 
                 // compute the posterior value for the initial tree
-                _state_ = log_posterior(_state_);
+                _state_.q = log_posterior(_state_.q);
         }
         pt_hamiltonian_t(const pt_hamiltonian_t& mh)
                 : _history_              (mh._history_),
@@ -325,19 +341,19 @@ public:
                 momentum_step(p, q, _step_size_/2.0);
         }
         void sample_length(threaded_rng_t& rng) {
-                size_t n = _state_.tree().n_nodes-1;
+                size_t n = static_cast<pt_root_t&>(_state_.q).n_nodes-1;
                 // distributions for drawing random numbers
                 boost::random::uniform_01<> uniform;
                 // state
-                vector_t  p(n);
-                pt_root_t q(_state_);
+                vector_t  p(_state_.p);
+                pt_root_t q(_state_.q);
                 // sample a new momentum
                 boost::normal_distribution<> nd(0.0, 1.0);
                 for (size_t i = 0; i < n; i++) {
                         p[i] = nd(rng);
                 }
                 // current posterior values
-                double current_U = -_state_;
+                double current_U = -_state_.q;
                 double current_K = std::accumulate(p.begin(), p.end(), 0.0, square<double>())/2.0;
                 // simulate Hamiltonian dynamics
                 leapfrog(_steps_, p, q);
@@ -347,19 +363,19 @@ public:
                 double rho = std::exp(current_U - proposed_U + current_K - proposed_K);
                 if (uniform(rng) < rho) {
                         // accept proposal
-                        _state_ = q;
-                        _state_ = -proposed_U;
+                        _state_.q = q;
+                        _state_.q = -proposed_U;
                         _history_.accepted_lengths++;
                 }
                 // update history
-                _history_.samples.push_back(_state_);
-                _history_.values .push_back(_state_);
+                _history_.samples.push_back(_state_.q);
+                _history_.values .push_back(_state_.q);
                 _history_.steps_length++;
         }
         void sample_topology(pt_node_t& node, threaded_rng_t& rng) {
                 // can't sample leafs
                 if (node.leaf()) return;
-                double log_posterior_ref = _state_;
+                double log_posterior_ref = _state_.q;
                 // distributions for drawing random numbers
                 boost::random::bernoulli_distribution<> bernoulli(0.5);
                 boost::random::uniform_01<> uniform;
@@ -370,14 +386,14 @@ public:
                 node.move(which);
 
                 // compute new log likelihood
-                const double log_posterior_new = log_posterior(_state_);
+                const double log_posterior_new = log_posterior(_state_.q);
 
                 // compute acceptance probability
                 const double rho = exp(1.0/_temperature_*(log_posterior_new-log_posterior_ref));
                 const double x   = uniform(rng);
                 if (x <= std::min(1.0, rho)) {
                         // sample accepted
-                        _state_ = log_posterior_new;
+                        _state_.q = log_posterior_new;
                         _history_.accepted_topologies++;
                 }
                 else {
@@ -390,8 +406,8 @@ public:
                 // sample branch lengths for the full tree
                 sample_length(rng);
                 // loop over nodes and sample topologies
-                for (pt_node_t::nodes_t::const_iterator it = _state_.tree().begin_nodes();
-                     it != _state_.tree().end_nodes(); it++) {
+                for (pt_node_t::nodes_t::const_iterator it = static_cast<pt_root_t&>(_state_.q).begin_nodes();
+                     it != static_cast<pt_root_t&>(_state_.q).end_nodes(); it++) {
                         // skip the root
                         if ((*it)->root()) {
                                 continue;
@@ -399,13 +415,13 @@ public:
                         sample_topology(**it, rng);
                 }
                 // update history
-                _history_.samples.push_back(_state_);
-                _history_.values .push_back(_state_);
+                _history_.samples.push_back(_state_.q);
+                _history_.values .push_back(_state_.q);
                 if (verbose) {
                         print_progress();
                 }
                 // return posterior value
-                return _state_;
+                return _state_.q;
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
@@ -448,6 +464,31 @@ protected:
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
 class pt_metropolis_hastings_t : public pt_sampler_t
 {
+protected:
+        // the state of a sampler is a phylogenetic tree paired with its
+        // posterior value
+        class state_t : public pt_sampler_t::state_t, public polymorphic_type_t<pt_root_t, double>
+        {
+                typedef polymorphic_type_t<pt_root_t, double> base_t;
+        public:
+                state_t(const pt_root_t& tree)
+                        : base_t(tree, 0.0)
+                        { }
+                state_t(const state_t& state)
+                        : base_t(state)
+                        { }
+                const pt_root_t& tree() const {
+                        return base_t::first;
+                }
+                pt_root_t& tree() {
+                        return base_t::first;
+                }
+                virtual void swap(pt_sampler_t::state_t& state) {
+                        using std::swap;
+                        swap(*this, static_cast<state_t&>(state));
+                }
+                using base_t::operator=;
+        };
 public:
         typedef boost::math::gamma_distribution<> gamma_distribution_t;
 
@@ -710,8 +751,8 @@ public:
                                         print_progress();
                                 }
                                 // swap states of the two chains
-                                swap(_population_[i].state(),
-                                     _population_[j].state());
+                                _population_[i].state().swap(
+                                        _population_[j].state());
                         }
                 }
                 // wait for all processes to finish
