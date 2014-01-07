@@ -814,8 +814,7 @@ public:
         virtual void print_progress() const {
                 for (size_t i = 0; i < _population_.size(); i++) {
                         std::cerr << __line_del__ << std::endl
-                                  << __line_del__"|======================================|"
-                                  << __line_del__ << std::endl
+                                  << __line_del__ "|======================================|" << std::endl
                                   << __line_del__ << std::endl;
                         _population_[i].print_progress();
                 }
