@@ -231,7 +231,7 @@ class pt_hamiltonian_t : public pt_sampler_t
         template<typename T>
         struct square
         {
-                T operator()(const T& Left, const T& Right) const {   
+                T operator()(const T& Left, const T& Right) const {
                         return (Left + Right*Right);
                 }
         };
