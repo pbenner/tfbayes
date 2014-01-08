@@ -165,42 +165,12 @@ private:
         boost::math::gamma_distribution<> gamma_distribution;
 };
 
-// sampling history
-////////////////////////////////////////////////////////////////////////////////
-
-struct pt_history_mh_t
-{
-        typedef std::list<pt_root_t> samples_t;
-        typedef std::vector<double> values_t;
-
-        // acceptance rates
-        size_t accepted_topologies;
-        size_t accepted_lengths;
-        size_t steps_topology;
-        size_t steps_length;
-        // list of tree samples
-        samples_t samples;
-        // the posterior value for each tree
-        values_t values;
-};
-
-struct pt_history_mc3_t
-{
-        pt_history_mc3_t(size_t k)
-        : accepted_swaps(k, 0),
-          steps         (k, 0)
-                { }
-
-        std::vector<size_t> accepted_swaps;
-        std::vector<size_t> steps;
-};
-
 // phylotree sampler
 ////////////////////////////////////////////////////////////////////////////////
 
 class pt_sampler_t : public virtual clonable
 {
-protected:
+public:
         class state_t {
         public:
                 virtual ~state_t() { }
@@ -209,6 +179,21 @@ protected:
                 friend  void swap(state_t& left, state_t& right) {
                         left.swap(right);
                 }
+        };
+        struct history_t
+        {
+                typedef std::list<pt_root_t> samples_t;
+                typedef std::vector<double> values_t;
+
+                // acceptance rates
+                size_t accepted_topologies;
+                size_t accepted_lengths;
+                size_t steps_topology;
+                size_t steps_length;
+                // list of tree samples
+                samples_t samples;
+                // the posterior value for each tree
+                values_t values;
         };
 public:
         virtual ~pt_sampler_t() { }
@@ -219,7 +204,7 @@ public:
         virtual double operator()(threaded_rng_t& rng, bool verbose = false) = 0;
 
         // access methods
-        virtual const pt_history_mh_t& history() const = 0;
+        virtual const history_t& history() const = 0;
         virtual const state_t& state() const = 0;
 
         // print status
@@ -444,10 +429,10 @@ public:
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
-        virtual const pt_history_mh_t& history() const {
+        virtual const history_t& history() const {
                 return _history_;
         }
-        virtual pt_history_mh_t& history() {
+        virtual history_t& history() {
                 return _history_;
         }
         virtual const state_t& state() const {
@@ -464,7 +449,7 @@ public:
         }
 protected:
         // sampler history
-        pt_history_mh_t _history_;
+        history_t _history_;
         // state of the sampler
         state_t _state_;
         // a thread pool for computing likelihoods
@@ -654,10 +639,10 @@ public:
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
-        virtual const pt_history_mh_t& history() const {
+        virtual const history_t& history() const {
                 return _history_;
         }
-        virtual pt_history_mh_t& history() {
+        virtual history_t& history() {
                 return _history_;
         }
         virtual const state_t& state() const {
@@ -674,7 +659,7 @@ public:
         }
 protected:
         // sampler history
-        pt_history_mh_t _history_;
+        history_t _history_;
         // state of the sampler
         state_t _state_;
         // a thread pool for computing likelihoods
@@ -692,6 +677,16 @@ protected:
 template <typename T>
 class pt_mc3_t : public pt_sampler_t
 {
+        struct history_mc3_t
+        {
+                history_mc3_t(size_t k)
+                        : accepted_swaps(k, 0),
+                          steps         (k, 0)
+                        { }
+
+                std::vector<size_t> accepted_swaps;
+                std::vector<size_t> steps;
+        };
         typedef std::vector<double> vector_t;
 public:
         pt_mc3_t(const vector_t& temperatures, const T& mh)
@@ -784,7 +779,7 @@ public:
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
-        virtual const pt_history_mh_t& history() const {
+        virtual const history_t& history() const {
                 return _population_[0].history();
         }
         virtual const state_t& state() const {
@@ -792,7 +787,7 @@ public:
         }
 protected:
         // mc3 specific history
-        pt_history_mc3_t _history_;
+        history_mc3_t _history_;
         // a population of samplers
         boost::ptr_vector<T> _population_;
         // a local thread pool
@@ -868,10 +863,10 @@ public:
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
-        virtual const pt_history_mh_t& history() const {
+        virtual const history_t& history() const {
                 return _population_[0].history();
         }
-        virtual const pt_history_mh_t& history(size_t i) const {
+        virtual const history_t& history(size_t i) const {
                 return _population_[i].history();
         }
         virtual const state_t& state() const {

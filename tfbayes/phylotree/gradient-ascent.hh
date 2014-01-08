@@ -34,20 +34,6 @@
 #include <tfbayes/utility/distribution.hh>
 #include <tfbayes/utility/statistics.hh>
 
-// sampling history
-////////////////////////////////////////////////////////////////////////////////
-
-struct pt_history_ga_t
-{
-        typedef std::list<pt_root_t> samples_t;
-        typedef std::vector<double> values_t;
-
-        // list of tree samples
-        samples_t samples;
-        // the posterior value for each tree
-        values_t values;
-};
-
 /* This is a gradient ascent method to compute the maximum posterior
  * value with an adaptive step-size similar to resilient
  * backpropagation (Rprop).
@@ -55,6 +41,17 @@ struct pt_history_ga_t
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
 class pt_gradient_ascent_t
 {
+public:
+        struct history_t
+        {
+                typedef std::list<pt_root_t> samples_t;
+                typedef std::vector<double> values_t;
+
+                // list of tree samples
+                samples_t samples;
+                // the posterior value for each tree
+                values_t values;
+        };
 public:
         pt_gradient_ascent_t(const pt_root_t& tree,
                              const alignment_map_t<AC>& alignment,
@@ -134,15 +131,15 @@ public:
         }
         // access methods
         ////////////////////////////////////////////////////////////////////////
-        const pt_history_ga_t& history() const {
+        const history_t& history() const {
                 return _history_;
         }
-        pt_history_ga_t& history() {
+        history_t& history() {
                 return _history_;
         }
 protected:
         // sampler history
-        pt_history_ga_t _history_;
+        history_t _history_;
         // tree and posterior value
         pt_root_t _tree_;
         // data

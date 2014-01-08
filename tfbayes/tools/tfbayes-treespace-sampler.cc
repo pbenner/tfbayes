@@ -62,7 +62,7 @@ protected:
                 size_t line = 0;
                 // print header
                 o << "x y" << endl;
-                for (pt_history_ga_t::values_t::const_iterator it = ga.history().values.begin();
+                for (typename pt_gradient_ascent_t<AS, AC, PC>::history_t::values_t::const_iterator it = ga.history().values.begin();
                      it != ga.history().values.end(); it++) {
                         o << ++line << " " << *it << endl;
                 }
@@ -81,7 +81,7 @@ protected:
                 }
                 o << endl;
                 // print the list such that the order of samples is preserved
-                std::vector<pt_history_mh_t::values_t::const_iterator> it_vec(mh.size());
+                std::vector<pt_sampler_t::history_t::values_t::const_iterator> it_vec(mh.size());
                 for (size_t i = 0; i < mh.size(); i++) {
                         it_vec[i] = mh.history(i).values.begin();
                 }
@@ -117,7 +117,7 @@ public:
 protected:
         template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
         std::ostream& print_ga(const pt_gradient_ascent_t<AS, AC, PC>& ga, std::ostream& o) const {
-                for (pt_history_ga_t::samples_t::const_iterator it = ga.history().samples.begin();
+                for (typename pt_gradient_ascent_t<AS, AC, PC>::history_t::samples_t::const_iterator it = ga.history().samples.begin();
                      it != ga.history().samples.end(); it++) {
                         o << newick_format(*it) << endl;
                 }
@@ -125,7 +125,7 @@ protected:
         }
         std::ostream& print_mh(const pt_pmcmc_t& mh, std::ostream& o) const {
                 // print the list such that the order of samples is preserved
-                std::vector<pt_history_mh_t::samples_t::const_iterator> it_vec(mh.size());
+                std::vector<pt_sampler_t::history_t::samples_t::const_iterator> it_vec(mh.size());
                 for (size_t i = 0; i < mh.size(); i++) {
                         it_vec[i] = mh.history(i).samples.begin();
                 }
