@@ -22,10 +22,11 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <algorithm> /* std::min */
+#include <algorithm>  // std::min, std::transform
 #include <cmath>
 #include <iomanip>
 #include <list>
+#include <functional> // std::negate
 #include <numeric>
 #include <vector>
 
@@ -282,6 +283,9 @@ public:
                   _steps_                (steps),
                   _momentum_refreshment_ (momentum_refreshment) {
 
+                // check parameters
+                assert(_momentum_refreshment_ >= -1.0);
+                assert(_momentum_refreshment_ <=  1.0);
                 // compute the posterior value for the initial tree
                 _state_.q = log_posterior(_state_.q);
         }
@@ -369,6 +373,7 @@ public:
                 double current_K = std::accumulate(p.begin(), p.end(), 0.0, square<double>())/2.0;
                 // simulate Hamiltonian dynamics
                 leapfrog(_steps_, p, q);
+                std::transform(p.begin(), p.end(), p.begin(), std::negate<double>());
                 // Metropolis-Hastings acceptance probability
                 double proposed_U = -log_posterior(q);
                 double proposed_K = std::accumulate(p.begin(), p.end(), 0.0, square<double>())/2.0;
@@ -380,6 +385,7 @@ public:
                         _state_.q = -proposed_U;
                         _history_.accepted_lengths++;
                 }
+                std::transform(_state_.p.begin(), _state_.p.end(), _state_.p.begin(), std::negate<double>());
                 // update history
                 _history_.samples.push_back(_state_.q);
                 _history_.values .push_back(_state_.q);
