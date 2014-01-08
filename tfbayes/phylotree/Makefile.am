@@ -26,12 +26,10 @@ expected_terms_LDADD  += libtfbayes-phylotree.la
 parser_test_SOURCES = parser-test.cc
 parser_test_LDADD   = -lm
 parser_test_LDADD  += libtfbayes-phylotree.la
-parser_test_LDADD  += $(BOOST_SYSTEM_LIB)
 
 approximation_test_SOURCES = approximation-test.cc
 approximation_test_LDADD   = -lm
 approximation_test_LDADD  += libtfbayes-phylotree.la
-approximation_test_LDADD  += $(BOOST_SYSTEM_LIB)
 
 likelihood_test_SOURCES = likelihood-test.cc
 likelihood_test_LDADD   = -lm
@@ -40,7 +38,6 @@ likelihood_test_LDADD  += libtfbayes-phylotree.la
 marginal_likelihood_test_SOURCES = marginal-likelihood-test.cc
 marginal_likelihood_test_LDADD   = -lm
 marginal_likelihood_test_LDADD  += libtfbayes-phylotree.la
-marginal_likelihood_test_LDADD  += $(BOOST_SYSTEM_LIB)
 
 treespace_test_SOURCES = treespace-test.cc
 treespace_test_LDADD   = -lm
@@ -74,6 +71,9 @@ libtfbayes_phylotree_la_SOURCES = \
 	treespace.hh
 libtfbayes_phylotree_la_LIBADD   = -lm
 libtfbayes_phylotree_la_LIBADD  += $(LIB_GLPK)
+libtfbayes_phylotree_la_LIBADD  += $(LIB_PTHREAD)
+libtfbayes_phylotree_la_LIBADD  += $(BOOST_SYSTEM_LIB)
+libtfbayes_phylotree_la_LIBADD  += $(BOOST_THREAD_LIB)
 libtfbayes_phylotree_la_LIBADD  += $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
 libtfbayes_phylotree_la_LDFLAGS  = -no-undefined 
 libtfbayes_phylotree_la_LDFLAGS += -version-info 0:0:0

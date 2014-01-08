@@ -79,7 +79,7 @@ public:
         boost::unique_future<T> schedule(boost::function<T ()> f) {
                 boost::lock_guard<boost::mutex> guard(mtx);
                 typedef boost::packaged_task<T> task_t;
-                boost::shared_ptr<task_t> tmp = boost::make_shared<task_t>(f);
+                boost::shared_ptr<task_t> tmp = boost::make_shared<task_t>(boost::move(f));
                 io_service.post(boost::bind(&task_t::operator(), tmp));
                 return tmp->get_future();
         }
