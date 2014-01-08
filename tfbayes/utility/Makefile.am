@@ -14,6 +14,7 @@ noinst_HEADERS = \
 	permutation.hh \
 	polynomial.hh \
 	progress.hh \
+	random.hh \
 	statistics.hh \
 	strtools.hh \
 	thread-pool.hh
