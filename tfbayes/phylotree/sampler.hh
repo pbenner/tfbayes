@@ -268,6 +268,7 @@ public:
                          const gamma_distribution_t& gamma_distribution,
                          double step_size,
                          size_t steps,
+                         double momentum_refreshment,
                          thread_pool_t& thread_pool,
                          double temperature = 1.0)
                 : _history_              (), // zero-initialize history
@@ -278,7 +279,8 @@ public:
                   _gamma_distribution_   (gamma_distribution),
                   _temperature_          (temperature),
                   _step_size_            (step_size),
-                  _steps_                (steps) {
+                  _steps_                (steps),
+                  _momentum_refreshment_ (momentum_refreshment) {
 
                 // compute the posterior value for the initial tree
                 _state_.q = log_posterior(_state_.q);
@@ -292,7 +294,8 @@ public:
                   _gamma_distribution_   (mh._gamma_distribution_),
                   _temperature_          (mh._temperature_),
                   _step_size_            (mh._step_size_),
-                  _steps_                (mh._steps_) {
+                  _steps_                (mh._steps_),
+                  _momentum_refreshment_ (mh._momentum_refreshment_) {
 
         }
         virtual ~pt_hamiltonian_t()
@@ -358,7 +361,8 @@ public:
                 // sample a new momentum
                 boost::normal_distribution<> nd(0.0, 1.0);
                 for (size_t i = 0; i < n; i++) {
-                        p[i] = nd(rng);
+                        p[i] = _momentum_refreshment_*p[i] + std::pow(
+                                (1.0-std::pow(_momentum_refreshment_, 2.0)), 0.5)*nd(rng);
                 }
                 // current posterior values
                 double current_U = -_state_.q;
@@ -371,6 +375,7 @@ public:
                 double rho = std::exp(current_U - proposed_U + current_K - proposed_K);
                 if (uniform(rng) < rho) {
                         // accept proposal
+                        _state_.p = p;
                         _state_.q = q;
                         _state_.q = -proposed_U;
                         _history_.accepted_lengths++;
@@ -467,6 +472,8 @@ protected:
         // integration parameters
         double _step_size_;
         size_t _steps_;
+        // other parameters
+        double _momentum_refreshment_;
 };
 
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>

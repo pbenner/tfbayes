@@ -163,6 +163,7 @@ typedef struct _options_t {
         double min_change;
         double leapfrog_step_size;
         size_t leapfrog_steps;
+        double momentum_refreshment;
         double step_size;
         double proposal_variance;
         string save_posterior;
@@ -178,6 +179,7 @@ typedef struct _options_t {
                   min_change(0.0005),
                   leapfrog_step_size(0.01),
                   leapfrog_steps(1),
+                  momentum_refreshment(0.0),
                   step_size(0.001),
                   proposal_variance(0.01),
                   save_posterior(""),
@@ -202,21 +204,22 @@ operator<<(std::ostream& o, const vector<double>& v)
 
 ostream&
 operator<<(std::ostream& o, const options_t& options) {
-        o << "Options:"                                                   << endl
-          << "-> pseudocounts          = " << options.alpha               << endl
-          << "-> gamma scale           = " << options.scale               << endl
-          << "-> gamma shape           = " << options.shape               << endl
-          << "-> leapfrog step_size    = " << options.leapfrog_step_size  << endl
-          << "-> leapfrog steps        = " << options.leapfrog_steps      << endl
-          << "-> max steps             = " << options.max_steps           << endl
-          << "-> min change            = " << options.min_change          << endl
-          << "-> gradient step size    = " << options.step_size           << endl
-          << "-> proposal variance     = " << options.proposal_variance   << endl
-          << "-> parallel chains       = " << options.chains              << endl
-          << "-> number of threads     = " << options.threads             << endl
-          << "-> temperatures          = " << options.temperatures        << endl
-          << "-> save posterior values = " << options.save_posterior      << endl
-          << "-> verbose               = " << options.verbose             << endl;
+        o << "Options:"                                                    << endl
+          << "-> pseudocounts          = " << options.alpha                << endl
+          << "-> gamma scale           = " << options.scale                << endl
+          << "-> gamma shape           = " << options.shape                << endl
+          << "-> leapfrog step_size    = " << options.leapfrog_step_size   << endl
+          << "-> leapfrog steps        = " << options.leapfrog_steps       << endl
+          << "-> momentum refreshment  = " << options.momentum_refreshment << endl
+          << "-> max steps             = " << options.max_steps            << endl
+          << "-> min change            = " << options.min_change           << endl
+          << "-> gradient step size    = " << options.step_size            << endl
+          << "-> proposal variance     = " << options.proposal_variance    << endl
+          << "-> parallel chains       = " << options.chains               << endl
+          << "-> number of threads     = " << options.threads              << endl
+          << "-> temperatures          = " << options.temperatures         << endl
+          << "-> save posterior values = " << options.save_posterior       << endl
+          << "-> verbose               = " << options.verbose              << endl;
         return o;
 }
 
@@ -239,6 +242,7 @@ void print_usage(char *pname, FILE *fp)
                       "      --leapfrog-step-size      - integration step size for the hamiltonian mcmc\n"
                       "      --leapfrog-steps          - number of integration steps for the hamiltonian mcmc\n"
                       "      --proposal-variance=float - variance of the proposal distribution\n"
+                      "      --hamiltonian-alpha=float - partial momentum refreshment parameter\n"
                       "      --shape=float             - shape parameter for the gamma prior\n"
                       "      --scale=float             - scale parameter for the gamma prior\n"
                       "                                  for each sample to FILE\n"
@@ -366,7 +370,8 @@ void run_hamiltonian_mcmc(
         seed_rng(rng);
         // the metropolis sampler
         pt_ham_t pt_ham(pt_root, alignment_map, options.alpha, gamma_distribution,
-                        options.leapfrog_step_size, options.leapfrog_steps, thread_pool);
+                        options.leapfrog_step_size, options.leapfrog_steps,
+                        options.momentum_refreshment, thread_pool);
         // parallel chains with different temperatures
         pt_mc3_t<pt_ham_t> pt_mc3(options.temperatures, pt_ham);
         // run several mc3 chains in parallel
@@ -423,21 +428,22 @@ int main(int argc, char *argv[])
         for(;;) {
                 int c, option_index = 0;
                 static struct option long_options[] = {
-                        { "counts",             1, 0, 'a' },
-                        { "chains",             1, 0, 'j' },
-                        { "epsilon",            1, 0, 'n' },
-                        { "proposal-variance",  1, 0, 's' },
-                        { "leapfrog-step-size", 1, 0, 'b' },
-                        { "leapfrog-steps",     1, 0, 'c' },
-                        { "shape",              1, 0, 'r' },
-                        { "scale",              1, 0, 'l' },
-                        { "steps",              1, 0, 'm' },
-                        { "step-size",          1, 0, 'e' },
-                        { "temperatures",       1, 0, 'u' },
-                        { "threads",            1, 0, 't' },
-                        { "save-posterior",     1, 0, 'p' },
-                        { "help",               0, 0, 'h' },
-                        { "version",            0, 0, 'x' }
+                        { "counts",               1, 0, 'a' },
+                        { "chains",               1, 0, 'j' },
+                        { "epsilon",              1, 0, 'n' },
+                        { "proposal-variance",    1, 0, 's' },
+                        { "leapfrog-step-size",   1, 0, 'b' },
+                        { "leapfrog-steps",       1, 0, 'c' },
+                        { "momentum-refreshment", 1, 0, 'd' },
+                        { "shape",                1, 0, 'r' },
+                        { "scale",                1, 0, 'l' },
+                        { "steps",                1, 0, 'm' },
+                        { "step-size",            1, 0, 'e' },
+                        { "temperatures",         1, 0, 'u' },
+                        { "threads",              1, 0, 't' },
+                        { "save-posterior",       1, 0, 'p' },
+                        { "help",                 0, 0, 'h' },
+                        { "version",              0, 0, 'x' }
                 };
 
                 c = getopt_long(argc, argv, "v",
@@ -469,6 +475,9 @@ int main(int argc, char *argv[])
                         break;
                 case 'c':
                         options.leapfrog_steps = atoi(optarg);
+                        break;
+                case 'd':
+                        options.momentum_refreshment = atof(optarg);
                         break;
                 case 'n':
                         options.min_change = atof(optarg);
