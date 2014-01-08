@@ -85,6 +85,11 @@ public:
         operator T&() {
                 return base_t::second;
         }
+        friend  void swap(polymorphic_type_t& left, polymorphic_type_t& right) {
+                using std::swap;
+                swap(static_cast<base_t&>(left),
+                     static_cast<base_t&>(right));
+        }
 };
 
 // proposal distributions
@@ -200,6 +205,9 @@ protected:
                 virtual ~state_t() { }
 
                 virtual void swap(state_t& state) = 0;
+                friend  void swap(state_t& left, state_t& right) {
+                        left.swap(right);
+                }
         };
 public:
         virtual ~pt_sampler_t() { }
@@ -227,7 +235,7 @@ template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
 class pt_hamiltonian_t : public pt_sampler_t
 {
         typedef std::vector<double> vector_t;
-
+public:
         template<typename T>
         struct square
         {
@@ -464,7 +472,7 @@ protected:
 template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
 class pt_metropolis_hastings_t : public pt_sampler_t
 {
-protected:
+public:
         // the state of a sampler is a phylogenetic tree paired with its
         // posterior value
         class state_t : public pt_sampler_t::state_t, public polymorphic_type_t<pt_root_t, double>
@@ -485,7 +493,8 @@ protected:
                 }
                 virtual void swap(pt_sampler_t::state_t& state) {
                         using std::swap;
-                        swap(*this, static_cast<state_t&>(state));
+                        swap(static_cast<base_t&>(*this),
+                             static_cast<base_t&>(static_cast<state_t&>(state)));
                 }
                 using base_t::operator=;
         };
@@ -751,8 +760,8 @@ public:
                                         print_progress();
                                 }
                                 // swap states of the two chains
-                                _population_[i].state().swap(
-                                        _population_[j].state());
+                                swap(_population_[i].state(),
+                                     _population_[j].state());
                         }
                 }
                 // wait for all processes to finish
