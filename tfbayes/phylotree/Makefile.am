@@ -50,23 +50,24 @@ treespace_distance_LDADD  += libtfbayes-phylotree.la
 lib_LTLIBRARIES = libtfbayes-phylotree.la
 
 libtfbayes_phylotree_la_SOURCES = \
-	phylotree.cc \
-	phylotree.hh \
 	approximation.hh \
 	generate-observations.hh \
 	gradient.hh \
 	gradient-ascent.hh \
-	polynomial.hh \
-	sampler.hh \
 	lexer.ll \
+	model.hh \
 	parser.hh \
 	parser.yy \
 	parsetree.cc \
 	parsetree.hh \
-	simple-polynomial.hh \
+	phylotree.cc \
+	phylotree.hh \
+	polynomial.hh \
 	posterior.hh \
 	marginal-likelihood.hh \
 	utility.hh \
+	sampler.hh \
+	simple-polynomial.hh \
 	treespace.cc \
 	treespace.hh
 libtfbayes_phylotree_la_LIBADD   = -lm
