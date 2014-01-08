@@ -48,7 +48,7 @@ public:
         explicit print_posterior_values(const pt_pmcmc_t& mh)
                 : f(boost::bind(&print_posterior_values::print_mh, this, boost::cref(mh), _1))
                 { }
-        template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
+        template <size_t AS, typename AC, typename PC>
         explicit print_posterior_values(const pt_gradient_ascent_t<AS, AC, PC>& ga)
                 : f(boost::bind(&print_posterior_values::print_ga<AS, AC, PC>, this, boost::cref(ga), _1))
                 { }
@@ -57,7 +57,7 @@ public:
                 return f(o);
         }
 protected:
-        template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
+        template <size_t AS, typename AC, typename PC>
         std::ostream& print_ga(const pt_gradient_ascent_t<AS, AC, PC>& ga, std::ostream& o) const {
                 size_t line = 0;
                 // print header
@@ -105,7 +105,7 @@ public:
         explicit print_posterior_samples(const pt_pmcmc_t& mh)
                 : f(boost::bind(&print_posterior_samples::print_mh, this, boost::cref(mh), _1))
                 { }
-        template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
+        template <size_t AS, typename AC, typename PC>
         explicit print_posterior_samples(const pt_gradient_ascent_t<AS, AC, PC>& ga)
                 : f(boost::bind(&print_posterior_samples::print_ga<AS, AC, PC>, this, boost::cref(ga), _1))
                 { }
@@ -115,7 +115,7 @@ public:
         }
 
 protected:
-        template <size_t AS, typename AC = alphabet_code_t, typename PC = double>
+        template <size_t AS, typename AC, typename PC>
         std::ostream& print_ga(const pt_gradient_ascent_t<AS, AC, PC>& ga, std::ostream& o) const {
                 for (typename pt_gradient_ascent_t<AS, AC, PC>::history_t::samples_t::const_iterator it = ga.history().samples.begin();
                      it != ga.history().samples.end(); it++) {
