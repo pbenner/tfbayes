@@ -12,9 +12,6 @@ tfbayes_treespace_sampler_SOURCES  = tfbayes-treespace-sampler.cc
 tfbayes_treespace_sampler_LDADD    = ../phylotree/libtfbayes-phylotree.la
 tfbayes_treespace_sampler_LDADD   += ../fasta/libtfbayes-fasta.la
 tfbayes_treespace_sampler_LDADD   += ../fastarithmetics/libtfbayes-fastarithmetics.la
-tfbayes_treespace_sampler_LDADD   += $(LIB_PTHREAD)
-tfbayes_treespace_sampler_LDADD   += $(BOOST_SYSTEM_LIB)
-tfbayes_treespace_sampler_LDADD   += $(BOOST_THREAD_LIB)
 
 tfbayes_treespace_mean_SOURCES = tfbayes-treespace-mean.cc
 tfbayes_treespace_mean_LDADD   = ../phylotree/libtfbayes-phylotree.la
