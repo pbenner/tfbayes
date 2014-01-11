@@ -1,0 +1,135 @@
+#! /usr/bin/env python
+
+# Copyright (C) 2014 Philipp Benner
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# imports
+# ------------------------------------------------------------------------------
+
+import getopt
+import sys
+
+from tfbayes                import alignio
+from tfbayes.alignment      import alignment_t, marginal_likelihood
+from tfbayes.interface      import vector
+from tfbayes.phylotree      import pt_root_t
+from tfbayes.uipac.alphabet import DNA
+
+# usage
+# ------------------------------------------------------------------------------
+
+def usage():
+    """Print usage."""
+    print
+    print "tfbayes-alignment-likelihood [option]... ALIGNMENT TREE"
+    print
+    print "Compute the marginal likelihood of an alignment given a phylogenetic"
+    print "tree where the column specific stationary distribution is integrated"
+    print "out."
+    print
+    print "Options:"
+    print "       --alpha=Px:Px:Px:Px:Px         - dirichlet prior pseudocounts"
+    print "       --format=STR                   - format of the input file(s) (fasta or maf)"
+    print "                                        [default: maf]"
+    print
+    print "   -h, --help                         - print help"
+    print "   -v, --verbose                      - be verbose"
+    print
+
+# options
+# ------------------------------------------------------------------------------
+
+options = {
+    'format'         : 'maf',
+    'alpha'          : [0.2, 0.2, 0.2, 0.2, 0.2],
+    'verbose'        : False,
+    }
+
+# read alignments
+# ------------------------------------------------------------------------------
+
+def read_alignment(file_name):
+    if options['verbose']:
+        sys.stderr.write('Reading file %s.\n' % file_name)
+    # use biopython to parse the alignment file
+    if options['format'] == 'fasta':
+        alignments = alignio.parse(file_name, "fasta")
+    if options['format'] == 'maf':
+        alignments = alignio.parse(file_name, "maf")
+    return alignments
+
+# compute marginal likelihood
+# ------------------------------------------------------------------------------
+
+def compute_marginal_likelihood(alignments, tree):
+    result = 0.0
+    for alignment in alignments:
+        # convert to native alignment format
+        alignment = alignment_t(alignment, tree)
+        partial   = sum(marginal_likelihood(tree, alignment, options['alpha']))
+        if (options['verbose']):
+            print "partial likelihood: ", partial
+        result   += partial
+    return result
+
+# main
+# ------------------------------------------------------------------------------
+
+def main(alignment_file, tree_file):
+    alignments = read_alignment(alignment_file)
+    tree       = pt_root_t(tree_file)
+
+    print compute_marginal_likelihood(alignments, tree)
+
+# __main__
+# ------------------------------------------------------------------------------
+
+def __main__():
+    global options
+    try:
+        longopts   = ["format=", "alpha=", "help", "verbose"]
+        opts, tail = getopt.getopt(sys.argv[1:], "hv", longopts)
+    except getopt.GetoptError:
+        usage()
+        return 2
+    output = None
+    if not len(tail) == 2:
+        usage()
+        return 1
+    # override those options with command line arguments
+    for o, a in opts:
+        if o == "--format":
+            options['format'] = a
+        if o == "--alpha":
+            options['alpha'] = map(float, a.split(':'))
+            if not len(options['alpha']) == 5:
+                usage()
+                return 1
+        if o in ("-v", "--verbose"):
+            sys.stderr.write("Verbose mode turned on.\n")
+            options["verbose"] = True
+        if o in ("-h", "--help"):
+            usage()
+            return 0
+    main(*tail)
+    return 0
+
+if __name__ == "__main__":
+    try:
+        sys.exit(__main__())
+    except IOError, e:
+        sys.stderr.write('%s\n' % e)
+        sys.exit(1)
