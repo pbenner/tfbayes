@@ -83,7 +83,7 @@ def strip_gaps_from_species(multiple_alignment):
     i = 0
     while i < len(multiple_alignment[0]):
         # filter all positions where the reference sequence has a gap
-        while multiple_alignment[stripindex][i] == '-':
+        while i < len(multiple_alignment[0]) and multiple_alignment[stripindex][i] == '-':
             multiple_alignment = remove_column(multiple_alignment, i)
         i = i + 1
 
