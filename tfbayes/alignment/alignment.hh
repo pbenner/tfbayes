@@ -73,7 +73,8 @@ public:
         }
         alignment_t(const std::matrix<AC>& sequences,
                     const taxon_map_t& taxon_map,
-                    alphabet_t alphabet = nucleotide_alphabet_t())
+                    alphabet_t alphabet = nucleotide_alphabet_t(),
+                    bool verbose = false)
                 : base_t     (sequences),
                   _n_species (taxon_map.size()),
                   // the length is initialized later
@@ -81,18 +82,19 @@ public:
                   _taxon_map (taxon_map),
                   _alphabet  (alphabet) {
                 // check that all lengths are consistent
-                init_alignment(sequences);
+                init_alignment(sequences, verbose);
         }
         alignment_t(const std::matrix<AC>& sequences,
                     const pt_root_t& tree,
-                    alphabet_t alphabet = nucleotide_alphabet_t())
+                    alphabet_t alphabet = nucleotide_alphabet_t(),
+                    bool verbose = false)
                 : base_t     (sequences),
                   _n_species (tree.n_leaves),
                   _length    (0),
                   _alphabet  (alphabet) {
                 init_taxon_map(tree);
                 // check that all lengths are consistent
-                init_alignment(sequences);
+                init_alignment(sequences, verbose);
         }
         alignment_t(const std::string& filename,
                     boost::optional<const pt_root_t&> tree = boost::optional<const pt_root_t&>(),
@@ -116,7 +118,7 @@ public:
                 // parse fasta file
                 std::matrix<AC> tmp = parse_fasta(filename, verbose);
                 // check that all lengths are consistent
-                init_alignment(tmp);
+                init_alignment(tmp, verbose);
         }
         alignment_t(const alignment_t& alignment)
                 : base_t(alignment),
@@ -249,7 +251,7 @@ protected:
                 }
                 return tmp;
         }
-        void init_alignment(const std::matrix<AC>& sequences) {
+        void init_alignment(const std::matrix<AC>& sequences, bool verbose = false) {
                 std::matrix<AC> tmp(sequences);
                 // initialize length
                 for (typename base_t::const_iterator it = tmp.begin();
@@ -258,6 +260,9 @@ protected:
                         if (it->size() > length()) {
                                 _length = it->size();
                         }
+                }
+                if (verbose) {
+                        std::cerr << "-> alignment length is " << _length << std::endl;
                 }
                 // initialize data
                 for (taxon_map_t::const_iterator it = taxon_map().begin();
@@ -348,11 +353,11 @@ public:
                         }
                         if (occurred.find(parser.taxon()) != occurred.end()) {
                                 // push alignment
+                                push_back(alignment_t<AC>(sequences, taxon_map, alphabet, verbose));
                                 if (verbose) {
-                                        std::cerr << boost::format("Reading alignment %d...") % i++
+                                        std::cerr << boost::format("Finished parsing alignment %d...") % i++
                                                   << std::endl;
                                 }
-                                push_back(alignment_t<AC>(sequences, taxon_map, alphabet));
                                 // reset occurrences
                                 occurred.clear();
                                 // start new alignment
@@ -368,11 +373,11 @@ public:
                                           << std::endl;
                         }
                 }
+                push_back(alignment_t<AC>(sequences, taxon_map, alphabet, verbose));
                 if (verbose) {
-                        std::cerr << boost::format("Reading alignment %d...") % (base_t::size()+1)
+                        std::cerr << boost::format("Finished parsing alignment %d...") % (base_t::size()+1)
                                   << std::endl;
                 }
-                push_back(alignment_t<AC>(sequences, taxon_map, alphabet));
         }
 
 protected:
