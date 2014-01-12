@@ -29,7 +29,6 @@ import tempfile
 
 from tfbayes.dpm.dpm_tfbs_interface import *
 from tfbayes.config                 import *
-from tfbayes.cluster                import parse_partition
 
 # global options
 # ------------------------------------------------------------------------------
@@ -92,7 +91,7 @@ def optimize():
 # main
 # ------------------------------------------------------------------------------
 
-def main():
+def __main__():
     global options
     global sampler_config
     try:
