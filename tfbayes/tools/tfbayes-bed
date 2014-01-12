@@ -46,6 +46,7 @@ def usage():
     print "   -f FORMAT               - format of the output files"
     print "   -r NAME                 - name of the reference species, all"
     print "                             coordinates are based on this genome"
+    print "   -s                      - splice sequences"
     print
     print "   -h, --help              - print help"
     print "   -v, --verbose           - be verbose"
@@ -58,6 +59,7 @@ options = {
     'database_dir'   : None,
     'output_format'  : 'maf',
     'refseq'         : 'hg19',
+    'splice'         : False,
     'verbose'        : False,
     }
 
@@ -75,8 +77,10 @@ def get_alignment(chromosome, seq_start, seq_end):
 
     idx = alignio.MafIO.MafIndex(mafindex, maf, seqname)
 
-    multiple_alignment = idx.get_spliced([seq_start],
-                                         [seq_end])
+    if options['splice']:
+        multiple_alignment = idx.get_spliced([seq_start], [seq_end])
+    else:
+        multiple_alignment = idx.search([seq_start], [seq_end])
 
     return multiple_alignment
 
@@ -112,7 +116,7 @@ def __main__():
     global options
     try:
         longopts   = ["help", "verbose"]
-        opts, tail = getopt.getopt(sys.argv[1:], "f:r:hv", longopts)
+        opts, tail = getopt.getopt(sys.argv[1:], "sf:r:hv", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -132,6 +136,8 @@ def __main__():
             options['output_format'] = a
         if o == "-r":
             options['refseq'] = a
+        if o == "-s":
+            options['splice'] = True
     # tail
     bed_file = tail[0]
     options['database_dir'] = tail[1]
