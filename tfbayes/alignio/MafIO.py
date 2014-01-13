@@ -448,7 +448,7 @@ class MafIndex():
         
         # find the union of all IDs in these alignments
         all_seqnames = set([x.id for y in fetched for x in y])
-                
+        
         # split every record by base position
         split_by_position = dict([(x, {}) for x in all_seqnames])
         

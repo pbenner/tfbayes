@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# Copyright (C) 2012 Philipp Benner
+# Copyright (C) 2012-2014 Philipp Benner
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -46,7 +46,6 @@ def usage():
     print "   -f FORMAT               - format of the output files"
     print "   -r NAME                 - name of the reference species, all"
     print "                             coordinates are based on this genome"
-    print "   -s                      - splice sequences"
     print
     print "   -h, --help              - print help"
     print "   -v, --verbose           - be verbose"
@@ -59,12 +58,66 @@ options = {
     'database_dir'   : None,
     'output_format'  : 'maf',
     'refseq'         : 'hg19',
-    'splice'         : False,
     'verbose'        : False,
     }
 
 # database operations
 # ------------------------------------------------------------------------------
+
+def get_alignment_refseq_index(alignment):
+    for idx, record in enumerate(alignment):
+        if record.id.split('.')[0] == options['refseq']:
+            return idx
+    raise IOError("Species `%s' is not present in alignment." % options['refseq'])
+
+def trim_alignment(alignment, seq_start, seq_end):
+    idx   = get_alignment_refseq_index(alignment)
+    start = 0
+    end   = len(alignment[idx])-1
+    if alignment[idx].annotations['start'] < seq_start:
+        # number of nucleotides we need to remove
+        n = seq_start - alignment[idx].annotations['start']
+        if options['verbose']:
+            sys.stderr.write("Removing %d nucleotides from the beginning.\n" % n)
+        # count number of nucleotides (no gaps)
+        count = 0
+        while count < n:
+            if alignment[idx][start] != '-':
+                count += 1
+            start += 1
+    if alignment[idx].annotations['start'] + alignment[idx].annotations['size'] > seq_end:
+        # number of nucleotides we need to remove
+        n = alignment[idx].annotations['start'] + alignment[idx].annotations['size'] - seq_end
+        if options['verbose']:
+            sys.stderr.write("Removing %d nucleotides from the end.\n" % n)
+        # count number of nucleotides (no gaps)
+        count = 0
+        while count < n:
+            if alignment[idx][end] != '-':
+                count += 1
+            end -= 1
+    return alignment[:,start:end+1]
+
+def trim_alignment_list(alignment_list, seq_start, seq_end):
+    for idx, alignment in enumerate(alignment_list):
+        alignment_list[idx] = trim_alignment(alignment, seq_start, seq_end)
+    return alignment_list
+
+def alignment_list_clear_names(alignment_list):
+    for alignment in alignment_list:
+        for record in alignment:
+            record.id   = record.id.split('.')[0]
+            record.name = ''
+            record.description = ''
+
+def alignment_list_count(alignment_list):
+    count = 0
+    for alignment in alignment_list:
+        idx = get_alignment_refseq_index(alignment)
+        for char in alignment[idx]:
+            if char != '-':
+                count += 1
+    return count
 
 def get_alignment(chromosome, seq_start, seq_end):
     if options['database_dir']:
@@ -73,16 +126,24 @@ def get_alignment(chromosome, seq_start, seq_end):
     else:
         mafindex   = "%s.mafindex" % chromosome
         maf        = "%s.maf"      % chromosome
+
     seqname = "%s.%s" % (options['refseq'], chromosome)
 
     idx = alignio.MafIO.MafIndex(mafindex, maf, seqname)
+    alignment_list = [x for x in idx.search([seq_start], [seq_end])]
 
-    if options['splice']:
-        multiple_alignment = idx.get_spliced([seq_start], [seq_end])
-    else:
-        multiple_alignment = idx.search([seq_start], [seq_end])
+    if options['verbose']:
+        sys.stderr.write("Alignment with %d nucleotides fetched.\n"
+                         % alignment_list_count(alignment_list))
 
-    return multiple_alignment
+    alignment_list = trim_alignment_list(alignment_list, seq_start, seq_end)
+    alignment_list_clear_names(alignment_list)
+
+    if options['verbose']:
+        sys.stderr.write("Alignment with %d nucleotides generated.\n"
+                         % alignment_list_count(alignment_list))
+
+    return alignment_list
 
 # parse bed file
 # ------------------------------------------------------------------------------
@@ -116,7 +177,7 @@ def __main__():
     global options
     try:
         longopts   = ["help", "verbose"]
-        opts, tail = getopt.getopt(sys.argv[1:], "sf:r:hv", longopts)
+        opts, tail = getopt.getopt(sys.argv[1:], "f:r:hv", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -136,8 +197,6 @@ def __main__():
             options['output_format'] = a
         if o == "-r":
             options['refseq'] = a
-        if o == "-s":
-            options['splice'] = True
     # tail
     bed_file = tail[0]
     options['database_dir'] = tail[1]
