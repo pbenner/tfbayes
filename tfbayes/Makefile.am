@@ -3,7 +3,6 @@
 SUBDIRS  = alignio
 SUBDIRS += weblogo
 SUBDIRS += corebio
-SUBDIRS += fg
 SUBDIRS += interface
 SUBDIRS += fastarithmetics
 SUBDIRS += fasta
