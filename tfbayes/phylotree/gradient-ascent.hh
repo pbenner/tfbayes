@@ -72,6 +72,8 @@ public:
                   derivative_prev     (tree.n_nodes-1)
                 { }
 
+        virtual ~pt_gradient_ascent_t() { }
+
         double optimize(bool verbose) {
                 double total = 0.0;
 
@@ -118,9 +120,8 @@ public:
                 return total;
         }
         void operator()(size_t max, double stop = 0.0, bool verbose = true) {
-                for (pt_node_t::nodes_t::const_iterator is = _tree_.begin_nodes();
-                     is != _tree_.end_nodes(); is++) {
-                        node_epsilon[(*is)->id] = _epsilon_;
+                BOOST_FOREACH(double& e, node_epsilon) {
+                        e = _epsilon_;
                 }
                 for (size_t i = 0; i < max; i++) {
                         double total = optimize(verbose);
