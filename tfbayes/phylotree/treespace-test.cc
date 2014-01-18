@@ -809,17 +809,7 @@ void test12()
         s4.insert(4);
         s4.insert(5);
         s4.insert(6);
-        nedge_t e1 (7,  s1, 1.1);
-        nedge_t e2 (7,  s2, 1.2);
-        nedge_t e3 (7,  s3, 1.3);
-        nedge_t e4 (7,  s4, 1.4);
-        // construct tree
         nedge_set_t nedge_set;
-        // internal edge lengths
-        nedge_set.push_back(e1);
-        nedge_set.push_back(e2);
-        nedge_set.push_back(e3);
-        nedge_set.push_back(e4);
         // leaf edge lengths
         vector<double> leaf_d(8, 1);
         // leaf names
@@ -845,19 +835,7 @@ void test12()
 int
 main(void)
 {
-        test1(); cout << endl;
-        test2(); cout << endl;
-        test3(); cout << endl;
-        test4(); cout << endl;
-        test5(); cout << endl;
-        test6(); cout << endl;
-        test7(); cout << endl;
-        test8(); cout << endl;
-        test9(); cout << endl;
-        test10(); cout << endl;
-        test11(); cout << endl;
         test12(); cout << endl;
-        glp_free_env();
 
         return 0;
 }
