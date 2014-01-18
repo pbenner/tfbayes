@@ -484,8 +484,15 @@ nedge_root_t::convert() const
 
         // create leaves that are missing so far
         if (leaves.any()) {
-                tree = new pt_node_t(0.0, tree,
-                                     convert_leaf_set(leaf_d(), leaf_names(), leaves));
+                if (tree) {
+                        // some nodes have been created already
+                        tree = new pt_node_t(0.0, tree,
+                                             convert_leaf_set(leaf_d(), leaf_names(), leaves));
+                }
+                else {
+                        // star tree topology
+                        tree = convert_leaf_set(leaf_d(), leaf_names(), leaves);
+                }
         }
         // construct outgroup
         pt_leaf_t* outgroup = new pt_leaf_t(leaf_d(0), leaf_names(0));
