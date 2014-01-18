@@ -224,6 +224,12 @@ void mean(const string& command)
                         if (is->d() < options.cut) {
                                 is = it->nedge_set().erase(is);
                         }
+                        // if the last element is removed from the
+                        // edge set, then this prevents further
+                        // incrementation of the iterator
+                        if (is == it->nedge_set().end()) {
+                                break;
+                        }
                 }
         }
         /* print resulting tree */
