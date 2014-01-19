@@ -30,6 +30,7 @@
 
 %code {
 
+#include <new>
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,6 +49,16 @@ int yyerror(YYLTYPE* locp, context_t* context, const char* err) {
 		yyget_text(context->scanner), err);
         exit(EXIT_FAILURE);
 }
+
+#define allocate(result, type) \
+        try { \
+	    result = new type; \
+        } \
+	catch (std::bad_alloc&) { \
+                std::cerr << "Memory allocation failed!" \
+                          << std::endl; \
+                exit(EXIT_FAILURE); \
+        }
 
 }
 
@@ -71,39 +82,39 @@ int yyerror(YYLTYPE* locp, context_t* context, const char* err) {
 %%
 start:
       tree_list tree SEMICOLON
-      { context->pt_parsetree = new pt_parsetree_t(TREE_LIST_N, 2, NULL, $1, $2); }
+      { allocate(context->pt_parsetree, pt_parsetree_t(TREE_LIST_N, 2, NULL, $1, $2)); }
     | tree SEMICOLON
-      { context->pt_parsetree = new pt_parsetree_t(TREE_LIST_N, 1, NULL, $1); }
+      { allocate(context->pt_parsetree, pt_parsetree_t(TREE_LIST_N, 1, NULL, $1)); }
     ;
 tree_list:
       tree_list tree SEMICOLON
-      { $$ = new pt_parsetree_t(TREE_LIST_N, 2, NULL, $1, $2); }
+      { allocate($$, pt_parsetree_t(TREE_LIST_N, 2, NULL, $1, $2)); }
     | tree SEMICOLON
-      { $$ = new pt_parsetree_t(TREE_LIST_N, 1, NULL, $1); }
+      { allocate($$, pt_parsetree_t(TREE_LIST_N, 1, NULL, $1)); }
     ;
 tree: LPAREN node_list COMMA outgroup RPAREN
-      { $$ = new pt_parsetree_t(TREE_N, 2, NULL, $2, $4); }
+      { allocate($$, pt_parsetree_t(TREE_N, 2, NULL, $2, $4)); }
     ;
 outgroup:
       name COLON distance
-      { $$ = new pt_parsetree_t(LEAF_N, 2, NULL, $1, $3); }
+      { allocate($$, pt_parsetree_t(LEAF_N, 2, NULL, $1, $3)); }
 node_list:
       node_list COMMA node
-      { $$ = new pt_parsetree_t(NODE_LIST_N, 2, NULL, $1, $3); }
+      { allocate($$, pt_parsetree_t(NODE_LIST_N, 2, NULL, $1, $3)); }
     | node
-      { $$ = new pt_parsetree_t(NODE_LIST_N, 1, NULL, $1); }
+      { allocate($$, pt_parsetree_t(NODE_LIST_N, 1, NULL, $1)); }
     ;
 node: name COLON distance
-      { $$ = new pt_parsetree_t(LEAF_N, 2, NULL, $1, $3); }
+      { allocate($$, pt_parsetree_t(LEAF_N, 2, NULL, $1, $3)); }
     | LPAREN node_list RPAREN COLON distance
-      { $$ = new pt_parsetree_t(NODE_N, 2, NULL, $2, $5); }
+      { allocate($$, pt_parsetree_t(NODE_N, 2, NULL, $2, $5)); }
     ;
-name: NAME { $$ = new pt_parsetree_t(NAME_N, 0, strdup(yyget_text(context->scanner))); }
+name: NAME { allocate($$, pt_parsetree_t(NAME_N, 0, strdup(yyget_text(context->scanner)))); }
     ;
 distance:
       FLOAT
       {
-        $$ = new pt_parsetree_t(DISTANCE_N, 0, calloc(1, sizeof(double)));
+        allocate($$, pt_parsetree_t(DISTANCE_N, 0, calloc(1, sizeof(double))));
         *((double *)$$->data) = atof(yyget_text(context->scanner));
       }
     ;

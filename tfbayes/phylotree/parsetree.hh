@@ -47,8 +47,6 @@ public:
          pt_parsetree_t(nodetype_t type, size_t n_children, void *data, ...);
         ~pt_parsetree_t();
 
-        void destroy();
-
         std::list<pt_root_t> convert(size_t drop, size_t skip) const;
         pt_root_t  convert(const std::list<pt_root_t>& tree_list) const;
         pt_node_t* convert() const;

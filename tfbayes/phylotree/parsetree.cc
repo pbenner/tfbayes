@@ -15,9 +15,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <cstdio>
 #include <iostream>
+#include <new>
 #include <cassert>
+#include <cstdio>
 #include <cstdlib>
 
 #include <boost/format.hpp>
@@ -45,18 +46,42 @@ pt_parsetree_t::pt_parsetree_t(
 }
 
 pt_parsetree_t::~pt_parsetree_t() {
+        // non-recursive destruction of the tree list
+        if (type != TREE_LIST_N) {
+                for(size_t i = 0; i < n_children; i++) {
+                        delete(children[i]);
+                }
+        }
         if (data) {
                 free(data);
         }
         free(children);
 }
 
-void
-pt_parsetree_t::destroy() {
-        for(size_t i = 0; i < n_children; i++) {
-                children[i]->destroy();
+void delete_tree_list(pt_parsetree_t* tree) {
+        assert(tree->type == TREE_LIST_N);
+
+        pt_parsetree_t *tmp;
+
+        while (tree) {
+                if (tree->n_children == 2) {
+                        // delete phylogenetic tree
+                        delete(tree->children[1]);
+                        // go down in the AST
+                        tmp  = tree;
+                        tree = tree->children[0];
+                        // free current node
+                        delete(tmp);
+                }
+                else {
+                        // delete phylogenetic tree
+                        delete(tree->children[0]);
+                        // free current node
+                        delete(tree);
+                        // end recursion
+                        tree = NULL;
+                }
         }
-        delete(this);
 }
 
 list<pt_root_t>
@@ -90,7 +115,7 @@ pt_parsetree_t::convert(size_t drop, size_t skip) const
                                 tree_list.push_front(pt->children[1]->convert(tree_list));
                         }
                         // on the left is the tree list
-                        assert(children[0]->type == TREE_LIST_N);
+                        assert(pt->children[0]->type == TREE_LIST_N);
                         pt = pt->children[0];
                 }
                 else {
@@ -143,7 +168,13 @@ pt_parsetree_t::convert() const
                 else {
                         child_left  = children[0]->convert();
                         child_right = children[1]->convert();
-                        node = new pt_node_t(0.0, child_left, child_right);
+                        try {
+                                node = new pt_node_t(0.0, child_left, child_right);
+                        }
+                        catch (bad_alloc&) {
+                                cerr << "Memory allocation failed!"
+                                     << endl;
+                        }
                 }
                 break;
         case NODE_N:
@@ -156,8 +187,14 @@ pt_parsetree_t::convert() const
         case LEAF_N:
                 assert(children[0]->type == NAME_N);
                 assert(children[1]->type == DISTANCE_N);
-                node = new pt_leaf_t(*(double *)children[1]->data,
-                                      (char   *)children[0]->data);
+                try {
+                        node = new pt_leaf_t(*(double *)children[1]->data,
+                                              (char   *)children[0]->data);
+                }
+                catch (bad_alloc&) {
+                        cerr << "Memory allocation failed!"
+                             << endl;
+                }
                 break;
         case TREE_N:
         case TREE_LIST_N:
@@ -265,7 +302,7 @@ list<pt_root_t> parse_tree_list(FILE * file, size_t drop, size_t skip)
         yylex_destroy(context.scanner);
 
         // free AST
-        context.pt_parsetree->destroy();
+        delete_tree_list(context.pt_parsetree);
  
         return tree_list;
 }
