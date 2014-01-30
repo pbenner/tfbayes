@@ -31,7 +31,6 @@ dist_bin_SCRIPTS = \
 	tfbayes-estimate \
 	tfbayes-expectation \
 	tfbayes-cluster \
-	tfbayes-generate \
 	tfbayes-motifformat \
 	tfbayes-fasta-to-maf \
 	tfbayes-maf-to-fasta \
