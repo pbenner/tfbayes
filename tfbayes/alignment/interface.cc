@@ -115,7 +115,7 @@ std::string sequence_str(sequence_t<>& s)
 
 std::string alignment_str(alignment_t<>& a)
 {
-        return to_string(print_alignment_pretty(a));
+        return to_string(print_alignment_fasta(a));
 }
 
 // alignment functions
@@ -254,6 +254,8 @@ BOOST_PYTHON_MODULE(interface)
                 .def("__getitem__",          alignment_getitem)
                 .def("__setitem__",          alignment_setitem)
                 .def("__str__",              alignment_str)
+                .def("shuffle",              &alignment_t<>::shuffle)
+                .def(self += self)
                 ;
         // functions on alignments
         def("approximate",         &approximate        <alphabet_code_t, double>);

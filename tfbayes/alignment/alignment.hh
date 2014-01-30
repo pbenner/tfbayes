@@ -22,6 +22,7 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <algorithm>    // std::random_shuffle
 #include <set>
 #include <string>
 #include <vector>
@@ -164,7 +165,19 @@ public:
                 }
                 return sequence;
         }
-
+        void operator+=(const alignment_t& alignment) {
+                assert(taxon_map() == alignment.taxon_map());
+                assert(alphabet()  == alignment.alphabet());
+                for (const_iterator it = alignment.begin();
+                     it != alignment.end(); it++) {
+                        base_t::push_back(*it);
+                }
+                _length += alignment.length();
+        }
+        void shuffle() {
+                // this is not thread safe!
+                std::random_shuffle(begin(), end());
+        }
         // Access Methods
         ////////////////////////////////////////////////////////////////////////
         const size_t& n_species() const {

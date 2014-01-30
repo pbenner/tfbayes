@@ -40,6 +40,12 @@ public:
         size_t size() const {
                 return _size;
         }
+        bool operator==(const alphabet_t& alphabet) const {
+                return _code == alphabet._code;
+        }
+        bool operator!=(const alphabet_t& alphabet) const {
+                return _code != alphabet._code;
+        }
 protected:
         // a derived class may use this constructor to
         // initialize the codebooks
