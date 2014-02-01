@@ -44,6 +44,7 @@ def usage():
     print "       --alpha=Px:Px:Px:Px:Px         - dirichlet prior pseudocounts"
     print "       --format=STR                   - format of the input file(s) (fasta or maf)"
     print "                                        [default: maf]"
+    print "       --scale=FLOAT                  - scale tree by a constant factor"
     print
     print "   -h, --help                         - print help"
     print "   -v, --verbose                      - be verbose"
@@ -55,6 +56,7 @@ def usage():
 options = {
     'format'         : 'maf',
     'alpha'          : [0.2, 0.2, 0.2, 0.2, 0.2],
+    'scale'          : 1.0,
     'verbose'        : False,
     }
 
@@ -91,6 +93,7 @@ def compute_marginal_likelihood(alignments, tree):
 def main(alignment_file, tree_file):
     alignments = read_alignment(alignment_file)
     tree       = pt_root_t(tree_file)
+    tree.scale(options['scale'])
 
     print compute_marginal_likelihood(alignments, tree)
 
@@ -100,7 +103,7 @@ def main(alignment_file, tree_file):
 def __main__():
     global options
     try:
-        longopts   = ["format=", "alpha=", "help", "verbose"]
+        longopts   = ["format=", "alpha=", "scale=", "help", "verbose"]
         opts, tail = getopt.getopt(sys.argv[1:], "hv", longopts)
     except getopt.GetoptError:
         usage()
@@ -118,6 +121,8 @@ def __main__():
             if not len(options['alpha']) == 5:
                 usage()
                 return 1
+        if o == "--scale":
+            options['scale'] = float(a)
         if o in ("-v", "--verbose"):
             sys.stderr.write("Verbose mode turned on.\n")
             options["verbose"] = True

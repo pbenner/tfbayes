@@ -64,6 +64,7 @@ BOOST_PYTHON_MODULE(interface)
                 .def_readonly("d",        &pt_node_t::d)
                 .def("leaf",              &pt_node_t::leaf)
                 .def("root",              &pt_node_t::root)
+                .def("scale",             &pt_node_t::scale)
                 ;
         class_<pt_leaf_t, bases<pt_node_t> >("pt_leaf_t", no_init)
                 ;
