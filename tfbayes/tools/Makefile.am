@@ -40,6 +40,7 @@ dist_bin_SCRIPTS = \
 	tfbayes-partition \
 	tfbayes-preprocess-alignment \
 	tfbayes-sampler \
+	tfbayes-treespace-distance \
 	tfbayes-scan
 
 ## clean python files

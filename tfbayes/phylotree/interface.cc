@@ -28,6 +28,8 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #include <tfbayes/phylotree/parser.hh>
+#include <tfbayes/phylotree/phylotree.hh>
+#include <tfbayes/phylotree/treespace.hh>
 #include <tfbayes/interface/exceptions.hh>
 #include <tfbayes/interface/utility.hh>
 
@@ -72,5 +74,10 @@ BOOST_PYTHON_MODULE(interface)
                 .def("__init__",    make_constructor(parse_tree_file))
                 .def("get_node_id", &pt_root_t::get_node_id)
                 .def("get_leaf_id", &pt_root_t::get_leaf_id)
+                ;
+        class_<geodesic_t>("geodesic_t", no_init)
+                .def(init<pt_root_t, pt_root_t>())
+                .def("__call__", &geodesic_t::operator())
+                .def("length",   &geodesic_t::length)
                 ;
 }
