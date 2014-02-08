@@ -47,8 +47,12 @@ public:
          pt_parsetree_t(nodetype_t type, size_t n_children, void *data, ...);
         ~pt_parsetree_t();
 
-        std::list<pt_root_t> convert(size_t drop, size_t skip) const;
-        pt_root_t  convert(const std::list<pt_root_t>& tree_list) const;
+        std::list<pt_root_t> convert(
+                size_t drop, size_t skip,
+                boost::optional<const pt_root_t&> ref_tree = boost::optional<const pt_root_t&>()) const;
+        pt_root_t  convert(
+                const std::list<pt_root_t>& tree_list,
+                boost::optional<const pt_root_t&> ref_tree) const;
         pt_node_t* convert() const;
 
         void * const data;
@@ -64,8 +68,10 @@ typedef struct {
 	yyscan_t scanner;
 } context_t;
 
-std::list<pt_root_t> parse_tree_list(FILE * file = NULL, size_t drop = 0, size_t skip = 1);
-std::list<pt_root_t> parse_tree_list(const std::string& filename, size_t drop = 0, size_t skip = 1);
+std::list<pt_root_t> parse_tree_list(FILE * file = NULL, size_t drop = 0, size_t skip = 1,
+                                     boost::optional<const pt_root_t&> ref_tree = boost::optional<const pt_root_t&>());
+std::list<pt_root_t> parse_tree_list(const std::string& filename, size_t drop = 0, size_t skip = 1,
+                                     boost::optional<const pt_root_t&> ref_tree = boost::optional<const pt_root_t&>());
 
 std::ostream& operator<< (std::ostream& o, pt_parsetree_t* const tree);
 

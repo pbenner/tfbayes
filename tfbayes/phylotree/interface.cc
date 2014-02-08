@@ -54,6 +54,17 @@ pt_root_t* parse_tree_file(const std::string& filename)
         return new pt_root_t(tree_list.front());
 }
 
+pt_root_t* parse_tree_file_ref(const std::string& filename, const pt_root_t& ref_tree)
+{
+        std::list<pt_root_t> tree_list = parse_tree_list(filename, 0, 1, ref_tree);
+
+        if (tree_list.size() != 1) {
+                raise_IOError(boost::format("%s: File must contain a single phylogenetic tree.")
+                              % filename);
+        }
+        return new pt_root_t(tree_list.front());
+}
+
 // interface
 // -----------------------------------------------------------------------------
 
@@ -72,6 +83,7 @@ BOOST_PYTHON_MODULE(interface)
                 ;
         class_<pt_root_t, bases<pt_node_t> >("pt_root_t", no_init)
                 .def("__init__",    make_constructor(parse_tree_file))
+                .def("__init__",    make_constructor(parse_tree_file_ref))
                 .def("get_node_id", &pt_root_t::get_node_id)
                 .def("get_leaf_id", &pt_root_t::get_leaf_id)
                 ;

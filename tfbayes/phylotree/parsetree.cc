@@ -85,7 +85,8 @@ void delete_tree_list(pt_parsetree_t* tree) {
 }
 
 list<pt_root_t>
-pt_parsetree_t::convert(size_t drop, size_t skip) const
+pt_parsetree_t::convert(size_t drop, size_t skip,
+                        boost::optional<const pt_root_t&> ref_tree) const
 {
         size_t n = 0;
         list<pt_root_t> tree_list;
@@ -112,7 +113,7 @@ pt_parsetree_t::convert(size_t drop, size_t skip) const
                         // convert the tree on the right which is a
                         // phylogenetic tree
                         if (n-i >= drop && i % skip == 0) {
-                                tree_list.push_front(pt->children[1]->convert(tree_list));
+                                tree_list.push_front(pt->children[1]->convert(tree_list, ref_tree));
                         }
                         // on the left is the tree list
                         assert(pt->children[0]->type == TREE_LIST_N);
@@ -122,7 +123,7 @@ pt_parsetree_t::convert(size_t drop, size_t skip) const
                         assert(pt->children[0]->type == TREE_N);
                         // we only have the phylogenetic tree
                         if (n-i >= drop && i % skip == 0) {
-                                tree_list.push_front(pt->children[0]->convert(tree_list));
+                                tree_list.push_front(pt->children[0]->convert(tree_list, ref_tree));
                         }
                         // end loop
                         pt = NULL;
@@ -132,7 +133,8 @@ pt_parsetree_t::convert(size_t drop, size_t skip) const
 }
 
 pt_root_t
-pt_parsetree_t::convert(const list<pt_root_t>& tree_list) const
+pt_parsetree_t::convert(const list<pt_root_t>& tree_list,
+                        boost::optional<const pt_root_t&> ref_tree) const
 {
         assert(type == TREE_N);
 
@@ -144,7 +146,10 @@ pt_parsetree_t::convert(const list<pt_root_t>& tree_list) const
         assert(children[0]->n_children == 2);
         pt_leaf_t* outgroup = static_cast<pt_leaf_t*>(children[1]->convert());
         pt_node_t* node     =                         children[0]->convert();
-        if (tree_list.begin() != tree_list.end()) {
+        if (ref_tree) {
+                return pt_root_t(*node, outgroup, *ref_tree);
+        }
+        else if (tree_list.begin() != tree_list.end()) {
                 return pt_root_t(*node, outgroup, *tree_list.begin());
         }
         else {
@@ -277,7 +282,8 @@ int yylex_init   (yyscan_t* scanner);
 int yylex_destroy(yyscan_t  scanner);
 void yylex_set_input(yyscan_t scanner, FILE* file);
 
-list<pt_root_t> parse_tree_list(FILE * file, size_t drop, size_t skip)
+list<pt_root_t> parse_tree_list(FILE * file, size_t drop, size_t skip,
+                                boost::optional<const pt_root_t&> ref_tree)
 {
         list<pt_root_t> tree_list;
         context_t context;
@@ -296,7 +302,7 @@ list<pt_root_t> parse_tree_list(FILE * file, size_t drop, size_t skip)
                 return tree_list;
         }
         // convert AST to phylotree
-        tree_list = context.pt_parsetree->convert(drop, skip);
+        tree_list = context.pt_parsetree->convert(drop, skip, ref_tree);
  
         // free lexer memory
         yylex_destroy(context.scanner);
@@ -307,7 +313,8 @@ list<pt_root_t> parse_tree_list(FILE * file, size_t drop, size_t skip)
         return tree_list;
 }
 
-list<pt_root_t> parse_tree_list(const string& filename, size_t drop, size_t skip)
+list<pt_root_t> parse_tree_list(const string& filename, size_t drop, size_t skip,
+                                boost::optional<const pt_root_t&> ref_tree)
 {
         FILE* yyin = fopen(filename.c_str(), "r");
         if (yyin == NULL) {
@@ -316,7 +323,7 @@ list<pt_root_t> parse_tree_list(const string& filename, size_t drop, size_t skip
                 exit(EXIT_FAILURE);
         }
 
-        list<pt_root_t> tree_list = parse_tree_list(yyin, drop, skip);
+        list<pt_root_t> tree_list = parse_tree_list(yyin, drop, skip, ref_tree);
         fclose(yyin);
 
         return tree_list;

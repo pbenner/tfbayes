@@ -22,6 +22,7 @@
 import sys
 import getopt
 import os
+import tempfile
 
 # local imports
 # ------------------------------------------------------------------------------
@@ -57,7 +58,7 @@ def usage():
 
 def distance(tree_file1, tree_file2):
     tree1 = pt_root_t(tree_file1)
-    tree2 = pt_root_t(tree_file2)
+    tree2 = pt_root_t(tree_file2, tree1)
     print geodesic_t(tree1, tree2).length()
 
 # main
