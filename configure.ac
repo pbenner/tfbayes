@@ -230,7 +230,6 @@ AC_CONFIG_FILES([
   tfbayes/alignio/Makefile
   tfbayes/fastarithmetics/Makefile
   tfbayes/fasta/Makefile
-  tfbayes/fg/Makefile
   tfbayes/config/Makefile
   tfbayes/interface/Makefile
   tfbayes/phylotree/Makefile
