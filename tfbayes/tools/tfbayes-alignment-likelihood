@@ -23,7 +23,7 @@ import getopt
 import sys
 
 from tfbayes                import alignio
-from tfbayes.alignment      import alignment_t, marginal_likelihood
+from tfbayes.alignment      import alignment_t, marginal_likelihood, tree_prior, gamma_distribution_t
 from tfbayes.interface      import vector
 from tfbayes.phylotree      import pt_root_t
 from tfbayes.uipac.alphabet import DNA
@@ -42,9 +42,13 @@ def usage():
     print
     print "Options:"
     print "       --alpha=Px:Px:Px:Px:Px         - dirichlet prior pseudocounts"
-    print "       --format=STR                   - format of the input file(s) (fasta or maf)"
+    print "       --format=str                   - format of the input file(s) (fasta or maf)"
     print "                                        [default: maf]"
-    print "       --scale=FLOAT                  - scale tree by a constant factor"
+    print "   -p                                 - compute (unnormalized) posterior"
+    print "       --shape=float                  - shape parameter of the gamma prior"
+    print "       --scale=float                  - scale parameter of the gamma prior"
+    print "       --rate=float                   - rate parameter which scales the tree by a"
+    print "                                        constant factor"
     print
     print "   -h, --help                         - print help"
     print "   -v, --verbose                      - be verbose"
@@ -56,6 +60,9 @@ def usage():
 options = {
     'format'         : 'maf',
     'alpha'          : [0.2, 0.2, 0.2, 0.2, 0.2],
+    'posterior'      : False,
+    'rate'           : 1.0,
+    'shape'          : 1.0,
     'scale'          : 1.0,
     'verbose'        : False,
     }
@@ -85,6 +92,10 @@ def compute_marginal_likelihood(alignments, tree):
         if (options['verbose']):
             print "partial likelihood: ", partial
         result   += partial
+    if options['posterior']:
+        gamma_distribution = gamma_distribution_t(
+            options['shape'], options['scale'])
+        result += tree_prior(tree, gamma_distribution)
     return result
 
 # main
@@ -93,7 +104,7 @@ def compute_marginal_likelihood(alignments, tree):
 def main(alignment_file, tree_file):
     alignments = read_alignment(alignment_file)
     tree       = pt_root_t(tree_file)
-    tree.scale(options['scale'])
+    tree.scale(options['rate'])
 
     print compute_marginal_likelihood(alignments, tree)
 
@@ -103,8 +114,9 @@ def main(alignment_file, tree_file):
 def __main__():
     global options
     try:
-        longopts   = ["format=", "alpha=", "scale=", "help", "verbose"]
-        opts, tail = getopt.getopt(sys.argv[1:], "hv", longopts)
+        longopts   = ["format=", "alpha=", "shape=", "scale=", "rate=",
+                      "help", "verbose"]
+        opts, tail = getopt.getopt(sys.argv[1:], "phv", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -121,8 +133,14 @@ def __main__():
             if not len(options['alpha']) == 5:
                 usage()
                 return 1
+        if o == "-p":
+            options['posterior'] = True
+        if o == "--shape":
+            options['shape'] = float(a)
         if o == "--scale":
             options['scale'] = float(a)
+        if o == "--rate":
+            options['rate'] = float(a)
         if o in ("-v", "--verbose"):
             sys.stderr.write("Verbose mode turned on.\n")
             options["verbose"] = True

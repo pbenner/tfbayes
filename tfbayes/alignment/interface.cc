@@ -235,6 +235,25 @@ std::vector<double> marginal_likelihood(
         }
 }
 
+double tree_prior(
+        const pt_root_t& tree,
+        const boost::math::gamma_distribution<>& gamma_distribution)
+{
+        double result = 0.0;
+
+        for (pt_node_t::nodes_t::const_iterator it = tree.begin_nodes();
+             it != tree.end_nodes(); it++) {
+                // skip the root
+                if ((*it)->root()) {
+                        continue;
+                }
+                if ((*it)->d > 0) {
+                        result += std::log(boost::math::pdf(gamma_distribution, (*it)->d));
+                }
+        }
+        return result;
+}
+
 // interface
 // -----------------------------------------------------------------------------
 
@@ -242,6 +261,9 @@ BOOST_PYTHON_MODULE(interface)
 {
         class_<sequence_t<> >("sequence_t", no_init)
                 .def("__str__", sequence_str)
+                ;
+        class_<boost::math::gamma_distribution<> >("gamma_distribution_t", no_init)
+                .def(init<double, double>())
                 ;
         class_<alignment_t<> >("alignment_t", no_init)
                 /* the ordering of constructors is important, since
@@ -261,4 +283,5 @@ BOOST_PYTHON_MODULE(interface)
         def("approximate",         &approximate        <alphabet_code_t, double>);
         def("marginal_likelihood", &marginal_likelihood<alphabet_code_t, double>);
         def("scan",                &scan               <alphabet_code_t, double>);
+        def("tree_prior",          &tree_prior                                  );
 }

@@ -57,7 +57,9 @@ double pt_posterior(
                 if ((*it)->root()) {
                         continue;
                 }
-                result += std::log(boost::math::pdf(gamma_prior, (*it)->d));
+                if ((*it)->d > 0) {
+                        result += std::log(boost::math::pdf(gamma_prior, (*it)->d));
+                }
         }
         return result;
 }
@@ -80,7 +82,9 @@ pt_posterior_derivative(
                         continue;
                 }
                 // posterior value
-                result += std::log(boost::math::pdf(gamma_prior, (*it)->d));
+                if ((*it)->d > 0) {
+                        result += std::log(boost::math::pdf(gamma_prior, (*it)->d));
+                }
                 // posterior derivative
                 result.derivative()[(*it)->id]
                         += boost::math::log_pdf_derivative(gamma_prior, (*it)->d);
