@@ -57,6 +57,7 @@ double pt_posterior(
                 if ((*it)->root()) {
                         continue;
                 }
+                // the gamma distribution has positive support!
                 if ((*it)->d > 0) {
                         result += std::log(boost::math::pdf(gamma_prior, (*it)->d));
                 }
@@ -81,7 +82,8 @@ pt_posterior_derivative(
                 if ((*it)->root()) {
                         continue;
                 }
-                // posterior value
+                // posterior value (the gamma distribution has
+                // positive support!)
                 if ((*it)->d > 0) {
                         result += std::log(boost::math::pdf(gamma_prior, (*it)->d));
                 }

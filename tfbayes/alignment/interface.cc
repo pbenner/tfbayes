@@ -247,6 +247,7 @@ double tree_prior(
                 if ((*it)->root()) {
                         continue;
                 }
+                // the gamma distribution has positive support!
                 if ((*it)->d > 0) {
                         result += std::log(boost::math::pdf(gamma_distribution, (*it)->d));
                 }
