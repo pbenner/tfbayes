@@ -21,6 +21,7 @@
 
 #include <iostream>
 
+#include <tfbayes/phylotree/polynomial.hh>
 #include <tfbayes/phylotree/tree-reduction.hh>
 #include <tfbayes/phylotree/utility.hh>
 
@@ -176,6 +177,77 @@ void test_tree6() {
         }
 }
 
+void test_tree7() {
+        cout << "Test 7:" << endl;
+        pt_leaf_t* n11 = new pt_leaf_t(11.0, "n11");
+        pt_leaf_t* n10 = new pt_leaf_t(10.0, "n10");
+        pt_leaf_t* n9  = new pt_leaf_t( 9.0, "n9");
+        pt_leaf_t* n8  = new pt_leaf_t( 8.0, "n8");
+        pt_leaf_t* n7  = new pt_leaf_t( 7.0, "n7");
+        pt_leaf_t* n6  = new pt_leaf_t( 6.0, "n6");
+        pt_node_t* n5  = new pt_node_t( 5.0, n8, n9);
+        pt_node_t* n4  = new pt_node_t( 4.0, n6, n7);
+        pt_node_t* n3  = new pt_node_t( 3.0, n10, n11);
+        pt_node_t* n2  = new pt_node_t( 2.0, n4, n5);
+        pt_root_t n1(n2, n3);
+        vector<alphabet_code_t> observations(n1.n_leaves, 0);
+        observations[n1["n9" ]->id] = 3;
+        observations[n1["n8" ]->id] = 2;
+        observations[n1["n7" ]->id] = 1;
+        observations[n1["n6" ]->id] = 0;
+        observations[n1["n10"]->id] = 3;
+        observations[n1["n11"]->id] = 2;
+
+        cout << "(n1 (n2 (n4 (n6 A) (n7 C))"  << endl
+             << "        (n5 (n8 G) (n9 T)))" << endl
+             << "    (n3 (n10 A) (n11 C)))"   << endl;
+
+        incomplete_expression_t incomplete_expression = pt_simplify(n1);
+        polynomial_t<alphabet_size> result = pt_expand_t<alphabet_size>(incomplete_expression, observations);
+        cout << incomplete_expression << endl
+             << result << endl
+             << endl;
+}
+
+void test_tree8() {
+        cout << "Test 8:" << endl;
+        pt_leaf_t* n13 = new pt_leaf_t(13.0, "n13");
+        pt_leaf_t* n12 = new pt_leaf_t(12.0, "n12");
+        pt_leaf_t* n11 = new pt_leaf_t(11.0, "n11");
+        pt_leaf_t* n10 = new pt_leaf_t(10.0, "n10");
+        pt_leaf_t* n9  = new pt_leaf_t( 9.0, "n9");
+        pt_leaf_t* n8  = new pt_leaf_t( 8.0, "n8");
+        pt_leaf_t* n7  = new pt_leaf_t( 7.0, "n7");
+        pt_node_t* n6  = new pt_node_t( 6.0, n11, n12);
+        pt_node_t* n5  = new pt_node_t( 5.0, n9, n10);
+        pt_node_t* n4  = new pt_node_t( 4.0, n7, n8);
+        pt_node_t* n3  = new pt_node_t( 3.0, n6, n13);
+        pt_node_t* n2  = new pt_node_t( 2.0, n4, n5);
+        pt_root_t n1(n2, n3);
+        vector<alphabet_code_t> observations(n1.n_leaves, 0);
+        observations[n1["n9" ]->id] = 3;
+        observations[n1["n8" ]->id] = 2;
+        observations[n1["n7" ]->id] = 1;
+        observations[n1["n10"]->id] = 3;
+        observations[n1["n11"]->id] = 2;
+        observations[n1["n12"]->id] = 0;
+        observations[n1["n13"]->id] = 0;
+
+        cout << "(n1 (n2 (n4 (n7 A) (n8 C))"   << endl
+             << "        (n5 (n9 G) (n10 T)))" << endl
+             << "    (n3 (n6 (n11 A) (n12 C))" << endl
+             << "        (n13 C)))"            << endl;
+
+        incomplete_expression_t incomplete_expression = pt_simplify(n1);
+        polynomial_t<alphabet_size> result1 = pt_expand_t<alphabet_size>(incomplete_expression, observations);
+        polynomial_t<alphabet_size> result2 = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                n1, observations);
+        cout << incomplete_expression << endl
+             << result1 << endl
+             << result2 << endl
+             << endl;
+}
+
 int main(void) {
         test_tree1();
         test_tree2();
@@ -183,6 +255,8 @@ int main(void) {
         test_tree4();
         test_tree5();
         test_tree6();
+        test_tree7();
+        test_tree8();
 
         return 0.0;
 }

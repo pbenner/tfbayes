@@ -107,9 +107,9 @@ namespace tfbayes_detail {
         size_t hash_value(const incomplete_leafset_t& leafset) {
                 size_t seed = 0;
                 for (incomplete_leafset_t::const_iterator it = leafset.begin(); it != leafset.end(); it++) {
-                        boost::hash_combine(seed, hash_value(*it));
+                        seed += hash_value(*it);
                 }
-                boost::hash_combine(seed, hash_value(leafset.incomplete()));
+                seed += hash_value(leafset.incomplete());
                 return seed;
         }
         

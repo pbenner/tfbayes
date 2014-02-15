@@ -33,6 +33,7 @@
 #include <tfbayes/phylotree/gradient.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/phylotree/posterior.hh>
+#include <tfbayes/phylotree/tree-reduction.hh>
 #include <tfbayes/phylotree/utility.hh>
 
 using namespace std;
@@ -75,18 +76,6 @@ int main(void) {
 
         cout << "Phylogenetic tree:"   << endl
              << newick_format(pt_root) << endl;
-
-        // MET("Simplifying",
-        //     incomplete_expression_t incomplete_expression = pt_simplify(pt_root));
-
-        // cout << "Simplified polynomial:" << endl
-        //      << incomplete_expression    << endl;
-
-        // MET("Expanding",
-        //     polynomial_t<alphabet_size> result1 = pt_expand<alphabet_size>(incomplete_expression, observations));
-
-        // cout << "Expanded polynomial:" << endl
-        //      << result1                << endl;
 
         polynomial_t<alphabet_size> result2 = pt_likelihood<alphabet_size, alphabet_code_t, double>(
                 pt_root, observations);
