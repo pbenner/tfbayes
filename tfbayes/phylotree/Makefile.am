@@ -10,10 +10,14 @@ BUILT_SOURCES = parser.hh
 AM_YFLAGS = -d
 AM_LFLAGS = -o$(LEX_OUTPUT_ROOT).c
 
-noinst_PROGRAMS = polynomial-test phylotree-test expected-terms parser-test approximation-test likelihood-test marginal-likelihood-test treespace-test treespace-distance
+noinst_PROGRAMS = polynomial-test tree-reduction-test phylotree-test expected-terms parser-test approximation-test likelihood-test marginal-likelihood-test treespace-test treespace-distance
 
 polynomial_test_SOURCES = polynomial-test.cc
 polynomial_test_LDADD   = -lm
+
+tree_reduction_test_SOURCES = tree-reduction-test.cc
+tree_reduction_test_LDADD   = -lm
+tree_reduction_test_LDADD  += libtfbayes-phylotree.la
 
 phylotree_test_SOURCES = phylotree-test.cc
 phylotree_test_LDADD   = -lm
