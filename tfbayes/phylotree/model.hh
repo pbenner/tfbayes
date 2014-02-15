@@ -23,6 +23,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <tfbayes/phylotree/phylotree.hh>
+#include <tfbayes/utility/polynomial.hh>
 
 /* AS: ALPHABET SIZE
  * AC: ALPHABET CODE TYPE

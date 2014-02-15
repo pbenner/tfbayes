@@ -15,7 +15,7 @@ noinst_PROGRAMS = polynomial-test tree-reduction-test phylotree-test expected-te
 polynomial_test_SOURCES = polynomial-test.cc
 polynomial_test_LDADD   = -lm
 
-tree_reduction_test_SOURCES = tree-reduction-test.cc
+tree_reduction_test_SOURCES = tree-reduction-test.cc tree-reduction.hh
 tree_reduction_test_LDADD   = -lm
 tree_reduction_test_LDADD  += libtfbayes-phylotree.la
 
