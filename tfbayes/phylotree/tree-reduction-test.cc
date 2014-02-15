@@ -248,6 +248,48 @@ void test_tree8() {
              << endl;
 }
 
+void test_tree9() {
+        cout << "Test 9:" << endl;
+        pt_leaf_t* n15 = new pt_leaf_t(15.0, "n15");
+        pt_leaf_t* n14 = new pt_leaf_t(14.0, "n14");
+        pt_leaf_t* n13 = new pt_leaf_t(13.0, "n13");
+        pt_leaf_t* n12 = new pt_leaf_t(12.0, "n12");
+        pt_leaf_t* n11 = new pt_leaf_t(11.0, "n11");
+        pt_leaf_t* n10 = new pt_leaf_t(10.0, "n10");
+        pt_leaf_t* n9  = new pt_leaf_t( 9.0, "n9");
+        pt_leaf_t* n8  = new pt_leaf_t( 8.0, "n8");
+        pt_node_t* n7  = new pt_node_t( 6.0, n14, n15);
+        pt_node_t* n6  = new pt_node_t( 6.0, n12, n13);
+        pt_node_t* n5  = new pt_node_t( 5.0, n10, n11);
+        pt_node_t* n4  = new pt_node_t( 4.0, n8, n9);
+        pt_node_t* n3  = new pt_node_t( 3.0, n6, n7);
+        pt_node_t* n2  = new pt_node_t( 2.0, n4, n5);
+        pt_root_t n1(n2, n3);
+        vector<alphabet_code_t> observations(n1.n_leaves, 0);
+        observations[n1["n8" ]->id] = 1;
+        observations[n1["n9" ]->id] = 2;
+        observations[n1["n10"]->id] = 3;
+        observations[n1["n11"]->id] = 3;
+        observations[n1["n12"]->id] = 2;
+        observations[n1["n13"]->id] = 0;
+        observations[n1["n14"]->id] = 0;
+        observations[n1["n15"]->id] = 2;
+
+        cout << "(n1 (n2 (n4 (n8 A) (n9 C))"    << endl
+             << "        (n5 (n10 G) (n11 T)))" << endl
+             << "    (n3 (n6 (n12 A) (n13 C))"  << endl
+             << "        (n7 (n14 C) (n15 C)))" << endl;
+
+        incomplete_expression_t incomplete_expression = pt_simplify(n1);
+        polynomial_t<alphabet_size> result1 = pt_expand_t<alphabet_size>(incomplete_expression, observations);
+        polynomial_t<alphabet_size> result2 = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                n1, observations);
+        cout << incomplete_expression << endl
+             << result1 << endl
+             << result2 << endl
+             << endl;
+}
+
 int main(void) {
         test_tree1();
         test_tree2();
@@ -257,6 +299,7 @@ int main(void) {
         test_tree6();
         test_tree7();
         test_tree8();
+        test_tree9();
 
         return 0.0;
 }
