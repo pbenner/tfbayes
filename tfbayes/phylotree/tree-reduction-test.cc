@@ -290,6 +290,41 @@ void test_tree9() {
              << endl;
 }
 
+pt_root_t
+create_tree(size_t n)
+{
+        assert(n >= 1);
+
+        pt_node_t* pt_last = new pt_leaf_t(1.0);
+
+        for (size_t i = 1; i < n; i++) {
+                pt_last = new pt_node_t(1.0, pt_last, new pt_leaf_t(1.0));
+        }
+        return pt_root_t(pt_last, new pt_leaf_t(1.0));
+}
+
+void random_init(std::vector<alphabet_code_t>& observations)
+{
+        for (size_t i = 0; i < observations.size(); i++) {
+                observations[i] = rand()%alphabet_size;
+        }
+}
+
+void test_tree10() {
+        cout << "Test 10:" << endl;
+
+        for (size_t i = 2; i < 10; i++) {
+                pt_root_t n1 = create_tree(i);
+                std::vector<alphabet_code_t> observations(n1.n_leaves);
+                random_init(observations);
+
+                incomplete_expression_t incomplete_expression = pt_simplify(n1);
+                polynomial_t<alphabet_size> result = pt_expand_t<alphabet_size>(incomplete_expression, observations);
+                cout << i << ": " << incomplete_expression.size().first
+                     << endl;
+        }
+}
+
 int main(void) {
         test_tree1();
         test_tree2();
@@ -300,6 +335,7 @@ int main(void) {
         test_tree7();
         test_tree8();
         test_tree9();
+        test_tree10();
 
         return 0.0;
 }
