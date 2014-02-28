@@ -81,15 +81,15 @@ The *data* directory contains some data sets for phylogenetic tree inference. We
 
 The file *test.posterior.dat* contains the (unnormalized) posterior values for the samples. It is formatted such that it can be easily read and plotted with *GNU-R*. To compute the posterior expectation use
 
-	zcat test.nh.gz | tfbayes-treespace-mean -n 100 -r -f -d 8000 -v mean > test.mean.nh
+	zcat test.nh.gz | tfbayes-treespace-estimate -n 100 -r -f -d 8000 -v mean > test.mean.nh
 
 which drops the first *8000* samples and performs *100* iterations of the algorithm. Similarly, use
 
-	zcat test.nh.gz | tfbayes-treespace-mean -n 100 -r -d 8000 -v median > test.median.nh
+	zcat test.nh.gz | tfbayes-treespace-estimate -n 100 -r -d 8000 -v median > test.median.nh
 
 to compute the median. To compare the result with the majority rule consensus tree use
 
-	zcat test.nh.gz | tfbayes-treespace-mean -d 8000 -v majority-consensus
+	zcat test.nh.gz | tfbayes-treespace-estimate -d 8000 -v majority-consensus
 
 With *tfbayes-treespace-histogram* several summarizing statistics can be computed. For instance, to obtain a histogram of tree topologies use
 

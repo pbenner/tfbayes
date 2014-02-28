@@ -226,7 +226,7 @@ void estimate(const string& command)
                 list<ntree_t> tmp = parse_tree_file(options.mean_file);
                 assert(tmp.size() == 1);
                 /* compute variance */
-                cerr << frechet_variance(ntree_list, tmp.front())
+                cout << frechet_variance(ntree_list, tmp.front())
                      << endl;
         }
         else {
