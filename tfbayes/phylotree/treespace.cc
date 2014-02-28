@@ -15,15 +15,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <treespace.hh>
-#include <tfbayes/utility/progress.hh>
-
 #include <algorithm>
 #include <iomanip>
 #include <cmath>
 #include <cstdlib>
 
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/variate_generator.hpp>
+
 #include <glpk.h>
+
+#include <tfbayes/phylotree/treespace.hh>
+#include <tfbayes/utility/progress.hh>
 
 using namespace std;
 
@@ -1352,7 +1355,7 @@ median_tree_cyc(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambd
 
 ntree_t
 mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
-               size_t n, const lambda_t& lambda, bool verbose)
+               size_t n, boost::random::mt19937& gen, const lambda_t& lambda, bool verbose)
 {
         vector<ntree_t> ntree_list(_ntree_list.begin(), _ntree_list.end());
         vector<double > weights(_weights);
@@ -1363,7 +1366,7 @@ mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
 
         for (size_t i = 1, k = 0; k < n; k++) {
                 // shuffle elements in each iteration
-                random_permutation_t permutation(ntree_list.size());
+                random_permutation_t permutation(ntree_list.size(), gen);
                 random_shuffle(ntree_list.begin(), ntree_list.end(), permutation);
                 random_shuffle(   weights.begin(),    weights.end(), permutation);
 
@@ -1383,28 +1386,28 @@ mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
 }
 
 ntree_t
-mean_tree_rand(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda,
-               bool verbose)
+mean_tree_rand(const list<ntree_t>& ntree_list, size_t n, boost::random::mt19937& gen, 
+               const lambda_t& lambda, bool verbose)
 {
         const vector<double> weights(ntree_list.size(), 1.0);
 
-        return mean_tree_rand(ntree_list, weights, n, lambda, verbose);
+        return mean_tree_rand(ntree_list, weights, n, gen, lambda, verbose);
 }
 
 ntree_t
 median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
-                 size_t n, const lambda_t& lambda, bool verbose)
+                 size_t n, boost::random::mt19937& gen, const lambda_t& lambda, bool verbose)
 {
         vector<ntree_t> ntree_list(_ntree_list.begin(), _ntree_list.end());
         vector<double > weights(_weights);
-        // assure that we have as many weights as we have trees
+        // random generator for shuffling the tree list
         assert(ntree_list.size() == weights.size());
         // start with the laste element
         ntree_t sk = ntree_list.back();
 
         for (size_t i = 1, k = 0; k < n; k++) {
                 // shuffle elements in each iteration
-                random_permutation_t permutation(ntree_list.size());
+                random_permutation_t permutation(ntree_list.size(), gen);
                 random_shuffle(ntree_list.begin(), ntree_list.end(), permutation);
                 random_shuffle(   weights.begin(),    weights.end(), permutation);
 
@@ -1424,12 +1427,12 @@ median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weight
 }
 
 ntree_t
-median_tree_rand(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda,
-                 bool verbose)
+median_tree_rand(const list<ntree_t>& ntree_list, size_t n, boost::random::mt19937& gen,
+                 const lambda_t& lambda, bool verbose)
 {
         const vector<double> weights(ntree_list.size(), 1.0);
 
-        return median_tree_rand(ntree_list, weights, n, lambda, verbose);
+        return median_tree_rand(ntree_list, weights, n, gen, lambda, verbose);
 }
 
 ntree_t

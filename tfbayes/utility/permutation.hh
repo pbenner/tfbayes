@@ -26,13 +26,18 @@
 #include <cstdlib>
 #include <cstddef>
 
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_01.hpp>
+
 class random_permutation_t : std::vector<double> {
 public:
-        random_permutation_t(size_t length)
+        random_permutation_t(size_t length, boost::random::mt19937& gen)
                 : std::vector<double>(length-1, 0.0) {
+
+                boost::uniform_01<> uniform;
+
                 for (size_t i = 0; i < length-1; i++) {
-                        operator[](i) = static_cast<double>(rand()) /
-                                static_cast<double>(RAND_MAX);
+                        operator[](i) = uniform(gen);
                 }
         }
 

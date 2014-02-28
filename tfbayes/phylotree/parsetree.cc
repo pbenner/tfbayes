@@ -316,15 +316,17 @@ list<pt_root_t> parse_tree_list(FILE * file, size_t drop, size_t skip,
 list<pt_root_t> parse_tree_list(const string& filename, size_t drop, size_t skip,
                                 boost::optional<const pt_root_t&> ref_tree)
 {
-        FILE* yyin = fopen(filename.c_str(), "r");
-        if (yyin == NULL) {
-                cerr << boost::format("Could not open tree file `%s': %s") % filename % strerror(errno)
-                     << endl;
-                exit(EXIT_FAILURE);
+        FILE* yyin = NULL;
+        if (filename != "") {
+                yyin = fopen(filename.c_str(), "r");
+                if (yyin == NULL) {
+                        cerr << boost::format("Could not open tree file `%s': %s") % filename % strerror(errno)
+                             << endl;
+                        exit(EXIT_FAILURE);
+                }
         }
-
         list<pt_root_t> tree_list = parse_tree_list(yyin, drop, skip, ref_tree);
-        fclose(yyin);
+        if (yyin) fclose(yyin);
 
         return tree_list;
 }

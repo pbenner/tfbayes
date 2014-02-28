@@ -30,7 +30,11 @@
 #include <tfbayes/phylotree/parser.hh>
 #include <tfbayes/phylotree/treespace.hh>
 #include <tfbayes/utility/progress.hh>
+#include <tfbayes/utility/random.hh>
 
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/variate_generator.hpp>
 #include <boost/unordered/unordered_map.hpp>
 
 #define alphabet_size 5
@@ -39,14 +43,6 @@ typedef boost::unordered_map<topology_t, std::list<ntree_t> > topology_map_t;
 
 using namespace std;
 
-void init() {
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        time_t seed = tv.tv_sec*tv.tv_usec;
-
-        srand(seed);
-}
-
 // Options
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,6 +50,7 @@ typedef struct _options_t {
         double cut;
         bool random;
         bool variance;
+        string mean_file;
         size_t drop;
         size_t k;
         size_t iterations;
@@ -62,6 +59,7 @@ typedef struct _options_t {
                 : cut(1e-8),
                   random(false),
                   variance(false),
+                  mean_file(""),
                   drop(0),
                   k(1),
                   iterations(100),
@@ -79,20 +77,22 @@ void print_usage(char *pname, FILE *fp)
 {
         (void)fprintf(fp, "\nUsage: %s [OPTION] COMMAND < TREE_LIST\n\n", pname);
         (void)fprintf(fp,
-                      "Commands: mean, median, majority-consensus\n"
+                      "Commands:\n"
                       "\n"
                       "      mean                   - Frechet mean\n"
                       "      median                 - geometric median\n"
                       "      majority-consensus     - majority rule consensus tree with\n"
                       "                               average branch lengths\n"
                       "      simple-mean            - compute the mean for each topology\n"
+                      "      variance               - Frechet variance\n"
                       "\n"
                       "Options:\n"
                       "             -c FLOAT        - remove edges from resulting tree\n"
                       "                               if the length is shorter than FLOAT\n"
                       "                               (default: %e)\n"
                       "             -r              - use random instead of cyclic version\n"
-                      "             -f              - compute Frechet variance\n"
+                      "             -m FILE         - provide the Frechet mean for computing\n"
+                      "                               the Frechet variance\n"
                       "             -n INTEGER      - number of iterations\n"
                       "             -d INTEGER      - drop first n trees\n"
                       "             -k INTEGER      - compute mean from every kth tree\n"
@@ -126,9 +126,9 @@ void print_version(FILE *fp)
                       "FOR A PARTICULAR PURPOSE.\n\n");
 }
 
-list<ntree_t> parse_tree_file()
+list<ntree_t> parse_tree_file(const string& filename = "")
 {
-        list<pt_root_t>  tree_list = parse_tree_list(NULL, options.drop, options.k);
+        list<pt_root_t>  tree_list = parse_tree_list(filename, options.drop, options.k);
         list<ntree_t  > ntree_list;
         // convert trees
         for (list<pt_root_t>::const_iterator it = tree_list.begin();
@@ -139,11 +139,14 @@ list<ntree_t> parse_tree_file()
         return ntree_list;
 }
 
-list<ntree_t> randomize_ntree_list(const list<ntree_t>& ntree_list)
+list<ntree_t> randomize_ntree_list(const list<ntree_t>& ntree_list, boost::random::mt19937& gen)
 {
         vector<ntree_t> tmp(ntree_list.begin(), ntree_list.end());
+        // random generator for shuffling the tree list
+        boost::uniform_int<> uni_dist;
+        boost::variate_generator<boost::random::mt19937&, boost::uniform_int<> > rng(gen, uni_dist);
 
-        random_shuffle(tmp.begin(), tmp.end());
+        random_shuffle(tmp.begin(), tmp.end(), rng);
 
         return list<ntree_t>(tmp.begin(), tmp.end());
 }
@@ -184,27 +187,28 @@ void simple_mean(list<ntree_t>& result, const list<ntree_t>& ntree_list)
         }
 }
 
-void mean(const string& command)
+void estimate(const string& command)
 {
+        boost::random::mt19937 gen;
         /* init random number generator */
-        init();
+        seed_rng(gen);
 
         list<ntree_t> result_list;
         /* phylogenetic tree */
-        list<ntree_t> ntree_list = randomize_ntree_list(parse_tree_file());
+        list<ntree_t> ntree_list = randomize_ntree_list(parse_tree_file(), gen);
         /* return if there is no tree in the list */
         if (ntree_list.size() == 0) return;
 
         if (command == "mean") {
                 result_list.push_back(
                         options.random ?
-                        mean_tree_rand(ntree_list, options.iterations, default_lambda_t(), options.verbose) :
+                        mean_tree_rand(ntree_list, options.iterations, gen, default_lambda_t(), options.verbose) :
                         mean_tree_cyc (ntree_list, options.iterations, default_lambda_t(), options.verbose));
         }
         else if (command == "median") {
                 result_list.push_back(
                         options.random ?
-                        median_tree_rand(ntree_list, options.iterations, default_lambda_t(), options.verbose) :
+                        median_tree_rand(ntree_list, options.iterations, gen, default_lambda_t(), options.verbose) :
                         median_tree_cyc (ntree_list, options.iterations, default_lambda_t(), options.verbose));
         }
         else if (command == "majority-consensus") {
@@ -213,6 +217,17 @@ void mean(const string& command)
         }
         else if (command == "simple-mean") {
                 simple_mean(result_list, ntree_list);
+        }
+        else if (command == "variance") {
+                /* read Frechet mean from file */
+                if (options.mean_file == "") {
+                        wrong_usage("Please provide the Frechet mean.");
+                }
+                list<ntree_t> tmp = parse_tree_file(options.mean_file);
+                assert(tmp.size() == 1);
+                /* compute variance */
+                cerr << frechet_variance(ntree_list, tmp.front())
+                     << endl;
         }
         else {
                 wrong_usage("Unknown command.");
@@ -241,13 +256,6 @@ void mean(const string& command)
                 cout << newick_format(tmp) << endl;
         }
 
-        /* Frechet variance */
-        if (command == "mean" && options.variance) {
-                cerr << "Frechet variance: "
-                     << frechet_variance(ntree_list, result_list.front())
-                     << endl;
-        }
-
         /* free glp library space */
         glp_free_env();
 }
@@ -261,7 +269,7 @@ int main(int argc, char *argv[])
                         { "version",         0, 0, 'q' }
                 };
 
-                c = getopt_long(argc, argv, "c:rfd:k:n:v",
+                c = getopt_long(argc, argv, "c:rm:d:k:n:v",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -292,6 +300,9 @@ int main(int argc, char *argv[])
                         }
                         options.k = atoi(optarg);
                         break;
+                case 'm':
+                        options.mean_file = string(optarg);
+                        break;
                 case 'n':
                         options.iterations = atoi(optarg);
                         break;
@@ -315,7 +326,7 @@ int main(int argc, char *argv[])
         }
         string command(argv[optind]);
 
-        mean(command);
+        estimate(command);
 
         return 0;
 }

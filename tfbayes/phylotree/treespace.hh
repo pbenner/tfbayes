@@ -35,6 +35,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/random/mersenne_twister.hpp>
 
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/utility/clonable.hh>
@@ -454,30 +455,34 @@ double frechet_variance(const std::list<ntree_t>& ntree_list,
                         const ntree_t& mean);
 double frechet_variance(const std::list<ntree_t>& ntree_list, const ntree_t& mean);
 
-ntree_t mean_tree_cyc(const std::list<ntree_t>& ntree_list, size_t n = 100,
+ntree_t mean_tree_cyc(const std::list<ntree_t>& ntree_list, size_t n,
                       const lambda_t& lambda = default_lambda_t(),
                       bool verbose = false);
 ntree_t mean_tree_cyc(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights,
-                      size_t n = 100, const lambda_t& lambda = default_lambda_t(),
+                      size_t n, const lambda_t& lambda = default_lambda_t(),
                       bool verbose = false);
-ntree_t median_tree_cyc(const std::list<ntree_t>& ntree_list, size_t n = 100,
+ntree_t median_tree_cyc(const std::list<ntree_t>& ntree_list, size_t n,
                         const lambda_t& lambda = default_lambda_t(),
                         bool verbose = false);
 ntree_t median_tree_cyc(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights,
-                        size_t n = 100, const lambda_t& lambda = default_lambda_t(),
+                        size_t n, const lambda_t& lambda = default_lambda_t(),
                         bool verbose = false);
 
-ntree_t mean_tree_rand(const std::list<ntree_t>& ntree_list, size_t n = 100,
+ntree_t mean_tree_rand(const std::list<ntree_t>& ntree_list, size_t n,
+                       boost::random::mt19937& gen,
                        const lambda_t& lambda = default_lambda_t(),
                        bool verbose = false);
-ntree_t mean_tree_rand(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights,
-                       size_t n = 100, const lambda_t& lambda = default_lambda_t(),
+ntree_t mean_tree_rand(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights, size_t n,
+                       boost::random::mt19937& gen,
+                       const lambda_t& lambda = default_lambda_t(),
                        bool verbose = false);
-ntree_t median_tree_rand(const std::list<ntree_t>& ntree_list, size_t n = 100,
+ntree_t median_tree_rand(const std::list<ntree_t>& ntree_list, size_t n,
+                         boost::random::mt19937& gen,
                          const lambda_t& lambda = default_lambda_t(),
                          bool verbose = false);
-ntree_t median_tree_rand(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights,
-                         size_t n = 100, const lambda_t& lambda = default_lambda_t(),
+ntree_t median_tree_rand(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights, size_t n,
+                         boost::random::mt19937& gen,
+                         const lambda_t& lambda = default_lambda_t(),
                          bool verbose = false);
 
 ntree_t mean_same_topology(const std::list<ntree_t>& ntree_list,
