@@ -126,9 +126,9 @@ void print_version(FILE *fp)
                       "FOR A PARTICULAR PURPOSE.\n\n");
 }
 
-list<ntree_t> parse_tree_file(const string& filename = "")
+list<ntree_t> parse_tree_file(const string& filename, size_t drop, size_t k)
 {
-        list<pt_root_t>  tree_list = parse_tree_list(filename, options.drop, options.k);
+        list<pt_root_t>  tree_list = parse_tree_list(filename, drop, k);
         list<ntree_t  > ntree_list;
         // convert trees
         for (list<pt_root_t>::const_iterator it = tree_list.begin();
@@ -195,7 +195,8 @@ void estimate(const string& command)
 
         list<ntree_t> result_list;
         /* phylogenetic tree */
-        list<ntree_t> ntree_list = randomize_ntree_list(parse_tree_file(), gen);
+        list<ntree_t> ntree_list = randomize_ntree_list(
+                parse_tree_file("", options.drop, options.k), gen);
         /* return if there is no tree in the list */
         if (ntree_list.size() == 0) return;
 
@@ -223,7 +224,7 @@ void estimate(const string& command)
                 if (options.mean_file == "") {
                         wrong_usage("Please provide the Frechet mean.");
                 }
-                list<ntree_t> tmp = parse_tree_file(options.mean_file);
+                list<ntree_t> tmp = parse_tree_file(options.mean_file, 0, 1);
                 assert(tmp.size() == 1);
                 /* compute variance */
                 cout << frechet_variance(ntree_list, tmp.front())
