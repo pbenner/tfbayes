@@ -1332,7 +1332,7 @@ median_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
         for (size_t i = 1, k = 0; k < n; k++) {
                 list  <ntree_t>::const_iterator it = ntree_list.begin();
                 vector<double >::const_iterator is = weights.begin();
-                for (; it != ntree_list.end(); it++, i++) {
+                for (; it != ntree_list.end() && is != weights.end(); it++, is++, i++) {
                         if (verbose && i % 100 == 0) {
                                 cerr << progress_t(i/(double)(n*ntree_list.size()));
                         }
@@ -1413,7 +1413,7 @@ median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weight
 
                 vector<ntree_t>::const_iterator it = ntree_list.begin();
                 vector<double >::const_iterator is = weights.begin();
-                for (; it != ntree_list.end(); it++, i++) {
+                for (; it != ntree_list.end() && is != weights.end(); it++, is++, i++) {
                         if (verbose && i % 100 == 0) {
                                 cerr << progress_t(i/(double)(n*ntree_list.size()));
                         }
