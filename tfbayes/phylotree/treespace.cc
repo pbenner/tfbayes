@@ -303,8 +303,8 @@ topology_t::operator==(const topology_t& topology) const
 
 pt_node_t*
 convert_leaf_set(
-        const vector<double>& leaf_d,
-        const vector<string>& leaf_names,
+        const ntree_t::leaf_d_t& leaf_d,
+        const ntree_t::leaf_names_t& leaf_names,
         const nsplit_t::part_t& leaves)
 {
         // get the first non-zero bit
@@ -401,8 +401,8 @@ nedge_node_t::propagate(const nedge_t& e)
 
 nedge_node_t::convert_t
 nedge_node_t::convert(
-        const vector<double>& leaf_d,
-        const vector<string>& leaf_names) const
+        const ntree_t::leaf_d_t& leaf_d,
+        const ntree_t::leaf_names_t& leaf_names) const
 {
         pt_node_t *tree = NULL, *tmp_node;
         convert_t tmp;
@@ -441,8 +441,8 @@ nedge_node_t::convert(
 
 nedge_root_t::nedge_root_t(
         const nedge_set_t& nedge_set,
-        const vector<double>& leaf_d,
-        const vector<string>& leaf_names)
+        const ntree_t::leaf_d_t& leaf_d,
+        const ntree_t::leaf_names_t& leaf_names)
         : nedge_node_t(),
           _leaf_d(leaf_d),
           _leaf_names(leaf_names)
@@ -512,8 +512,8 @@ parse_pt_node_t(
         size_t n,
         const pt_node_t& node,
         nedge_set_t& nedge_set,
-        vector<double>& leaf_d,
-        vector<string>& leaf_names)
+        ntree_t::leaf_d_t& leaf_d,
+        ntree_t::leaf_names_t& leaf_names)
 {
         set<size_t> s;
 
@@ -539,8 +539,8 @@ static void
 parse_pt_node_t(
         const pt_root_t& node,
         nedge_set_t& nedge_set,
-        vector<double>& leaf_d,
-        vector<string>& leaf_names)
+        ntree_t::leaf_d_t& leaf_d,
+        ntree_t::leaf_names_t& leaf_names)
 {
         assert(node.outgroup());
         // add outgroup
@@ -552,8 +552,8 @@ parse_pt_node_t(
 }
 
 ntree_t::ntree_t(const nedge_set_t& nedge_set,
-                 const vector<double>& leaf_d,
-                 const vector<string> leaf_names)
+                 const leaf_d_t& leaf_d,
+                 const leaf_names_t leaf_names)
         : _n(leaf_d.size()-1),
           _nedge_set(nedge_set),
           _leaf_d(leaf_d),
@@ -569,8 +569,8 @@ ntree_t::ntree_t(const nedge_set_t& nedge_set,
 ntree_t::ntree_t(const pt_root_t& tree)
 {
         nedge_set_t nedge_set;
-        vector<double> leaf_d(tree.n_leaves, 0);
-        vector<string> leaf_names(tree.n_leaves, "");
+        leaf_d_t leaf_d(tree.n_leaves, 0);
+        leaf_names_t leaf_names(tree.n_leaves, "");
 
         // parse the tree
         parse_pt_node_t(tree, nedge_set, leaf_d, leaf_names);
@@ -614,12 +614,12 @@ ntree_t::nedge_set() {
         return _nedge_set;
 }
 
-const vector<double>&
+const ntree_t::leaf_d_t&
 ntree_t::leaf_d() const {
         return _leaf_d;
 }
 
-vector<double>&
+ntree_t::leaf_d_t&
 ntree_t::leaf_d() {
         return _leaf_d;
 }
@@ -629,7 +629,7 @@ ntree_t::leaf_d(size_t i) const {
         return leaf_d()[i];
 }
 
-const vector<string>&
+const ntree_t::leaf_names_t&
 ntree_t::leaf_names() const {
         return _leaf_names;
 }
@@ -698,7 +698,7 @@ ntree_t::scale(double lambda)
              it != nedge_set().end(); it++) {
                 it->d() *= lambda;
         }
-        for (vector<double>::iterator it = leaf_d().begin();
+        for (leaf_d_t::iterator it = leaf_d().begin();
              it != leaf_d().end(); it++) {
                 (*it) *= lambda;
         }
@@ -998,7 +998,7 @@ geodesic_t::operator()(const double lambda) const
         if (lambda == 1.0) return t2();
         // variables
         nedge_set_t nedge_set;
-        vector<double> leaf_d(leaf_n(), 0);
+        ntree_t::leaf_d_t leaf_d(leaf_n(), 0);
 
         for (list<npath_t>::const_iterator it = npath_list().begin(); it != npath_list().end(); it++) {
                 const npath_t& npath(*it);
@@ -1084,19 +1084,19 @@ geodesic_t::leaf_n() const
         return _leaf_n;
 }
 
-const vector<string>&
+const ntree_t::leaf_names_t&
 geodesic_t::leaf_names() const
 {
         return _leaf_names;
 }
 
-const vector<double>&
+const ntree_t::leaf_d_t&
 geodesic_t::t1_leaf_d() const
 {
         return t1().leaf_d();
 }
 
-const vector<double>&
+const ntree_t::leaf_d_t&
 geodesic_t::t2_leaf_d() const
 {
         return t2().leaf_d();
@@ -1472,8 +1472,8 @@ majority_consensus(const list<ntree_t>& ntree_list, bool verbose)
         const size_t m = ntree_list.size();
         nsplit_map_t nsplit_map;
         nedge_set_t  nedge_set;
-        vector<double> leaf_d(n+1, 0);
-        vector<string> leaf_names(ntree_list.begin()->leaf_names());
+        ntree_t::leaf_d_t leaf_d(n+1, 0);
+        ntree_t::leaf_names_t leaf_names(ntree_list.begin()->leaf_names());
 
         // loop through the list of trees an count occurences of splits
         list<ntree_t>::const_iterator it = ntree_list.begin();

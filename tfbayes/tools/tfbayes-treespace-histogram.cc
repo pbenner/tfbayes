@@ -38,7 +38,8 @@ using namespace std;
 
 #define alphabet_size 5
 
-typedef std::map<named_nsplit_t, std::vector<double> > split_map_t;
+typedef map<named_nsplit_t, vector<double> > split_map_t;
+typedef map<string, vector<double> > leaf_map_t;
 typedef boost::unordered_map<topology_t, size_t> topology_map_t;
 
 // Options
@@ -70,6 +71,7 @@ void print_usage(char *pname, FILE *fp)
                       "\n"
                       "Commands:\n"
                       "             edges           - histogram of edge lengths\n"
+                      "             leaf-edges      - histogram of leaf edge lengths\n"
                       "             topology        - histogram of topologies\n"
                       "\n"
                       "Options:\n"
@@ -104,9 +106,9 @@ void print_version(FILE *fp)
                       "FOR A PARTICULAR PURPOSE.\n\n");
 }
 
-list<ntree_t> parse_tree_file()
+list<ntree_t> parse_tree_file(size_t drop, size_t k)
 {
-        list<pt_root_t>  tree_list = parse_tree_list(NULL, options.drop, options.k);
+        list<pt_root_t>  tree_list = parse_tree_list("", drop, k);
         list<ntree_t  > ntree_list;
         // convert trees
         for (list<pt_root_t>::const_iterator it = tree_list.begin();
@@ -155,6 +157,26 @@ ostream& operator<<(ostream& o, const split_map_t& map)
         return o;
 }
 
+ostream& operator<<(ostream& o, const leaf_map_t& map)
+{
+        size_t n = map.begin()->second.size();
+        // print header
+        for (leaf_map_t::const_iterator it = map.begin(); it != map.end(); it++) {
+                if (it != map.begin()) o << " ";
+                o << it->first;
+        }
+        o << endl;
+        // print table
+        for (size_t i = 0; i < n; i++) {
+                for (leaf_map_t::const_iterator it = map.begin(); it != map.end(); it++) {
+                        if (it != map.begin()) o << " ";
+                        o << fixed << it->second[i];
+                }
+                o << endl;
+        }
+        return o;
+}
+
 ostream& operator<<(ostream& o, const topology_map_t& map)
 {
         vector<size_t> vec;
@@ -179,7 +201,7 @@ void histogram_edges()
         split_map_t map;
         ntree_t result;
         /* phylogenetic tree */
-        list<ntree_t> ntree_list = parse_tree_file();
+        list<ntree_t> ntree_list = parse_tree_file(options.drop, options.k);
         /* return if there is no tree in the list */
         if (ntree_list.size() == 0) return;
 
@@ -194,13 +216,31 @@ void histogram_edges()
         cout << map << endl;
 }
 
+void histogram_leaf_edges()
+{
+        leaf_map_t map;
+        ntree_t result;
+        /* phylogenetic tree */
+        list<ntree_t> ntree_list = parse_tree_file(options.drop, options.k);
+        /* return if there is no tree in the list */
+        if (ntree_list.size() == 0) return;
+
+        for (list<ntree_t>::const_iterator it = ntree_list.begin();
+             it != ntree_list.end(); it++) {
+                for (size_t i = 0; i < it->n()+1; i++) {
+                        map[it->leaf_name(i)].push_back(it->leaf_d(i));
+                }
+        }
+        cout << map << endl;
+}
+
 void histogram_topology()
 {
         topology_map_t map;
 
         ntree_t result;
         /* phylogenetic tree */
-        list<ntree_t> ntree_list = parse_tree_file();
+        list<ntree_t> ntree_list = parse_tree_file(options.drop, options.k);
         /* return if there is no tree in the list */
         if (ntree_list.size() == 0) return;
 
@@ -262,6 +302,9 @@ int main(int argc, char *argv[])
         }
         if (string(argv[optind]) == "edges") {
                 histogram_edges();
+        }
+        else if (string(argv[optind]) == "leaf-edges") {
+                histogram_leaf_edges();
         }
         else if (string(argv[optind]) == "topology") {
                 histogram_topology();

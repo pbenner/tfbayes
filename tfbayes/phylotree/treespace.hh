@@ -250,11 +250,14 @@ protected:
 
 class ntree_t {
 public:
+        typedef std::vector<double> leaf_d_t;
+        typedef std::vector<std::string> leaf_names_t;
+
         // constructors
         ntree_t() : _n(0) { };
         ntree_t(const nedge_set_t& nedge_set,
-                const std::vector<double>& leaf_d,
-                const std::vector<std::string> leaf_names = std::vector<std::string>());
+                const leaf_d_t& leaf_d,
+                const leaf_names_t leaf_names = leaf_names_t());
         ntree_t(const pt_root_t& tree);
 
         // methods
@@ -263,10 +266,10 @@ public:
         const nedge_t& find_edge(const nsplit_t& nsplit) const;
         const nedge_set_t& nedge_set() const;
               nedge_set_t& nedge_set();
-        const std::vector<double>& leaf_d() const;
-              std::vector<double>& leaf_d();
+        const leaf_d_t& leaf_d() const;
+              leaf_d_t& leaf_d();
         double leaf_d(size_t i) const;
-        const std::vector<std::string>& leaf_names() const;
+        const leaf_names_t& leaf_names() const;
         const std::string& leaf_name(size_t i) const;
         bool compatible(const nsplit_t& nsplit) const;
         void add_edge(const nedge_t& edge);
@@ -286,9 +289,9 @@ protected:
         // n-2 splits
         nedge_set_t _nedge_set;
         // leaf edge lengths, indexed by an integer 0, 1, ..., n
-        std::vector<double> _leaf_d;
+        leaf_d_t _leaf_d;
         // leaf names
-        std::vector<std::string> _leaf_names;
+        leaf_names_t _leaf_names;
         // empty leaf name
         static const std::string _empty_string;
         // empty edge
@@ -409,9 +412,9 @@ public:
 
         const std::list<common_nedge_t>& common_edges() const;
         size_t leaf_n() const;
-        const std::vector<std::string>& leaf_names() const;
-        const std::vector<double>& t1_leaf_d() const;
-        const std::vector<double>& t2_leaf_d() const;
+        const ntree_t::leaf_names_t& leaf_names() const;
+        const ntree_t::leaf_d_t& t1_leaf_d() const;
+        const ntree_t::leaf_d_t& t2_leaf_d() const;
         double t1_leaf_d(size_t i) const;
         double t2_leaf_d(size_t i) const;
         const ntree_t& t1() const;
@@ -426,7 +429,7 @@ protected:
         std::list<common_nedge_t> _common_edges;
         std::list<npath_t> _npath_list;
         size_t _leaf_n;
-        std::vector<std::string> _leaf_names;
+        ntree_t::leaf_names_t _leaf_names;
         ntree_t _t1;
         ntree_t _t2;
         // empty common edge
