@@ -54,7 +54,8 @@ typedef struct _options_t {
         size_t drop;
         size_t k;
         size_t iterations;
-        bool verbose;
+        double step_size;
+        size_t verbose;
         _options_t()
                 : cut(1e-8),
                   random(false),
@@ -63,7 +64,8 @@ typedef struct _options_t {
                   drop(0),
                   k(1),
                   iterations(100),
-                  verbose(false)
+                  step_size(1.0),
+                  verbose(0)
                 { }
 } options_t;
 
@@ -87,16 +89,18 @@ void print_usage(char *pname, FILE *fp)
                       "      variance               - Frechet variance\n"
                       "\n"
                       "Options:\n"
-                      "             -c FLOAT        - remove edges from resulting tree\n"
+                      "             -c float        - remove edges from resulting tree\n"
                       "                               if the length is shorter than FLOAT\n"
                       "                               (default: %e)\n"
                       "             -r              - use random instead of cyclic version\n"
-                      "             -m FILE         - provide the Frechet mean for computing\n"
+                      "             -m file         - provide the Frechet mean for computing\n"
                       "                               the Frechet variance\n"
-                      "             -n INTEGER      - number of iterations\n"
-                      "             -d INTEGER      - drop first n trees\n"
-                      "             -k INTEGER      - compute mean from every kth tree\n"
-                      "             -v              - be verbose and print progress bar"
+                      "             -n integer      - number of iterations\n"
+                      "             -d integer      - drop first n trees\n"
+                      "             -k integer      - compute mean from every kth tree\n"
+                      "             -s float        - step size parameter\n"
+                      "             -v              - set verbose level to one"
+                      "   --verbose integer         - set verbose level (0, 1, 2, or 3)"
                       "\n"
                       "   --help                    - print help and exit\n"
                       "   --version                 - print version information and exit\n\n",
@@ -203,14 +207,14 @@ void estimate(const string& command)
         if (command == "mean") {
                 result_list.push_back(
                         options.random ?
-                        mean_tree_rand(ntree_list, options.iterations, gen, default_lambda_t(), options.verbose) :
-                        mean_tree_cyc (ntree_list, options.iterations, default_lambda_t(), options.verbose));
+                        mean_tree_rand(ntree_list, options.iterations, gen, default_lambda_t(options.step_size), options.verbose) :
+                        mean_tree_cyc (ntree_list, options.iterations, default_lambda_t(options.step_size), options.verbose));
         }
         else if (command == "median") {
                 result_list.push_back(
                         options.random ?
-                        median_tree_rand(ntree_list, options.iterations, gen, default_lambda_t(), options.verbose) :
-                        median_tree_cyc (ntree_list, options.iterations, default_lambda_t(), options.verbose));
+                        median_tree_rand(ntree_list, options.iterations, gen, default_lambda_t(options.step_size), options.verbose) :
+                        median_tree_cyc (ntree_list, options.iterations, default_lambda_t(options.step_size), options.verbose));
         }
         else if (command == "majority-consensus") {
                 result_list.push_back(
@@ -266,11 +270,12 @@ int main(int argc, char *argv[])
         for(;;) {
                 int c, option_index = 0;
                 static struct option long_options[] = {
+                        { "verbose",         1, 0, 'v' },
                         { "help",            0, 0, 'h' },
                         { "version",         0, 0, 'q' }
                 };
 
-                c = getopt_long(argc, argv, "c:rm:d:k:n:v",
+                c = getopt_long(argc, argv, "c:rm:d:k:n:s:v",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -307,8 +312,20 @@ int main(int argc, char *argv[])
                 case 'n':
                         options.iterations = atoi(optarg);
                         break;
+                case 's':
+                        if (atoi(optarg) < 1.0) {
+                                print_usage(argv[0], stdout);
+                                exit(EXIT_SUCCESS);
+                        }
+                        options.step_size = atof(optarg);
+                        break;
                 case 'v':
-                        options.verbose = true;
+                        if (optarg) {
+                                options.verbose = atoi(optarg);
+                        }
+                        else {
+                                options.verbose = 1;
+                        }
                         break;
                 case 'h':
                         print_usage(argv[0], stdout);

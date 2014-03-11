@@ -26,13 +26,15 @@
 #include <sstream>
 #include <iomanip>
 
+#include <tfbayes/utility/terminal-codes.hh>
+
 class progress_t : public std::string {
 public:
         progress_t(double p) : std::string() {
                 std::stringstream ss;
 
                 // carriage return
-                ss << "\33[2K\r" << "|";
+                ss << __line_del__ << "|";
                 for (size_t i = 1; i < LINE_WIDTH-1; i++) {
                         if (i/(double)LINE_WIDTH < p) {
                                 ss << ">";

@@ -47,13 +47,11 @@
 #include <tfbayes/utility/polynomial.hh>
 #include <tfbayes/utility/progress.hh>
 #include <tfbayes/utility/random.hh>
+#include <tfbayes/utility/terminal-codes.hh>
 #include <tfbayes/utility/thread-pool.hh>
 
 // misc tools
 ////////////////////////////////////////////////////////////////////////////////
-
-#define __line_up__  "\x1b[A"
-#define __line_del__ "\33[2K\r"
 
 inline
 double __rate__(size_t i, size_t n) {
