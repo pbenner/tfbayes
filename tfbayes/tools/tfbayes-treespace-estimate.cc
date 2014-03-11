@@ -100,7 +100,7 @@ void print_usage(char *pname, FILE *fp)
                       "             -k integer      - compute mean from every kth tree\n"
                       "             -s float        - step size parameter\n"
                       "             -v              - set verbose level to one"
-                      "   --verbose integer         - set verbose level (0, 1, 2, or 3)"
+                      "   --verbose integer         - set verbose level (from 0 to 4)"
                       "\n"
                       "   --help                    - print help and exit\n"
                       "   --version                 - print version information and exit\n\n",

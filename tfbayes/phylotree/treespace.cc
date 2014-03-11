@@ -1317,6 +1317,7 @@ mean_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
         assert(ntree_list.size() == weights.size());
         // start with the laste element
         ntree_t sk = ntree_list.back();
+        ntree_t sk_old = sk;
 
         for (size_t i = 1, k = 0; k < n; k++) {
                 list  <ntree_t>::const_iterator it = ntree_list.begin();
@@ -1336,6 +1337,12 @@ mean_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
                              << endl;
                 }
                 if (verbose >= 3) {
+                        cerr << "distance to the previous estimate: "
+                             << geodesic_t(sk, sk_old).length()
+                             << endl;
+                        sk_old = sk;
+                }
+                if (verbose >= 4) {
                         cerr << newick_format(sk.export_tree())
                              << endl;
                 }
@@ -1360,6 +1367,7 @@ median_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
         assert(ntree_list.size() == weights.size());
         // start with the laste element
         ntree_t sk = ntree_list.back();
+        ntree_t sk_old = sk;
 
         for (size_t i = 1, k = 0; k < n; k++) {
                 list  <ntree_t>::const_iterator it = ntree_list.begin();
@@ -1379,6 +1387,12 @@ median_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
                              << endl;
                 }
                 if (verbose >= 3) {
+                        cerr << "distance to the previous estimate: "
+                             << geodesic_t(sk, sk_old).length()
+                             << endl;
+                        sk_old = sk;
+                }
+                if (verbose >= 4) {
                         cerr << newick_format(sk.export_tree())
                              << endl;
                 }
@@ -1405,6 +1419,7 @@ mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
         assert(ntree_list.size() == weights.size());
         // start with the laste element
         ntree_t sk = ntree_list.back();
+        ntree_t sk_old = sk;
 
         for (size_t i = 1, k = 0; k < n; k++) {
                 // shuffle elements in each iteration
@@ -1430,6 +1445,12 @@ mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
                              << endl;
                 }
                 if (verbose >= 3) {
+                        cerr << "distance to the previous estimate: "
+                             << geodesic_t(sk, sk_old).length()
+                             << endl;
+                        sk_old = sk;
+                }
+                if (verbose >= 4) {
                         cerr << newick_format(sk.export_tree())
                              << endl;
                 }
@@ -1456,6 +1477,7 @@ median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weight
         assert(ntree_list.size() == weights.size());
         // start with the laste element
         ntree_t sk = ntree_list.back();
+        ntree_t sk_old = sk;
 
         for (size_t i = 1, k = 0; k < n; k++) {
                 // shuffle elements in each iteration
@@ -1481,6 +1503,12 @@ median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weight
                              << endl;
                 }
                 if (verbose >= 3) {
+                        cerr << "distance to the previous estimate: "
+                             << geodesic_t(sk, sk_old).length()
+                             << endl;
+                        sk_old = sk;
+                }
+                if (verbose >= 4) {
                         cerr << newick_format(sk.export_tree())
                              << endl;
                 }
