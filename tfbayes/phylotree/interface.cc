@@ -65,6 +65,11 @@ pt_root_t* parse_tree_file_ref(const std::string& filename, const pt_root_t& ref
         return new pt_root_t(tree_list.front());
 }
 
+pt_root_t geodesic_call(geodesic_t geodesic, double lambda)
+{
+        return geodesic(lambda).export_tree();
+}
+
 // interface
 // -----------------------------------------------------------------------------
 
@@ -89,7 +94,7 @@ BOOST_PYTHON_MODULE(interface)
                 ;
         class_<geodesic_t>("geodesic_t", no_init)
                 .def(init<pt_root_t, pt_root_t>())
-                .def("__call__", &geodesic_t::operator())
+                .def("__call__", &geodesic_call)
                 .def("length",   &geodesic_t::length)
                 ;
 }

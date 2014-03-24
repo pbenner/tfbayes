@@ -41,6 +41,7 @@ dist_bin_SCRIPTS = \
 	tfbayes-preprocess-alignment \
 	tfbayes-sampler \
 	tfbayes-treespace-distance \
+	tfbayes-treespace-geodesic \
 	tfbayes-scan
 
 ## clean python files
