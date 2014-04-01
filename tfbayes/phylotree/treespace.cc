@@ -1282,6 +1282,26 @@ median_loss(const list<ntree_t>& ntree_list,
 }
 
 double
+frechet_confidence(const list<ntree_t>& ntree_list,
+                   const ntree_t& mean,
+                   double confidence_level)
+{
+        size_t n = ntree_list.size();
+        vector<double> result; result.reserve(n);
+        // confidence level must not exceed one
+        assert(confidence_level <= 1.0);
+
+        for (list  <ntree_t>::const_iterator it = ntree_list.begin();
+             it != ntree_list.end(); it++) {
+                geodesic_t geodesic(mean, *it);
+                result.push_back(geodesic.length());
+        }
+        sort(result.begin(), result.end());
+
+        return result[static_cast<size_t>(ceil(n*confidence_level))];
+}
+
+double
 frechet_variance(const list<ntree_t>& ntree_list,
                  const vector<double>& weights,
                  const ntree_t& mean)

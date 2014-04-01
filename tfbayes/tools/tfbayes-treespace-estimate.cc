@@ -48,6 +48,7 @@ using namespace std;
 
 typedef struct _options_t {
         double cut;
+        double confidence_level;
         bool random;
         bool variance;
         string mean_file;
@@ -58,6 +59,7 @@ typedef struct _options_t {
         size_t verbose;
         _options_t()
                 : cut(1e-8),
+                  confidence_level(0.95),
                   random(false),
                   variance(false),
                   mean_file(""),
@@ -81,6 +83,7 @@ void print_usage(char *pname, FILE *fp)
         (void)fprintf(fp,
                       "Commands:\n"
                       "\n"
+                      "      confidence             - radius of confidence region\n"
                       "      mean                   - Frechet mean\n"
                       "      median                 - geometric median\n"
                       "      majority-consensus     - majority rule consensus tree with\n"
@@ -94,13 +97,16 @@ void print_usage(char *pname, FILE *fp)
                       "                               (default: %e)\n"
                       "             -r              - use random instead of cyclic version\n"
                       "             -m file         - provide the Frechet mean for computing\n"
-                      "                               the Frechet variance\n"
+                      "                               the Frechet variance or confidence region\n"
                       "             -n integer      - number of iterations\n"
                       "             -d integer      - drop first n trees\n"
                       "             -k integer      - compute mean from every kth tree\n"
                       "             -s float        - step size parameter\n"
-                      "             -v              - set verbose level to one"
-                      "   --verbose integer         - set verbose level (from 0 to 4)"
+                      "   --confidence-level float  - level for computing the confidence region\n"
+                      "                               (default: 0.95)\n"
+                      "\n"
+                      "             -v              - set verbose level to one\n"
+                      "   --verbose integer         - set verbose level (from 0 to 4)\n"
                       "\n"
                       "   --help                    - print help and exit\n"
                       "   --version                 - print version information and exit\n\n",
@@ -204,7 +210,18 @@ void estimate(const string& command)
         /* return if there is no tree in the list */
         if (ntree_list.size() == 0) return;
 
-        if (command == "mean") {
+        if (command == "confidence") {
+                /* read Frechet mean from file */
+                if (options.mean_file == "") {
+                        wrong_usage("Please provide the Frechet mean.");
+                }
+                list<ntree_t> tmp = parse_tree_file(options.mean_file, 0, 1);
+                assert(tmp.size() == 1);
+                /* compute variance */
+                cout << frechet_confidence(ntree_list, tmp.front(), options.confidence_level)
+                     << endl;
+        }
+        else if (command == "mean") {
                 result_list.push_back(
                         options.random ?
                         mean_tree_rand(ntree_list, options.iterations, gen, default_lambda_t(options.step_size), options.verbose) :
@@ -270,9 +287,10 @@ int main(int argc, char *argv[])
         for(;;) {
                 int c, option_index = 0;
                 static struct option long_options[] = {
-                        { "verbose",         1, 0, 'v' },
-                        { "help",            0, 0, 'h' },
-                        { "version",         0, 0, 'q' }
+                        { "confidence-level", 1, 0, 'a' },
+                        { "verbose",          1, 0, 'v' },
+                        { "help",             0, 0, 'h' },
+                        { "version",          0, 0, 'q' }
                 };
 
                 c = getopt_long(argc, argv, "c:rm:d:k:n:s:v",
@@ -283,6 +301,13 @@ int main(int argc, char *argv[])
                 }
 
                 switch(c) {
+                case 'a':
+                        if (atof(optarg) < 0 || 1 < atof(optarg)) {
+                                print_usage(argv[0], stdout);
+                                exit(EXIT_SUCCESS);
+                        }
+                        options.confidence_level = atof(optarg);
+                        break;
                 case 'c':
                         options.cut = atof(optarg);
                         break;

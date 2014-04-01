@@ -460,6 +460,10 @@ public:
 double mean_loss(const std::list<ntree_t>& ntree_list, const ntree_t& tree);
 double median_loss(const std::list<ntree_t>& ntree_list, const ntree_t& tree);
 
+double frechet_confidence(const std::list<ntree_t>& ntree_list,
+                          const ntree_t& mean,
+                          double confidence_level);
+
 double frechet_variance(const std::list<ntree_t>& ntree_list,
                         const std::vector<double>& weights,
                         const ntree_t& mean);
