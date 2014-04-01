@@ -1282,14 +1282,14 @@ median_loss(const list<ntree_t>& ntree_list,
 }
 
 double
-frechet_confidence(const list<ntree_t>& ntree_list,
-                   const ntree_t& mean,
-                   double confidence_level)
+frechet_credibility(const list<ntree_t>& ntree_list,
+                    const ntree_t& mean,
+                    double credibility_level)
 {
         size_t n = ntree_list.size();
         vector<double> result; result.reserve(n);
-        // confidence level must not exceed one
-        assert(confidence_level <= 1.0);
+        // credibility level must not exceed one
+        assert(credibility_level <= 1.0);
 
         for (list  <ntree_t>::const_iterator it = ntree_list.begin();
              it != ntree_list.end(); it++) {
@@ -1298,7 +1298,7 @@ frechet_confidence(const list<ntree_t>& ntree_list,
         }
         sort(result.begin(), result.end());
 
-        return result[static_cast<size_t>(ceil(n*confidence_level))];
+        return result[static_cast<size_t>(ceil(n*credibility_level))];
 }
 
 double

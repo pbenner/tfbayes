@@ -48,7 +48,7 @@ using namespace std;
 
 typedef struct _options_t {
         double cut;
-        double confidence_level;
+        double credibility_level;
         bool random;
         bool variance;
         string mean_file;
@@ -59,7 +59,7 @@ typedef struct _options_t {
         size_t verbose;
         _options_t()
                 : cut(1e-8),
-                  confidence_level(0.95),
+                  credibility_level(0.95),
                   random(false),
                   variance(false),
                   mean_file(""),
@@ -83,7 +83,7 @@ void print_usage(char *pname, FILE *fp)
         (void)fprintf(fp,
                       "Commands:\n"
                       "\n"
-                      "      confidence             - radius of confidence region\n"
+                      "      credibility            - radius of credibility region\n"
                       "      mean                   - Frechet mean\n"
                       "      median                 - geometric median\n"
                       "      majority-consensus     - majority rule consensus tree with\n"
@@ -97,12 +97,12 @@ void print_usage(char *pname, FILE *fp)
                       "                               (default: %e)\n"
                       "             -r              - use random instead of cyclic version\n"
                       "             -m file         - provide the Frechet mean for computing\n"
-                      "                               the Frechet variance or confidence region\n"
+                      "                               the Frechet variance or credibility region\n"
                       "             -n integer      - number of iterations\n"
                       "             -d integer      - drop first n trees\n"
                       "             -k integer      - compute mean from every kth tree\n"
                       "             -s float        - step size parameter\n"
-                      "   --confidence-level float  - level for computing the confidence region\n"
+                      "   --credibility-level float - level for computing the credibility region\n"
                       "                               (default: 0.95)\n"
                       "\n"
                       "             -v              - set verbose level to one\n"
@@ -210,7 +210,7 @@ void estimate(const string& command)
         /* return if there is no tree in the list */
         if (ntree_list.size() == 0) return;
 
-        if (command == "confidence") {
+        if (command == "credibility") {
                 /* read Frechet mean from file */
                 if (options.mean_file == "") {
                         wrong_usage("Please provide the Frechet mean.");
@@ -218,7 +218,7 @@ void estimate(const string& command)
                 list<ntree_t> tmp = parse_tree_file(options.mean_file, 0, 1);
                 assert(tmp.size() == 1);
                 /* compute variance */
-                cout << frechet_confidence(ntree_list, tmp.front(), options.confidence_level)
+                cout << frechet_credibility(ntree_list, tmp.front(), options.credibility_level)
                      << endl;
         }
         else if (command == "mean") {
@@ -287,10 +287,10 @@ int main(int argc, char *argv[])
         for(;;) {
                 int c, option_index = 0;
                 static struct option long_options[] = {
-                        { "confidence-level", 1, 0, 'a' },
-                        { "verbose",          1, 0, 'v' },
-                        { "help",             0, 0, 'h' },
-                        { "version",          0, 0, 'q' }
+                        { "credibility-level", 1, 0, 'a' },
+                        { "verbose",           1, 0, 'v' },
+                        { "help",              0, 0, 'h' },
+                        { "version",           0, 0, 'q' }
                 };
 
                 c = getopt_long(argc, argv, "c:rm:d:k:n:s:v",
@@ -306,7 +306,7 @@ int main(int argc, char *argv[])
                                 print_usage(argv[0], stdout);
                                 exit(EXIT_SUCCESS);
                         }
-                        options.confidence_level = atof(optarg);
+                        options.credibility_level = atof(optarg);
                         break;
                 case 'c':
                         options.cut = atof(optarg);
