@@ -53,7 +53,7 @@ void random_init(std::vector<alphabet_code_t>& observations)
         }
 }
 
-double expected_terms(size_t n)
+double expected_terms(size_t n, bool felsenstein = false)
 {
         const pt_root_t tree = create_tree(n);
         std::vector<alphabet_code_t> observations(tree.n_leaves);
@@ -63,11 +63,17 @@ double expected_terms(size_t n)
                 /* generate a new random sample */
                 random_init(observations);
                 /* compute the polynomial for this sample */
-                pt_simple_polynomial_t<alphabet_size> poly(tree, observations);
-//                pt_polynomial_t<alphabet_size> poly(tree);
-                /* record size of the polynomial */
-                result = (i*(double)result + (double)poly.size())/((double)i+1.0);
-
+                if (felsenstein) {
+                        pt_simple_polynomial_t<alphabet_size> poly(tree, observations);
+                        /* record size of the polynomial */
+                        result = (i*(double)result + (double)poly.size())/((double)i+1.0);
+                }
+                else {
+                        polynomial_t<alphabet_size> poly = pt_likelihood<alphabet_size, alphabet_code_t, double>(
+                                tree, observations);
+                        /* record size of the polynomial */
+                        result = (i*(double)result + (double)poly.size())/((double)i+1.0);
+                }
         }
 
         return result;
@@ -85,26 +91,35 @@ int main(void)
 {
         init();
 
-//        size_t N = 20;
-        size_t N = 6;
+        size_t n1 = 5;
+        size_t n2 = 20;
+        size_t n  = max(n1,n2);
 
-        cout << "c(";
-        for (size_t n = 1; n <= N; n++) {
-                cout << 2*n-1;
-                if (n < N) {
-                     cout << ", ";
+        /* header */
+        for (size_t i = 1; i <= n; i++) {
+                cout << 2*i-1 << " ";
+        }
+        cout << endl;
+        /* felsenstein */
+        for (size_t i = 1; i <= n; i++) {
+                if (i <= n1) {
+                        cout << expected_terms(i, true) << " ";
+                }
+                else {
+                        cout << "NA ";
                 }
         }
-        cout << ")" << endl;
-        cout << "c(";
-        for (size_t n = 1; n <= N; n++) {
-                double result = expected_terms(n);
-                cout << result;
-                if (n < N) {
-                     cout << ", ";
+        cout << endl;
+        /* PY */
+        for (size_t i = 1; i <= n; i++) {
+                if (i <= n2) {
+                        cout << expected_terms(i, false) << " ";
+                }
+                else {
+                        cout << "NA ";
                 }
         }
-        cout << ")" << endl;
+        cout << endl;
 
         return 0.0;
 }
