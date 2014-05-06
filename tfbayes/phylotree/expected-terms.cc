@@ -95,31 +95,24 @@ int main(void)
         size_t n2 = 20;
         size_t n  = max(n1,n2);
 
-        /* header */
         for (size_t i = 1; i <= n; i++) {
+                /* header */
                 cout << 2*i-1 << " ";
-        }
-        cout << endl;
-        /* felsenstein */
-        for (size_t i = 1; i <= n; i++) {
+                /* felsenstein */
                 if (i <= n1) {
                         cout << expected_terms(i, true) << " ";
                 }
                 else {
                         cout << "NA ";
                 }
-        }
-        cout << endl;
-        /* PY */
-        for (size_t i = 1; i <= n; i++) {
+                /* PY */
                 if (i <= n2) {
-                        cout << expected_terms(i, false) << " ";
+                        cout << expected_terms(i, false) << endl;
                 }
                 else {
-                        cout << "NA ";
+                        cout << "NA" << endl;
                 }
         }
-        cout << endl;
 
         return 0.0;
 }
