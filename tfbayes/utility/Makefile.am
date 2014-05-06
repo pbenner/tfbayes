@@ -17,4 +17,5 @@ noinst_HEADERS = \
 	random.hh \
 	statistics.hh \
 	strtools.hh \
+	terminal-codes.hh \
 	thread-pool.hh

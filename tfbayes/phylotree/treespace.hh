@@ -250,11 +250,14 @@ protected:
 
 class ntree_t {
 public:
+        typedef std::vector<double> leaf_d_t;
+        typedef std::vector<std::string> leaf_names_t;
+
         // constructors
         ntree_t() : _n(0) { };
         ntree_t(const nedge_set_t& nedge_set,
-                const std::vector<double>& leaf_d,
-                const std::vector<std::string> leaf_names = std::vector<std::string>());
+                const leaf_d_t& leaf_d,
+                const leaf_names_t leaf_names = leaf_names_t());
         ntree_t(const pt_root_t& tree);
 
         // methods
@@ -263,10 +266,10 @@ public:
         const nedge_t& find_edge(const nsplit_t& nsplit) const;
         const nedge_set_t& nedge_set() const;
               nedge_set_t& nedge_set();
-        const std::vector<double>& leaf_d() const;
-              std::vector<double>& leaf_d();
+        const leaf_d_t& leaf_d() const;
+              leaf_d_t& leaf_d();
         double leaf_d(size_t i) const;
-        const std::vector<std::string>& leaf_names() const;
+        const leaf_names_t& leaf_names() const;
         const std::string& leaf_name(size_t i) const;
         bool compatible(const nsplit_t& nsplit) const;
         void add_edge(const nedge_t& edge);
@@ -286,9 +289,9 @@ protected:
         // n-2 splits
         nedge_set_t _nedge_set;
         // leaf edge lengths, indexed by an integer 0, 1, ..., n
-        std::vector<double> _leaf_d;
+        leaf_d_t _leaf_d;
         // leaf names
-        std::vector<std::string> _leaf_names;
+        leaf_names_t _leaf_names;
         // empty leaf name
         static const std::string _empty_string;
         // empty edge
@@ -409,9 +412,9 @@ public:
 
         const std::list<common_nedge_t>& common_edges() const;
         size_t leaf_n() const;
-        const std::vector<std::string>& leaf_names() const;
-        const std::vector<double>& t1_leaf_d() const;
-        const std::vector<double>& t2_leaf_d() const;
+        const ntree_t::leaf_names_t& leaf_names() const;
+        const ntree_t::leaf_d_t& t1_leaf_d() const;
+        const ntree_t::leaf_d_t& t2_leaf_d() const;
         double t1_leaf_d(size_t i) const;
         double t2_leaf_d(size_t i) const;
         const ntree_t& t1() const;
@@ -426,7 +429,7 @@ protected:
         std::list<common_nedge_t> _common_edges;
         std::list<npath_t> _npath_list;
         size_t _leaf_n;
-        std::vector<std::string> _leaf_names;
+        ntree_t::leaf_names_t _leaf_names;
         ntree_t _t1;
         ntree_t _t2;
         // empty common edge
@@ -445,10 +448,21 @@ public:
 
 class default_lambda_t : public lambda_t {
 public:
+        default_lambda_t(double step_size = 1.0)
+                : step_size(step_size) { }
+
         virtual double operator()(size_t k) const {
-                return 1.0/(2.0*(double)k);
+                return 1.0/(2.0*(1.0 + static_cast<double>(k)/step_size));
         }
+        double step_size;
 };
+
+double mean_loss(const std::list<ntree_t>& ntree_list, const ntree_t& tree);
+double median_loss(const std::list<ntree_t>& ntree_list, const ntree_t& tree);
+
+double frechet_credibility(const std::list<ntree_t>& ntree_list,
+                           const ntree_t& mean,
+                           double credibility_level);
 
 double frechet_variance(const std::list<ntree_t>& ntree_list,
                         const std::vector<double>& weights,
@@ -457,41 +471,41 @@ double frechet_variance(const std::list<ntree_t>& ntree_list, const ntree_t& mea
 
 ntree_t mean_tree_cyc(const std::list<ntree_t>& ntree_list, size_t n,
                       const lambda_t& lambda = default_lambda_t(),
-                      bool verbose = false);
+                      size_t verbose = false);
 ntree_t mean_tree_cyc(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights,
                       size_t n, const lambda_t& lambda = default_lambda_t(),
-                      bool verbose = false);
+                      size_t verbose = false);
 ntree_t median_tree_cyc(const std::list<ntree_t>& ntree_list, size_t n,
                         const lambda_t& lambda = default_lambda_t(),
-                        bool verbose = false);
+                        size_t verbose = false);
 ntree_t median_tree_cyc(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights,
                         size_t n, const lambda_t& lambda = default_lambda_t(),
-                        bool verbose = false);
+                        size_t verbose = false);
 
 ntree_t mean_tree_rand(const std::list<ntree_t>& ntree_list, size_t n,
                        boost::random::mt19937& gen,
                        const lambda_t& lambda = default_lambda_t(),
-                       bool verbose = false);
+                       size_t verbose = false);
 ntree_t mean_tree_rand(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights, size_t n,
                        boost::random::mt19937& gen,
                        const lambda_t& lambda = default_lambda_t(),
-                       bool verbose = false);
+                       size_t verbose = false);
 ntree_t median_tree_rand(const std::list<ntree_t>& ntree_list, size_t n,
                          boost::random::mt19937& gen,
                          const lambda_t& lambda = default_lambda_t(),
-                         bool verbose = false);
+                         size_t verbose = false);
 ntree_t median_tree_rand(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights, size_t n,
                          boost::random::mt19937& gen,
                          const lambda_t& lambda = default_lambda_t(),
-                         bool verbose = false);
+                         size_t verbose = false);
 
 ntree_t mean_same_topology(const std::list<ntree_t>& ntree_list,
-                           bool verbose = false);
+                           size_t verbose = false);
 
 // consensus trees
 ////////////////////////////////////////////////////////////////////////////////
 
-ntree_t majority_consensus(const std::list<ntree_t>& ntree_list, bool verbose = false);
+ntree_t majority_consensus(const std::list<ntree_t>& ntree_list, size_t verbose = false);
 
 // i/o operators
 ////////////////////////////////////////////////////////////////////////////////

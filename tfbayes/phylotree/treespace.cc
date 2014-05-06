@@ -303,8 +303,8 @@ topology_t::operator==(const topology_t& topology) const
 
 pt_node_t*
 convert_leaf_set(
-        const vector<double>& leaf_d,
-        const vector<string>& leaf_names,
+        const ntree_t::leaf_d_t& leaf_d,
+        const ntree_t::leaf_names_t& leaf_names,
         const nsplit_t::part_t& leaves)
 {
         // get the first non-zero bit
@@ -401,8 +401,8 @@ nedge_node_t::propagate(const nedge_t& e)
 
 nedge_node_t::convert_t
 nedge_node_t::convert(
-        const vector<double>& leaf_d,
-        const vector<string>& leaf_names) const
+        const ntree_t::leaf_d_t& leaf_d,
+        const ntree_t::leaf_names_t& leaf_names) const
 {
         pt_node_t *tree = NULL, *tmp_node;
         convert_t tmp;
@@ -441,8 +441,8 @@ nedge_node_t::convert(
 
 nedge_root_t::nedge_root_t(
         const nedge_set_t& nedge_set,
-        const vector<double>& leaf_d,
-        const vector<string>& leaf_names)
+        const ntree_t::leaf_d_t& leaf_d,
+        const ntree_t::leaf_names_t& leaf_names)
         : nedge_node_t(),
           _leaf_d(leaf_d),
           _leaf_names(leaf_names)
@@ -512,8 +512,8 @@ parse_pt_node_t(
         size_t n,
         const pt_node_t& node,
         nedge_set_t& nedge_set,
-        vector<double>& leaf_d,
-        vector<string>& leaf_names)
+        ntree_t::leaf_d_t& leaf_d,
+        ntree_t::leaf_names_t& leaf_names)
 {
         set<size_t> s;
 
@@ -539,8 +539,8 @@ static void
 parse_pt_node_t(
         const pt_root_t& node,
         nedge_set_t& nedge_set,
-        vector<double>& leaf_d,
-        vector<string>& leaf_names)
+        ntree_t::leaf_d_t& leaf_d,
+        ntree_t::leaf_names_t& leaf_names)
 {
         assert(node.outgroup());
         // add outgroup
@@ -552,8 +552,8 @@ parse_pt_node_t(
 }
 
 ntree_t::ntree_t(const nedge_set_t& nedge_set,
-                 const vector<double>& leaf_d,
-                 const vector<string> leaf_names)
+                 const leaf_d_t& leaf_d,
+                 const leaf_names_t leaf_names)
         : _n(leaf_d.size()-1),
           _nedge_set(nedge_set),
           _leaf_d(leaf_d),
@@ -569,8 +569,8 @@ ntree_t::ntree_t(const nedge_set_t& nedge_set,
 ntree_t::ntree_t(const pt_root_t& tree)
 {
         nedge_set_t nedge_set;
-        vector<double> leaf_d(tree.n_leaves, 0);
-        vector<string> leaf_names(tree.n_leaves, "");
+        leaf_d_t leaf_d(tree.n_leaves, 0);
+        leaf_names_t leaf_names(tree.n_leaves, "");
 
         // parse the tree
         parse_pt_node_t(tree, nedge_set, leaf_d, leaf_names);
@@ -614,12 +614,12 @@ ntree_t::nedge_set() {
         return _nedge_set;
 }
 
-const vector<double>&
+const ntree_t::leaf_d_t&
 ntree_t::leaf_d() const {
         return _leaf_d;
 }
 
-vector<double>&
+ntree_t::leaf_d_t&
 ntree_t::leaf_d() {
         return _leaf_d;
 }
@@ -629,7 +629,7 @@ ntree_t::leaf_d(size_t i) const {
         return leaf_d()[i];
 }
 
-const vector<string>&
+const ntree_t::leaf_names_t&
 ntree_t::leaf_names() const {
         return _leaf_names;
 }
@@ -698,7 +698,7 @@ ntree_t::scale(double lambda)
              it != nedge_set().end(); it++) {
                 it->d() *= lambda;
         }
-        for (vector<double>::iterator it = leaf_d().begin();
+        for (leaf_d_t::iterator it = leaf_d().begin();
              it != leaf_d().end(); it++) {
                 (*it) *= lambda;
         }
@@ -998,7 +998,7 @@ geodesic_t::operator()(const double lambda) const
         if (lambda == 1.0) return t2();
         // variables
         nedge_set_t nedge_set;
-        vector<double> leaf_d(leaf_n(), 0);
+        ntree_t::leaf_d_t leaf_d(leaf_n(), 0);
 
         for (list<npath_t>::const_iterator it = npath_list().begin(); it != npath_list().end(); it++) {
                 const npath_t& npath(*it);
@@ -1084,19 +1084,19 @@ geodesic_t::leaf_n() const
         return _leaf_n;
 }
 
-const vector<string>&
+const ntree_t::leaf_names_t&
 geodesic_t::leaf_names() const
 {
         return _leaf_names;
 }
 
-const vector<double>&
+const ntree_t::leaf_d_t&
 geodesic_t::t1_leaf_d() const
 {
         return t1().leaf_d();
 }
 
-const vector<double>&
+const ntree_t::leaf_d_t&
 geodesic_t::t2_leaf_d() const
 {
         return t2().leaf_d();
@@ -1254,10 +1254,52 @@ geodesic_t::complement_trees()
 const common_nedge_t geodesic_t::_null_common_nedge;
 const double geodesic_t::epsilon = 0.000001;
 
-// Frechet mean
+// Frechet mean and geometric median
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <tfbayes/utility/permutation.hh>
+
+double
+mean_loss(const list<ntree_t>& ntree_list,
+          const ntree_t& tree)
+{
+        double result = 0.0;
+        for (list<ntree_t>::const_iterator it = ntree_list.begin(); it != ntree_list.end(); it++) {
+                result += pow(geodesic_t(tree, *it).length(), 2.0);
+        }
+        return 1.0/ntree_list.size()*result;
+}
+
+double
+median_loss(const list<ntree_t>& ntree_list,
+            const ntree_t& tree)
+{
+        double result = 0.0;
+        for (list<ntree_t>::const_iterator it = ntree_list.begin(); it != ntree_list.end(); it++) {
+                result += geodesic_t(tree, *it).length();
+        }
+        return 1.0/ntree_list.size()*result;
+}
+
+double
+frechet_credibility(const list<ntree_t>& ntree_list,
+                    const ntree_t& mean,
+                    double credibility_level)
+{
+        size_t n = ntree_list.size();
+        vector<double> result; result.reserve(n);
+        // credibility level must not exceed one
+        assert(credibility_level <= 1.0);
+
+        for (list  <ntree_t>::const_iterator it = ntree_list.begin();
+             it != ntree_list.end(); it++) {
+                geodesic_t geodesic(mean, *it);
+                result.push_back(geodesic.length());
+        }
+        sort(result.begin(), result.end());
+
+        return result[static_cast<size_t>(ceil(n*credibility_level))];
+}
 
 double
 frechet_variance(const list<ntree_t>& ntree_list,
@@ -1289,12 +1331,13 @@ frechet_variance(const list<ntree_t>& ntree_list, const ntree_t& mean)
 
 ntree_t
 mean_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
-              size_t n, const lambda_t& lambda, bool verbose)
+              size_t n, const lambda_t& lambda, size_t verbose)
 {
         // assure that we have as many weights as we have trees
         assert(ntree_list.size() == weights.size());
         // start with the laste element
         ntree_t sk = ntree_list.back();
+        ntree_t sk_old = sk;
 
         for (size_t i = 1, k = 0; k < n; k++) {
                 list  <ntree_t>::const_iterator it = ntree_list.begin();
@@ -1305,7 +1348,23 @@ mean_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
                         }
                         geodesic_t geodesic(sk, *it);
                         // lambda(k+1) should be constant within one cycle
-                        sk = geodesic(2.0*lambda(k+1)*(*is)/(1.0+2.0*lambda(k+1)*(*is)));
+                        sk = geodesic(2.0*lambda(k)*(*is)/(1.0+2.0*lambda(k)*(*is)));
+                }
+                if (verbose >= 2) {
+                        cerr << __line_del__
+                             << std::setprecision(11) << fixed
+                             << "average loss: " << mean_loss(ntree_list, sk)
+                             << endl;
+                }
+                if (verbose >= 3) {
+                        cerr << "distance to the previous estimate: "
+                             << geodesic_t(sk, sk_old).length()
+                             << endl;
+                        sk_old = sk;
+                }
+                if (verbose >= 4) {
+                        cerr << newick_format(sk.export_tree())
+                             << endl;
                 }
         }
         return sk;
@@ -1313,7 +1372,7 @@ mean_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
 
 ntree_t
 mean_tree_cyc(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda,
-              bool verbose)
+              size_t verbose)
 {
         const vector<double> weights(ntree_list.size(), 1.0);
 
@@ -1322,23 +1381,40 @@ mean_tree_cyc(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda,
 
 ntree_t
 median_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
-                size_t n, const lambda_t& lambda, bool verbose)
+                size_t n, const lambda_t& lambda, size_t verbose)
 {
         // assure that we have as many weights as we have trees
         assert(ntree_list.size() == weights.size());
         // start with the laste element
         ntree_t sk = ntree_list.back();
+        ntree_t sk_old = sk;
 
         for (size_t i = 1, k = 0; k < n; k++) {
                 list  <ntree_t>::const_iterator it = ntree_list.begin();
                 vector<double >::const_iterator is = weights.begin();
-                for (; it != ntree_list.end(); it++, i++) {
+                for (; it != ntree_list.end() && is != weights.end(); it++, is++, i++) {
                         if (verbose && i % 100 == 0) {
                                 cerr << progress_t(i/(double)(n*ntree_list.size()));
                         }
                         geodesic_t geodesic(sk, *it);
                         // lambda(k+1) should be constant within one cycle
-                        sk = geodesic(min(1.0, lambda(k+1)*(*is)/geodesic.length()));
+                        sk = geodesic(min(1.0, lambda(k)*(*is)/geodesic.length()));
+                }
+                if (verbose >= 2) {
+                        cerr << __line_del__
+                             << std::setprecision(11) << fixed
+                             << "average loss: " << median_loss(ntree_list, sk)
+                             << endl;
+                }
+                if (verbose >= 3) {
+                        cerr << "distance to the previous estimate: "
+                             << geodesic_t(sk, sk_old).length()
+                             << endl;
+                        sk_old = sk;
+                }
+                if (verbose >= 4) {
+                        cerr << newick_format(sk.export_tree())
+                             << endl;
                 }
         }
         return sk;
@@ -1346,7 +1422,7 @@ median_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
 
 ntree_t
 median_tree_cyc(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambda,
-                bool verbose)
+                size_t verbose)
 {
         const vector<double> weights(ntree_list.size(), 1.0);
 
@@ -1355,7 +1431,7 @@ median_tree_cyc(const list<ntree_t>& ntree_list, size_t n, const lambda_t& lambd
 
 ntree_t
 mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
-               size_t n, boost::random::mt19937& gen, const lambda_t& lambda, bool verbose)
+               size_t n, boost::random::mt19937& gen, const lambda_t& lambda, size_t verbose)
 {
         vector<ntree_t> ntree_list(_ntree_list.begin(), _ntree_list.end());
         vector<double > weights(_weights);
@@ -1363,6 +1439,7 @@ mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
         assert(ntree_list.size() == weights.size());
         // start with the laste element
         ntree_t sk = ntree_list.back();
+        ntree_t sk_old = sk;
 
         for (size_t i = 1, k = 0; k < n; k++) {
                 // shuffle elements in each iteration
@@ -1379,7 +1456,23 @@ mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
                         geodesic_t geodesic(sk, *it);
                         // in the random version lambda(i+1) changes
                         // in each iteration
-                        sk = geodesic(2.0*lambda(i+1)*(*is)/(1.0+2.0*lambda(i+1)*(*is)));
+                        sk = geodesic(2.0*lambda(i-1)*(*is)/(1.0+2.0*lambda(i-1)*(*is)));
+                }
+                if (verbose >= 2) {
+                        cerr << __line_del__
+                             << std::setprecision(11) << fixed
+                             << "average loss: " << mean_loss(_ntree_list, sk)
+                             << endl;
+                }
+                if (verbose >= 3) {
+                        cerr << "distance to the previous estimate: "
+                             << geodesic_t(sk, sk_old).length()
+                             << endl;
+                        sk_old = sk;
+                }
+                if (verbose >= 4) {
+                        cerr << newick_format(sk.export_tree())
+                             << endl;
                 }
         }
         return sk;
@@ -1387,7 +1480,7 @@ mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
 
 ntree_t
 mean_tree_rand(const list<ntree_t>& ntree_list, size_t n, boost::random::mt19937& gen, 
-               const lambda_t& lambda, bool verbose)
+               const lambda_t& lambda, size_t verbose)
 {
         const vector<double> weights(ntree_list.size(), 1.0);
 
@@ -1396,7 +1489,7 @@ mean_tree_rand(const list<ntree_t>& ntree_list, size_t n, boost::random::mt19937
 
 ntree_t
 median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
-                 size_t n, boost::random::mt19937& gen, const lambda_t& lambda, bool verbose)
+                 size_t n, boost::random::mt19937& gen, const lambda_t& lambda, size_t verbose)
 {
         vector<ntree_t> ntree_list(_ntree_list.begin(), _ntree_list.end());
         vector<double > weights(_weights);
@@ -1404,6 +1497,7 @@ median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weight
         assert(ntree_list.size() == weights.size());
         // start with the laste element
         ntree_t sk = ntree_list.back();
+        ntree_t sk_old = sk;
 
         for (size_t i = 1, k = 0; k < n; k++) {
                 // shuffle elements in each iteration
@@ -1413,14 +1507,30 @@ median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weight
 
                 vector<ntree_t>::const_iterator it = ntree_list.begin();
                 vector<double >::const_iterator is = weights.begin();
-                for (; it != ntree_list.end(); it++, i++) {
+                for (; it != ntree_list.end() && is != weights.end(); it++, is++, i++) {
                         if (verbose && i % 100 == 0) {
                                 cerr << progress_t(i/(double)(n*ntree_list.size()));
                         }
                         geodesic_t geodesic(sk, *it);
                         // in the random version lambda(i+1) changes
                         // in each iteration
-                        sk = geodesic(min(1.0, lambda(i+1)*(*is)/geodesic.length()));
+                        sk = geodesic(min(1.0, lambda(static_cast<double>(i-1))*(*is)/geodesic.length()));
+                }
+                if (verbose >= 2) {
+                        cerr << __line_del__
+                             << std::setprecision(11) << fixed
+                             << "average loss: " << median_loss(_ntree_list, sk)
+                             << endl;
+                }
+                if (verbose >= 3) {
+                        cerr << "distance to the previous estimate: "
+                             << geodesic_t(sk, sk_old).length()
+                             << endl;
+                        sk_old = sk;
+                }
+                if (verbose >= 4) {
+                        cerr << newick_format(sk.export_tree())
+                             << endl;
                 }
         }
         return sk;
@@ -1428,7 +1538,7 @@ median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weight
 
 ntree_t
 median_tree_rand(const list<ntree_t>& ntree_list, size_t n, boost::random::mt19937& gen,
-                 const lambda_t& lambda, bool verbose)
+                 const lambda_t& lambda, size_t verbose)
 {
         const vector<double> weights(ntree_list.size(), 1.0);
 
@@ -1437,7 +1547,7 @@ median_tree_rand(const list<ntree_t>& ntree_list, size_t n, boost::random::mt199
 
 ntree_t
 mean_same_topology(const std::list<ntree_t>& ntree_list,
-                   bool verbose)
+                   size_t verbose)
 {
         size_t n = ntree_list.size();
         // check that the list is not empty
@@ -1462,7 +1572,7 @@ mean_same_topology(const std::list<ntree_t>& ntree_list,
 ////////////////////////////////////////////////////////////////////////////////
 
 ntree_t
-majority_consensus(const list<ntree_t>& ntree_list, bool verbose)
+majority_consensus(const list<ntree_t>& ntree_list, size_t verbose)
 {
         assert(ntree_list.size() > 0);
 
@@ -1472,8 +1582,8 @@ majority_consensus(const list<ntree_t>& ntree_list, bool verbose)
         const size_t m = ntree_list.size();
         nsplit_map_t nsplit_map;
         nedge_set_t  nedge_set;
-        vector<double> leaf_d(n+1, 0);
-        vector<string> leaf_names(ntree_list.begin()->leaf_names());
+        ntree_t::leaf_d_t leaf_d(n+1, 0);
+        ntree_t::leaf_names_t leaf_names(ntree_list.begin()->leaf_names());
 
         // loop through the list of trees an count occurences of splits
         list<ntree_t>::const_iterator it = ntree_list.begin();

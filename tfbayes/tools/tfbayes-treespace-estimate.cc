@@ -48,22 +48,26 @@ using namespace std;
 
 typedef struct _options_t {
         double cut;
+        double credibility_level;
         bool random;
         bool variance;
         string mean_file;
         size_t drop;
         size_t k;
         size_t iterations;
-        bool verbose;
+        double step_size;
+        size_t verbose;
         _options_t()
                 : cut(1e-8),
+                  credibility_level(0.95),
                   random(false),
                   variance(false),
                   mean_file(""),
                   drop(0),
                   k(1),
                   iterations(100),
-                  verbose(false)
+                  step_size(1.0),
+                  verbose(0)
                 { }
 } options_t;
 
@@ -79,6 +83,7 @@ void print_usage(char *pname, FILE *fp)
         (void)fprintf(fp,
                       "Commands:\n"
                       "\n"
+                      "      credibility            - radius of credibility region\n"
                       "      mean                   - Frechet mean\n"
                       "      median                 - geometric median\n"
                       "      majority-consensus     - majority rule consensus tree with\n"
@@ -87,16 +92,21 @@ void print_usage(char *pname, FILE *fp)
                       "      variance               - Frechet variance\n"
                       "\n"
                       "Options:\n"
-                      "             -c FLOAT        - remove edges from resulting tree\n"
+                      "             -c float        - remove edges from resulting tree\n"
                       "                               if the length is shorter than FLOAT\n"
                       "                               (default: %e)\n"
                       "             -r              - use random instead of cyclic version\n"
-                      "             -m FILE         - provide the Frechet mean for computing\n"
-                      "                               the Frechet variance\n"
-                      "             -n INTEGER      - number of iterations\n"
-                      "             -d INTEGER      - drop first n trees\n"
-                      "             -k INTEGER      - compute mean from every kth tree\n"
-                      "             -v              - be verbose and print progress bar"
+                      "             -m file         - provide the Frechet mean for computing\n"
+                      "                               the Frechet variance or credibility region\n"
+                      "             -n integer      - number of iterations\n"
+                      "             -d integer      - drop first n trees\n"
+                      "             -k integer      - compute mean from every kth tree\n"
+                      "             -s float        - step size parameter\n"
+                      "   --credibility-level float - level for computing the credibility region\n"
+                      "                               (default: 0.95)\n"
+                      "\n"
+                      "             -v              - set verbose level to one\n"
+                      "   --verbose integer         - set verbose level (from 0 to 4)\n"
                       "\n"
                       "   --help                    - print help and exit\n"
                       "   --version                 - print version information and exit\n\n",
@@ -200,17 +210,28 @@ void estimate(const string& command)
         /* return if there is no tree in the list */
         if (ntree_list.size() == 0) return;
 
-        if (command == "mean") {
+        if (command == "credibility") {
+                /* read Frechet mean from file */
+                if (options.mean_file == "") {
+                        wrong_usage("Please provide the Frechet mean.");
+                }
+                list<ntree_t> tmp = parse_tree_file(options.mean_file, 0, 1);
+                assert(tmp.size() == 1);
+                /* compute variance */
+                cout << frechet_credibility(ntree_list, tmp.front(), options.credibility_level)
+                     << endl;
+        }
+        else if (command == "mean") {
                 result_list.push_back(
                         options.random ?
-                        mean_tree_rand(ntree_list, options.iterations, gen, default_lambda_t(), options.verbose) :
-                        mean_tree_cyc (ntree_list, options.iterations, default_lambda_t(), options.verbose));
+                        mean_tree_rand(ntree_list, options.iterations, gen, default_lambda_t(options.step_size), options.verbose) :
+                        mean_tree_cyc (ntree_list, options.iterations, default_lambda_t(options.step_size), options.verbose));
         }
         else if (command == "median") {
                 result_list.push_back(
                         options.random ?
-                        median_tree_rand(ntree_list, options.iterations, gen, default_lambda_t(), options.verbose) :
-                        median_tree_cyc (ntree_list, options.iterations, default_lambda_t(), options.verbose));
+                        median_tree_rand(ntree_list, options.iterations, gen, default_lambda_t(options.step_size), options.verbose) :
+                        median_tree_cyc (ntree_list, options.iterations, default_lambda_t(options.step_size), options.verbose));
         }
         else if (command == "majority-consensus") {
                 result_list.push_back(
@@ -266,11 +287,13 @@ int main(int argc, char *argv[])
         for(;;) {
                 int c, option_index = 0;
                 static struct option long_options[] = {
-                        { "help",            0, 0, 'h' },
-                        { "version",         0, 0, 'q' }
+                        { "credibility-level", 1, 0, 'a' },
+                        { "verbose",           1, 0, 'v' },
+                        { "help",              0, 0, 'h' },
+                        { "version",           0, 0, 'q' }
                 };
 
-                c = getopt_long(argc, argv, "c:rm:d:k:n:v",
+                c = getopt_long(argc, argv, "c:rm:d:k:n:s:v",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -278,6 +301,13 @@ int main(int argc, char *argv[])
                 }
 
                 switch(c) {
+                case 'a':
+                        if (atof(optarg) < 0 || 1 < atof(optarg)) {
+                                print_usage(argv[0], stdout);
+                                exit(EXIT_SUCCESS);
+                        }
+                        options.credibility_level = atof(optarg);
+                        break;
                 case 'c':
                         options.cut = atof(optarg);
                         break;
@@ -307,8 +337,20 @@ int main(int argc, char *argv[])
                 case 'n':
                         options.iterations = atoi(optarg);
                         break;
+                case 's':
+                        if (atoi(optarg) < 1.0) {
+                                print_usage(argv[0], stdout);
+                                exit(EXIT_SUCCESS);
+                        }
+                        options.step_size = atof(optarg);
+                        break;
                 case 'v':
-                        options.verbose = true;
+                        if (optarg) {
+                                options.verbose = atoi(optarg);
+                        }
+                        else {
+                                options.verbose = 1;
+                        }
                         break;
                 case 'h':
                         print_usage(argv[0], stdout);
