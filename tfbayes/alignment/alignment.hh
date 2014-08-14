@@ -388,7 +388,7 @@ public:
                 }
                 push_back(alignment_t<AC>(sequences, taxon_map, alphabet, verbose));
                 if (verbose) {
-                        std::cerr << boost::format("Finished parsing alignment %d...") % (base_t::size()+1)
+                        std::cerr << boost::format("Finished parsing alignment %d...") % (base_t::size())
                                   << std::endl;
                 }
         }

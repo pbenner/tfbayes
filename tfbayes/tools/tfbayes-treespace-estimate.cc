@@ -1,4 +1,4 @@
-/* Copyright (C) 2013 Philipp Benner
+/* Copyright (C) 2013, 2014 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ typedef struct _options_t {
         _options_t()
                 : cut(1e-8),
                   credibility_level(0.95),
-                  random(false),
+                  random(true),
                   variance(false),
                   mean_file(""),
                   drop(0),
@@ -95,7 +95,8 @@ void print_usage(char *pname, FILE *fp)
                       "             -c float        - remove edges from resulting tree\n"
                       "                               if the length is shorter than FLOAT\n"
                       "                               (default: %e)\n"
-                      "             -r              - use random instead of cyclic version\n"
+                      "             -r              - use random version of the algorithm [default]\n"
+                      "             -y              - use cyclic version of the algorithm\n"
                       "             -m file         - provide the Frechet mean for computing\n"
                       "                               the Frechet variance or credibility region\n"
                       "             -n integer      - number of iterations\n"
@@ -293,7 +294,7 @@ int main(int argc, char *argv[])
                         { "version",           0, 0, 'q' }
                 };
 
-                c = getopt_long(argc, argv, "c:rm:d:k:n:s:v",
+                c = getopt_long(argc, argv, "c:rym:d:k:n:s:v",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -313,6 +314,9 @@ int main(int argc, char *argv[])
                         break;
                 case 'r':
                         options.random = true;
+                        break;
+                case 'y':
+                        options.random = false;
                         break;
                 case 'f':
                         options.variance = true;
