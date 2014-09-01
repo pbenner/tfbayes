@@ -137,9 +137,12 @@ void print_version(FILE *fp)
                       "FOR A PARTICULAR PURPOSE.\n\n");
 }
 
-list<ntree_t> parse_tree_file(const string& filename, size_t drop, size_t k)
+list<ntree_t>
+parse_tree_file(
+        const string& filename, size_t drop, size_t k,
+        boost::optional<const pt_root_t&> ref_tree = boost::optional<const pt_root_t&>())
 {
-        list<pt_root_t>  tree_list = parse_tree_list(filename, drop, k);
+        list<pt_root_t>  tree_list = parse_tree_list(filename, drop, k, ref_tree);
         list<ntree_t  > ntree_list;
         // convert trees
         for (list<pt_root_t>::const_iterator it = tree_list.begin();
@@ -200,17 +203,43 @@ void simple_mean(list<ntree_t>& result, const list<ntree_t>& ntree_list)
 
 void estimate(const string& command)
 {
+        // random number generator
+        ////////////////////////////////////////////////////////////////////////
         boost::random::mt19937 gen;
         /* init random number generator */
         seed_rng(gen);
 
+        // if variance should be computed take the mean tree
+        // as the reference tree
+        ////////////////////////////////////////////////////////////////////////
+        boost::optional<pt_root_t> ref_tree;
+        if (command == "variance") {
+                /* read Frechet mean from file */
+                if (options.mean_file == "") {
+                        wrong_usage("Please provide the Frechet mean.");
+                }
+                list<pt_root_t> tmp = parse_tree_list(options.mean_file, 0, 1);
+                assert(tmp.size() == 1);
+                ref_tree = tmp.front();
+        }
+
+        // parse tree list
+        ////////////////////////////////////////////////////////////////////////
         list<ntree_t> result_list;
+        list<ntree_t> ntree_list;
         /* phylogenetic tree */
-        list<ntree_t> ntree_list = randomize_ntree_list(
-                parse_tree_file("", options.drop, options.k), gen);
+        if (ref_tree) {
+                ntree_list = randomize_ntree_list(
+                        parse_tree_file("", options.drop, options.k, *ref_tree), gen);
+        } else {
+                ntree_list = randomize_ntree_list(
+                        parse_tree_file("", options.drop, options.k), gen);
+        }
         /* return if there is no tree in the list */
         if (ntree_list.size() == 0) return;
 
+        // run command
+        ////////////////////////////////////////////////////////////////////////
         if (command == "credibility") {
                 /* read Frechet mean from file */
                 if (options.mean_file == "") {
@@ -242,14 +271,8 @@ void estimate(const string& command)
                 simple_mean(result_list, ntree_list);
         }
         else if (command == "variance") {
-                /* read Frechet mean from file */
-                if (options.mean_file == "") {
-                        wrong_usage("Please provide the Frechet mean.");
-                }
-                list<ntree_t> tmp = parse_tree_file(options.mean_file, 0, 1);
-                assert(tmp.size() == 1);
                 /* compute variance */
-                cout << frechet_variance(ntree_list, tmp.front())
+                cout << frechet_variance(ntree_list, ntree_t(*ref_tree))
                      << endl;
         }
         else {
