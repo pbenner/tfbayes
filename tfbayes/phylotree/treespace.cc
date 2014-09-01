@@ -1335,7 +1335,7 @@ mean_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
 {
         // assure that we have as many weights as we have trees
         assert(ntree_list.size() == weights.size());
-        // start with the laste element
+        // start with the last element
         ntree_t sk = ntree_list.back();
         ntree_t sk_old = sk;
 
@@ -1385,7 +1385,7 @@ median_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
 {
         // assure that we have as many weights as we have trees
         assert(ntree_list.size() == weights.size());
-        // start with the laste element
+        // start with the last element
         ntree_t sk = ntree_list.back();
         ntree_t sk_old = sk;
 
@@ -1437,7 +1437,7 @@ mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
         vector<double > weights(_weights);
         // assure that we have as many weights as we have trees
         assert(ntree_list.size() == weights.size());
-        // start with the laste element
+        // start with the last element
         ntree_t sk = ntree_list.back();
         ntree_t sk_old = sk;
 
@@ -1495,7 +1495,7 @@ median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weight
         vector<double > weights(_weights);
         // random generator for shuffling the tree list
         assert(ntree_list.size() == weights.size());
-        // start with the laste element
+        // start with the last element
         ntree_t sk = ntree_list.back();
         ntree_t sk_old = sk;
 
