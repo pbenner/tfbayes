@@ -213,7 +213,7 @@ void estimate(const string& command)
         // as the reference tree
         ////////////////////////////////////////////////////////////////////////
         boost::optional<pt_root_t> ref_tree;
-        if (command == "variance") {
+        if (command == "variance" || command == "credibility") {
                 /* read Frechet mean from file */
                 if (options.mean_file == "") {
                         wrong_usage("Please provide the Frechet mean.");
