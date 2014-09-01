@@ -241,14 +241,7 @@ void estimate(const string& command)
         // run command
         ////////////////////////////////////////////////////////////////////////
         if (command == "credibility") {
-                /* read Frechet mean from file */
-                if (options.mean_file == "") {
-                        wrong_usage("Please provide the Frechet mean.");
-                }
-                list<ntree_t> tmp = parse_tree_file(options.mean_file, 0, 1);
-                assert(tmp.size() == 1);
-                /* compute variance */
-                cout << frechet_credibility(ntree_list, tmp.front(), options.credibility_level)
+                cout << frechet_credibility(ntree_list, ntree_t(*ref_tree), options.credibility_level)
                      << endl;
         }
         else if (command == "mean") {
@@ -271,7 +264,6 @@ void estimate(const string& command)
                 simple_mean(result_list, ntree_list);
         }
         else if (command == "variance") {
-                /* compute variance */
                 cout << frechet_variance(ntree_list, ntree_t(*ref_tree))
                      << endl;
         }
