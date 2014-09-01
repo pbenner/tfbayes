@@ -121,7 +121,7 @@ void wrong_usage(const char *msg)
                 (void)fprintf(stderr, "%s\n", msg);
         }
         (void)fprintf(stderr,
-                      "Try `tfbayes-treespace-mean --help' for more information.\n");
+                      "Try `tfbayes-treespace-estimate --help' for more information.\n");
 
         exit(EXIT_FAILURE);
 
