@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
                         options.iterations = atoi(optarg);
                         break;
                 case 's':
-                        if (atoi(optarg) < 1.0) {
+                        if (atof(optarg) < 0.0) {
                                 print_usage(argv[0], stdout);
                                 exit(EXIT_SUCCESS);
                         }
