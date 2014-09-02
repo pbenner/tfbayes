@@ -87,7 +87,7 @@ which drops the first *8000* samples and performs *100* iterations of the algori
 
 	zcat test.nh.gz | tfbayes-treespace-estimate -n 100 -r -d 8000 --verbose=3 median > test.median.nh
 
-to compute the median. The convergence should be checked carefully! If the set of samples is large it might be a good idea to adapt the step size parameter (e.g. *--step-size=1000*). To compare the result with the majority rule consensus tree use
+to compute the median. The convergence should be checked carefully! If the set of samples is large it might be a good idea to adapt the step size parameter (e.g. *-s 1000*). To compare the result with the majority rule consensus tree use
 
 	zcat test.nh.gz | tfbayes-treespace-estimate -d 8000 -v majority-consensus
 
