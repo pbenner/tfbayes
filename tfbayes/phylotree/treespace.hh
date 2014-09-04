@@ -457,8 +457,8 @@ public:
         double step_size;
 };
 
-double mean_loss(const std::list<ntree_t>& ntree_list, const ntree_t& tree);
-double median_loss(const std::list<ntree_t>& ntree_list, const ntree_t& tree);
+double mean_loss(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights, const ntree_t& tree);
+double median_loss(const std::list<ntree_t>& ntree_list, const std::vector<double>& weights, const ntree_t& tree);
 
 double frechet_credibility(const std::list<ntree_t>& ntree_list,
                            const ntree_t& mean,

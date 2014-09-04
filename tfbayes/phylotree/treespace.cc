@@ -1261,24 +1261,42 @@ const double geodesic_t::epsilon = 0.000001;
 
 double
 mean_loss(const list<ntree_t>& ntree_list,
+          const vector<double>& weights,
           const ntree_t& tree)
 {
         double result = 0.0;
-        for (list<ntree_t>::const_iterator it = ntree_list.begin(); it != ntree_list.end(); it++) {
-                result += pow(geodesic_t(tree, *it).length(), 2.0);
+        double sum    = 0.0;
+        // assure that we have as many weights as we have trees
+        assert(ntree_list.size() == weights.size());
+
+        list  <ntree_t>::const_iterator it = ntree_list.begin();
+        vector<double >::const_iterator is = weights.begin();
+        for (; it != ntree_list.end() && is != weights.end(); it++, is++) {
+                geodesic_t geodesic(tree, *it);
+                result += (*is)*pow(geodesic.length(), 2);
+                sum    += *is;
         }
-        return 1.0/ntree_list.size()*result;
+        return result/sum;
 }
 
 double
 median_loss(const list<ntree_t>& ntree_list,
+            const vector<double>& weights,
             const ntree_t& tree)
 {
         double result = 0.0;
-        for (list<ntree_t>::const_iterator it = ntree_list.begin(); it != ntree_list.end(); it++) {
-                result += geodesic_t(tree, *it).length();
+        double sum    = 0.0;
+        // assure that we have as many weights as we have trees
+        assert(ntree_list.size() == weights.size());
+
+        list  <ntree_t>::const_iterator it = ntree_list.begin();
+        vector<double >::const_iterator is = weights.begin();
+        for (; it != ntree_list.end() && is != weights.end(); it++, is++) {
+                geodesic_t geodesic(tree, *it);
+                result += (*is)*geodesic.length();
+                sum    += *is;
         }
-        return 1.0/ntree_list.size()*result;
+        return result/sum;
 }
 
 double
@@ -1306,19 +1324,7 @@ frechet_variance(const list<ntree_t>& ntree_list,
                  const vector<double>& weights,
                  const ntree_t& mean)
 {
-        double result = 0.0;
-        double sum    = 0.0;
-        // assure that we have as many weights as we have trees
-        assert(ntree_list.size() == weights.size());
-
-        list  <ntree_t>::const_iterator it = ntree_list.begin();
-        vector<double >::const_iterator is = weights.begin();
-        for (; it != ntree_list.end() && is != weights.end(); it++, is++) {
-                geodesic_t geodesic(mean, *it);
-                result += (*is)*pow(geodesic.length(), 2);
-                sum    += *is;
-        }
-        return result/sum;
+        return mean_loss(ntree_list, weights, mean);
 }
 
 double
@@ -1353,7 +1359,7 @@ mean_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
                 if (verbose >= 2) {
                         cerr << __line_del__
                              << std::setprecision(11) << fixed
-                             << "average loss: " << mean_loss(ntree_list, sk)
+                             << "average loss: " << mean_loss(ntree_list, weights, sk)
                              << endl;
                 }
                 if (verbose >= 3) {
@@ -1403,7 +1409,7 @@ median_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
                 if (verbose >= 2) {
                         cerr << __line_del__
                              << std::setprecision(11) << fixed
-                             << "average loss: " << median_loss(ntree_list, sk)
+                             << "average loss: " << median_loss(ntree_list, weights, sk)
                              << endl;
                 }
                 if (verbose >= 3) {
@@ -1461,7 +1467,7 @@ mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
                 if (verbose >= 2) {
                         cerr << __line_del__
                              << std::setprecision(11) << fixed
-                             << "average loss: " << mean_loss(_ntree_list, sk)
+                             << "average loss: " << mean_loss(_ntree_list, weights, sk)
                              << endl;
                 }
                 if (verbose >= 3) {
@@ -1519,7 +1525,7 @@ median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weight
                 if (verbose >= 2) {
                         cerr << __line_del__
                              << std::setprecision(11) << fixed
-                             << "average loss: " << median_loss(_ntree_list, sk)
+                             << "average loss: " << median_loss(_ntree_list, weights, sk)
                              << endl;
                 }
                 if (verbose >= 3) {
