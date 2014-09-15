@@ -542,7 +542,11 @@ parse_pt_node_t(
         ntree_t::leaf_d_t& leaf_d,
         ntree_t::leaf_names_t& leaf_names)
 {
-        assert(node.outgroup());
+        if (!node.outgroup()) {
+                cerr << "Error: Phylogenetic tree has wrong format (rooted)."
+                     << endl;
+                exit(EXIT_FAILURE);
+        }
         // add outgroup
         leaf_d    [node.outgroup()->id] = node.outgroup()->d;
         leaf_names[node.outgroup()->id] = node.outgroup()->name;

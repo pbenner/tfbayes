@@ -137,15 +137,16 @@ pt_parsetree_t::convert(const list<pt_root_t>& tree_list,
                         boost::optional<const pt_root_t&> ref_tree) const
 {
         assert(type == TREE_N);
-
-        assert(n_children == 2);
+        assert(n_children == 1 || n_children == 2);
         assert(children[0]->type == NODE_LIST_N);
-        assert(children[1]->type == LEAF_N);
         // make sure that there are at least three childs
         // attached to the root (including outgroup)
-        assert(children[0]->n_children == 2);
-        pt_leaf_t* outgroup = static_cast<pt_leaf_t*>(children[1]->convert());
-        pt_node_t* node     =                         children[0]->convert();
+        pt_leaf_t* outgroup = NULL;
+        pt_node_t* node     = children[0]->convert();
+        if (n_children == 2) {
+                assert(children[1]->type == LEAF_N);
+                outgroup = static_cast<pt_leaf_t*>(children[1]->convert());
+        }
         if (ref_tree) {
                 return pt_root_t(*node, outgroup, *ref_tree);
         }

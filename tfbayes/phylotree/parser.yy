@@ -95,6 +95,9 @@ tree_list:
 tree: LPAREN node_list COMMA outgroup RPAREN
       { allocate($$, pt_parsetree_t(TREE_N, 2, NULL, $2, $4)); }
     ;
+tree: LPAREN node_list RPAREN
+      { allocate($$, pt_parsetree_t(TREE_N, 1, NULL, $2)); }
+    ;
 outgroup:
       name COLON distance
       { allocate($$, pt_parsetree_t(LEAF_N, 2, NULL, $1, $3)); }
