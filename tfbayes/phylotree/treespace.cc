@@ -543,8 +543,9 @@ parse_pt_node_t(
         ntree_t::leaf_names_t& leaf_names)
 {
         if (!node.outgroup()) {
-                cerr << "Error: Phylogenetic tree has wrong format (rooted)."
-                     << endl;
+                cerr << "Error: Phylogenetic tree has wrong format (rooted)."     << endl
+                     << "       The format must be (A,B,C); where A and B can be" << endl
+                     << "       either subtrees or leaves but C must be a leaf."  << endl;
                 exit(EXIT_FAILURE);
         }
         // add outgroup
