@@ -51,6 +51,9 @@ def usage():
     print "This program computes a point estimate (e.g. mean or median)"
     print "from a set of posterior samples."
     print
+    print "Afterwards, the program `tfbayes-partition' can be used to process"
+    print "(i.e. plot or export) the resulting partition of the data set."
+    print
     print "Commands:"
     print "       map                         - compute map partition"
     print "       mean                        - compute mean partition"
