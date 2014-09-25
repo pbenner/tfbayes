@@ -68,11 +68,11 @@ struct index_to_python
         boost::python::list* l = new boost::python::list();
 
         if (typeid(index) == typeid(seq_index_t)) {
-            (*l).append(index[0]);
-            (*l).append(index[1]);
+                (*l).append(index[0]);
+                (*l).append(index[1]);
         }
         else if (typeid(index) == typeid(index_t)) {
-            (*l).append(index[0]);
+                (*l).append(index[0]);
         }
         else {
                 PyErr_SetString(PyExc_IndexError, "Internal error!");
