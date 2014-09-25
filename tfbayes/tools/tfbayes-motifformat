@@ -139,7 +139,7 @@ def main():
 
 if __name__ == "__main__":
     try:
-        sys.exit(__main__())
+        sys.exit(main())
     except IOError, e:
         sys.stderr.write('%s\n' % e)
         sys.exit(1)
