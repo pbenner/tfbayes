@@ -40,7 +40,7 @@ def default_results_config():
 # parse results config
 # ------------------------------------------------------------------------------
 
-def parse_results_config(config_file, results_config):
+def parse_results_config(config_file, results_config, parse_partitions=True):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
     if not config_parser.has_section('Result'):
@@ -55,7 +55,7 @@ def parse_results_config(config_file, results_config):
         results_config['sampling_history'].temperature = read_matrix(config_parser, 'Result', 'temperature', float)
     if config_parser.has_option('Result', 'switches'):
         results_config['sampling_history'].switches = read_matrix(config_parser, 'Result', 'switches', float)
-    if config_parser.has_option('Result', 'partitions'):
+    if config_parser.has_option('Result', 'partitions') and parse_partitions:
         results_config['sampling_history'].partitions = parse_partition_list(config_parser.get('Result', 'partitions'))
     if config_parser.has_option('Result', 'map_partition'):
         results_config['map_partition'] = parse_partition(config_parser.get('Result', 'map_partition'))

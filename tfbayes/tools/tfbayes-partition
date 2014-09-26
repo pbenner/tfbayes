@@ -113,7 +113,7 @@ def main(command, sampler_config_file):
     if not sampler_config.phylogenetic_file:
         raise IOError('no sequences file specified')
     # parse results file
-    parse_results_config(sampler_config.save, results_config)
+    parse_results_config(sampler_config.save, results_config, False)
     if options['save']:
         config_parser_save = ConfigParser.ConfigParser()
         config_parser_save.read(options['save'])
