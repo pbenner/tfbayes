@@ -121,7 +121,7 @@ def main(sampler_config_file):
     results_config = default_results_config()
     parse_sampler_config(sampler_config_file, sampler_config)
     results_config_file = sampler_config.save
-    parse_results_config(results_config_file, results_config)
+    parse_results_config(results_config_file, results_config, False)
     plot_result(results_config)
 
 # __main__
