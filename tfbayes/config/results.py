@@ -44,7 +44,7 @@ def parse_results_config(config_file, results_config, parse_partitions=True):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.read(config_file)
     if not config_parser.has_section('Result'):
-        raise IOError("Invalid configuration file.")
+        raise IOError("Invalid results configuration file.")
     if config_parser.has_option('Result', 'components'):
         results_config['sampling_history'].components = read_matrix(config_parser, 'Result', 'components', int)
     if config_parser.has_option('Result', 'likelihood'):

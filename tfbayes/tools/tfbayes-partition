@@ -89,11 +89,11 @@ def usage():
 # plot motifs
 # ------------------------------------------------------------------------------
 
-def plot_cluster_list(cluster_list):
+def plot_cluster_list(cluster_list, command):
     basename = os.path.splitext(os.path.split(sampler_config.save)[1])[0]
     files    = plot.plot_cluster_list(cluster_list, basename, revcomp=options['revcomp'])
     if options['join']:
-        cmd = 'pdftk %s cat output %s_cluster.pdf' % (' '.join(files), basename)
+        cmd = 'pdftk %s cat output %s_%s_cluster.pdf' % (' '.join(files), basename, command)
         print cmd
         subprocess.call(cmd, shell=True)
         cmd = 'rm -f %s' % ' '.join(files)
@@ -130,7 +130,7 @@ def main(command, sampler_config_file):
         configfile = open(options['save'], 'wb')
         config_parser_save.write(configfile)
     else:
-        plot_cluster_list(cluster_list)
+        plot_cluster_list(cluster_list, command)
 
 def __main__():
     global options
