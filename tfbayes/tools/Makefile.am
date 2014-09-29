@@ -35,7 +35,6 @@ dist_bin_SCRIPTS = \
 	tfbayes-motifformat \
 	tfbayes-fasta-to-maf \
 	tfbayes-maf-to-fasta \
-	tfbayes-optimize \
 	tfbayes-plot \
 	tfbayes-partition \
 	tfbayes-preprocess-alignment \

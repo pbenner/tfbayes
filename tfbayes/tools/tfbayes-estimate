@@ -86,8 +86,8 @@ def compute_mean(command):
     elif command == "median":
         results_config['median_partition'] = dpm_tfbs.median(results_config['sampling_history'], options['take'], options['verbose'])
     else:
-            usage()
-            return 1
+        usage()
+        return 1
     # save result
     save_results_config(sampler_config.save, results_config)
 
