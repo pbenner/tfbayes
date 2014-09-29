@@ -24,7 +24,6 @@ pkgpythondir = $(pyexecdir)/tfbayes/dpm
 
 ## scripts
 dist_bin_SCRIPTS = \
-	tfbayes-align \
 	tfbayes-alignment-likelihood \
 	tfbayes-alignment-shuffle \
 	tfbayes-approximate \
