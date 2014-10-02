@@ -153,7 +153,7 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         // baseline prior
         tfbs_options.baseline_priors.push_back(matrix<double>());
         for (size_t i = 0; i < options.tfbs_length; i++) {
-                tfbs_options.baseline_priors.begin()->push_back(vector<double>(data_tfbs_t::alphabet_size, 1.0));
+                tfbs_options.baseline_priors.begin()->push_back(vector<double>(data_tfbs_t::alphabet_size, 0.2));
         }
 
         // tfbs options

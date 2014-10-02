@@ -265,6 +265,7 @@ dpm_tfbs_t::mixture_weights(const range_t& range, double log_weights[], cluster_
                 log_weights [i] = sum;
                 cluster_tags[i] = cluster.cluster_tag();
         }
+        assert(static_cast<size_t>(i) == mixture_components() + baseline_components());
 }
 
 GCC_ATTRIBUTE_HOT

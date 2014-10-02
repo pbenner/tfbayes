@@ -551,6 +551,11 @@ map_local_optimization(const index_i& index, dpm_tfbs_t& dpm, bool verbose) {
                 return false;
         }
         ////////////////////////////////////////////////////////////////////////
+        // first release the element from its cluster
+        cluster_tag_t old_cluster_tag = dpm.state()[index];
+        cluster_tag_t new_cluster_tag;
+        dpm.state().remove(index, old_cluster_tag);
+        ////////////////////////////////////////////////////////////////////////
         size_t components = dpm.mixture_components() + dpm.baseline_components();
         double log_weights1[components];
         double log_weights2[components];
@@ -559,10 +564,7 @@ map_local_optimization(const index_i& index, dpm_tfbs_t& dpm, bool verbose) {
         range_t range1(index, dpm.state().tfbs_length, false);
         range_t range2(index, dpm.state().tfbs_length, true );
         ////////////////////////////////////////////////////////////////////////
-        // release the element from its cluster
-        cluster_tag_t old_cluster_tag = dpm.state()[index];
-        cluster_tag_t new_cluster_tag;
-        dpm.state().remove(index, old_cluster_tag);
+        // compute weights
         dpm.mixture_weights(range1, log_weights1, cluster_tags1, 1.0);
         dpm.mixture_weights(range2, log_weights2, cluster_tags2, 1.0, log_weights1[components-1]);
 
