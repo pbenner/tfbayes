@@ -18,6 +18,8 @@
 
 from cluster import cluster_t
 
+from ..uipac import DNA
+
 # sort cluster
 # ------------------------------------------------------------------------------
 
@@ -55,14 +57,18 @@ def generate_cluster(sequences, dpm_subset, idx, sampler_config):
     alpha          = baseline_prior[0:4]
     alpha_gap      = baseline_prior[4]
     components     = len(dpm_subset)
-    for position in dpm_subset:
-        s = position[0]
-        p = position[1]
+    for r in dpm_subset:
+        s = r.index()[0]
+        p = r.index()[1]
         # loop over the motif
-        for j in range(sampler_config.tfbs_length):
+        for j in range(r.length()):
             # loop over all nucleotides plus counts for gaps
-            for i in range(4):
-                counts[i][j] += sequences[s][p+j][i]
+            if r.reverse():
+                for i in range(4):
+                    counts[i][r.length()-j-1] += sequences[s][p+j][DNA.complement(i)]
+            else:
+                for i in range(4):
+                    counts[i][j] += sequences[s][p+j][i]
             counts_gap[j] += sequences[s][p+j][4]
     return cluster_t(counts, counts_gap, alpha, alpha_gap, components, idx, dpm_subset.dpm_subset_tag())
 

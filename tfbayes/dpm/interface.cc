@@ -86,6 +86,10 @@ struct index_to_python
 // interface
 // -----------------------------------------------------------------------------
 
+const bool&    (range_t::*range_t_get_reverse)() const = &range_t::reverse;
+const size_t&  (range_t::*range_t_get_length)()  const = &range_t::length;
+const index_i& (range_t::*range_t_get_index)()   const = &range_t::index;
+
 BOOST_PYTHON_MODULE(interface)
 {
         // class definitions
@@ -113,7 +117,11 @@ BOOST_PYTHON_MODULE(interface)
                 ;
         class_<range_t>("range_t", no_init)
                 .def(init<index_i&, size_t, bool>())
+                .def("__str__",  to_string<range_t>)
                 .def("__repr__", to_string<range_t>)
+                .def("reverse",  range_t_get_reverse,  return_value_policy<copy_const_reference>())
+                .def("length",   range_t_get_length,   return_value_policy<copy_const_reference>())
+                .def("index",    range_t_get_index,    return_value_policy<reference_existing_object>())
                 ;
         class_<dpm_subset_t>("dpm_subset_t", init<dpm_subset_tag_t>())
                 .def("__iter__", boost::python::iterator<dpm_subset_t>())

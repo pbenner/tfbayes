@@ -42,3 +42,8 @@ class DNA:
             return codebook[numbers]
         else:
             return ''.join(map(lambda x: codebook[x], numbers))
+    @staticmethod
+    def complement(code):
+        codebook = { 0: 3,  1:  2, 2:  1, 3: 0,
+                     4: 4, -1: -1 }
+        return codebook[code]
