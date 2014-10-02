@@ -202,4 +202,46 @@ size_t select_max_component(size_t k, double log_weights[])
         return result;
 }
 
+static inline
+std::pair<size_t, size_t> select_max_component2(size_t k, const double log_weights1[], const double log_weights2[])
+{
+        /* log_weights are cumulative, so we need to normalize by log_weights[k-1] */
+
+        /* resulting cluster number */
+        std::pair<size_t, size_t> result = std::make_pair(1, 0);
+        /* difference between two successive log weights */
+        double diff   = 0.0;
+        /* we need to store the last value because zero is not
+         * represented in the log weights array */
+        double last   = 0.0;
+
+        for (size_t i = 0; i < k; i++) {
+                /* if the increase for this cluster is higher than any
+                 * before */
+                if (diff < exp(log_weights1[i] - log_weights1[k-1]) - last) {
+                        /* store the new increase in probability */
+                        diff   = exp(log_weights1[i] - log_weights1[k-1]) - last;
+                        /* and the cluster number */
+                        result.first  = 1;
+                        result.second = i;
+                }
+                /* also save the value of the last weight */
+                last = exp(log_weights1[i] - log_weights1[k-1]);
+        }
+        for (size_t i = 0; i < k; i++) {
+                /* if the increase for this cluster is higher than any
+                 * before */
+                if (diff < exp(log_weights2[i] - log_weights2[k-1]) - last) {
+                        /* store the new increase in probability */
+                        diff   = exp(log_weights2[i] - log_weights2[k-1]) - last;
+                        /* and the cluster number */
+                        result.first  = 2;
+                        result.second = i;
+                }
+                /* also save the value of the last weight */
+                last = exp(log_weights2[i] - log_weights2[k-1]);
+        }
+        return result;
+}
+
 #endif /* __TFBAYES_UTILITY_STATISTICS_HH__ */

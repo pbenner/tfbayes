@@ -34,3 +34,16 @@ operator<< (std::ostream& o, const seq_index_t& index) {
 
         return o;
 }
+
+std::ostream&
+operator<< (std::ostream& o, const range_t& range) {
+        if (typeid(range.index()) == typeid(seq_index_t)) {
+                o << static_cast<const seq_index_t&>(range.index())
+                  << ":" << range.length();
+        }
+        else {
+                o << static_cast<const index_t&>(range.index())
+                  << ":" << range.length();
+        }
+        return o;
+}

@@ -544,46 +544,48 @@ map_local_optimization(cluster_t& cluster, dpm_tfbs_t& dpm, bool verbose)
 }
 
 static bool
-map_local_optimization(const range_t& range, dpm_tfbs_t& dpm, bool verbose) {
-        ////////////////////////////////////////////////////////////////////////
-        // release the element from its cluster
-        cluster_tag_t old_cluster_tag = dpm.state()[range.index()];
-        dpm.state().remove(range, old_cluster_tag);
-        size_t components = dpm.mixture_components() + dpm.baseline_components();
-        double log_weights[components];
-        cluster_tag_t cluster_tags[components];
-        dpm.mixture_weights(range, log_weights, cluster_tags);
-
-        ////////////////////////////////////////////////////////////////////////
-        // draw a new cluster for the element and assign the element
-        // to that cluster
-        cluster_tag_t new_cluster_tag;
-        new_cluster_tag = cluster_tags[select_max_component(components, log_weights)];
-        if (verbose && new_cluster_tag != old_cluster_tag) {
-                cout << "Moving " << (const seq_index_t&)range.index()
-                     << " from cluster " << old_cluster_tag
-                     << " to cluster "   << new_cluster_tag
-                     << endl;
-        }
-
-        ////////////////////////////////////////////////////////////////////////
-        dpm.state().add(range, new_cluster_tag);
-
-        return old_cluster_tag != new_cluster_tag;
-}
-
-static bool
 map_local_optimization(const index_i& index, dpm_tfbs_t& dpm, bool verbose) {
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
         if (!dpm.valid_for_sampling(index)) {
                 return false;
         }
+        ////////////////////////////////////////////////////////////////////////
+        size_t components = dpm.mixture_components() + dpm.baseline_components();
+        double log_weights1[components];
+        double log_weights2[components];
+        cluster_tag_t cluster_tags1[components];
+        cluster_tag_t cluster_tags2[components];
         range_t range1(index, dpm.state().tfbs_length, false);
         range_t range2(index, dpm.state().tfbs_length, true );
-        bool result1 = map_local_optimization(range1, dpm, verbose);
-        bool result2 = map_local_optimization(range2, dpm, verbose);
-        return result1 || result2;
+        ////////////////////////////////////////////////////////////////////////
+        // release the element from its cluster
+        cluster_tag_t old_cluster_tag = dpm.state()[index];
+        cluster_tag_t new_cluster_tag;
+        dpm.state().remove(index, old_cluster_tag);
+        dpm.mixture_weights(range1, log_weights1, cluster_tags1, 1.0);
+        dpm.mixture_weights(range2, log_weights2, cluster_tags2, 1.0, log_weights1[components-1]);
+
+        ////////////////////////////////////////////////////////////////////////
+        // draw a new cluster for the element and assign the element
+        // to that cluster
+        std::pair<size_t, size_t> result = select_max_component2(components, log_weights1, log_weights2);
+        ////////////////////////////////////////////////////////////////////////
+        if (result.first == 1) {
+                new_cluster_tag = cluster_tags1[result.second];
+                dpm.state().add(range1, new_cluster_tag);
+        }
+        else {
+                new_cluster_tag = cluster_tags2[result.second];
+                dpm.state().add(range2, new_cluster_tag);
+        }
+        if (verbose && new_cluster_tag != old_cluster_tag) {
+                cout << "Moving " << (const seq_index_t&)index
+                     << " from cluster " << old_cluster_tag
+                     << " to cluster "   << new_cluster_tag
+                     << endl;
+        }
+        return old_cluster_tag != new_cluster_tag;
 }
 
 static dpm_partition_t

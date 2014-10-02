@@ -157,7 +157,7 @@ protected:
         ssize_t _x[2];
 };
 
-class range_t {
+class range_t : public virtual clonable {
 public:
         range_t(const index_i& index, size_t length, bool reverse) GCC_ATTRIBUTE_HOT
                 : _index(index.clone()), _length(length), _reverse(reverse) {
@@ -173,6 +173,13 @@ public:
         ~range_t() GCC_ATTRIBUTE_HOT {
                 delete(_index);
         }
+
+        virtual range_t* clone() const GCC_ATTRIBUTE_HOT {
+                return new range_t(*this);
+        }
+
+        friend std::ostream& operator<< (std::ostream& o, const range_t& range);
+
         range_t& operator=(const range_t& range) GCC_ATTRIBUTE_HOT {
                 range_t tmp(range);
                 swap(*this, tmp);

@@ -29,7 +29,7 @@ def parse_partition_identifier(partition_str, end):
     # before this bracket
     start = 0
     if not partition_str[end-1] == ':':
-        raise IOError('Invalid MAP partition.')
+        raise IOError('Invalid partition.')
     for i in range(end-1,-1,-1):
         if (partition_str[i] == ' ' or partition_str[i] == ','):
             start = i+1
@@ -54,16 +54,21 @@ def parse_partition_elements(subset_str):
         if c == '(':
             stack.append(i)
         elif c == ')' and stack:
-            start = stack.pop()
-            element = subset_str[start + 1: i].split(',')
-            yield seq_index_t(int(element[0]), int(element[1]))
+            start  = stack.pop()
+            index  = subset_str[start + 1: i].split(',')
+            m      = re.match(":([0-9]+)(!?)", subset_str[i+1:len(subset_str)])
+            if m == None:
+                raise IOError('Invalid partition.')
+            length = int(m.groups()[0])
+            rc     = m.groups()[1] == "!"
+            yield range_t(seq_index_t(int(index[0]), int(index[1])), length, rc)
 
 def parse_partition(partition_str):
     partition = dpm_partition_t()
     for identifier, subset in parse_partition_subsets(partition_str):
         dpm_subset = dpm_subset_t(identifier)
-        for element in parse_partition_elements(subset):
-            dpm_subset.insert(element)
+        for r in parse_partition_elements(subset):
+            dpm_subset.insert(r)
         partition.append(dpm_subset)
     return partition
 

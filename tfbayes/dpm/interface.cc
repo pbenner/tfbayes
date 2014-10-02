@@ -56,9 +56,9 @@ std::string to_string(const T& t)
         return ss.str();
 }
 
-void dpm_subset_insert(dpm_subset_t& dpm_subset, const index_i& index, size_t length, bool reverse_complement)
+void dpm_subset_insert(dpm_subset_t& dpm_subset, const range_t& range)
 {
-        dpm_subset.insert(range_t(index, length, reverse_complement));
+        dpm_subset.insert(range);
 }
 
 struct index_to_python
@@ -110,6 +110,10 @@ BOOST_PYTHON_MODULE(interface)
                 .def(init<size_t, size_t>())
                 .def("__str__",  to_string<seq_index_t>)
                 .def("__repr__", to_string<seq_index_t>)
+                ;
+        class_<range_t>("range_t", no_init)
+                .def(init<index_i&, size_t, bool>())
+                .def("__repr__", to_string<range_t>)
                 ;
         class_<dpm_subset_t>("dpm_subset_t", init<dpm_subset_tag_t>())
                 .def("__iter__", boost::python::iterator<dpm_subset_t>())
