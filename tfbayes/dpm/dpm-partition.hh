@@ -22,18 +22,18 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <boost/ptr_container/ptr_unordered_set.hpp>
+#include <boost/unordered_set.hpp>
 
 #include <tfbayes/dpm/index.hh>
 #include <tfbayes/dpm/datatypes.hh>
 
 typedef std::string dpm_subset_tag_t;
 
-class dpm_subset_t : public virtual clonable, public boost::ptr_unordered_set<index_i> {
+class dpm_subset_t : public virtual clonable, public boost::unordered_set<range_t> {
 public:
         // typedefs
         ////////////////////////////////////////////////////////////////////////
-        typedef boost::ptr_unordered_set<index_i> base_t;
+        typedef boost::unordered_set<range_t> base_t;
         typedef base_t::iterator iterator;
         typedef base_t::const_iterator const_iterator;
 
@@ -71,10 +71,6 @@ public:
         }
         // methods
         ////////////////////////////////////////////////////////////////////////
-        std::pair<iterator, bool> insert(const index_i& index) {
-                // alway clone objects when inserting them
-                return base_t::insert(index.clone());
-        }
         // each subset represents a cluster with a specific model
         const dpm_subset_tag_t dpm_subset_tag() const {
                 return _dpm_subset_tag;

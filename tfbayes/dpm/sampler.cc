@@ -107,6 +107,7 @@ gibbs_sampler_t::operator=(const sampler_t& sampler)
 bool
 gibbs_sampler_t::_gibbs_sample(const index_i& index)
 {
+        range_t range(index,1);
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
         if (!_dpm->valid_for_sampling(index)) {
@@ -115,11 +116,11 @@ gibbs_sampler_t::_gibbs_sample(const index_i& index)
         ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
         cluster_tag_t old_cluster_tag = state()[index];
-        state().remove(index, old_cluster_tag);
+        state().remove(range, old_cluster_tag);
         size_t components = _dpm->mixture_components() + _dpm->baseline_components();
         double log_weights[components];
         cluster_tag_t cluster_tags[components];
-        _dpm->mixture_weights(index, log_weights, cluster_tags);
+        _dpm->mixture_weights(range, log_weights, cluster_tags);
 
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
@@ -127,7 +128,7 @@ gibbs_sampler_t::_gibbs_sample(const index_i& index)
         cluster_tag_t new_cluster_tag = cluster_tags[select_component(components, log_weights, gen())];
 
         ////////////////////////////////////////////////////////////////////////
-        state().add(index, new_cluster_tag);
+        state().add(range, new_cluster_tag);
 
         return old_cluster_tag != new_cluster_tag;
 }

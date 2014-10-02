@@ -56,9 +56,9 @@ std::string to_string(const T& t)
         return ss.str();
 }
 
-void dpm_subset_insert(dpm_subset_t& dpm_subset, const index_i& index)
+void dpm_subset_insert(dpm_subset_t& dpm_subset, const index_i& index, size_t length, bool reverse_complement)
 {
-        dpm_subset.insert(index);
+        dpm_subset.insert(range_t(index, length, reverse_complement));
 }
 
 struct index_to_python

@@ -31,6 +31,8 @@
 #include <tfbayes/dpm/data.hh>
 #include <tfbayes/dpm/indexer.hh>
 
+#include <tfbayes/uipac/alphabet.hh>
+
 #define __ALPHABET_SIZE__ 5
 #define __CODE_TYPE__ boost::array<double, __ALPHABET_SIZE__>
 
@@ -45,6 +47,7 @@ public:
          * type is an approximate multinomial distribution, we need to store
          * the count statistics for each nucleotide. */
         static const size_t alphabet_size = __ALPHABET_SIZE__;
+        static const alphabet_t alphabet;
         typedef __CODE_TYPE__ code_t;
 
         // constructors
@@ -97,6 +100,7 @@ public:
         size_t elements() const { return _elements; };
         void shuffle();
         bool valid_sampling_index(const index_i& index, size_t tfbs_length) const;
+        const sequence_data_t<__CODE_TYPE__>& complements() const;
 
         static sequence_data_t<data_tfbs_t::code_t> read_fasta(const std::string& file_name);
 
@@ -104,6 +108,8 @@ private:
         // all nucleotide positions in a vector (used for the gibbs sampler)
         std::vector<index_i*> indices;
         std::vector<index_i*> sampling_indices;
+        // complements
+        sequence_data_t<__CODE_TYPE__> _complements;
 
         // number of sequences and nucleotides
         size_t _n_sequences;

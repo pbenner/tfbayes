@@ -376,11 +376,13 @@ independence_background_t::set_bg_cluster_tag(cluster_tag_t bg_cluster_tag) {
 
 product_dirichlet_t::product_dirichlet_t(
         const matrix<double>& _alpha,
-        const sequence_data_t<data_tfbs_t::code_t>& data)
+        const sequence_data_t<data_tfbs_t::code_t>& data,
+        const sequence_data_t<data_tfbs_t::code_t>& complement_data)
         : component_model_t(),
           _size1(_alpha.size()),
           _size2(_alpha[0].size()),
-          _data(&data)
+          _data(&data),
+          _complement_data(&complement_data)
 {
         for (size_t i = 0; i < _alpha.size(); i++) {
                 alpha .push_back(counts_t());
@@ -398,7 +400,8 @@ product_dirichlet_t::product_dirichlet_t(const product_dirichlet_t& distribution
           counts(distribution.counts),
           _size1(distribution._size1),
           _size2(distribution._size2),
-          _data (distribution._data)
+          _data (distribution._data),
+          _complement_data(distribution._complement_data)
 {
 }
 
@@ -425,10 +428,21 @@ product_dirichlet_t::add(const range_t& range) {
         const size_t length   = range.length();
         size_t i, k;
 
-        for (i = 0; i < length; i++) {
-                const seq_index_t index(sequence, position+i);
-                for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
-                        counts[i%_size1][k] += data()[index][k];
+        if (!range.reverse()) {
+                for (i = 0; i < length; i++) {
+                        const seq_index_t index(sequence, position+i);
+                        for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
+                                counts[i%_size1][k] += data()[index][k];
+                        }
+                }
+        }
+        // reverse complement
+        else {
+                for (i = 0; i < length; i++) {
+                        const seq_index_t index(sequence, position+length-i-1);
+                        for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
+                                counts[i%_size1][k] += complement_data()[index][k];
+                        }
                 }
         }
         return i/_size1;
@@ -441,10 +455,21 @@ product_dirichlet_t::remove(const range_t& range) {
         const size_t length   = range.length();
         size_t i, k;
 
-        for (i = 0; i < length; i++) {
-                const seq_index_t index(sequence, position+i);
-                for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
-                        counts[i%_size1][k] -= data()[index][k];
+        if (!range.reverse()) {
+                for (i = 0; i < length; i++) {
+                        const seq_index_t index(sequence, position+i);
+                        for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
+                                counts[i%_size1][k] -= data()[index][k];
+                        }
+                }
+        }
+        // reverse complement
+        else {
+                for (i = 0; i < length; i++) {
+                        const seq_index_t index(sequence, position+length-i-1);
+                        for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
+                                counts[i%_size1][k] -= complement_data()[index][k];
+                        }
                 }
         }
         return i/_size1;
@@ -472,13 +497,26 @@ double product_dirichlet_t::log_predictive(const range_t& range) {
         const size_t length   = range.length();
         double result = 0;
 
-        for (size_t i = 0; i < length; i++) {
-                const seq_index_t index(sequence, position+i);
+        if (!range.reverse()) {
+                for (size_t i = 0; i < length; i++) {
+                        const seq_index_t index(sequence, position+i);
 
-                /* counts contains the data count statistic
-                 * and the pseudo counts alpha */
-                result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1], data()[index])
-                        - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1]);
+                        /* counts contains the data count statistic
+                         * and the pseudo counts alpha */
+                        result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1], data()[index])
+                                - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1]);
+                }
+        }
+        // reverse complement
+        else {
+                for (size_t i = 0; i < length; i++) {
+                        const seq_index_t index(sequence, position+length-i-1);
+
+                        /* counts contains the data count statistic
+                         * and the pseudo counts alpha */
+                        result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1], complement_data()[index])
+                                - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1]);
+                }
         }
 
         return result;

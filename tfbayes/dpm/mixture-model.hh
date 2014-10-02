@@ -41,7 +41,7 @@ public:
         virtual size_t mixture_components() const = 0;
         virtual size_t baseline_components() const = 0;
         // compute cumulative mixture weights on log scale (not normalized!)
-        virtual void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[]) = 0;
+        virtual void   mixture_weights(const range_t& range, double log_weights[], cluster_tag_t tags[]) = 0;
         virtual double likelihood() const = 0;
         // compute the posterior value of the current cluster
         // assignment (usually not normalized)

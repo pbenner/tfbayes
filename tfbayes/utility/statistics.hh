@@ -124,7 +124,7 @@ std::vector<double> dirichlet_sample(const std::vector<double>& _alpha, gsl_rng*
 }
 
 static inline
-size_t select_component(size_t k, double log_weights[], boost::random::mt19937& gen)
+size_t select_component(size_t k, const double log_weights[], boost::random::mt19937& gen)
 {
         /* log_weights are cumulative */
         boost::random::uniform_01<> dist;
@@ -142,6 +142,36 @@ size_t select_component(size_t k, double log_weights[], boost::random::mt19937& 
                 }
         }
         return k-1;
+}
+
+static inline
+std::pair<size_t,size_t> select_component2(
+        size_t k,
+        const double log_weights1[],
+        const double log_weights2[],
+        boost::random::mt19937& gen)
+{
+        /* log_weights are cumulative */
+        boost::random::uniform_01<> dist;
+        
+        const double r = dist(gen);
+
+        if (r == 0.0) {
+                return std::make_pair(1,0);
+        }
+
+        const double log_r = log(r) + log_weights2[k-1];
+        for (size_t i = 0; i < k; i++) {
+                if (log_r <= log_weights1[i]) {
+                        return std::make_pair(1, i);
+                }
+        }
+        for (size_t i = 0; i < k-1; i++) {
+                if (log_r <= log_weights2[i]) {
+                        return std::make_pair(2, i);
+                }
+        }
+        return std::make_pair(2, k-1);
 }
 
 static inline

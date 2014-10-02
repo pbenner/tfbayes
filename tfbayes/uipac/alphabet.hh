@@ -34,6 +34,9 @@ public:
         alphabet_code_t decode(alphabet_code_t code) const {
                 return _decode[static_cast<size_t>(code)];
         }
+        alphabet_code_t complement(alphabet_code_t code) const {
+                return _complement[static_cast<size_t>(code)];
+        }
         bool element(alphabet_code_t letter) const {
                 return _code[static_cast<size_t>(letter)] >= 0;
         }
@@ -51,12 +54,14 @@ protected:
         // initialize the codebooks
         alphabet_t(const alphabet_code_t* code,
                    const alphabet_code_t* decode,
+                   const alphabet_code_t* complement,
                    size_t size)
-                : _code(code), _decode(decode), _size(size)
+                : _code(code), _decode(decode), _complement(complement), _size(size)
                 { }
         // codebook pointer
-        const alphabet_code_t*   _code;
-        const alphabet_code_t* _decode;
+        const alphabet_code_t*       _code;
+        const alphabet_code_t*     _decode;
+        const alphabet_code_t* _complement;
         // the size of the alphabet
         size_t _size;
 };
@@ -64,12 +69,13 @@ protected:
 class nucleotide_alphabet_t : public alphabet_t {
 public:
         nucleotide_alphabet_t() 
-                : alphabet_t(_code, _decode, 5)
+                : alphabet_t(_code, _decode, _complement, 5)
                 { }
 protected:
         // codebooks specific to this class
-        static const alphabet_code_t   _code[];
-        static const alphabet_code_t _decode[];
+        static const alphabet_code_t       _code[];
+        static const alphabet_code_t     _decode[];
+        static const alphabet_code_t _complement[];
 };
 
 #endif /* __TFBAYES_UIPAC_ALPHABET_HH__ */

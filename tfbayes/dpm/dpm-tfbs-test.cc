@@ -38,8 +38,8 @@ dpm_tfbs_t::test_metropolis_hastings() {
         gettimeofday(&tv, NULL);
         gen.seed(tv.tv_sec*tv.tv_usec);
 
-        seq_index_t index1(0,53);
-        seq_index_t index2(1,26);
+        range_t range1(seq_index_t(0,53), 10, true);
+        range_t range2(seq_index_t(1,26), 10, true);
         double l1, l2;
 
         cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
@@ -47,11 +47,11 @@ dpm_tfbs_t::test_metropolis_hastings() {
 
         cout.precision(10);
 
-        _state.remove(index1, _state.bg_cluster_tag);
-        _state.add(index1, cluster_tag1);
+        _state.remove(range1, _state.bg_cluster_tag);
+        _state.add(range1, cluster_tag1);
 
-        _state.remove(index2, _state.bg_cluster_tag);
-        _state.add(index2, cluster_tag1);
+        _state.remove(range2, _state.bg_cluster_tag);
+        _state.add(range2, cluster_tag1);
 
         l1 = likelihood();
         cout << _state.cluster_assignments() << endl;
@@ -70,30 +70,30 @@ dpm_tfbs_t::test_metropolis_hastings() {
 
 void
 dpm_tfbs_t::test_moves() {
-        seq_index_t index1(0,0);
-        seq_index_t index2(0,10);
-        seq_index_t index3(1,10);
-        seq_index_t index4(1,20);
-        seq_index_t index5(0,13);
-        seq_index_t index6(0,22);
+        range_t range1(seq_index_t(0, 0), 10, true);
+        range_t range2(seq_index_t(0,10), 10, true);
+        range_t range3(seq_index_t(1,10), 10, true);
+        range_t range4(seq_index_t(1,20), 10, true);
+        range_t range5(seq_index_t(0,13), 10, true);
+        range_t range6(seq_index_t(0,22), 10, true);
 
         cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
 
-        _state.remove(index1, _state.bg_cluster_tag);
-        _state.add(index1, cluster_tag1);
+        _state.remove(range1, _state.bg_cluster_tag);
+        _state.add(range1, cluster_tag1);
 
-        _state.remove(index2, _state.bg_cluster_tag);
-        _state.add(index2, cluster_tag1);
+        _state.remove(range2, _state.bg_cluster_tag);
+        _state.add(range2, cluster_tag1);
 
-        _state.remove(index3, _state.bg_cluster_tag);
-        _state.add(index3, cluster_tag1);
+        _state.remove(range3, _state.bg_cluster_tag);
+        _state.add(range3, cluster_tag1);
 
         cluster_t& cluster2 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
 
-        _state.remove(index4, _state.bg_cluster_tag);
-        _state.add(index4, cluster_tag2);
+        _state.remove(range4, _state.bg_cluster_tag);
+        _state.add(range4, cluster_tag2);
 
         cout << _state.cluster_assignments() << endl;
         _state.move_left(cluster1);
@@ -104,21 +104,21 @@ dpm_tfbs_t::test_moves() {
 
 void
 dpm_tfbs_t::test_background() {
-        seq_index_t index1(0,0);
-        seq_index_t index2(0,10);
-        seq_index_t index3(0,11);
-        seq_index_t index4(0,12);
-        seq_index_t index5(0,13);
-        seq_index_t index6(0,22);
+        range_t range1(seq_index_t(0, 0), 10, true);
+        range_t range2(seq_index_t(0,10), 10, true);
+        range_t range3(seq_index_t(1,10), 10, true);
+        range_t range4(seq_index_t(1,20), 10, true);
+        range_t range5(seq_index_t(0,13), 10, true);
+        range_t range6(seq_index_t(0,22), 10, true);
 
         cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
-        cout << "Adding index1:" << index1 << " to cluster:" << cluster_tag1 << endl;
-        _state.remove(index1, _state.bg_cluster_tag);
-        _state.add(index1, cluster_tag1);
-        cout << "Adding index6:" << index6<< " to cluster:" << cluster_tag1 << endl;
-        _state.remove(index6, _state.bg_cluster_tag);
-        _state.add(index6, cluster_tag1);
+        cout << "Adding range1 to cluster:" << cluster_tag1 << endl;
+        _state.remove(range1, _state.bg_cluster_tag);
+        _state.add(range1, cluster_tag1);
+        cout << "Adding range6 to cluster:" << cluster_tag1 << endl;
+        _state.remove(range6, _state.bg_cluster_tag);
+        _state.add(range6, cluster_tag1);
         cout << endl;
 
         cout << _state.cluster_assignments() << endl;
@@ -126,37 +126,37 @@ dpm_tfbs_t::test_background() {
         cluster_t& cluster2 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
 
-        cout << "Adding index2:" << index2 << " to cluster:" << cluster_tag2 << endl;
-        _state.remove(index2, _state.bg_cluster_tag);
-        _state.add(index2, cluster_tag2);
+        cout << "Adding range2 to cluster:" << cluster_tag2 << endl;
+        _state.remove(range2, _state.bg_cluster_tag);
+        _state.add(range2, cluster_tag2);
         cout << _state.cluster_assignments();
-        _state.remove(index2, cluster_tag2);
-        _state.add(index2, _state.bg_cluster_tag);
-        cout << "Removing index2:" << index2 << " from cluster:" << cluster_tag2 << endl << endl;
+        _state.remove(range2, cluster_tag2);
+        _state.add(range2, _state.bg_cluster_tag);
+        cout << "Removing range2 from cluster:" << cluster_tag2 << endl << endl;
 
-        cout << "Adding index3:" << index3 << " to cluster:" << cluster_tag2 << endl;
-        _state.remove(index3, _state.bg_cluster_tag);
-        _state.add(index3, cluster_tag2);
+        cout << "Adding range3 to cluster:" << cluster_tag2 << endl;
+        _state.remove(range3, _state.bg_cluster_tag);
+        _state.add(range3, cluster_tag2);
         cout << _state.cluster_assignments();
-        _state.remove(index3, cluster_tag2);
-        _state.add(index3, _state.bg_cluster_tag);
-        cout << "Removing index3:" << index2 << " from cluster:" << cluster_tag2 << endl << endl;
+        _state.remove(range3, cluster_tag2);
+        _state.add(range3, _state.bg_cluster_tag);
+        cout << "Removing range3 from cluster:" << cluster_tag2 << endl << endl;
 
-        cout << "Adding index4:" << index4 << " to cluster:" << cluster_tag2 << endl;
-        _state.remove(index4, _state.bg_cluster_tag);
-        _state.add(index4, cluster_tag2);
+        cout << "Adding range4 to cluster:" << cluster_tag2 << endl;
+        _state.remove(range4, _state.bg_cluster_tag);
+        _state.add(range4, cluster_tag2);
         cout << _state.cluster_assignments();
-        _state.remove(index4, cluster_tag2);
-        _state.add(index4, _state.bg_cluster_tag);
-        cout << "Removing index4:" << index2 << " from cluster:" << cluster_tag2 << endl << endl;
+        _state.remove(range4, cluster_tag2);
+        _state.add(range4, _state.bg_cluster_tag);
+        cout << "Removing range4 from cluster:" << cluster_tag2 << endl << endl;
 
-        cout << "Adding index5:" << index4 << " to cluster:" << cluster_tag2 << endl;
-        _state.remove(index5, _state.bg_cluster_tag);
-        _state.add(index5, cluster_tag2);
+        cout << "Adding range5 to cluster:" << cluster_tag2 << endl;
+        _state.remove(range5, _state.bg_cluster_tag);
+        _state.add(range5, cluster_tag2);
         cout << _state.cluster_assignments();
-        _state.remove(index5, cluster_tag2);
-        _state.add(index5, _state.bg_cluster_tag);
-        cout << "Removing index5:" << index2 << " from cluster:" << cluster_tag2 << endl;
+        _state.remove(range5, cluster_tag2);
+        _state.add(range5, _state.bg_cluster_tag);
+        cout << "Removing range5 from cluster:" << cluster_tag2 << endl;
 
         exit(EXIT_SUCCESS);
 }
@@ -183,19 +183,19 @@ dpm_tfbs_t::test() {
         gettimeofday(&tv, NULL);
         gen.seed(tv.tv_sec*tv.tv_usec);
 
-        seq_index_t index1(0,0);
-        seq_index_t index2(1,0);
-        seq_index_t index3(2,0);
-        seq_index_t index4(3,0);
+        range_t range1(seq_index_t(0,0), 10, true);
+        range_t range2(seq_index_t(1,0), 10, true);
+        range_t range3(seq_index_t(2,0), 10, true);
+        range_t range4(seq_index_t(3,0), 10, true);
 
         cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
-        cout << "Adding index1:" << index1 << " to cluster:" << cluster_tag1 << endl;
-        _state.add(index1, cluster_tag1);
+        cout << "Adding range1 to cluster:" << cluster_tag1 << endl;
+        _state.add(range1, cluster_tag1);
         cluster_t& cluster2 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
-        cout << "Adding index2:" << index2 << " to cluster:" << cluster_tag2 << endl;
-        _state.add(index2, cluster_tag2);
+        cout << "Adding range2 to cluster:" << cluster_tag2 << endl;
+        _state.add(range2, cluster_tag2);
 
         cout << "Components: " << mixture_components() << " + " << baseline_components() << endl;
         size_t components = mixture_components() + baseline_components();
@@ -203,8 +203,8 @@ dpm_tfbs_t::test() {
         cluster_tag_t cluster_tags[components];
         cluster_tag_t new_cluster_tag;
 
-        cout << "Sampling index3:" << index3 << endl;
-        mixture_weights(index3, log_weights, cluster_tags);
+        cout << "Sampling range3" << endl;
+        mixture_weights(range3, log_weights, cluster_tags);
         normalize(components, log_weights);
         for (size_t i = 0; i < components; i++) {
                 cout << "weight " << i << ": " << exp(log_weights[i]) << endl;
@@ -214,8 +214,8 @@ dpm_tfbs_t::test() {
                 cout << "selected cluster " << new_cluster_tag << endl;
         }
 
-        cout << "Sampling index4:" << index4 << endl;
-        mixture_weights(index4, log_weights, cluster_tags);
+        cout << "Sampling range4" << endl;
+        mixture_weights(range4, log_weights, cluster_tags);
         for (size_t i = 0; i < components; i++) {
                 cout << "weight " << i << ": " << log_weights[i] << endl;
         }

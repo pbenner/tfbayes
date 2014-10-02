@@ -36,8 +36,8 @@
 class index_i : public virtual clonable {
 public:
         virtual index_i* clone() const = 0;
-        virtual const size_t& operator[](size_t i) const = 0;
-        virtual size_t& operator[](size_t i) = 0;
+        virtual const ssize_t& operator[](size_t i) const = 0;
+        virtual ssize_t& operator[](size_t i) = 0;
         virtual bool operator==(const index_i& index) const = 0;
         virtual bool operator!=(const index_i& index) const = 0;
         virtual index_i& operator=(const index_i& index) = 0;
@@ -58,7 +58,7 @@ class index_t : public index_i {
 public:
         inline index_t() {
         }
-        inline explicit index_t(size_t x0) GCC_ATTRIBUTE_HOT
+        inline explicit index_t(ssize_t x0) GCC_ATTRIBUTE_HOT
                 : _x0(x0) {
         }
         inline index_t(const index_t& index) GCC_ATTRIBUTE_HOT
@@ -71,10 +71,10 @@ public:
 
         friend std::ostream& operator<< (std::ostream& o, const index_t& index);
 
-        virtual inline const size_t& operator[](size_t i) const GCC_ATTRIBUTE_HOT {
+        virtual inline const ssize_t& operator[](size_t i) const GCC_ATTRIBUTE_HOT {
                 return _x0;
         }
-        virtual inline size_t& operator[](size_t i) GCC_ATTRIBUTE_HOT {
+        virtual inline ssize_t& operator[](size_t i) GCC_ATTRIBUTE_HOT {
                 return _x0;
         }
         virtual inline bool operator==(const index_i& index) const GCC_ATTRIBUTE_HOT {
@@ -100,14 +100,14 @@ public:
         }
 
 protected:
-        size_t _x0;
+        ssize_t _x0;
 };
 
 class seq_index_t : public index_i {
 public:
         inline seq_index_t() {
         }
-        inline seq_index_t(size_t x0, size_t x1) GCC_ATTRIBUTE_HOT {
+        inline seq_index_t(ssize_t x0, ssize_t x1) GCC_ATTRIBUTE_HOT {
                 _x[0] = x0;
                 _x[1] = x1;
         }
@@ -122,10 +122,10 @@ public:
 
         friend std::ostream& operator<< (std::ostream& o, const seq_index_t& seq_index);
 
-        virtual inline const size_t& operator[](size_t i) const GCC_ATTRIBUTE_HOT {
+        virtual inline const ssize_t& operator[](size_t i) const GCC_ATTRIBUTE_HOT {
                 return _x[i];
         }
-        virtual inline size_t& operator[](size_t i) GCC_ATTRIBUTE_HOT {
+        virtual inline ssize_t& operator[](size_t i) GCC_ATTRIBUTE_HOT {
                 return _x[i];
         }
         virtual inline bool operator==(const index_i& seq_index) const GCC_ATTRIBUTE_HOT {
@@ -154,17 +154,21 @@ public:
         }
 
 protected:
-        size_t _x[2];
+        ssize_t _x[2];
 };
 
 class range_t {
 public:
+        range_t(const index_i& index, size_t length, bool reverse) GCC_ATTRIBUTE_HOT
+                : _index(index.clone()), _length(length), _reverse(reverse) {
+        }
         range_t(const index_i& index, size_t length) GCC_ATTRIBUTE_HOT
-                : _index(index.clone()), _length(length) {
+                : _index(index.clone()), _length(length), _reverse(false) {
         }
         range_t(const range_t& range) GCC_ATTRIBUTE_HOT
-                : _index (range.index().clone()),
-                  _length(range.length()) {
+                : _index  (range.index().clone()),
+                  _length (range.length()),
+                  _reverse(range.reverse()) {
         }
         ~range_t() GCC_ATTRIBUTE_HOT {
                 delete(_index);
@@ -176,22 +180,40 @@ public:
         }
         friend void swap(range_t& first, range_t& second) {
                 using std::swap;
-                swap(first._index,  second._index );
-                swap(first._length, second._length);
+                swap(first._index,   second._index  );
+                swap(first._length,  second._length );
+                swap(first._reverse, second._reverse);
         }
         bool operator==(const range_t& range) const GCC_ATTRIBUTE_HOT {
-                return range.index() == *_index && range.length() == _length;
+                return range.index  () == *_index  &&
+                       range.length () ==  _length &&
+                       range.reverse() == range.reverse();
+        }
+        bool operator!=(const range_t& range) const GCC_ATTRIBUTE_HOT {
+                return !operator==(range);
         }
         const index_i& index() const GCC_ATTRIBUTE_HOT {
+                return *_index;
+        }
+              index_i& index() GCC_ATTRIBUTE_HOT {
                 return *_index;
         }
         const size_t& length() const GCC_ATTRIBUTE_HOT {
                 return _length;
         }
-
+              size_t& length() GCC_ATTRIBUTE_HOT {
+                return _length;
+        }
+        const bool& reverse() const GCC_ATTRIBUTE_HOT {
+                return _reverse;
+        }
+              bool& reverse() GCC_ATTRIBUTE_HOT {
+                return _reverse;
+        }
 protected:
         index_i* _index;
         size_t _length;
+        bool _reverse;
 };
 
 static inline

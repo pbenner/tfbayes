@@ -53,8 +53,9 @@ public:
         ////////////////////////////////////////////////////////////////////////
         size_t baseline_components() const { return 1; }
         size_t mixture_components() const;
-        void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[]);
-        void   add(const index_i& index, cluster_tag_t tag);
+        void   mixture_weights(const range_t& range, double log_weights[], cluster_tag_t tags[]);
+        void   add   (const range_t& range, cluster_tag_t tag);
+        void   remove(const range_t& range, cluster_tag_t tag);
         void   remove(const index_i& index, cluster_tag_t tag);
         double likelihood() const;
         double posterior() const;

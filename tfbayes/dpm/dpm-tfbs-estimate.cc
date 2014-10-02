@@ -57,7 +57,7 @@ init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data
              it != partition.end(); it++, k++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& index = static_cast<const seq_index_t&>(*is);
+                        const seq_index_t& index = static_cast<const seq_index_t&>(is->index());
                         for (size_t i = 0; i < tfbs_length; i++) {
                                 data[index[0]][index[1]+i] = k*tfbs_length+i+1;
                         }
@@ -73,7 +73,7 @@ clean_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& dat
              it != partition.end(); it++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& index = static_cast<const seq_index_t&>(*is);
+                        const seq_index_t& index = static_cast<const seq_index_t&>(is->index());
                         for (size_t i = 0; i < tfbs_length; i++) {
                                 data[index[0]][index[1]+i] = 0;
                         }
@@ -226,7 +226,7 @@ distance(const dpm_partition_t& pi_a,
              it != pi_a.end(); it++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& tmp = static_cast<const seq_index_t&>(*is);
+                        const seq_index_t& tmp = static_cast<const seq_index_t&>(is->index());
                         for (size_t i = 0; i < tfbs_length; i++) {
                                 indices.insert(seq_index_t(tmp[0], tmp[1]+i));
                         }
@@ -238,7 +238,7 @@ distance(const dpm_partition_t& pi_a,
              it != pi_b.end(); it++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& tmp = static_cast<const seq_index_t&>(*is);
+                        const seq_index_t& tmp = static_cast<const seq_index_t&>(is->index());
                         for (size_t i = 0; i < tfbs_length; i++) {
                                 indices.insert(seq_index_t(tmp[0], tmp[1]+i));
                         }
@@ -362,20 +362,20 @@ dpm_tfbs_optimize_estimate(const dpm_partition_list_t& partitions,
                 size_t subset_size = subset.size();
 
                 // set of indices that need to be optimized
-                boost::unordered_set<seq_index_t> indices;
+                boost::unordered_set<range_t> range_set;
 
                 // populate index list
                 for (dpm_subset_t::iterator is = subset.begin();
                      is != subset.end(); is++) {
-                        indices.insert(static_cast<const seq_index_t&>(*is));
+                        range_set.insert(*is);
                 }
 
-                for (boost::unordered_set<seq_index_t>::const_iterator is = indices.begin();
-                     is != indices.end(); is++) {
+                for (boost::unordered_set<range_t>::const_iterator is = range_set.begin();
+                     is != range_set.end(); is++) {
                         // save index pointer
-                        const seq_index_t index(static_cast<const seq_index_t&>(*is));
+                        const range_t range(*is);
                         // erase index from subset
-                        subset.erase(index);
+                        subset.erase(range);
                         // compute new loss
                         new_loss = (*loss)(distance(partitions, estimate, a, b, dpm));
                         if (new_loss < old_loss) {
@@ -387,7 +387,7 @@ dpm_tfbs_optimize_estimate(const dpm_partition_list_t& partitions,
                                 // new estimate is worse
                                 new_loss = old_loss;
                                 // reverse changes
-                                subset.insert(index);
+                                subset.insert(range);
                         }
                 }
                 // check if subset is empty
@@ -544,20 +544,15 @@ map_local_optimization(cluster_t& cluster, dpm_tfbs_t& dpm, bool verbose)
 }
 
 static bool
-map_local_optimization(const index_i& index, dpm_tfbs_t& dpm, bool verbose) {
-        ////////////////////////////////////////////////////////////////////////
-        // check if we can sample this element
-        if (!dpm.valid_for_sampling(index)) {
-                return false;
-        }
+map_local_optimization(const range_t& range, dpm_tfbs_t& dpm, bool verbose) {
         ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
-        cluster_tag_t old_cluster_tag = dpm.state()[index];
-        dpm.state().remove(index, old_cluster_tag);
+        cluster_tag_t old_cluster_tag = dpm.state()[range.index()];
+        dpm.state().remove(range, old_cluster_tag);
         size_t components = dpm.mixture_components() + dpm.baseline_components();
         double log_weights[components];
         cluster_tag_t cluster_tags[components];
-        dpm.mixture_weights(index, log_weights, cluster_tags);
+        dpm.mixture_weights(range, log_weights, cluster_tags);
 
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
@@ -565,16 +560,30 @@ map_local_optimization(const index_i& index, dpm_tfbs_t& dpm, bool verbose) {
         cluster_tag_t new_cluster_tag;
         new_cluster_tag = cluster_tags[select_max_component(components, log_weights)];
         if (verbose && new_cluster_tag != old_cluster_tag) {
-                cout << "Moving " << (const seq_index_t&)index
+                cout << "Moving " << (const seq_index_t&)range.index()
                      << " from cluster " << old_cluster_tag
                      << " to cluster "   << new_cluster_tag
                      << endl;
         }
 
         ////////////////////////////////////////////////////////////////////////
-        dpm.state().add(index, new_cluster_tag);
+        dpm.state().add(range, new_cluster_tag);
 
         return old_cluster_tag != new_cluster_tag;
+}
+
+static bool
+map_local_optimization(const index_i& index, dpm_tfbs_t& dpm, bool verbose) {
+        ////////////////////////////////////////////////////////////////////////
+        // check if we can sample this element
+        if (!dpm.valid_for_sampling(index)) {
+                return false;
+        }
+        range_t range1(index, dpm.state().tfbs_length, false);
+        range_t range2(index, dpm.state().tfbs_length, true );
+        bool result1 = map_local_optimization(range1, dpm, verbose);
+        bool result2 = map_local_optimization(range2, dpm, verbose);
+        return result1 || result2;
 }
 
 static dpm_partition_t

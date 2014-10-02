@@ -218,7 +218,7 @@ mixture_state_t::partition() const
                 // loop through cluster elements
                 for (cluster_t::const_iterator is = cluster.begin();
                      is != cluster.end(); is++) {
-                        dpm_partition.back().insert(is->index());
+                        dpm_partition.back().insert(range_t(is->index(), 1));
                 }
         }
         return dpm_partition;

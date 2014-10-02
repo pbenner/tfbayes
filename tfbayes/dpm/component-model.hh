@@ -155,7 +155,8 @@ protected:
 class product_dirichlet_t : public component_model_t {
 public:
          product_dirichlet_t(const std::matrix<double>& alpha,
-                             const sequence_data_t<data_tfbs_t::code_t>& data);
+                             const sequence_data_t<data_tfbs_t::code_t>& data,
+                             const sequence_data_t<data_tfbs_t::code_t>& complement_data);
          product_dirichlet_t(const product_dirichlet_t& distribution);
         ~product_dirichlet_t();
 
@@ -191,6 +192,9 @@ public:
         const sequence_data_t<data_tfbs_t::code_t>& data() const {
                 return *_data;
         }
+        const sequence_data_t<data_tfbs_t::code_t>& complement_data() const {
+                return *_complement_data;
+        }
 
         friend std::ostream& operator<< (std::ostream& o, const product_dirichlet_t& pd);
 
@@ -204,6 +208,7 @@ protected:
         size_t _size2;
 
         const sequence_data_t<data_tfbs_t::code_t>* _data;
+        const sequence_data_t<data_tfbs_t::code_t>* _complement_data;
 };
 
 // Markov Chain Mixture

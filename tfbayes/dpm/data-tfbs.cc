@@ -36,6 +36,8 @@
 
 using namespace std;
 
+const alphabet_t data_tfbs_t::alphabet = nucleotide_alphabet_t();
+
 bool
 data_tfbs_t::valid_sampling_index(const index_i& index, size_t tfbs_length) const
 {
@@ -59,7 +61,20 @@ data_tfbs_t::data_tfbs_t(const string& phylogenetic_input, size_t tfbs_length)
           _n_sequences(size()),
           _elements(0)
 {
-        // loop over sequences
+        _complements = sequence_data_t<code_t>(*this);
+        // compute complements
+        for(size_t i = 0; i < _n_sequences; i++) {
+                // loop over elements in a sequence
+                for(size_t j = 0; j < operator[](i).size(); j++) {
+                        // generate an index of this position
+                        seq_index_t index(i,j);
+                        for (size_t k = 0; k < alphabet_size; k++) {
+                                _complements[index][alphabet.complement(k)]
+                                        = operator[](index)[k];
+                        }
+                }
+        }
+        // add indices
         for(size_t i = 0; i < _n_sequences; i++) {
                 // loop over elements in a sequence
                 for(size_t j = 0; j < operator[](i).size(); j++) {
@@ -86,6 +101,7 @@ data_tfbs_t::data_tfbs_t(const string& phylogenetic_input, size_t tfbs_length)
 
 data_tfbs_t::data_tfbs_t(const data_tfbs_t& data)
         : sequence_data_t<code_t>(*this),
+          _complements (data._complements),
           _n_sequences (data._n_sequences),
           _elements    (data._elements)
 {
@@ -129,6 +145,12 @@ data_tfbs_t::is_blank(const index_i& index) const
                 }
         }
         return true;
+}
+
+const sequence_data_t<__CODE_TYPE__>&
+data_tfbs_t::complements() const
+{
+        return _complements;
 }
 
 #include <boost/regex.hpp>
@@ -176,7 +198,7 @@ data_tfbs_t::read_fasta(const string& file_name)
                         if(boost::regex_match(result[i], what, e, boost::match_extra))
                         {
                                 /* the alphabet of the input can be
-                                 * larger that what is used for the
+                                 * larger than what is used for the
                                  * sampler, for instance, gaps in the
                                  * alignment are used in the input as
                                  * fifth character, but are optional

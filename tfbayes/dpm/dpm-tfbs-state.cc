@@ -120,7 +120,7 @@ dpm_tfbs_state_t::valid_tfbs_position(const index_i& index) const
                 }
                 // check if there is a tfbs starting within the word
                 for (size_t i = 1; i < tfbs_length; i++) {
-                        if (tfbs_start_positions[seq_index_t(sequence, position+i)] == 1) {
+                        if (tfbs_start_positions[seq_index_t(sequence, position+i)] != 0) {
                                 return false;
                         }
                         if (cluster_assignments()[seq_index_t(sequence, position+i)] == -1) {
@@ -133,33 +133,35 @@ dpm_tfbs_state_t::valid_tfbs_position(const index_i& index) const
 }
 
 void
-dpm_tfbs_state_t::add(const index_i& index, cluster_tag_t tag)
+dpm_tfbs_state_t::add(const range_t& range, cluster_tag_t tag)
 {
-        const range_t range(index, tfbs_length);
+        operator[](tag).add_observations(range);
 
-        if (tag == bg_cluster_tag) {
-                operator[](tag).add_observations(range);
-        }
-        else {
-                operator[](tag).add_observations(range);
+        if (tag != bg_cluster_tag) {
+                tfbs_start_positions[range.index()] = range.reverse() ? -1 : 1;
                 num_tfbs++;
-                tfbs_start_positions[index] = 1;
+        }
+}
+
+void
+dpm_tfbs_state_t::remove(const range_t& range, cluster_tag_t tag)
+{
+        operator[](tag).remove_observations(range);
+
+        if (tag != bg_cluster_tag) {
+                assert((range.reverse() == 0 && tfbs_start_positions[range.index()] ==  1) ||
+                       (range.reverse() == 1 && tfbs_start_positions[range.index()] == -1));
+                num_tfbs--;
+                tfbs_start_positions[range.index()] = 0;
         }
 }
 
 void
 dpm_tfbs_state_t::remove(const index_i& index, cluster_tag_t tag)
 {
-        const range_t range(index, tfbs_length);
+        range_t range(index, tfbs_length, tfbs_start_positions[index] == -1);
 
-        if (tag == bg_cluster_tag) {
-                operator[](tag).remove_observations(range);
-        }
-        else {
-                operator[](tag).remove_observations(range);
-                num_tfbs--;
-                tfbs_start_positions[index] = 0;
-        }
+        remove(range, tag);
 }
 
 void
@@ -196,15 +198,15 @@ dpm_tfbs_state_t::move_left(cluster_t& cluster)
                         restore();
                         return false;
                 }
-                const range_t& range  = *is;
-                const size_t sequence = range.index()[0];
-                const size_t position = range.index()[1];
-                const seq_index_t index(sequence, position-1);
-                remove(range.index(), cluster.cluster_tag());
-                add(range.index(), bg_cluster_tag);
-                if (position > 0 && valid_tfbs_position(index)) {
-                        remove(index, bg_cluster_tag);
-                        add   (index, cluster.cluster_tag());
+                const range_t& old_range(*is);
+                      range_t  new_range(old_range);
+                // one position to the left
+                new_range.index()[1]--;
+                remove(old_range, cluster.cluster_tag());
+                add   (old_range, bg_cluster_tag);
+                if (new_range.index()[1] > 0 && valid_tfbs_position(new_range.index())) {
+                        remove(new_range, bg_cluster_tag);
+                        add   (new_range, cluster.cluster_tag());
                 }
         }
 
@@ -221,16 +223,16 @@ dpm_tfbs_state_t::move_right(cluster_t& cluster)
                         restore();
                         return false;
                 }
-                const range_t range(*is);
-                const size_t sequence = range.index()[0];
-                const size_t position = range.index()[1];
-                const size_t sequence_length = _data->size(sequence);
-                const seq_index_t index(sequence, position+1);
-                remove(range.index(), cluster.cluster_tag());
-                add(range.index(), bg_cluster_tag);
-                if (position+tfbs_length < sequence_length && valid_tfbs_position(index)) {
-                        remove(index, bg_cluster_tag);
-                        add   (index, cluster.cluster_tag());
+                const range_t& old_range(*is);
+                      range_t  new_range(old_range);
+                const size_t sequence_length = _data->size(old_range.index()[0]);
+                // one position to the left
+                new_range.index()[1]++;
+                remove(old_range, cluster.cluster_tag());
+                add   (old_range, bg_cluster_tag);
+                if (new_range.index()[1]+tfbs_length < sequence_length && valid_tfbs_position(new_range.index())) {
+                        remove(new_range, bg_cluster_tag);
+                        add   (new_range, cluster.cluster_tag());
                 }
         }
         return true;
@@ -268,7 +270,7 @@ dpm_tfbs_state_t::partition() const
                         dpm_partition.add_component(cluster.baseline_tag());
                         // loop through cluster elements
                         for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
-                                dpm_partition.back().insert(is->index());
+                                dpm_partition.back().insert(*is);
                         }
                 }
         }
@@ -285,8 +287,8 @@ dpm_tfbs_state_t::set_partition(const dpm_partition_t& partition)
                 if (cluster.cluster_tag() != bg_cluster_tag) {
                         // loop through cluster elements
                         for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
-                                remove(is->index(), cluster.cluster_tag());
-                                add   (is->index(), bg_cluster_tag);
+                                remove(*is, cluster.cluster_tag());
+                                add   (*is, bg_cluster_tag);
                         }
                 }
         }
@@ -297,8 +299,8 @@ dpm_tfbs_state_t::set_partition(const dpm_partition_t& partition)
                 cluster_t& cluster = get_free_cluster(subset.dpm_subset_tag());
 
                 for (dpm_subset_t::const_iterator is = subset.begin(); is != subset.end(); is++) {
-                        assert(valid_tfbs_position(*is));
-                        assert(operator[](*is) == bg_cluster_tag);
+                        assert(valid_tfbs_position(is->index()));
+                        assert(operator[](is->index()) == bg_cluster_tag);
                         remove(*is, bg_cluster_tag);
                         add   (*is, cluster.cluster_tag());
                 }

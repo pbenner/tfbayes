@@ -38,7 +38,8 @@ public:
 
         gibbs_state_t* clone() const = 0;
 
-        virtual void add(const index_i& index, cluster_tag_t tag) = 0;
+        virtual void add   (const range_t& range, cluster_tag_t tag) = 0;
+        virtual void remove(const range_t& range, cluster_tag_t tag) = 0;
         virtual void remove(const index_i& index, cluster_tag_t tag) = 0;
 };
 

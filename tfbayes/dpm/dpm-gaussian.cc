@@ -86,15 +86,21 @@ dpm_gaussian_t::valid_for_sampling(const index_i& index) const
 }
 
 void
-dpm_gaussian_t::add(const index_i& index, cluster_tag_t cluster_tag)
+dpm_gaussian_t::add(const range_t& range, cluster_tag_t cluster_tag)
 {
-        gibbs_state_t::operator[](cluster_tag).add_observations(range_t(index,1));
+        gibbs_state_t::operator[](cluster_tag).add_observations(range);
+}
+
+void
+dpm_gaussian_t::remove(const range_t& range, cluster_tag_t cluster_tag)
+{
+        gibbs_state_t::operator[](cluster_tag).remove_observations(range);
 }
 
 void
 dpm_gaussian_t::remove(const index_i& index, cluster_tag_t cluster_tag)
 {
-        gibbs_state_t::operator[](cluster_tag).remove_observations(range_t(index,1));
+        gibbs_state_t::operator[](cluster_tag).remove_observations(range_t(index, 1));
 }
 
 size_t
@@ -104,12 +110,11 @@ dpm_gaussian_t::mixture_components() const
 }
 
 void
-dpm_gaussian_t::mixture_weights(const index_i& index, double log_weights[], cluster_tag_t cluster_tags[])
+dpm_gaussian_t::mixture_weights(const range_t& range, double log_weights[], cluster_tag_t cluster_tags[])
 {
         size_t components = mixture_components();
         double sum        = -numeric_limits<double>::infinity();
         double N          = _data->elements() - 1;
-        range_t range(index, 1);
 
         cluster_tag_t i = 0;
         for (mixture_state_t::const_iterator it = gibbs_state_t::begin(); it != gibbs_state_t::end(); it++) {

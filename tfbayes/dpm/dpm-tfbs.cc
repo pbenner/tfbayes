@@ -78,7 +78,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
         else if (options.background_model == "dirichlet") {
                 /* single dirichlet-compound distribution for all
                  * nucleotides in the background */
-                product_dirichlet_t* bg = new product_dirichlet_t(options.background_alpha, data);
+                product_dirichlet_t* bg = new product_dirichlet_t(options.background_alpha, data, data.complements());
                 _state.bg_cluster_tag = _state.add_cluster(bg);
         }
         else if (options.background_model == "markov chain mixture") {
@@ -100,7 +100,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                 for (size_t j = 0; j < options.tfbs_length; j++) {
                         assert((*it)[j].size() == data_tfbs_t::alphabet_size);
                 }
-                product_dirichlet_t* dirichlet = new product_dirichlet_t(*it, data);
+                product_dirichlet_t* dirichlet = new product_dirichlet_t(*it, data, data.complements());
                 _state.add_baseline_model(dirichlet, *is);
                 _baseline_tags.push_back(*is);
         }
@@ -206,7 +206,7 @@ dpm_tfbs_t::valid_for_sampling(const index_i& index) const
                 }
                 // check if there is a tfbs starting within the word
                 for (size_t i = 1; i < _tfbs_length; i++) {
-                        if (_state.tfbs_start_positions[seq_index_t(sequence, position+i)] == 1) {
+                        if (_state.tfbs_start_positions[seq_index_t(sequence, position+i)] != 0) {
                                 return false;
                         }
                         if (_state.cluster_assignments()[seq_index_t(sequence, position+i)] == -1) {
@@ -232,40 +232,38 @@ dpm_tfbs_t::baseline_components() const
 
 GCC_ATTRIBUTE_HOT
 void
-dpm_tfbs_t::mixture_weights(const index_i& index, double log_weights[], cluster_tag_t cluster_tags[], const double temp)
+dpm_tfbs_t::mixture_weights(const range_t& range, double log_weights[], cluster_tag_t cluster_tags[], const double temp, const double baseline)
 {
-        const range_t range(index, _tfbs_length);
-        ssize_t mixture_n  = mixture_components();
-        ssize_t baseline_n = baseline_components();
-        double sum         = -numeric_limits<double>::infinity();
+        double sum = baseline;
 
         cluster_tag_t i = 0;
         ////////////////////////////////////////////////////////////////////////
         // loop through existing clusters
-        for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
+        for (cm_iterator it = _state.begin(); it != _state.end(); it++, i++) {
                 cluster_t& cluster = **it;
-                cluster_tags[i] = cluster.cluster_tag();
                 if (cluster.cluster_tag() == _state.bg_cluster_tag) {
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
                         sum = logadd(sum, (_lambda_inv_log + cluster.model().log_predictive(range))/temp);
+                        log_weights [i] = sum;
+                        cluster_tags[i] = _state.bg_cluster_tag;
                 }
                 else {
                         ////////////////////////////////////////////////////////
                         // mixture component 2: dirichlet process
                         sum = logadd(sum, (_lambda_log + _process_prior->log_predictive(cluster, _state) + cluster.model().log_predictive(range))/temp);
+                        log_weights [i] = sum;
+                        cluster_tags[i] = cluster.cluster_tag();
                 }
-                log_weights[i] = sum;
-                i++;
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
-        for (i = 0; i < baseline_n; i++) {
-                cluster_t& cluster = _state.get_free_cluster(_baseline_tags[i]);
-                cluster_tags[mixture_n+i] = cluster.cluster_tag();
-                sum = logadd(sum, (_lambda_log + _process_prior->log_predictive(cluster, _state) + log(_baseline_weights[i]) +
+        for (size_t j = 0; j < baseline_components(); j++, i++) {
+                cluster_t& cluster = _state.get_free_cluster(_baseline_tags[j]);
+                sum = logadd(sum, (_lambda_log + _process_prior->log_predictive(cluster, _state) + log(_baseline_weights[j]) +
                                    cluster.model().log_predictive(range))/temp);
-                log_weights[mixture_n+i] = sum;
+                log_weights [i] = sum;
+                cluster_tags[i] = cluster.cluster_tag();
         }
 }
 
@@ -273,15 +271,13 @@ GCC_ATTRIBUTE_HOT
 void
 dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[], const double temp, const bool include_background)
 {
-        ssize_t mixture_n  = mixture_components();
-        ssize_t baseline_n = baseline_components();
         double sum         = -numeric_limits<double>::infinity();
         double n           = range_set.size();
 
         cluster_tag_t i = 0;
         ////////////////////////////////////////////////////////////////////////
         // loop through existing clusters
-        for (cm_iterator it = _state.begin(); it != _state.end(); it++) {
+        for (cm_iterator it = _state.begin(); it != _state.end(); it++, i++) {
                 cluster_t& cluster = **it;
                 cluster_tags[i] = cluster.cluster_tag();
                 if (cluster.cluster_tag() == _state.bg_cluster_tag) {
@@ -297,16 +293,15 @@ dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights
                         sum = logadd(sum, (n*_lambda_log + n*_process_prior->log_predictive(cluster, _state) + cluster.model().log_predictive(range_set))/temp);
                 }
                 log_weights[i] = sum;
-                i++;
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
-        for (i = 0; i < baseline_n; i++) {
-                cluster_t& cluster = _state.get_free_cluster(_baseline_tags[i]);
-                cluster_tags[mixture_n+i] = cluster.cluster_tag();
-                sum = logadd(sum, (n*_lambda_log + n*_process_prior->log_predictive(cluster, _state) + log(_baseline_weights[i]) +
+        for (size_t j = 0; j < baseline_components(); j++, i++) {
+                cluster_t& cluster = _state.get_free_cluster(_baseline_tags[j]);
+                sum = logadd(sum, (n*_lambda_log + n*_process_prior->log_predictive(cluster, _state) + log(_baseline_weights[j]) +
                                    cluster.model().log_predictive(range_set))/temp);
-                log_weights[mixture_n+i] = sum;
+                log_weights [i] = sum;
+                cluster_tags[i] = cluster.cluster_tag();
         }
 }
 

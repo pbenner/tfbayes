@@ -22,6 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <limits>
+
 #include <boost/optional.hpp>
 
 #include <tfbayes/alignment/alignment.hh>
@@ -71,11 +73,15 @@ public:
         ////////////////////////////////////////////////////////////////////////
         size_t mixture_components() const;
         size_t baseline_components() const;
-        void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[]) {
+        void   mixture_weights(const range_t& range, double log_weights[], cluster_tag_t tags[]) {
                 // set default temperature
-                mixture_weights(index, log_weights, tags, 1.0);
+                mixture_weights(range, log_weights, tags, 1.0, -std::numeric_limits<double>::infinity());
         }
-        void   mixture_weights(const index_i& index, double log_weights[], cluster_tag_t tags[], const double temp);
+        void   mixture_weights(const range_t& range, double log_weights[], cluster_tag_t tags[], const double temp) {
+                // set default temperature
+                mixture_weights(range, log_weights, tags, temp, -std::numeric_limits<double>::infinity());
+        }
+        void   mixture_weights(const range_t& range, double log_weights[], cluster_tag_t tags[], const double temp, const double baseline);
         void   mixture_weights(const std::vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[], const double temp = 1.0, const bool include_background = true);
         double likelihood() const;
         double posterior() const;

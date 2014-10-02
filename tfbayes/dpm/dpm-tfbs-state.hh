@@ -54,7 +54,8 @@ public:
 
         // methods
         ////////////////////////////////////////////////////////////////////////
-        void add   (const index_i& index, cluster_tag_t tag);
+        void add   (const range_t& range, cluster_tag_t tag);
+        void remove(const range_t& range, cluster_tag_t tag);
         void remove(const index_i& index, cluster_tag_t tag);
 
         bool move_left (cluster_t& cluster);

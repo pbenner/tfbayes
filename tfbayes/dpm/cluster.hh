@@ -26,6 +26,7 @@
 #include <vector>
 #include <iostream>
 
+#include <boost/any.hpp>
 #include <boost/unordered_set.hpp> 
 
 #include <tfbayes/dpm/component-model.hh>
