@@ -186,7 +186,7 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp)
         {
                 const range_t& range = *it;
 
-                dpm().state().remove(range.index(), old_cluster_tag);
+                dpm().state().remove(range, old_cluster_tag);
         }
         ////////////////////////////////////////////////////////////////////////
         // obtian the mixture probabilities
@@ -308,10 +308,10 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         // call the standard hybrid sampler that first produces a
         // Gibbs sample and afterwards make a Metropolis-Hastings step
         size_t s = _gibbs_sample(temperature);
-//        _metropolis_sample(temperature);
+        _metropolis_sample(temperature);
         // do a Gibbs block sampling step, i.e. go through all
         // clusters and try to merge them
-//        _block_sample(temperature);
+        _block_sample(temperature);
         // we are done with sampling here, now process commands
         flockfile(stdout);
         cout << boost::format("%s: Processing commands.") % _name
