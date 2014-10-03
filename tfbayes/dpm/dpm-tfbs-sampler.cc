@@ -179,7 +179,6 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp)
 
                 range_set.push_back(range);
         }
-
         ////////////////////////////////////////////////////////////////////////
         // release all elemente from the cluster
         for (vector<range_t>::iterator it = range_set.begin(); it != range_set.end(); it++)
