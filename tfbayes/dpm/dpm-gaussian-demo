@@ -140,7 +140,7 @@ class interactive_sampler_t():
         num_clusters = self.dpm.num_clusters()
         # samples
         for c, subset in enumerate(self.dpm.partition()):
-            x, y = zip(*[ self.data[index] for index in subset ])
+            x, y = zip(*[ self.data[r.index()] for r in subset ])
             ax.scatter(x, y, c=self.cluster_colors[c], alpha=0.75)
             ax.set_title("Clustering Result K="+str(num_clusters)+", N="+str(self.steps))
         # means
