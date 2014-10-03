@@ -123,7 +123,6 @@ dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp) {
         double log_weights2[components];
         cluster_tag_t cluster_tags1[components];
         cluster_tag_t cluster_tags2[components];
-        boost::random::uniform_int_distribution<> dist(0, 1);
         range_t range1(index, dpm().state().tfbs_length, false);
         range_t range2(index, dpm().state().tfbs_length, true );
         ////////////////////////////////////////////////////////////////////////
