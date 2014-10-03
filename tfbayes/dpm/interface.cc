@@ -56,32 +56,10 @@ std::string to_string(const T& t)
         return ss.str();
 }
 
-void dpm_subset_insert(dpm_subset_t& dpm_subset, const range_t& range)
+void dpm_subset_t_insert(dpm_subset_t& dpm_subset, const range_t& range)
 {
         dpm_subset.insert(range);
 }
-
-struct index_to_python
-{
-    static PyObject* convert(const index_i& index)
-    {
-        boost::python::list* l = new boost::python::list();
-
-        if (typeid(index) == typeid(seq_index_t)) {
-                (*l).append(index[0]);
-                (*l).append(index[1]);
-        }
-        else if (typeid(index) == typeid(index_t)) {
-                (*l).append(index[0]);
-        }
-        else {
-                PyErr_SetString(PyExc_IndexError, "Internal error!");
-                throw boost::python::error_already_set();
-        }
-
-        return l->ptr();
-    }
-};
 
 // interface
 // -----------------------------------------------------------------------------
@@ -124,11 +102,11 @@ BOOST_PYTHON_MODULE(interface)
                 .def("index",    range_t_get_index,    return_value_policy<reference_existing_object>())
                 ;
         class_<dpm_subset_t>("dpm_subset_t", init<dpm_subset_tag_t>())
-                .def("__iter__", boost::python::iterator<dpm_subset_t>())
+                .def("__iter__", boost::python::iterator<dpm_subset_t, return_internal_reference<> >())
                 .def("__str__",  to_string<dpm_subset_t>)
                 .def("__repr__", to_string<dpm_subset_t>)
                 .def("__len__", &dpm_subset_t::size)
-                .def("insert",  &dpm_subset_insert)
+                .def("insert",  &dpm_subset_t_insert)
                 .def("dpm_subset_tag", &dpm_subset_t::dpm_subset_tag)
                 ;
         class_<dpm_partition_t>("dpm_partition_t")
@@ -151,6 +129,4 @@ BOOST_PYTHON_MODULE(interface)
                           const indexer_t&>())
                 .def("__call__", &gibbs_sampler_t::operator())
                 ;
-        // converter
-        to_python_converter<index_i, index_to_python>();
 }

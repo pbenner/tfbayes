@@ -218,15 +218,15 @@ std::pair<size_t, size_t> select_max_component2(size_t k, const double log_weigh
         for (size_t i = 0; i < k; i++) {
                 /* if the increase for this cluster is higher than any
                  * before */
-                if (diff < exp(log_weights1[i] - log_weights1[k-1]) - last) {
+                if (diff < exp(log_weights1[i] - log_weights2[k-1]) - last) {
                         /* store the new increase in probability */
-                        diff   = exp(log_weights1[i] - log_weights1[k-1]) - last;
+                        diff   = exp(log_weights1[i] - log_weights2[k-1]) - last;
                         /* and the cluster number */
                         result.first  = 1;
                         result.second = i;
                 }
                 /* also save the value of the last weight */
-                last = exp(log_weights1[i] - log_weights1[k-1]);
+                last = exp(log_weights1[i] - log_weights2[k-1]);
         }
         for (size_t i = 0; i < k; i++) {
                 /* if the increase for this cluster is higher than any
