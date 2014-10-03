@@ -104,31 +104,19 @@ dpm_tfbs_state_t::operator=(const mixture_state_t& state)
 bool
 dpm_tfbs_state_t::valid_tfbs_position(const index_i& index) const
 {
-        const size_t sequence = index[0];
-        const size_t position = index[1];
-
         // check if there is a tfbs starting here, if not check
         // succeeding positions
         if (tfbs_start_positions[index] == 0) {
+                const size_t sequence = index[0];
+                const size_t position = index[1];
                 // check if this element belongs to a tfbs that starts
                 // earlier in the sequence
-                if (operator[](index) != bg_cluster_tag) {
-                        return false;
-                }
-                if (cluster_assignments()[seq_index_t(sequence, position)] == -1) {
-                        return false;
-                }
-                // check if there is a tfbs starting within the word
-                for (size_t i = 1; i < tfbs_length; i++) {
-                        if (tfbs_start_positions[seq_index_t(sequence, position+i)] != 0) {
-                                return false;
-                        }
-                        if (cluster_assignments()[seq_index_t(sequence, position+i)] == -1) {
+                for (size_t i = 0; i < tfbs_length; i++) {
+                        if (operator[](seq_index_t(sequence, position+i)) != bg_cluster_tag) {
                                 return false;
                         }
                 }
         }
-
         return true;
 }
 

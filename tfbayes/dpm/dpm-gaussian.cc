@@ -79,12 +79,6 @@ dpm_gaussian_t::operator=(const mixture_model_t& mixture_model)
         return *this;
 }
 
-bool
-dpm_gaussian_t::valid_for_sampling(const index_i& index) const
-{
-        return true;
-}
-
 void
 dpm_gaussian_t::add(const range_t& range, cluster_tag_t cluster_tag)
 {

@@ -59,7 +59,6 @@ public:
         void   remove(const index_i& index, cluster_tag_t tag);
         double likelihood() const;
         double posterior() const;
-        bool   valid_for_sampling(const index_i& index) const;
         std::matrix<double> means() const;
 
         const mixture_state_t& state() const;

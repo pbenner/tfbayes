@@ -187,37 +187,6 @@ dpm_tfbs_t::operator=(const mixture_model_t& mixture_model)
         return *this;
 }
 
-bool
-dpm_tfbs_t::valid_for_sampling(const index_i& index) const
-{
-        const size_t sequence = index[0];
-        const size_t position = index[1];
-
-        // check if there is a tfbs starting here, if not check
-        // succeeding positions
-        if (_state.tfbs_start_positions[index] == 0) {
-                // check if this element belongs to a tfbs that starts
-                // earlier in the sequence
-                if (_state[index] != _state.bg_cluster_tag) {
-                        return false;
-                }
-                if (_state.cluster_assignments()[seq_index_t(sequence, position)] == -1) {
-                        return false;
-                }
-                // check if there is a tfbs starting within the word
-                for (size_t i = 1; i < _tfbs_length; i++) {
-                        if (_state.tfbs_start_positions[seq_index_t(sequence, position+i)] != 0) {
-                                return false;
-                        }
-                        if (_state.cluster_assignments()[seq_index_t(sequence, position+i)] == -1) {
-                                return false;
-                        }
-                }
-        }
-
-        return true;
-}
-
 size_t
 dpm_tfbs_t::mixture_components() const
 {

@@ -46,7 +46,6 @@ public:
         // compute the posterior value of the current cluster
         // assignment (usually not normalized)
         virtual double posterior() const = 0;
-        virtual bool   valid_for_sampling(const index_i& index) const = 0;
         virtual mixture_state_t& state() = 0;
         virtual const mixture_state_t& state() const = 0;
         virtual mixture_model_t& operator=(const mixture_model_t& mixture_model) = 0;

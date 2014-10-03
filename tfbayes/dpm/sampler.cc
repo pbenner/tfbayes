@@ -109,11 +109,6 @@ gibbs_sampler_t::_gibbs_sample(const index_i& index)
 {
         range_t range(index,1);
         ////////////////////////////////////////////////////////////////////////
-        // check if we can sample this element
-        if (!_dpm->valid_for_sampling(index)) {
-                return false;
-        }
-        ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
         cluster_tag_t old_cluster_tag = state()[index];
         state().remove(range, old_cluster_tag);

@@ -110,7 +110,7 @@ bool
 dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp) {
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
-        if (!dpm().valid_for_sampling(index)) {
+        if (!dpm().state().valid_tfbs_position(index)) {
                 return false;
         }
         ////////////////////////////////////////////////////////////////////////

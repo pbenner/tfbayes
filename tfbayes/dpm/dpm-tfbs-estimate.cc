@@ -547,7 +547,7 @@ static bool
 map_local_optimization(const index_i& index, dpm_tfbs_t& dpm, bool verbose) {
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
-        if (!dpm.valid_for_sampling(index)) {
+        if (!dpm.state().valid_tfbs_position(index)) {
                 return false;
         }
         ////////////////////////////////////////////////////////////////////////
