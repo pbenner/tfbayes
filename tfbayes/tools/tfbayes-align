@@ -1,0 +1,230 @@
+#! /usr/bin/env python
+
+# Copyright (C) 2011 Philipp Benner
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+import ConfigParser
+import getopt
+import os
+import math
+import sys
+
+from tfbayes.motif import information
+from tfbayes.motif import plot
+from tfbayes.motif import tools
+
+from itertools import izip
+
+# global options
+# ------------------------------------------------------------------------------
+
+options = {
+    'force-alignment' : None,
+    'save-motif'      : None,
+    'save-plot'       : None,
+    'method'          : 'kl-divergence',
+    'cut-matrix'      : True,
+    'verbose'         : False,
+    }
+
+# usage
+# ------------------------------------------------------------------------------
+
+def usage():
+    """Print usage."""
+    print
+    print "tfbayes-align [option]... CLUSTER_CONFIG CLUSTER_1 CLUSTER_2"
+    print
+    print "After sampling and processing the MAP partition, this program allows"
+    print "to align two clusters according to several alternative objectives."
+    print
+    print "Options:"
+    print "       --force-alignment=N        - force alignment at position N"
+    print "       --method=METHOD            - kl-divergence (default), information-content, or"
+    print "                                    r-sequence"
+    print "   -n                             - do not cut matrix"
+    print
+    print "       --save-motif=CLUSTER       - save counts as CLUSTER"
+    print "       --save-plot=FILE           - save weblogo in FILE"
+    print
+    print "   -h, --help                     - print help"
+    print "   -v, --verbose                  - be verbose"
+    print
+
+# tools
+# ------------------------------------------------------------------------------
+
+def argmax(array):
+    result = []
+    for i in izip(array, xrange(len(array))):
+        if i[0] == max(array):
+            result.append(i[1])
+    return result
+
+def argmin(array):
+    result = []
+    for i in izip(array, xrange(len(array))):
+        if i[0] == min(array):
+            result.append(i[1])
+    return result
+
+# pwm tools
+# ------------------------------------------------------------------------------
+
+def sum_freq(i, j, k, c1_freq, c2_freq, length):
+    j1 = j
+    j2 = j-k
+    if   j1 >= 0 and j1 < length and j2 >= 0 and j2 < length:
+        return (c1_freq[i][j1] + c2_freq[i][j2])/2.0
+    elif j1 >= 0 and j1 < length:
+        return c1_freq[i][j1]
+    elif j2 >= 0 and j2 < length:
+        return c2_freq[i][j2]
+    else:
+        return 0
+
+# alignment
+# ------------------------------------------------------------------------------
+
+def cut_matrix(length, bg_freq, motif):
+    while len(motif[0]) > length:
+        if information.information_content_column(0, bg_freq, motif) > information.information_content_column(-1, bg_freq, motif):
+            motif = [ [ motif[i][j] for j in range(0, len(motif[0])-1) ] for i in range(0, len(motif)) ]
+        else:
+            motif = [ [ motif[i][j] for j in range(1, len(motif[0])  ) ] for i in range(0, len(motif)) ]
+    return motif
+
+def align(k, c1_freq, c2_freq):
+    length  = len(c1_freq[0])
+    j_range = range(min(0,k), max(length,length+k))
+    return [ [ sum_freq(i, j, k, c1_freq, c2_freq, length) for j in j_range ] for i in range(0, len(c1_freq)) ]
+
+def max_alignment(bg_freq, c1_freq, c2_freq):
+    ic      = []
+    length  = len(c1_freq[0])
+    k_range = range(-length+1, length)
+    for k in k_range:
+        if options['method'] == 'information-content':
+            result = align(k, c1_freq, c2_freq)
+            result = cut_matrix(len(c1_freq[0]), bg_freq, result)
+            ic.append(information.information_content(bg_freq, result))
+        if options['method'] == 'r-sequence':
+            result = align(k, c1_freq, c2_freq)
+            result = cut_matrix(len(c1_freq[0]), bg_freq, result)
+            ic.append(information.r_sequence(result))
+        if options['method'] == 'kl-divergence':
+            ic.append(information.kl_divergence(k, bg_freq, c1_freq, c2_freq))
+    if options['method'] == 'information-content' or options['method'] == 'r-sequence':
+        if options['verbose']:
+            print zip(ic, k_range)
+            print "max: %i" % k_range[argmax(ic)[0]]
+        return k_range[argmax(ic)[0]]
+    if options['method'] == 'kl-divergence':
+        if options['verbose']:
+            print zip(ic, k_range)
+            print "min: %i" % k_range[argmin(ic)[0]]
+        return k_range[argmin(ic)[0]]
+
+# parse results config
+# ------------------------------------------------------------------------------
+
+def read_vector(config, section, option, converter):
+    vector_str = config.get(section, option)
+    vector     = map(converter, vector_str.split(' '))
+    return vector
+
+def read_matrix(config, section, option, converter):
+    matrix_str = config.get(section, option)
+    matrix     = []
+    for line in matrix_str.split('\n'):
+        if line != '':
+            matrix.append([converter(a) for a in line.split(' ')])
+    return matrix
+
+def save_freq(config_parser, result):
+    config_parser.set('Cluster', options['save-motif'], "\n"+"\n".join(map(lambda arg: " ".join(map(str, arg)), result)))
+
+def read_config(config_file, cluster_1, cluster_2):
+    config_parser = ConfigParser.RawConfigParser()
+    config_parser.read(config_file)
+    if not config_parser.has_section('Cluster'):
+        raise IOError("Invalid configuration file.")
+    bg_freq = read_matrix(config_parser, 'Cluster', 'cluster_0', float)
+    c1_freq = read_matrix(config_parser, 'Cluster',  cluster_1,  float)
+    c2_freq = read_matrix(config_parser, 'Cluster',  cluster_2,  float)
+    if options['force-alignment']:
+        m = options['force-alignment']
+    else:
+        m = max_alignment(bg_freq, c1_freq, c2_freq)
+    result = align(m, c1_freq, c2_freq)
+    if options['cut-matrix']:
+        result = cut_matrix(len(c1_freq[0]), bg_freq, result)
+    if options['verbose']:
+        print c1_freq
+        print c2_freq
+        print result
+    if options['save-plot']:
+        plot.plot_motif(result, options['save-plot'], 'Alignment of %s and %s' % (cluster_1, cluster_2))
+    if options['save-motif']:
+        save_freq(config_parser, result)
+        fp = open(config_file, 'wb')
+        config_parser.write(fp)
+        fp.close()
+
+# main
+# ------------------------------------------------------------------------------
+
+def main():
+    global options
+    try:
+        longopts   = ["help", "verbose", "method=", "force-alignment=", "save-motif=", "save-plot="]
+        opts, tail = getopt.getopt(sys.argv[1:], "vn", longopts)
+    except getopt.GetoptError:
+        usage()
+        return 2
+    output = None
+    for o, a in opts:
+        if o in ("-v", "--verbose"):
+            sys.stderr.write("Verbose mode turned on.\n")
+            options["verbose"] = True
+        if o in ("-h", "--help"):
+            usage()
+            return 0
+        if o == "--method":
+            if a == "kl-divergence" or a == "information-content" or a == 'r-sequence':
+                options['method'] = a
+            else:
+                usage()
+                return 1
+        if o == "-n":
+            options['cut-matrix'] = False
+        if o == "--force-alignment":
+            options['force-alignment'] = int(a)
+        if o == "--save-motif":
+            options['save-motif'] = a
+        if o == "--save-plot":
+            options['save-plot'] = a
+    if len(tail) != 3:
+        usage()
+        return 1
+    read_config(*tail)
+
+if __name__ == "__main__":
+    try:
+        sys.exit(__main__())
+    except IOError, e:
+        sys.stderr.write('%s\n' % e)
+        sys.exit(1)
