@@ -132,7 +132,7 @@ def align(k, c1, c2, identifier=None):
     sum_alpha      = [ [ sum_counts_mat(i, j, k, c1.alpha, c2.alpha, length) for j in j_range ] for i in i_range ]
     sum_alpha_gap  = [ sum_counts_vec(j, k, c1.alpha_gap, c2.alpha_gap, length) for j in j_range ]
     sum_components = c1.components + c2.components
-    return cluster_t(sum_counts, sum_counts_gap, sum_alpha, sum_alpha_gap, sum_components, identifier, c1.cluster_type)[0:8]
+    return cluster_t(sum_counts, sum_counts_gap, sum_alpha, sum_alpha_gap, sum_components, identifier, c1.cluster_type)
 
 def max_alignment(c1, c2):
     ic      = []
