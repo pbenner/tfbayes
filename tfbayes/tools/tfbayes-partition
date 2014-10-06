@@ -114,21 +114,14 @@ def main(command, sampler_config_file):
         raise IOError('no sequences file specified')
     # parse results file
     parse_results_config(sampler_config.save, results_config, False)
-    if options['save']:
-        config_parser_save = ConfigParser.ConfigParser()
-        config_parser_save.read(options['save'])
     if options['load']:
-        config_parser_load = ConfigParser.ConfigParser()
-        config_parser_load.read(options['load'])
-        cluster_list = fileio.load_cluster_list(config_parser_load, sampler_config)
+        cluster_list = fileio.load_cluster_list(options['load'], sampler_config)
     else:
         # parse sequences fasta file
         descriptions, sequences = parse_sequences(sampler_config.phylogenetic_file)
         cluster_list = generate_cluster_list(sequences, sampler_config, results_config, command)
     if options['save']:
-        fileio.save_cluster_list(config_parser_save, cluster_list)
-        configfile = open(options['save'], 'wb')
-        config_parser_save.write(configfile)
+        fileio.save_cluster_list(options['save'], cluster_list)
     else:
         plot_cluster_list(cluster_list, command)
 

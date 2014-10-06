@@ -65,6 +65,15 @@ class cluster_t():
         if not len(counts) == self.n:
             raise IOError('Counts matrix has invalid dimension.')
         self.m          = len(counts[0])
+    def __getitem__(self, s):
+        tr = lambda x: zip(*x)
+        if not isinstance(s, slice):
+            raise IOError("__getitem__() requires a slice object.")
+        counts     = tr(tr(self.counts)[s])
+        counts_gap = self.counts_gap[s]
+        alpha      = tr(tr(self.alpha )[s])
+        alpha_gap  = self.alpha_gap[s]
+        return cluster_t(counts, counts_gap, alpha, alpha_gap, self.components, self.identifier, self.cluster_type)
     def posterior_counts(self):
         counts = [ [ self.counts[i][j] + self.alpha[i][j] for j in range(self.m) ] for i in range(self.n) ]
         gaps   = [ self.counts_gap[i] + self.alpha_gap[i] for j in range(self.m) ]
@@ -75,9 +84,9 @@ class cluster_t():
         return frequencies(self.counts, self.n, self.m)
     def motif(self):
         return motif(self.counts, self.alpha, self.n, self.m)
-    def pwm(self):
+    def pwm(self, bg):
         motif = self.motif()
-        return pwm(motif, self.n, self.m)
+        return pwm(motif, bg, self.n, self.m)
     def score(self, sequence):
         """Given a nucleotide sequence of the same length as the
            cluster, compute how well the pwm matches this sequence."""
@@ -90,11 +99,9 @@ class cluster_t():
         alpha_gap  = [ self.alpha_gap[-j-1] for j in range(self.m) ]
         return cluster_t(counts, counts_gap, alpha, alpha_gap, self.components, self.identifier, self.cluster_type)
     def entropy(self):
-        motif = self.motif()
-        return information.entropy(motif, self.n, self.m)
+        return information.entropy(self)
     def r_sequence(self):
-        motif = self.motif()
-        return information.r_sequence(motif, self.n, self.m)
+        return information.r_sequence(self)
     def scan(self, sequence, threshold, skip_gaps=False):
         pwm    = self.pwm()
         length = len(pwm[0])

@@ -16,10 +16,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+import ConfigParser
 import re
 
 from ..uipac import *
 from ..config.tools import read_vector, write_vector
+from cluster import cluster_t
 
 # pwm to string
 # ------------------------------------------------------------------------------
@@ -117,11 +119,19 @@ def load_cluster(cluster_parser, sampler_config, cluster_name):
     components   = int(cluster_parser.get('Cluster', '%s_components' % cluster_name))
     identifier   = int(result.group(1))
     cluster_type = cluster_parser.get('Cluster', '%s_type' % cluster_name)
-    alpha        = sampler_config['baseline_priors'][cluster_type][0:4]
-    alpha_gap    = sampler_config['baseline_priors'][cluster_type][4]
+    alpha        = None
+    alpha_gap    = None
+    for (tag, prior) in zip(sampler_config.baseline_tags, sampler_config.baseline_priors):
+        if tag == cluster_type:
+            alpha     = map(list, zip(*prior))[0:4]
+            alpha_gap = map(list, zip(*prior))[4]
+    if alpha == None or alpha_gap == None:
+        raise IOError("Baseline prior not found in sampler config.")
     return cluster_t(counts, counts_gap, alpha, alpha_gap, components, identifier, cluster_type)
 
-def load_cluster_list(cluster_parser, sampler_config):
+def load_cluster_list(cluster_file, sampler_config):
+    cluster_parser = ConfigParser.ConfigParser()
+    cluster_parser.read(cluster_file)
     cluster_list  = []
     cluster_names = read_vector(cluster_parser, 'Cluster', 'cluster', str)
     for cluster_name in cluster_names:
@@ -141,9 +151,12 @@ def save_cluster(cluster_parser, cluster):
     cluster_parser.set('Cluster', '%s_type' % cluster_name, cluster.cluster_type)
     return cluster_name
 
-def save_cluster_list(cluster_parser, cluster_list):
+def save_cluster_list(cluster_file, cluster_list):
+    cluster_parser = ConfigParser.ConfigParser()
     cluster_names = []
     for cluster in cluster_list:
         cluster_name = save_cluster(cluster_parser, cluster)
         cluster_names.append(cluster_name)
     write_vector(cluster_parser, 'Cluster', 'cluster', cluster_names)
+    with open(cluster_file, 'wb') as cluster_fp:
+        cluster_parser.write(cluster_fp)

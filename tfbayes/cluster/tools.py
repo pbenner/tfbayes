@@ -71,9 +71,8 @@ def average_counts(counts, n, m):
 # ------------------------------------------------------------------------------
 
 def motif(counts, alpha, n, m):
-    counts_sum  = [ sum(map(lambda c: float(c[j]), counts)) for j in range(m) ]
-    alpha_sum   = [ sum(map(lambda a: float(a[j]), alpha )) for j in range(m) ]
-    expectation = [ [ float(counts[i][j] + alpha[i][j])/(counts_sum[j]+alpha_sum[j])
+    counts_sum  = [ sum([ counts[i][j]+alpha[i][j] for i in range(n) ]) for j in range(m) ]
+    expectation = [ [ float(counts[i][j] + alpha[i][j])/counts_sum[j]
                       for j in range(m) ]
                     for i in range(n) ]
     return expectation
@@ -81,12 +80,8 @@ def motif(counts, alpha, n, m):
 # motif -> pwm
 # ------------------------------------------------------------------------------
 
-def pwm(motif, n, m):
+def pwm(motif, bg, n, m):
     bg = [ 0.0 ] * n
-    bg[DNA.code('A')] = 0.3
-    bg[DNA.code('C')] = 0.2
-    bg[DNA.code('G')] = 0.2
-    bg[DNA.code('T')] = 0.3
     return [ [ math.log(motif[i][j]/bg[i], 2) for j in range(m) ] for i in range(n) ]
 
 # search the cluster list
