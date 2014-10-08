@@ -99,9 +99,9 @@ class cluster_t():
         alpha_gap  = [ self.alpha_gap[-j-1] for j in range(self.m) ]
         return cluster_t(counts, counts_gap, alpha, alpha_gap, self.components, self.identifier, self.cluster_type)
     def entropy(self):
-        return information.entropy(self)
+        return information.entropy(self.motif())
     def r_sequence(self):
-        return information.r_sequence(self)
+        return information.r_sequence(self.motif())
     def scan(self, sequence, threshold, skip_gaps=False):
         pwm    = self.pwm()
         length = len(pwm[0])

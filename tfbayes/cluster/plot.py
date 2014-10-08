@@ -53,7 +53,7 @@ def plot_motif(motif, file_name, title, fout=None):
     # Log(|A|) - H(X)
     # that is, the stack height is simply defined by what is given by data.entropy,
     # since we use nats, the entropy should also be in the interval [0, 1]!
-    data.entropy = map(lambda x: 1.0 - x/math.log(4), information.entropy(motif, len(motif), len(motif[0])))
+    data.entropy = map(lambda x: 1.0 - x/math.log(4), information.entropy(motif))
     data.entropy_interval = None
     format = LogoFormat(data, options)
     if not fout:

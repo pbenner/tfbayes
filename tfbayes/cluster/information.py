@@ -22,13 +22,12 @@ import tools
 # entropy
 # ------------------------------------------------------------------------------
 
-def entropy(cluster):
+def entropy(motif):
     """For each column in the motif compute the discrete entropy."""
     # use the natural logarithm since this is also what the weblogo library
     # expects
-    motif = cluster.motif()
-    n     = cluster.n
-    m     = cluster.m
+    n     = len(motif)
+    m     = len(motif[0])
     result = [ 0.0 ] * m
     for j in range(m):
         result[j] = sum([ -motif[i][j]*math.log(motif[i][j]) for i in range(n) ])
@@ -37,10 +36,9 @@ def entropy(cluster):
 # R_sequence
 # ------------------------------------------------------------------------------
 
-def r_sequence(cluster):
-    motif = cluster.motif()
-    n   = cluster.n
-    m   = cluster.m
+def r_sequence(motif):
+    n     = len(motif)
+    m     = len(motif[0])
     tmp = [ 2 + sum([ motif[i][j]*math.log(motif[i][j], 2) for i in range(n) ]) for j in range(m) ]
     return 1.0/float(m)*sum(tmp)
 

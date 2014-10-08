@@ -22,12 +22,13 @@ import math
 import re
 import sys
 
-from tfbayes.config  import *
-from tfbayes.cluster import information
-from tfbayes.cluster import fileio
-from tfbayes.cluster import plot
-from tfbayes.cluster import tools
-from tfbayes.cluster import cluster_t
+from tfbayes.config    import *
+from tfbayes.cluster   import information
+from tfbayes.cluster   import fileio
+from tfbayes.cluster   import plot
+from tfbayes.cluster   import tools
+from tfbayes.cluster   import cluster_t
+from tfbayes.interface import sigint
 
 from itertools import izip
 

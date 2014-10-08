@@ -87,6 +87,7 @@ BOOST_PYTHON_MODULE(interface)
         class_<pt_leaf_t, bases<pt_node_t> >("pt_leaf_t", no_init)
                 ;
         class_<pt_root_t, bases<pt_node_t> >("pt_root_t", no_init)
+                .def(init<const pt_root_t&>())
                 .def("__init__",    make_constructor(parse_tree_file))
                 .def("__init__",    make_constructor(parse_tree_file_ref))
                 .def("get_node_id", &pt_root_t::get_node_id)

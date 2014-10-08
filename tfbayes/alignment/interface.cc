@@ -235,6 +235,48 @@ std::vector<double> marginal_likelihood(
         }
 }
 
+template<size_t AS, typename AC, typename PC>
+std::matrix<double> expectation(
+        const pt_root_t& tree,
+        const alignment_t<AC>& alignment,
+        const std::vector<PC>& prior)
+{
+        exponent_t<AS, PC> alpha(prior.begin(), prior.end());
+        std::matrix<double> result;
+        polynomial_term_t<AS> term(1.0);
+
+        for (typename alignment_t<AC>::const_iterator it = alignment.begin();
+             it != alignment.end(); it++) {
+                std::vector<double> tmp(AS, 0);
+                double ml = pt_marginal_likelihood<AS, AC, PC>(tree, *it, alpha);
+                pt_polynomial_t<AS, PC> poly = pt_likelihood<AS, AC, PC>(tree, *it);
+
+                for (size_t i = 0; i < AS; i++) {
+                        term.exponent()[i] = 1;
+                        tmp[i] = exp(pt_marginal_likelihood(term*poly, alpha) - ml);
+                        term.exponent()[i] = 0;
+                }
+                result.push_back(tmp);
+        }
+
+        return result;
+}
+
+template<typename AC, typename PC>
+std::matrix<double> expectation(
+        const pt_root_t& tree,
+        const alignment_t<AC>& alignment,
+        const std::vector<PC>& prior)
+{
+        switch (alignment.alphabet().size()) {
+        case 5: return expectation<5, AC, PC>(tree, alignment, prior); break;
+        default:
+                std::cerr << "scan(): Invalid alphabet size."
+                          << std::endl;
+                exit(EXIT_FAILURE);
+        }
+}
+
 double tree_prior(
         const pt_root_t& tree,
         const boost::math::gamma_distribution<>& gamma_distribution)
@@ -284,5 +326,6 @@ BOOST_PYTHON_MODULE(interface)
         def("approximate",         &approximate        <alphabet_code_t, double>);
         def("marginal_likelihood", &marginal_likelihood<alphabet_code_t, double>);
         def("scan",                &scan               <alphabet_code_t, double>);
+        def("expectation",         &expectation        <alphabet_code_t, double>);
         def("tree_prior",          &tree_prior                                  );
 }
