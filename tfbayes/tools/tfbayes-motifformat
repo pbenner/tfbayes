@@ -22,12 +22,14 @@ import re
 import subprocess
 import sys
 
-from tfbayes.cluster import plot_motif
+from tfbayes.cluster import plot_motif, plot_counts
 
 # global options
 # ------------------------------------------------------------------------------
 
 options = {
+    'counts'      : False,
+    'prior'       : [0.1, 0.1, 0.1, 0.1, 0.1],
     'join'        : False,
     'revcomp'     : False,
     'verbose'     : False,
@@ -41,10 +43,14 @@ def usage():
     print
     print "tfbayes-motifformat [option]... FILE"
     print
-    print "The output of `tfbayes-expectation' can be parsed with this"
-    print "program and converted to pdf."
+    print "The output of `tfbayes-expectation' or `tfbayes-approximation'"
+    print "can be parsed with this program and converted to pdf."
     print
     print "Options:"
+    print "       --prior=Px:Px:Px:Px:Px     - counts for the prior"
+    print "                                    (only used if `-c' is used)"
+    print "   -c, --counts                   - visualize counts instead of probabilities"
+    print "                                    (output of `tfbayes-approximation')"
     print "   -j, --join                     - join plots with pdftk"
     print
     print "   -h, --help                     - print help"
@@ -54,29 +60,33 @@ def usage():
 # parse results config
 # ------------------------------------------------------------------------------
 
-def parse_motif(fin, name, output_file):
+def parse_file(fin, name, output_file):
     position = fin.tell()
     pattern  = re.compile('^[ \t]*([0-9.]+)[ \t]+([0-9.]+)[ \t]+([0-9.]+)[ \t]+([0-9.]+)[ \t]+([0-9.]+)[ \t]*;?[ \t]*$')
-    motif    = [[],[],[],[]]
+    result    = [[],[],[],[]]
     while True:
         line = fin.readline()
         if not line:
             break
-        result = pattern.match(line)
-        if result:
+        m = pattern.match(line)
+        if m:
             # rescale the expectations since we only use the first four
-            tmp = [float(result.group(1)), float(result.group(2)),
-                   float(result.group(3)), float(result.group(4))]
-            tmp = map(lambda x: x/sum(tmp), tmp)
-            motif[0].append(tmp[0])
-            motif[1].append(tmp[1])
-            motif[2].append(tmp[2])
-            motif[3].append(tmp[3])
+            tmp = [float(m.group(1)), float(m.group(2)),
+                   float(m.group(3)), float(m.group(4))]
+            if not options['counts']:
+                tmp = map(lambda x: x/sum(tmp), tmp)
+            result[0].append(tmp[0])
+            result[1].append(tmp[1])
+            result[2].append(tmp[2])
+            result[3].append(tmp[3])
             position = fin.tell()
         else:
             fin.seek(position)
             break
-    plot_motif(motif, output_file, name)
+    if options['counts']:
+        plot_counts(result, zip(*([options['prior']]*len(result[0]))), output_file, name)
+    else:
+        plot_motif(result, output_file, name)
 
 def join_plots(basename, files):
     cmd = 'pdftk %s cat output %s.pdf' % (' '.join(files), basename)
@@ -99,7 +109,7 @@ def parse_motifformat(file_name):
         result = pattern.match(line)
         if result:
             output_file = '%s_%s-%d.pdf' % (output_base, result.group(1), idx)
-            parse_motif(fin, result.group(1), output_file)
+            parse_file(fin, result.group(1), output_file)
             files.append(output_file)
             idx += 1
         else:
@@ -115,8 +125,8 @@ def parse_motifformat(file_name):
 def main():
     global options
     try:
-        longopts   = ["join", "help", "verbose"]
-        opts, tail = getopt.getopt(sys.argv[1:], "jhv", longopts)
+        longopts   = ["counts", "join", "prior=", "help", "verbose"]
+        opts, tail = getopt.getopt(sys.argv[1:], "cjhv", longopts)
     except getopt.GetoptError:
         usage()
         return 2
@@ -128,8 +138,15 @@ def main():
         if o in ("-h", "--help"):
             usage()
             return 0
+        if o in ("-c", "--counts"):
+            options['counts'] = True
         if o in ("-j", "--join"):
             options['join'] = True
+        if o == "--prior":
+            options['prior'] = map(float, a.split(':'))
+            if not len(options['prior']) == 5:
+                usage()
+                return 1
     if len(tail) == 1:
         parse_motifformat(*tail)
     else:
