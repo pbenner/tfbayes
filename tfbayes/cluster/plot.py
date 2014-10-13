@@ -86,24 +86,27 @@ def plot_counts(counts, alpha, file_name, title, fout=None):
     else:
         pdf_formatter(data, format, fout)
 
-def plot_cluster(cluster, basename, is_revcomp=False):
+def plot_cluster(cluster, basename, is_revcomp=False, plain_title=False):
     # use a different file name and title if cluster is a reverse complement
     # of some other cluster
+    title = ''
     if is_revcomp:
-        title = 'Cluster %d (rc). A = %.1f. C = %d. RS = %.2f' % (cluster.identifier, cluster.average_counts(), cluster.components, cluster.r_sequence())
+        if not plain_title:
+            title = 'Cluster %d (rc). A = %.1f. C = %d. RS = %.2f' % (cluster.identifier, cluster.average_counts(), cluster.components, cluster.r_sequence())
         file_name = '%s_cluster_%d_revcomp.pdf' % (basename, cluster.identifier)
     else:
-        title = 'Cluster %d. A = %.1f. C = %d. RS = %.2f' % (cluster.identifier, cluster.average_counts(), cluster.components, cluster.r_sequence())
+        if not plain_title:
+            title = 'Cluster %d. A = %.1f. C = %d. RS = %.2f' % (cluster.identifier, cluster.average_counts(), cluster.components, cluster.r_sequence())
         file_name = '%s_cluster_%d.pdf' % (basename, cluster.identifier)
     # do the actual plotting here
     plot_counts(cluster.counts, cluster.alpha, file_name, title)
     # and return the file name of the pdf
     return file_name
 
-def plot_cluster_list(cluster_list, basename, revcomp=False):
+def plot_cluster_list(cluster_list, basename, revcomp=False, plain_title=False):
     files = []
     for cluster in cluster_list:
-        files.append(plot_cluster(cluster, basename, False))
+        files.append(plot_cluster(cluster, basename, False, plain_title))
         if revcomp:
-            files.append(plot_cluster(cluster.revcomp(), basename, True))
+            files.append(plot_cluster(cluster.revcomp(), basename, True, plain_title))
     return files

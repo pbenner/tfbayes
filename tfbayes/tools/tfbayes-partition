@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# Copyright (C) 2012 Philipp Benner
+# Copyright (C) 2012-2014 Philipp Benner
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@ options = {
     'plot'             : False,
     'revcomp'          : False,
     'join'             : False,
+    'plain-title'      : False,
     'load'             : None,
     'save'             : None,
     'verbose'          : False,
@@ -78,6 +79,8 @@ def usage():
     print "Options:"
     print "   -j, --join                     - join plots with pdftk"
     print "   -r                             - also plot reverse complements"
+    print "       --plain-title              - do not plot any information"
+    print "                                    except for the logo"
     print
     print "   -l, --load=FILE                - load motifs from FILE"
     print "   -s, --save=FILE                - save motifs to FILE"
@@ -91,7 +94,8 @@ def usage():
 
 def plot_cluster_list(cluster_list, command):
     basename = os.path.splitext(os.path.split(sampler_config.save)[1])[0]
-    files    = plot.plot_cluster_list(cluster_list, basename, revcomp=options['revcomp'])
+    files    = plot.plot_cluster_list(cluster_list, basename, revcomp=options['revcomp'],
+                                      plain_title=options['plain-title'])
     if options['join']:
         cmd = 'pdftk %s cat output %s_%s_cluster.pdf' % (' '.join(files), basename, command)
         print cmd
@@ -112,11 +116,11 @@ def main(command, sampler_config_file):
         raise IOError('no result file specified')
     if not sampler_config.phylogenetic_file:
         raise IOError('no sequences file specified')
-    # parse results file
-    parse_results_config(sampler_config.save, results_config, False)
     if options['load']:
         cluster_list = fileio.load_cluster_list(options['load'], sampler_config)
     else:
+        # parse results file
+        parse_results_config(sampler_config.save, results_config, False)
         # parse sequences fasta file
         descriptions, sequences = parse_sequences(sampler_config.phylogenetic_file)
         cluster_list = generate_cluster_list(sequences, sampler_config, results_config, command)
@@ -129,7 +133,7 @@ def __main__():
     global options
     global sampler_config
     try:
-        longopts   = ["help", "verbose", "plot", "join", "load=", "save="]
+        longopts   = ["help", "verbose", "plot", "plain-title", "join", "load=", "save="]
         opts, tail = getopt.getopt(sys.argv[1:], "rjpls:v", longopts)
     except getopt.GetoptError:
         usage()
@@ -150,6 +154,8 @@ def __main__():
             options['join'] = True
         if o in ("-p", "--plot"):
             options['plot'] = True
+        if o == "--plain-title":
+            options['plain-title'] = True
         if o == "-r":
             options['revcomp'] = True
         if o in ("-l", "--load"):
