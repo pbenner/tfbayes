@@ -52,7 +52,7 @@ class cluster_t():
     cluster_type   = None # i.e. which baseline prior was used
     n              = None # alphabet size
     m              = None # cluster length
-    def __init__(self, counts, counts_gap, alpha, alpha_gap, components, identifier, cluster_type):
+    def __init__(self, counts, counts_gap, alpha, alpha_gap, components, identifier, cluster_type, sites = None):
         # initialize counts, components, and identifier
         self.counts       = counts
         self.counts_gap   = counts_gap
@@ -62,6 +62,7 @@ class cluster_t():
         self.identifier   = identifier
         self.cluster_type = cluster_type
         self.n            = 4
+        self.sites        = sites
         if not len(counts) == self.n:
             raise IOError('Counts matrix has invalid dimension.')
         self.m          = len(counts[0])
@@ -73,7 +74,7 @@ class cluster_t():
         counts_gap = self.counts_gap[s]
         alpha      = tr(tr(self.alpha )[s])
         alpha_gap  = self.alpha_gap[s]
-        return cluster_t(counts, counts_gap, alpha, alpha_gap, self.components, self.identifier, self.cluster_type)
+        return cluster_t(counts, counts_gap, alpha, alpha_gap, self.components, self.identifier, self.cluster_type, sites = self.sites)
     def posterior_counts(self):
         counts = [ [ self.counts[i][j] + self.alpha[i][j] for j in range(self.m) ] for i in range(self.n) ]
         gaps   = [ self.counts_gap[i] + self.alpha_gap[i] for j in range(self.m) ]
@@ -97,7 +98,7 @@ class cluster_t():
         counts_gap = [ self.counts_gap[-j-1] for j in range(self.m) ]
         alpha      = revcomp(self.alpha, self.n, self.m)
         alpha_gap  = [ self.alpha_gap[-j-1] for j in range(self.m) ]
-        return cluster_t(counts, counts_gap, alpha, alpha_gap, self.components, self.identifier, self.cluster_type)
+        return cluster_t(counts, counts_gap, alpha, alpha_gap, self.components, self.identifier, self.cluster_type, sites = self.sites)
     def entropy(self):
         return information.entropy(self.motif())
     def r_sequence(self):
