@@ -70,7 +70,7 @@ def generate_cluster(sequences, dpm_subset, idx, sampler_config):
                 for i in range(4):
                     counts[i][j] += sequences[s][p+j][i]
             counts_gap[j] += sequences[s][p+j][4]
-    return cluster_t(counts, counts_gap, alpha, alpha_gap, components, idx, dpm_subset.dpm_subset_tag())
+    return cluster_t(counts, counts_gap, alpha, alpha_gap, components, idx, dpm_subset.dpm_subset_tag(), sites=dpm_subset)
 
 def generate_cluster_list(sequences, sampler_config, results_config, which = 'map'):
     """Loop through the partition and for each subset generate a motif."""

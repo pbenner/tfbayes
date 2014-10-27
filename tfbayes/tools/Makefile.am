@@ -38,6 +38,7 @@ dist_bin_SCRIPTS = \
 	tfbayes-bed \
 	tfbayes-estimate \
 	tfbayes-expectation \
+	tfbayes-export-results \
 	tfbayes-motifformat \
 	tfbayes-fasta-to-maf \
 	tfbayes-maf-to-fasta \

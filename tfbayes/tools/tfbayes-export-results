@@ -1,0 +1,106 @@
+#! /usr/bin/env python
+
+# Copyright (C) 2014 Philipp Benner
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# imports
+# ------------------------------------------------------------------------------
+
+import csv
+import sys
+import getopt
+import os
+
+from tfbayes.config  import *
+
+# global options
+# ------------------------------------------------------------------------------
+
+sampler_config = default_sampler_config()
+results_config = default_results_config()
+
+options = {
+    'verbose'          : False,
+    }
+
+# usage
+# ------------------------------------------------------------------------------
+
+def usage():
+    """Print usage."""
+    print
+    print "tfbayes-partition [option]... SAMPLER_CONFIG"
+    print
+    print "Export the results `tfbayes-sampler' to a table format,"
+    print "which can for instance be imported into GNU-R."
+    print
+    print "Options:"
+    print "   -h, --help                     - print help"
+    print "   -v, --verbose                  - be verbose"
+    print
+
+# main
+# ------------------------------------------------------------------------------
+
+def main(sampler_config_file):
+    # parse configuration and results file
+    parse_sampler_config(sampler_config_file, sampler_config)
+    if not sampler_config.save:
+        raise IOError('no result file specified')
+    parse_results_config(sampler_config.save, results_config, False)
+    # export results
+    output_file = "{}_components.csv".format(os.path.splitext(sampler_config_file)[0])
+    if (options['verbose']):
+        print "Writing components to `{}'.".format(output_file)
+    with open(output_file, 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(zip(*results_config['sampling_history'].components))
+    output_file = "{}_posterior.csv".format(os.path.splitext(sampler_config_file)[0])
+    if (options['verbose']):
+        print "Writing posterior to `{}'.".format(output_file)
+    with open(output_file, 'w') as f:
+        writer  = csv.writer(f)
+        writer.writerows(zip(*results_config['sampling_history'].posterior))
+
+def __main__():
+    try:
+        longopts   = ["help", "verbose"]
+        opts, tail = getopt.getopt(sys.argv[1:], "hv", longopts)
+    except getopt.GetoptError:
+        usage()
+        return 2
+    output = None
+    if len(tail) != 1:
+        usage()
+        return 1
+    # override those options with command line arguments
+    for o, a in opts:
+        if o in ("-v", "--verbose"):
+            sys.stderr.write("Verbose mode turned on.\n")
+            options["verbose"] = True
+        if o in ("-h", "--help"):
+            usage()
+            return 0
+    # call main and exit
+    main(*tail)
+    return 0
+
+if __name__ == "__main__":
+    try:
+        sys.exit(__main__())
+    except IOError, e:
+        sys.stderr.write('%s\n' % e)
+        sys.exit(1)

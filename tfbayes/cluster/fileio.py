@@ -19,9 +19,11 @@
 import ConfigParser
 import re
 
-from ..uipac import *
-from ..config.tools import read_vector, write_vector
-from cluster import cluster_t
+from ..dpm           import dpm_subset_t
+from ..config.tools  import read_vector, write_vector
+from ..config.parser import parse_partition_elements
+from ..uipac         import *
+from cluster         import cluster_t
 
 # pwm to string
 # ------------------------------------------------------------------------------
@@ -121,13 +123,19 @@ def load_cluster(cluster_parser, sampler_config, cluster_name):
     cluster_type = cluster_parser.get('Cluster', '%s_type' % cluster_name)
     alpha        = None
     alpha_gap    = None
+    sites        = None
+    if cluster_parser.has_option('Cluster', '%s_sites' % cluster_name):
+        sites_str = cluster_parser.get('Cluster', '%s_sites' % cluster_name)
+        sites     = dpm_subset_t(cluster_name)
+        for elem in parse_partition_elements(sites_str):
+            sites.insert(elem)
     for (tag, prior) in zip(sampler_config.baseline_tags, sampler_config.baseline_priors):
         if tag == cluster_type:
             alpha     = map(list, zip(*prior))[0:4]
             alpha_gap = map(list, zip(*prior))[4]
     if alpha == None or alpha_gap == None:
         raise IOError("Baseline prior not found in sampler config.")
-    return cluster_t(counts, counts_gap, alpha, alpha_gap, components, identifier, cluster_type)
+    return cluster_t(counts, counts_gap, alpha, alpha_gap, components, identifier, cluster_type, sites = sites)
 
 def load_cluster_list(cluster_file, sampler_config):
     cluster_parser = ConfigParser.ConfigParser()
@@ -149,6 +157,9 @@ def save_cluster(cluster_parser, cluster):
     cluster_parser.set('Cluster', '%s_components' % cluster_name, cluster.components)
     # write cluster type (i.e. which prior was used)
     cluster_parser.set('Cluster', '%s_type' % cluster_name, cluster.cluster_type)
+    # write sites if available
+    if cluster.sites:
+        cluster_parser.set('Cluster', '%s_sites' % cluster_name, cluster.sites)
     return cluster_name
 
 def save_cluster_list(cluster_file, cluster_list):
