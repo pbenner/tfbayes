@@ -81,11 +81,13 @@ size_t hash_value(const exponent_t<alphabet_size>& exponent) {
 typedef struct _options_t {
         size_t dimension;
         phylotree_hmm_t<alphabet_size>::priors_t priors;
+        double scale;
         matrix<double> transition;
         bool verbose;
         _options_t()
                 : dimension(2),
                   priors(),
+                  scale(1.0),
                   transition(),
                   verbose(false) {
 
@@ -119,10 +121,17 @@ void print_usage(char *pname, FILE *fp)
 {
         (void)fprintf(fp, "\nUsage: %s [OPTION] TREE FASTA_ALIGNMENT\n\n", pname);
         (void)fprintf(fp,
+                      "Given a phylogenetic tree and a sequence alignment, this program\n"
+                      "computes the marginal probability distributions of a hidden Markov\n"
+                      "model (HMM). Each state of the HMM is assiciated with a different\n"
+                      "set of Dirichlet pseudocounts for the stationary distribution\n"
+                      "of the evolutionary model."
                       "\n"
                       "Options:\n"
-                      "             -a VECTOR       - pseudo count\n"
+                      "             -a VECTOR       - pseudo count (e.g. 10.0,0.1 for an HMM\n"
+                      "                               with two dimensions)\n"
                       "             -d DIMENSION    - dimension\n"
+                      "             -s FLOAT        - scale tree by a given factor\n"
                       "             -t MATRIX       - transition matrix\n"
                       "\n"
                       "             -v              - be verbose\n"
@@ -173,6 +182,9 @@ void run_hmm(const char* file_tree, const char* file_alignment)
         /* phylogenetic tree */
         pt_root_t pt_root = parse_tree_file(file_tree);
 
+        /* scale tree */
+        pt_root.scale(options.scale);
+
         /* alignment */
         alignment_t<> alignment(file_alignment, pt_root);
 
@@ -198,7 +210,7 @@ void init_options(const string& alpha, const string& transition)
 
         if (alpha != "") {
                 options.priors = phylotree_hmm_t<alphabet_size>::priors_t();
-                tmp = token(strip(alpha), ' ');
+                tmp = token(strip(alpha), ',');
                 for (size_t i = 0; i < tmp.size(); i++) {
                         if (tmp[i] == "") {
                                 continue;
@@ -273,10 +285,10 @@ int main(int argc, char *argv[])
                 int c, option_index = 0;
                 static struct option long_options[] = {
                         { "help",            0, 0, 'h' },
-                        { "version",         0, 0, 's' }
+                        { "version",         0, 0, 'x' }
                 };
 
-                c = getopt_long(argc, argv, "a:d:t:vh",
+                c = getopt_long(argc, argv, "a:d:s:t:vh",
                                 long_options, &option_index);
 
                 if(c == -1) {
@@ -290,6 +302,9 @@ int main(int argc, char *argv[])
                 case 'd':
                         options.dimension = atoi(optarg);
                         break;
+                case 's':
+                        options.scale = atof(optarg);
+                        break;
                 case 't':
                         transition = string(optarg);
                         break;
@@ -299,7 +314,7 @@ int main(int argc, char *argv[])
                 case 'h':
                         print_usage(argv[0], stdout);
                         exit(EXIT_SUCCESS);
-                case 's':
+                case 'x':
                         print_version(stdout);
                         exit(EXIT_SUCCESS);
                 default:

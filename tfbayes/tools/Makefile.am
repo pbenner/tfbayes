@@ -3,21 +3,28 @@
 AM_CPPFLAGS = -I$(top_srcdir)
 AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
-bin_PROGRAMS = tfbayes-generate-alignment tfbayes-treespace-sampler tfbayes-treespace-estimate tfbayes-treespace-histogram
+bin_PROGRAMS = tfbayes-generate-alignment tfbayes-treespace-sampler tfbayes-hmm tfbayes-treespace-estimate tfbayes-treespace-histogram
 
 tfbayes_generate_alignment_SOURCES = tfbayes-generate-alignment.cc
-tfbayes_generate_alignment_LDADD   = ../phylotree/libtfbayes-phylotree.la
+tfbayes_generate_alignment_LDADD   = $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
 
 tfbayes_treespace_sampler_SOURCES  = tfbayes-treespace-sampler.cc
-tfbayes_treespace_sampler_LDADD    = ../phylotree/libtfbayes-phylotree.la
-tfbayes_treespace_sampler_LDADD   += ../fasta/libtfbayes-fasta.la
-tfbayes_treespace_sampler_LDADD   += ../fastarithmetics/libtfbayes-fastarithmetics.la
+tfbayes_treespace_sampler_LDADD    = $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
+tfbayes_treespace_sampler_LDADD   += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
+tfbayes_treespace_sampler_LDADD   += $(top_builddir)/tfbayes/fastarithmetics/libtfbayes-fastarithmetics.la
 
 tfbayes_treespace_estimate_SOURCES = tfbayes-treespace-estimate.cc
-tfbayes_treespace_estimate_LDADD   = ../phylotree/libtfbayes-phylotree.la
+tfbayes_treespace_estimate_LDADD   = $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
 
 tfbayes_treespace_histogram_SOURCES = tfbayes-treespace-histogram.cc
-tfbayes_treespace_histogram_LDADD   = ../phylotree/libtfbayes-phylotree.la
+tfbayes_treespace_histogram_LDADD   = $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
+
+tfbayes_hmm_SOURCES = tfbayes-hmm.cc
+tfbayes_hmm_LDADD   = -lm
+tfbayes_hmm_LDADD  += $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
+tfbayes_hmm_LDADD  += $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
+tfbayes_hmm_LDADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
+tfbayes_hmm_LDADD  += $(BOOST_SYSTEM_LIB)
 
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/dpm
