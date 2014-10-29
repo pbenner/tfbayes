@@ -6,14 +6,7 @@ AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 ## headers
 noinst_HEADERS = alignment.hh alignment-hmm.hh sequence.hh
 
-noinst_PROGRAMS = alignment-test alignment-hmm-test
-
-alignment_hmm_test_SOURCES = alignment-hmm-test.cc
-alignment_hmm_test_LDADD   = -lm
-alignment_hmm_test_LDADD  += $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
-alignment_hmm_test_LDADD  += $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
-alignment_hmm_test_LDADD  += $(top_builddir)/tfbayes/fasta/libtfbayes-fasta.la
-alignment_hmm_test_LDADD  += $(BOOST_SYSTEM_LIB)
+noinst_PROGRAMS = alignment-test
 
 alignment_test_SOURCES = alignment-test.cc
 alignment_test_LDADD   = $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
