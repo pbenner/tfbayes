@@ -3,14 +3,14 @@
 AM_CPPFLAGS = -I$(top_srcdir)
 AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
-noinst_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug
+noinst_PROGRAMS = dpm-tfbs-debug dpm-gaussian-debug mcm-test
 
-# mcm_test_SOURCES = mcm-test.cc
-# mcm_test_LDADD   = libtfbayes-dpm.la
-# mcm_test_LDADD  += -lm
-# mcm_test_LDADD  += $(BOOST_REGEX_LIB)
-# mcm_test_LDADD  += $(BOOST_SYSTEM_LIB)
-# mcm_test_LDADD  += $(BOOST_THREAD_LIB)
+mcm_test_SOURCES = mcm-test.cc
+mcm_test_LDADD   = libtfbayes-dpm.la
+mcm_test_LDADD  += -lm
+mcm_test_LDADD  += $(BOOST_REGEX_LIB)
+mcm_test_LDADD  += $(BOOST_SYSTEM_LIB)
+mcm_test_LDADD  += $(BOOST_THREAD_LIB)
 
 dpm_gaussian_debug_SOURCES = dpm-gaussian-main.cc
 dpm_gaussian_debug_LDADD   = libtfbayes-dpm.la
