@@ -33,6 +33,7 @@
 #include <tfbayes/phylotree/sampler.hh>
 #include <tfbayes/phylotree/gradient.hh>
 #include <tfbayes/phylotree/gradient-ascent.hh>
+#include <tfbayes/utility/linalg.hh>
 #include <tfbayes/utility/random.hh>
 #include <tfbayes/utility/strtools.hh>
 
@@ -53,12 +54,12 @@ public:
                 : f(boost::bind(&print_posterior_values::print_ga<AS, AC, PC>, this, boost::cref(ga), _1))
                 { }
 
-        std::ostream& operator()(std::ostream& o) const {
+        ostream& operator()(ostream& o) const {
                 return f(o);
         }
 protected:
         template <size_t AS, typename AC, typename PC>
-        std::ostream& print_ga(const pt_gradient_ascent_t<AS, AC, PC>& ga, std::ostream& o) const {
+        ostream& print_ga(const pt_gradient_ascent_t<AS, AC, PC>& ga, ostream& o) const {
                 size_t line = 0;
                 // print header
                 o << "x y" << endl;
@@ -68,7 +69,7 @@ protected:
                 }
                 return o;
         }
-        std::ostream& print_mh(const pt_pmcmc_t& mh, std::ostream& o) const {
+        ostream& print_mh(const pt_pmcmc_t& mh, ostream& o) const {
                 if (mh.history(0).values.begin() ==
                     mh.history(0).values.end()) {
                         return o;
@@ -81,7 +82,7 @@ protected:
                 }
                 o << endl;
                 // print the list such that the order of samples is preserved
-                std::vector<pt_sampler_t::history_t::values_t::const_iterator> it_vec(mh.size());
+                vector<pt_sampler_t::history_t::values_t::const_iterator> it_vec(mh.size());
                 for (size_t i = 0; i < mh.size(); i++) {
                         it_vec[i] = mh.history(i).values.begin();
                 }
@@ -97,7 +98,7 @@ protected:
                 }
                 return o;
         }
-        boost::function<std::ostream& (std::ostream& o)> f;
+        boost::function<ostream& (ostream& o)> f;
 };
 
 class print_posterior_samples {
@@ -110,22 +111,22 @@ public:
                 : f(boost::bind(&print_posterior_samples::print_ga<AS, AC, PC>, this, boost::cref(ga), _1))
                 { }
 
-        std::ostream& operator()(std::ostream& o) const {
+        ostream& operator()(ostream& o) const {
                 return f(o);
         }
 
 protected:
         template <size_t AS, typename AC, typename PC>
-        std::ostream& print_ga(const pt_gradient_ascent_t<AS, AC, PC>& ga, std::ostream& o) const {
+        ostream& print_ga(const pt_gradient_ascent_t<AS, AC, PC>& ga, ostream& o) const {
                 for (typename pt_gradient_ascent_t<AS, AC, PC>::history_t::samples_t::const_iterator it = ga.history().samples.begin();
                      it != ga.history().samples.end(); it++) {
                         o << newick_format(*it) << endl;
                 }
                 return o;
         }
-        std::ostream& print_mh(const pt_pmcmc_t& mh, std::ostream& o) const {
+        ostream& print_mh(const pt_pmcmc_t& mh, ostream& o) const {
                 // print the list such that the order of samples is preserved
-                std::vector<pt_sampler_t::history_t::samples_t::const_iterator> it_vec(mh.size());
+                vector<pt_sampler_t::history_t::samples_t::const_iterator> it_vec(mh.size());
                 for (size_t i = 0; i < mh.size(); i++) {
                         it_vec[i] = mh.history(i).samples.begin();
                 }
@@ -139,7 +140,7 @@ protected:
                 }
                 return o;
         }
-        boost::function<std::ostream& (std::ostream& o)> f;
+        boost::function<ostream& (ostream& o)> f;
 };
 
 ostream& operator<< (ostream& o, const print_posterior_values& pv)
@@ -156,7 +157,7 @@ ostream& operator<< (ostream& o, const print_posterior_samples& ps)
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct _options_t {
-        vector<double> alpha;
+        matrix<double> alpha;
         double scale;
         double shape;
         size_t max_steps;
@@ -172,7 +173,7 @@ typedef struct _options_t {
         vector<double> temperatures;
         bool   verbose;
         _options_t()
-                : alpha(alphabet_size, 0.2),
+                : alpha(1, alphabet_size, 0.2),
                   scale(0.1),
                   shape(1.0),
                   max_steps(1000),
@@ -193,7 +194,7 @@ typedef struct _options_t {
 static options_t options;
 
 ostream&
-operator<<(std::ostream& o, const vector<double>& v)
+operator<<(ostream& o, const vector<double>& v)
 {
         for (size_t i = 0; i < v.size(); i++) {
                 if (i != 0) o << ":";
@@ -203,7 +204,17 @@ operator<<(std::ostream& o, const vector<double>& v)
 }
 
 ostream&
-operator<<(std::ostream& o, const options_t& options) {
+operator<<(ostream& o, const matrix<double>& m)
+{
+        for (size_t i = 0; i < m.size(); i++) {
+                if (i != 0) o << ";";
+                o << m[i];
+        }
+        return o;
+}
+
+ostream&
+operator<<(ostream& o, const options_t& options) {
         o << "Options:"                                                    << endl
           << "-> pseudocounts          = " << options.alpha                << endl
           << "-> gamma scale           = " << options.scale                << endl
@@ -237,7 +248,7 @@ void print_usage(char *pname, FILE *fp)
                       "\n"
                       "Options:\n"
                       "      --chains=integer          - number of parallel chains\n"
-                      "      --counts=f:f:f:f:f        - pseudo counts\n"
+                      "      --counts=f:f:f:f:f[;...]  - matrix of pseudocounts\n"
                       "      --epsilon=float           - stop gradient ascent if change is smaller than this value\n"
                       "      --leapfrog-step-size      - integration step size for the hamiltonian mcmc\n"
                       "      --leapfrog-steps          - number of integration steps for the hamiltonian mcmc\n"
@@ -320,7 +331,7 @@ void run_gradient_ascent(
         thread_pool_t& thread_pool)
 {
         pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(
-                pt_root, alignment_map, options.alpha, gamma_distribution,
+                pt_root, alignment_map, options.alpha[0], gamma_distribution,
                 thread_pool, options.step_size);
         pt_gradient_ascent(options.max_steps, options.min_change);
         // print posterior values to separate file
@@ -347,7 +358,7 @@ void run_metropolis_hastings(
         // proposal distribution
         normal_proposal_t proposal(options.proposal_variance);
         // the metropolis sampler
-        pt_mc_t pt_mc(pt_root, alignment_map, options.alpha, gamma_distribution, proposal, thread_pool);
+        pt_mc_t pt_mc(pt_root, alignment_map, options.alpha[0], gamma_distribution, proposal, thread_pool);
         // parallel chains with different temperatures
         pt_mc3_t<pt_mc_t> pt_mc3(options.temperatures, pt_mc);
         // run several mc3 chains in parallel
@@ -369,7 +380,7 @@ void run_hamiltonian_mcmc(
         threaded_rng_t rng;
         seed_rng(rng);
         // the metropolis sampler
-        pt_ham_t pt_ham(pt_root, alignment_map, options.alpha, gamma_distribution,
+        pt_ham_t pt_ham(pt_root, alignment_map, options.alpha[0], gamma_distribution,
                         options.leapfrog_step_size, options.leapfrog_steps,
                         options.momentum_refreshment, thread_pool);
         // parallel chains with different temperatures
@@ -421,7 +432,8 @@ void run_optimization(const string& method, const char* file_tree, const char* f
 
 int main(int argc, char *argv[])
 {
-        vector<string> tokens;
+        vector<string> tokens1;
+        vector<string> tokens2;
         const char* file_tree;
         const char* file_alignment;
 
@@ -455,13 +467,17 @@ int main(int argc, char *argv[])
 
                 switch(c) {
                 case 'a':
-                        tokens = token(string(optarg), ':');
-                        if (tokens.size() != alphabet_size) {
-                                wrong_usage(NULL);
-                                exit(EXIT_FAILURE);
-                        }
-                        for (size_t i = 0; i < alphabet_size; i++) {
-                                options.alpha[i] = atof(tokens[i].c_str());
+                        tokens1 = token(string(optarg), ';');
+                        options.alpha = matrix<double>(tokens1.size(), alphabet_size, 0);
+                        for (size_t i = 0; i < tokens1.size(); i++) {
+                                tokens2 = token(tokens1[i], ':');
+                                if (tokens2.size() != alphabet_size) {
+                                        wrong_usage(NULL);
+                                        exit(EXIT_FAILURE);
+                                }
+                                for (size_t j = 0; j < alphabet_size; j++) {
+                                        options.alpha[i][j] = atof(tokens2[j].c_str());
+                                }
                         }
                         break;
                 case 'e':
@@ -501,10 +517,10 @@ int main(int argc, char *argv[])
                         options.threads = atoi(optarg);
                         break;
                 case 'u':
-                        tokens = token(string(optarg), ':');
+                        tokens1 = token(string(optarg), ':');
                         options.temperatures = vector<double>();
-                        for (size_t i = 0; i < tokens.size(); i++) {
-                                options.temperatures.push_back(atof(tokens[i].c_str()));
+                        for (size_t i = 0; i < tokens1.size(); i++) {
+                                options.temperatures.push_back(atof(tokens1[i].c_str()));
                         }
                         break;
                 case 'v':
