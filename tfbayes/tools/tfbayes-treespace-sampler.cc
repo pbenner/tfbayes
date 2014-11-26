@@ -254,6 +254,8 @@ void print_usage(char *pname, FILE *fp)
                       "      --leapfrog-steps          - number of integration steps for the hamiltonian mcmc\n"
                       "      --proposal-variance=float - variance of the proposal distribution\n"
                       "      --hamiltonian-alpha=float - partial momentum refreshment parameter\n"
+                      "                                  [-1,+1], where values closer to one cause a new sample\n"
+                      "                                  to be similar to the old one\n"
                       "      --shape=float             - shape parameter for the gamma prior\n"
                       "      --scale=float             - scale parameter for the gamma prior\n"
                       "                                  for each sample to FILE\n"
