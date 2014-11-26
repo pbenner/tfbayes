@@ -248,7 +248,7 @@ public:
 
         pt_hamiltonian_t(const pt_root_t& tree,
                          const alignment_map_t<AC>& alignment,
-                         const std::vector<double>& alpha,
+                         const std::matrix<double>& alpha,
                          const gamma_distribution_t& gamma_distribution,
                          double step_size,
                          size_t steps,
@@ -259,13 +259,20 @@ public:
                   _state_                (tree),
                   _thread_pool_          (thread_pool),
                   _alignment_            (alignment),
-                  _alpha_                (alpha.begin(), alpha.end()),
+                  _alpha_                (),
                   _gamma_distribution_   (gamma_distribution),
                   _temperature_          (temperature),
                   _step_size_            (step_size),
                   _steps_                (steps),
                   _momentum_refreshment_ (momentum_refreshment) {
 
+                if (alignment.size() % alpha.size() != 0) {
+                        std::cerr << "Warning: The number of pseudocount vectors is not a multiple of the alignment length."
+                                  << std::endl;
+                }
+                for (size_t i = 0; i < alpha.size(); i++) {
+                        _alpha_.push_back(exponent_t<AS, PC>(alpha[i].begin(), alpha[i].end()));
+                }
                 // check parameters
                 assert(_momentum_refreshment_ >= -1.0);
                 assert(_momentum_refreshment_ <=  1.0);
@@ -455,7 +462,7 @@ protected:
         // alignment data
         const alignment_map_t<AC>& _alignment_;
         // prior distribution and parameters
-        exponent_t<AS, PC> _alpha_;
+        std::vector<exponent_t<AS, PC> > _alpha_;
         gamma_distribution_t _gamma_distribution_;
         double _temperature_;
         // integration parameters
@@ -499,7 +506,7 @@ public:
 
         pt_metropolis_hastings_t(const pt_root_t& tree,
                                  const alignment_map_t<AC>& alignment,
-                                 const std::vector<double>& alpha,
+                                 const std::matrix<double>& alpha,
                                  const gamma_distribution_t& gamma_distribution,
                                  const proposal_distribution_t& proposal_distribution,
                                  thread_pool_t& thread_pool,
@@ -508,11 +515,18 @@ public:
                   _state_                (tree),
                   _thread_pool_          (thread_pool),
                   _alignment_            (alignment),
-                  _alpha_                (alpha.begin(), alpha.end()),
+                  _alpha_                (),
                   _gamma_distribution_   (gamma_distribution),
                   _temperature_          (temperature),
                   _proposal_distribution_(proposal_distribution.clone()) {
 
+                if (alignment.size() % alpha.size() != 0) {
+                        std::cerr << "Warning: The number of pseudocount vectors is not a multiple of the alignment length."
+                                  << std::endl;
+                }
+                for (size_t i = 0; i < alpha.size(); i++) {
+                        _alpha_.push_back(exponent_t<AS, PC>(alpha[i].begin(), alpha[i].end()));
+                }
                 // compute the posterior value for the initial tree
                 _state_ = log_posterior();
         }
@@ -665,7 +679,7 @@ protected:
         // alignment data
         const alignment_map_t<AC>& _alignment_;
         // prior distribution and parameters
-        exponent_t<AS, PC> _alpha_;
+        std::vector<exponent_t<AS, PC> > _alpha_;
         gamma_distribution_t _gamma_distribution_;
         double _temperature_;
         // metropolis-hastings proposal distribution

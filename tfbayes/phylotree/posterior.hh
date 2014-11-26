@@ -45,7 +45,7 @@ template <size_t AS, typename AC, typename PC>
 double pt_posterior(
         const pt_root_t& tree,
         const alignment_map_t<AC>& alignment,
-        const exponent_t<AS, PC>& alpha,
+        const std::vector<exponent_t<AS, PC> >& alpha,
         const boost::math::gamma_distribution<>& gamma_prior,
         thread_pool_t& thread_pool
         ) {
@@ -70,7 +70,7 @@ pt_marginal_derivative_t
 pt_posterior_derivative(
         const pt_root_t& tree,
         const alignment_map_t<AC>& alignment,
-        const exponent_t<AS, PC>& alpha,
+        const std::vector<exponent_t<AS, PC> >& alpha,
         const boost::math::gamma_distribution<>& gamma_prior,
         thread_pool_t& thread_pool
         ) {

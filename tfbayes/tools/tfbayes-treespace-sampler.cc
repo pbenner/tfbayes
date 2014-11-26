@@ -333,7 +333,7 @@ void run_gradient_ascent(
         thread_pool_t& thread_pool)
 {
         pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(
-                pt_root, alignment_map, options.alpha[0], gamma_distribution,
+                pt_root, alignment_map, options.alpha, gamma_distribution,
                 thread_pool, options.step_size);
         pt_gradient_ascent(options.max_steps, options.min_change);
         // print posterior values to separate file
@@ -360,7 +360,7 @@ void run_metropolis_hastings(
         // proposal distribution
         normal_proposal_t proposal(options.proposal_variance);
         // the metropolis sampler
-        pt_mc_t pt_mc(pt_root, alignment_map, options.alpha[0], gamma_distribution, proposal, thread_pool);
+        pt_mc_t pt_mc(pt_root, alignment_map, options.alpha, gamma_distribution, proposal, thread_pool);
         // parallel chains with different temperatures
         pt_mc3_t<pt_mc_t> pt_mc3(options.temperatures, pt_mc);
         // run several mc3 chains in parallel
@@ -382,7 +382,7 @@ void run_hamiltonian_mcmc(
         threaded_rng_t rng;
         seed_rng(rng);
         // the metropolis sampler
-        pt_ham_t pt_ham(pt_root, alignment_map, options.alpha[0], gamma_distribution,
+        pt_ham_t pt_ham(pt_root, alignment_map, options.alpha, gamma_distribution,
                         options.leapfrog_step_size, options.leapfrog_steps,
                         options.momentum_refreshment, thread_pool);
         // parallel chains with different temperatures

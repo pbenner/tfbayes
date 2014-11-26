@@ -85,7 +85,7 @@ template <size_t AS, typename AC, typename PC>
 double pt_marginal_likelihood(
         const pt_root_t& tree,
         const alignment_map_t<AC>& alignment,
-        const exponent_t<AS, PC>& alpha,
+        const std::vector<exponent_t<AS, PC> >& alpha,
         thread_pool_t& thread_pool
         ) {
         // type of the marginal likelihood function that is called by
@@ -105,7 +105,7 @@ double pt_marginal_likelihood(
                         static_cast<double>(it->second),
                         boost::cref(tree),
                         boost::cref(it->first),
-                        boost::cref(alpha));
+                        boost::cref(alpha[i%alpha.size()]));
                 futures[i++] = thread_pool.schedule(f);
         }
         for (size_t i = 0; i < futures.size(); i++) {
@@ -179,7 +179,7 @@ pt_marginal_derivative_t
 pt_marginal_derivative(
         const pt_root_t& tree,
         const alignment_map_t<AC>& alignment,
-        const exponent_t<AS, PC>& alpha,
+        const std::vector<exponent_t<AS, PC> >& alpha,
         thread_pool_t& thread_pool
         ) {
         // type of the marginal likelihood function that is called by
@@ -201,7 +201,7 @@ pt_marginal_derivative(
                         static_cast<double>(it->second),
                         boost::cref(tree),
                         boost::cref(it->first),
-                        boost::cref(alpha));
+                        boost::cref(alpha[i%alpha.size()]));
                 futures[i++] = thread_pool.schedule(f);
         }
         // marginal likelihood

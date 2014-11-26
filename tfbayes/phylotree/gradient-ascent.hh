@@ -55,7 +55,7 @@ public:
 public:
         pt_gradient_ascent_t(const pt_root_t& tree,
                              const alignment_map_t<AC>& alignment,
-                             const std::vector<double>& alpha,
+                             const std::matrix<double>& alpha,
                              const boost::math::gamma_distribution<>& gamma_distribution,
                              thread_pool_t& thread_pool,
                              double epsilon = 0.001,
@@ -64,13 +64,21 @@ public:
                   _tree_              (tree),
                   _alignment_         (alignment),
                   _thread_pool_       (thread_pool),
-                  _alpha_             (alpha.begin(), alpha.end()),
+                  _alpha_             (),
                   _gamma_distribution_(gamma_distribution),
                   _epsilon_           (epsilon),
                   _eta_               (eta),
                   node_epsilon        (tree.n_nodes-1),
-                  derivative_prev     (tree.n_nodes-1)
-                { }
+                  derivative_prev     (tree.n_nodes-1) {
+
+                if (alignment.size() % alpha.size() != 0) {
+                        std::cerr << "Warning: The number of pseudocount vectors is not a multiple of the alignment length."
+                                  << std::endl;
+                }
+                for (size_t i = 0; i < alpha.size(); i++) {
+                        _alpha_.push_back(exponent_t<AS, PC>(alpha[i].begin(), alpha[i].end()));
+                }
+        }
 
         virtual ~pt_gradient_ascent_t() { }
 
@@ -148,7 +156,7 @@ protected:
         // a thread pool for computing likelihoods
         thread_pool_t& _thread_pool_;
         // prior parameters and distribution
-        exponent_t<AS, PC> _alpha_;
+        std::vector<exponent_t<AS, PC> > _alpha_;
         boost::math::gamma_distribution<> _gamma_distribution_;
         // step size parameters
         double _epsilon_;
