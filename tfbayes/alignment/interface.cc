@@ -205,15 +205,18 @@ template<size_t AS, typename AC, typename PC>
 std::vector<double> marginal_likelihood(
         const pt_root_t& tree,
         const alignment_t<AC>& alignment,
-        const std::vector<PC>& prior)
+        const std::matrix<PC>& prior)
 {
-        exponent_t<AS, PC> alpha(prior.begin(), prior.end());
         std::vector<double> result;
 
         /* go through the alignment and compute the marginal
          * likelihood for each position */
+        size_t i = 0;
         for (typename alignment_t<AC>::const_iterator it = alignment.begin();
-             it != alignment.end(); it++) {
+             it != alignment.end(); it++, i++) {
+                exponent_t<AS, PC> alpha(prior[i%prior.size()].begin(),
+                                         prior[i%prior.size()].end  ());
+
                 result.push_back(pt_marginal_likelihood<AS, AC, PC>
                                  (tree, *it, alpha));
         }
@@ -224,7 +227,7 @@ template<typename AC, typename PC>
 std::vector<double> marginal_likelihood(
         const pt_root_t& tree,
         const alignment_t<AC>& alignment,
-        const std::vector<PC>& prior)
+        const std::matrix<PC>& prior)
 {
         switch (alignment.alphabet().size()) {
         case 5: return marginal_likelihood<5, AC, PC>(tree, alignment, prior); break;
@@ -239,15 +242,18 @@ template<size_t AS, typename AC, typename PC>
 std::matrix<double> expectation(
         const pt_root_t& tree,
         const alignment_t<AC>& alignment,
-        const std::vector<PC>& prior)
+        const std::matrix<PC>& prior)
 {
-        exponent_t<AS, PC> alpha(prior.begin(), prior.end());
         std::matrix<double> result;
         polynomial_term_t<AS> term(1.0);
 
+        size_t i = 0;
         for (typename alignment_t<AC>::const_iterator it = alignment.begin();
-             it != alignment.end(); it++) {
+             it != alignment.end(); it++, i++) {
                 std::vector<double> tmp(AS, 0);
+                exponent_t<AS, PC> alpha(prior[i%prior.size()].begin(),
+                                         prior[i%prior.size()].end  ());
+
                 double ml = pt_marginal_likelihood<AS, AC, PC>(tree, *it, alpha);
                 pt_polynomial_t<AS, PC> poly = pt_likelihood<AS, AC, PC>(tree, *it);
 
@@ -266,7 +272,7 @@ template<typename AC, typename PC>
 std::matrix<double> expectation(
         const pt_root_t& tree,
         const alignment_t<AC>& alignment,
-        const std::vector<PC>& prior)
+        const std::matrix<PC>& prior)
 {
         switch (alignment.alphabet().size()) {
         case 5: return expectation<5, AC, PC>(tree, alignment, prior); break;

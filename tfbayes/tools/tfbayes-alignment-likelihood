@@ -34,14 +34,14 @@ from tfbayes.uipac.alphabet import DNA
 def usage():
     """Print usage."""
     print
-    print "tfbayes-alignment-likelihood [option]... ALIGNMENT TREE"
+    print "tfbayes-alignment-likelihood [option]... TREE ALIGNMENT"
     print
     print "Compute the marginal likelihood of an alignment given a phylogenetic"
     print "tree where the column specific stationary distribution is integrated"
     print "out."
     print
     print "Options:"
-    print "       --alpha=Px:Px:Px:Px:Px         - dirichlet prior pseudocounts"
+    print "       --alpha=Px:Px:Px:Px:Px[;...]   - dirichlet prior pseudocount vectors"
     print "       --format=str                   - format of the input file(s) (fasta or maf)"
     print "                                        [default: maf]"
     print "   -p                                 - compute (unnormalized) posterior"
@@ -59,7 +59,7 @@ def usage():
 
 options = {
     'format'         : 'maf',
-    'alpha'          : [0.2, 0.2, 0.2, 0.2, 0.2],
+    'alpha'          : [[0.2, 0.2, 0.2, 0.2, 0.2]],
     'posterior'      : False,
     'rate'           : 1.0,
     'shape'          : 1.0,
@@ -83,7 +83,7 @@ def read_alignment(file_name):
 # compute marginal likelihood
 # ------------------------------------------------------------------------------
 
-def compute_marginal_likelihood(alignments, tree):
+def compute_marginal_likelihood(tree, alignments):
     result = 0.0
     for alignment in alignments:
         # convert to native alignment format
@@ -101,12 +101,12 @@ def compute_marginal_likelihood(alignments, tree):
 # main
 # ------------------------------------------------------------------------------
 
-def main(alignment_file, tree_file):
+def main(tree_file, alignment_file):
     alignments = read_alignment(alignment_file)
     tree       = pt_root_t(tree_file)
     tree.scale(options['rate'])
 
-    print compute_marginal_likelihood(alignments, tree)
+    print compute_marginal_likelihood(tree, alignments)
 
 # __main__
 # ------------------------------------------------------------------------------
@@ -129,10 +129,13 @@ def __main__():
         if o == "--format":
             options['format'] = a
         if o == "--alpha":
-            options['alpha'] = map(float, a.split(':'))
-            if not len(options['alpha']) == 5:
-                usage()
-                return 1
+            options['alpha'] = []
+            for v in a.split(';'):
+                tmp = map(float, v.split(':'))
+                if not len(tmp) == 5:
+                    usage()
+                    return 1
+                options['alpha'].append(tmp)
         if o == "-p":
             options['posterior'] = True
         if o == "--shape":

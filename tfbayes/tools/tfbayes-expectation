@@ -40,7 +40,7 @@ from tfbayes.interface  import sigint
 def usage():
     """Print usage."""
     print
-    print "tfbayes-expectation [option]... PHYLOGENETIC_TREE FASTA_FILE..."
+    print "tfbayes-expectation [option]... TREE ALIGNMENT..."
     print
     print "Given a set of fasta files from the ChIP experiment and a"
     print "phylogenetic tree, this program computes a motif of the"
@@ -49,7 +49,7 @@ def usage():
     print "can be plotted with `tfbayes-motifformat'."
     print
     print "Options:"
-    print "       --prior=Px:Px:Px:Px:Px         - counts for the prior"
+    print "       --alpha=Px:Px:Px:Px:Px[;...]   - dirichlet prior pseudocount vectors"
     print "       --format=STR                   - fasta or maf [default: maf]"
     print "   -t, --threads=N                    - run N jobs in parallel"
     print
@@ -62,7 +62,7 @@ def usage():
 
 options = {
     'phylotree'      : None,
-    'prior'          : [0.1, 0.1, 0.1, 0.1, 0.1],
+    'alpha'          : [[0.1, 0.1, 0.1, 0.1, 0.1]],
     'format'         : 'maf',
     'threads'        : 1,
     'verbose'        : False,
@@ -89,7 +89,7 @@ def code_nucleotide(char):
 
 def alignment_expectation(multiple_alignment, phylotree):
     alignment = alignment_t(multiple_alignment, phylotree)
-    return expectation(phylotree, alignment, options['prior'])
+    return expectation(phylotree, alignment, options['alpha'])
 
 # parse alignment
 # ------------------------------------------------------------------------------
@@ -187,7 +187,7 @@ def main_maf(files):
 def __main__():
     global options
     try:
-        longopts   = ["format=", "prior=", "threads=", "help", "verbose"]
+        longopts   = ["format=", "alpha=", "threads=", "help", "verbose"]
         opts, tail = getopt.getopt(sys.argv[1:], "t:hv", longopts)
     except getopt.GetoptError:
         usage()
@@ -209,11 +209,14 @@ def __main__():
                 usage()
                 return 1
             options['format'] = a
-        if o == "--prior":
-            options['prior'] = map(float, a.split(':'))
-            if not len(options['prior']) == 5:
-                usage()
-                return 1
+        if o == "--alpha":
+            options['alpha'] = []
+            for v in a.split(';'):
+                tmp = map(float, v.split(':'))
+                if not len(tmp) == 5:
+                    usage()
+                    return 1
+                options['alpha'].append(tmp)
         if o in ("-t", "--threads"):
             options['threads'] = int(a)
             if not options['threads'] >= 1:
