@@ -146,7 +146,7 @@ _main_(const string& fasta_file) {
         }
         range_t range(seq_index_t(data.size()-1, 0), data[data.size()-1].size());
         cout << "Log predictive: "
-             << model.log_predictive(range)
+             << model.predictive(range)
              << endl;
 }
 
