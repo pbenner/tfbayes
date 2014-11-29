@@ -33,14 +33,17 @@ public:
                 return _code[static_cast<size_t>(letter)];
         }
         alphabet_code_t decode(alphabet_code_t code) const {
-                return _decode[static_cast<size_t>(code)];
+                return _decode[static_cast<size_t>(code)+1];
         }
         alphabet_code_t complement(alphabet_code_t code) const {
                 assert(_complement != NULL);
-                return _complement[static_cast<size_t>(code)];
+                return _complement[static_cast<size_t>(code)+1];
         }
         bool element(alphabet_code_t letter) const {
                 return _code[static_cast<size_t>(letter)] >= 0;
+        }
+        bool missing_data(alphabet_code_t letter) const {
+                return _code[static_cast<size_t>(letter)] == -1;
         }
         size_t size() const {
                 return _size;

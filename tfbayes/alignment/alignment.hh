@@ -379,7 +379,7 @@ public:
                         taxon_map_t::const_iterator it = taxon_map.find(parser.taxon());
                         if (it != taxon_map.end()) {
                                 occurred.insert(parser.taxon());
-                                sequences[it->second] = sequence_t<AC>(line);
+                                sequences[it->second] = sequence_t<AC>(line, alphabet);
                         }
                         else {
                                 std::cerr << boost::format("Warning: taxon `%s' not found in the phylogenetic tree.") % parser.taxon()

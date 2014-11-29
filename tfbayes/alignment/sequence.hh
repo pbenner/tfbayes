@@ -26,8 +26,10 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <cstdlib>
 
 #include <boost/bind.hpp>            /* bind */
+#include <boost/format.hpp>
 #include <boost/range/adaptors.hpp>  /* transformed */
 #include <boost/range/algorithm.hpp> /* copy */
 #include <boost/foreach.hpp>
@@ -37,6 +39,14 @@
 template <typename CODE_TYPE = alphabet_code_t>
 class sequence_t : public std::vector<CODE_TYPE>
 {
+        static alphabet_code_t _code(const alphabet_t& alphabet, alphabet_code_t letter) {
+                if (alphabet.missing_data(letter) || alphabet.element(letter)) {
+                        return alphabet.code(letter);
+                }
+                std::cerr << boost::format("Sequence contains illegal character `%c'.") % letter
+                          << std::endl;
+                exit(EXIT_FAILURE);
+        }
 public:
         sequence_t(const alphabet_t& alphabet = nucleotide_alphabet_t())
                 : std::vector<CODE_TYPE>(),
@@ -57,7 +67,7 @@ public:
                 : std::vector<CODE_TYPE>(sequence.size()),
                   alphabet(alphabet) {
                 boost::copy(
-                        sequence | boost::adaptors::transformed(boost::bind(&alphabet_t::code, &alphabet, _1)), begin());
+                        sequence | boost::adaptors::transformed(boost::bind(sequence_t<CODE_TYPE>::_code, boost::ref(alphabet), _1)), begin());
         }
         sequence_t(const sequence_t<CODE_TYPE>& ns,
                    const alphabet_t& alphabet = nucleotide_alphabet_t())
@@ -83,7 +93,7 @@ public:
         friend std::ostream& operator<< (std::ostream& o, const sequence_t<CODE_TYPE>& sequence) {
                 for (typename sequence_t<CODE_TYPE>::const_iterator it = sequence.begin();
                      it != sequence.end(); it++) {
-                        o << (*it == sequence.alphabet.code('N') ? 'N' : sequence.alphabet.decode(*it));
+                        o << sequence.alphabet.decode(*it);
                 }
                 return o;
         }

@@ -17,6 +17,7 @@
 
 
 #include <iostream>
+#include <iomanip>
 
 #include <tfbayes/uipac/alphabet.hh>
 
@@ -29,9 +30,15 @@ test_nucleotide_code()
         alphabet_t a = b;
 
         for (alphabet_code_t i = 0; i < 126; i++) {
-                cout << i << " is coded as " << (int)a.code(i) << " and decoded as " << a.decode(a.code(i));
+                cout << i << " is coded as " << setw(3) << (int)a.code(i) << " and decoded as " << a.decode(a.code(i));
+                if (a.element(i) || a.missing_data(i)) {
+                        cout << " [complement " << (int)a.complement(a.code(i)) << "]";
+                }
                 if (a.element(i)) {
                         cout << " (is element)";
+                }
+                if (a.missing_data(i)) {
+                        cout << " (is missing data)";
                 }
                 cout << endl;
         }
@@ -44,9 +51,12 @@ test_protein_code()
         alphabet_t a = b;
 
         for (alphabet_code_t i = 0; i < 126; i++) {
-                cout << i << " is coded as " << (int)a.code(i) << " and decoded as " << a.decode(a.code(i));
+                cout << i << " is coded as " << setw(3) << (int)a.code(i) << " and decoded as " << a.decode(a.code(i));
                 if (a.element(i)) {
                         cout << " (is element)";
+                }
+                if (a.missing_data(i)) {
+                        cout << " (is missing data)";
                 }
                 cout << endl;
         }
