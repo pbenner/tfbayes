@@ -1354,10 +1354,14 @@ mean_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
                 list  <ntree_t>::const_iterator it = ntree_list.begin();
                 vector<double >::const_iterator is = weights.begin();
                 for (; it != ntree_list.end() && is != weights.end(); it++, is++, i++) {
-                        if (verbose && i % 100 == 0) {
-                                cerr << progress_t(i/(double)(n*ntree_list.size()));
-                        }
                         geodesic_t geodesic(sk, *it);
+                        // verbose
+                        if (verbose && i % 100 == 0) {
+                                cerr << progress_t(i/(double)(n*ntree_list.size()))
+                                     << " [step size: "
+                                     << std::scientific << 2.0*lambda(k)*(*is)/(1.0+2.0*lambda(k)*(*is))
+                                     << "]";
+                        }
                         // lambda(k+1) should be constant within one cycle
                         sk = geodesic(2.0*lambda(k)*(*is)/(1.0+2.0*lambda(k)*(*is)));
                 }
@@ -1404,10 +1408,14 @@ median_tree_cyc(const list<ntree_t>& ntree_list, const vector<double>& weights,
                 list  <ntree_t>::const_iterator it = ntree_list.begin();
                 vector<double >::const_iterator is = weights.begin();
                 for (; it != ntree_list.end() && is != weights.end(); it++, is++, i++) {
-                        if (verbose && i % 100 == 0) {
-                                cerr << progress_t(i/(double)(n*ntree_list.size()));
-                        }
                         geodesic_t geodesic(sk, *it);
+                        // verbose
+                        if (verbose && i % 100 == 0) {
+                                cerr << progress_t(i/(double)(n*ntree_list.size()))
+                                     << " [step size: "
+                                     << std::scientific << min(1.0, lambda(k)*(*is)/geodesic.length())
+                                     << "]";
+                        }
                         // lambda(k+1) should be constant within one cycle
                         sk = geodesic(min(1.0, lambda(k)*(*is)/geodesic.length()));
                 }
@@ -1461,10 +1469,14 @@ mean_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weights,
                 vector<ntree_t>::const_iterator it = ntree_list.begin();
                 vector<double >::const_iterator is = weights.begin();
                 for (; it != ntree_list.end() && is != weights.end(); it++, is++, i++) {
-                        if (verbose && i % 100 == 0) {
-                                cerr << progress_t(i/(double)(n*ntree_list.size()));
-                        }
                         geodesic_t geodesic(sk, *it);
+                        // verbose
+                        if (verbose && i % 100 == 0) {
+                                cerr << progress_t(i/(double)(n*ntree_list.size()))
+                                     << " [step size: "
+                                     << std::scientific << 2.0*lambda(i-1)*(*is)/(1.0+2.0*lambda(i-1)*(*is))
+                                     << "]";
+                        }
                         // in the random version lambda(i+1) changes
                         // in each iteration
                         sk = geodesic(2.0*lambda(i-1)*(*is)/(1.0+2.0*lambda(i-1)*(*is)));
@@ -1519,10 +1531,14 @@ median_tree_rand(const list<ntree_t>& _ntree_list, const vector<double>& _weight
                 vector<ntree_t>::const_iterator it = ntree_list.begin();
                 vector<double >::const_iterator is = weights.begin();
                 for (; it != ntree_list.end() && is != weights.end(); it++, is++, i++) {
-                        if (verbose && i % 100 == 0) {
-                                cerr << progress_t(i/(double)(n*ntree_list.size()));
-                        }
                         geodesic_t geodesic(sk, *it);
+                        // verbose
+                        if (verbose && i % 100 == 0) {
+                                cerr << progress_t(i/(double)(n*ntree_list.size()))
+                                     << " [step size: "
+                                     << std::scientific << min(1.0, lambda(static_cast<double>(i-1))*(*is)/geodesic.length())
+                                     << "]";
+                        }
                         // in the random version lambda(i+1) changes
                         // in each iteration
                         sk = geodesic(min(1.0, lambda(static_cast<double>(i-1))*(*is)/geodesic.length()));
