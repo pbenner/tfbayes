@@ -22,37 +22,6 @@
 
 using namespace std;
 
-template <typename CODE_TYPE>
-CODE_TYPE code_nucleotide(char a)
-{
-        switch (a) {
-        case 'A':
-        case 'a':
-                return 1;
-        case 'C':
-        case 'c':
-                return 3;
-        case 'G':
-        case 'g':
-                return 0;
-        case 'T':
-        case 't':
-                return 2;
-        case '-':
-                return 4;
-        }
-        return -1;
-}
-
-void
-generate_nucleotide_code()
-{
-        for (alphabet_code_t i = 0; i < 126; i++) {
-                cout << (int)code_nucleotide<alphabet_code_t>(i) << ", ";
-        }
-        cout << "-1" << endl;
-}
-
 void
 test_nucleotide_code()
 {
@@ -68,10 +37,27 @@ test_nucleotide_code()
         }
 }
 
+void
+test_protein_code()
+{
+        alphabet_t b = protein_alphabet_t();
+        alphabet_t a = b;
+
+        for (alphabet_code_t i = 0; i < 126; i++) {
+                cout << i << " is coded as " << (int)a.code(i) << " and decoded as " << a.decode(a.code(i));
+                if (a.element(i)) {
+                        cout << " (is element)";
+                }
+                cout << endl;
+        }
+}
+
 int
 main(void)
 {
         test_nucleotide_code();
+        cout << endl;
+        test_protein_code();
 
         return 0;
 }

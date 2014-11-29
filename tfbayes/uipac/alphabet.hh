@@ -23,6 +23,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <cstddef>
+#include <cassert>
 
 typedef char alphabet_code_t;
 
@@ -35,6 +36,7 @@ public:
                 return _decode[static_cast<size_t>(code)];
         }
         alphabet_code_t complement(alphabet_code_t code) const {
+                assert(_complement != NULL);
                 return _complement[static_cast<size_t>(code)];
         }
         bool element(alphabet_code_t letter) const {
@@ -69,13 +71,24 @@ protected:
 class nucleotide_alphabet_t : public alphabet_t {
 public:
         nucleotide_alphabet_t() 
-                : alphabet_t(_code, _decode, _complement, 5)
+                : alphabet_t(_nucleotide_code, _nucleotide_decode, _nucleotide_complement, 5)
                 { }
 protected:
         // codebooks specific to this class
-        static const alphabet_code_t       _code[];
-        static const alphabet_code_t     _decode[];
-        static const alphabet_code_t _complement[];
+        static const alphabet_code_t       _nucleotide_code[];
+        static const alphabet_code_t     _nucleotide_decode[];
+        static const alphabet_code_t _nucleotide_complement[];
+};
+
+class protein_alphabet_t : public alphabet_t {
+public:
+        protein_alphabet_t() 
+                : alphabet_t(_protein_code, _protein_decode, NULL, 21)
+                { }
+protected:
+        // codebooks specific to this class
+        static const alphabet_code_t       _protein_code[];
+        static const alphabet_code_t     _protein_decode[];
 };
 
 #endif /* __TFBAYES_UIPAC_ALPHABET_HH__ */
