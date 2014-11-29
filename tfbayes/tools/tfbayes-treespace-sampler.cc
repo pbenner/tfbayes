@@ -246,7 +246,7 @@ void print_usage(char *pname, FILE *fp)
                       "         hamiltonian-mcmc\n"
                       "\n"
                       "Options:\n"
-                      "      --alphabet=string         - nucleotide (5) or protein (21)\n"
+                      "      --alphabet=string         - nucleotide (5) or protein (21) [default: nucleotide]\n"
                       "      --chains=integer          - number of parallel chains\n"
                       "      --counts=f:f:f:f:f[;...]  - matrix of pseudocounts\n"
                       "      --epsilon=float           - stop gradient ascent if change is smaller than this value\n"
