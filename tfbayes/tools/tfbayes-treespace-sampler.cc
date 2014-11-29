@@ -1,4 +1,4 @@
-/* Copyright (C) 2012-2013 Philipp Benner
+/* Copyright (C) 2012-2014 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,8 +36,6 @@
 #include <tfbayes/utility/linalg.hh>
 #include <tfbayes/utility/random.hh>
 #include <tfbayes/utility/strtools.hh>
-
-#define alphabet_size 5
 
 using namespace std;
 
@@ -158,6 +156,7 @@ ostream& operator<< (ostream& o, const print_posterior_samples& ps)
 
 typedef struct _options_t {
         matrix<double> alpha;
+        alphabet_t alphabet;
         double scale;
         double shape;
         size_t max_steps;
@@ -173,7 +172,7 @@ typedef struct _options_t {
         vector<double> temperatures;
         bool   verbose;
         _options_t()
-                : alpha(1, alphabet_size, 0.2),
+                : alphabet(nucleotide_alphabet_t()),
                   scale(0.1),
                   shape(1.0),
                   max_steps(1000),
@@ -247,6 +246,7 @@ void print_usage(char *pname, FILE *fp)
                       "         hamiltonian-mcmc\n"
                       "\n"
                       "Options:\n"
+                      "      --alphabet=string         - nucleotide (5) or protein (21)\n"
                       "      --chains=integer          - number of parallel chains\n"
                       "      --counts=f:f:f:f:f[;...]  - matrix of pseudocounts\n"
                       "      --epsilon=float           - stop gradient ascent if change is smaller than this value\n"
@@ -326,13 +326,14 @@ void save_posterior_values(const T& t)
 // computations, a more powerful algorithm for computing MAP solutions
 // was developed by Felsenstein (i.e. a coordinate ascent algorithm)
 
+template <size_t AS>
 void run_gradient_ascent(
         const pt_root_t& pt_root,
         const alignment_map_t<>& alignment_map,
         const boost::math::gamma_distribution<>& gamma_distribution,
         thread_pool_t& thread_pool)
 {
-        pt_gradient_ascent_t<alphabet_size> pt_gradient_ascent(
+        pt_gradient_ascent_t<AS> pt_gradient_ascent(
                 pt_root, alignment_map, options.alpha, gamma_distribution,
                 thread_pool, options.step_size);
         pt_gradient_ascent(options.max_steps, options.min_change);
@@ -345,16 +346,15 @@ void run_gradient_ascent(
 // sampler
 ////////////////////////////////////////////////////////////////////////////////
 
-// type of the metropolis hastings algorithm
-typedef pt_metropolis_hastings_t<alphabet_size> pt_mc_t;
-typedef pt_hamiltonian_t<alphabet_size> pt_ham_t;
-
+template <size_t AS>
 void run_metropolis_hastings(
         const pt_root_t& pt_root,
         const alignment_map_t<>& alignment_map,
         const boost::math::gamma_distribution<>& gamma_distribution,
         thread_pool_t& thread_pool)
 {
+        typedef pt_metropolis_hastings_t<AS> pt_mc_t;
+
         threaded_rng_t rng;
         seed_rng(rng);
         // proposal distribution
@@ -373,12 +373,15 @@ void run_metropolis_hastings(
         cout << print_posterior_samples(pmcmc);
 }
 
+template <size_t AS>
 void run_hamiltonian_mcmc(
         const pt_root_t& pt_root,
         const alignment_map_t<>& alignment_map,
         const boost::math::gamma_distribution<>& gamma_distribution,
         thread_pool_t& thread_pool)
 {
+        typedef pt_hamiltonian_t<AS> pt_ham_t;
+
         threaded_rng_t rng;
         seed_rng(rng);
         // the metropolis sampler
@@ -407,20 +410,32 @@ void run_optimization(const string& method, const char* file_tree, const char* f
         boost::math::gamma_distribution<> gamma_distribution(options.shape, options.scale);
 
         // alignment
-        alignment_set_t<> alignment_set(file_alignment, pt_root, nucleotide_alphabet_t(), options.verbose);
+        alignment_set_t<> alignment_set(file_alignment, pt_root, options.alphabet, options.verbose);
         assert(alignment_set.size() > 0);
         assert(alignment_set[0].length() > 0);
         // convert alignment
         alignment_map_t<> alignment_map(alignment_set);
 
         if (method == "gradient-ascent") {
-                run_gradient_ascent(pt_root, alignment_map, gamma_distribution, thread_pool);
+                switch (options.alphabet.size()) {
+                case  5: run_gradient_ascent< 5>(pt_root, alignment_map, gamma_distribution, thread_pool); break;
+                case 21: run_gradient_ascent<21>(pt_root, alignment_map, gamma_distribution, thread_pool); break;
+                default: assert(0);
+                }
         }
         else if (method == "metropolis-hastings") {
-                run_metropolis_hastings(pt_root, alignment_map, gamma_distribution, thread_pool);
+                switch (options.alphabet.size()) {
+                case  5: run_metropolis_hastings< 5>(pt_root, alignment_map, gamma_distribution, thread_pool); break;
+                case 21: run_metropolis_hastings<21>(pt_root, alignment_map, gamma_distribution, thread_pool); break;
+                default: assert(0);
+                }
         }
         else if (method == "hamiltonian-mcmc") {
-                run_hamiltonian_mcmc(pt_root, alignment_map, gamma_distribution, thread_pool);
+                switch (options.alphabet.size()) {
+                case  5: run_hamiltonian_mcmc< 5>(pt_root, alignment_map, gamma_distribution, thread_pool); break;
+                case 21: run_hamiltonian_mcmc<21>(pt_root, alignment_map, gamma_distribution, thread_pool); break;
+                default: assert(0);
+                }
         }
         else {
                 cerr << "Unknown optimization method: " << method
@@ -442,6 +457,7 @@ int main(int argc, char *argv[])
         for(;;) {
                 int c, option_index = 0;
                 static struct option long_options[] = {
+                        { "alphabet",             1, 0, 'y' },
                         { "counts",               1, 0, 'a' },
                         { "chains",               1, 0, 'j' },
                         { "epsilon",              1, 0, 'n' },
@@ -470,14 +486,10 @@ int main(int argc, char *argv[])
                 switch(c) {
                 case 'a':
                         tokens1 = token(string(optarg), ';');
-                        options.alpha = matrix<double>(tokens1.size(), alphabet_size, 0);
                         for (size_t i = 0; i < tokens1.size(); i++) {
                                 tokens2 = token(tokens1[i], ':');
-                                if (tokens2.size() != alphabet_size) {
-                                        wrong_usage(NULL);
-                                        exit(EXIT_FAILURE);
-                                }
-                                for (size_t j = 0; j < alphabet_size; j++) {
+                                options.alpha.push_back(vector<double>(tokens2.size(), 0.0));
+                                for (size_t j = 0; j < tokens2.size(); j++) {
                                         options.alpha[i][j] = atof(tokens2[j].c_str());
                                 }
                         }
@@ -534,6 +546,18 @@ int main(int argc, char *argv[])
                 case 'x':
                         print_version(stdout);
                         exit(EXIT_SUCCESS);
+                case 'y':
+                        if (string("nucleotide") == string(optarg)) {
+                                options.alphabet = nucleotide_alphabet_t();
+                        }
+                        else if (string("protein") == string(optarg)) {
+                                options.alphabet = protein_alphabet_t();
+                        }
+                        else {
+                                print_usage(argv[0], stdout);
+                                exit(EXIT_FAILURE);
+                        }
+                        break;
                 default:
                         wrong_usage(NULL);
                         exit(EXIT_FAILURE);
@@ -542,6 +566,17 @@ int main(int argc, char *argv[])
         if(optind+3 != argc) {
                 wrong_usage("Wrong number of arguments.");
                 exit(EXIT_FAILURE);
+        }
+        // generate prior if there was none specified
+        if (options.alpha.size() == 0) {
+                options.alpha = matrix<double>(1, options.alphabet.size(), 0.2);
+        }
+        // check dimensions of the prior
+        for (size_t i = 0; i < options.alpha.size(); i++) {
+                if (options.alpha[i].size() != options.alphabet.size()) {
+                        wrong_usage("Prior does not match alphabet size.");
+                        exit(EXIT_FAILURE);
+                }
         }
 
         string method(argv[optind]);
