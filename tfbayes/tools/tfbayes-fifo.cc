@@ -56,6 +56,9 @@ void print_usage(char *pname, FILE *fp)
 {
         (void)fprintf(fp, "\nUsage: mkfifo FILE; COMMAND 2>&1 | %s [OPTION] FILE\n\n", pname);
         (void)fprintf(fp,
+                      "Redirect the output of COMMAND to a non-blocking fifo, so that the output\n"
+                      "can be received at any time by reading from FILE."
+                      "\n"
                       "Options:\n"
                       "             -v              - be verbose\n"
                       "   --help                    - print help and exit\n"
