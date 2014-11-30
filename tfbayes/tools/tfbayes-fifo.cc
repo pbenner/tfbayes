@@ -99,7 +99,7 @@ int print_fifo(string filename)
 
         readfd = open(filename.c_str(), O_RDONLY | O_NONBLOCK);
         if(readfd == -1) {
-                perror(str(format("open() %s failed") % filename).c_str());
+                perror(str(format("open() of `%s' failed") % filename).c_str());
                 exit(EXIT_FAILURE);
         }
         if(fstat(readfd, &status) == -1) {
@@ -108,7 +108,7 @@ int print_fifo(string filename)
                 exit(EXIT_FAILURE);
         }
         if(!S_ISFIFO(status.st_mode)) {
-                cerr << format("%s is not a fifo!\n") % filename
+                cerr << format("`%s' is not a fifo!") % filename
                      << endl;
                 close(readfd);
                 exit(EXIT_FAILURE);
