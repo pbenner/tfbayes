@@ -37,8 +37,6 @@
 #include <boost/random/variate_generator.hpp>
 #include <boost/unordered/unordered_map.hpp>
 
-#define alphabet_size 5
-
 typedef boost::unordered_map<topology_t, std::list<ntree_t> > topology_map_t;
 
 using namespace std;

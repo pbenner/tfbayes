@@ -3,7 +3,9 @@
 AM_CPPFLAGS = -I$(top_srcdir)
 AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
-bin_PROGRAMS = tfbayes-generate-alignment tfbayes-treespace-sampler tfbayes-hmm tfbayes-treespace-estimate tfbayes-treespace-histogram
+bin_PROGRAMS = tfbayes-generate-alignment tfbayes-treespace-sampler tfbayes-hmm tfbayes-treespace-estimate tfbayes-treespace-histogram tfbayes-fifo
+
+tfbayes_fifo_SOURCES = tfbayes-fifo.cc
 
 tfbayes_generate_alignment_SOURCES = tfbayes-generate-alignment.cc
 tfbayes_generate_alignment_LDADD   = $(top_builddir)/tfbayes/phylotree/libtfbayes-phylotree.la
