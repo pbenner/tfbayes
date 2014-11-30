@@ -102,7 +102,8 @@ int print_fifo(string filename)
 
         if (access(filename.c_str(), F_OK ) == -1) {
                 if (mkfifo(filename.c_str(), 0644) != 0) {
-                        perror(str(format("creating `%s' failed") % filename).c_str());
+                        perror(str(format("Creating `%s' failed") % filename).c_str());
+                        exit(EXIT_FAILURE);
                 }
         }
         readfd = open(filename.c_str(), O_RDONLY | O_NONBLOCK);
