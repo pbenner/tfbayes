@@ -54,7 +54,7 @@ static options_t options;
 static
 void print_usage(char *pname, FILE *fp)
 {
-        (void)fprintf(fp, "\nUsage: mkfifo FILE; COMMAND 2>&1 | %s [OPTION] FILE\n\n", pname);
+        (void)fprintf(fp, "\nUsage: COMMAND 2>&1 | %s [OPTION] FILE\n\n", pname);
         (void)fprintf(fp,
                       "Redirect the output of COMMAND to a non-blocking fifo, so that the output\n"
                       "can be received at any time by reading from FILE."
@@ -100,6 +100,11 @@ int print_fifo(string filename)
 
         signal(SIGPIPE, SIG_IGN);
 
+        if (access(filename.c_str(), F_OK ) == -1) {
+                if (mkfifo(filename.c_str(), 0644) != 0) {
+                        perror(str(format("creating `%s' failed") % filename).c_str());
+                }
+        }
         readfd = open(filename.c_str(), O_RDONLY | O_NONBLOCK);
         if(readfd == -1) {
                 perror(str(format("open() of `%s' failed") % filename).c_str());
