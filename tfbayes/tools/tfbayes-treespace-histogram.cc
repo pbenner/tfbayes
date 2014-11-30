@@ -257,7 +257,8 @@ int main(int argc, char *argv[])
                 int c, option_index = 0;
                 static struct option long_options[] = {
                         { "help",            0, 0, 'h' },
-                        { "version",         0, 0, 'q' }
+                        { "version",         0, 0, 'q' },
+                        { 0,                 0, 0,  0  }
                 };
 
                 c = getopt_long(argc, argv, "d:k:v",

@@ -304,7 +304,8 @@ int main(int argc, char *argv[])
                         { "credibility-level", 1, 0, 'a' },
                         { "verbose",           1, 0, 'v' },
                         { "help",              0, 0, 'h' },
-                        { "version",           0, 0, 'q' }
+                        { "version",           0, 0, 'q' },
+                        { 0,                   0, 0,  0  }
                 };
 
                 c = getopt_long(argc, argv, "c:rym:d:k:n:s:v",

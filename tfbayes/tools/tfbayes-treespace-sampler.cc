@@ -447,6 +447,8 @@ void run_optimization(const string& method, const char* file_tree, const char* f
 // main function
 ////////////////////////////////////////////////////////////////////////////////
 
+extern int optind, opterr, optopt;
+
 int main(int argc, char *argv[])
 {
         vector<string> tokens1;
@@ -473,7 +475,8 @@ int main(int argc, char *argv[])
                         { "threads",              1, 0, 't' },
                         { "save-posterior",       1, 0, 'p' },
                         { "help",                 0, 0, 'h' },
-                        { "version",              0, 0, 'x' }
+                        { "version",              0, 0, 'x' },
+                        { 0,                      0, 0,  0  }
                 };
 
                 c = getopt_long(argc, argv, "v",
