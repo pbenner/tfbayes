@@ -42,7 +42,8 @@
 #include <tfbayes/fastarithmetics/fast-lnbeta.hh>
 
 #include <boost/math/distributions/gamma.hpp>
-//#include <boost/thread/locks.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 
 using namespace std;
 
@@ -227,7 +228,8 @@ independence_background_t::independence_background_t(
         const double k, const double g,
         const sequence_data_t<data_tfbs_t::code_t>& _data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
-        thread_pool_t& thread_pool)
+        thread_pool_t& thread_pool,
+        string cachefile)
         : component_model_t(cluster_assignments),
           _size(data_tfbs_t::alphabet_size),
           _bg_cluster_tag(0),

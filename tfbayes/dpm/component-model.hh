@@ -100,7 +100,8 @@ public:
                  const double k, const double g,
                  const sequence_data_t<data_tfbs_t::code_t>& data,
                  const sequence_data_t<cluster_tag_t>& cluster_assignments,
-                 thread_pool_t& thread_pool);
+                 thread_pool_t& thread_pool,
+                 std::string cachefile = "");
          independence_background_t(const independence_background_t& distribution);
         ~independence_background_t();
 
