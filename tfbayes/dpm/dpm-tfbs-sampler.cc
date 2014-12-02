@@ -341,9 +341,10 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
           _server(NULL),
           _bt(NULL)
 {
+        // initialize dpm_tfbs
+        dpm_tfbs_t dpm_tfbs(options, _data, _alignment_set);
+
         for (size_t i = 0; i < _size; i++) {
-                // initialize dpm_tfbs
-                dpm_tfbs_t dpm_tfbs(options, _data, _alignment_set);
                 // check if we have to resume from an old state
                 if (history.partitions.size() != 0) {
                         if (history.partitions.size() % _size != 0) {
