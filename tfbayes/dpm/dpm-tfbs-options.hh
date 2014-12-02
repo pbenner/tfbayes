@@ -44,8 +44,9 @@ typedef struct {
         std::string background_model;
         std::matrix<double> background_alpha;
         size_t background_context;
+        std::vector<double> background_gamma;
         std::string background_weights;
-        std::vector<double>  baseline_weights;
+        std::vector<double> baseline_weights;
         baseline_priors_t baseline_priors;
         baseline_tags_t baseline_tags;
         size_t population_size;

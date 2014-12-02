@@ -225,6 +225,11 @@ independence_background_t::independence_background_t(
 {
         boost::unordered_map<data_tfbs_t::code_t, double> map;
 
+        flockfile(stderr);
+        cerr << "Background gamma shape: " << k << endl
+             << "Background gamma scale: " << g << endl
+             << endl;
+        funlockfile(stderr);
         /* go through the data and precompute
          * lnbeta(n + alpha) - lnbeta(alpha) */
         for(size_t i = 0; i < data().size(); i++) {
@@ -234,11 +239,11 @@ independence_background_t::independence_background_t(
                         const double p = j/(double)data()[i].size();
                         const double q = (p*(i+1.0) + (1.0-p)*i)/(double)data().size();
 
-                        flockfile(stdout);
-                        cout.precision(2);
-                        cout << "\rPrecomputing background... " << setw(6) << fixed
+                        flockfile(stderr);
+                        cerr.precision(2);
+                        cerr << "\rPrecomputing background... " << setw(6) << fixed
                              << q*100.0 << "%"                  << flush;
-                        funlockfile(stdout);
+                        funlockfile(stderr);
 
                         _precomputed_marginal[i][j] = hashed_gamma_marginal(data()[i][j], k, g, map);
                 }

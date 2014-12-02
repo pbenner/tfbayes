@@ -38,6 +38,7 @@ def default_sampler_config():
     sampler_config.process_prior       = 'pitman-yor process'
     sampler_config.background_model    = 'independence-dirichlet'
     sampler_config.background_alpha    = [[1, 1, 1, 1, 5]]
+    sampler_config.background_gamma    = [5.0, 0.2]
     sampler_config.background_context  = 2
     sampler_config.background_weights  = 'decay'
     sampler_config.population_size     = 1
@@ -91,6 +92,10 @@ def parse_sampler_config(config_file, sampler_config):
         sampler_config.background_model = config_parser.get('TFBS-Sampler', 'background-model').strip()
     if config_parser.has_option('TFBS-Sampler', 'background-alpha'):
         sampler_config.background_alpha = tr(read_matrix(config_parser, 'TFBS-Sampler', 'background-alpha', float))
+    if config_parser.has_option('TFBS-Sampler', 'background-gamma'):
+        sampler_config.background_gamma = read_vector(config_parser, 'TFBS-Sampler', 'background-gamma', float)
+        if (len(sampler_config.background_gamma) != 2):
+            raise IOError("Invalid background gamma parameters")
     if config_parser.has_option('TFBS-Sampler', 'background-context'):
         sampler_config.background_context = config_parser.get('TFBS-Sampler', 'background-context')
     if config_parser.has_option('TFBS-Sampler', 'background-weights'):
