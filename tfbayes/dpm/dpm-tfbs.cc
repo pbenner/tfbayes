@@ -71,8 +71,10 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                  * independet, where the Dirichlet pseudocounts
                  * are integrated out */
                 assert(options.background_gamma.size() == 2);
+                assert(options.threads >= 1);
+                thread_pool_t thread_pool(options.threads);
                 independence_background_t* bg = new independence_background_t(
-                        options.background_gamma[0], options.background_gamma[1], data, _state.cluster_assignments());
+                        options.background_gamma[0], options.background_gamma[1], data, _state.cluster_assignments(), thread_pool);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
                 bg->set_bg_cluster_tag(_state.bg_cluster_tag);
         }

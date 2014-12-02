@@ -31,15 +31,6 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_sf_gamma.h>
 
-#include <tfbayes/dpm/component-model.hh>
-#include <tfbayes/fastarithmetics/fast-lnbeta.hh>
-
-using namespace std;
-
-// Methods to integrate out the pseudocounts of a Dirichlet
-// distribution, where we use a Gamma hyperprior
-////////////////////////////////////////////////////////////////////////////////
-
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_monte.h>
 #include <gsl/gsl_monte_plain.h>
@@ -47,7 +38,17 @@ using namespace std;
 #include <gsl/gsl_monte_vegas.h>
 #include <gsl/gsl_sf_psi.h>
 
+#include <tfbayes/dpm/component-model.hh>
+#include <tfbayes/fastarithmetics/fast-lnbeta.hh>
+
 #include <boost/math/distributions/gamma.hpp>
+//#include <boost/thread/locks.hpp>
+
+using namespace std;
+
+// Methods to integrate out the pseudocounts of a Dirichlet
+// distribution, where we use a Gamma hyperprior
+////////////////////////////////////////////////////////////////////////////////
 
 struct gamma_marginal_data {
         const data_tfbs_t::code_t& counts;
@@ -161,16 +162,25 @@ double
 hashed_gamma_marginal(
         const data_tfbs_t::code_t& counts,
         const double k, const double g,
-        boost::unordered_map<data_tfbs_t::code_t, double>& map)
+        boost::unordered_map<data_tfbs_t::code_t, double>& map,
+        boost::shared_mutex& mutex)
 {
-        boost::unordered_map<data_tfbs_t::code_t, double>::iterator it = map.find(counts);
+        {
+                // get read access to the map
+                boost::shared_lock<boost::shared_mutex> lock(mutex);
+                boost::unordered_map<data_tfbs_t::code_t, double>::iterator it = map.find(counts);
 
-        if (it != map.end()) {
-                return it->second;
+                if (it != map.end()) {
+                        return it->second;
+                }
+                // release lock
         }
-        else {
+        {
+                // compute value
                 double result = gamma_marginal(counts, k, g);
-                map[counts]   = result;
+                // get write access
+                boost::unique_lock<boost::shared_mutex> lock(mutex);
+                map[counts] = result;
 
                 return result;
         }
@@ -216,14 +226,19 @@ independence_background_t::independence_background_t(
 independence_background_t::independence_background_t(
         const double k, const double g,
         const sequence_data_t<data_tfbs_t::code_t>& _data,
-        const sequence_data_t<cluster_tag_t>& cluster_assignments)
+        const sequence_data_t<cluster_tag_t>& cluster_assignments,
+        thread_pool_t& thread_pool)
         : component_model_t(cluster_assignments),
           _size(data_tfbs_t::alphabet_size),
           _bg_cluster_tag(0),
           _precomputed_marginal(_data.sizes(), 0),
           _data(&_data)
 {
+        typedef double (*hgm)(const data_tfbs_t::code_t&, const double, const double,
+                              boost::unordered_map<data_tfbs_t::code_t, double>&,
+                              boost::shared_mutex&);
         boost::unordered_map<data_tfbs_t::code_t, double> map;
+        boost::shared_mutex mutex;
 
         flockfile(stderr);
         cerr << "Background gamma shape: " << k << endl
@@ -233,6 +248,16 @@ independence_background_t::independence_background_t(
         /* go through the data and precompute
          * lnbeta(n + alpha) - lnbeta(alpha) */
         for(size_t i = 0; i < data().size(); i++) {
+                future_vector_t<double> futures(data()[i].size());
+
+                for(size_t j = 0; j < data()[i].size(); j++) {
+                        boost::function<double ()> f = boost::bind(
+                                static_cast<hgm>(&hashed_gamma_marginal),
+                                boost::cref(data()[i][j]), k, g,
+                                boost::ref(map), boost::ref(mutex));
+
+                        futures[j] = thread_pool.schedule(f);
+                }
                 for(size_t j = 0; j < data()[i].size(); j++) {
                         /* compute percentage by linearly
                          * interpolating two values */
@@ -245,13 +270,13 @@ independence_background_t::independence_background_t(
                              << q*100.0 << "%"                  << flush;
                         funlockfile(stderr);
 
-                        _precomputed_marginal[i][j] = hashed_gamma_marginal(data()[i][j], k, g, map);
+                        _precomputed_marginal[i][j] = futures[j].get();
                 }
         }
 
-        flockfile(stdout);
+        flockfile(stderr);
         cout << "\rPrecomputing background...   done." << endl << flush;
-        funlockfile(stdout);
+        funlockfile(stderr);
 }
 
 independence_background_t::independence_background_t(const independence_background_t& distribution)

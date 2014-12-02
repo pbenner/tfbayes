@@ -41,6 +41,7 @@
 #include <tfbayes/dpm/mixture-weights.hh>
 #include <tfbayes/dpm/nucleotide-context.hh>
 #include <tfbayes/dpm/dpm-tfbs-options.hh>
+#include <tfbayes/utility/thread-pool.hh>
 
 // component_model_t interface
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,7 +99,8 @@ public:
          independence_background_t(
                  const double k, const double g,
                  const sequence_data_t<data_tfbs_t::code_t>& data,
-                 const sequence_data_t<cluster_tag_t>& cluster_assignments);
+                 const sequence_data_t<cluster_tag_t>& cluster_assignments,
+                 thread_pool_t& thread_pool);
          independence_background_t(const independence_background_t& distribution);
         ~independence_background_t();
 

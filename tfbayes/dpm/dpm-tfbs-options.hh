@@ -50,6 +50,7 @@ typedef struct {
         baseline_priors_t baseline_priors;
         baseline_tags_t baseline_tags;
         size_t population_size;
+        size_t threads;
         std::string socket_file;
 } tfbs_options_t;
 

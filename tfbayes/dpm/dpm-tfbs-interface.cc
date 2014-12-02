@@ -74,6 +74,7 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
                 .def_readwrite("baseline_weights",    &tfbs_options_t::baseline_weights)
                 .def_readwrite("baseline_tags",       &tfbs_options_t::baseline_tags)
                 .def_readwrite("population_size",     &tfbs_options_t::population_size)
+                .def_readwrite("threads",             &tfbs_options_t::threads)
                 .def_readwrite("socket_file",         &tfbs_options_t::socket_file)
                 ;
         class_<baseline_priors_t>("baseline_priors_t")

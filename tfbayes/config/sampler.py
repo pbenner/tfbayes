@@ -48,6 +48,7 @@ def default_sampler_config():
     sampler_config.baseline_priors     = []
     sampler_config.socket_file         = ""
     sampler_config.samples             = (1000,100)
+    sampler_config.threads             = 1
     sampler_config.save                = ""
     return sampler_config
 
@@ -106,6 +107,10 @@ def parse_sampler_config(config_file, sampler_config):
         sampler_config.median_partition = str2bool(config_parser.get('TFBS-Sampler', 'median-partition'))
     if config_parser.has_option('TFBS-Sampler', 'population-size'):
         sampler_config.population_size = int(config_parser.get('TFBS-Sampler', 'population-size'))
+    if config_parser.has_option('TFBS-Sampler', 'threads'):
+        sampler_config.threads = int(config_parser.get('TFBS-Sampler', 'threads'))
+        if (sampler_config.threads <= 0):
+            raise IOError("Invalid number of threads")
     if config_parser.has_option('TFBS-Sampler', 'save'):
         sampler_config.save = config_parser.get('TFBS-Sampler', 'save')
     if config_parser.has_option('TFBS-Sampler', 'samples'):
