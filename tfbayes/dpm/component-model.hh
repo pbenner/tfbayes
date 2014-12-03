@@ -101,7 +101,7 @@ public:
                  const sequence_data_t<data_tfbs_t::code_t>& data,
                  const sequence_data_t<cluster_tag_t>& cluster_assignments,
                  thread_pool_t& thread_pool,
-                 std::string cachefile = "");
+                 const std::string& cachefile = "");
          independence_background_t(const independence_background_t& distribution);
         ~independence_background_t();
 
@@ -122,6 +122,12 @@ public:
         // datatypes
         typedef data_tfbs_t::code_t counts_t;
 
+        bool load_marginal(
+                const double k, const double g,
+                const std::string& cachefile);
+        bool save_marginal(
+                const double k, const double g,
+                const std::string& cachefile);
         void precompute_marginal(double k, double g, thread_pool_t& thread_pool);
         size_t add(const range_t& range);
         size_t remove(const range_t& range);

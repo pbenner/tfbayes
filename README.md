@@ -22,6 +22,7 @@ The following libraries are required for tfbayes:
 	boost (>= 1.47)
 	boost_python
 	boost_system
+	boost_serialization
 	boost_thread
 	boost_regex
 	glpk

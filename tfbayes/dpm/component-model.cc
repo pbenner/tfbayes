@@ -41,8 +41,8 @@
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/fastarithmetics/fast-lnbeta.hh>
 
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
 #include <boost/math/distributions/gamma.hpp>
 #include <boost/unordered_map.hpp> 
 
@@ -216,7 +216,7 @@ public:
                         if (this->data[i].size() != data[i].size()) {
                                 return false;
                         }
-                        for (size_t j = 0; i < data[i].size(); j++) {
+                        for (size_t j = 0; j < data[i].size(); j++) {
                                 if (this->data[i][j] != data[i][j]) {
                                         return false;
                                 }
@@ -273,36 +273,16 @@ independence_background_t::independence_background_t(
         const sequence_data_t<data_tfbs_t::code_t>& _data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
         thread_pool_t& thread_pool,
-        string cachefile)
+        const string& cachefile)
         : component_model_t(cluster_assignments),
           _size(data_tfbs_t::alphabet_size),
           _bg_cluster_tag(0),
           _precomputed_marginal(_data.sizes(), 0),
           _data(&_data)
 {
-        std::ifstream ifs(cachefile);
-        background_cache_t background_cache;
-
-        // try to receive precomputed marginals from cache
-        if (ifs) {
-                boost::archive::text_iarchive ia(ifs);
-                ia >> background_cache;
-                if (background_cache.consistent(k, g, _data)) {
-                        _precomputed_marginal = background_cache.precomputed_marginal;
-                }
-                else {
-                        std::ofstream ofs(cachefile);
-                        precompute_marginal(k, g, thread_pool);
-                        if (ofs) {
-                                boost::archive::text_oarchive oa(ofs);
-                                const background_cache_t tmp(k, g, _data, _precomputed_marginal);
-                                oa << tmp;
-                                flockfile(stderr);
-                                cerr << boost::format("Background cache saved to `%s'.") % cachefile
-                                     << endl;
-                                funlockfile(stderr);
-                        }
-                }
+        if (!load_marginal(k, g, cachefile)) {
+                precompute_marginal(k, g, thread_pool);
+                save_marginal(k, g, cachefile);
         }
 }
 
@@ -329,6 +309,48 @@ independence_background_t::operator=(const component_model_t& component_model)
         independence_background_t tmp(static_cast<const independence_background_t&>(component_model));
         swap(*this, tmp);
         return *this;
+}
+
+bool
+independence_background_t::load_marginal(
+        const double k, const double g,
+        const string& cachefile)
+{
+        std::ifstream ifs(cachefile, std::ios::binary);
+        background_cache_t background_cache;
+
+        // try to receive precomputed marginals from cache
+        if (ifs) {
+                boost::archive::binary_iarchive ia(ifs);
+                ia >> background_cache;
+                if (background_cache.consistent(k, g, data())) {
+                        _precomputed_marginal = background_cache.precomputed_marginal;
+                        return true;
+                }
+                cerr << "Background cache is inconsistent... recomputing!"
+                     << endl;
+        }
+        return false;
+}
+
+bool
+independence_background_t::save_marginal(
+        const double k, const double g,
+        const string& cachefile)
+{
+        std::ofstream ofs(cachefile);
+        if (ofs) {
+                boost::archive::binary_oarchive oa(ofs);
+                const background_cache_t tmp(k, g, data(), _precomputed_marginal);
+                oa << tmp;
+                flockfile(stderr);
+                cerr << boost::format("Background cache saved to `%s'.") % cachefile
+                     << endl;
+                funlockfile(stderr);
+
+                return true;
+        }
+        return false;
 }
 
 void
