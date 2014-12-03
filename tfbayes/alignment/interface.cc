@@ -118,6 +118,11 @@ alignment_t<> alignment_getslice(alignment_t<>& a, range_t& range)
         return a[range];
 }
 
+alignment_t<> alignment_set_getitem(alignment_set_t<>& a, size_t i)
+{
+        return a[i];
+}
+
 alignment_t<> alignment_set_getslice(alignment_set_t<>& a, range_t& range)
 {
         return a[range];
@@ -351,6 +356,7 @@ BOOST_PYTHON_MODULE(interface)
                 ;
         class_<alignment_set_t<> >("alignment_set_t", no_init)
                 .def("__init__",             make_constructor(alignment_set_constructor))
+                .def("__getitem__",          alignment_set_getitem)
                 .def("__getitem__",          alignment_set_getslice)
                 .def("__len__",              &alignment_set_t<>::size)
                 ;
