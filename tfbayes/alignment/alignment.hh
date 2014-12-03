@@ -45,8 +45,6 @@
  * PC: POLYNOMIAL CODE TYPE
  */
 
-typedef seq_index_t alignment_index_t;
-
 template <typename AC = alphabet_code_t>
 class alignment_t : std::matrix<AC> {
 public:
@@ -150,11 +148,26 @@ public:
         // use the access operator from base class to read/write columns
         using base_t::operator[];
         // define new access operators to access individual cells
-        const AC& operator[](const alignment_index_t& index) const {
+        const std::vector<AC>& operator[](const index_t& index) const {
+                return base_t::operator[](index[1]);
+        }
+              std::vector<AC>& operator[](const index_t& index) {
+                return base_t::operator[](index[1]);
+        }
+        const AC& operator[](const seq_index_t& index) const {
                 return base_t::operator[](index[1])[index[0]];
         }
-              AC& operator[](const alignment_index_t& index) {
+              AC& operator[](const seq_index_t& index) {
                 return base_t::operator[](index[1])[index[0]];
+        }
+        alignment_t<AC> operator[](const range_t& range) const {
+                assert(typeid(range.index()) == typeid(index_t));
+                base_t sequences;
+                index_t index = static_cast<const index_t&>(range.index());
+                for (size_t i = 0; i < range.length(); i++) {
+                        sequences.push_back(base_t::operator[](index[0]+i));
+                }
+                return alignment_t<AC>(sequences.transpose(), taxon_map(), alphabet());
         }
         // and to obtain full sequences for one species
         sequence_t<AC> operator[](const std::string& taxon) const {
@@ -391,6 +404,14 @@ public:
                         std::cerr << boost::format("Finished parsing alignment %d...") % (base_t::size())
                                   << std::endl;
                 }
+        }
+        // use the access operator from base class to read/write columns
+        using base_t::operator[];
+        alignment_t<AC> operator[](const range_t& range) const {
+                assert(typeid(range.index()) == typeid(seq_index_t));
+                index_t index(range.index()[1]);
+                range_t tmp(index, range.length());
+                return base_t::operator[](range.index()[0])[tmp];
         }
 
 protected:

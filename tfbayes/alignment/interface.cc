@@ -77,6 +77,11 @@ alignment_t<>* alignment_from_alignio(object a, const pt_root_t& tree)
         return new alignment_t<>(tmp, tree);
 }
 
+alignment_set_t<>* alignment_set_constructor(std::string filename)
+{
+        return new alignment_set_t<>(filename);
+}
+
 // library interface
 // -----------------------------------------------------------------------------
 
@@ -91,11 +96,11 @@ char alignment_getitem(alignment_t<>& a, boost::python::tuple index)
         size_t j = extract<size_t>(index[1]);
         if (i >= a.n_species()) raise_IndexError();
         if (j >= a.length   ()) raise_IndexError();
-        if (a[alignment_index_t(i,j)] == a.alphabet().code('N')) {
+        if (a[seq_index_t(i,j)] == a.alphabet().code('N')) {
                 return 'N';
         }
         else {
-                return a.alphabet().decode(a[alignment_index_t(i,j)]);
+                return a.alphabet().decode(a[seq_index_t(i,j)]);
         }
 }
 
@@ -105,7 +110,17 @@ void alignment_setitem(alignment_t<>& a, boost::python::tuple index, alphabet_co
         size_t j = extract<size_t>(index[1]);
         if (i >= a.n_species()) raise_IndexError();
         if (j >= a.length   ()) raise_IndexError();
-        a[alignment_index_t(i,j)] = a.alphabet().code(d);
+        a[seq_index_t(i,j)] = a.alphabet().code(d);
+}
+
+alignment_t<> alignment_getslice(alignment_t<>& a, range_t& range)
+{
+        return a[range];
+}
+
+alignment_t<> alignment_set_getslice(alignment_set_t<>& a, range_t& range)
+{
+        return a[range];
 }
 
 std::string sequence_str(sequence_t<>& s)
@@ -116,6 +131,11 @@ std::string sequence_str(sequence_t<>& s)
 std::string alignment_str(alignment_t<>& a)
 {
         return to_string(print_alignment_fasta(a));
+}
+
+std::string pretty_print_alignment(alignment_t<>& a)
+{
+        return to_string(print_alignment_pretty(a));
 }
 
 // alignment functions
@@ -323,15 +343,23 @@ BOOST_PYTHON_MODULE(interface)
                 .def("__iter__",             boost::python::iterator<alignment_t<> >())
                 .def("__getitem__",          alignment_getsequence)
                 .def("__getitem__",          alignment_getitem)
+                .def("__getitem__",          alignment_getslice)
                 .def("__setitem__",          alignment_setitem)
                 .def("__str__",              alignment_str)
                 .def("shuffle",              &alignment_t<>::shuffle)
                 .def(self += self)
                 ;
+        class_<alignment_set_t<> >("alignment_set_t", no_init)
+                .def("__init__",             make_constructor(alignment_set_constructor))
+                .def("__getitem__",          alignment_set_getslice)
+                .def("__len__",              &alignment_set_t<>::size)
+                ;
+                
         // functions on alignments
-        def("approximate",         &approximate        <alphabet_code_t, double>);
-        def("marginal_likelihood", &marginal_likelihood<alphabet_code_t, double>);
-        def("scan",                &scan               <alphabet_code_t, double>);
-        def("expectation",         &expectation        <alphabet_code_t, double>);
-        def("tree_prior",          &tree_prior                                  );
+        def("approximate",            &approximate        <alphabet_code_t, double>);
+        def("marginal_likelihood",    &marginal_likelihood<alphabet_code_t, double>);
+        def("scan",                   &scan               <alphabet_code_t, double>);
+        def("expectation",            &expectation        <alphabet_code_t, double>);
+        def("tree_prior",             &tree_prior                                  );
+        def("pretty_print_alignment", &pretty_print_alignment                      );
 }

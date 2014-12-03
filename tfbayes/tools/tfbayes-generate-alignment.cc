@@ -210,7 +210,7 @@ static
 void insert_observations(alignment_t<>& alignment, size_t i, const vector<alphabet_code_t>& observations)
 {
         for (size_t k = 0; k < observations.size(); k++) {
-                alignment[alignment_index_t(k, i)] = observations[k];
+                alignment[seq_index_t(k, i)] = observations[k];
         }
 }
 

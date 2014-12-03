@@ -24,8 +24,9 @@ import getopt
 import os
 import subprocess
 
-from tfbayes.cluster import *
-from tfbayes.config  import *
+from tfbayes.alignment import *
+from tfbayes.cluster   import *
+from tfbayes.config    import *
 
 # global options
 # ------------------------------------------------------------------------------
@@ -62,9 +63,9 @@ def usage():
 # ------------------------------------------------------------------------------
 
 def get_alignment(filename):
-    alignment = list(alignio.parse(filename, 'maf'))
+    alignment = alignment_set_t(filename)
     if len(alignment) == 0:
-        raise IOError("Invalid alignment file (maf file required!)")
+        raise IOError("Invalid alignment file")
     return alignment
 
 # partition
@@ -87,7 +88,7 @@ def print_regions(partition, alignment):
             s = r.index()[0]
             p = r.index()[1]
             print "index (%d, %d)" % (s, p)
-            print alignment[s][:,p:(p+r.length())]
+            print pretty_print_alignment(alignment[r])
             print
 
 # main
