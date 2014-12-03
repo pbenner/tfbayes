@@ -31,6 +31,9 @@
 #include <tfbayes/dpm/datatypes.hh>
 #include <tfbayes/utility/clonable.hh>
 
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/vector.hpp>
+
 // data_t and iterator_t
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -151,42 +154,43 @@ template <typename T>
 class data_t : public data_i<T>, public std::vector<T>
 {
 public:
-        using std::vector<T>::size;
-        using std::vector<T>::push_back;
-        using std::vector<T>::operator[];
-        using std::vector<T>::operator=;
+        typedef std::vector<T> base_t;
+        using base_t::size;
+        using base_t::push_back;
+        using base_t::operator[];
+        using base_t::operator=;
 
-        data_t() : std::vector<T>() {
+        data_t() : base_t() {
         }
         data_t(size_t n, T init)
-                : std::vector<T>(n, init) {
+                : base_t(n, init) {
         }
-        data_t(const std::vector<T>& data)
-                : std::vector<T>(data) {
+        data_t(const base_t& data)
+                : base_t(data) {
         }
         data_t(const data_t& data)
-                : std::vector<T>(data) {
+                : base_t(data) {
         }
         virtual ~data_t() {}
 
         friend void swap(data_t<T>& first, data_t<T>& second) {
                 using std::swap;
-                swap(static_cast<std::vector<T>&>(first),
-                     static_cast<std::vector<T>&>(second));
+                swap(static_cast<base_t&>(first),
+                     static_cast<base_t&>(second));
         }
         virtual data_t<T>* clone() const {
                 return new data_t<T>(*this);
         }
         /* override abstract assignment operator */
         virtual data_t<T>& operator=(const data_i<T>& data) {
-                std::vector<T>::operator=(
+                base_t::operator=(
                         static_cast<const data_t<T>&>(data));
                 return *this;
         }
         /* prevent the default assignment operator to call
          * abstract assignment operator from data_i<T> */
         virtual data_t<T>& operator=(const data_t<T>& data) {
-                std::vector<T>::operator=(
+                base_t::operator=(
                         static_cast<const data_t<T>&>(data));
                 return *this;
         }
@@ -197,58 +201,65 @@ public:
                 return iterator_t<T>(*this, range.index(), range.length());
         }
         virtual inline const T& operator[](const index_i& index) const GCC_ATTRIBUTE_HOT {
-                return std::vector<T>::operator[](index[0]);
+                return base_t::operator[](index[0]);
         }
         virtual inline T& operator[](const index_i& index) GCC_ATTRIBUTE_HOT {
-                return std::vector<T>::operator[](index[0]);
+                return base_t::operator[](index[0]);
         }
         friend std::ostream& operator<< <> (std::ostream& o, const data_t<T>& sd);
+private:
+        friend class boost::serialization::access;
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version) {
+                ar & boost::serialization::base_object<base_t >(*this);
+        }
 };
 
 template <typename T>
 class sequence_data_t : public data_i<T>, public std::vector<std::vector<T> >
 {
 public:
-        using std::vector<std::vector<T> >::size;
-        using std::vector<std::vector<T> >::push_back;
-        using std::vector<std::vector<T> >::operator[];
-        using std::vector<std::vector<T> >::operator=;
+        typedef std::vector<std::vector<T> > base_t;
+        using base_t::size;
+        using base_t::push_back;
+        using base_t::operator[];
+        using base_t::operator=;
 
-        sequence_data_t() : std::vector<std::vector<T> >() {
+        sequence_data_t() : base_t() {
         }
         sequence_data_t(const std::vector<size_t> n, const T init)
-                : std::vector<std::vector<T> >() {
+                : base_t() {
                 for (size_t i = 0; i < n.size(); i++) {
                         push_back(std::vector<T>(n[i], init));
                 }
         }
-        sequence_data_t(const std::vector<std::vector<T> >& data)
-                : std::vector<std::vector<T> >(data) {
+        sequence_data_t(const base_t& data)
+                : base_t(data) {
         }
         sequence_data_t(const sequence_data_t& data)
-                : std::vector<std::vector<T> >(data) {
+                : base_t(data) {
         }
         virtual ~sequence_data_t() {
         }
 
         void swap(sequence_data_t<T>& first, sequence_data_t<T>& second) {
                 using std::swap;
-                swap(static_cast<std::vector<std::vector<T> >&>(first),
-                     static_cast<std::vector<std::vector<T> >&>(second));
+                swap(static_cast<base_t&>(first),
+                     static_cast<base_t&>(second));
         }
         virtual sequence_data_t<T>* clone() const {
                 return new sequence_data_t<T>(*this);
         }
         /* override abstract assignment operator */
         virtual sequence_data_t<T>& operator=(const data_i<T>& data) {
-                std::vector<std::vector<T> >::operator=(
+                base_t::operator=(
                         static_cast<const sequence_data_t<T>&>(data));
                 return *this;
         }
         /* prevent the default assignment operator to call
          * abstract assignment operator from data_i<T> */
         virtual sequence_data_t<T>& operator=(const sequence_data_t<T>& data) {
-                std::vector<std::vector<T> >::operator=(
+                base_t::operator=(
                         static_cast<const sequence_data_t<T>&>(data));
                 return *this;
         }
@@ -259,10 +270,10 @@ public:
                 return iterator_t<T>(*this, range.index(), range.length());
         }
         virtual inline const T& operator[](const index_i& index) const GCC_ATTRIBUTE_HOT {
-                return std::vector<std::vector<T> >::operator[](index[0])[index[1]];
+                return base_t::operator[](index[0])[index[1]];
         }
         virtual inline T& operator[](const index_i& index) GCC_ATTRIBUTE_HOT {
-                return std::vector<std::vector<T> >::operator[](index[0])[index[1]];
+                return base_t::operator[](index[0])[index[1]];
         }
         virtual size_t size(size_t i) const {
                 return operator[](i).size();
@@ -275,6 +286,12 @@ public:
                 return lengths;
         }
         friend std::ostream& operator<< <> (std::ostream& o, const sequence_data_t<T>& sd);
+private:
+        friend class boost::serialization::access;
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version) {
+                ar & boost::serialization::base_object<base_t>(*this);
+        }
 };
 
 #endif /* __TFBAYES_DPM_DATA_HH__ */

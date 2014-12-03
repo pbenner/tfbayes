@@ -87,6 +87,8 @@ AX_BOOST_REGEX(,
   AC_MSG_ERROR([this library is required]))
 AX_BOOST_SYSTEM(,
   AC_MSG_ERROR([this library is required]))
+AX_BOOST_SERIALIZATION(,
+  AC_MSG_ERROR([this library is required]))
 AX_BOOST_THREAD(,
   AC_MSG_ERROR([this library is required]))
 AX_BOOST_PYTHON(,

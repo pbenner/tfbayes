@@ -41,9 +41,10 @@
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/fastarithmetics/fast-lnbeta.hh>
 
-#include <boost/math/distributions/gamma.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
+#include <boost/math/distributions/gamma.hpp>
+#include <boost/unordered_map.hpp> 
 
 using namespace std;
 
@@ -119,8 +120,6 @@ gamma_marginal(
         return log(result);
 }
 
-#include <boost/unordered_map.hpp> 
-
 namespace boost {
         // add hash_value for boost arrays
         static inline
@@ -187,6 +186,51 @@ hashed_gamma_marginal(
         }
 }
 
+class background_cache_t {
+private:
+        friend class boost::serialization::access;
+
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version) {
+                ar & k;
+                ar & g;
+                ar & data;
+                ar & precomputed_marginal;
+        }
+public:
+        background_cache_t()
+                { }
+        background_cache_t(double k, double g, const sequence_data_t<data_tfbs_t::code_t>& data,
+                           const sequence_data_t<double>& precomputed_marginal)
+                : k(k), g(g), data(data),
+                  precomputed_marginal(precomputed_marginal)
+                { }
+        bool consistent(double k, double g, const sequence_data_t<data_tfbs_t::code_t>& data) {
+                if (this->k != k || this->g != g) {
+                        return false;
+                }
+                if (this->data.size() != data.size()) {
+                        return false;
+                }
+                for (size_t i = 0; i < data.size(); i++) {
+                        if (this->data[i].size() != data[i].size()) {
+                                return false;
+                        }
+                        for (size_t j = 0; i < data[i].size(); j++) {
+                                if (this->data[i][j] != data[i][j]) {
+                                        return false;
+                                }
+                        }
+                }
+                return true;
+        }
+
+        double k;
+        double g;
+        sequence_data_t<data_tfbs_t::code_t> data;
+        sequence_data_t<double> precomputed_marginal;
+};
+
 // Independence Background Model
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -236,6 +280,60 @@ independence_background_t::independence_background_t(
           _precomputed_marginal(_data.sizes(), 0),
           _data(&_data)
 {
+        std::ifstream ifs(cachefile);
+        background_cache_t background_cache;
+
+        // try to receive precomputed marginals from cache
+        if (ifs) {
+                boost::archive::text_iarchive ia(ifs);
+                ia >> background_cache;
+                if (background_cache.consistent(k, g, _data)) {
+                        _precomputed_marginal = background_cache.precomputed_marginal;
+                }
+                else {
+                        std::ofstream ofs(cachefile);
+                        precompute_marginal(k, g, thread_pool);
+                        if (ofs) {
+                                boost::archive::text_oarchive oa(ofs);
+                                const background_cache_t tmp(k, g, _data, _precomputed_marginal);
+                                oa << tmp;
+                                flockfile(stderr);
+                                cerr << boost::format("Background cache saved to `%s'.") % cachefile
+                                     << endl;
+                                funlockfile(stderr);
+                        }
+                }
+        }
+}
+
+independence_background_t::independence_background_t(const independence_background_t& distribution)
+        : component_model_t(distribution),
+          _size(distribution._size),
+          _bg_cluster_tag(distribution._bg_cluster_tag),
+          _precomputed_marginal(distribution._precomputed_marginal),
+          _data(distribution._data)
+{
+}
+
+independence_background_t::~independence_background_t() {
+}
+
+independence_background_t*
+independence_background_t::clone() const {
+        return new independence_background_t(*this);
+}
+
+independence_background_t&
+independence_background_t::operator=(const component_model_t& component_model)
+{
+        independence_background_t tmp(static_cast<const independence_background_t&>(component_model));
+        swap(*this, tmp);
+        return *this;
+}
+
+void
+independence_background_t::precompute_marginal(double k, double g, thread_pool_t& thread_pool)
+{
         typedef double (*hgm)(const data_tfbs_t::code_t&, const double, const double,
                               boost::unordered_map<data_tfbs_t::code_t, double>&,
                               boost::shared_mutex&);
@@ -275,35 +373,9 @@ independence_background_t::independence_background_t(
                         _precomputed_marginal[i][j] = futures[j].get();
                 }
         }
-
         flockfile(stderr);
         cout << "\rPrecomputing background...   done." << endl << flush;
         funlockfile(stderr);
-}
-
-independence_background_t::independence_background_t(const independence_background_t& distribution)
-        : component_model_t(distribution),
-          _size(distribution._size),
-          _bg_cluster_tag(distribution._bg_cluster_tag),
-          _precomputed_marginal(distribution._precomputed_marginal),
-          _data(distribution._data)
-{
-}
-
-independence_background_t::~independence_background_t() {
-}
-
-independence_background_t*
-independence_background_t::clone() const {
-        return new independence_background_t(*this);
-}
-
-independence_background_t&
-independence_background_t::operator=(const component_model_t& component_model)
-{
-        independence_background_t tmp(static_cast<const independence_background_t&>(component_model));
-        swap(*this, tmp);
-        return *this;
 }
 
 size_t

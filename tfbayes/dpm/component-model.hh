@@ -122,6 +122,7 @@ public:
         // datatypes
         typedef data_tfbs_t::code_t counts_t;
 
+        void precompute_marginal(double k, double g, thread_pool_t& thread_pool);
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
         size_t count(const range_t& range);

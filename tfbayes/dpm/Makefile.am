@@ -10,6 +10,7 @@ mcm_test_LDADD   = libtfbayes-dpm.la
 mcm_test_LDADD  += -lm
 mcm_test_LDADD  += $(BOOST_REGEX_LIB)
 mcm_test_LDADD  += $(BOOST_SYSTEM_LIB)
+mcm_test_LDADD  += $(BOOST_SERIALIZATION_LIB)
 mcm_test_LDADD  += $(BOOST_THREAD_LIB)
 
 dpm_gaussian_debug_SOURCES = dpm-gaussian-main.cc
@@ -83,6 +84,7 @@ libtfbayes_dpm_la_LIBADD  += $(top_builddir)/tfbayes/uipac/libtfbayes-uipac.la
 libtfbayes_dpm_la_LIBADD  += $(LIB_PTHREAD)
 libtfbayes_dpm_la_LIBADD  += $(BOOST_REGEX_LIB)
 libtfbayes_dpm_la_LIBADD  += $(BOOST_SYSTEM_LIB)
+libtfbayes_dpm_la_LIBADD  += $(BOOST_SERIALIZATION_LIB)
 libtfbayes_dpm_la_LIBADD  += $(BOOST_THREAD_LIB)
 libtfbayes_dpm_la_LDFLAGS  = -no-undefined
 libtfbayes_dpm_la_LDFLAGS += -version-info 0:0:0
