@@ -24,7 +24,6 @@ import getopt
 import os
 import subprocess
 
-from tfbayes         import alignio
 from tfbayes.cluster import *
 from tfbayes.config  import *
 
@@ -82,7 +81,7 @@ def get_partition(command, results_config):
 
 def print_regions(partition, alignment):
     for idx, dpm_subset in enumerate(partition):
-        print "Cluster %i" % idx
+        print "Cluster %i with %i elements" % (idx, len(dpm_subset))
         print "--------------------------------------------------------------------------------"
         for r in dpm_subset:
             s = r.index()[0]
