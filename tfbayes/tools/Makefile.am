@@ -43,6 +43,7 @@ dist_bin_SCRIPTS = \
 	tfbayes-export-results \
 	tfbayes-motifformat \
 	tfbayes-fasta-to-maf \
+	tfbayes-locate \
 	tfbayes-maf-to-fasta \
 	tfbayes-plot \
 	tfbayes-partition \

@@ -72,9 +72,9 @@ def usage():
     print "of ChIP data. Motifs can be either plotted or saved as counts."
     print
     print "Commands:"
-    print "       map                         - use map partition"
-    print "       mean                        - use mean partition"
-    print "       median                      - use median parititon"
+    print "       map                        - use map partition"
+    print "       mean                       - use mean partition"
+    print "       median                     - use median parititon"
     print
     print "Options:"
     print "   -j, --join                     - join plots with pdftk"
