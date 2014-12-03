@@ -378,7 +378,7 @@ dpm_tfbs_optimize_estimate(const dpm_partition_list_t& partitions,
                         subset.erase(range);
                         // compute new loss
                         new_loss = (*loss)(distance(partitions, estimate, a, b, dpm));
-                        if (new_loss < old_loss) {
+                        if (new_loss < old_loss && abs(new_loss - old_loss) > 1e-5) {
                                 // new estimate seems better
                                 old_loss = new_loss;
                                 optimized = true;
@@ -593,10 +593,12 @@ map_local_optimization(const index_i& index, dpm_tfbs_t& dpm, bool verbose) {
 static dpm_partition_t
 map_local_optimization(dpm_tfbs_t& dpm, bool verbose) {
         bool optimized;
+        double old_posterior;
+        double new_posterior = dpm.posterior();
         /* make some noise */
         if (verbose) {
                 cout << "Performing local optimizations..." << endl
-                     << "Posterior: " << dpm.posterior()
+                     << "Posterior: " << new_posterior
                      << endl;
         }
         /* loop until no local optimizations are possible */
@@ -612,11 +614,15 @@ map_local_optimization(dpm_tfbs_t& dpm, bool verbose) {
                      it != dpm.state().end(); it++) {
                         optimized |= map_local_optimization(**it, dpm, verbose);
                 }
+                old_posterior = new_posterior;
+                new_posterior = dpm.posterior();
+
                 if (verbose) {
-                        cout << "Posterior: " << dpm.posterior()
+                        cout << "Posterior: " << new_posterior
+                             << " (increment: " << abs(old_posterior - new_posterior) << ")"
                              << endl;
                 }
-        } while (optimized);
+        } while (optimized && abs(old_posterior - new_posterior) > 1e-4);
         /* return final partition */
         return dpm.state().partition();
 }

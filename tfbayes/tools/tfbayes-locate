@@ -63,7 +63,10 @@ def usage():
 # ------------------------------------------------------------------------------
 
 def get_alignment(filename):
-    return list(alignio.parse(filename, 'maf'))
+    alignment = list(alignio.parse(filename, 'maf'))
+    if len(alignment) == 0:
+        raise IOError("Invalid alignment file (maf file required!)")
+    return alignment
 
 # partition
 # ------------------------------------------------------------------------------
