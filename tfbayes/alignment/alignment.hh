@@ -149,10 +149,10 @@ public:
         using base_t::operator[];
         // define new access operators to access individual cells
         const std::vector<AC>& operator[](const index_t& index) const {
-                return base_t::operator[](index[1]);
+                return base_t::operator[](index[0]);
         }
               std::vector<AC>& operator[](const index_t& index) {
-                return base_t::operator[](index[1]);
+                return base_t::operator[](index[0]);
         }
         const AC& operator[](const seq_index_t& index) const {
                 return base_t::operator[](index[1])[index[0]];

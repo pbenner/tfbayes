@@ -95,13 +95,17 @@ public:
          independence_background_t(
                  const std::matrix<double>& alpha,
                  const sequence_data_t<data_tfbs_t::code_t>& data,
-                 const sequence_data_t<cluster_tag_t>& cluster_assignments);
+                 const sequence_data_t<cluster_tag_t>& cluster_assignments,
+                 boost::optional<const alignment_set_t<>&> alignment_set =
+                 boost::optional<const alignment_set_t<>&>());
          independence_background_t(
                  const double k, const double g,
                  const sequence_data_t<data_tfbs_t::code_t>& data,
                  const sequence_data_t<cluster_tag_t>& cluster_assignments,
                  thread_pool_t& thread_pool,
-                 const std::string& cachefile = "");
+                 const std::string& cachefile = "",
+                 boost::optional<const alignment_set_t<>&> alignment_set =
+                 boost::optional<const alignment_set_t<>&>());
          independence_background_t(const independence_background_t& distribution);
         ~independence_background_t();
 

@@ -237,7 +237,8 @@ public:
 independence_background_t::independence_background_t(
         const matrix<double>& _alpha,
         const sequence_data_t<data_tfbs_t::code_t>& _data,
-        const sequence_data_t<cluster_tag_t>& cluster_assignments)
+        const sequence_data_t<cluster_tag_t>& cluster_assignments,
+        boost::optional<const alignment_set_t<>&> alignment_set)
         : component_model_t(cluster_assignments),
           _size(data_tfbs_t::alphabet_size),
           _bg_cluster_tag(0),
@@ -273,7 +274,8 @@ independence_background_t::independence_background_t(
         const sequence_data_t<data_tfbs_t::code_t>& _data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
         thread_pool_t& thread_pool,
-        const string& cachefile)
+        const string& cachefile,
+        boost::optional<const alignment_set_t<>&> alignment_set)
         : component_model_t(cluster_assignments),
           _size(data_tfbs_t::alphabet_size),
           _bg_cluster_tag(0),

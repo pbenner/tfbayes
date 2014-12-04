@@ -62,7 +62,9 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                 /* every position in the background is fully
                  * independet, this gives more flexibility to the
                  * prior pseudocounts */
-                independence_background_t* bg = new independence_background_t(options.background_alpha, data, _state.cluster_assignments());
+                independence_background_t* bg = new independence_background_t(
+                        options.background_alpha, data, _state.cluster_assignments(),
+                        alignment_set);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
                 bg->set_bg_cluster_tag(_state.bg_cluster_tag);
         }
@@ -75,7 +77,8 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                 thread_pool_t thread_pool(options.threads);
                 independence_background_t* bg = new independence_background_t(
                         options.background_gamma[0], options.background_gamma[1], data,
-                        _state.cluster_assignments(), thread_pool, options.background_cache);
+                        _state.cluster_assignments(), thread_pool, options.background_cache,
+                        alignment_set);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
                 bg->set_bg_cluster_tag(_state.bg_cluster_tag);
         }
@@ -87,7 +90,8 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
         }
         else if (options.background_model == "markov chain mixture") {
                 assert(options.background_context >= 0);
-                markov_chain_mixture_t* bg = new markov_chain_mixture_t(data_tfbs_t::alphabet_size, options, data, _state.cluster_assignments(), 0);
+                markov_chain_mixture_t* bg = new markov_chain_mixture_t(
+                        data_tfbs_t::alphabet_size, options, data, _state.cluster_assignments(), 0);
                 _state.bg_cluster_tag = _state.add_cluster(bg);
         }
         else {
