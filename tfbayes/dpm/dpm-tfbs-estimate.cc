@@ -18,6 +18,7 @@
 #define __STDC_LIMIT_MACROS
 
 #include <stdint.h>
+#include <cmath> /* abs */
 
 #include <boost/unordered/unordered_set.hpp>
 #include <boost/numeric/ublas/matrix_sparse.hpp>
