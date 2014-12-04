@@ -336,7 +336,8 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
         : population_mcmc_t(options.population_size, history),
           _options(options),
           _data(options.phylogenetic_file, options.tfbs_length),
-          _alignment_set(options.alignment_file),
+          _alignment_set(options.alignment_file, boost::optional<const pt_root_t&>(),
+                         nucleotide_alphabet_t(), true),
           _socket_file(options.socket_file),
           _server(NULL),
           _bt(NULL)

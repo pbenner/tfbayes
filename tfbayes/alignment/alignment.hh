@@ -370,14 +370,13 @@ public:
                  * sequence */
                 for (size_t i = 1; parser;) {
                         line = parser();
-                        if (line == "")
-                                continue;
                         if (parser.description().size() == 0) {
                                 std::cerr << "Warning: sequence without description found... skipping."
                                           << std::endl;
                                 continue;
                         }
-                        if (occurred.find(parser.taxon()) != occurred.end()) {
+                        if (occurred.find(parser.taxon()) != occurred.end() ||
+                            parser.description()[0] == ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>") {
                                 // push alignment
                                 push_back(alignment_t<AC>(sequences, taxon_map, alphabet, verbose));
                                 if (verbose) {
@@ -388,6 +387,11 @@ public:
                                 occurred.clear();
                                 // start new alignment
                                 sequences = std::matrix<AC>(n, 0);
+                        }
+                        if (line == "") {
+                                std::cerr << "Warning: empty sequence found... skipping."
+                                          << std::endl;
+                                continue;
                         }
                         taxon_map_t::const_iterator it = taxon_map.find(parser.taxon());
                         if (it != taxon_map.end()) {
