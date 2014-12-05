@@ -32,6 +32,7 @@ operator<<(ostream& o, const tfbs_options_t& options) {
           << "-> background context  = " << options.background_context  << endl
           << "-> background weights  = " << options.background_weights  << endl
           << "-> population_size     = " << options.population_size     << endl
-          << "-> socket_file         = " << options.socket_file         << endl;
+          << "-> socket_file         = " << options.socket_file         << endl
+          << "-> verbose             = " << options.verbose             << endl;
         return o;
 }

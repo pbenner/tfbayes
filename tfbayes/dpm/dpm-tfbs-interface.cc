@@ -77,6 +77,7 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
                 .def_readwrite("population_size",     &tfbs_options_t::population_size)
                 .def_readwrite("threads",             &tfbs_options_t::threads)
                 .def_readwrite("socket_file",         &tfbs_options_t::socket_file)
+                .def_readwrite("verbose",             &tfbs_options_t::verbose)
                 ;
         class_<baseline_priors_t>("baseline_priors_t")
                 .def("__iter__", boost::python::iterator<baseline_priors_t>())

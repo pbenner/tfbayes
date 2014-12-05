@@ -104,6 +104,7 @@ def __main__():
         if o in ("-v", "--verbose"):
             sys.stderr.write("Verbose mode turned on.\n")
             options["verbose"] = True
+            sampler_config.verbose = True
         if o in ("-h", "--help"):
             usage()
             return 0

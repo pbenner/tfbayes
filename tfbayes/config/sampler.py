@@ -51,6 +51,7 @@ def default_sampler_config():
     sampler_config.samples             = (1000,100)
     sampler_config.threads             = 1
     sampler_config.save                = ""
+    sampler_config.verbose             = False
     return sampler_config
 
 # parse config
