@@ -171,6 +171,7 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options.baseline_weights    = vector<double>(1,1);
         tfbs_options.baseline_tags.push_back("baseline_default");
         tfbs_options.initial_temperature = 1.0;
+        tfbs_options.verbose             = true;
 
         // create data, dpm, and sampler objects
         dpm_tfbs_pmcmc_t pmcmc(tfbs_options);
