@@ -170,7 +170,8 @@ class product_dirichlet_t : public component_model_t {
 public:
          product_dirichlet_t(const std::matrix<double>& alpha,
                              const sequence_data_t<data_tfbs_t::code_t>& data,
-                             const sequence_data_t<data_tfbs_t::code_t>& complement_data);
+                             const sequence_data_t<data_tfbs_t::code_t>& complement_data,
+                             const bool complement = true);
          product_dirichlet_t(const product_dirichlet_t& distribution);
         ~product_dirichlet_t();
 
@@ -180,12 +181,14 @@ public:
                 using std::swap;
                 swap(static_cast<component_model_t&>(first),
                      static_cast<component_model_t&>(second));
-                swap(first.alpha,      second.alpha);
-                swap(first.counts,     second.counts);
-                swap(first.tmp_counts, second.tmp_counts);
-                swap(first._size1,     second._size1);
-                swap(first._size2,     second._size2);
-                swap(first._data,      second._data);
+                swap(first.alpha,            second.alpha);
+                swap(first.counts,           second.counts);
+                swap(first.tmp_counts,       second.tmp_counts);
+                swap(first._size1,           second._size1);
+                swap(first._size2,           second._size2);
+                swap(first._data,            second._data);
+                swap(first._complement_data, second._complement_data);
+                swap(first._complement,      second._complement);
         }
 
         product_dirichlet_t& operator=(const component_model_t& component_model);
@@ -223,6 +226,7 @@ protected:
 
         const sequence_data_t<data_tfbs_t::code_t>* _data;
         const sequence_data_t<data_tfbs_t::code_t>* _complement_data;
+        bool _complement;
 };
 
 // Markov Chain Mixture

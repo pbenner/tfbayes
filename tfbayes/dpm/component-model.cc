@@ -505,12 +505,14 @@ independence_background_t::set_bg_cluster_tag(cluster_tag_t bg_cluster_tag) {
 product_dirichlet_t::product_dirichlet_t(
         const matrix<double>& _alpha,
         const sequence_data_t<data_tfbs_t::code_t>& data,
-        const sequence_data_t<data_tfbs_t::code_t>& complement_data)
+        const sequence_data_t<data_tfbs_t::code_t>& complement_data,
+        bool complement)
         : component_model_t(),
           _size1(_alpha.size()),
           _size2(_alpha[0].size()),
           _data(&data),
-          _complement_data(&complement_data)
+          _complement_data(&complement_data),
+          _complement(complement)
 {
         for (size_t i = 0; i < _alpha.size(); i++) {
                 alpha .push_back(counts_t());
@@ -529,7 +531,8 @@ product_dirichlet_t::product_dirichlet_t(const product_dirichlet_t& distribution
           _size1(distribution._size1),
           _size2(distribution._size2),
           _data (distribution._data),
-          _complement_data(distribution._complement_data)
+          _complement_data(distribution._complement_data),
+          _complement(distribution._complement)
 {
 }
 
@@ -556,7 +559,7 @@ product_dirichlet_t::add(const range_t& range) {
         const size_t length   = range.length();
         size_t i, k;
 
-        if (!range.reverse()) {
+        if (!range.reverse() || _complement == false) {
                 for (i = 0; i < length; i++) {
                         const seq_index_t index(sequence, position+i);
                         for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
@@ -583,7 +586,7 @@ product_dirichlet_t::remove(const range_t& range) {
         const size_t length   = range.length();
         size_t i, k;
 
-        if (!range.reverse()) {
+        if (!range.reverse() || _complement == false) {
                 for (i = 0; i < length; i++) {
                         const seq_index_t index(sequence, position+i);
                         for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
@@ -625,7 +628,7 @@ double product_dirichlet_t::log_predictive(const range_t& range) {
         const size_t length   = range.length();
         double result = 0;
 
-        if (!range.reverse()) {
+        if (!range.reverse() || _complement == false) {
                 for (size_t i = 0; i < length; i++) {
                         const seq_index_t index(sequence, position+i);
 
