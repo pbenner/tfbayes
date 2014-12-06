@@ -192,6 +192,7 @@ private:
 
         template<class Archive>
         void serialize(Archive & ar, const unsigned int version) {
+                ar & alpha;
                 ar & k;
                 ar & g;
                 ar & data;
@@ -200,12 +201,26 @@ private:
 public:
         background_cache_t()
                 { }
-        background_cache_t(double k, double g, const sequence_data_t<data_tfbs_t::code_t>& data,
-                           const sequence_data_t<double>& precomputed_marginal)
-                : k(k), g(g), data(data),
+        background_cache_t(
+                const independence_background_t::counts_t& alpha,
+                const double k, const double g,
+                const sequence_data_t<data_tfbs_t::code_t>& data,
+                const sequence_data_t<double>& precomputed_marginal)
+                : alpha(alpha), k(k), g(g), data(data),
                   precomputed_marginal(precomputed_marginal)
                 { }
-        bool consistent(double k, double g, const sequence_data_t<data_tfbs_t::code_t>& data) {
+        bool consistent(
+                const independence_background_t::counts_t& alpha,
+                const double k, const double g,
+                const sequence_data_t<data_tfbs_t::code_t>& data) {
+                if (this->alpha.size() != alpha.size()) {
+                        return false;
+                }
+                for (size_t i = 0; i < alpha.size(); i++) {
+                        if (this->alpha[i] != alpha[i]) {
+                                return false;
+                        }
+                }
                 if (this->k != k || this->g != g) {
                         return false;
                 }
@@ -225,6 +240,7 @@ public:
                 return true;
         }
 
+        independence_background_t::counts_t alpha;
         double k;
         double g;
         sequence_data_t<data_tfbs_t::code_t> data;
@@ -318,7 +334,8 @@ independence_background_t::clone() const {
 independence_background_t&
 independence_background_t::operator=(const component_model_t& component_model)
 {
-        independence_background_t tmp(static_cast<const independence_background_t&>(component_model));
+        independence_background_t tmp(
+                static_cast<const independence_background_t&>(component_model));
         swap(*this, tmp);
         return *this;
 }
@@ -336,7 +353,7 @@ independence_background_t::load_marginal(
         if (ifs) {
                 boost::archive::binary_iarchive ia(ifs);
                 ia >> background_cache;
-                if (background_cache.consistent(k, g, data())) {
+                if (background_cache.consistent(alpha, k, g, data())) {
                         _precomputed_marginal = background_cache.precomputed_marginal;
                         return true;
                 }
@@ -355,7 +372,7 @@ independence_background_t::save_marginal(
         std::ofstream ofs(cachefile);
         if (ofs) {
                 boost::archive::binary_oarchive oa(ofs);
-                const background_cache_t tmp(k, g, data(), _precomputed_marginal);
+                const background_cache_t tmp(alpha, k, g, data(), _precomputed_marginal);
                 oa << tmp;
                 flockfile(stderr);
                 cerr << boost::format("Background cache saved to `%s'.") % cachefile
