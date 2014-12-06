@@ -107,8 +107,7 @@ dpm_tfbs_sampler_t::dpm() const
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef DEBUG
-static
-void print_probabilities(
+string print_probabilities(
         double log_weights1[],
         double log_weights2[],
         cluster_tag_t cluster_tags1[],
@@ -116,18 +115,21 @@ void print_probabilities(
         size_t components)
 {
         double prev = -std::numeric_limits<double>::infinity();
+        stringstream ss;
+
         for (size_t i = 0; i < components; i++) {
-                cout << cluster_tags1[i] << ":"
-                     << exp(log_weights1[i] - log_weights2[components-1]) - exp(prev - log_weights2[components-1])
-                     << " ";
+                ss << cluster_tags1[i] << ":"
+                   << exp(log_weights1[i] - log_weights2[components-1]) - exp(prev - log_weights2[components-1])
+                   << " ";
                 prev = log_weights1[i];
         }
         for (size_t i = 0; i < components; i++) {
-                cout << cluster_tags1[i] << ":"
-                     << exp(log_weights2[i] - log_weights2[components-1]) - exp(prev - log_weights2[components-1])
-                     << " ";
+                ss << cluster_tags1[i] << ":"
+                   << exp(log_weights2[i] - log_weights2[components-1]) - exp(prev - log_weights2[components-1])
+                   << " ";
                 prev = log_weights2[i];
         }
+        return ss.str();
 }
 #endif
 
@@ -166,8 +168,8 @@ dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp) {
                      << " to "    << cluster_tags1[result.second]
                      << endl;
                 cout << "Probabilities: "
-                     << print_probabilities(log_weights1, log_weights2, cluster_tags1, cluster_tags2,
-                                            components)
+                     << print_probabilities(log_weights1, log_weights2,
+                                            cluster_tags1, cluster_tags2, components)
                      << endl;
                 cout << print_alignment_pretty(dpm().alignment_set()[range1])
                      << endl;
