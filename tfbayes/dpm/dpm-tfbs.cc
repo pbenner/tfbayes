@@ -76,6 +76,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                 assert(options.threads >= 1);
                 thread_pool_t thread_pool(options.threads);
                 independence_background_t* bg = new independence_background_t(
+                        options.background_alpha,
                         options.background_gamma[0], options.background_gamma[1], data,
                         _state.cluster_assignments(), thread_pool, options.background_cache,
                         alignment_set);

@@ -270,6 +270,7 @@ independence_background_t::independence_background_t(
  * prior and Gamma distributed pseudocounts. The pseudocounts
  * are numerically integrated out. */
 independence_background_t::independence_background_t(
+        const matrix<double>& _alpha,
         const double k, const double g,
         const sequence_data_t<data_tfbs_t::code_t>& _data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
@@ -282,9 +283,18 @@ independence_background_t::independence_background_t(
           _precomputed_marginal(_data.sizes(), 0),
           _data(&_data)
 {
-        if (!load_marginal(k, g, cachefile)) {
-                precompute_marginal(k, g, thread_pool);
-                save_marginal(k, g, cachefile);
+        counts_t alpha;
+
+        assert(_alpha.size() == 1);
+        assert(_alpha[0].size() == data_tfbs_t::alphabet_size);
+
+        for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
+                alpha[j] = _alpha[0][j];
+        }
+
+        if (!load_marginal(alpha, k, g, cachefile)) {
+                precompute_marginal(alpha, k, g, thread_pool);
+                save_marginal(alpha, k, g, cachefile);
         }
 }
 
@@ -315,6 +325,7 @@ independence_background_t::operator=(const component_model_t& component_model)
 
 bool
 independence_background_t::load_marginal(
+        const counts_t& alpha,
         const double k, const double g,
         const string& cachefile)
 {
@@ -337,6 +348,7 @@ independence_background_t::load_marginal(
 
 bool
 independence_background_t::save_marginal(
+        const counts_t& alpha,
         const double k, const double g,
         const string& cachefile)
 {
@@ -356,12 +368,15 @@ independence_background_t::save_marginal(
 }
 
 void
-independence_background_t::precompute_marginal(double k, double g, thread_pool_t& thread_pool)
+independence_background_t::precompute_marginal(
+        const counts_t& alpha,
+        const double k, const double g,
+        thread_pool_t& thread_pool)
 {
-        typedef double (*hgm)(const data_tfbs_t::code_t&, const double, const double,
-                              boost::unordered_map<data_tfbs_t::code_t, double>&,
+        typedef double (*hgm)(const counts_t&, const double, const double,
+                              boost::unordered_map<counts_t, double>&,
                               boost::shared_mutex&);
-        boost::unordered_map<data_tfbs_t::code_t, double> map;
+        boost::unordered_map<counts_t, double> map;
         boost::shared_mutex mutex;
 
         flockfile(stderr);

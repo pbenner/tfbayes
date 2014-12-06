@@ -99,6 +99,7 @@ public:
                  boost::optional<const alignment_set_t<>&> alignment_set =
                  boost::optional<const alignment_set_t<>&>());
          independence_background_t(
+                 const std::matrix<double>& alpha,
                  const double k, const double g,
                  const sequence_data_t<data_tfbs_t::code_t>& data,
                  const sequence_data_t<cluster_tag_t>& cluster_assignments,
@@ -127,12 +128,17 @@ public:
         typedef data_tfbs_t::code_t counts_t;
 
         bool load_marginal(
+                const counts_t& alpha,
                 const double k, const double g,
                 const std::string& cachefile);
         bool save_marginal(
+                const counts_t& alpha,
                 const double k, const double g,
                 const std::string& cachefile);
-        void precompute_marginal(double k, double g, thread_pool_t& thread_pool);
+        void precompute_marginal(
+                const counts_t& alpha,
+                const double k, const double g,
+                thread_pool_t& thread_pool);
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
