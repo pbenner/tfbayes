@@ -134,6 +134,34 @@ dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp) {
         // draw a new cluster for the element and assign the element
         // to that cluster
         std::pair<size_t, size_t> result = select_component2(components, log_weights1, log_weights2, gen());
+        // if (old_cluster_tag != cluster_tags1[result.second]) {
+        //         cout << "Moving " << static_cast<const seq_index_t&>(index) << " from " << old_cluster_tag << " to " << cluster_tags1[result.second] << endl;
+        //         cout << print_alignment_pretty(dpm().alignment_set()[range1]);
+        //         double prev = -std::numeric_limits<double>::infinity();
+        //         cout << "probabilities: ";
+        //         for (size_t i = 0; i < components; i++) {
+        //                 cout << cluster_tags1[i] << ":" << exp(log_weights1[i] - log_weights2[components-1]) - exp(prev - log_weights2[components-1]) << " ";
+        //                 prev = log_weights1[i];
+        //         }
+        //         for (size_t i = 0; i < components; i++) {
+        //                 cout << cluster_tags1[i] << ":" << exp(log_weights2[i] - log_weights2[components-1]) - exp(prev - log_weights2[components-1]) << " ";
+        //                 prev = log_weights2[i];
+        //         }
+        //         cout << endl;
+        //         cout << "    -> selected: ";
+        //         for (size_t i = 0; i < 100; i++) {
+        //                 std::pair<size_t, size_t> r = select_component2(components, log_weights1, log_weights2, gen());
+        //                 if (r.first == 1) {
+        //                         cout << cluster_tags1[r.second] << " ";
+        //                 }
+        //                 else {
+        //                         cout << cluster_tags2[r.second] << " ";
+        //                 }
+        //         }
+        //         cout << "Num tfbs: " << dpm().state().num_tfbs << endl;
+        //         cout << endl
+        //              << endl;
+        // }
         ////////////////////////////////////////////////////////////////////////
         if (result.first == 1) {
                 dpm().state().add(range1, cluster_tags1[result.second]);
