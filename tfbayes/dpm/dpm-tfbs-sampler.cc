@@ -152,8 +152,8 @@ dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp) {
         range_t range2(index, dpm().state().tfbs_length, true );
         ////////////////////////////////////////////////////////////////////////
         // compute weights
-        dpm().mixture_weights(range1, log_weights1, cluster_tags1, temp);
-        dpm().mixture_weights(range2, log_weights2, cluster_tags2, temp, log_weights1[components-1]);
+        dpm().mixture_weights(range1, log_weights1, cluster_tags1, temp, true);
+        dpm().mixture_weights(range2, log_weights2, cluster_tags2, temp, false, log_weights1[components-1]);
 
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element

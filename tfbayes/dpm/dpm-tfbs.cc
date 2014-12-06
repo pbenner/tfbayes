@@ -210,7 +210,9 @@ dpm_tfbs_t::baseline_components() const
 
 GCC_ATTRIBUTE_HOT
 void
-dpm_tfbs_t::mixture_weights(const range_t& range, double log_weights[], cluster_tag_t cluster_tags[], const double temp, const double baseline)
+dpm_tfbs_t::mixture_weights(
+        const range_t& range, double log_weights[], cluster_tag_t cluster_tags[],
+        const double temp, const bool include_background, const double baseline)
 {
         double sum = baseline;
 
@@ -222,17 +224,17 @@ dpm_tfbs_t::mixture_weights(const range_t& range, double log_weights[], cluster_
                 if (cluster.cluster_tag() == _state.bg_cluster_tag) {
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
-                        sum = logadd(sum, (_lambda_inv_log + cluster.model().log_predictive(range))/temp);
-                        log_weights [i] = sum;
-                        cluster_tags[i] = _state.bg_cluster_tag;
+                        if (include_background) {
+                                sum = logadd(sum, (_lambda_inv_log + cluster.model().log_predictive(range))/temp);
+                        }
                 }
                 else {
                         ////////////////////////////////////////////////////////
                         // mixture component 2: dirichlet process
                         sum = logadd(sum, (_lambda_log + _process_prior->log_predictive(cluster, _state) + cluster.model().log_predictive(range))/temp);
-                        log_weights [i] = sum;
-                        cluster_tags[i] = cluster.cluster_tag();
                 }
+                log_weights [i] = sum;
+                cluster_tags[i] = cluster.cluster_tag();
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
@@ -248,7 +250,8 @@ dpm_tfbs_t::mixture_weights(const range_t& range, double log_weights[], cluster_
 
 GCC_ATTRIBUTE_HOT
 void
-dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[], const double temp, const bool include_background)
+dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[],
+                            const double temp, const bool include_background)
 {
         double sum         = -numeric_limits<double>::infinity();
         double n           = range_set.size();

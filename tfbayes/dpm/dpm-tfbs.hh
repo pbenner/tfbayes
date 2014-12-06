@@ -73,16 +73,18 @@ public:
         ////////////////////////////////////////////////////////////////////////
         size_t mixture_components() const;
         size_t baseline_components() const;
+        // override pure functions
         void   mixture_weights(const range_t& range, double log_weights[], cluster_tag_t tags[]) {
                 // set default temperature
-                mixture_weights(range, log_weights, tags, 1.0, -std::numeric_limits<double>::infinity());
+                mixture_weights(range, log_weights, tags, 1.0, true, -std::numeric_limits<double>::infinity());
         }
-        void   mixture_weights(const range_t& range, double log_weights[], cluster_tag_t tags[], const double temp) {
-                // set default temperature
-                mixture_weights(range, log_weights, tags, temp, -std::numeric_limits<double>::infinity());
-        }
-        void   mixture_weights(const range_t& range, double log_weights[], cluster_tag_t tags[], const double temp, const double baseline);
-        void   mixture_weights(const std::vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[], const double temp = 1.0, const bool include_background = true);
+        void   mixture_weights(const range_t& range, double log_weights[], cluster_tag_t tags[],
+                               const double temp,
+                               const bool include_background = true,
+                               const double baseline = -std::numeric_limits<double>::infinity());
+        void   mixture_weights(const std::vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[],
+                               const double temp = 1.0,
+                               const bool include_background = true);
         double likelihood() const;
         double posterior() const;
 

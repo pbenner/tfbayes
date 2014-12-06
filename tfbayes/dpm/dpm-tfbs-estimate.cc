@@ -566,8 +566,8 @@ map_local_optimization(const index_i& index, dpm_tfbs_t& dpm, bool verbose) {
         range_t range2(index, dpm.state().tfbs_length, true );
         ////////////////////////////////////////////////////////////////////////
         // compute weights
-        dpm.mixture_weights(range1, log_weights1, cluster_tags1, 1.0);
-        dpm.mixture_weights(range2, log_weights2, cluster_tags2, 1.0, log_weights1[components-1]);
+        dpm.mixture_weights(range1, log_weights1, cluster_tags1, 1.0, true);
+        dpm.mixture_weights(range2, log_weights2, cluster_tags2, 1.0, false, log_weights1[components-1]);
 
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
