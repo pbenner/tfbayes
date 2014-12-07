@@ -170,7 +170,7 @@ def __main__():
         if o == "--format":
             options['format'] = a
         if o == "-m":
-            if int(a) < 0:
+            if int(a) <= 0:
                 usage()
                 return 1
             options['mask'] = int(a)
