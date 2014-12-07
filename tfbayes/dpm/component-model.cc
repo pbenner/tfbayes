@@ -53,7 +53,8 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 struct gamma_marginal_data {
-        const data_tfbs_t::code_t& counts;
+        const independence_background_t::counts_t& counts;
+        const independence_background_t::counts_t& alpha;
         const boost::math::gamma_distribution<> distribution;
 };
 
@@ -71,7 +72,9 @@ gamma_marginal_f(double * x, size_t dim, void * params)
 
         /* multiply with gamma distribution */
         for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
-                result *= boost::math::pdf(data->distribution, x[i]);
+                if (data->alpha[i] != -1) {
+                        result *= boost::math::pdf(data->distribution, x[i]);
+                }
         }
         return result;
 }
@@ -81,7 +84,8 @@ gamma_marginal_f(double * x, size_t dim, void * params)
  * do this numerically) */
 double
 gamma_marginal(
-        const data_tfbs_t::code_t& counts,
+        const independence_background_t::counts_t& counts,
+        const independence_background_t::counts_t& alpha,
         const double k, const double g)
 {
         double xl[data_tfbs_t::alphabet_size];
@@ -95,12 +99,18 @@ gamma_marginal(
         gsl_monte_function F;
 
         struct gamma_marginal_data data = {
-                counts, boost::math::gamma_distribution<>(k, g)
+                counts, alpha, boost::math::gamma_distribution<>(k, g)
         };
 
         for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
-                xl[i] =   0.0;
-                xu[i] = 100.0;
+                if (alpha[i] == -1) {
+                        xl[i] =   0.0;
+                        xu[i] = 100.0;
+                }
+                else {
+                        xl[i] = alpha[i];
+                        xu[i] = alpha[i];
+                }
         }
 
         F.f      = gamma_marginal_f;
@@ -160,7 +170,8 @@ namespace boost {
 
 double
 hashed_gamma_marginal(
-        const data_tfbs_t::code_t& counts,
+        const independence_background_t::counts_t& counts,
+        const independence_background_t::counts_t& alpha,
         const double k, const double g,
         boost::unordered_map<data_tfbs_t::code_t, double>& map,
         boost::shared_mutex& mutex)
@@ -177,7 +188,7 @@ hashed_gamma_marginal(
         }
         {
                 // compute value
-                double result = gamma_marginal(counts, k, g);
+                double result = gamma_marginal(counts, alpha, k, g);
                 // get write access
                 boost::unique_lock<boost::shared_mutex> lock(mutex);
                 map[counts] = result;
@@ -270,16 +281,7 @@ independence_background_t::independence_background_t(
                 alpha[j] = _alpha[0][j];
         }
 
-
-        /* go through the data and precompute
-         * lnbeta(n + alpha) - lnbeta(alpha) */
-        for(size_t i = 0; i < data().size(); i++) {
-                for(size_t j = 0; j < data()[i].size(); j++) {
-                        _precomputed_marginal[i][j] =
-                                  fast_lnbeta<data_tfbs_t::alphabet_size>(alpha, data()[i][j])
-                                - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha);
-                }
-        }
+        precompute_marginal(alpha);
 }
 
 /* This is an independence background model with Dirichlet
@@ -300,17 +302,27 @@ independence_background_t::independence_background_t(
           _data(&_data)
 {
         counts_t alpha;
+        size_t dim = 0;
 
         assert(_alpha.size() == 1);
         assert(_alpha[0].size() == data_tfbs_t::alphabet_size);
 
         for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
                 alpha[j] = _alpha[0][j];
+                if (alpha[j] == -1)
+                        dim++;
         }
 
-        if (!load_marginal(alpha, k, g, cachefile)) {
-                precompute_marginal(alpha, k, g, thread_pool);
-                save_marginal(alpha, k, g, cachefile);
+        if (dim == 0) {
+                // all pseudocounts are given
+                precompute_marginal(alpha);
+        }
+        else {
+                // at least one pseudocount has to be integrated
+                if (!load_marginal_gamma(alpha, k, g, cachefile)) {
+                        precompute_marginal_gamma(alpha, k, g, thread_pool);
+                        save_marginal_gamma(alpha, k, g, cachefile);
+                }
         }
 }
 
@@ -341,7 +353,7 @@ independence_background_t::operator=(const component_model_t& component_model)
 }
 
 bool
-independence_background_t::load_marginal(
+independence_background_t::load_marginal_gamma(
         const counts_t& alpha,
         const double k, const double g,
         const string& cachefile)
@@ -364,7 +376,7 @@ independence_background_t::load_marginal(
 }
 
 bool
-independence_background_t::save_marginal(
+independence_background_t::save_marginal_gamma(
         const counts_t& alpha,
         const double k, const double g,
         const string& cachefile)
@@ -386,11 +398,27 @@ independence_background_t::save_marginal(
 
 void
 independence_background_t::precompute_marginal(
+        const counts_t& alpha)
+{
+        /* go through the data and precompute
+         * lnbeta(n + alpha) - lnbeta(alpha) */
+        for(size_t i = 0; i < data().size(); i++) {
+                for(size_t j = 0; j < data()[i].size(); j++) {
+                        _precomputed_marginal[i][j] =
+                                  fast_lnbeta<data_tfbs_t::alphabet_size>(alpha, data()[i][j])
+                                - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha);
+                }
+        }
+}
+
+void
+independence_background_t::precompute_marginal_gamma(
         const counts_t& alpha,
         const double k, const double g,
         thread_pool_t& thread_pool)
 {
-        typedef double (*hgm)(const counts_t&, const double, const double,
+        typedef double (*hgm)(const counts_t&, const counts_t&,
+                              const double, const double,
                               boost::unordered_map<counts_t, double>&,
                               boost::shared_mutex&);
         boost::unordered_map<counts_t, double> map;
@@ -409,7 +437,7 @@ independence_background_t::precompute_marginal(
                 for(size_t j = 0; j < data()[i].size(); j++) {
                         boost::function<double ()> f = boost::bind(
                                 static_cast<hgm>(&hashed_gamma_marginal),
-                                boost::cref(data()[i][j]), k, g,
+                                boost::cref(data()[i][j]), alpha, k, g,
                                 boost::ref(map), boost::ref(mutex));
 
                         futures[j] = thread_pool.schedule(f);

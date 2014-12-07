@@ -127,15 +127,17 @@ public:
         // datatypes
         typedef data_tfbs_t::code_t counts_t;
 
-        bool load_marginal(
+        bool load_marginal_gamma(
                 const counts_t& alpha,
                 const double k, const double g,
                 const std::string& cachefile);
-        bool save_marginal(
+        bool save_marginal_gamma(
                 const counts_t& alpha,
                 const double k, const double g,
                 const std::string& cachefile);
         void precompute_marginal(
+                const counts_t& alpha);
+        void precompute_marginal_gamma(
                 const counts_t& alpha,
                 const double k, const double g,
                 thread_pool_t& thread_pool);
