@@ -71,9 +71,9 @@ gamma_marginal_f(double * x, size_t dim, void * params)
         independence_background_t::counts_t alpha(data->alpha);
 
         for (size_t i = 0, j = 0; i < data_tfbs_t::alphabet_size; i++) {
-                assert(j < dim);
                 /* determine pseudocounts that are integrated out */
                 if (alpha[i] == -1) {
+                        assert(j < dim);
                         /* copy pseudocounts */
                         alpha[i] = x[j];
                         /* multiply with gamma distribution */
