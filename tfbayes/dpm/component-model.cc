@@ -721,13 +721,29 @@ double product_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
                 /* loop through all ranges */
                 for (size_t k = 0; k < range_set.size(); k++) {
 
-                        const size_t sequence = range_set[k].index()[0];
-                        const size_t position = range_set[k].index()[1];
-                        const seq_index_t index(sequence, position+i);
+                        if (!range_set[k].reverse() || _complement == false) {
+                                const size_t sequence = range_set[k].index()[0];
+                                const size_t position = range_set[k].index()[1];
+                                const seq_index_t index(sequence, position+i);
 
-                        /* add counts of this subsequence to tmp_counts */
-                        for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
-                                tmp_counts[j] += data()[index][j];
+                                /* add counts of this subsequence to tmp_counts */
+                                for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
+                                        tmp_counts[j] += data()[index][j];
+                                }
+                        }
+                }
+                /* reverse complements */
+                for (size_t k = 0; k < range_set.size(); k++) {
+
+                        if (range_set[k].reverse() && _complement == true) {
+                                const size_t sequence = range_set[k].index()[0];
+                                const size_t position = range_set[k].index()[1];
+                                const seq_index_t index(sequence, position+length-i-1);
+
+                                /* add counts of this subsequence to tmp_counts */
+                                for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
+                                        tmp_counts[j] += complement_data()[index][j];
+                                }
                         }
                 }
                 result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1], tmp_counts)
