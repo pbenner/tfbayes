@@ -782,9 +782,9 @@ markov_chain_mixture_t::markov_chain_mixture_t(
           _max_context(options.background_context),
           _alphabet_size(alphabet_size)
 {
-//        cerr << "Error: The markov chain mixture model is broken!"
-//             << endl;
-//        exit(EXIT_FAILURE);
+       cerr << "Error: The markov chain mixture model is broken!"
+            << endl;
+       exit(EXIT_FAILURE);
 
         _length = context_t::counts_size(alphabet_size, _max_context);
         _alpha  = (double*)malloc(_length*sizeof(double));
