@@ -59,6 +59,7 @@ struct gamma_marginal_data {
         const boost::math::gamma_distribution<> distribution;
 };
 
+GCC_ATTRIBUTE_HOT
 double
 gamma_marginal_f(double * x, size_t dim, void * params)
 {
