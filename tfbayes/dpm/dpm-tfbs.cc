@@ -58,17 +58,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
 
         ////////////////////////////////////////////////////////////////////////////////
         // add background model to the state
-        if (options.background_model == "independence-dirichlet" || options.background_model == "") {
-                /* every position in the background is fully
-                 * independet, this gives more flexibility to the
-                 * prior pseudocounts */
-                independence_background_t* bg = new independence_background_t(
-                        options.background_alpha, data, _state.cluster_assignments(),
-                        alignment_set);
-                _state.bg_cluster_tag = _state.add_cluster(bg);
-                bg->set_bg_cluster_tag(_state.bg_cluster_tag);
-        }
-        else if (options.background_model == "independence-dirichlet-gamma") {
+        if (options.background_model == "independence-dirichlet") {
                 /* every position in the background is fully
                  * independet, where the Dirichlet pseudocounts
                  * are integrated out */

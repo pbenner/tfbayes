@@ -94,12 +94,6 @@ class independence_background_t : public component_model_t {
 public:
          independence_background_t(
                  const std::matrix<double>& alpha,
-                 const sequence_data_t<data_tfbs_t::code_t>& data,
-                 const sequence_data_t<cluster_tag_t>& cluster_assignments,
-                 boost::optional<const alignment_set_t<>&> alignment_set =
-                 boost::optional<const alignment_set_t<>&>());
-         independence_background_t(
-                 const std::matrix<double>& alpha,
                  const double k, const double g,
                  const sequence_data_t<data_tfbs_t::code_t>& data,
                  const sequence_data_t<cluster_tag_t>& cluster_assignments,

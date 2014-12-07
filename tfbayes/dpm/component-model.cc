@@ -270,32 +270,9 @@ public:
 // Independence Background Model
 ////////////////////////////////////////////////////////////////////////////////
 
-independence_background_t::independence_background_t(
-        const matrix<double>& _alpha,
-        const sequence_data_t<data_tfbs_t::code_t>& _data,
-        const sequence_data_t<cluster_tag_t>& cluster_assignments,
-        boost::optional<const alignment_set_t<>&> alignment_set)
-        : component_model_t(cluster_assignments),
-          _size(data_tfbs_t::alphabet_size),
-          _bg_cluster_tag(0),
-          _precomputed_marginal(_data.sizes(), 0),
-          _data(&_data)
-{
-        data_tfbs_t::code_t alpha;
-
-        assert(_alpha.size() == 1);
-        assert(_alpha[0].size() == data_tfbs_t::alphabet_size);
-
-        for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
-                alpha[j] = _alpha[0][j];
-        }
-
-        precompute_marginal(alpha);
-}
-
 /* This is an independence background model with Dirichlet
- * prior and Gamma distributed pseudocounts. The pseudocounts
- * are numerically integrated out. */
+ * prior. If the pseudocounts are set to -1 a Gamma distribution
+ * is used to integrate them out. */
 independence_background_t::independence_background_t(
         const matrix<double>& _alpha,
         const double k, const double g,
