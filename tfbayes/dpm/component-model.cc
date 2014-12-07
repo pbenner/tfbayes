@@ -72,9 +72,9 @@ gamma_marginal_f(double * x, size_t dim, void * params)
                      fast_lnbeta<data_tfbs_t::alphabet_size>(x));
 
         /* multiply with gamma distribution */
-        for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
+        for (size_t i = 0, j = 0; i < data_tfbs_t::alphabet_size; i++) {
                 if (data->alpha[i] == -1) {
-                        result *= boost::math::pdf(data->distribution, x[i]);
+                        result *= boost::math::pdf(data->distribution, x[j++]);
                 }
         }
         return result;
