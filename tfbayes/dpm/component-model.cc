@@ -112,9 +112,14 @@ gamma_marginal(
                 counts, alpha, boost::math::gamma_distribution<>(k, g)
         };
 
+        /* begin at the mode and determine a point where the density
+         * function is below a certain threshold */
+        double thr;
+        for (thr = (k-1)*g; boost::math::pdf(data.distribution, thr) > 1e-8; thr += 1.0);
+
         for (size_t i = 0; i < dim; i++) {
-                xl[i] =   0.0;
-                xu[i] = 100.0;
+                xl[i] = 0.0;
+                xu[i] = thr;
         }
 
         F.f      = gamma_marginal_f;
