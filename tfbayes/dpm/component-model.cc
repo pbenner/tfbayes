@@ -63,21 +63,28 @@ double
 gamma_marginal_f(double * x, size_t dim, void * params)
 {
         /* store the result on normal scale */
-        double result;
+        double result = 1.0;
         /* casted parameters */
         struct gamma_marginal_data* data = (gamma_marginal_data *)params;
 
-        /* lnbeta(n, a) - lnbeta(a) */
-        result = exp(fast_lnbeta<data_tfbs_t::alphabet_size>(data->counts, x) -
-                     fast_lnbeta<data_tfbs_t::alphabet_size>(x));
+        /* pseudocounts */
+        independence_background_t::counts_t alpha(data->alpha);
 
-        /* multiply with gamma distribution */
         for (size_t i = 0, j = 0; i < data_tfbs_t::alphabet_size; i++) {
                 assert(j < dim);
-                if (data->alpha[i] == -1) {
-                        result *= boost::math::pdf(data->distribution, x[j++]);
+                /* determine pseudocounts that are integrated out */
+                if (alpha[i] == -1) {
+                        /* copy pseudocounts */
+                        alpha[i] = x[j];
+                        /* multiply with gamma distribution */
+                        result  *= boost::math::pdf(data->distribution, x[j++]);
                 }
         }
+
+        /* lnbeta(n, a) - lnbeta(a) */
+        result *= exp(fast_lnbeta<data_tfbs_t::alphabet_size>(data->counts, alpha) -
+                      fast_lnbeta<data_tfbs_t::alphabet_size>(alpha));
+
         return result;
 }
 
