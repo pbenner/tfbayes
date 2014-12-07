@@ -19,6 +19,7 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <algorithm>    // std::count
 #include <sstream>
 #include <vector>
 #include <iostream>
@@ -71,7 +72,7 @@ gamma_marginal_f(double * x, size_t dim, void * params)
                      fast_lnbeta<data_tfbs_t::alphabet_size>(x));
 
         /* multiply with gamma distribution */
-        for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
+        for (size_t i = 0; i < dim; i++) {
                 if (data->alpha[i] == -1) {
                         result *= boost::math::pdf(data->distribution, x[i]);
                 }
@@ -88,6 +89,7 @@ gamma_marginal(
         const independence_background_t::counts_t& alpha,
         const double k, const double g)
 {
+        size_t dim = count(alpha.begin(), alpha.end(), -1);
         double xl[data_tfbs_t::alphabet_size];
         double xu[data_tfbs_t::alphabet_size];
         const gsl_rng_type *T;
@@ -102,19 +104,13 @@ gamma_marginal(
                 counts, alpha, boost::math::gamma_distribution<>(k, g)
         };
 
-        for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
-                if (alpha[i] == -1) {
+        for (size_t i = 0; i < dim; i++) {
                         xl[i] =   0.0;
                         xu[i] = 100.0;
-                }
-                else {
-                        xl[i] = alpha[i];
-                        xu[i] = alpha[i];
-                }
         }
 
         F.f      = gamma_marginal_f;
-        F.dim    = data_tfbs_t::alphabet_size;
+        F.dim    = dim;
         F.params = &data;
      
         gsl_rng_env_setup();
@@ -122,8 +118,8 @@ gamma_marginal(
         T = gsl_rng_default;
         r = gsl_rng_alloc(T);
 
-        gsl_monte_miser_state *s = gsl_monte_miser_alloc(data_tfbs_t::alphabet_size);
-        gsl_monte_miser_integrate(&F, xl, xu, data_tfbs_t::alphabet_size, calls, r, s,
+        gsl_monte_miser_state *s = gsl_monte_miser_alloc(dim);
+        gsl_monte_miser_integrate(&F, xl, xu, dim, calls, r, s,
                                   &result, &err);
         gsl_monte_miser_free(s);
 
@@ -434,7 +430,7 @@ independence_background_t::precompute_marginal_gamma(
                 for(size_t j = 0; j < data()[i].size(); j++) {
                         boost::function<double ()> f = boost::bind(
                                 static_cast<hgm>(&hashed_gamma_marginal),
-                                boost::cref(data()[i][j]), alpha, k, g,
+                                boost::cref(data()[i][j]), boost::cref(alpha), k, g,
                                 boost::ref(map), boost::ref(mutex));
 
                         futures[j] = thread_pool.schedule(f);
