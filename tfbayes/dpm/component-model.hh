@@ -94,7 +94,7 @@ class independence_background_t : public component_model_t {
 public:
          independence_background_t(
                  const std::matrix<double>& alpha,
-                 const double k, const double g,
+                 const std::vector<double>& parameters,
                  const sequence_data_t<data_tfbs_t::code_t>& data,
                  const sequence_data_t<cluster_tag_t>& cluster_assignments,
                  thread_pool_t& thread_pool,
@@ -123,17 +123,17 @@ public:
 
         bool load_marginal_gamma(
                 const counts_t& alpha,
-                const double k, const double g,
+                const std::vector<double>& parameters,
                 const std::string& cachefile);
         bool save_marginal_gamma(
                 const counts_t& alpha,
-                const double k, const double g,
+                const std::vector<double>& parameters,
                 const std::string& cachefile);
         void precompute_marginal(
                 const counts_t& alpha);
         void precompute_marginal_gamma(
                 const counts_t& alpha,
-                const double k, const double g,
+                const std::vector<double>& parameters,
                 thread_pool_t& thread_pool);
         size_t add(const range_t& range);
         size_t remove(const range_t& range);
