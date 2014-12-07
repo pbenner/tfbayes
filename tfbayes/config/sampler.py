@@ -94,7 +94,11 @@ def parse_sampler_config(config_file, sampler_config):
     if config_parser.has_option('TFBS-Sampler', 'background-model'):
         sampler_config.background_model = config_parser.get('TFBS-Sampler', 'background-model').strip()
     if config_parser.has_option('TFBS-Sampler', 'background-alpha'):
-        sampler_config.background_alpha = tr(read_matrix(config_parser, 'TFBS-Sampler', 'background-alpha', float))
+        def convert_pseudocount(x):
+            if x == '*'      : return -1
+            if float(x) < 0.0: raise IOError("Illegal background pseudocounts")
+            return float(x)
+        sampler_config.background_alpha = tr(read_matrix(config_parser, 'TFBS-Sampler', 'background-alpha', convert_pseudocount))
     if config_parser.has_option('TFBS-Sampler', 'background-gamma'):
         sampler_config.background_gamma = read_vector(config_parser, 'TFBS-Sampler', 'background-gamma', float)
         if (len(sampler_config.background_gamma) != 2):

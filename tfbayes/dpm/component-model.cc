@@ -72,7 +72,7 @@ gamma_marginal_f(double * x, size_t dim, void * params)
 
         /* multiply with gamma distribution */
         for (size_t i = 0; i < data_tfbs_t::alphabet_size; i++) {
-                if (data->alpha[i] != -1) {
+                if (data->alpha[i] == -1) {
                         result *= boost::math::pdf(data->distribution, x[i]);
                 }
         }
@@ -302,18 +302,15 @@ independence_background_t::independence_background_t(
           _data(&_data)
 {
         counts_t alpha;
-        size_t dim = 0;
 
         assert(_alpha.size() == 1);
         assert(_alpha[0].size() == data_tfbs_t::alphabet_size);
 
         for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
                 alpha[j] = _alpha[0][j];
-                if (alpha[j] == -1)
-                        dim++;
         }
 
-        if (dim == 0) {
+        if (std::find(alpha.begin(), alpha.end(), -1) == alpha.end()) {
                 // all pseudocounts are given
                 precompute_marginal(alpha);
         }
