@@ -106,8 +106,8 @@ gamma_marginal(
         };
 
         for (size_t i = 0; i < dim; i++) {
-                        xl[i] =   0.0;
-                        xu[i] = 100.0;
+                xl[i] =   0.0;
+                xu[i] = 100.0;
         }
 
         F.f      = gamma_marginal_f;
