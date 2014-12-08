@@ -503,7 +503,7 @@ dpm_tfbs_estimate(const sampling_history_t& history,
 // -----------------------------------------------------------------------------
 
 static bool
-map_local_optimization(cluster_t& cluster, dpm_tfbs_t& dpm, bool verbose)
+map_local_optimization_move(cluster_t& cluster, dpm_tfbs_t& dpm, bool verbose)
 {
         double posterior_ref = dpm.posterior();
         double posterior_left;
@@ -542,6 +542,69 @@ map_local_optimization(cluster_t& cluster, dpm_tfbs_t& dpm, bool verbose)
         }
 
         return true;
+}
+
+static bool
+map_local_optimization_block(cluster_t& cluster, dpm_tfbs_t& dpm, bool verbose)
+{
+        vector<range_t> range_set;
+        cluster_tag_t old_cluster_tag = cluster.cluster_tag();
+        bool result = false;
+
+        ////////////////////////////////////////////////////////////////////////
+        // fill range_set
+        for (cluster_t::iterator it = cluster.begin(); it != cluster.end(); it++)
+        {
+                const range_t& range = *it;
+
+                range_set.push_back(range);
+        }
+        ////////////////////////////////////////////////////////////////////////
+        // release all elemente from the cluster
+        for (vector<range_t>::iterator it = range_set.begin(); it != range_set.end(); it++)
+        {
+                const range_t& range = *it;
+
+                dpm.state().remove(range, old_cluster_tag);
+        }
+        ////////////////////////////////////////////////////////////////////////
+        // obtian the mixture probabilities
+        size_t components = dpm.mixture_components() + dpm.baseline_components();
+        double log_weights[components];
+        cluster_tag_t cluster_tags[components];
+        dpm.mixture_weights(range_set, log_weights, cluster_tags, 1.0, true);
+
+        ////////////////////////////////////////////////////////////////////////
+        // draw a new cluster for the element and assign the element
+        // to that cluster
+        cluster_tag_t new_cluster_tag = cluster_tags[select_max_component(components, log_weights)];
+
+        ////////////////////////////////////////////////////////////////////////
+        // print some information to stdout
+        flockfile(stdout);
+        if (dpm.state()[new_cluster_tag].size() != 0) {
+                cout << boost::format("Cluster %d merged with cluster %d (%d + %d)")
+                        % old_cluster_tag % new_cluster_tag
+                        % dpm.state()[new_cluster_tag].size() % range_set.size()
+                     << endl;
+                result = true;
+        }
+        fflush(stdout);
+        funlockfile(stdout);
+
+        ////////////////////////////////////////////////////////////////////////
+        // move all elements to the new cluster
+        for (size_t i = 0; i < range_set.size(); i++) {
+                dpm.state().add(range_set[i], new_cluster_tag);
+        }
+        return result;
+}
+
+static bool
+map_local_optimization(cluster_t& cluster, dpm_tfbs_t& dpm, bool verbose)
+{
+        return map_local_optimization_move (cluster, dpm, verbose) ||
+               map_local_optimization_block(cluster, dpm, verbose);
 }
 
 static bool
@@ -610,10 +673,25 @@ map_local_optimization(dpm_tfbs_t& dpm, bool verbose) {
                      it != dpm.data().sampling_end(); it++) {
                         optimized |= map_local_optimization(**it, dpm, verbose);
                 }
-                /* optimize by moving whole clusters */
-                for (mixture_state_t::iterator it = dpm.state().begin();
-                     it != dpm.state().end(); it++) {
-                        optimized |= map_local_optimization(**it, dpm, verbose);
+
+
+                // since clusters are modified it is not possible to simply
+                // loop through the list of clusters, we need to be a bit more
+                // careful here!
+                vector<cluster_tag_t> used_clusters;
+                for (mixture_state_t::const_iterator it = dpm.state().begin(); it != dpm.state().end(); it++) {
+                        cluster_t& cluster = **it;
+                        if (cluster.cluster_tag() != dpm.state().bg_cluster_tag) {
+                                used_clusters.push_back(cluster.cluster_tag());
+                        }
+                }
+                // go through the list of used clusters and if they are still
+                // used then generate a block sample
+                for (vector<cluster_tag_t>::const_iterator it = used_clusters.begin(); it != used_clusters.end(); it++) {
+                        cluster_t& cluster = dpm.state()[*it];
+                        if (cluster.size() != 0) {
+                                optimized |= map_local_optimization(cluster, dpm, verbose);
+                        }
                 }
                 old_posterior = new_posterior;
                 new_posterior = dpm.posterior();
