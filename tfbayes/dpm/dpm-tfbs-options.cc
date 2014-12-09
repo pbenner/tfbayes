@@ -22,17 +22,19 @@ using namespace std;
 ostream&
 operator<<(ostream& o, const tfbs_options_t& options) {
         o << "Options:"              << endl
-          << "-> alpha               = " << options.alpha               << endl
-          << "-> discount            = " << options.discount            << endl
-          << "-> lambda              = " << options.lambda              << endl
-          << "-> initial temperature = " << options.initial_temperature << endl
-          << "-> tfbs_length         = " << options.tfbs_length         << endl
-          << "-> process prior       = " << options.process_prior       << endl
-          << "-> background model    = " << options.background_model    << endl
-          << "-> background context  = " << options.background_context  << endl
-          << "-> background weights  = " << options.background_weights  << endl
-          << "-> population_size     = " << options.population_size     << endl
-          << "-> socket_file         = " << options.socket_file         << endl
-          << "-> verbose             = " << options.verbose             << endl;
+          << "-> alpha                = " << options.alpha                << endl
+          << "-> discount             = " << options.discount             << endl
+          << "-> lambda               = " << options.lambda               << endl
+          << "-> block samples        = " << options.block_samples        << endl
+          << "-> block samples period = " << options.block_samples_period << endl
+          << "-> initial temperature  = " << options.initial_temperature  << endl
+          << "-> tfbs_length          = " << options.tfbs_length          << endl
+          << "-> process prior        = " << options.process_prior        << endl
+          << "-> background model     = " << options.background_model     << endl
+          << "-> background context   = " << options.background_context   << endl
+          << "-> background weights   = " << options.background_weights   << endl
+          << "-> population_size      = " << options.population_size      << endl
+          << "-> socket_file          = " << options.socket_file          << endl
+          << "-> verbose              = " << options.verbose              << endl;
         return o;
 }

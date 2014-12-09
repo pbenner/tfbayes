@@ -40,6 +40,8 @@ typedef struct {
         double discount;
         double lambda;
         double initial_temperature;
+        bool   block_samples;
+        size_t block_samples_period;
         std::string process_prior;
         std::string background_model;
         std::matrix<double> background_alpha;

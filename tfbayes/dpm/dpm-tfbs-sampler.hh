@@ -85,6 +85,8 @@ protected:
 
         // initial temperature for simulated annealing
         double _t0;
+        bool   _block_samples;
+        size_t _block_samples_period;
 };
 
 #include <pmcmc.hh>

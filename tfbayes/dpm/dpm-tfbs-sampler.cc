@@ -38,19 +38,24 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
         const data_tfbs_t& data,
         save_queue_t<string>& output_queue)
         :
-        gibbs_sampler_t  (dpm_tfbs, data),
-        phylogenetic_data(&data),
-        _output_queue    (&output_queue),
-        _t0              (options.initial_temperature)
+        gibbs_sampler_t      (dpm_tfbs, data),
+        phylogenetic_data    (&data),
+        _output_queue        (&output_queue),
+        _t0                  (options.initial_temperature),
+        _block_samples       (options.block_samples),
+        _block_samples_period(options.block_samples_period)
 {
-        assert(options.initial_temperature >= 1.0);
+        assert(options.initial_temperature  >= 1.0);
+        assert(options.block_samples_period >= 1);
 }
 
 dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(const dpm_tfbs_sampler_t& sampler)
-        : gibbs_sampler_t  (sampler),
-          phylogenetic_data(sampler.phylogenetic_data),
-          _output_queue    (sampler._output_queue),
-          _t0              (sampler._t0)
+        : gibbs_sampler_t      (sampler),
+          phylogenetic_data    (sampler.phylogenetic_data),
+          _output_queue        (sampler._output_queue),
+          _t0                  (sampler._t0),
+          _block_samples       (sampler._block_samples),
+          _block_samples_period(sampler._block_samples_period)
 { }
 
 dpm_tfbs_sampler_t::~dpm_tfbs_sampler_t()
@@ -350,7 +355,9 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         _metropolis_sample(temperature);
         // do a Gibbs block sampling step, i.e. go through all
         // clusters and try to merge them
-//        _block_sample(temperature);
+        if (_block_samples && i % _block_samples_period == 0) {
+                _block_sample(temperature);
+        }
         // we are done with sampling here, now process commands
         flockfile(stdout);
         cout << boost::format("%s: Processing commands.") % _name

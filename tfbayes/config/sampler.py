@@ -29,29 +29,31 @@ from tfbayes.dpm       import *
 
 def default_sampler_config():
     sampler_config = tfbs_options_t()
-    sampler_config.alignment_file      = ""
-    sampler_config.phylogenetic_file   = ""
-    sampler_config.alpha               = 0.05
-    sampler_config.discount            = 0.0
-    sampler_config._lambda_            = 0.01
-    sampler_config.initial_temperature = 10.0
-    sampler_config.process_prior       = 'pitman-yor process'
-    sampler_config.background_model    = 'independence-dirichlet'
-    sampler_config.background_alpha    = [[1, 1, 1, 1, 5]]
-    sampler_config.background_gamma    = [5.0, 0.2]
-    sampler_config.background_cache    = ''
-    sampler_config.background_context  = 2
-    sampler_config.background_weights  = 'decay'
-    sampler_config.population_size     = 1
-    sampler_config.tfbs_length         = 10
-    sampler_config.baseline_tags       = []
-    sampler_config.baseline_weights    = []
-    sampler_config.baseline_priors     = []
-    sampler_config.socket_file         = ""
-    sampler_config.samples             = (1000,100)
-    sampler_config.threads             = 1
-    sampler_config.save                = ""
-    sampler_config.verbose             = False
+    sampler_config.alignment_file       = ""
+    sampler_config.phylogenetic_file    = ""
+    sampler_config.alpha                = 0.05
+    sampler_config.discount             = 0.0
+    sampler_config._lambda_             = 0.01
+    sampler_config.block_samples        = False
+    sampler_config.block_samples_period = 1
+    sampler_config.initial_temperature  = 10.0
+    sampler_config.process_prior        = 'pitman-yor process'
+    sampler_config.background_model     = 'independence-dirichlet'
+    sampler_config.background_alpha     = [[1, 1, 1, 1, 5]]
+    sampler_config.background_gamma     = [5.0, 0.2]
+    sampler_config.background_cache     = ''
+    sampler_config.background_context   = 2
+    sampler_config.background_weights   = 'decay'
+    sampler_config.population_size      = 1
+    sampler_config.tfbs_length          = 10
+    sampler_config.baseline_tags        = []
+    sampler_config.baseline_weights     = []
+    sampler_config.baseline_priors      = []
+    sampler_config.socket_file          = ""
+    sampler_config.samples              = (1000,100)
+    sampler_config.threads              = 1
+    sampler_config.save                 = ""
+    sampler_config.verbose              = False
     return sampler_config
 
 # parse config
@@ -87,6 +89,12 @@ def parse_sampler_config(config_file, sampler_config):
         sampler_config.discount = float(config_parser.get('TFBS-Sampler', 'discount'))
     if config_parser.has_option('TFBS-Sampler', 'lambda'):
         sampler_config._lambda_ = float(config_parser.get('TFBS-Sampler', 'lambda'))
+    if config_parser.has_option('TFBS-Sampler', 'block-samples'):
+        sampler_config.block_samples = bool(config_parser.get('TFBS-Sampler', 'block-samples-period'))
+    if config_parser.has_option('TFBS-Sampler', 'block-samples-period'):
+        sampler_config.block_samples_period = int(config_parser.get('TFBS-Sampler', 'block-samples-period'))
+        if not sampler_config.block_samples_period >= 1:
+            raise IOError("Illegal block-samples-period specified.")
     if config_parser.has_option('TFBS-Sampler', 'initial-temperature'):
         sampler_config.initial_temperature = float(config_parser.get('TFBS-Sampler', 'initial-temperature'))
     if config_parser.has_option('TFBS-Sampler', 'process-prior'):
