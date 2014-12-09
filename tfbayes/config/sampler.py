@@ -90,7 +90,7 @@ def parse_sampler_config(config_file, sampler_config):
     if config_parser.has_option('TFBS-Sampler', 'lambda'):
         sampler_config._lambda_ = float(config_parser.get('TFBS-Sampler', 'lambda'))
     if config_parser.has_option('TFBS-Sampler', 'block-samples'):
-        sampler_config.block_samples = bool(config_parser.get('TFBS-Sampler', 'block-samples-period'))
+        sampler_config.block_samples = bool(config_parser.get('TFBS-Sampler', 'block-samples'))
     if config_parser.has_option('TFBS-Sampler', 'block-samples-period'):
         sampler_config.block_samples_period = int(config_parser.get('TFBS-Sampler', 'block-samples-period'))
         if not sampler_config.block_samples_period >= 1:
