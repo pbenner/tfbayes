@@ -122,8 +122,12 @@ def sum_cluster_sites(k, s1, s2):
     for site in s1:
         sites.insert(site)
     for site in s2:
-        index = seq_index_t(site.index()[0], site.index()[1]+abs(k))
-        sites.insert(range_t(index, site.length(), site.reverse()))
+        if not site.reverse():
+            index = seq_index_t(site.index()[0], site.index()[1]+k)
+            sites.insert(range_t(index, site.length(), site.reverse()))
+        else:
+            index = seq_index_t(site.index()[0], site.index()[1]-k)
+            sites.insert(range_t(index, site.length(), site.reverse()))
     return sites
 
 # alignment
