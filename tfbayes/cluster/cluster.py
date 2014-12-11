@@ -22,6 +22,7 @@ from plot        import *
 from tools       import *
 
 from ..alignment import select_subsequence
+from ..dpm       import range_t, seq_index_t, dpm_subset_t
 
 # basic class to store cluster
 # ------------------------------------------------------------------------------
@@ -70,11 +71,23 @@ class cluster_t():
         tr = lambda x: zip(*x)
         if not isinstance(s, slice):
             raise IOError("__getitem__() requires a slice object.")
+        if s.start < 0 or s.stop-1 < s.start:
+            raise IndexError("Index out of bounds")
+        if s.stop - s.start > len(self.counts[0]):
+            raise IndexError("Index out of bounds")
         counts     = tr(tr(self.counts)[s])
         counts_gap = self.counts_gap[s]
         alpha      = tr(tr(self.alpha )[s])
         alpha_gap  = self.alpha_gap[s]
-        return cluster_t(counts, counts_gap, alpha, alpha_gap, self.components, self.identifier, self.cluster_type, sites = self.sites)
+        sites      = dpm_subset_t(self.sites.dpm_subset_tag())
+        for site in self.sites:
+            if not site.reverse():
+                index = seq_index_t(site.index()[0], site.index()[1]+s.start)
+                sites.insert(range_t(index, s.stop-s.start, site.reverse()))
+            else:
+                index = seq_index_t(site.index()[0], site.index()[1]-s.start)
+                sites.insert(range_t(index, s.stop-s.start, site.reverse()))
+        return cluster_t(counts, counts_gap, alpha, alpha_gap, self.components, self.identifier, self.cluster_type, sites = sites)
     def posterior_counts(self):
         counts = [ [ self.counts[i][j] + self.alpha[i][j] for j in range(self.m) ] for i in range(self.n) ]
         gaps   = [ self.counts_gap[i] + self.alpha_gap[i] for j in range(self.m) ]

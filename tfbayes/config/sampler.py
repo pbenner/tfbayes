@@ -146,3 +146,4 @@ def parse_sampler_config(config_file, sampler_config):
         generate_baseline(sampler_config)
     if config_parser.has_option('TFBS-Sampler', 'socket-file'):
         sampler_config.socket_file = config_parser.get('TFBS-Sampler', 'socket-file').strip()
+    return sampler_config
