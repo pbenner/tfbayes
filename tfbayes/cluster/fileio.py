@@ -126,7 +126,7 @@ def load_cluster(cluster_parser, sampler_config, cluster_name):
     sites        = None
     if cluster_parser.has_option('Cluster', '%s_sites' % cluster_name):
         sites_str = cluster_parser.get('Cluster', '%s_sites' % cluster_name)
-        sites     = dpm_subset_t(cluster_name)
+        sites     = dpm_subset_t(cluster_type)
         for elem in parse_partition_elements(sites_str):
             sites.insert(elem)
     for (tag, prior) in zip(sampler_config.baseline_tags, sampler_config.baseline_priors):

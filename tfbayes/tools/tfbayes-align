@@ -22,13 +22,18 @@ import math
 import re
 import sys
 
-from tfbayes.config    import *
-from tfbayes.cluster   import information
-from tfbayes.cluster   import fileio
-from tfbayes.cluster   import plot
-from tfbayes.cluster   import tools
-from tfbayes.cluster   import cluster_t
-from tfbayes.interface import sigint
+from tfbayes.config         import *
+from tfbayes.cluster        import information
+from tfbayes.cluster        import fileio
+from tfbayes.cluster        import plot
+from tfbayes.cluster        import tools
+from tfbayes.cluster        import cluster_t
+from tfbayes.cluster.parser import generate_cluster
+from tfbayes.interface      import sigint
+from tfbayes.fasta          import parse_sequences
+from tfbayes.dpm            import dpm_subset_t
+from tfbayes.dpm            import range_t
+from tfbayes.dpm            import seq_index_t
 
 from itertools import izip
 
@@ -112,6 +117,15 @@ def sum_counts_vec(j, k, c1_counts, c2_counts, length):
     else:
         return 0
 
+def sum_cluster_sites(k, s1, s2):
+    sites = dpm_subset_t(s1.dpm_subset_tag())
+    for site in s1:
+        sites.insert(site)
+    for site in s2:
+        index = seq_index_t(site.index()[0], site.index()[1]+abs(k))
+        sites.insert(range_t(index, site.length(), site.reverse()))
+    return sites
+
 # alignment
 # ------------------------------------------------------------------------------
 
@@ -133,7 +147,8 @@ def align(k, c1, c2, identifier=None):
     sum_alpha      = [ [ sum_counts_mat(i, j, k, c1.alpha, c2.alpha, length) for j in j_range ] for i in i_range ]
     sum_alpha_gap  = [ sum_counts_vec(j, k, c1.alpha_gap, c2.alpha_gap, length) for j in j_range ]
     sum_components = c1.components + c2.components
-    return cluster_t(sum_counts, sum_counts_gap, sum_alpha, sum_alpha_gap, sum_components, identifier, c1.cluster_type)
+    sum_sites      = sum_cluster_sites(k, c1.sites, c2.sites)
+    return cluster_t(sum_counts, sum_counts_gap, sum_alpha, sum_alpha_gap, sum_components, identifier, c1.cluster_type, sum_sites)
 
 def max_alignment(c1, c2):
     ic      = []
@@ -178,6 +193,9 @@ def main(sampler_config_file, cluster_file, cluster_1_id, cluster_2_id, cluster_
     ############################################################################
     parse_sampler_config(sampler_config_file, sampler_config)
     cluster_list = fileio.load_cluster_list(cluster_file, sampler_config)
+    # parse sequences fasta file
+    ############################################################################
+    descriptions, sequences = parse_sequences(sampler_config.phylogenetic_file)
     # find the two clusters in the cluster list
     ############################################################################
     cluster_1 = None
@@ -214,6 +232,7 @@ def main(sampler_config_file, cluster_file, cluster_1_id, cluster_2_id, cluster_
         m = max_alignment(cluster_1, cluster_2)
     result = align(m, cluster_1, cluster_2, cluster_out_id)
     result = cut_cluster(result, cluster_1.m)
+    result = generate_cluster(sequences, result.sites, cluster_out_id, sampler_config)
     cluster_list.append(result)
     # save result
     ############################################################################
