@@ -85,7 +85,7 @@ class cluster_t():
                 index = seq_index_t(site.index()[0], site.index()[1]+s.start)
                 sites.insert(range_t(index, s.stop-s.start, site.reverse()))
             else:
-                index = seq_index_t(site.index()[0], site.index()[1]-s.start)
+                index = seq_index_t(site.index()[0], site.index()[1]+site.length()-s.start-(s.stop-s.start))
                 sites.insert(range_t(index, s.stop-s.start, site.reverse()))
         return cluster_t(counts, counts_gap, alpha, alpha_gap, self.components, self.identifier, self.cluster_type, sites = sites)
     def posterior_counts(self):
@@ -111,7 +111,10 @@ class cluster_t():
         counts_gap = [ self.counts_gap[-j-1] for j in range(self.m) ]
         alpha      = revcomp(self.alpha, self.n, self.m)
         alpha_gap  = [ self.alpha_gap[-j-1] for j in range(self.m) ]
-        return cluster_t(counts, counts_gap, alpha, alpha_gap, self.components, self.identifier, self.cluster_type, sites = self.sites)
+        sites      = dpm_subset_t(self.sites.dpm_subset_tag())
+        for site in self.sites:
+            sites.insert(range_t(site.index(), site.length(), not site.reverse()))
+        return cluster_t(counts, counts_gap, alpha, alpha_gap, self.components, self.identifier, self.cluster_type, sites = sites)
     def entropy(self):
         return information.entropy(self.motif())
     def r_sequence(self):
