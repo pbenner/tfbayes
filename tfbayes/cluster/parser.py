@@ -16,8 +16,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from cluster import cluster_t
+import sys
 
+from cluster import cluster_t
 from ..uipac import DNA
 
 # sort cluster
@@ -50,9 +51,10 @@ def get_baseline_prior(tag, sampler_config):
             return map(list, zip(*baseline_prior))
     raise IOError("Baseline prior not found!")
 
-def generate_cluster(sequences, dpm_subset, idx, sampler_config):
-    counts         = [ [ 0.0 for j in range(sampler_config.tfbs_length) ] for i in range(4) ]
-    counts_gap     = [ 0.0 ] * sampler_config.tfbs_length
+def generate_cluster(sequences, dpm_subset, idx, sampler_config, index_error = True):
+    length         = max([r.length() for r in dpm_subset])
+    counts         = [ [ 0.0 for j in range(length) ] for i in range(4) ]
+    counts_gap     = [ 0.0 ] * length
     baseline_prior = get_baseline_prior(dpm_subset.dpm_subset_tag(), sampler_config)
     alpha          = baseline_prior[0:4]
     alpha_gap      = baseline_prior[4]
@@ -64,9 +66,23 @@ def generate_cluster(sequences, dpm_subset, idx, sampler_config):
         for j in range(r.length()):
             # loop over all nucleotides plus counts for gaps
             if r.reverse():
+                try: sequences[s][p+j][DNA.complement(i)]
+                except IndexError:
+                    if index_error:
+                        raise
+                    else:
+                        print >> sys.stderr, "Warning: index %d:%d out of range!" % (s, p+j)
+                        continue
                 for i in range(4):
                     counts[i][r.length()-j-1] += sequences[s][p+j][DNA.complement(i)]
             else:
+                try: sequences[s][p+j][i]
+                except IndexError:
+                    if index_error:
+                        raise
+                    else:
+                        print >> sys.stderr, "Warning: index %d:%d out of range!" % (s, p+j)
+                        continue
                 for i in range(4):
                     counts[i][j] += sequences[s][p+j][i]
             counts_gap[j] += sequences[s][p+j][4]

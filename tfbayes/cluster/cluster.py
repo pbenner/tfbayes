@@ -85,7 +85,7 @@ class cluster_t():
                 index = seq_index_t(site.index()[0], site.index()[1]+s.start)
                 sites.insert(range_t(index, s.stop-s.start, site.reverse()))
             else:
-                index = seq_index_t(site.index()[0], site.index()[1]-s.start)
+                index = seq_index_t(site.index()[0], site.index()[1]+site.length()-s.start-(s.stop-s.start))
                 sites.insert(range_t(index, s.stop-s.start, site.reverse()))
         return cluster_t(counts, counts_gap, alpha, alpha_gap, self.components, self.identifier, self.cluster_type, sites = sites)
     def posterior_counts(self):
