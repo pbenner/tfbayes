@@ -127,14 +127,24 @@ def sum_cluster_sites(k, s1, s2):
                 index = seq_index_t(site.index()[0], site.index()[1]-k)
                 sites.insert(range_t(index, site.length()+k, site.reverse()))
         for site in s2:
-            index = seq_index_t(site.index()[0], site.index()[1]-k)
-            sites.insert(range_t(index, site.length()+k, site.reverse()))
+            if not site.reverse():
+                index = seq_index_t(site.index()[0], site.index()[1]-k)
+                sites.insert(range_t(index, site.length()+k, site.reverse()))
+            else:
+                sites.insert(range_t(site.index(), site.length()+k, site.reverse()))
     else:
         for site in s1:
-            index = seq_index_t(site.index()[0], site.index()[1]+k)
-            sites.insert(range_t(index, site.length()-k, site.reverse()))
+            if not site.reverse():
+                index = seq_index_t(site.index()[0], site.index()[1]+k)
+                sites.insert(range_t(index, site.length()-k, site.reverse()))
+            else:
+                sites.insert(range_t(site.index(), site.length()-k, site.reverse()))
         for site in s2:
-            sites.insert(range_t(site.index(), site.length()-k, site.reverse()))
+            if not site.reverse():
+                sites.insert(range_t(site.index(), site.length()-k, site.reverse()))
+            else:
+                index = seq_index_t(site.index()[0], site.index()[1]+k)
+                sites.insert(range_t(index, site.length()-k, site.reverse()))
 
     return sites
 
@@ -247,7 +257,7 @@ def main(sampler_config_file, cluster_file, cluster_1_id, cluster_2_id, cluster_
         m = max_alignment(cluster_1, cluster_2)
     result = align(m, cluster_1, cluster_2, cluster_out_id)
     #result = cut_cluster(result, cluster_1.m)
-    result = generate_cluster(sequences, result.sites, cluster_out_id, sampler_config, False)
+    #result = generate_cluster(sequences, result.sites, cluster_out_id, sampler_config, False)
     cluster_list.append(result)
     # save result
     ############################################################################
