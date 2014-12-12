@@ -170,9 +170,6 @@ def align(k, c1, c2, identifier=None):
     sum_alpha_gap  = [ sum_counts_vec(j, k, c1.alpha_gap, c2.alpha_gap, length) for j in j_range ]
     sum_components = c1.components + c2.components
     sum_sites      = sum_cluster_sites(k, c1.sites, c2.sites)
-    print c1.sites
-    print c2.sites
-    print sum_sites
     return cluster_t(sum_counts, sum_counts_gap, sum_alpha, sum_alpha_gap, sum_components, identifier, c1.cluster_type, sum_sites)
 
 def max_alignment(c1, c2):
@@ -251,13 +248,13 @@ def main(sampler_config_file, cluster_file, cluster_1_id, cluster_2_id, cluster_
         raise IOError("The two clusters have different types.")
     # align clusters
     ############################################################################
-    if options['force-alignment']:
-        m = options['force-alignment']
-    else:
+    if options['force-alignment'] is None:
         m = max_alignment(cluster_1, cluster_2)
+    else:
+        m = options['force-alignment']
     result = align(m, cluster_1, cluster_2, cluster_out_id)
-    #result = cut_cluster(result, cluster_1.m)
-    #result = generate_cluster(sequences, result.sites, cluster_out_id, sampler_config, False)
+    result = cut_cluster(result, cluster_1.m)
+    result = generate_cluster(sequences, result.sites, cluster_out_id, sampler_config, False)
     cluster_list.append(result)
     # save result
     ############################################################################
