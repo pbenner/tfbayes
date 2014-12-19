@@ -114,5 +114,5 @@ FastaParser::operator()()
 
 FastaParser::operator bool() const
 {
-        return stream;
+        return stream.good();
 }
