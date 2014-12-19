@@ -23,5 +23,5 @@ plot(x, y1, type='l',
      xlab="Number of vertices",
      ylab="Expected number of terms")
 lines(x, y2, lty=2)
-legend("top", c("decomposition", "pruning"), lty=c(1,2), bty='n')
+legend("top", c("pruning", "decomposition"), lty=c(1,2), bty='n')
 dev.off()
