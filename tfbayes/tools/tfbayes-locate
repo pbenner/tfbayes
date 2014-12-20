@@ -80,11 +80,11 @@ def get_partition(command, results_config):
 # print regions
 # ------------------------------------------------------------------------------
 
-def print_regions(partition, alignment):
-    for idx, dpm_subset in enumerate(partition):
-        print "Cluster %i with %i elements" % (idx, len(dpm_subset))
+def print_regions(cluster_list, alignment):
+    for cluster in cluster_list:
+        print "Cluster %i with %i elements" % (cluster.identifier, cluster.components)
         print "--------------------------------------------------------------------------------"
-        for r in dpm_subset:
+        for r in cluster.sites:
             s = r.index()[0]
             p = r.index()[1]
             print "index (%d, %d)" % (s, p)
@@ -105,12 +105,12 @@ def main(command, sampler_config_file):
         raise IOError('no alignment file specified')
     # parse results file
     parse_results_config(sampler_config.save, results_config, False)
-    # parse partition
-    partition = get_partition(command, results_config)
     # parse alignment
     alignment = get_alignment(sampler_config.alignment_file)
+    # get cluster list
+    cluster_list = generate_cluster_list(alignment, sampler_config, results_config, command)
     # print alignment regions
-    print_regions(partition, alignment)
+    print_regions(cluster_list, alignment)
 
 def __main__():
     global options

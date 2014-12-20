@@ -51,6 +51,7 @@ class cluster_t():
     components     = None # number of sites that belong to the cluster
     identifier     = None # some identifier (integer)
     cluster_type   = None # i.e. which baseline prior was used
+    sites          = None # dpm_subset_t with site locations
     n              = None # alphabet size
     m              = None # cluster length
     def __init__(self, counts, counts_gap, alpha, alpha_gap, components, identifier, cluster_type, sites = None):

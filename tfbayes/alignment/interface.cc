@@ -113,6 +113,13 @@ void alignment_setitem(alignment_t<>& a, boost::python::tuple index, alphabet_co
         a[seq_index_t(i,j)] = a.alphabet().code(d);
 }
 
+std::vector<double> alignment_getcolumn(alignment_t<>& a, size_t i)
+{
+        const std::vector<alphabet_code_t> tmp(a[i]);
+
+        return std::vector<double>(tmp.begin(), tmp.end());
+}
+
 alignment_t<> alignment_getslice(alignment_t<>& a, range_t& range)
 {
         return a[range];
@@ -349,6 +356,7 @@ BOOST_PYTHON_MODULE(interface)
                 .def("__getitem__",          alignment_getsequence)
                 .def("__getitem__",          alignment_getitem)
                 .def("__getitem__",          alignment_getslice)
+                .def("__getitem__",          alignment_getcolumn)
                 .def("__setitem__",          alignment_setitem)
                 .def("__str__",              alignment_str)
                 .def("shuffle",              &alignment_t<>::shuffle)
