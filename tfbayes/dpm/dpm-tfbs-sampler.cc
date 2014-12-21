@@ -272,7 +272,7 @@ dpm_tfbs_sampler_t::_block_sample(const double temp)
         vector<cluster_tag_t> used_clusters;
         for (cm_iterator it = dpm().state().begin(); it != dpm().state().end(); it++) {
                 cluster_t& cluster = **it;
-                if (cluster.cluster_tag() != dpm().state().bg_cluster_tag) {
+                if (!dpm().state().is_background(cluster)) {
                         used_clusters.push_back(cluster.cluster_tag());
                 }
         }

@@ -22,6 +22,7 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <set>
 #include <vector>
 
 #include <boost/random/mersenne_twister.hpp>
@@ -35,7 +36,6 @@ class dpm_tfbs_state_t : public gibbs_state_t {
 public:
          dpm_tfbs_state_t(const std::vector<size_t>& sizes,
                           size_t tfbs_length,
-                          cluster_tag_t bg_cluster_tag,
                           const data_tfbs_t& data);
          dpm_tfbs_state_t(const dpm_tfbs_state_t& state);
         ~dpm_tfbs_state_t();
@@ -58,11 +58,11 @@ public:
         void remove(const range_t& range, cluster_tag_t tag);
         void remove(const index_i& index, cluster_tag_t tag);
 
-        bool move_left (cluster_t& cluster);
-        bool move_right(cluster_t& cluster);
+        bool move_left (cluster_t& cluster, cluster_tag_t bg_cluster_tag);
+        bool move_right(cluster_t& cluster, cluster_tag_t bg_cluster_tag);
 
         bool proposal(cluster_t& cluster, std::stringstream& ss, boost::random::mt19937& gen);
-        void save(cluster_tag_t cluster_tag);
+        void save(cluster_tag_t cluster_tag, cluster_tag_t bg_cluster_tag);
         void restore();
 
         bool valid_tfbs_position(const index_i& index) const;
@@ -78,6 +78,9 @@ public:
 
         dpm_partition_t partition() const;
         void set_partition(const dpm_partition_t& partition);
+        bool is_background(cluster_tag_t tag) const;
+        bool is_background(const cluster_t& cluster) const;
+        cluster_tag_t add_background_cluster(component_model_t& component_model);
 
         // data
         ////////////////////////////////////////////////////////////////////////
@@ -101,7 +104,8 @@ public:
         size_t tfbs_length;
         // the bg_cluster_tag is determined after the state is
         // initialize, so this can't be a constant
-        cluster_tag_t bg_cluster_tag;
+        typedef std::vector<cluster_tag_t> bg_cluster_tags_t;
+        bg_cluster_tags_t bg_cluster_tags;
 };
 
 #endif /* __TFBAYES_DPM_DPM_TFBS_STATE_HH__ */

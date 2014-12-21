@@ -29,12 +29,10 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 pitman_yor_prior::pitman_yor_prior(
-        double alpha, double discount,
-        cluster_tag_t bg_cluster_tag)
+        double alpha, double discount)
         : dpm_tfbs_prior_t(),
           alpha(alpha),
-          discount(discount),
-          bg_cluster_tag(bg_cluster_tag)
+          discount(discount)
 {}
 
 pitman_yor_prior*
@@ -64,7 +62,7 @@ pitman_yor_prior::joint(const dpm_tfbs_state_t& state) const
 
         for (cl_iterator it = state.begin(); it != state.end(); it++) {
                 const cluster_t& cluster = **it;
-                if (cluster.cluster_tag() != bg_cluster_tag) {
+                if (!state.is_background(cluster)) {
                         sum += gsl_sf_lngamma(cluster.size());
                 }
         }

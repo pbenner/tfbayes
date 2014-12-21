@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2013 Philipp Benner
+/* Copyright (C) 2011-2014 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
           // coded nucleotide sequences
           _alignment_set(NULL),
           // cluster manager
-          _state(data.sizes(), options.tfbs_length, 0, data),
+          _state(data.sizes(), options.tfbs_length, data),
           // mixture weight for the dirichlet process
           _lambda(options.lambda),
           _lambda_log(log(options.lambda)),
@@ -60,30 +60,38 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
         // add background model to the state
         if (options.background_model == "independence-dirichlet") {
                 /* every position in the background is fully
-                 * independet, where the Dirichlet pseudocounts
-                 * are integrated out */
+                 * independet; the Dirichlet pseudocounts
+                 * can be integrated out */
                 assert(options.background_gamma.size() == 2);
                 assert(options.threads >= 1);
+                assert(options.background_alpha.size() == 1);
                 thread_pool_t thread_pool(options.threads);
                 independence_background_t* bg = new independence_background_t(
-                        options.background_alpha, options.background_gamma, data,
+                        options.background_alpha[0], options.background_gamma, data,
                         _state.cluster_assignments(), thread_pool, options.background_cache,
                         alignment_set);
-                _state.bg_cluster_tag = _state.add_cluster(bg);
-                bg->set_bg_cluster_tag(_state.bg_cluster_tag);
+                cluster_tag_t tag = _state.add_background_cluster(*bg);
+                bg->set_bg_cluster_tag(tag);
         }
         else if (options.background_model == "dirichlet") {
-                /* single dirichlet-compound distribution for all
+                /* multiple dirichlet-compound distribution for all
                  * nucleotides in the background */
-                product_dirichlet_t* bg = new product_dirichlet_t(
-                        options.background_alpha, data, data.complements(), false);
-                _state.bg_cluster_tag = _state.add_cluster(bg);
+                assert(options.background_alpha.size() > 0);
+                for (matrix<double>::const_iterator it = options.background_alpha.begin();
+                     it != options.background_alpha.end(); it++) {
+                        matrix<double> tmp; tmp.push_back(*it);
+                        product_dirichlet_t* bg = new product_dirichlet_t(
+                                tmp, data, data.complements(), false);
+                        _state.add_background_cluster(*bg);
+                }
+                // assign a uniform prior to the background components
+                _lambda_inv_log -= log(options.background_alpha.size());
         }
         else if (options.background_model == "markov chain mixture") {
                 assert(options.background_context >= 0);
                 markov_chain_mixture_t* bg = new markov_chain_mixture_t(
                         data_tfbs_t::alphabet_size, options, data, _state.cluster_assignments(), 0);
-                _state.bg_cluster_tag = _state.add_cluster(bg);
+                _state.add_background_cluster(*bg);
         }
         else {
                 cerr << "Unknown background model." << endl;
@@ -110,12 +118,12 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                 // cannot use _state.add() here because we need to add
                 // sites of length one to the background
                 range_t range(**it, 1);
-                _state[_state.bg_cluster_tag].add_observations(range);
+                _state[*_state.bg_cluster_tags.begin()].add_observations(range);
         }
         ////////////////////////////////////////////////////////////////////////////////
         // set the process prior
         if (options.process_prior == "pitman-yor process" || options.process_prior == "") {
-                _process_prior = new pitman_yor_prior(options.alpha, options.discount, _state.bg_cluster_tag);
+                _process_prior = new pitman_yor_prior(options.alpha, options.discount);
         }
         else if (options.process_prior == "uniform process") {
                 _process_prior = new uniform_prior(options.alpha);
@@ -211,7 +219,7 @@ dpm_tfbs_t::mixture_weights(
         // loop through existing clusters
         for (cm_iterator it = _state.begin(); it != _state.end(); it++, i++) {
                 cluster_t& cluster = **it;
-                if (cluster.cluster_tag() == _state.bg_cluster_tag) {
+                if (_state.is_background(cluster)) {
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
                         if (include_background) {
@@ -252,7 +260,7 @@ dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights
         for (cm_iterator it = _state.begin(); it != _state.end(); it++, i++) {
                 cluster_t& cluster = **it;
                 cluster_tags[i] = cluster.cluster_tag();
-                if (cluster.cluster_tag() == _state.bg_cluster_tag) {
+                if (_state.is_background(cluster)) {
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
                         if (include_background) {
@@ -299,7 +307,9 @@ dpm_tfbs_t::posterior() const {
         double result = likelihood();
 
         // background prior
-        result += _state[_state.bg_cluster_tag].size()*_lambda_inv_log;
+        BOOST_FOREACH (const cluster_tag_t& cluster_tag, _state.bg_cluster_tags) {
+                result += _state[cluster_tag].size()*_lambda_inv_log;
+        }
         // tfbs prior
         result += _state.num_tfbs*_lambda_log;
         // process prior

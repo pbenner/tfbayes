@@ -281,7 +281,7 @@ public:
  * prior. If the pseudocounts are set to -1 a Gamma distribution
  * is used to integrate them out. */
 independence_background_t::independence_background_t(
-        const matrix<double>& _alpha,
+        const vector<double>& _alpha,
         const vector<double>& parameters,
         const sequence_data_t<data_tfbs_t::code_t>& _data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
@@ -294,13 +294,12 @@ independence_background_t::independence_background_t(
           _precomputed_marginal(_data.sizes(), 0),
           _data(&_data)
 {
+        assert(_alpha.size() == data_tfbs_t::alphabet_size);
+
         counts_t alpha;
 
-        assert(_alpha.size() == 1);
-        assert(_alpha[0].size() == data_tfbs_t::alphabet_size);
-
         for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
-                alpha[j] = _alpha[0][j];
+                alpha[j] = _alpha[j];
         }
 
         if (std::find(alpha.begin(), alpha.end(), -1) == alpha.end()) {

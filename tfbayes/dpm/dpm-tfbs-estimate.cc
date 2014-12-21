@@ -503,7 +503,7 @@ dpm_tfbs_estimate(const sampling_history_t& history,
 // -----------------------------------------------------------------------------
 
 static bool
-map_local_optimization_move(cluster_t& cluster, dpm_tfbs_t& dpm, bool verbose)
+map_local_optimization_move(cluster_t& cluster, cluster_tag_t bg_cluster_tag, dpm_tfbs_t& dpm, bool verbose)
 {
         double posterior_ref = dpm.posterior();
         double posterior_left;
@@ -511,22 +511,22 @@ map_local_optimization_move(cluster_t& cluster, dpm_tfbs_t& dpm, bool verbose)
         stringstream ss;
         size_t size = cluster.size();
 
-        dpm.state().save(cluster.cluster_tag());
-        dpm.state().move_left(cluster);
+        dpm.state().save(cluster.cluster_tag(), bg_cluster_tag);
+        dpm.state().move_left(cluster, bg_cluster_tag);
         posterior_left = dpm.posterior();
         dpm.state().restore();
 
-        dpm.state().save(cluster.cluster_tag());
-        dpm.state().move_right(cluster);
+        dpm.state().save(cluster.cluster_tag(), bg_cluster_tag);
+        dpm.state().move_right(cluster, bg_cluster_tag);
         posterior_right = dpm.posterior();
         dpm.state().restore();
 
         if (posterior_left > posterior_ref && posterior_left > posterior_right) {
-                dpm.state().move_left(cluster);
+                dpm.state().move_left(cluster, bg_cluster_tag);
                 ss << "moved to the left";
         }
         else if (posterior_right > posterior_ref && posterior_right > posterior_left) {
-                dpm.state().move_right(cluster);
+                dpm.state().move_right(cluster, bg_cluster_tag);
                 ss << "moved to the right";
         }
         else {
@@ -603,8 +603,15 @@ map_local_optimization_block(cluster_t& cluster, dpm_tfbs_t& dpm, bool verbose)
 static bool
 map_local_optimization(cluster_t& cluster, dpm_tfbs_t& dpm, bool verbose)
 {
-        return map_local_optimization_move (cluster, dpm, verbose) ||
-               map_local_optimization_block(cluster, dpm, verbose);
+        bool result = false;
+
+        for (dpm_tfbs_state_t::bg_cluster_tags_t::const_iterator it = dpm.state().bg_cluster_tags.begin();
+             it != dpm.state().bg_cluster_tags.end(); it++) {
+                result |= map_local_optimization_move(cluster, *it, dpm, verbose);
+        }
+        result |= map_local_optimization_block(cluster, dpm, verbose);
+
+        return result;
 }
 
 static bool
@@ -681,7 +688,7 @@ map_local_optimization(dpm_tfbs_t& dpm, bool verbose) {
                 vector<cluster_tag_t> used_clusters;
                 for (mixture_state_t::const_iterator it = dpm.state().begin(); it != dpm.state().end(); it++) {
                         cluster_t& cluster = **it;
-                        if (cluster.cluster_tag() != dpm.state().bg_cluster_tag) {
+                        if (!dpm.state().is_background(cluster)) {
                                 used_clusters.push_back(cluster.cluster_tag());
                         }
                 }

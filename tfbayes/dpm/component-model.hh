@@ -93,7 +93,7 @@ protected:
 class independence_background_t : public component_model_t {
 public:
          independence_background_t(
-                 const std::matrix<double>& alpha,
+                 const std::vector<double>& alpha,
                  const std::vector<double>& parameters,
                  const sequence_data_t<data_tfbs_t::code_t>& data,
                  const sequence_data_t<cluster_tag_t>& cluster_assignments,

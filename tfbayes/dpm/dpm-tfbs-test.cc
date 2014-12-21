@@ -47,10 +47,10 @@ dpm_tfbs_t::test_metropolis_hastings() {
 
         cout.precision(10);
 
-        _state.remove(range1, _state.bg_cluster_tag);
+        _state.remove(range1, _state.bg_cluster_tags[0]);
         _state.add(range1, cluster_tag1);
 
-        _state.remove(range2, _state.bg_cluster_tag);
+        _state.remove(range2, _state.bg_cluster_tags[0]);
         _state.add(range2, cluster_tag1);
 
         l1 = likelihood();
@@ -80,23 +80,23 @@ dpm_tfbs_t::test_moves() {
         cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
 
-        _state.remove(range1, _state.bg_cluster_tag);
+        _state.remove(range1, _state.bg_cluster_tags[0]);
         _state.add(range1, cluster_tag1);
 
-        _state.remove(range2, _state.bg_cluster_tag);
+        _state.remove(range2, _state.bg_cluster_tags[0]);
         _state.add(range2, cluster_tag1);
 
-        _state.remove(range3, _state.bg_cluster_tag);
+        _state.remove(range3, _state.bg_cluster_tags[0]);
         _state.add(range3, cluster_tag1);
 
         cluster_t& cluster2 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
 
-        _state.remove(range4, _state.bg_cluster_tag);
+        _state.remove(range4, _state.bg_cluster_tags[0]);
         _state.add(range4, cluster_tag2);
 
         cout << _state.cluster_assignments() << endl;
-        _state.move_left(cluster1);
+        _state.move_left(cluster1, _state.bg_cluster_tags[0]);
         cout << _state.cluster_assignments() << endl;
 
         exit(EXIT_SUCCESS);
@@ -114,10 +114,10 @@ dpm_tfbs_t::test_background() {
         cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
         cout << "Adding range1 to cluster:" << cluster_tag1 << endl;
-        _state.remove(range1, _state.bg_cluster_tag);
+        _state.remove(range1, _state.bg_cluster_tags[0]);
         _state.add(range1, cluster_tag1);
         cout << "Adding range6 to cluster:" << cluster_tag1 << endl;
-        _state.remove(range6, _state.bg_cluster_tag);
+        _state.remove(range6, _state.bg_cluster_tags[0]);
         _state.add(range6, cluster_tag1);
         cout << endl;
 
@@ -127,35 +127,35 @@ dpm_tfbs_t::test_background() {
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
 
         cout << "Adding range2 to cluster:" << cluster_tag2 << endl;
-        _state.remove(range2, _state.bg_cluster_tag);
+        _state.remove(range2, _state.bg_cluster_tags[0]);
         _state.add(range2, cluster_tag2);
         cout << _state.cluster_assignments();
         _state.remove(range2, cluster_tag2);
-        _state.add(range2, _state.bg_cluster_tag);
+        _state.add(range2, _state.bg_cluster_tags[0]);
         cout << "Removing range2 from cluster:" << cluster_tag2 << endl << endl;
 
         cout << "Adding range3 to cluster:" << cluster_tag2 << endl;
-        _state.remove(range3, _state.bg_cluster_tag);
+        _state.remove(range3, _state.bg_cluster_tags[0]);
         _state.add(range3, cluster_tag2);
         cout << _state.cluster_assignments();
         _state.remove(range3, cluster_tag2);
-        _state.add(range3, _state.bg_cluster_tag);
+        _state.add(range3, _state.bg_cluster_tags[0]);
         cout << "Removing range3 from cluster:" << cluster_tag2 << endl << endl;
 
         cout << "Adding range4 to cluster:" << cluster_tag2 << endl;
-        _state.remove(range4, _state.bg_cluster_tag);
+        _state.remove(range4, _state.bg_cluster_tags[0]);
         _state.add(range4, cluster_tag2);
         cout << _state.cluster_assignments();
         _state.remove(range4, cluster_tag2);
-        _state.add(range4, _state.bg_cluster_tag);
+        _state.add(range4, _state.bg_cluster_tags[0]);
         cout << "Removing range4 from cluster:" << cluster_tag2 << endl << endl;
 
         cout << "Adding range5 to cluster:" << cluster_tag2 << endl;
-        _state.remove(range5, _state.bg_cluster_tag);
+        _state.remove(range5, _state.bg_cluster_tags[0]);
         _state.add(range5, cluster_tag2);
         cout << _state.cluster_assignments();
         _state.remove(range5, cluster_tag2);
-        _state.add(range5, _state.bg_cluster_tag);
+        _state.add(range5, _state.bg_cluster_tags[0]);
         cout << "Removing range5 from cluster:" << cluster_tag2 << endl;
 
         exit(EXIT_SUCCESS);
