@@ -231,6 +231,65 @@ protected:
         bool _complement;
 };
 
+// Multinomial/Dirichlet Mixture Model
+////////////////////////////////////////////////////////////////////////////////
+
+class mixture_dirichlet_t : public component_model_t {
+public:
+         mixture_dirichlet_t(const std::matrix<double>& alpha,
+                             const sequence_data_t<data_tfbs_t::code_t>& data);
+         mixture_dirichlet_t(const mixture_dirichlet_t& distribution);
+        ~mixture_dirichlet_t();
+
+        mixture_dirichlet_t* clone() const;
+
+        friend void swap(mixture_dirichlet_t& first, mixture_dirichlet_t& second) {
+                using std::swap;
+                swap(static_cast<component_model_t&>(first),
+                     static_cast<component_model_t&>(second));
+                swap(first.alpha,            second.alpha);
+                swap(first.counts,           second.counts);
+                swap(first._size1,           second._size1);
+                swap(first._size2,           second._size2);
+                swap(first._data,            second._data);
+                swap(first._component_assignments, second._component_assignments);
+        }
+
+        mixture_dirichlet_t& operator=(const component_model_t& component_model);
+
+        // datatypes
+        typedef data_tfbs_t::code_t counts_t;
+
+        size_t add(const index_i& index);
+        size_t add(const range_t& range);
+        size_t remove(const index_i& index);
+        size_t remove(const range_t& range);
+        size_t count(const range_t& range);
+        double predictive(const range_t& range);
+        double predictive(const std::vector<range_t>& range);
+        double log_predictive(const index_i& index);
+        double log_predictive(const range_t& range);
+        double log_predictive(const std::vector<range_t>& range);
+        double log_likelihood() const;
+        std::string print_counts() const;
+
+        const sequence_data_t<data_tfbs_t::code_t>& data() const {
+                return *_data;
+        }
+
+        friend std::ostream& operator<< (std::ostream& o, const mixture_dirichlet_t& pd);
+
+protected:
+        std::vector<counts_t> alpha;
+        std::vector<counts_t> counts;
+
+        size_t _size1;
+        size_t _size2;
+
+        const sequence_data_t<data_tfbs_t::code_t>* _data;
+        sequence_data_t<ssize_t> _component_assignments;
+};
+
 // Markov Chain Mixture
 ////////////////////////////////////////////////////////////////////////////////
 

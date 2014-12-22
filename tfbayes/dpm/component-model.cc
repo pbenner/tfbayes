@@ -19,7 +19,7 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <algorithm>    // std::count
+#include <algorithm>    // std::count, std::max_element
 #include <sstream>
 #include <vector>
 #include <iostream>
@@ -769,6 +769,202 @@ double product_dirichlet_t::log_likelihood() const {
 
 string
 product_dirichlet_t::print_counts() const {
+        stringstream ss;
+        for (size_t k = 0; k < _size2; k++) {
+                ss << nucleotide_alphabet_t().decode(k) << " ";
+                for (size_t j = 0; j < _size1; j++) {
+                        ss.precision(8);
+                        ss.width(10);
+                        ss << counts[j][k] << " ";
+                }
+                ss << endl;
+        }
+        return ss.str();
+}
+
+// Multinomial/Dirichlet Mixture Model
+////////////////////////////////////////////////////////////////////////////////
+
+mixture_dirichlet_t::mixture_dirichlet_t(
+        const matrix<double>& _alpha,
+        const sequence_data_t<data_tfbs_t::code_t>& data)
+        : component_model_t(),
+          _size1(_alpha.size()),
+          _size2(_alpha[0].size()),
+          _data(&data),
+          _component_assignments(data.sizes(), -1)
+{
+        for (size_t i = 0; i < _alpha.size(); i++) {
+                alpha .push_back(counts_t());
+                counts.push_back(counts_t());
+                for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
+                        alpha [i][j] = _alpha[i][j];
+                        counts[i][j] = _alpha[i][j];
+                }
+        }
+}
+
+mixture_dirichlet_t::mixture_dirichlet_t(const mixture_dirichlet_t& distribution)
+        : component_model_t(distribution),
+          alpha (distribution.alpha),
+          counts(distribution.counts),
+          _size1(distribution._size1),
+          _size2(distribution._size2),
+          _data (distribution._data),
+          _component_assignments(distribution._component_assignments)
+{
+}
+
+mixture_dirichlet_t::~mixture_dirichlet_t() {
+}
+
+mixture_dirichlet_t*
+mixture_dirichlet_t::clone() const {
+        return new mixture_dirichlet_t(*this);
+}
+
+mixture_dirichlet_t&
+mixture_dirichlet_t::operator=(const component_model_t& component_model)
+{
+        mixture_dirichlet_t tmp(static_cast<const mixture_dirichlet_t&>(component_model));
+        swap(*this, tmp);
+        return *this;
+}
+
+size_t
+mixture_dirichlet_t::add(const index_i& index)
+{
+        assert(_component_assignments[index] == -1);
+
+        vector<double> result(_size1, 0.0);
+
+        // find component with highest predictive value
+        for (size_t i = 0; i < _size1; i++) {
+                /* counts contains the data count statistic
+                 * and the pseudo counts alpha */
+                result[i] = fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i], data()[index])
+                          - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i]);
+        }
+        size_t i = distance(result.begin(), max_element(result.begin(), result.end()));
+
+        // add counts to the max component
+        for (size_t k = 0; k < data_tfbs_t::alphabet_size; k++) {
+                counts[i][k] += data()[index][k];
+        }
+        _component_assignments[index] = i;
+
+        return 1;
+}
+
+size_t
+mixture_dirichlet_t::add(const range_t& range)
+{
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
+
+        for (size_t i = 0; i < length; i++) {
+                add(seq_index_t(sequence, position+i));
+        }
+        return length;
+}
+
+size_t
+mixture_dirichlet_t::remove(const index_i& index)
+{
+        size_t i = _component_assignments[index];
+
+        for (size_t k = 0; k < data_tfbs_t::alphabet_size; k++) {
+                counts[i][k] -= data()[index][k];
+        }
+        _component_assignments[index] = -1;
+
+        return 1;
+}
+
+size_t
+mixture_dirichlet_t::remove(const range_t& range)
+{
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
+
+        for (size_t i = 0; i < length; i++) {
+                remove(seq_index_t(sequence, position+i));
+        }
+        return length;
+}
+
+size_t
+mixture_dirichlet_t::count(const range_t& range) {
+        return range.length();
+}
+
+/*
+ *  p(y|x) = Beta(n(x) + n(y) + alpha) / Beta(n(x) + alpha)
+ */
+double mixture_dirichlet_t::predictive(const range_t& range) {
+        return exp(log_predictive(range));
+}
+
+double mixture_dirichlet_t::predictive(const vector<range_t>& range_set) {
+        return exp(log_predictive(range_set));
+}
+
+double mixture_dirichlet_t::log_predictive(const index_i& index) {
+        vector<double> result(_size1, 0.0);
+
+        for (size_t i = 0; i < _size1; i++) {
+                /* counts contains the data count statistic
+                 * and the pseudo counts alpha */
+                result[i] = fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i], data()[index])
+                          - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i]);
+        }
+
+        return *max_element(result.begin(), result.end()) - log(_size1);
+}
+
+double mixture_dirichlet_t::log_predictive(const range_t& range) {
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
+        double result = 0;
+
+        for (size_t i = 0; i < length; i++) {
+                result += log_predictive(seq_index_t(sequence, position+i));
+        }
+
+        return result;
+}
+
+double mixture_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
+        assert(range_set.size() > 0);
+        double result = 0;
+
+        BOOST_FOREACH(const range_t& range, range_set) {
+                result += log_predictive(range);
+        }
+
+        return result;
+}
+
+/*
+ *  p(x) = Beta(n(x) + alpha) / Beta(alpha)
+ */
+double mixture_dirichlet_t::log_likelihood() const {
+        double result = 0;
+
+        for (size_t i = 0; i < _size1; i++) {
+                /* counts contains the data count statistic
+                 * and the pseudo counts alpha */
+                result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1])
+                        - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha [i%_size1]);
+        }
+        return result - log(_size1);
+}
+
+string
+mixture_dirichlet_t::print_counts() const {
         stringstream ss;
         for (size_t k = 0; k < _size2; k++) {
                 ss << nucleotide_alphabet_t().decode(k) << " ";

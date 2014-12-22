@@ -81,6 +81,14 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                         options.background_alpha, data, data.complements(), false);
                 _state.add_background_cluster(*bg);
         }
+        else if (options.background_model == "dirichlet-mixture") {
+                /* multiple dirichlet-compound distribution for all
+                 * nucleotides in the background */
+                assert(options.background_alpha.size() >= 1);
+                mixture_dirichlet_t* bg = new mixture_dirichlet_t(
+                        options.background_alpha, data);
+                _state.add_background_cluster(*bg);
+        }
         else if (options.background_model == "markov chain mixture") {
                 assert(options.background_context >= 0);
                 markov_chain_mixture_t* bg = new markov_chain_mixture_t(
