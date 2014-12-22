@@ -76,16 +76,10 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
         else if (options.background_model == "dirichlet") {
                 /* multiple dirichlet-compound distribution for all
                  * nucleotides in the background */
-                assert(options.background_alpha.size() > 0);
-                for (matrix<double>::const_iterator it = options.background_alpha.begin();
-                     it != options.background_alpha.end(); it++) {
-                        matrix<double> tmp; tmp.push_back(*it);
-                        product_dirichlet_t* bg = new product_dirichlet_t(
-                                tmp, data, data.complements(), false);
-                        _state.add_background_cluster(*bg);
-                }
-                // assign a uniform prior to the background components
-                _lambda_inv_log -= log(options.background_alpha.size());
+                assert(options.background_alpha.size() == 1);
+                product_dirichlet_t* bg = new product_dirichlet_t(
+                        options.background_alpha, data, data.complements(), false);
+                _state.add_background_cluster(*bg);
         }
         else if (options.background_model == "markov chain mixture") {
                 assert(options.background_context >= 0);
