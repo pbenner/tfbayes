@@ -41,6 +41,7 @@
 
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/fastarithmetics/fast-lnbeta.hh>
+#include <tfbayes/utility/logarithmetic.hh>
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -912,16 +913,16 @@ double mixture_dirichlet_t::predictive(const vector<range_t>& range_set) {
 }
 
 double mixture_dirichlet_t::log_predictive(const index_i& index) {
-        vector<double> result(_size1, 0.0);
+        double result = -std::numeric_limits<double>::infinity();
 
         for (size_t i = 0; i < _size1; i++) {
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result[i] = fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i], data()[index])
-                          - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i]);
+                result = logadd(result, fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i], data()[index])
+                                      - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i]));
         }
 
-        return *max_element(result.begin(), result.end()) - log(_size1);
+        return result - log(_size1);
 }
 
 double mixture_dirichlet_t::log_predictive(const range_t& range) {
