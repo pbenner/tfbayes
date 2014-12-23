@@ -25,6 +25,7 @@ import os
 import subprocess
 
 from tfbayes.alignment import *
+from tfbayes.fasta     import *
 from tfbayes.cluster   import *
 from tfbayes.config    import *
 
@@ -35,6 +36,7 @@ sampler_config = default_sampler_config()
 results_config = default_results_config()
 
 options = {
+    'load'             : None,
     'verbose'          : False,
     }
 
@@ -55,6 +57,8 @@ def usage():
     print "       median                     - use median parititon"
     print
     print "Options:"
+    print "   -l, --load=FILE                - load clusters from FILE"
+    print
     print "   -h, --help                     - print help"
     print "   -v, --verbose                  - be verbose"
     print
@@ -103,12 +107,16 @@ def main(command, sampler_config_file):
         raise IOError('no result file specified')
     if not sampler_config.alignment_file:
         raise IOError('no alignment file specified')
-    # parse results file
-    parse_results_config(sampler_config.save, results_config, False)
+    if options['load']:
+        cluster_list = fileio.load_cluster_list(options['load'], sampler_config)
+    else:
+        # parse results file
+        parse_results_config(sampler_config.save, results_config, False)
+        # get cluster list
+        descriptions, sequences = parse_sequences(sampler_config.phylogenetic_file)
+        cluster_list = generate_cluster_list(sequences, sampler_config, results_config, command)
     # parse alignment
     alignment = get_alignment(sampler_config.alignment_file)
-    # get cluster list
-    cluster_list = generate_cluster_list(alignment, sampler_config, results_config, command)
     # print alignment regions
     print_regions(cluster_list, alignment)
 
@@ -116,7 +124,7 @@ def __main__():
     global options
     global sampler_config
     try:
-        longopts   = ["help", "verbose", ]
+        longopts   = ["load=", "help", "verbose", ]
         opts, tail = getopt.getopt(sys.argv[1:], "hv", longopts)
     except getopt.GetoptError:
         usage()
@@ -127,6 +135,8 @@ def __main__():
         return 1
     # override those options with command line arguments
     for o, a in opts:
+        if o in ("-l", "--load"):
+            options['load'] = a
         if o in ("-v", "--verbose"):
             sys.stderr.write("Verbose mode turned on.\n")
             options["verbose"] = True
