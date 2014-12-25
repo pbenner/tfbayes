@@ -17,15 +17,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 def read_vector(config_parser, section, option, converter):
-    vector_str = config_parser.get(section, option).replace('  ',' ').strip()
-    vector     = map(converter, vector_str.split(' '))
+    vector_str = config_parser.get(section, option)
+    vector_str = ' '.join(vector_str.split())
+    vector     = map(converter, vector_str.split())
     return vector
 
 def read_matrix(config_parser, section, option, converter):
     matrix_str = config_parser.get(section, option)
     matrix     = []
     for line in matrix_str.split('\n'):
-        line = line.replace('  ',' ').strip()
+        line = ' '.join(line.split())
         if line != '':
             matrix.append([converter(a) for a in line.split(' ')])
     return matrix
