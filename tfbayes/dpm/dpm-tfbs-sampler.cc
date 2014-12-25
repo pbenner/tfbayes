@@ -360,8 +360,6 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         }
         // we are done with sampling here, now process commands
         flockfile(stdout);
-        cout << dpm().state()[dpm().state().bg_cluster_tags[0]].model().print_counts()
-             << endl;
         cout << boost::format("%s: Processing commands.") % _name
              << endl;
         fflush(stdout);
