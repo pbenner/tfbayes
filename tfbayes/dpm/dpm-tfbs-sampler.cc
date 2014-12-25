@@ -237,7 +237,7 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp)
         size_t components = dpm().mixture_components() + dpm().baseline_components();
         double log_weights[components];
         cluster_tag_t cluster_tags[components];
-        dpm().mixture_weights(range_set, log_weights, cluster_tags, temp, false);
+        dpm().mixture_weights(range_set, log_weights, cluster_tags, temp, true);
 
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
