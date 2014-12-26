@@ -67,11 +67,13 @@ dpm_tfbs_sampler_t::~dpm_tfbs_sampler_t()
 void
 swap(dpm_tfbs_sampler_t& first, dpm_tfbs_sampler_t& second) {
         swap(static_cast<gibbs_sampler_t&>(first), static_cast<gibbs_sampler_t&>(second));
-        swap(first.phylogenetic_data, second.phylogenetic_data);
-        swap(first._command_queue,    second._command_queue);
-        swap(first._output_queue,     second._output_queue);
-        swap(first._t0,               second._t0);
-        swap(first._verbose,          second._verbose);
+        swap(first.phylogenetic_data,     second.phylogenetic_data);
+        swap(first._command_queue,        second._command_queue);
+        swap(first._output_queue,         second._output_queue);
+        swap(first._t0,                   second._t0);
+        swap(first._block_samples,        second._block_samples);
+        swap(first._block_samples_period, second._block_samples_period);
+        swap(first._verbose,              second._verbose);
 }
 
 dpm_tfbs_sampler_t*

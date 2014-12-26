@@ -16,6 +16,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+def str2bool(s):
+    if s.lower() in ("yes", "true"):
+        return True
+    if s.lower() in ("no", "false"):
+        return False
+    raise IOError("Invalid boolean string `%s'." % s)
+
 def read_vector(config_parser, section, option, converter):
     vector_str = config_parser.get(section, option)
     vector_str = ' '.join(vector_str.split())
