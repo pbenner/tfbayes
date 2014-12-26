@@ -43,7 +43,8 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
         _output_queue        (&output_queue),
         _t0                  (options.initial_temperature),
         _block_samples       (options.block_samples),
-        _block_samples_period(options.block_samples_period)
+        _block_samples_period(options.block_samples_period),
+        _verbose             (options.verbose)
 {
         assert(options.initial_temperature  >= 1.0);
         assert(options.block_samples_period >= 1);
@@ -55,7 +56,8 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(const dpm_tfbs_sampler_t& sampler)
           _output_queue        (sampler._output_queue),
           _t0                  (sampler._t0),
           _block_samples       (sampler._block_samples),
-          _block_samples_period(sampler._block_samples_period)
+          _block_samples_period(sampler._block_samples_period),
+          _verbose             (sampler._verbose)
 { }
 
 dpm_tfbs_sampler_t::~dpm_tfbs_sampler_t()
@@ -69,6 +71,7 @@ swap(dpm_tfbs_sampler_t& first, dpm_tfbs_sampler_t& second) {
         swap(first._command_queue,    second._command_queue);
         swap(first._output_queue,     second._output_queue);
         swap(first._t0,               second._t0);
+        swap(first._verbose,          second._verbose);
 }
 
 dpm_tfbs_sampler_t*
@@ -360,6 +363,12 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         }
         // we are done with sampling here, now process commands
         flockfile(stdout);
+        if (_verbose) {
+                BOOST_FOREACH(cluster_tag_t& tag, dpm().state().bg_cluster_tags) {
+                        cout << dpm().state()[tag].model().print_counts()
+                             << endl;
+                }
+        }
         cout << boost::format("%s: Processing commands.") % _name
              << endl;
         fflush(stdout);

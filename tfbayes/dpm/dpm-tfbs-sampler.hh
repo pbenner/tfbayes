@@ -87,6 +87,7 @@ protected:
         double _t0;
         bool   _block_samples;
         size_t _block_samples_period;
+        bool   _verbose;
 };
 
 #include <pmcmc.hh>
