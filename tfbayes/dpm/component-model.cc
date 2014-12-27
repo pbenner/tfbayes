@@ -958,8 +958,8 @@ double mixture_dirichlet_t::log_likelihood() const {
         for (size_t i = 0; i < _size1; i++) {
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result = logadd(result, fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1])
-                                      - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha [i%_size1]));
+                result = logadd(result, fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i])
+                                      - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha [i]));
         }
         return result - log(_size1);
 }
