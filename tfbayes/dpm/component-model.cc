@@ -953,13 +953,13 @@ double mixture_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
  *  p(x) = Beta(n(x) + alpha) / Beta(alpha)
  */
 double mixture_dirichlet_t::log_likelihood() const {
-        double result = 0;
+        double result = -std::numeric_limits<double>::infinity();
 
         for (size_t i = 0; i < _size1; i++) {
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1])
-                        - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha [i%_size1]);
+                result = logadd(result, fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1])
+                                      - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha [i%_size1]));
         }
         return result - log(_size1);
 }
