@@ -913,16 +913,16 @@ double mixture_dirichlet_t::predictive(const vector<range_t>& range_set) {
 }
 
 double mixture_dirichlet_t::log_predictive(const index_i& index) {
-        double result = -std::numeric_limits<double>::infinity();
+        vector<double> result(_size1, 0);
 
         for (size_t i = 0; i < _size1; i++) {
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result = logadd(result, fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i], data()[index])
-                                      - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i]));
+                result[i] = fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i], data()[index])
+                          - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i]);
         }
 
-        return result - log(_size1);
+        return *max_element(result.begin(), result.end());
 }
 
 double mixture_dirichlet_t::log_predictive(const range_t& range) {
@@ -953,15 +953,15 @@ double mixture_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
  *  p(x) = Beta(n(x) + alpha) / Beta(alpha)
  */
 double mixture_dirichlet_t::log_likelihood() const {
-        double result = -std::numeric_limits<double>::infinity();
+        double result = 0;
 
         for (size_t i = 0; i < _size1; i++) {
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result = logadd(result, fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i])
-                                      - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha [i]));
+                result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i])
+                        - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha [i]);
         }
-        return result - log(_size1);
+        return result;
 }
 
 string
