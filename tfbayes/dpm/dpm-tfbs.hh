@@ -90,7 +90,7 @@ public:
 
         // compute point estimates
         ////////////////////////////////////////////////////////////////////////
-        dpm_partition_t map   (const sampling_history_t& histroy, bool verbose = false) const;
+        dpm_partition_t map   (const sampling_history_t& histroy, bool optimize = false, bool verbose = false) const;
         dpm_partition_t mean  (const sampling_history_t& history, ssize_t take = -1, bool verbose = false) const;
         dpm_partition_t median(const sampling_history_t& history, ssize_t take = -1, bool verbose = false) const;
 

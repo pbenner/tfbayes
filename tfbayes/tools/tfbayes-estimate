@@ -36,6 +36,7 @@ from tfbayes.interface              import sigint
 sampler_config = default_sampler_config()
 
 options = {
+    'optimize'            : False,
     'take'                : -1,
     'verbose'             : False
     }
@@ -60,6 +61,7 @@ def usage():
     print "       median                      - compute median parititon"
     print
     print "Options:"
+    print "   -o                              - optimize map partition"
     print "       --take=N                    - take last N partitions to compute"
     print "                                     the mean or median"
     print
@@ -80,7 +82,7 @@ def compute_mean(command):
     dpm_tfbs  =  dpm_tfbs_t(sampler_config, data_tfbs)
     # compute mean or median
     if command == "map":
-        results_config['map_partition'] = dpm_tfbs.map(results_config['sampling_history'], options['verbose'])
+        results_config['map_partition'] = dpm_tfbs.map(results_config['sampling_history'], options['optimize'], options['verbose'])
     elif command == "mean":
         results_config['mean_partition'] = dpm_tfbs.mean(results_config['sampling_history'], options['take'], options['verbose'])
     elif command == "median":
@@ -113,6 +115,8 @@ def __main__():
     parse_sampler_config(tail[1], sampler_config)
     # override those options with command line arguments
     for o, a in opts:
+        if o == "-o":
+            options['optimize'] = True
         if o == "--take":
             options["take"] = int(a)
         if o in ("-v", "--verbose"):

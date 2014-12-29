@@ -714,7 +714,7 @@ map_local_optimization(dpm_tfbs_t& dpm, bool verbose) {
 }
 
 static dpm_partition_t
-compute_map(const sampling_history_t& history, dpm_tfbs_t& dpm, bool verbose)
+compute_map(const sampling_history_t& history, dpm_tfbs_t& dpm, bool optimize, bool verbose)
 {
         /* number of parallel samplers */
         size_t n = history.temperature.size();
@@ -753,21 +753,26 @@ compute_map(const sampling_history_t& history, dpm_tfbs_t& dpm, bool verbose)
                      << endl;
         }
         if (max > -numeric_limits<double>::infinity()) {
-                /* set dpm state to best partition */
-                dpm.state().set_partition(history.partitions[argmax]);
-                /* optimize this partition locally */
-                return map_local_optimization(dpm, verbose);
+                if (optimize) {
+                        /* set dpm state to best partition */
+                        dpm.state().set_partition(history.partitions[argmax]);
+                        /* optimize this partition locally */
+                        return map_local_optimization(dpm, verbose);
+                }
+                else {
+                        return history.partitions[argmax];
+                }
         }
         else {
                 return dpm_partition_t();
         }
 }
 
-// entry points
+// Entry points
 // -----------------------------------------------------------------------------
 
 dpm_partition_t
-dpm_tfbs_t::map(const sampling_history_t& history, bool verbose) const
+dpm_tfbs_t::map(const sampling_history_t& history, bool optimize, bool verbose) const
 {
         /* create a copy of this object */
         dpm_tfbs_t dpm(*this);
@@ -776,7 +781,7 @@ dpm_tfbs_t::map(const sampling_history_t& history, bool verbose) const
                 cout << "Computing map partition: ";
         }
 
-        return compute_map(history, dpm, verbose);
+        return compute_map(history, dpm, optimize, verbose);
 }
 
 dpm_partition_t
