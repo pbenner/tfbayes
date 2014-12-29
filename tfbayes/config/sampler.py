@@ -36,6 +36,8 @@ def default_sampler_config():
     sampler_config._lambda_             = 0.01
     sampler_config.block_samples        = False
     sampler_config.block_samples_period = 1
+    sampler_config.optimize             = False
+    sampler_config.optimize_period      = 1
     sampler_config.initial_temperature  = 10.0
     sampler_config.process_prior        = 'pitman-yor process'
     sampler_config.background_model     = 'independence-dirichlet'
@@ -92,6 +94,12 @@ def parse_sampler_config(config_file, sampler_config):
         sampler_config.block_samples_period = int(config_parser.get('TFBS-Sampler', 'block-samples-period'))
         if not sampler_config.block_samples_period >= 1:
             raise IOError("Illegal block-samples-period specified.")
+    if config_parser.has_option('TFBS-Sampler', 'optimize'):
+        sampler_config.optimize = str2bool(config_parser.get('TFBS-Sampler', 'optimize'))
+    if config_parser.has_option('TFBS-Sampler', 'optimize-period'):
+        sampler_config.optimize_period = int(config_parser.get('TFBS-Sampler', 'optimize-period'))
+        if not sampler_config.optimize_period >= 1:
+            raise IOError("Illegal optimize-period specified.")
     if config_parser.has_option('TFBS-Sampler', 'initial-temperature'):
         sampler_config.initial_temperature = float(config_parser.get('TFBS-Sampler', 'initial-temperature'))
     if config_parser.has_option('TFBS-Sampler', 'process-prior'):

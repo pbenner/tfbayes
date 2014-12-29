@@ -27,6 +27,8 @@ operator<<(ostream& o, const tfbs_options_t& options) {
           << "-> lambda               = " << options.lambda               << endl
           << "-> block samples        = " << options.block_samples        << endl
           << "-> block samples period = " << options.block_samples_period << endl
+          << "-> optimize             = " << options.optimize             << endl
+          << "-> optimize period      = " << options.optimize_period      << endl
           << "-> initial temperature  = " << options.initial_temperature  << endl
           << "-> tfbs_length          = " << options.tfbs_length          << endl
           << "-> process prior        = " << options.process_prior        << endl

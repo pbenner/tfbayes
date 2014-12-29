@@ -41,16 +41,20 @@ pitman_yor_prior::clone() const {
 }
 
 double
-pitman_yor_prior::log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state) const
+pitman_yor_prior::log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state, size_t n) const
 {
-        const double K = state.size()-1;
+        const double K = state.size() - state.bg_cluster_tags.size();
+        double result = 0.0;
 
-        if (cluster.size() == 0) {
-                return log(alpha + discount*(K)) - log(state.num_tfbs + alpha);
+        for (size_t i = 0; i < n; i++) {
+                if (cluster.size() + i == 0) {
+                        result += log(alpha + discount*K) - log(state.num_tfbs + i + alpha);
+                }
+                else {
+                        result += log(cluster.size() + i - discount) - log(state.num_tfbs + i + alpha);
+                }
         }
-        else {
-                return log(cluster.size()-discount) - log(state.num_tfbs + alpha);
-        }
+        return result;
 }
 
 double
@@ -84,9 +88,10 @@ uniform_prior::clone() const {
 }
 
 double
-uniform_prior::log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state) const
+uniform_prior::log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state, size_t n) const
 {
-        const double K = state.size()-1;
+        assert(n == 1);
+        const double K = state.size() - state.bg_cluster_tags.size();
 
         if (cluster.size() == 0) {
                 return log(alpha) - log(alpha + K);
@@ -115,9 +120,10 @@ poppe_prior::clone() const {
 }
 
 double
-poppe_prior::log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state) const
+poppe_prior::log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state, size_t n) const
 {
-        const double K = state.size()-1;
+        assert(n == 1);
+        const double K = state.size() - state.bg_cluster_tags.size();
         const double N = state.num_tfbs;
 
         if (K == 0 && cluster.size() == 0) {

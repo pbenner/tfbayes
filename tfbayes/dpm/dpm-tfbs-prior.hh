@@ -32,7 +32,7 @@ public:
 
         dpm_tfbs_prior_t* clone() const = 0;
 
-        virtual double log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state) const = 0;
+        virtual double log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state, size_t n = 1.0) const = 0;
         virtual double joint(const dpm_tfbs_state_t& state) const = 0;
 };
 
@@ -42,7 +42,7 @@ public:
 
         pitman_yor_prior* clone() const;
 
-        double log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state) const;
+        double log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state, size_t n = 1.0) const;
         double joint(const dpm_tfbs_state_t& state) const;
 
 protected:
@@ -58,7 +58,7 @@ public:
 
         uniform_prior* clone() const;
 
-        double log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state) const;
+        double log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state, size_t n = 1.0) const;
         double joint(const dpm_tfbs_state_t& state) const;
 
 protected:
@@ -71,7 +71,7 @@ public:
 
         poppe_prior* clone() const;
 
-        double log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state) const;
+        double log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state, size_t n = 1.0) const;
         double joint(const dpm_tfbs_state_t& state) const;
 };
 

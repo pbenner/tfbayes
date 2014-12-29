@@ -253,15 +253,14 @@ void
 dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[],
                             const double temp, const bool include_background)
 {
-        double sum         = -numeric_limits<double>::infinity();
-        double n           = range_set.size();
+        double sum = -numeric_limits<double>::infinity();
+        size_t n   = range_set.size();
 
         cluster_tag_t i = 0;
         ////////////////////////////////////////////////////////////////////////
         // loop through existing clusters
         for (cm_iterator it = _state.begin(); it != _state.end(); it++, i++) {
                 cluster_t& cluster = **it;
-                cluster_tags[i] = cluster.cluster_tag();
                 if (_state.is_background(cluster)) {
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
@@ -272,15 +271,16 @@ dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights
                 else {
                         ////////////////////////////////////////////////////////
                         // mixture component 2: dirichlet process
-                        sum = logadd(sum, (n*_lambda_log + n*_process_prior->log_predictive(cluster, _state) + cluster.model().log_predictive(range_set))/temp);
+                        sum = logadd(sum, (n*_lambda_log + _process_prior->log_predictive(cluster, _state, n) + cluster.model().log_predictive(range_set))/temp);
                 }
-                log_weights[i] = sum;
+                log_weights [i] = sum;
+                cluster_tags[i] = cluster.cluster_tag();
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
         for (size_t j = 0; j < baseline_components(); j++, i++) {
                 cluster_t& cluster = _state.get_free_cluster(_baseline_tags[j]);
-                sum = logadd(sum, (n*_lambda_log + n*_process_prior->log_predictive(cluster, _state) + log(_baseline_weights[j]) +
+                sum = logadd(sum, (n*_lambda_log + _process_prior->log_predictive(cluster, _state, n) + log(_baseline_weights[j]) +
                                    cluster.model().log_predictive(range_set))/temp);
                 log_weights [i] = sum;
                 cluster_tags[i] = cluster.cluster_tag();

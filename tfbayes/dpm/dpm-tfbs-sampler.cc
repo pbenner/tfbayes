@@ -19,6 +19,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <cmath> /* abs */
+
 #include <boost/random/uniform_01.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
 
@@ -44,10 +46,13 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
         _t0                  (options.initial_temperature),
         _block_samples       (options.block_samples),
         _block_samples_period(options.block_samples_period),
+        _optimize            (options.optimize),
+        _optimize_period     (options.optimize_period),
         _verbose             (options.verbose)
 {
         assert(options.initial_temperature  >= 1.0);
         assert(options.block_samples_period >= 1);
+        assert(options.optimize_period >= 1);
 }
 
 dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(const dpm_tfbs_sampler_t& sampler)
@@ -57,6 +62,8 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(const dpm_tfbs_sampler_t& sampler)
           _t0                  (sampler._t0),
           _block_samples       (sampler._block_samples),
           _block_samples_period(sampler._block_samples_period),
+          _optimize            (sampler._optimize),
+          _optimize_period     (sampler._optimize_period),
           _verbose             (sampler._verbose)
 { }
 
@@ -73,6 +80,8 @@ swap(dpm_tfbs_sampler_t& first, dpm_tfbs_sampler_t& second) {
         swap(first._t0,                   second._t0);
         swap(first._block_samples,        second._block_samples);
         swap(first._block_samples_period, second._block_samples_period);
+        swap(first._optimize,             second._optimize);
+        swap(first._optimize_period,      second._optimize_period);
         swap(first._verbose,              second._verbose);
 }
 
@@ -144,7 +153,7 @@ string print_probabilities(
 #endif
 
 bool
-dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp) {
+dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, double temp, bool optimize) {
         ////////////////////////////////////////////////////////////////////////
         // check if we can sample this element
         if (!dpm().state().valid_tfbs_position(index)) {
@@ -167,10 +176,16 @@ dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp) {
         dpm().mixture_weights(range1, log_weights1, cluster_tags1, temp, true);
         dpm().mixture_weights(range2, log_weights2, cluster_tags2, temp, false, log_weights1[components-1]);
 
+        std::pair<size_t, size_t> result;
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
         // to that cluster
-        std::pair<size_t, size_t> result = select_component2(components, log_weights1, log_weights2, gen());
+        if (optimize) {
+                result = select_max_component2(components, log_weights1, log_weights2);
+        }
+        else {
+                result = select_component2(components, log_weights1, log_weights2, gen());
+        }
 #ifdef DEBUG
         if (old_cluster_tag != cluster_tags1[result.second]) {
                 cout << "Moving " << static_cast<const seq_index_t&>(index)
@@ -197,7 +212,7 @@ dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, const double temp) {
 }
 
 size_t
-dpm_tfbs_sampler_t::_gibbs_sample(const double temp) {
+dpm_tfbs_sampler_t::_gibbs_sample(double temp, bool optimize) {
         size_t sum = 0;
         // the indexer needs to be constant since it is shared between
         // processes, so to shuffle the indices we first need to
@@ -207,7 +222,7 @@ dpm_tfbs_sampler_t::_gibbs_sample(const double temp) {
         // now sample
         for (vector<index_i*>::iterator it = indices.begin();
              it != indices.end(); it++) {
-                if(_gibbs_sample(**it, temp)) sum+=1;
+                if(_gibbs_sample(**it, temp, optimize)) sum+=1;
         }
         return sum;
 }
@@ -216,7 +231,7 @@ dpm_tfbs_sampler_t::_gibbs_sample(const double temp) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void
-dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp)
+dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, double temp, bool optimize)
 {
         vector<range_t> range_set;
         cluster_tag_t old_cluster_tag = cluster.cluster_tag();
@@ -244,10 +259,16 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp)
         cluster_tag_t cluster_tags[components];
         dpm().mixture_weights(range_set, log_weights, cluster_tags, temp, true);
 
+        cluster_tag_t new_cluster_tag;
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
         // to that cluster
-        cluster_tag_t new_cluster_tag = cluster_tags[select_component(components, log_weights, gen())];
+        if (optimize) {
+                new_cluster_tag = cluster_tags[select_max_component(components, log_weights)];
+        }
+        else {
+                new_cluster_tag = cluster_tags[select_component(components, log_weights, gen())];
+        }
 
         ////////////////////////////////////////////////////////////////////////
         // print some information to stdout
@@ -269,7 +290,7 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, const double temp)
 }
 
 void
-dpm_tfbs_sampler_t::_block_sample(const double temp)
+dpm_tfbs_sampler_t::_block_sample(double temp, bool optimize)
 {
         // since clusters are modified it is not possible to simply
         // loop through the list of clusters, we need to be a bit more
@@ -287,7 +308,7 @@ dpm_tfbs_sampler_t::_block_sample(const double temp)
         for (vector<cluster_tag_t>::const_iterator it = used_clusters.begin(); it != used_clusters.end(); it++) {
                 cluster_t& cluster = state()[*it];
                 if (cluster.size() != 0) {
-                        _block_sample(cluster, temp);
+                        _block_sample(cluster, temp, optimize);
                 }
         }
 }
@@ -296,7 +317,7 @@ dpm_tfbs_sampler_t::_block_sample(const double temp)
 ////////////////////////////////////////////////////////////////////////////////
 
 bool
-dpm_tfbs_sampler_t::_metropolis_sample(cluster_t& cluster, const double temp) {
+dpm_tfbs_sampler_t::_metropolis_sample(cluster_t& cluster, double temp, bool optimize) {
         double posterior_ref = dpm().posterior();
         double posterior_tmp;
         stringstream ss;
@@ -309,8 +330,15 @@ dpm_tfbs_sampler_t::_metropolis_sample(cluster_t& cluster, const double temp) {
                 posterior_tmp = dpm().posterior();
 
                 /* posterior value is on log scale! */
-                if (dist(gen()) <= min(exp((posterior_tmp - posterior_ref)/temp), 1.0)) {
-                        goto accepted;
+                if (optimize) {
+                        if (posterior_tmp > posterior_ref) {
+                                goto accepted;
+                        }
+                }
+                else {
+                        if (dist(gen()) <= min(exp((posterior_tmp - posterior_ref)/temp), 1.0)) {
+                                goto accepted;
+                        }
                 }
                 dpm().state().restore();
         }
@@ -328,9 +356,9 @@ accepted:
 }
 
 bool
-dpm_tfbs_sampler_t::_metropolis_sample(const double temp) {
+dpm_tfbs_sampler_t::_metropolis_sample(double temp, bool optimize) {
         for (cl_iterator it = dpm().state().begin(); it != dpm().state().end(); it++) {
-                _metropolis_sample(**it, temp);
+                _metropolis_sample(**it, temp, optimize);
         }
 
         return true;
@@ -340,28 +368,17 @@ dpm_tfbs_sampler_t::_metropolis_sample(const double temp) {
 ////////////////////////////////////////////////////////////////////////////////
 
 size_t
-dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
-        // temperature for simulated annealing
-        double temperature = 1.0;
-        if (is_burnin) {
-                // geometric decline of the temperature
-                temperature = _t0*pow((1.0/_t0), (double)i/n);
-        }
-        flockfile(stdout);
-        cout << _name << ": "
-             << "temperature is " << temperature << endl;
-        fflush(stdout);
-        funlockfile(stdout);
-        // save temperature
-        _sampling_history.temperature[0].push_back(temperature);
+dpm_tfbs_sampler_t::_sample(size_t i, size_t n, double temp, bool optimize) {
         // call the standard hybrid sampler that first produces a
         // Gibbs sample and afterwards make a Metropolis-Hastings step
-        size_t s = _gibbs_sample(temperature);
-        _metropolis_sample(temperature);
+        size_t s = _gibbs_sample(temp, optimize);
+        _metropolis_sample(temp, optimize);
         // do a Gibbs block sampling step, i.e. go through all
         // clusters and try to merge them
-        if (_block_samples && i % _block_samples_period == 0) {
-                _block_sample(temperature);
+        if (temp == 1.0) {
+                if (_block_samples && i % _block_samples_period == 0) {
+                        _block_sample(temp, optimize);
+                }
         }
         // we are done with sampling here, now process commands
         flockfile(stdout);
@@ -384,6 +401,41 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
                 _output_queue->push(ss.str());
         }
         return s;
+}
+
+size_t
+dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
+        // temperature for simulated annealing
+        size_t result = 0;
+        double temp = 1.0;
+        if (is_burnin) {
+                // geometric decline of the temperature
+                temp = _t0*pow((1.0/_t0), (double)i/n);
+        }
+        flockfile(stdout);
+        cout << _name << ": "
+             << "temperature is " << temp << endl;
+        fflush(stdout);
+        funlockfile(stdout);
+        // save temperature
+        _sampling_history.temperature[0].push_back(temp);
+        if (!is_burnin && _optimize && i % _optimize_period == 0) {
+                double old_posterior;
+                double new_posterior = dpm().posterior();
+                do {
+                        result += _sample(i, n, temp, true);
+                        old_posterior = new_posterior;
+                        new_posterior = dpm().posterior();
+                        cout << _name << ": "
+                             << "Posterior: "   << new_posterior
+                             << " (increment: " << abs(old_posterior - new_posterior) << ")"
+                             << endl;
+                } while (abs(old_posterior - new_posterior) > 1e-4);
+        }
+        else {
+                result = _sample(i, n, temp, false);
+        }
+        return result;
 }
 
 // dpm_tfbs_pmcmc_t

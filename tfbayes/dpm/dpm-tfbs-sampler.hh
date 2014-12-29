@@ -72,13 +72,14 @@ public:
 
 protected:
         size_t _sample(size_t i, size_t n, bool is_burnin);
+        size_t _sample(size_t i, size_t n, double temp, bool optimize);
         using gibbs_sampler_t::_gibbs_sample;
-        bool   _gibbs_sample(const index_i& index, const double temp);
-        size_t _gibbs_sample(const double temp = 1.0);
-        void _block_sample(const double temp);
-        void _block_sample(cluster_t& cluster, const double temp);
-        bool _metropolis_sample(const double temp);
-        bool _metropolis_sample(cluster_t& cluster, const double temp);
+        bool   _gibbs_sample(const index_i& index, double temp, bool optimize);
+        size_t _gibbs_sample(double temp = 1.0, bool optimize = false);
+        void _block_sample(double temp, bool optimize);
+        void _block_sample(cluster_t& cluster, double temp, bool optimize);
+        bool _metropolis_sample(double temp, bool optimize);
+        bool _metropolis_sample(cluster_t& cluster, double temp, bool optimize);
 
         save_queue_t<command_t*> _command_queue;
         save_queue_t<std::string>* _output_queue;
@@ -87,6 +88,8 @@ protected:
         double _t0;
         bool   _block_samples;
         size_t _block_samples_period;
+        bool   _optimize;
+        size_t _optimize_period;
         bool   _verbose;
 };
 
