@@ -175,7 +175,7 @@ dpm_tfbs_state_t::restore() {
 }
 
 bool
-dpm_tfbs_state_t::move_left(cluster_t& cluster, cluster_tag_t bg_cluster_tag)
+dpm_tfbs_state_t::move_left(cluster_t& cluster, cluster_tag_t bg_cluster_tag, size_t n)
 {
         const cluster_t::elements_t elements(cluster.elements());
 
@@ -187,7 +187,7 @@ dpm_tfbs_state_t::move_left(cluster_t& cluster, cluster_tag_t bg_cluster_tag)
                 const range_t& old_range(*is);
                       range_t  new_range(old_range);
                 // one position to the left
-                new_range.index()[1]--;
+                new_range.index()[1] -= n;
                 remove(old_range, cluster.cluster_tag());
                 add   (old_range, bg_cluster_tag);
                 if (new_range.index()[1] > 0 && valid_tfbs_position(new_range.index())) {
@@ -200,7 +200,7 @@ dpm_tfbs_state_t::move_left(cluster_t& cluster, cluster_tag_t bg_cluster_tag)
 }
 
 bool
-dpm_tfbs_state_t::move_right(cluster_t& cluster, cluster_tag_t bg_cluster_tag)
+dpm_tfbs_state_t::move_right(cluster_t& cluster, cluster_tag_t bg_cluster_tag, size_t n)
 {
         const cluster_t::elements_t elements(cluster.elements());
 
@@ -213,10 +213,11 @@ dpm_tfbs_state_t::move_right(cluster_t& cluster, cluster_tag_t bg_cluster_tag)
                       range_t  new_range(old_range);
                 const size_t sequence_length = _data->size(old_range.index()[0]);
                 // one position to the left
-                new_range.index()[1]++;
+                new_range.index()[1] += n;
                 remove(old_range, cluster.cluster_tag());
                 add   (old_range, bg_cluster_tag);
-                if (new_range.index()[1]+tfbs_length < sequence_length && valid_tfbs_position(new_range.index())) {
+                if (new_range.index()[1]+new_range.length() <= sequence_length &&
+                    valid_tfbs_position(new_range.index())) {
                         remove(new_range, bg_cluster_tag);
                         add   (new_range, cluster.cluster_tag());
                 }
@@ -227,25 +228,26 @@ dpm_tfbs_state_t::move_right(cluster_t& cluster, cluster_tag_t bg_cluster_tag)
 bool
 dpm_tfbs_state_t::proposal(cluster_t& cluster, stringstream& ss, boost::random::mt19937& gen)
 {
+        if (is_background(cluster)) {
+                return false;
+        }
         boost::random::uniform_int_distribution<> dist   (0, 1);
         boost::random::uniform_int_distribution<> dist_bg(0, bg_cluster_tags.size()-1);
-
+        boost::random::uniform_int_distribution<> steps  (1, cluster.elements().begin()->length()/2);
+        size_t n = steps(gen);
         // select a background component at random
         cluster_tag_t bg_cluster_tag = bg_cluster_tags[dist_bg(gen)];
 
         save(cluster.cluster_tag(), bg_cluster_tag);
 
-        if (cluster.cluster_tag() != bg_cluster_tag && cluster.size() > 1) {
-                if (dist(gen) == 0) {
-                        ss << "move to right";
-                        return move_right(cluster, bg_cluster_tag);
-                }
-                else {
-                        ss << "move to left";
-                        return move_left(cluster, bg_cluster_tag);
-                }
+        if (dist(gen) == 0) {
+                ss << boost::format("move %d steps to the right") % n;
+                return move_right(cluster, bg_cluster_tag, n);
         }
-        return false;
+        else {
+                ss << boost::format("move %d steps to the left") % n;
+                return move_left(cluster, bg_cluster_tag, n);
+        }
 }
 
 dpm_partition_t
