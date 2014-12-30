@@ -587,19 +587,16 @@ ostream& operator<< (ostream& o, const dpm_tfbs_pmcmc_t& pmcmc)
         o << "[Result]" << endl;
 
         o << "components =" << endl
-          << std::noshowpoint
           << history.components;
         o << "switches =" << endl
-          << std::noshowpoint
           << history.switches;
+        o << setprecision(2)
+          << fixed;
         o << "likelihood =" << endl
-          << std::showpoint
           << history.likelihood;
         o << "posterior =" << endl
-          << std::showpoint
           << history.posterior;
         o << "temperature =" << endl
-          << std::showpoint
           << history.temperature;
         o << "partitions =" << endl
           << history.partitions;

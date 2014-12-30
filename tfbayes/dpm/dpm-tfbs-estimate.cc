@@ -753,9 +753,11 @@ compute_map(const sampling_history_t& history, dpm_tfbs_t& dpm, bool optimize, b
                      << endl;
         }
         if (max > -numeric_limits<double>::infinity()) {
+                /* set dpm state to best partition */
+                dpm.state().set_partition(history.partitions[argmax]);
+                cout << boost::format("Posterior: %f") % dpm.posterior()
+                     << endl;
                 if (optimize) {
-                        /* set dpm state to best partition */
-                        dpm.state().set_partition(history.partitions[argmax]);
                         /* optimize this partition locally */
                         return map_local_optimization(dpm, verbose);
                 }

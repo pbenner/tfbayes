@@ -103,7 +103,7 @@ def __main__():
         longopts   = ["take=",
                       "help",
                       "verbose"]
-        opts, tail = getopt.getopt(sys.argv[1:], "vh", longopts)
+        opts, tail = getopt.getopt(sys.argv[1:], "ovh", longopts)
     except getopt.GetoptError:
         usage()
         return 2
