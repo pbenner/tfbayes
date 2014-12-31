@@ -57,7 +57,7 @@ typedef struct _options_t {
                   discount(0.0),
                   lambda(0.01),
                   process_prior("pitman-yor process"),
-                  background_model("independence-dirichlet"),
+                  background_model("dirichlet-mixture"),
                   background_alpha(1),
                   background_context(2),
                   background_weights("entropy"),
@@ -171,6 +171,11 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options.background_weights  = options.background_weights;
         tfbs_options.baseline_weights    = vector<double>(1,1);
         tfbs_options.baseline_tags.push_back("baseline_default");
+        tfbs_options.block_samples       = false;
+        tfbs_options.block_samples_period= 1;
+        tfbs_options.metropolis_proposals= 4;
+        tfbs_options.optimize            = false;
+        tfbs_options.optimize_period     = 1;
         tfbs_options.initial_temperature = 1.0;
         tfbs_options.threads             = 1;
         tfbs_options.verbose             = true;
