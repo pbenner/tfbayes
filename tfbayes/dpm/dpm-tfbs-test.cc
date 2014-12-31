@@ -32,43 +32,6 @@
 using namespace std;
 
 void
-dpm_tfbs_t::test_metropolis_hastings() {
-        boost::random::mt19937 gen;
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        gen.seed(tv.tv_sec*tv.tv_usec);
-
-        range_t range1(seq_index_t(0,53), 10, true);
-        range_t range2(seq_index_t(1,26), 10, true);
-        double l1, l2;
-
-        cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
-        cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
-
-        cout.precision(10);
-
-        _state.remove(range1, _state.bg_cluster_tags[0]);
-        _state.add(range1, cluster_tag1);
-
-        _state.remove(range2, _state.bg_cluster_tags[0]);
-        _state.add(range2, cluster_tag1);
-
-        l1 = likelihood();
-        cout << _state.cluster_assignments() << endl;
-        cout << "likelihood: " << l1 << endl;
-
-        stringstream ss;
-        _state.proposal(cluster1, ss, gen);
-        l2 = likelihood();
-        cout << _state.cluster_assignments() << endl;
-        cout << "likelihood: " << l2 << endl;
-
-        cout << "ratio: " << exp(l2-l1) << endl;
-
-        exit(EXIT_SUCCESS);
-}
-
-void
 dpm_tfbs_t::test_moves() {
         range_t range1(seq_index_t(0, 0), 10, true);
         range_t range2(seq_index_t(0,10), 10, true);

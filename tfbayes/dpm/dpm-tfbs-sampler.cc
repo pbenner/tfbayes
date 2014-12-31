@@ -317,6 +317,31 @@ dpm_tfbs_sampler_t::_block_sample(double temp, bool optimize)
 ////////////////////////////////////////////////////////////////////////////////
 
 bool
+dpm_tfbs_sampler_t::_metropolis_proposal(cluster_t& cluster, stringstream& ss)
+{
+        if (dpm().state().is_background(cluster)) {
+                return false;
+        }
+        boost::random::uniform_int_distribution<> dist   (0, 1);
+        boost::random::uniform_int_distribution<> dist_bg(0, dpm().state().bg_cluster_tags.size()-1);
+        boost::random::uniform_int_distribution<> steps  (1, cluster.elements().begin()->length()/2);
+        size_t n = steps(gen());
+        // select a background component at random
+        cluster_tag_t bg_cluster_tag = dpm().state().bg_cluster_tags[dist_bg(gen())];
+
+        dpm().state().save(cluster.cluster_tag(), bg_cluster_tag);
+
+        if (dist(gen()) == 0) {
+                ss << boost::format("move %d steps to the right") % n;
+                return dpm().state().move_right(cluster, bg_cluster_tag, n);
+        }
+        else {
+                ss << boost::format("move %d steps to the left") % n;
+                return dpm().state().move_left(cluster, bg_cluster_tag, n);
+        }
+}
+
+bool
 dpm_tfbs_sampler_t::_metropolis_sample(cluster_t& cluster, double temp, bool optimize) {
         double posterior_ref = dpm().posterior();
         double posterior_tmp;
@@ -326,7 +351,7 @@ dpm_tfbs_sampler_t::_metropolis_sample(cluster_t& cluster, double temp, bool opt
         /* allocate a uniform distribution on the unit inverval */
         boost::random::uniform_01<> dist;
 
-        if (dpm().state().proposal(cluster, ss, gen())) {
+        if (_metropolis_proposal(cluster, ss)) {
                 posterior_tmp = dpm().posterior();
 
                 /* posterior value is on log scale! */
@@ -357,8 +382,11 @@ accepted:
 
 bool
 dpm_tfbs_sampler_t::_metropolis_sample(double temp, bool optimize) {
-        for (cl_iterator it = dpm().state().begin(); it != dpm().state().end(); it++) {
-                _metropolis_sample(**it, temp, optimize);
+        // sample each cluster twice
+        for (size_t i = 0; i < 2; i++) {
+                for (cl_iterator it = dpm().state().begin(); it != dpm().state().end(); it++) {
+                        _metropolis_sample(**it, temp, optimize);
+                }
         }
 
         return true;

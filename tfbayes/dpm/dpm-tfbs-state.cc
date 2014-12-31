@@ -19,11 +19,6 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <sstream>
-
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
-
 #include <tfbayes/dpm/dpm-tfbs-state.hh>
 
 using namespace std;
@@ -223,31 +218,6 @@ dpm_tfbs_state_t::move_right(cluster_t& cluster, cluster_tag_t bg_cluster_tag, s
                 }
         }
         return true;
-}
-
-bool
-dpm_tfbs_state_t::proposal(cluster_t& cluster, stringstream& ss, boost::random::mt19937& gen)
-{
-        if (is_background(cluster)) {
-                return false;
-        }
-        boost::random::uniform_int_distribution<> dist   (0, 1);
-        boost::random::uniform_int_distribution<> dist_bg(0, bg_cluster_tags.size()-1);
-        boost::random::uniform_int_distribution<> steps  (1, cluster.elements().begin()->length()/2);
-        size_t n = steps(gen);
-        // select a background component at random
-        cluster_tag_t bg_cluster_tag = bg_cluster_tags[dist_bg(gen)];
-
-        save(cluster.cluster_tag(), bg_cluster_tag);
-
-        if (dist(gen) == 0) {
-                ss << boost::format("move %d steps to the right") % n;
-                return move_right(cluster, bg_cluster_tag, n);
-        }
-        else {
-                ss << boost::format("move %d steps to the left") % n;
-                return move_left(cluster, bg_cluster_tag, n);
-        }
 }
 
 dpm_partition_t

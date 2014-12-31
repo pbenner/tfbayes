@@ -22,6 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <sstream>
+
 #include <tfbayes/dpm/dpm-tfbs.hh>
 #include <tfbayes/dpm/dpm-tfbs-state.hh>
 #include <tfbayes/dpm/sampler.hh>
@@ -78,6 +80,7 @@ protected:
         size_t _gibbs_sample(double temp = 1.0, bool optimize = false);
         void _block_sample(double temp, bool optimize);
         void _block_sample(cluster_t& cluster, double temp, bool optimize);
+        bool _metropolis_proposal(cluster_t& cluster, std::stringstream& ss);
         bool _metropolis_sample(double temp, bool optimize);
         bool _metropolis_sample(cluster_t& cluster, double temp, bool optimize);
 

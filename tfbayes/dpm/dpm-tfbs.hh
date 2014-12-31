@@ -99,7 +99,6 @@ public:
         void test();
         void test_background();
         void test_moves();
-        void test_metropolis_hastings();
 
         // constants
         ////////////////////////////////////////////////////////////////////////
