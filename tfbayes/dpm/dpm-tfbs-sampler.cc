@@ -46,6 +46,7 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
         _t0                  (options.initial_temperature),
         _block_samples       (options.block_samples),
         _block_samples_period(options.block_samples_period),
+        _metropolis_proposals(options.metropolis_proposals),
         _optimize            (options.optimize),
         _optimize_period     (options.optimize_period),
         _verbose             (options.verbose)
@@ -62,6 +63,7 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(const dpm_tfbs_sampler_t& sampler)
           _t0                  (sampler._t0),
           _block_samples       (sampler._block_samples),
           _block_samples_period(sampler._block_samples_period),
+          _metropolis_proposals(sampler._metropolis_proposals),
           _optimize            (sampler._optimize),
           _optimize_period     (sampler._optimize_period),
           _verbose             (sampler._verbose)
@@ -80,6 +82,7 @@ swap(dpm_tfbs_sampler_t& first, dpm_tfbs_sampler_t& second) {
         swap(first._t0,                   second._t0);
         swap(first._block_samples,        second._block_samples);
         swap(first._block_samples_period, second._block_samples_period);
+        swap(first._metropolis_proposals, second._metropolis_proposals);
         swap(first._optimize,             second._optimize);
         swap(first._optimize_period,      second._optimize_period);
         swap(first._verbose,              second._verbose);
@@ -383,7 +386,7 @@ accepted:
 bool
 dpm_tfbs_sampler_t::_metropolis_sample(double temp, bool optimize) {
         // sample each cluster twice
-        for (size_t i = 0; i < 2; i++) {
+        for (size_t i = 0; i < _metropolis_proposals; i++) {
                 for (cl_iterator it = dpm().state().begin(); it != dpm().state().end(); it++) {
                         _metropolis_sample(**it, temp, optimize);
                 }

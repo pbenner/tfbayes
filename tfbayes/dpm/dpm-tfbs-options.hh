@@ -42,6 +42,7 @@ typedef struct {
         double initial_temperature;
         bool   block_samples;
         size_t block_samples_period;
+        size_t metropolis_proposals;
         bool   optimize;
         size_t optimize_period;
         std::string process_prior;

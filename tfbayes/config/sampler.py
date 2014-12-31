@@ -36,6 +36,7 @@ def default_sampler_config():
     sampler_config._lambda_             = 0.01
     sampler_config.block_samples        = False
     sampler_config.block_samples_period = 1
+    sampler_config.metropolis_proposals = 4
     sampler_config.optimize             = False
     sampler_config.optimize_period      = 1
     sampler_config.initial_temperature  = 10.0
@@ -94,6 +95,10 @@ def parse_sampler_config(config_file, sampler_config):
         sampler_config.block_samples_period = int(config_parser.get('TFBS-Sampler', 'block-samples-period'))
         if not sampler_config.block_samples_period >= 1:
             raise IOError("Illegal block-samples-period specified.")
+    if config_parser.has_option('TFBS-Sampler', 'metropolis-proposals'):
+        if not int(config_parser.get('TFBS-Sampler', 'metropolis-proposals')) >= 0:
+            raise IOError("Illegal number of metropolis proposals.")
+        sampler_config.metropolis_proposals = int(config_parser.get('TFBS-Sampler', 'metropolis-proposals'))
     if config_parser.has_option('TFBS-Sampler', 'optimize'):
         sampler_config.optimize = str2bool(config_parser.get('TFBS-Sampler', 'optimize'))
     if config_parser.has_option('TFBS-Sampler', 'optimize-period'):

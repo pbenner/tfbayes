@@ -91,6 +91,7 @@ protected:
         double _t0;
         bool   _block_samples;
         size_t _block_samples_period;
+        size_t _metropolis_proposals;
         bool   _optimize;
         size_t _optimize_period;
         bool   _verbose;
