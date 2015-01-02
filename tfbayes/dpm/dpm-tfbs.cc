@@ -86,7 +86,9 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                  * nucleotides in the background */
                 assert(options.background_alpha.size() >= 1);
                 mixture_dirichlet_t* bg = new mixture_dirichlet_t(
-                        options.background_alpha, data);
+                        options.background_alpha,
+                        options.background_weights,
+                        data);
                 _state.add_background_cluster(*bg);
         }
         else if (options.background_model == "markov chain mixture") {

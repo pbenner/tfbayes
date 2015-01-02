@@ -46,7 +46,7 @@ def default_sampler_config():
     sampler_config.background_gamma     = [5.0, 0.2]
     sampler_config.background_cache     = ''
     sampler_config.background_context   = 2
-    sampler_config.background_weights   = 'decay'
+    sampler_config.background_weights   = []
     sampler_config.population_size      = 1
     sampler_config.tfbs_length          = 10
     sampler_config.baseline_tags        = []
@@ -126,7 +126,7 @@ def parse_sampler_config(config_file, sampler_config):
     if config_parser.has_option('TFBS-Sampler', 'background-context'):
         sampler_config.background_context = config_parser.get('TFBS-Sampler', 'background-context')
     if config_parser.has_option('TFBS-Sampler', 'background-weights'):
-        sampler_config.background_weights = config_parser.get('TFBS-Sampler', 'background-weights')
+        sampler_config.background_weights = read_vector(config_parser, 'TFBS-Sampler', 'background-weights', float)
     if config_parser.has_option('TFBS-Sampler', 'tfbs-length'):
         sampler_config.tfbs_length = int(config_parser.get('TFBS-Sampler', 'tfbs-length'))
     if config_parser.has_option('TFBS-Sampler', 'median-partition'):

@@ -145,6 +145,28 @@ size_t select_component(size_t k, const double log_weights[], boost::random::mt1
 }
 
 static inline
+size_t select_component(const std::vector<double>& log_weights, boost::random::mt19937& gen)
+{
+        /* log_weights are cumulative */
+        boost::random::uniform_01<> dist;
+        
+        const double r = dist(gen);
+        const size_t k = log_weights.size();
+
+        if (r == 0.0) {
+                return 0;
+        }
+
+        const double log_r = log(r) + log_weights[k-1];
+        for (size_t i = 0; i < k-1; i++) {
+                if (log_r <= log_weights[i]) {
+                        return i;
+                }
+        }
+        return k-1;
+}
+
+static inline
 std::pair<size_t,size_t> select_component2(
         size_t k,
         const double log_weights1[],

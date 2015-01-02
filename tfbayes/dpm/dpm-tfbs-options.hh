@@ -51,7 +51,7 @@ typedef struct {
         size_t background_context;
         std::vector<double> background_gamma;
         std::string background_cache;
-        std::string background_weights;
+        std::vector<double> background_weights;
         std::vector<double> baseline_weights;
         baseline_priors_t baseline_priors;
         baseline_tags_t baseline_tags;

@@ -237,6 +237,7 @@ protected:
 class mixture_dirichlet_t : public component_model_t {
 public:
          mixture_dirichlet_t(const std::matrix<double>& alpha,
+                             const std::vector<double>& weights,
                              const sequence_data_t<data_tfbs_t::code_t>& data);
          mixture_dirichlet_t(const mixture_dirichlet_t& distribution);
         ~mixture_dirichlet_t();
@@ -249,6 +250,7 @@ public:
                      static_cast<component_model_t&>(second));
                 swap(first.alpha,            second.alpha);
                 swap(first.counts,           second.counts);
+                swap(first.weights,          second.weights);
                 swap(first._size1,           second._size1);
                 swap(first._size2,           second._size2);
                 swap(first._data,            second._data);
@@ -282,6 +284,7 @@ public:
 protected:
         std::vector<counts_t> alpha;
         std::vector<counts_t> counts;
+        std::vector<double> weights;
 
         size_t _size1;
         size_t _size2;

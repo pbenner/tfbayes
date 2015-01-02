@@ -21,7 +21,7 @@ using namespace std;
 
 ostream&
 operator<<(ostream& o, const tfbs_options_t& options) {
-        o << "Options:"              << endl
+        o << "Options:"                   << endl
           << "-> alpha                = " << options.alpha                << endl
           << "-> discount             = " << options.discount             << endl
           << "-> lambda               = " << options.lambda               << endl
@@ -34,7 +34,6 @@ operator<<(ostream& o, const tfbs_options_t& options) {
           << "-> process prior        = " << options.process_prior        << endl
           << "-> background model     = " << options.background_model     << endl
           << "-> background context   = " << options.background_context   << endl
-          << "-> background weights   = " << options.background_weights   << endl
           << "-> population_size      = " << options.population_size      << endl
           << "-> socket_file          = " << options.socket_file          << endl
           << "-> verbose              = " << options.verbose              << endl;

@@ -46,7 +46,6 @@ typedef struct _options_t {
         const char* background_model;
         double background_alpha;
         size_t background_context;
-        const char* background_weights;
         size_t population_size;
         string save;
         _options_t()
@@ -60,7 +59,6 @@ typedef struct _options_t {
                   background_model("dirichlet-mixture"),
                   background_alpha(1),
                   background_context(2),
-                  background_weights("entropy"),
                   population_size(1),
                   save()
                 { }
@@ -79,7 +77,6 @@ operator<<(std::ostream& o, const _options_t& options) {
           << "-> background model    = " << options.background_model    << endl
           << "-> background_alpha    = " << options.background_alpha    << endl
           << "-> background_context  = " << options.background_context  << endl
-          << "-> background_weights  = " << options.background_weights  << endl
           << "-> population_size     = " << options.population_size     << endl
           << "-> save                = " << options.save                << endl;
         return o;
@@ -168,7 +165,6 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options.background_model    = options.background_model;
         tfbs_options.background_gamma    = vector<double>(2,1);
         tfbs_options.background_context  = options.background_context;
-        tfbs_options.background_weights  = options.background_weights;
         tfbs_options.baseline_weights    = vector<double>(1,1);
         tfbs_options.baseline_tags.push_back("baseline_default");
         tfbs_options.block_samples       = false;

@@ -42,6 +42,7 @@
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/fastarithmetics/fast-lnbeta.hh>
 #include <tfbayes/utility/logarithmetic.hh>
+#include <tfbayes/utility/statistics.hh>
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -774,9 +775,9 @@ product_dirichlet_t::print_counts() const {
         for (size_t k = 0; k < _size2; k++) {
                 ss << nucleotide_alphabet_t().decode(k) << " ";
                 for (size_t j = 0; j < _size1; j++) {
-                        ss.precision(8);
                         ss.width(10);
-                        ss << counts[j][k] << " ";
+                        ss.precision(2);
+                        ss << fixed << counts[j][k] << " ";
                 }
                 ss << endl;
         }
@@ -788,13 +789,21 @@ product_dirichlet_t::print_counts() const {
 
 mixture_dirichlet_t::mixture_dirichlet_t(
         const matrix<double>& _alpha,
+        const vector<double>& _weights,
         const sequence_data_t<data_tfbs_t::code_t>& data)
         : component_model_t(),
-          _size1(_alpha.size()),
-          _size2(_alpha[0].size()),
-          _data(&data),
+          weights(_weights),
+          _size1 (_alpha.size()),
+          _size2 (_alpha[0].size()),
+          _data  (&data),
           _component_assignments(data.sizes(), -1)
 {
+        if (weights.size() == 0) {
+                weights = vector<double>(_size1, 1.0/static_cast<double>(_size1));
+        }
+        else {
+                assert(weights.size() == _size1);
+        }
         for (size_t i = 0; i < _alpha.size(); i++) {
                 alpha .push_back(counts_t());
                 counts.push_back(counts_t());
@@ -807,11 +816,12 @@ mixture_dirichlet_t::mixture_dirichlet_t(
 
 mixture_dirichlet_t::mixture_dirichlet_t(const mixture_dirichlet_t& distribution)
         : component_model_t(distribution),
-          alpha (distribution.alpha),
-          counts(distribution.counts),
-          _size1(distribution._size1),
-          _size2(distribution._size2),
-          _data (distribution._data),
+          alpha  (distribution.alpha),
+          counts (distribution.counts),
+          weights(distribution.weights),
+          _size1 (distribution._size1),
+          _size2 (distribution._size2),
+          _data  (distribution._data),
           _component_assignments(distribution._component_assignments)
 {
 }
@@ -844,7 +854,8 @@ mixture_dirichlet_t::add(const index_i& index)
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
                 result[i] = fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i], data()[index])
-                          - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i]);
+                          - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i])
+                          + log(weights[i]);
         }
         size_t i = distance(result.begin(), max_element(result.begin(), result.end()));
 
@@ -970,9 +981,9 @@ mixture_dirichlet_t::print_counts() const {
         for (size_t k = 0; k < _size2; k++) {
                 ss << nucleotide_alphabet_t().decode(k) << " ";
                 for (size_t j = 0; j < _size1; j++) {
-                        ss.precision(8);
                         ss.width(10);
-                        ss << counts[j][k] << " ";
+                        ss.precision(2);
+                        ss << fixed << counts[j][k] << " ";
                 }
                 ss << endl;
         }
@@ -1003,16 +1014,8 @@ markov_chain_mixture_t::markov_chain_mixture_t(
         _counts = (double*)malloc(_length*sizeof(double));
         _counts_sum = (double*)malloc(_length/_alphabet_size*sizeof(double));
         _parents = (int*)malloc(_length*sizeof(int));
-        if (options.background_weights == "entropy") {
-                _weights = new entropy_weights_t(_alphabet_size, _max_context, _length);
-        }
-        else if (options.background_weights == "decay") {
-                _weights = new decay_weights_t(_max_context);
-        }
-        else {
-                cerr << "Error: Unknown background weights." << endl;
-                exit(EXIT_FAILURE);
-        }
+        _weights = new entropy_weights_t(_alphabet_size, _max_context, _length);
+        //_weights = new decay_weights_t(_max_context);
 
         /* for likelihood computations */
         _counts_tmp = (double*)malloc(_length*sizeof(double));

@@ -136,7 +136,6 @@ _main_(const string& fasta_file) {
         tfbs_options_t tfbs_options;
         tfbs_options.background_alpha   = matrix<double>(1,1,options.alpha);
         tfbs_options.background_context = options.context;
-        tfbs_options.background_weights = "entropy";
 
         markov_chain_mixture_t model(alphabet.size(), tfbs_options, data,
                                      cluster_assignments, 1);
