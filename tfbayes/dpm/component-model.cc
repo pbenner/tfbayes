@@ -792,7 +792,7 @@ mixture_dirichlet_t::mixture_dirichlet_t(
         const vector<double>& _weights,
         const sequence_data_t<data_tfbs_t::code_t>& data)
         : component_model_t(),
-          weights(_weights),
+          weights(normalize(_weights)),
           _size1 (_alpha.size()),
           _size2 (_alpha[0].size()),
           _data  (&data),
@@ -812,16 +812,80 @@ mixture_dirichlet_t::mixture_dirichlet_t(
                         counts[i][j] = _alpha[i][j];
                 }
         }
+        precompute_component_assignments();
+}
+
+ssize_t
+mixture_dirichlet_t::max_component(const seq_index_t& index) const
+{
+        vector<double> result(_size1, 0.0);
+
+        /* find component with highest predictive value */
+        for (size_t i = 0; i < _size1; i++) {
+                /* counts contains the data count statistic
+                 * and the pseudo counts alpha */
+                result[i] = fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i], data()[index])
+                          - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i])
+                          + log(weights[i]);
+        }
+        return distance(result.begin(), max_element(result.begin(), result.end()));
+}
+
+bool
+mixture_dirichlet_t::precompute_component_assignments_loop()
+{
+        bool optimized = false;
+        /* optimize assignments */
+        for (size_t i = 0; i < data().size(); i++) {
+                for (size_t j = 0; j < data()[i].size(); j++) {
+                        seq_index_t index(i, j);
+                        /* remove counts if possible */
+                        if (_component_assignments[index] != -1) {
+                                remove(index);
+                        }
+                        /* get best assignment */
+                        ssize_t k = max_component(index);
+                        /* check if assigment changed */
+                        if (k != _component_assignments[index]) {
+                                optimized = true;
+                        }
+                        /* save assignemnt */
+                        _component_assignments[index] = k;
+                        /* add counts to background */
+                        add(index);
+                }
+        }
+        return optimized;
+}
+
+#include <tfbayes/utility/terminal-codes.hh>
+
+void
+mixture_dirichlet_t::precompute_component_assignments()
+{
+        bool optimized = true;
+        /* iterate until reaching a fixed point */
+        cout << endl;
+        for (size_t i = 0; optimized; i++) {
+                cout << __line_up__ << __line_del__
+                     << boost::format("Optimizing background assignments ... [%d]") % i
+                     << endl;
+
+                optimized = precompute_component_assignments_loop();
+        }
+        cout << __line_up__ << __line_del__
+             << "Optimizing background assignments ... done"
+             << endl;
 }
 
 mixture_dirichlet_t::mixture_dirichlet_t(const mixture_dirichlet_t& distribution)
         : component_model_t(distribution),
-          alpha  (distribution.alpha),
-          counts (distribution.counts),
-          weights(distribution.weights),
-          _size1 (distribution._size1),
-          _size2 (distribution._size2),
-          _data  (distribution._data),
+          alpha   (distribution.alpha),
+          counts  (distribution.counts),
+          weights (distribution.weights),
+          _size1  (distribution._size1),
+          _size2  (distribution._size2),
+          _data   (distribution._data),
           _component_assignments(distribution._component_assignments)
 {
 }
@@ -845,25 +909,12 @@ mixture_dirichlet_t::operator=(const component_model_t& component_model)
 size_t
 mixture_dirichlet_t::add(const index_i& index)
 {
-        assert(_component_assignments[index] == -1);
+        size_t i = _component_assignments[index];
 
-        vector<double> result(_size1, 0.0);
-
-        // find component with highest predictive value
-        for (size_t i = 0; i < _size1; i++) {
-                /* counts contains the data count statistic
-                 * and the pseudo counts alpha */
-                result[i] = fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i], data()[index])
-                          - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i])
-                          + log(weights[i]);
-        }
-        size_t i = distance(result.begin(), max_element(result.begin(), result.end()));
-
-        // add counts to the max component
+        /* add counts to the max component */
         for (size_t k = 0; k < data_tfbs_t::alphabet_size; k++) {
                 counts[i][k] += data()[index][k];
         }
-        _component_assignments[index] = i;
 
         return 1;
 }
@@ -886,10 +937,10 @@ mixture_dirichlet_t::remove(const index_i& index)
 {
         size_t i = _component_assignments[index];
 
+        /* substract counts from the max component */
         for (size_t k = 0; k < data_tfbs_t::alphabet_size; k++) {
                 counts[i][k] -= data()[index][k];
         }
-        _component_assignments[index] = -1;
 
         return 1;
 }
@@ -924,16 +975,14 @@ double mixture_dirichlet_t::predictive(const vector<range_t>& range_set) {
 }
 
 double mixture_dirichlet_t::log_predictive(const index_i& index) {
-        vector<double> result(_size1, 0);
+        size_t i = _component_assignments[index];
 
-        for (size_t i = 0; i < _size1; i++) {
-                /* counts contains the data count statistic
-                 * and the pseudo counts alpha */
-                result[i] = fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i], data()[index])
-                          - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i]);
-        }
+        /* counts contains the data count statistic
+         * and the pseudo counts alpha */
+        double result = fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i], data()[index])
+                      - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i]);
 
-        return *max_element(result.begin(), result.end());
+        return result;
 }
 
 double mixture_dirichlet_t::log_predictive(const range_t& range) {

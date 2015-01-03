@@ -23,6 +23,8 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <iostream>
+
 #include <tfbayes/phylotree/parsetree.hh>
 #define YYSTYPE pt_parsetree_t *
 #define YYLEX_PARAM context->scanner

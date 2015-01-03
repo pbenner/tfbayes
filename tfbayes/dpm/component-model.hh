@@ -282,6 +282,10 @@ public:
         friend std::ostream& operator<< (std::ostream& o, const mixture_dirichlet_t& pd);
 
 protected:
+        bool precompute_component_assignments_loop();
+        void precompute_component_assignments();
+        ssize_t max_component(const seq_index_t& index) const;
+
         std::vector<counts_t> alpha;
         std::vector<counts_t> counts;
         std::vector<double> weights;
