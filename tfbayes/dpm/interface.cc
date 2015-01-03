@@ -76,6 +76,7 @@ BOOST_PYTHON_MODULE(interface)
                 .def_readwrite("likelihood",          &sampling_history_t::likelihood)
                 .def_readwrite("posterior",           &sampling_history_t::posterior)
                 .def_readwrite("components",          &sampling_history_t::components)
+                .def_readwrite("cluster_sizes",       &sampling_history_t::cluster_sizes)
                 .def_readwrite("temperature",         &sampling_history_t::temperature)
                 .def_readwrite("partitions",          &sampling_history_t::partitions)
                 ;

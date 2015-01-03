@@ -469,6 +469,23 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
         return result;
 }
 
+void
+dpm_tfbs_sampler_t::_update_sampling_history(size_t switches)
+{
+        matrix<double> cluster_sizes = _sampling_history.cluster_sizes;
+        gibbs_sampler_t::_update_sampling_history(switches);
+
+        vector<double> tmp;
+
+        BOOST_FOREACH(const cluster_t* cluster, dpm().state()) {
+                if (!dpm().state().is_background(*cluster)) {
+                        tmp.push_back(cluster->size());
+                }
+        }
+        _sampling_history.cluster_sizes = cluster_sizes;
+        _sampling_history.cluster_sizes.push_back(tmp);
+}
+
 // dpm_tfbs_pmcmc_t
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -619,6 +636,8 @@ ostream& operator<< (ostream& o, const dpm_tfbs_pmcmc_t& pmcmc)
 
         o << "components =" << endl
           << history.components;
+        o << "cluster-sizes =" << endl
+          << history.cluster_sizes;
         o << "switches =" << endl
           << history.switches;
         o << setprecision(2)

@@ -57,7 +57,6 @@ population_mcmc_t::population_mcmc_t(size_t n, const sampling_history_t& history
         assert(_sampling_history.posterior  .size() == n);
         assert(_sampling_history.components .size() == n);
         assert(_sampling_history.temperature.size() == n);
-        assert(_sampling_history.temperature.size() == n);
 }
 
 population_mcmc_t::population_mcmc_t(const population_mcmc_t& pmcmc)
@@ -124,6 +123,15 @@ population_mcmc_t::update_sampling_history()
                         _population[i]->sampling_history().temperature[0].begin(),
                         _population[i]->sampling_history().temperature[0].end());
         }
+        // copy cluster sizes
+        for (size_t j = 0; j < _population[0]->sampling_history().partitions.size(); j++) {
+                for (size_t i = 0; i < _size; i++) {
+                        assert(j < _population[i]->sampling_history().cluster_sizes.size());
+                        _sampling_history.cluster_sizes.push_back(
+                                _population[i]->sampling_history().cluster_sizes[j]);
+                }
+        }
+        // copy partitions
         for (size_t j = 0; j < _population[0]->sampling_history().partitions.size(); j++) {
                 for (size_t i = 0; i < _size; i++) {
                         assert(j < _population[i]->sampling_history().partitions.size());

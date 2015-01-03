@@ -32,6 +32,7 @@ public:
         std::matrix<double>  posterior;
         std::matrix<double>  components;
         std::matrix<double>  temperature;
+        std::matrix<double>  cluster_sizes;
         dpm_partition_list_t partitions;
 };
 

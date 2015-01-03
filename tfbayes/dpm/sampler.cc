@@ -184,11 +184,17 @@ gibbs_sampler_t::state() {
 void
 gibbs_sampler_t::_update_sampling_history(size_t switches)
 {
+        vector<double> tmp;
+
+        BOOST_FOREACH(const cluster_t* cluster, _dpm->state()) {
+                tmp.push_back(cluster->size());
+        }
         _sampling_history.switches  [0].push_back(switches);
         _sampling_history.likelihood[0].push_back(_dpm->likelihood());
         _sampling_history.posterior [0].push_back(_dpm->posterior());
         _sampling_history.components[0].push_back(_dpm->mixture_components());
         _sampling_history.partitions   .push_back(_dpm->state().partition());
+        _sampling_history.cluster_sizes.push_back(tmp);
 }
 
 void

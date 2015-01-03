@@ -83,7 +83,7 @@ protected:
         bool _metropolis_proposal(cluster_t& cluster, std::stringstream& ss);
         bool _metropolis_sample(double temp, bool optimize);
         bool _metropolis_sample(cluster_t& cluster, double temp, bool optimize);
-
+        void _update_sampling_history(size_t switches);
         save_queue_t<command_t*> _command_queue;
         save_queue_t<std::string>* _output_queue;
 
