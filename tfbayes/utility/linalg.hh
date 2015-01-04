@@ -22,8 +22,9 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <stddef.h>
+#include <numeric> /* accumulate */
 #include <vector>
+#include <cstddef>
 
 /* since this is the only position where c++0x might be useful
  * in the code we try to stick with boost here */
@@ -80,7 +81,7 @@ template <typename T>
 std::vector<T> normalize(const std::vector<T>& container)
 {
         std::vector<T> tmp(container);
-        T sum = std::accumulate(tmp.begin(), tmp.end(), 0.0);
+        T sum = std::accumulate(tmp.begin(), tmp.end(), static_cast<T>(0));
 
         BOOST_FOREACH(T &n, tmp) {
                 n /= sum;
