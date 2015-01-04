@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# Copyright (C) 2011 Philipp Benner
+# Copyright (C) 2011-2014 Philipp Benner
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,6 +52,9 @@ def importMatplotlib(backend=None):
 # global options
 # ------------------------------------------------------------------------------
 
+sampler_config = default_sampler_config()
+results_config = default_results_config()
+
 options = {
     'save'        : None,
     'sequences'   : None,
@@ -80,7 +83,39 @@ def usage():
 # plot
 # ------------------------------------------------------------------------------
 
-def plot_posterior_and_components(results_config, show):
+def get_cluster_sizes(i, n):
+    cluster_sizes = []
+    # extract cluster sizes from sampler i
+    for j in range(i, len(results_config['sampling_history'].cluster_sizes), n):
+        cluster_sizes.append(results_config['sampling_history'].cluster_sizes[j].export())
+    return cluster_sizes
+
+def plot_cluster_sizes(ax, cluster_sizes, ymax = None):
+    x = []
+    y = []
+    for i in range(len(cluster_sizes)):
+        x.extend([i]*len(cluster_sizes[i]))
+        y.extend(cluster_sizes[i])
+    ax.scatter(x, y, c="black", edgecolors='None')
+    if ymax:
+        ax.set_ylim(0, ymax)
+
+def plot_result2(results_config, show):
+    fig = pyplot.figure()
+    fig.subplots_adjust(left=0.15)
+    # create subplots
+    n    = sampler_config.population_size
+    rows = math.floor(math.sqrt(n))
+    cols = math.ceil (math.sqrt(n))
+    ax   = [None] * n
+    m    = max(map(max, results_config['sampling_history'].cluster_sizes))
+    for i in range(n):
+        cluster_sizes = get_cluster_sizes(i, n)
+        ax[i] = fig.add_subplot(rows, cols, i)
+        plot_cluster_sizes(ax[i], cluster_sizes, ymax=m+1)
+    show()
+
+def plot_result1(results_config, show):
     fig = pyplot.figure()
     fig.subplots_adjust(left=0.15)
     ax1 = fig.add_subplot(3,1,1)
@@ -89,7 +124,6 @@ def plot_posterior_and_components(results_config, show):
     ax1.set_ylabel("log posterior")
     ax2.set_ylabel("components")
     ax3.set_ylabel("temperature")
-    ax3.set_xlabel("sample")
     for l in results_config['sampling_history'].posterior:
         p1 = ax1.plot(l)
     for c in results_config['sampling_history'].components:
@@ -109,7 +143,8 @@ def plot_result(results_config):
         importMatplotlib()
         show  = pyplot.show
         close = None
-    plot_posterior_and_components(results_config, show)
+    plot_result1(results_config, show)
+    plot_result2(results_config, show)
     if close:
         close()
 
@@ -117,8 +152,6 @@ def plot_result(results_config):
 # ------------------------------------------------------------------------------
 
 def main(sampler_config_file):
-    sampler_config = default_sampler_config()
-    results_config = default_results_config()
     parse_sampler_config(sampler_config_file, sampler_config)
     results_config_file = sampler_config.save
     parse_results_config(results_config_file, results_config, False)
