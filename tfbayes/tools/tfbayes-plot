@@ -96,7 +96,7 @@ def plot_cluster_sizes(ax, cluster_sizes, ymax = None):
     for i in range(len(cluster_sizes)):
         x.extend([i]*len(cluster_sizes[i]))
         y.extend(cluster_sizes[i])
-    ax.scatter(x, y, c="black", edgecolors='None')
+    ax.scatter(x, y, c="black", edgecolors='None', s=2)
     if ymax:
         ax.set_ylim(0, ymax)
 
