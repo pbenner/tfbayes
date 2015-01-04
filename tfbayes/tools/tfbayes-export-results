@@ -55,6 +55,40 @@ def usage():
 # main
 # ------------------------------------------------------------------------------
 
+def export_components(sampler_config_file):
+    output_file = "{}_components.csv".format(os.path.splitext(sampler_config_file)[0])
+    if (options['verbose']):
+        print "Writing components to `{}'.".format(output_file)
+    with open(output_file, 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(zip(*results_config['sampling_history'].components))
+
+def export_posterior(sampler_config_file):
+    output_file = "{}_posterior.csv".format(os.path.splitext(sampler_config_file)[0])
+    if (options['verbose']):
+        print "Writing posterior to `{}'.".format(output_file)
+    with open(output_file, 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(zip(*results_config['sampling_history'].posterior))
+
+def export_cluster_sizes(sampler_config_file):
+    # iterate over samplers
+    for i in range(sampler_config.population_size):
+        output_file = "%s_cluster_sizes-%d.csv" % (os.path.splitext(sampler_config_file)[0], i)
+        cluster_sizes = []
+        # extract cluster sizes from sampler i
+        for j in range(i, len(results_config['sampling_history'].cluster_sizes), sampler_config.population_size):
+            cluster_sizes.append(results_config['sampling_history'].cluster_sizes[j].export())
+        # augment data
+        n = max(map(len, cluster_sizes))
+        for i in range(len(cluster_sizes)):
+            cluster_sizes[i].extend([None] * (n-len(cluster_sizes[i])))
+        if (options['verbose']):
+            print "Writing posterior to `{}'.".format(output_file)
+        with open(output_file, 'w') as f:
+            writer = csv.writer(f)
+            writer.writerows(zip(*cluster_sizes))
+
 def main(sampler_config_file):
     # parse configuration and results file
     parse_sampler_config(sampler_config_file, sampler_config)
@@ -62,18 +96,9 @@ def main(sampler_config_file):
         raise IOError('no result file specified')
     parse_results_config(sampler_config.save, results_config, False)
     # export results
-    output_file = "{}_components.csv".format(os.path.splitext(sampler_config_file)[0])
-    if (options['verbose']):
-        print "Writing components to `{}'.".format(output_file)
-    with open(output_file, 'w') as f:
-        writer = csv.writer(f)
-        writer.writerows(zip(*results_config['sampling_history'].components))
-    output_file = "{}_posterior.csv".format(os.path.splitext(sampler_config_file)[0])
-    if (options['verbose']):
-        print "Writing posterior to `{}'.".format(output_file)
-    with open(output_file, 'w') as f:
-        writer  = csv.writer(f)
-        writer.writerows(zip(*results_config['sampling_history'].posterior))
+    export_components   (sampler_config_file)
+    export_posterior    (sampler_config_file)
+    export_cluster_sizes(sampler_config_file)
 
 def __main__():
     try:

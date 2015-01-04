@@ -72,12 +72,12 @@ def parse_results_config(config_file, results_config, parse_partitions=True):
 def save_results_config(config_file, results_config):
     config_parser = ConfigParser.RawConfigParser()
     config_parser.add_section('Result')
-    write_matrix(config_parser, 'Result', 'components',   results_config['sampling_history'].components, int)
-    write_matrix(config_parser, 'Result', 'cluser-sizes', results_config['sampling_history'].cluster_sizes, int)
-    write_matrix(config_parser, 'Result', 'likelihood',   results_config['sampling_history'].likelihood)
-    write_matrix(config_parser, 'Result', 'posterior',    results_config['sampling_history'].posterior)
-    write_matrix(config_parser, 'Result', 'switches',     results_config['sampling_history'].switches, int)
-    write_matrix(config_parser, 'Result', 'temperature',  results_config['sampling_history'].temperature)
+    write_matrix(config_parser, 'Result', 'components',    results_config['sampling_history'].components, int)
+    write_matrix(config_parser, 'Result', 'cluster-sizes', results_config['sampling_history'].cluster_sizes, int)
+    write_matrix(config_parser, 'Result', 'likelihood',    results_config['sampling_history'].likelihood)
+    write_matrix(config_parser, 'Result', 'posterior',     results_config['sampling_history'].posterior)
+    write_matrix(config_parser, 'Result', 'switches',      results_config['sampling_history'].switches, int)
+    write_matrix(config_parser, 'Result', 'temperature',   results_config['sampling_history'].temperature)
     config_parser.set('Result', 'partitions', results_config['sampling_history'].partitions)
     if results_config.has_key('map_partition') and results_config['map_partition']:
         config_parser.set('Result', 'map_partition', results_config['map_partition'])
