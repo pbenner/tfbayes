@@ -22,8 +22,8 @@
 %locations
 %defines
 %error-verbose
-%lex-param   {context_t *state}
-%parse-param {context_t *state}
+%lex-param   {context_t* context}
+%parse-param {context_t* context}
 
 // lexer definitions
 ////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +36,6 @@
 #include <iostream>
 
 #include <tfbayes/phylotree/parsetree.hh>
-
 #define YYSTYPE pt_parsetree_t *
 }
 
@@ -54,6 +53,9 @@ typedef void* yyscan_t;
 char *yyget_text (yyscan_t scanner);
 
 int yylex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param, yyscan_t scanner);
+int yylex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param, context_t* context) {
+    return yylex(yylval_param, yylloc_param, context->scanner);
+}
 
 int yyerror(YYLTYPE* locp, context_t* context, const char* err) {
         fprintf(stderr, "parsing error at line %d colum %d near `%s': %s\n",
@@ -84,9 +86,9 @@ int yyerror(YYLTYPE* locp, context_t* context, const char* err) {
 %%
 start:
       tree_list tree SEMICOLON
-      { allocate(state->pt_parsetree, pt_parsetree_t(TREE_LIST_N, 2, NULL, $1, $2)); }
+      { allocate(context->pt_parsetree, pt_parsetree_t(TREE_LIST_N, 2, NULL, $1, $2)); }
     | tree SEMICOLON
-      { allocate(state->pt_parsetree, pt_parsetree_t(TREE_LIST_N, 1, NULL, $1)); }
+      { allocate(context->pt_parsetree, pt_parsetree_t(TREE_LIST_N, 1, NULL, $1)); }
     ;
 tree_list:
       tree_list tree SEMICOLON
@@ -114,13 +116,13 @@ node: name COLON distance
     | LPAREN node_list RPAREN COLON distance
       { allocate($$, pt_parsetree_t(NODE_N, 2, NULL, $2, $5)); }
     ;
-name: NAME { allocate($$, pt_parsetree_t(NAME_N, 0, strdup(yyget_text(state->scanner)))); }
+name: NAME { allocate($$, pt_parsetree_t(NAME_N, 0, strdup(yyget_text(context->scanner)))); }
     ;
 distance:
       FLOAT
       {
         allocate($$, pt_parsetree_t(DISTANCE_N, 0, calloc(1, sizeof(double))));
-        *((double *)$$->data) = atof(yyget_text(state->scanner));
+        *((double *)$$->data) = atof(yyget_text(context->scanner));
       }
     ;
 %%
