@@ -15,6 +15,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+// general options
+////////////////////////////////////////////////////////////////////////////////
+
+%pure-parser
+%locations
+%defines
+%error-verbose
+%lex-param   {context_t *state}
+%parse-param {context_t *state}
+
 // lexer definitions
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -26,8 +36,8 @@
 #include <iostream>
 
 #include <tfbayes/phylotree/parsetree.hh>
+
 #define YYSTYPE pt_parsetree_t *
-#define YYLEX_PARAM context->scanner
 }
 
 %code {
@@ -64,16 +74,6 @@ int yyerror(YYLTYPE* locp, context_t* context, const char* err) {
 
 }
 
-// bison options
-////////////////////////////////////////////////////////////////////////////////
-
-%pure-parser
-%locations
-%defines
-%error-verbose
-%parse-param {context_t* context}
-%lex-param {void * scanner}
-
 // token definitions
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -84,9 +84,9 @@ int yyerror(YYLTYPE* locp, context_t* context, const char* err) {
 %%
 start:
       tree_list tree SEMICOLON
-      { allocate(context->pt_parsetree, pt_parsetree_t(TREE_LIST_N, 2, NULL, $1, $2)); }
+      { allocate(state->pt_parsetree, pt_parsetree_t(TREE_LIST_N, 2, NULL, $1, $2)); }
     | tree SEMICOLON
-      { allocate(context->pt_parsetree, pt_parsetree_t(TREE_LIST_N, 1, NULL, $1)); }
+      { allocate(state->pt_parsetree, pt_parsetree_t(TREE_LIST_N, 1, NULL, $1)); }
     ;
 tree_list:
       tree_list tree SEMICOLON
@@ -114,13 +114,13 @@ node: name COLON distance
     | LPAREN node_list RPAREN COLON distance
       { allocate($$, pt_parsetree_t(NODE_N, 2, NULL, $2, $5)); }
     ;
-name: NAME { allocate($$, pt_parsetree_t(NAME_N, 0, strdup(yyget_text(context->scanner)))); }
+name: NAME { allocate($$, pt_parsetree_t(NAME_N, 0, strdup(yyget_text(state->scanner)))); }
     ;
 distance:
       FLOAT
       {
         allocate($$, pt_parsetree_t(DISTANCE_N, 0, calloc(1, sizeof(double))));
-        *((double *)$$->data) = atof(yyget_text(context->scanner));
+        *((double *)$$->data) = atof(yyget_text(state->scanner));
       }
     ;
 %%
