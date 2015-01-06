@@ -56,10 +56,9 @@ sampler_config = default_sampler_config()
 results_config = default_results_config()
 
 options = {
-    'save'        : None,
-    'sequences'   : None,
-    'interactive' : False,
-    'verbose'     : False,
+    'cluster-sizes' : False,
+    'save'          : None,
+    'verbose'       : False,
     }
 
 # usage
@@ -74,6 +73,7 @@ def usage():
     print "a sampling run."
     print
     print "Options:"
+    print "   -c                             - plot cluster sizes as well"
     print "   -s, --save=FILE                - save plot to FILE"
     print
     print "   -h, --help                     - print help"
@@ -145,7 +145,8 @@ def plot_result(results_config):
         show  = pyplot.show
         close = None
     plot_result1(results_config, show)
-    plot_result2(results_config, show)
+    if options['cluster-sizes']:
+        plot_result2(results_config, show)
     if close:
         close()
 
@@ -165,12 +166,14 @@ def __main__():
     global options
     try:
         longopts   = ["help", "verbose", "save="]
-        opts, tail = getopt.getopt(sys.argv[1:], "", longopts)
+        opts, tail = getopt.getopt(sys.argv[1:], "c", longopts)
     except getopt.GetoptError:
         usage()
         return 2
     output = None
     for o, a in opts:
+        if o == "-c":
+            options["cluster-sizes"] = True
         if o in ("-v", "--verbose"):
             sys.stderr.write("Verbose mode turned on.\n")
             options["verbose"] = True
