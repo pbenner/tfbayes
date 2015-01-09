@@ -552,6 +552,270 @@ independence_background_t::set_bg_cluster_tag(cluster_tag_t bg_cluster_tag) {
         _bg_cluster_tag = bg_cluster_tag;
 }
 
+// Default Background Model
+////////////////////////////////////////////////////////////////////////////////
+
+default_background_t::default_background_t(
+        const vector<double>& _alpha,
+        const vector<double>& parameters,
+        const sequence_data_t<data_tfbs_t::code_t>& _data,
+        const sequence_data_t<cluster_tag_t>& cluster_assignments,
+        thread_pool_t& thread_pool,
+        const string& cachefile,
+        boost::optional<const alignment_set_t<>&> alignment_set)
+        : component_model_t(cluster_assignments),
+          _size(data_tfbs_t::alphabet_size),
+          _bg_cluster_tag(0),
+          _precomputed_marginal(_data.sizes(), 0),
+          _data(&_data)
+{
+        assert(_alpha.size() == data_tfbs_t::alphabet_size);
+
+        flockfile(stderr);
+        cerr << "Background gamma shape: " << parameters[0] << endl
+             << "Background gamma scale: " << parameters[1] << endl
+             << endl;
+        funlockfile(stderr);
+
+}
+
+default_background_t::default_background_t(const default_background_t& distribution)
+        : component_model_t    (distribution),
+          _size                (distribution._size),
+          alpha                (distribution.alpha),
+          _bg_cluster_tag      (distribution._bg_cluster_tag),
+          _precomputed_marginal(distribution._precomputed_marginal),
+          _data                (distribution._data)
+{
+}
+
+default_background_t::~default_background_t() {
+}
+
+default_background_t*
+default_background_t::clone() const {
+        return new default_background_t(*this);
+}
+
+default_background_t&
+default_background_t::operator=(const component_model_t& component_model)
+{
+        default_background_t tmp(
+                static_cast<const default_background_t&>(component_model));
+        swap(*this, tmp);
+        return *this;
+}
+
+void
+default_background_t::update()
+{
+        gradient_ascent();
+        precompute_marginal();
+}
+
+void
+default_background_t::precompute_marginal()
+{
+        /* go through the data and precompute
+         * lnbeta(n + alpha) - lnbeta(alpha) */
+        for(size_t i = 0; i < data().size(); i++) {
+                for(size_t j = 0; j < data()[i].size(); j++) {
+                        _precomputed_marginal[i][j] =
+                                  mbeta_log(alpha, data()[i][j])
+                                - mbeta_log(alpha);
+                                //   fast_lnbeta<data_tfbs_t::alphabet_size>(alpha, data()[i][j])
+                                // - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha);
+                }
+        }
+}
+
+double
+default_background_t::gradient(
+        const seq_index_t& index, size_t k,
+        double alpha_sum)
+{
+        double sum = accumulate(data()[index].begin(), data()[index].end(), 0.0);
+
+        return boost::math::digamma(data()[index][k]+alpha[k]) - boost::math::digamma(sum+alpha_sum);
+}
+
+void
+default_background_t::gradient(
+        const seq_index_t& index,
+        double alpha_sum,
+        vector<double>& result)
+{
+        for (size_t k = 0; k < _size; k++) {
+                result[k] += gradient(index, k, alpha_sum);
+        }
+}
+
+void
+default_background_t::gradient(vector<double>& result)
+{
+        double alpha_sum = accumulate(alpha.begin(), alpha.end(), 0.0);
+        double n = 0.0;
+
+        for (size_t i = 0; i < data().size(); i++) {
+                for (size_t j = 0; j < data()[i].size(); j++) {
+                        seq_index_t index(i, j);
+                        if (cluster_assignments()[index] == _bg_cluster_tag) {
+                                gradient(index, alpha_sum, result);
+                                n += 1.0;
+                        }
+                }
+        }
+        for (size_t k = 0; k < _size; k++) {
+                result[k] -= n*(boost::math::digamma(alpha[k]) - boost::math::digamma(alpha_sum));
+        }
+}
+
+double
+default_background_t::gradient_ascent(
+        vector<double>& g,
+        vector<double>& g_prev,
+        vector<double>& epsilon,
+        double eta,
+        double min_alpha)
+{
+        double result = 0.0;
+
+        /* save old gradient and compute the new one */
+        g_prev = g; fill(g.begin(), g.end(), 0.0);
+        gradient(g);
+
+        for (size_t k = 0; k < _size; k++) {
+                double step = g[k] >= 0.0 ?
+                        epsilon[k] : -epsilon[k];
+
+                if (g[k] == 0.0)
+                        continue;
+                if (alpha[k] + step > 0.0) {
+                        alpha[k] += step;
+                        if (g_prev[k]*g[k] > 0.0) {
+                                epsilon[k] *= 1.0+eta;
+                        }
+                        if (g_prev[k]*g[k] < 0.0) {
+                                epsilon[k] *= 1.0-eta;
+                        }
+                }
+                else {
+                        alpha[k] = min_alpha;
+                }
+                result += abs(g[k]);
+        }
+        return result;
+}
+
+void
+default_background_t::gradient_ascent()
+{
+        vector<double> g      (_size, 1.0);
+        vector<double> g_prev (_size, 0.0);
+        vector<double> epsilon(_size, 1.0e-2);
+
+        for (double sum = 1.0; sum > 0.1;) {
+                sum = gradient_ascent(g, g_prev, epsilon);
+        }
+}
+
+size_t
+default_background_t::add(const range_t& range) {
+        return range.length();
+}
+
+size_t
+default_background_t::remove(const range_t& range) {
+        return range.length();
+}
+
+size_t
+default_background_t::count(const range_t& range) {
+        return range.length();
+}
+
+/*
+ *  p(y|x) = Beta(n(x) + n(y) + alpha) / Beta(n(x) + alpha)
+ */
+double default_background_t::predictive(const range_t& range) {
+        return exp(log_predictive(range));
+}
+
+double default_background_t::predictive(const vector<range_t>& range_set) {
+        return exp(log_predictive(range_set));
+}
+
+double default_background_t::log_predictive(const range_t& range) {
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
+        double result = 0;
+
+        for (size_t i = 0; i < length; i++) {
+                const seq_index_t index(sequence, position+i);
+
+                /* counts contains the data count statistic
+                 * and the pseudo counts alpha */
+                result += _precomputed_marginal[index];
+        }
+
+        return result;
+}
+
+double default_background_t::log_predictive(const vector<range_t>& range_set) {
+        assert(range_set.size() > 0);
+
+        const size_t length = range_set[0].length();
+        double result = 0;
+
+        for (size_t i = 0; i < length; i++) {
+                /* loop through all ranges */
+                for (size_t k = 0; k < range_set.size(); k++) {
+
+                        const size_t sequence = range_set[k].index()[0];
+                        const size_t position = range_set[k].index()[1];
+                        const seq_index_t index(sequence, position+i);
+
+                        /* all positions in the alignment are fully
+                         * independent, hence we do not need to sum
+                         * any counts */
+                        result += _precomputed_marginal[index];
+                }
+        }
+
+        return result;
+}
+
+/*
+ *  p(x) = Beta(n(x) + alpha) / Beta(alpha)
+ */
+double default_background_t::log_likelihood() const {
+        double result = 0;
+
+        /* counts contains the data count statistic
+         * and the pseudo counts alpha */
+        for(size_t i = 0; i < cluster_assignments().size(); i++) {
+                for(size_t j = 0; j < cluster_assignments()[i].size(); j++) {
+                        if (cluster_assignments()[i][j] == _bg_cluster_tag) {
+                                const seq_index_t index(i, j);
+                                result += _precomputed_marginal[index];
+                        }
+                }
+        }
+
+        return result;
+}
+
+string
+default_background_t::print_counts() const {
+        return string();
+}
+
+void
+default_background_t::set_bg_cluster_tag(cluster_tag_t bg_cluster_tag) {
+        _bg_cluster_tag = bg_cluster_tag;
+}
+
 // Multinomial/Dirichlet Model
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -26,13 +26,43 @@
 #include <cstdlib>
 #include <cmath>
 
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_sf_gamma.h>
-
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_01.hpp>
+#include <boost/math/special_functions/digamma.hpp>
+#include <boost/math/special_functions/gamma.hpp>
 
 #include <tfbayes/utility/polynomial.hh>
+
+template <size_t SIZE>
+double mbeta_log(
+        const boost::array<double, SIZE> alpha)
+{
+        double sum1 = 0;
+        double sum2 = 0;
+
+        for (size_t i = 0; i < SIZE; i++) {
+                sum1 += alpha[i];
+                sum2 += boost::math::lgamma(alpha[i]);
+        }
+
+        return sum2 - boost::math::lgamma(sum1);
+}
+
+template <size_t SIZE>
+double mbeta_log(
+        const boost::array<double, SIZE> extra,
+        const boost::array<double, SIZE> alpha)
+{
+        double sum1 = 0;
+        double sum2 = 0;
+
+        for (size_t i = 0; i < SIZE; i++) {
+                sum1 += extra[i] + alpha[i];
+                sum2 += boost::math::lgamma(extra[i] + alpha[i]);
+        }
+
+        return sum2 - boost::math::lgamma(sum1);
+}
 
 template <size_t AS, typename PC>
 double mbeta_log(
@@ -43,10 +73,10 @@ double mbeta_log(
 
         for (size_t i = 0; i < AS && alpha[i] > 0; i++) {
                 sum1 += alpha[i];
-                sum2 += gsl_sf_lngamma(alpha[i]);
+                sum2 += boost::math::lgamma(alpha[i]);
         }
 
-        return sum2 - gsl_sf_lngamma(sum1);
+        return sum2 - boost::math::lgamma(sum1);
 }
 
 template <size_t AS, typename PC>
@@ -60,11 +90,11 @@ double mbeta_log(
         for (size_t i = 0; i < AS; i++) {
                 if (exponent[i] + alpha[i] > 0) {
                         sum1 += exponent[i] + alpha[i];
-                        sum2 += gsl_sf_lngamma(exponent[i] + alpha[i]);
+                        sum2 += boost::math::lgamma(exponent[i] + alpha[i]);
                 }
         }
 
-        return sum2 - gsl_sf_lngamma(sum1);
+        return sum2 - boost::math::lgamma(sum1);
 }
 
 template <size_t AS, typename PC>
@@ -79,11 +109,11 @@ double mbeta_log(
         for (size_t i = from; i < to && alpha[i] > 0; i++) {
                 if (exponent[i] + alpha[i] > 0) {
                         sum1 += exponent[i] + alpha[i];
-                        sum2 += gsl_sf_lngamma(exponent[i] + alpha[i]);
+                        sum2 += boost::math::lgamma(exponent[i] + alpha[i]);
                 }
         }
 
-        return sum2 - gsl_sf_lngamma(sum1);
+        return sum2 - boost::math::lgamma(sum1);
 }
 
 template <size_t AS, typename PC>

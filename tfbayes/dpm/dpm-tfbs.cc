@@ -73,6 +73,18 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                 cluster_tag_t tag = _state.add_background_cluster(*bg);
                 bg->set_bg_cluster_tag(tag);
         }
+        else if (options.background_model == "default-background") {
+                assert(options.background_gamma.size() == 2);
+                assert(options.threads >= 1);
+                assert(options.background_alpha.size() == 1);
+                thread_pool_t thread_pool(options.threads);
+                default_background_t* bg = new default_background_t(
+                        options.background_alpha[0], options.background_gamma, data,
+                        _state.cluster_assignments(), thread_pool, options.background_cache,
+                        alignment_set);
+                cluster_tag_t tag = _state.add_background_cluster(*bg);
+                bg->set_bg_cluster_tag(tag);
+        }
         else if (options.background_model == "dirichlet") {
                 /* multiple dirichlet-compound distribution for all
                  * nucleotides in the background */
@@ -124,6 +136,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                 range_t range(**it, 1);
                 _state[*_state.bg_cluster_tags.begin()].add_observations(range);
         }
+        _state[*_state.bg_cluster_tags.begin()].update();
         ////////////////////////////////////////////////////////////////////////////////
         // set the process prior
         if (options.process_prior == "pitman-yor process" || options.process_prior == "") {

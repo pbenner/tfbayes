@@ -75,6 +75,7 @@ public:
         component_model_t& model();
         const component_model_t& model() const;
         elements_t elements() const;
+        void update() { model().update(); }
 
 private:
         component_model_t* _model;

@@ -75,6 +75,7 @@ public:
         virtual double log_predictive(const std::vector<range_t>& range_set) = 0;
         virtual double log_likelihood() const = 0;
         virtual std::string print_counts() const { return std::string(); }
+        virtual void update() { }
 
         virtual const data_i<cluster_tag_t>& cluster_assignments() const {
                 return *_cluster_assignments;
@@ -162,6 +163,87 @@ protected:
 
         sequence_data_t<double> _precomputed_marginal;
 
+        const sequence_data_t<data_tfbs_t::code_t>* _data;
+};
+
+// Default Background Model
+////////////////////////////////////////////////////////////////////////////////
+
+class default_background_t : public component_model_t {
+public:
+         default_background_t(
+                 const std::vector<double>& alpha,
+                 const std::vector<double>& parameters,
+                 const sequence_data_t<data_tfbs_t::code_t>& data,
+                 const sequence_data_t<cluster_tag_t>& cluster_assignments,
+                 thread_pool_t& thread_pool,
+                 const std::string& cachefile = "",
+                 boost::optional<const alignment_set_t<>&> alignment_set =
+                 boost::optional<const alignment_set_t<>&>());
+         default_background_t(const default_background_t& distribution);
+        ~default_background_t();
+
+        default_background_t* clone() const;
+
+        friend void swap(default_background_t& first, default_background_t& second) {
+                using std::swap;
+                swap(static_cast<component_model_t&>(first),
+                     static_cast<component_model_t&>(second));
+                swap(first._size,                 second._size);
+                swap(first.alpha,                 second.alpha);
+                swap(first._bg_cluster_tag,       second._bg_cluster_tag);
+                swap(first._precomputed_marginal, second._precomputed_marginal);
+                swap(first._data,                 second._data);
+        }
+
+        default_background_t& operator=(const component_model_t& component_model);
+
+        // datatypes
+        typedef data_tfbs_t::code_t counts_t;
+
+        void update();
+        void precompute_marginal();
+
+        double gradient(const seq_index_t& index, size_t k, double alpha_sum);
+        void   gradient(const seq_index_t& index, double alpha_sum, std::vector<double>& result);
+        void   gradient(std::vector<double>& result);
+
+        void gradient_ascent();
+        double gradient_ascent(
+                std::vector<double>& g,
+                std::vector<double>& g_prev,
+                std::vector<double>& epsilon,
+                double eta = 0.1,
+                double min_alpha = 1.0e-20);
+
+        size_t add(const range_t& range);
+        size_t remove(const range_t& range);
+        size_t count(const range_t& range);
+        double predictive(const range_t& range);
+        double predictive(const std::vector<range_t>& range_set);
+        double log_predictive(const range_t& range);
+        double log_predictive(const std::vector<range_t>& range_set);
+        double log_likelihood() const;
+        std::string print_counts() const;
+        void set_bg_cluster_tag(cluster_tag_t cluster_tag);
+
+        const sequence_data_t<cluster_tag_t>& cluster_assignments() const {
+                return static_cast<const sequence_data_t<cluster_tag_t>&>(component_model_t::cluster_assignments());
+        }
+        const sequence_data_t<data_tfbs_t::code_t>& data() {
+                return *_data;
+        }
+
+        friend std::ostream& operator<< (std::ostream& o, const default_background_t& pd);
+
+protected:
+        size_t _size;
+
+        counts_t alpha;
+
+        cluster_tag_t _bg_cluster_tag;
+
+        sequence_data_t<double> _precomputed_marginal;
         const sequence_data_t<data_tfbs_t::code_t>* _data;
 };
 

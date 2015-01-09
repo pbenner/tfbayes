@@ -411,6 +411,10 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, double temp, bool optimize) {
                         _block_sample(temp, optimize);
                 }
         }
+        // update clusters
+        for (cl_iterator it = dpm().state().begin(); it != dpm().state().end(); it++) {
+                (**it).update();
+        }
         // we are done with sampling here, now process commands
         flockfile(stdout);
         if (_verbose) {
