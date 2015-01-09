@@ -360,8 +360,10 @@ independence_background_t::load_marginal_gamma(
                         _precomputed_marginal = background_cache.precomputed_marginal;
                         return true;
                 }
+                flockfile(stderr);
                 cerr << "Background cache is inconsistent... recomputing!"
                      << endl;
+                funlockfile(stderr);
         }
         return false;
 }
