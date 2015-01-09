@@ -41,12 +41,12 @@
 
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/fastarithmetics/fast-lnbeta.hh>
+#include <tfbayes/utility/distribution.hh>
 #include <tfbayes/utility/logarithmetic.hh>
 #include <tfbayes/utility/statistics.hh>
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
-#include <boost/math/distributions/gamma.hpp>
 #include <boost/unordered_map.hpp> 
 
 using namespace std;
@@ -417,8 +417,7 @@ independence_background_t::precompute_marginal_gamma(
 
         flockfile(stderr);
         cerr << "Background gamma shape: " << parameters[0] << endl
-             << "Background gamma scale: " << parameters[1] << endl
-             << endl;
+             << "Background gamma scale: " << parameters[1] << endl;
         funlockfile(stderr);
         /* go through the data and precompute
          * lnbeta(n + alpha) - lnbeta(alpha) */
@@ -556,7 +555,6 @@ independence_background_t::set_bg_cluster_tag(cluster_tag_t bg_cluster_tag) {
 ////////////////////////////////////////////////////////////////////////////////
 
 default_background_t::default_background_t(
-        const vector<double>& _alpha,
         const vector<double>& parameters,
         const sequence_data_t<data_tfbs_t::code_t>& _data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
@@ -564,25 +562,26 @@ default_background_t::default_background_t(
         const string& cachefile,
         boost::optional<const alignment_set_t<>&> alignment_set)
         : component_model_t(cluster_assignments),
+          prior_distribution(parameters[0], parameters[1]),
           _size(data_tfbs_t::alphabet_size),
           _bg_cluster_tag(0),
           _precomputed_marginal(_data.sizes(), 0),
           _data(&_data)
 {
-        assert(_alpha.size() == data_tfbs_t::alphabet_size);
+        fill(alpha.begin(), alpha.end(), 0.5);
 
         flockfile(stderr);
         cerr << "Background gamma shape: " << parameters[0] << endl
-             << "Background gamma scale: " << parameters[1] << endl
-             << endl;
+             << "Background gamma scale: " << parameters[1] << endl;
         funlockfile(stderr);
 
 }
 
 default_background_t::default_background_t(const default_background_t& distribution)
         : component_model_t    (distribution),
-          _size                (distribution._size),
           alpha                (distribution.alpha),
+          prior_distribution   (distribution.prior_distribution),
+          _size                (distribution._size),
           _bg_cluster_tag      (distribution._bg_cluster_tag),
           _precomputed_marginal(distribution._precomputed_marginal),
           _data                (distribution._data)
@@ -623,8 +622,6 @@ default_background_t::precompute_marginal()
                         _precomputed_marginal[i][j] =
                                   mbeta_log(alpha, data()[i][j])
                                 - mbeta_log(alpha);
-                                //   fast_lnbeta<data_tfbs_t::alphabet_size>(alpha, data()[i][j])
-                                // - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha);
                 }
         }
 }
@@ -656,6 +653,7 @@ default_background_t::gradient(vector<double>& result)
         double alpha_sum = accumulate(alpha.begin(), alpha.end(), 0.0);
         double n = 0.0;
 
+        // likelihood
         for (size_t i = 0; i < data().size(); i++) {
                 for (size_t j = 0; j < data()[i].size(); j++) {
                         seq_index_t index(i, j);
@@ -667,6 +665,10 @@ default_background_t::gradient(vector<double>& result)
         }
         for (size_t k = 0; k < _size; k++) {
                 result[k] -= n*(boost::math::digamma(alpha[k]) - boost::math::digamma(alpha_sum));
+        }
+        // prior
+        for (size_t k = 0; k < _size; k++) {
+                result[k] += boost::math::log_pdf_derivative(prior_distribution, alpha[k]);
         }
 }
 
@@ -717,6 +719,11 @@ default_background_t::gradient_ascent()
         for (double sum = 1.0; sum > 0.1;) {
                 sum = gradient_ascent(g, g_prev, epsilon);
         }
+        cout << "Background pseudocounts: ";
+        for (size_t k = 0; k < _size; k++) {
+                cout << alpha[k] << " ";
+        }
+        cout << endl;
 }
 
 size_t
@@ -801,6 +808,10 @@ double default_background_t::log_likelihood() const {
                                 result += _precomputed_marginal[index];
                         }
                 }
+        }
+        /* prior probability for the pseudocounts*/
+        for (size_t k = 0; k < _size; k++) {
+                result += std::log(boost::math::pdf(prior_distribution, alpha[k]));
         }
 
         return result;

@@ -76,10 +76,9 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
         else if (options.background_model == "default-background") {
                 assert(options.background_gamma.size() == 2);
                 assert(options.threads >= 1);
-                assert(options.background_alpha.size() == 1);
                 thread_pool_t thread_pool(options.threads);
                 default_background_t* bg = new default_background_t(
-                        options.background_alpha[0], options.background_gamma, data,
+                        options.background_gamma, data,
                         _state.cluster_assignments(), thread_pool, options.background_cache,
                         alignment_set);
                 cluster_tag_t tag = _state.add_background_cluster(*bg);

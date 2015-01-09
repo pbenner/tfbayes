@@ -34,6 +34,8 @@
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_matrix.h>
 
+#include <boost/math/distributions/gamma.hpp>
+
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/utility/clonable.hh>
 #include <tfbayes/dpm/data-tfbs.hh>
@@ -172,7 +174,6 @@ protected:
 class default_background_t : public component_model_t {
 public:
          default_background_t(
-                 const std::vector<double>& alpha,
                  const std::vector<double>& parameters,
                  const sequence_data_t<data_tfbs_t::code_t>& data,
                  const sequence_data_t<cluster_tag_t>& cluster_assignments,
@@ -189,8 +190,9 @@ public:
                 using std::swap;
                 swap(static_cast<component_model_t&>(first),
                      static_cast<component_model_t&>(second));
-                swap(first._size,                 second._size);
                 swap(first.alpha,                 second.alpha);
+                swap(first.prior_distribution,    second.prior_distribution);
+                swap(first._size,                 second._size);
                 swap(first._bg_cluster_tag,       second._bg_cluster_tag);
                 swap(first._precomputed_marginal, second._precomputed_marginal);
                 swap(first._data,                 second._data);
@@ -237,9 +239,10 @@ public:
         friend std::ostream& operator<< (std::ostream& o, const default_background_t& pd);
 
 protected:
-        size_t _size;
-
         counts_t alpha;
+        boost::math::gamma_distribution<> prior_distribution;
+
+        size_t _size;
 
         cluster_tag_t _bg_cluster_tag;
 
