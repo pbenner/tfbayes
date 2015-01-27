@@ -406,10 +406,8 @@ dpm_tfbs_sampler_t::_sample(size_t i, size_t n, double temp, bool optimize) {
         _metropolis_sample(temp, optimize);
         // do a Gibbs block sampling step, i.e. go through all
         // clusters and try to merge them
-        if (temp == 1.0) {
-                if ((_block_samples && i % _block_samples_period == 0) || optimize) {
-                        _block_sample(temp, optimize);
-                }
+        if ((_block_samples && i % _block_samples_period == 0) || optimize) {
+                _block_sample(temp, optimize);
         }
         // update clusters
         for (cl_iterator it = dpm().state().begin(); it != dpm().state().end(); it++) {

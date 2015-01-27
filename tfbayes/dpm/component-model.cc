@@ -360,8 +360,10 @@ independence_background_t::load_marginal_gamma(
                         _precomputed_marginal = background_cache.precomputed_marginal;
                         return true;
                 }
+                flockfile(stderr);
                 cerr << "Background cache is inconsistent... recomputing!"
                      << endl;
+                funlockfile(stderr);
         }
         return false;
 }
@@ -450,7 +452,7 @@ independence_background_t::precompute_marginal_gamma(
                 }
         }
         flockfile(stderr);
-        cout << "\rPrecomputing background...   done." << endl << flush;
+        cerr << "\rPrecomputing background...   done." << endl << flush;
         funlockfile(stderr);
 }
 
@@ -719,11 +721,13 @@ default_background_t::gradient_ascent()
         for (double sum = 1.0; sum > 0.1;) {
                 sum = gradient_ascent(g, g_prev, epsilon);
         }
-        cout << "Background pseudocounts: ";
+        flockfile(stderr);
+        cerr << "Background pseudocounts: ";
         for (size_t k = 0; k < _size; k++) {
-                cout << alpha[k] << " ";
+                cerr << alpha[k] << " ";
         }
-        cout << endl;
+        cerr << endl;
+        funlockfile(stderr);
 }
 
 size_t
@@ -1140,17 +1144,19 @@ mixture_dirichlet_t::precompute_component_assignments()
 {
         bool optimized = true;
         /* iterate until reaching a fixed point */
-        cout << endl;
+        flockfile(stderr);
+        cerr << endl;
         for (size_t i = 0; optimized; i++) {
-                cout << __line_up__ << __line_del__
+                cerr << __line_up__ << __line_del__
                      << boost::format("Optimizing background assignments ... [%d]") % i
                      << endl;
 
                 optimized = precompute_component_assignments_loop();
         }
-        cout << __line_up__ << __line_del__
+        cerr << __line_up__ << __line_del__
              << "Optimizing background assignments ... done"
              << endl;
+        funlockfile(stderr);
 }
 
 mixture_dirichlet_t::mixture_dirichlet_t(const mixture_dirichlet_t& distribution)
