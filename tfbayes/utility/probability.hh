@@ -61,6 +61,9 @@ public:
                 log_p -= p.log_p;
                 return *this;
         }
+        explicit operator double() const {
+                return std::exp(log_p);
+        }
 
         friend
         std::ostream& operator<< (std::ostream& o, const probability_t& p) {
