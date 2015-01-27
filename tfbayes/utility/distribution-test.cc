@@ -42,7 +42,7 @@ main(void)
         vector<probability_t> x(5, probability_t(1.0/5.0));
 
         boost::math  ::dirichlet_distribution<> dist(alpha);
-        boost::random::dirichlet_distribution<probability_t> rdist(alpha);
+        boost::random::dirichlet_distribution<double, probability_t> rdist(alpha);
 
         cout << boost::math::log_pdf(dist, x)
              << endl;

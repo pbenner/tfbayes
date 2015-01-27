@@ -91,14 +91,10 @@ inline RealType pdf(const dirichlet_distribution<RealType, Policy>& dist, const 
 
 namespace boost { namespace random {
 
-template <class RealType = double>
+template <class input_type = double, class result_type = input_type>
 class dirichlet_distribution
 {
 public:
-        typedef double input_type;
-        typedef RealType result_type;
-
-
         dirichlet_distribution(const std::vector<input_type>& alpha) :
                 m_size(alpha.size()) {
                 BOOST_FOREACH(const input_type& a, alpha) {
@@ -109,7 +105,7 @@ public:
 
         template<class Engine>
         std::vector<result_type> operator()(Engine& eng) {
-                RealType sum;
+                result_type sum;
                 std::vector<result_type> result(m_size, 0.0);
                 for (size_t i = 0; i < m_size; i++) {
                         result[i] = m_distributions[i](eng);
