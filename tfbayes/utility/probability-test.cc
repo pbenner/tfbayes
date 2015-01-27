@@ -24,9 +24,14 @@ main(void)
 {
         probability_t a(0.3);
         probability_t b(0.2);
+        probability_t c;
 
-        cout << "a + b = " << a+b << endl;
-        cout << "a - b = " << a-b << endl;
-        cout << "a * b = " << a*b << endl;
-        cout << "a / b = " << a/b << endl;
+        c = 0.4;
+
+        cout << "a + b  = " << a+b << endl;
+        cout << "a - b  = " << a-b << endl;
+        cout << "a * b  = " << a*b << endl;
+        cout << "a / b  = " << a/b << endl;
+        cout << "log(a) = " << log(a) << endl;
+        cout << "c      = " << c << endl;
 }

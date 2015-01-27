@@ -28,17 +28,17 @@
 
 /* Log Sum of Exponentials Algorithm */
 
-static inline
-double logadd(double a, double b)
+template <class RealType = double>
+RealType logadd(RealType a, RealType b)
 {
-        if (a < b) return a == -std::numeric_limits<double>::infinity() ? b : b + log1p(exp(a-b));
-        else       return b == -std::numeric_limits<double>::infinity() ? a : a + log1p(exp(b-a));
+        if (a < b) return a == -std::numeric_limits<RealType>::infinity() ? b : b + std::log1p(std::exp(a-b));
+        else       return b == -std::numeric_limits<RealType>::infinity() ? a : a + std::log1p(std::exp(b-a));
 }
 
-static inline
-double logsub(double a, double b)
+template <class RealType = double>
+RealType logsub(RealType a, RealType b)
 {
-        return b == -std::numeric_limits<double>::infinity() ? a : a + log(1-exp(b-a));
+        return b == -std::numeric_limits<RealType>::infinity() ? a : a + std::log(1-exp(b-a));
 }
 
 #endif /* _LOGARITHMETIC_H_ */

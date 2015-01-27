@@ -37,7 +37,7 @@
 
 template <size_t SIZE>
 double mbeta_log(
-        const boost::array<double, SIZE> alpha)
+        const boost::array<double, SIZE>& alpha)
 {
         double sum1 = 0;
         double sum2 = 0;
@@ -52,13 +52,44 @@ double mbeta_log(
 
 template <size_t SIZE>
 double mbeta_log(
-        const boost::array<double, SIZE> extra,
-        const boost::array<double, SIZE> alpha)
+        const boost::array<double, SIZE>& extra,
+        const boost::array<double, SIZE>& alpha)
 {
         double sum1 = 0;
         double sum2 = 0;
 
         for (size_t i = 0; i < SIZE; i++) {
+                sum1 += extra[i] + alpha[i];
+                sum2 += boost::math::lgamma(extra[i] + alpha[i]);
+        }
+
+        return sum2 - boost::math::lgamma(sum1);
+}
+
+double mbeta_log(
+        const std::vector<double>& alpha)
+{
+        double sum1 = 0;
+        double sum2 = 0;
+
+        for (size_t i = 0; i < alpha.size(); i++) {
+                sum1 += alpha[i];
+                sum2 += boost::math::lgamma(alpha[i]);
+        }
+
+        return sum2 - boost::math::lgamma(sum1);
+}
+
+double mbeta_log(
+        const std::vector<double>& extra,
+        const std::vector<double>& alpha)
+{
+        assert(extra.size() == alpha.size());
+
+        double sum1 = 0;
+        double sum2 = 0;
+
+        for (size_t i = 0; i < alpha.size(); i++) {
                 sum1 += extra[i] + alpha[i];
                 sum2 += boost::math::lgamma(extra[i] + alpha[i]);
         }

@@ -27,6 +27,12 @@
 
 #include <tfbayes/utility/logarithmetic.hh>
 
+class probability_t;
+
+namespace std {
+        double log(const probability_t& p);
+}
+
 class probability_t {
 public:
         probability_t()
@@ -66,6 +72,7 @@ public:
                 }
                 return o;
         }
+        friend double std::log(const probability_t& p);
 
 protected:
         double log_p;
@@ -86,6 +93,13 @@ probability_t operator*(const probability_t& p, const probability_t& q) {
 probability_t operator/(const probability_t& p, const probability_t& q) {
         probability_t tmp(p);
         return tmp /= q;
+}
+
+namespace std {
+
+        double log(const probability_t& p) {
+                return p.log_p;
+        }
 }
 
 #endif /* __TFBAYES_UTILITY_PROBABILITY_HH__ */

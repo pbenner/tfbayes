@@ -3,9 +3,10 @@
 AM_CPPFLAGS = -I$(top_srcdir)
 AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
-noinst_PROGRAMS = probability-test
+noinst_PROGRAMS = probability-test distribution-test
 
 probability_test_SOURCES = probability-test.cc
+distribution_test_SOURCES = distribution-test.cc
 
 ## headers
 noinst_HEADERS = \
