@@ -53,9 +53,19 @@ public:
         }
         probability_t pdf(double value) {
                 size_t i = value == m_max ? m_n-1 : std::floor((value-m_min)/m_width);
-                probability_t n = operator[](i);
                 probability_t m = m_total;
                 probability_t w = m_width;
+                probability_t n;
+                if (i == m_n-1) {
+                        // no linear interpolation in this case
+                        n = operator[](i);
+                }
+                else {
+                        // interpolate the result
+                        const double y1 = operator[](i);
+                        const double y2 = operator[](i+1);
+                        n = y1 + (y2 - y1)*(value - m_midpoints[i])/m_width;
+                }
                 return n/(m*w);
         }
 
@@ -136,7 +146,11 @@ main(void)
         double b = 100;
         histogram_t histogram = approximate_distribution(k, 10000000, b);
 
-        BOOST_FOREACH(const double& v, histogram.midpoints()) {
+        // BOOST_FOREACH(const double& v, histogram.midpoints()) {
+        //         cout << boost::format("%0.8f %0.8f") % v % histogram.pdf(v)
+        //              << endl;
+        // }
+        for (double v = 0.0; v < log(3); v += 0.001) {
                 cout << boost::format("%0.8f %0.8f") % v % histogram.pdf(v)
                      << endl;
         }
