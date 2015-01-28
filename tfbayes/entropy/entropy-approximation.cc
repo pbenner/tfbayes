@@ -15,6 +15,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <fstream>
 #include <iostream>
 #include <vector>
 #include <cassert>
@@ -22,6 +23,9 @@
 
 #include <boost/format.hpp>
 #include <boost/random/mersenne_twister.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/vector.hpp>
 
 #include <tfbayes/utility/probability.hh>
 #include <tfbayes/utility/distribution.hh>
@@ -51,7 +55,7 @@ public:
                 operator[](i) += 1.0;
                 m_total += 1.0;
         }
-        probability_t pdf(double value) {
+        probability_t pdf(double value) const {
                 size_t i = value == m_max ? m_n-1 : std::floor((value-m_min)/m_width);
                 probability_t m = m_total;
                 probability_t w = m_width;
@@ -89,14 +93,29 @@ public:
         std::ostream& operator<<(std::ostream& o, const histogram_t& hist) {
                 double min = hist.m_min;
                 double max = hist.m_min+hist.m_width;
+                o << "min max midpoint counts"
+                  << std::endl;
                 for (size_t i = 0; i < hist.m_n; i++) {
-                        o << boost::format("[%0.5f, %0.5f): %d")
-                                % min % max % hist[i]
+                        o << boost::format("%0.8f %0.8f %0.8f %d")
+                                % min % max % hist.m_midpoints[i] % hist[i]
                           << std::endl;
                         min += hist.m_width;
                         max += hist.m_width;
                 }
                 return o;
+        }
+private:
+        /* serialization */
+        friend class boost::serialization::access;
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version) {
+                ar & static_cast<base_t&>(*this);
+                ar & m_n;
+                ar & m_min;
+                ar & m_max;
+                ar & m_width;
+                ar & m_total;
+                ar & m_midpoints;
         }
 
 protected:
@@ -124,34 +143,34 @@ approximate_distribution(size_t k, size_t n, size_t bins)
 
 using namespace std;
 
-void
-test_histogram(void)
-{
-        histogram_t hist(0, log(3), 5);
-
-        hist.add(0.0);
-        hist.add(0.1);
-        hist.add(0.2);
-        hist.add(0.21);
-        hist.add(0.22);
-        hist.add(log(3));
-
-        cout << hist << endl;
-}
-
 int
 main(void)
 {
-        size_t k = 3;
-        double b = 100;
-        histogram_t histogram = approximate_distribution(k, 10000000, b);
+        // number of samples for each dimension
+        double n[] = {0, 0, 10000000, 10000000, 50000000, 100000000};
 
-        // BOOST_FOREACH(const double& v, histogram.midpoints()) {
-        //         cout << boost::format("%0.8f %0.8f") % v % histogram.pdf(v)
-        //              << endl;
-        // }
-        for (double v = 0.0; v < log(3); v += 0.001) {
-                cout << boost::format("%0.8f %0.8f") % v % histogram.pdf(v)
+        for (size_t k = 2; k <= 5; k++) {
+                cerr << boost::format("Sampling entropies on simplices of dimension %d...") % k
                      << endl;
+
+                const histogram_t histogram = approximate_distribution(k, n[k], 100);
+
+                // save pdf to table
+                {
+                        std::ofstream ofs((boost::format("entropy-approximation-%d.csv") % k).str());
+
+                        BOOST_FOREACH(const double& v, histogram.midpoints()) {
+                                ofs << boost::format("%0.8f %0.8f") % v % histogram.pdf(v)
+                                    << endl;
+                        }
+                }
+                // save data to archive
+                {
+                        std::ofstream ofs((boost::format("entropy-approximation-%d.ar") % k).str());
+                        boost::archive::text_oarchive oa(ofs);
+                        // write class instance to archive
+                        oa << histogram;
+                }
         }
+
 }

@@ -8,6 +8,7 @@ noinst_PROGRAMS = entropy-test entropy-approximation
 entropy_test_SOURCES = entropy-test.cc
 
 entropy_approximation_SOURCES = entropy-approximation.cc
+entropy_approximation_LDADD = $(BOOST_SERIALIZATION_LIB)
 
 ## headers
 noinst_HEADERS = \
