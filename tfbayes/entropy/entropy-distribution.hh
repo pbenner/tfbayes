@@ -22,6 +22,8 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <boost/math/distributions/beta.hpp>
+
 #include <tfbayes/utility/histogram.hh>
 
 namespace boost { namespace random {
@@ -31,20 +33,23 @@ class entropy_distribution
 {
 public:
         entropy_distribution(size_t k, double a1, double a2) :
-                m_size(alpha.size()) {
-                BOOST_FOREACH(const input_type& a, alpha) {
-                        m_distributions.push_back(
-                                gamma_distribution<input_type>(a));
-                }
+                m_k(k), m_a1(a1), m_a2(a2),
+                m_state (k, 0.0),
+                m_beta  (a1, a2) {
         }
 
         template<class Engine>
-        std::vector<result_type> operator()(Engine& eng) {
+        const std::vector<result_type>& operator()(Engine& eng) {
+
+                return m_state;
         }
 
 private:
-        size_t m_size;
-        std::vector<double> m_state;
+        size_t m_k;
+        double m_a1;
+        double m_a2;
+        std::vector<result_type> m_state;
+        boost::math::beta_distribution<input_type> m_beta;
 };
 
 } // namespace random

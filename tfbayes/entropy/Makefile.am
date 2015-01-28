@@ -3,9 +3,12 @@
 AM_CPPFLAGS = -I$(top_srcdir)
 AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
-noinst_PROGRAMS = entropy-test entropy-approximation
+noinst_PROGRAMS = entropy-test entropy-approximation entropy-distribution-test
 
 entropy_test_SOURCES = entropy-test.cc
+
+entropy_distribution_test_SOURCES = entropy-distribution-test.cc
+entropy_distribution_LDADD = $(BOOST_SERIALIZATION_LIB)
 
 entropy_approximation_SOURCES = entropy-approximation.cc
 entropy_approximation_LDADD = $(BOOST_SERIALIZATION_LIB)
