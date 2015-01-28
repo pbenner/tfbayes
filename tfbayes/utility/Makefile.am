@@ -15,6 +15,7 @@ noinst_HEADERS = \
 	debug.hh \
 	default-operator.hh \
 	distribution.hh \
+	histogram.hh \
 	linalg.hh \
 	logarithmetic.hh \
 	named-ptr.hh \

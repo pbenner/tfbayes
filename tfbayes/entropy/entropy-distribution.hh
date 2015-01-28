@@ -15,26 +15,40 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __TFBAYES_ENTROPY_ENTROPY_HH__
-#define __TFBAYES_ENTROPY_ENTROPY_HH__
+#ifndef __TFBAYES_ENTROPY_SAMPLER_HH__
+#define __TFBAYES_ENTROPY_SAMPLER_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <vector>
-#include <cmath>
+#include <tfbayes/utility/histogram.hh>
 
-#include <boost/foreach.hpp>
+namespace boost { namespace random {
 
-template <class input_type = double>
-double entropy(const std::vector<input_type>& v) {
-        double result = 0.0;
-        BOOST_FOREACH(const input_type& i, v) {
-                result -= static_cast<double>(i)*std::log(i);
+template <class input_type = double, class result_type = input_type>
+class entropy_distribution
+{
+public:
+        entropy_distribution(size_t k, double a1, double a2) :
+                m_size(alpha.size()) {
+                BOOST_FOREACH(const input_type& a, alpha) {
+                        m_distributions.push_back(
+                                gamma_distribution<input_type>(a));
+                }
         }
-        return result;
-}
+
+        template<class Engine>
+        std::vector<result_type> operator()(Engine& eng) {
+        }
+
+private:
+        size_t m_size;
+        std::vector<double> m_state;
+};
+
+} // namespace random
+} // namespace boost
 
 
-#endif /* __TFBAYES_ENTROPY_ENTROPY_HH__ */
+#endif /* __TFBAYES_ENTROPY_SAMPLER_HH__ */
