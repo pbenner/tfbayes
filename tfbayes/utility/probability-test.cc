@@ -32,6 +32,8 @@ main(void)
         cout << "a - b  = " << a-b << endl;
         cout << "a * b  = " << a*b << endl;
         cout << "a / b  = " << a/b << endl;
+        cout << "a % b  = " << a%b << endl;
+        cout << "a > b  = " << (a<b)  << endl;
         cout << "log(a) = " << log(a) << endl;
         cout << "c      = " << c << endl;
 }

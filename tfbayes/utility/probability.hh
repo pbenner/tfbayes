@@ -61,6 +61,24 @@ public:
                 log_p -= p.log_p;
                 return *this;
         }
+        probability_t& operator%=(const probability_t& p) {
+                while (log_p >= p.log_p) {
+                        operator-=(p);
+                }
+                return *this;
+        }
+        bool operator>=(const probability_t& p) {
+                return log_p >= p.log_p;
+        }
+        bool operator>(const probability_t& p) {
+                return log_p > p.log_p;
+        }
+        bool operator<=(const probability_t& p) {
+                return log_p <= p.log_p;
+        }
+        bool operator<(const probability_t& p) {
+                return log_p < p.log_p;
+        }
         explicit operator double() const {
                 return std::exp(log_p);
         }
@@ -96,6 +114,10 @@ probability_t operator*(const probability_t& p, const probability_t& q) {
 probability_t operator/(const probability_t& p, const probability_t& q) {
         probability_t tmp(p);
         return tmp /= q;
+}
+probability_t operator%(const probability_t& p, const probability_t& q) {
+        probability_t tmp(p);
+        return tmp %= q;
 }
 
 namespace std {
