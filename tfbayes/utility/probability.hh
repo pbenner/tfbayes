@@ -33,10 +33,12 @@
 class probability_t {
 public:
         probability_t()
-        : log_p(-std::numeric_limits<double>::infinity())
+                : log_p (-std::numeric_limits<double>::infinity()),
+                  sign  (1)
                 { }
         probability_t(double p)
-                : log_p(std::log(std::abs(p))), sign(p >= 0.0 ? 1 : -1)
+                : log_p (std::log(std::abs(p))),
+                  sign  (p >= 0.0 ? 1 : -1)
                 { }
 
         probability_t& operator+=(const probability_t& q_) {

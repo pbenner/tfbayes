@@ -1,11 +1,12 @@
 
+source("entropy.R")
 source("entropy-plot.R")
 
 ################################################################################
 
 n  <- 100000
-a1 <- 100
-a2 <- 20
+a1 <- 10
+a2 <- 10
 
 # execute sampler
 system(sprintf("./entropy-distribution-test %d %d %d > entropy-distribution-test.csv", n, a1, a2))
@@ -13,7 +14,7 @@ system(sprintf("./entropy-distribution-test %d %d %d > entropy-distribution-test
 samples <- read.table("entropy-distribution-test.csv")
 samples.entropy <- apply(samples, 1, entropy)
 
-simplex.contour(theta, filled=TRUE)
+simplex.contour(samples, filled=TRUE)
 
 hist(samples.entropy, 100, prob=T, xlim=c(0, log(3)))
 par(new=TRUE)

@@ -1,3 +1,6 @@
+
+library(KernSmooth)
+
 # two-dimensional plotting functions
 ################################################################################
 

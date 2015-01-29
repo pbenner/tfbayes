@@ -3,10 +3,9 @@ library(logitnorm)
 library(gtools)
 library(KernSmooth)
 
-# basic definitions
 ################################################################################
 
-entropy <- function(theta) -sum(sapply(theta, function(x) x*log(x)))
+source("entropy.R")
 
 # simplex sampler for a general density f
 ################################################################################
