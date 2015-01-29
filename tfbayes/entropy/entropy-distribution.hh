@@ -22,9 +22,12 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <algorithm>
+
 #include <boost/math/distributions/beta.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
 #include <boost/random/normal_distribution.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+#include <boost/random/uniform_01.hpp>
 
 #include <tfbayes/utility/histogram.hh>
 
@@ -37,11 +40,18 @@ public:
         entropy_distribution(size_t k, input_type a1, input_type a2) :
                 m_k(k), m_a1(a1), m_a2(a2),
                 m_state (k, 0.0),
-                m_beta  (a1, a2) {
+                m_beta  (a1, a2),
+                m_burnin(false) {
         }
 
         template<class Engine>
-        const std::vector<result_type>& operator()(Engine& eng, input_type sigma = 0.01) {
+        const std::vector<result_type>& operator()(Engine& eng, input_type sigma = 0.01, size_t burnin = 1000) {
+                if (!m_burnin) {
+                        for (size_t i = 0; i < burnin; i++) {
+                                draw_sample();
+                        }
+                }
+                draw_sample();
 
                 return m_state;
         }
@@ -67,6 +77,7 @@ private:
         void draw_sample(Engine& eng, input_type sigma) {
                 // initialize proposal distribution
                 normal_distribution<input_type> dist(0.0, sigma);
+                uniform_01<input_type> runif;
                 // copy the old state
                 m_proposal = m_state;
                 for (size_t i = 0; i < m_k; i++) {
@@ -78,8 +89,11 @@ private:
                         m_proposal[i] = (m_state[i] + r*dist(eng)) % r;
                         m_proposal[j] = 1.0 - sum_proposal(i);
                         // accept or reject
-                        if (f(m_proposal) > 0.0 || )
+                        if (f(m_proposal) > 0.0 || log(runif(eng)) <= std::min(1.0, f(m_proposal)/f(m_state))) {
+                                m_state = m_proposal;
+                        }
                 }
+                std::random_shuffle(m_state.begin(), m_state.end(), eng);
         }
         result_type f(const std::vector<result_type>& x) {
                 result_type h = entropy(x);
@@ -93,6 +107,7 @@ private:
         std::vector<result_type> m_proposal;
         boost::math::beta_distribution<input_type> m_beta;
         histogram_t<input_type, result_type> histogram;
+        bool m_burnin;
 };
 
 } // namespace random

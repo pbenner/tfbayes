@@ -23,9 +23,10 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <iostream>
+#include <utility> /* swap */
+#include <cassert>
 #include <cmath>
 #include <cstdint>
-#include <utility> /* swap */
 
 #include <tfbayes/utility/logarithmetic.hh>
 
@@ -82,6 +83,7 @@ public:
                 sign  *= p.sign;
                 return *this;
         }
+        // This operator behaves like the modulo operator in GNU-R!
         probability_t& operator%=(const probability_t& q_) {
                 probability_t& p = *this;
                 probability_t  q = q_;
