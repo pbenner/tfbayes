@@ -89,12 +89,12 @@ public:
                 probability_t  q = q_;
                 assert(q >= 0.0);
                 if (p >= 0) {
-                        while (p.log_p >= q.log_p) {
+                        while (p >= q) {
                                 p -= q;
                         }
                 } else {
-                        while (p.log_p >= q.log_p) {
-                                p += 2.0*q;
+                        while (p < 0.0) {
+                                p += q;
                         }
                 }
                 return *this;

@@ -60,10 +60,12 @@ test2(double a, double b)
 void
 test3()
 {
+        cout << boost::format(" 0.25 %% 1.0: %f (%f)") % (probability_t( 0.25) % 1.0) % 0.25 << endl;
         cout << boost::format(" 1.25 %% 1.0: %f (%f)") % (probability_t( 1.25) % 1.0) % 0.25 << endl;
-        cout << boost::format(" 2.25 %% 1.0: %f (%f)") % (probability_t( 1.25) % 1.0) % 0.25 << endl;
+        cout << boost::format(" 2.25 %% 1.0: %f (%f)") % (probability_t( 2.25) % 1.0) % 0.25 << endl;
+        cout << boost::format("-0.25 %% 1.0: %f (%f)") % (probability_t(-0.25) % 1.0) % 0.75 << endl;
         cout << boost::format("-1.25 %% 1.0: %f (%f)") % (probability_t(-1.25) % 1.0) % 0.75 << endl;
-        cout << boost::format("-2.25 %% 1.0: %f (%f)") % (probability_t(-1.25) % 1.0) % 0.75 << endl;
+        cout << boost::format("-2.25 %% 1.0: %f (%f)") % (probability_t(-2.25) % 1.0) % 0.75 << endl;
 }
 
 int

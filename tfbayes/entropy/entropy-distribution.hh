@@ -23,13 +23,16 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <algorithm>
+#include <fstream>
+#include <string>
+
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 
 #include <boost/math/distributions/beta.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
 #include <boost/random/uniform_01.hpp>
-#include <boost/random/variate_generator.hpp>
-
 
 #include <tfbayes/entropy/entropy.hh>
 #include <tfbayes/utility/histogram.hh>
@@ -42,9 +45,16 @@ class entropy_distribution
 public:
         entropy_distribution(size_t k, input_type a1, input_type a2) :
                 m_k(k), m_a1(a1), m_a2(a2),
-                m_state (k, 0.0),
+                m_state (k, 1.0/k),
                 m_beta  (a1, a2),
                 m_burnin(false) {
+                // load the histogram class from file
+                std::string filename = (boost::format("entropy-approximation-%d.ar") % k).str();
+                // create and open an archive for input
+                std::ifstream ifs(filename);
+                boost::archive::text_iarchive ia(ifs);
+                // read class state from archive
+                ia >> histogram;
         }
 
         template<class Engine>
@@ -53,6 +63,7 @@ public:
                         for (size_t i = 0; i < burnin; i++) {
                                 draw_sample(eng, sigma);
                         }
+                        m_burnin = true;
                 }
                 draw_sample(eng, sigma);
 
@@ -94,16 +105,17 @@ private:
                 // initialize proposal distribution
                 normal_distribution<input_type> rnorm(0.0, sigma);
                 uniform_01<input_type> runif;
-                // copy the old state
-                m_proposal = m_state;
                 for (size_t i = 0; i < m_k; i++) {
+                        // copy the old state
+                        m_proposal = m_state;
                         // select the second coordinate at random
                         size_t j = draw_coordinate(eng, i);
                         // compute the range
                         result_type r = m_state[i] + m_state[j];
                         // draw a proposal
-                        m_proposal[i] = (m_state[i] + r*rnorm(eng)) % r;
-                        m_proposal[j] = 1.0 - sum_proposal(i);
+                        result_type tmp = (m_state[i] + r*rnorm(eng));
+                        m_proposal[i] = tmp % r;
+                        m_proposal[j] = 1.0 - sum_proposal(j);
                         // accept or reject
                         if (f(m_proposal) > 0.0 ||
                             static_cast<result_type>(runif(eng)) <= std::min(static_cast<result_type>(1.0), f(m_proposal)/f(m_state))) {
@@ -114,7 +126,7 @@ private:
         }
         result_type f(const std::vector<result_type>& x) {
                 input_type h = entropy(x);
-                return boost::math::pdf(m_beta, h)*histogram.pdf(h);
+                return boost::math::pdf(m_beta, h/std::log(m_k))*histogram.pdf(h);
         }
 
         size_t m_k;
