@@ -12,4 +12,4 @@ system(sprintf("./entropy-distribution-test %d %d %d > entropy-distribution-test
 # load result
 theta <- read.table("entropy-distribution-test.csv")
 
-simplex.contour(theta)
+simplex.contour(theta, filled=TRUE)

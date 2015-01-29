@@ -117,8 +117,7 @@ private:
                         m_proposal[i] = tmp % r;
                         m_proposal[j] = 1.0 - sum_proposal(j);
                         // accept or reject
-                        if (f(m_proposal) > 0.0 ||
-                            static_cast<result_type>(runif(eng)) <= std::min(static_cast<result_type>(1.0), f(m_proposal)/f(m_state))) {
+                        if (static_cast<result_type>(runif(eng)) <= std::min(static_cast<result_type>(1.0), f(m_proposal)/f(m_state))) {
                                 m_state = m_proposal;
                         }
                 }
