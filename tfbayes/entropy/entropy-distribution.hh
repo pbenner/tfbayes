@@ -28,7 +28,10 @@
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
 #include <boost/random/uniform_01.hpp>
+#include <boost/random/variate_generator.hpp>
 
+
+#include <tfbayes/entropy/entropy.hh>
 #include <tfbayes/utility/histogram.hh>
 
 namespace boost { namespace random {
@@ -48,10 +51,10 @@ public:
         const std::vector<result_type>& operator()(Engine& eng, input_type sigma = 0.01, size_t burnin = 1000) {
                 if (!m_burnin) {
                         for (size_t i = 0; i < burnin; i++) {
-                                draw_sample();
+                                draw_sample(eng, sigma);
                         }
                 }
-                draw_sample();
+                draw_sample(eng, sigma);
 
                 return m_state;
         }
@@ -67,6 +70,19 @@ private:
                 }
                 return result;
         }
+        // this class allows to use the boost random number generator
+        // with the std template library
+        template<class Engine>
+        class std_eng : std::unary_function<unsigned, unsigned> {
+        public:
+                unsigned operator()(unsigned i) {
+                        boost::random::uniform_int_distribution<> rng(0, i - 1);
+                        return rng(m_state);
+                }
+                std_eng(Engine& state) : m_state(state) {}
+        protected:
+                Engine &m_state;
+        };
         template<class Engine>
         size_t draw_coordinate(Engine& eng, size_t except_i) {
                 boost::random::uniform_int_distribution<> dist(0,m_k-2);
@@ -76,7 +92,7 @@ private:
         template<class Engine>
         void draw_sample(Engine& eng, input_type sigma) {
                 // initialize proposal distribution
-                normal_distribution<input_type> dist(0.0, sigma);
+                normal_distribution<input_type> rnorm(0.0, sigma);
                 uniform_01<input_type> runif;
                 // copy the old state
                 m_proposal = m_state;
@@ -86,18 +102,19 @@ private:
                         // compute the range
                         result_type r = m_state[i] + m_state[j];
                         // draw a proposal
-                        m_proposal[i] = (m_state[i] + r*dist(eng)) % r;
+                        m_proposal[i] = (m_state[i] + r*rnorm(eng)) % r;
                         m_proposal[j] = 1.0 - sum_proposal(i);
                         // accept or reject
-                        if (f(m_proposal) > 0.0 || log(runif(eng)) <= std::min(1.0, f(m_proposal)/f(m_state))) {
+                        if (f(m_proposal) > 0.0 ||
+                            static_cast<result_type>(runif(eng)) <= std::min(static_cast<result_type>(1.0), f(m_proposal)/f(m_state))) {
                                 m_state = m_proposal;
                         }
                 }
-                std::random_shuffle(m_state.begin(), m_state.end(), eng);
+                std::random_shuffle(m_state.begin(), m_state.end(), std_eng<Engine>(eng));
         }
         result_type f(const std::vector<result_type>& x) {
-                result_type h = entropy(x);
-                return m_beta(h)*histogram.pdf(h);
+                input_type h = entropy(x);
+                return boost::math::pdf(m_beta, h)*histogram.pdf(h);
         }
 
         size_t m_k;
