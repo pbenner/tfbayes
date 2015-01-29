@@ -11,6 +11,7 @@ distribution_test_SOURCES = distribution-test.cc
 ## headers
 noinst_HEADERS = \
 	abysmal-stack.hh \
+	boost-random-shuffle.hh \
 	clonable.hh \
 	debug.hh \
 	default-operator.hh \

@@ -22,7 +22,6 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <algorithm>
 #include <fstream>
 #include <string>
 
@@ -36,6 +35,7 @@
 
 #include <tfbayes/entropy/entropy.hh>
 #include <tfbayes/utility/histogram.hh>
+#include <tfbayes/utility/boost-random-shuffle.hh>
 
 namespace boost { namespace random {
 
@@ -81,19 +81,6 @@ private:
                 }
                 return result;
         }
-        // this class allows to use the boost random number generator
-        // with the std template library
-        template<class Engine>
-        class std_eng : std::unary_function<unsigned, unsigned> {
-        public:
-                unsigned operator()(unsigned i) {
-                        boost::random::uniform_int_distribution<> rng(0, i - 1);
-                        return rng(m_state);
-                }
-                std_eng(Engine& state) : m_state(state) {}
-        protected:
-                Engine &m_state;
-        };
         template<class Engine>
         size_t draw_coordinate(Engine& eng, size_t except_i) {
                 boost::random::uniform_int_distribution<> dist(0,m_k-2);
@@ -121,7 +108,7 @@ private:
                                 m_state = m_proposal;
                         }
                 }
-                std::random_shuffle(m_state.begin(), m_state.end(), std_eng<Engine>(eng));
+                boost::random::random_shuffle(m_state.begin(), m_state.end(), eng);
         }
         result_type f(const std::vector<result_type>& x) {
                 input_type h = entropy(x);
