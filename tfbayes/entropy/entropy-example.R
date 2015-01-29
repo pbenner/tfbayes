@@ -13,6 +13,14 @@ a2 <- 20
 a1 <- 10
 a2 <- 10
 
+a1 <- 1
+a2 <- 1
+
+# visualize density
+# ------------------------------------------------------------------------------
+
+simplex.plot(function(x) dentropy.simplex(x, a1, a2), filled=TRUE)
+
 # sampler
 # ------------------------------------------------------------------------------
 
@@ -34,5 +42,3 @@ curve(dentropy(x, a1, a2), 0, log(3), xaxt="n", yaxt="n")
 axis(4)
 
 simplex.contour(samples, filled=TRUE)
-
-simplex.plot(function(x) dentropy.simplex(x, a1, a2), filled=TRUE)
