@@ -100,8 +100,7 @@ private:
                         // compute the range
                         result_type r = m_state[i] + m_state[j];
                         // draw a proposal
-                        result_type tmp = (m_state[i] + r*rnorm(eng));
-                        m_proposal[i] = tmp % r;
+                        m_proposal[i] = (m_state[i] + r*rnorm(eng)) % r;
                         m_proposal[j] = 1.0 - sum_proposal(j);
                         // accept or reject
                         if (static_cast<result_type>(runif(eng)) <= std::min(static_cast<result_type>(1.0), f(m_proposal)/f(m_state))) {
