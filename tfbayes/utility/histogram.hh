@@ -33,11 +33,15 @@
 
 #include <tfbayes/utility/probability.hh>
 
-class histogram_t : public std::vector<double>
+template <class input_type = double, class result_type = input_type>
+class histogram_t : public std::vector<input_type>
 {
-        typedef std::vector<double> base_t;
+        typedef std::vector<input_type> base_t;
 public:
-        histogram_t(double min, double max, size_t n)
+        histogram_t()
+                : base_t()
+                { }
+        histogram_t(input_type min, input_type max, size_t n)
                 : base_t     (n, 0.0),
                   m_n        (n),
                   m_min      (min),
@@ -50,26 +54,26 @@ public:
                 }
         }
 
-        void add(double value) {
+        void add(input_type value) {
                 size_t i = value == m_max ? m_n-1 : std::floor((value-m_min)/m_width);
                 assert(value <= m_max);
-                assert(i < size());
-                operator[](i) += 1.0;
+                assert(i < base_t::size());
+                base_t::operator[](i) += 1.0;
                 m_total += 1.0;
         }
-        probability_t pdf(double value) const {
+        result_type pdf(input_type value) const {
                 size_t i = value == m_max ? m_n-1 : std::floor((value-m_min)/m_width);
-                probability_t m = m_total;
-                probability_t w = m_width;
-                probability_t n;
+                result_type m = m_total;
+                result_type w = m_width;
+                result_type n;
                 if (i == m_n-1) {
                         // no linear interpolation in this case
-                        n = operator[](i);
+                        n = base_t::operator[](i);
                 }
                 else {
                         // interpolate the result
-                        const double y1 = operator[](i);
-                        const double y2 = operator[](i+1);
+                        const input_type y1 = base_t::operator[](i);
+                        const input_type y2 = base_t::operator[](i+1);
                         n = y1 + (y2 - y1)*(value - m_midpoints[i])/m_width;
                 }
                 return n/(m*w);
@@ -78,23 +82,23 @@ public:
         const size_t& n() const {
                 return m_n;
         }
-        const double& min() const {
+        const input_type& min() const {
                 return m_min;
         }
-        const double& max() const {
+        const input_type& max() const {
                 return m_max;
         }
-        const double& width() const {
+        const input_type& width() const {
                 return m_width;
         }
-        const std::vector<double>& midpoints() const {
+        const std::vector<input_type>& midpoints() const {
                 return m_midpoints;
         }
 
         friend
         std::ostream& operator<<(std::ostream& o, const histogram_t& hist) {
-                double min = hist.m_min;
-                double max = hist.m_min+hist.m_width;
+                input_type min = hist.m_min;
+                input_type max = hist.m_min+hist.m_width;
                 o << "min max midpoint counts"
                   << std::endl;
                 for (size_t i = 0; i < hist.m_n; i++) {
@@ -122,11 +126,11 @@ private:
 
 protected:
         size_t m_n;
-        double m_min;
-        double m_max;
-        double m_width;
-        double m_total;
-        std::vector<double> m_midpoints;
+        input_type m_min;
+        input_type m_max;
+        input_type m_width;
+        input_type m_total;
+        std::vector<input_type> m_midpoints;
 };
 
 #endif /* __TFBAYES_UTILITY_HISTOGRAM_HH__ */

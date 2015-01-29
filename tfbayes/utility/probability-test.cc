@@ -15,12 +15,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <cmath>
+
+#include <boost/format.hpp>
+
 #include <tfbayes/utility/probability.hh>
 
 using namespace std;
 
-int
-main(void)
+void
+test1(void)
 {
         probability_t a(0.3);
         probability_t b(0.2);
@@ -36,4 +40,47 @@ main(void)
         cout << "a > b  = " << (a<b)  << endl;
         cout << "log(a) = " << log(a) << endl;
         cout << "c      = " << c << endl;
+        cout << endl;
 }
+
+void
+test2(double a, double b)
+{
+        probability_t pa(a);
+        probability_t pb(b);
+
+        cout << boost::format("a = %f, b = %f") % a % b << endl;
+        cout << boost::format("a + b  = %f (%f)") % (pa+pb) % (a+b) << endl;
+        cout << boost::format("a - b  = %f (%f)") % (pa-pb) % (a-b) << endl;
+        cout << boost::format("a * b  = %f (%f)") % (pa*pb) % (a*b) << endl;
+        cout << boost::format("a / b  = %f (%f)") % (pa/pb) % (a/b) << endl;
+        cout << endl;
+}
+
+void
+test3()
+{
+        cout << boost::format(" 1.25 %% 1.0: %f (%f)") % (probability_t( 1.25) % 1.0) % 0.25 << endl;
+        cout << boost::format(" 2.25 %% 1.0: %f (%f)") % (probability_t( 1.25) % 1.0) % 0.25 << endl;
+        cout << boost::format("-1.25 %% 1.0: %f (%f)") % (probability_t(-1.25) % 1.0) % 0.75 << endl;
+        cout << boost::format("-2.25 %% 1.0: %f (%f)") % (probability_t(-1.25) % 1.0) % 0.75 << endl;
+}
+
+int
+main(void)
+{
+        test1();
+
+        test2( 0.2,  0.3);
+        test2(-0.2,  0.3);
+        test2( 0.2, -0.3);
+        test2(-0.2, -0.3);
+
+        test2( 0.3,  0.2);
+        test2(-0.3,  0.2);
+        test2( 0.3, -0.2);
+        test2(-0.3, -0.2);
+
+        test3();
+}
+

@@ -24,14 +24,10 @@
 
 #include <iostream>
 #include <cmath>
+#include <cstdint>
+#include <utility> /* swap */
 
 #include <tfbayes/utility/logarithmetic.hh>
-
-class probability_t;
-
-namespace std {
-        double log(const probability_t& p);
-}
 
 class probability_t {
 public:
@@ -39,52 +35,127 @@ public:
         : log_p(-std::numeric_limits<double>::infinity())
                 { }
         probability_t(double p)
-        : log_p(std::log(p))
-                { }
-        probability_t(const probability_t& p)
-        : log_p(p.log_p)
+                : log_p(std::log(std::abs(p))), sign(p >= 0.0 ? 1 : -1)
                 { }
 
-        probability_t& operator+=(const probability_t& p) {
-                log_p = logadd(log_p, p.log_p);
+        probability_t& operator+=(const probability_t& q_) {
+                probability_t& p = *this;
+                probability_t  q = q_;
+                if (p.sign == q.sign) {
+                        p.log_p = logadd(p.log_p, q.log_p);
+                }
+                else if (p.sign > q.sign) {
+                        p -= q.abs();
+                }
+                else {
+                        p.abs(); p -= q; sign *= -1;
+                }
                 return *this;
         }
-        probability_t& operator-=(const probability_t& p) {
-                log_p = logsub(log_p, p.log_p);
+        probability_t& operator-=(const probability_t& q_) {
+                probability_t& p = *this;
+                probability_t  q = q_;
+                if (p.sign == q.sign) {
+                        if (p.log_p > q.log_p) {
+                                p.log_p = logsub(p.log_p, q.log_p);
+                        }
+                        else {
+                                p.log_p = logsub(q.log_p, p.log_p);
+                                sign *= -1;
+                        }
+                }
+                else if (p.sign > q.sign) {
+                        p += q.abs();
+                }
+                else {
+                        p.abs(); p += q; sign = -1;
+                }
                 return *this;
         }
         probability_t& operator*=(const probability_t& p) {
                 log_p += p.log_p;
+                sign  *= p.sign;
                 return *this;
         }
         probability_t& operator/=(const probability_t& p) {
                 log_p -= p.log_p;
+                sign  *= p.sign;
                 return *this;
         }
-        probability_t& operator%=(const probability_t& p) {
-                while (log_p >= p.log_p) {
-                        operator-=(p);
+        probability_t& operator%=(const probability_t& q_) {
+                probability_t& p = *this;
+                probability_t  q = q_;
+                assert(q >= 0.0);
+                if (p >= 0) {
+                        while (p.log_p >= q.log_p) {
+                                p -= q;
+                        }
+                } else {
+                        while (p.log_p >= q.log_p) {
+                                p += 2.0*q;
+                        }
                 }
                 return *this;
         }
-        bool operator>=(const probability_t& p) {
-                return log_p >= p.log_p;
+        probability_t& operator-() {
+                sign *= -1;
+                return *this;
         }
-        bool operator>(const probability_t& p) {
-                return log_p > p.log_p;
+        bool operator>=(const probability_t& p) const {
+                return (sign == p.sign && log_p >= p.log_p) || sign > p.sign;
         }
-        bool operator<=(const probability_t& p) {
-                return log_p <= p.log_p;
+        bool operator>(const probability_t& p) const {
+                return (sign == p.sign && log_p > p.log_p) || sign > p.sign;
         }
-        bool operator<(const probability_t& p) {
-                return log_p < p.log_p;
+        bool operator<=(const probability_t& p) const {
+                return (sign == p.sign && log_p <= p.log_p) || sign < p.sign;
+        }
+        bool operator<(const probability_t& p) const {
+                return (sign == p.sign && log_p < p.log_p) || sign < p.sign;
         }
         explicit operator double() const {
                 return std::exp(log_p);
         }
-
+        double log() const {
+                return sign == 1
+                        ? log_p
+                        : std::numeric_limits<double>::quiet_NaN();
+        }
+        probability_t& abs() {
+                sign = 1;
+                return *this;
+        }
+        // define operators here so that they can be used by member functions
+        friend
+        probability_t operator+(const probability_t& p, const probability_t& q) {
+                probability_t tmp(p);
+                return tmp += q;
+        }
+        friend
+        probability_t operator-(const probability_t& p, const probability_t& q) {
+                probability_t tmp(p);
+                return tmp -= q;
+        }
+        friend
+        probability_t operator*(const probability_t& p, const probability_t& q) {
+                probability_t tmp(p);
+                return tmp *= q;
+        }
+        friend
+        probability_t operator/(const probability_t& p, const probability_t& q) {
+                probability_t tmp(p);
+                return tmp /= q;
+        }
+        friend
+        probability_t operator%(const probability_t& p, const probability_t& q) {
+                probability_t tmp(p);
+                return tmp %= q;
+        }
         friend
         std::ostream& operator<< (std::ostream& o, const probability_t& p) {
+                if (p.sign == -1) {
+                        o << "-";
+                }
                 if (p.log_p == -std::numeric_limits<double>::infinity()) {
                         o << 0.0;
                 }
@@ -93,37 +164,19 @@ public:
                 }
                 return o;
         }
-        friend double std::log(const probability_t& p);
 
 protected:
         double log_p;
+        int8_t sign;
 };
 
-probability_t operator+(const probability_t& p, const probability_t& q) {
-        probability_t tmp(p);
-        return tmp += q;
-}
-probability_t operator-(const probability_t& p, const probability_t& q) {
-        probability_t tmp(p);
-        return tmp -= q;
-}
-probability_t operator*(const probability_t& p, const probability_t& q) {
-        probability_t tmp(p);
-        return tmp *= q;
-}
-probability_t operator/(const probability_t& p, const probability_t& q) {
-        probability_t tmp(p);
-        return tmp /= q;
-}
-probability_t operator%(const probability_t& p, const probability_t& q) {
-        probability_t tmp(p);
-        return tmp %= q;
-}
-
 namespace std {
-
         double log(const probability_t& p) {
-                return p.log_p;
+                return p.log();
+        }
+        probability_t abs(const probability_t& p) {
+                probability_t tmp = p;
+                return tmp.abs();
         }
 }
 
