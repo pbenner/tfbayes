@@ -111,7 +111,7 @@ private:
         }
         result_type f(const std::vector<result_type>& x) {
                 input_type h = entropy(x);
-                return boost::math::pdf(m_beta, h/std::log(m_k))*histogram.pdf(h);
+                return boost::math::pdf(m_beta, h/std::log(m_k))/histogram.pdf(h);
         }
 
         size_t m_k;
