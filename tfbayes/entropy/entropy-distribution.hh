@@ -45,9 +45,11 @@ class entropy_distribution
 public:
         entropy_distribution(size_t k, input_type a1, input_type a2) :
                 m_k(k), m_a1(a1), m_a2(a2),
-                m_state (k, 1.0/k),
-                m_beta  (a1, a2),
-                m_burnin(false) {
+                m_state    (k, 1.0/k),
+                m_beta     (a1, a2),
+                m_burnin   (false),
+                m_samples  (0.0),
+                m_accepted (0.0) {
                 // load the histogram class from file
                 std::string filename = (boost::format("entropy-approximation-%d.ar") % k).str();
                 // create and open an archive for input
@@ -69,7 +71,9 @@ public:
 
                 return m_state;
         }
-        
+        double acceptance_ratio() const {
+                return m_accepted/m_samples;
+        }
 
 private:
         result_type sum_proposal(size_t except_i) {
@@ -105,7 +109,10 @@ private:
                         // accept or reject
                         if (static_cast<result_type>(runif(eng)) <= std::min(static_cast<result_type>(1.0), f(m_proposal)/f(m_state))) {
                                 m_state = m_proposal;
+                                // update statistics
+                                m_accepted += 1.0;
                         }
+                        m_samples += 1.0;
                 }
                 boost::random::random_shuffle(m_state.begin(), m_state.end(), eng);
         }
@@ -122,6 +129,9 @@ private:
         boost::math::beta_distribution<input_type> m_beta;
         histogram_t<input_type, result_type> histogram;
         bool m_burnin;
+        // record some statistics
+        double m_samples;
+        double m_accepted;
 };
 
 } // namespace random

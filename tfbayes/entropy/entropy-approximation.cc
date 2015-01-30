@@ -23,16 +23,25 @@
 
 #include <boost/format.hpp>
 #include <boost/random/mersenne_twister.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <tfbayes/utility/histogram.hh>
 #include <tfbayes/utility/probability.hh>
 #include <tfbayes/utility/distribution.hh>
 #include <tfbayes/entropy/entropy.hh>
 
+template <typename T>
+void seed_rng(T& rng)
+{
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        rng.seed(tv.tv_sec*tv.tv_usec);
+}
+
 histogram_t<double, probability_t>
 approximate_distribution(size_t k, size_t n, size_t bins)
 {
-        boost::random::mt19937 gen;
+        boost::random::mt19937 gen; seed_rng(gen);
         std::vector<double> alpha(k, 1.0);
         boost::random::dirichlet_distribution<double, probability_t> dist(alpha);
         histogram_t<double, probability_t> histogram(0.0, std::log(k), bins);

@@ -19,6 +19,7 @@
 #include <vector>
 
 #include <boost/random/mersenne_twister.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <tfbayes/utility/probability.hh>
 #include <tfbayes/entropy/entropy-distribution.hh>
@@ -29,6 +30,14 @@ std::ostream& operator<<(std::ostream& o, const std::vector<probability_t>& v) {
                 o << std::fixed << std::setprecision(8) << v[i];
         }
         return o;
+}
+
+template <typename T>
+void seed_rng(T& rng)
+{
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        rng.seed(tv.tv_sec*tv.tv_usec);
 }
 
 using namespace std;
@@ -50,11 +59,14 @@ main(int argc, char *argv[])
         double a1 = atof(argv[2]);
         double a2 = atof(argv[3]);
 
-        boost::random::mt19937 gen;
+        boost::random::mt19937 gen; seed_rng(gen);
         boost::random::entropy_distribution<double, probability_t> dist(3, a1, a2);
 
         for (size_t i = 0; i < n; i++) {
-                cout << dist(gen)
+                cout << dist(gen, 0.1)
                      << endl;
         }
+        cerr << "acceptance ratio: "
+             << dist.acceptance_ratio()
+             << endl;
 }
