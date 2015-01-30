@@ -66,6 +66,17 @@ test3()
         cout << boost::format("-0.25 %% 1.0: %f (%f)") % (probability_t(-0.25) % 1.0) % 0.75 << endl;
         cout << boost::format("-1.25 %% 1.0: %f (%f)") % (probability_t(-1.25) % 1.0) % 0.75 << endl;
         cout << boost::format("-2.25 %% 1.0: %f (%f)") % (probability_t(-2.25) % 1.0) % 0.75 << endl;
+        cout << endl;
+}
+
+void
+test4()
+{
+        probability_t a(-0.345);
+        probability_t b( 0.345);
+
+        cout << "a >= 0: " << (a>=0) << endl;
+        cout << "b >= 0: " << (b>=0) << endl;
 }
 
 int
@@ -84,5 +95,6 @@ main(void)
         test2(-0.3, -0.2);
 
         test3();
+        test4();
 }
 
