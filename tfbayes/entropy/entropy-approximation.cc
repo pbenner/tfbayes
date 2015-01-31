@@ -65,8 +65,13 @@ save_histogram(const prob_histogram_t& histogram, size_t k)
             << endl;
         for (size_t i = 0; i < histogram.size(); i++) {
                 ofs << setprecision(100)
-                    << "\t" << histogram[i] << ","
-                    << endl;
+                    << "\t" << histogram[i];
+                if (i+1 == histogram.size()) {
+                        ofs << endl;
+                }
+                else {
+                        ofs << "," << endl;
+                }
         }
         ofs << "};" << endl;
 }

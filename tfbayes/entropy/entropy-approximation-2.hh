@@ -100,5 +100,5 @@ std::vector<double> entropy_histogram_2_counts = {
 	1813085,
 	2156616,
 	2825824,
-	6839360,
+	6839360
 };
