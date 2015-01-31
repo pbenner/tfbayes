@@ -4,12 +4,18 @@ source("entropy-plot.R")
 
 ################################################################################
 
+dentropy <- function(h, a1 = 100, a2 = 20, ...) {
+  dbeta(h/log(3), shape1 = a1, shape2 = a2)/log(3)
+}
+
+################################################################################
+
 n  <- 100000
 a1 <- 100
 a2 <- 20
 
 # execute sampler
-system(sprintf("./entropy-distribution-test %d %d %d > entropy-distribution-test.csv", n, a1, a2))
+system(sprintf("./entropy-distribution-test %d 2 %d %d > entropy-distribution-test.csv", n, a1, a2))
 # load result
 samples <- read.table("entropy-distribution-test.csv")
 samples.entropy <- apply(samples, 1, entropy)

@@ -45,22 +45,23 @@ using namespace std;
 static
 void print_usage(char *pname, FILE *fp)
 {
-        (void)fprintf(fp, "\nUsage: %s SAMPLES A1 A2\n\n", pname);
+        (void)fprintf(fp, "\nUsage: %s SAMPLES CARDINALITY A1 A2\n\n", pname);
 }
 
 int
 main(int argc, char *argv[])
 {
-        if (argc != 4) {
+        if (argc != 5) {
                 print_usage(argv[0], stderr);
                 exit(EXIT_FAILURE);
         }
         size_t n  = atoi(argv[1]);
-        double a1 = atof(argv[2]);
-        double a2 = atof(argv[3]);
+        size_t k  = atoi(argv[2]);
+        double a1 = atof(argv[3]);
+        double a2 = atof(argv[4]);
 
         boost::random::mt19937 gen; seed_rng(gen);
-        boost::random::entropy_distribution<double, probability_t> dist(3, a1, a2);
+        boost::random::entropy_distribution<double, probability_t> dist(k, a1, a2);
 
         for (size_t i = 0; i < n; i++) {
                 cout << dist(gen, 0.1)
