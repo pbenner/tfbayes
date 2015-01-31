@@ -53,6 +53,21 @@ public:
                         m_midpoints[i] = m_width/2.0 + i*m_width;
                 }
         }
+        histogram_t(input_type min, input_type max, const base_t& counts)
+                : base_t     (counts),
+                  m_n        (counts.size()),
+                  m_min      (min),
+                  m_max      (max),
+                  m_width    ((max-min)/counts.size()),
+                  m_total    (0.0),
+                  m_midpoints(counts.size(), 0.0) {
+                for (size_t i = 0; i < counts.size(); i++) {
+                        // compute midpoints
+                        m_midpoints[i] = m_width/2.0 + i*m_width;
+                        // sum number of counts
+                        m_total += counts[i];
+                }
+        }
 
         void add(input_type value) {
                 size_t i = value == m_max ? m_n-1 : std::floor((value-m_min)/m_width);

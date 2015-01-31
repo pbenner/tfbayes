@@ -25,14 +25,13 @@
 #include <fstream>
 #include <string>
 
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-
 #include <boost/math/distributions/beta.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
 #include <boost/random/uniform_01.hpp>
 
+#include <tfbayes/entropy/entropy-approximation-2.hh>
+#include <tfbayes/entropy/entropy-approximation-3.hh>
 #include <tfbayes/entropy/entropy.hh>
 #include <tfbayes/utility/histogram.hh>
 #include <tfbayes/utility/boost-random-shuffle.hh>
@@ -50,13 +49,17 @@ public:
                 m_burnin   (false),
                 m_samples  (0.0),
                 m_accepted (0.0) {
-                // load the histogram class from file
-                std::string filename = (boost::format("entropy-approximation-%d.ar") % k).str();
-                // create and open an archive for input
-                std::ifstream ifs(filename);
-                boost::archive::text_iarchive ia(ifs);
-                // read class state from archive
-                ia >> histogram;
+                if (k == 2) {
+                        histogram = histogram_t<input_type, result_type>(
+                                0.0, log(k), entropy_histogram_2_counts);
+                }
+                else if (k == 3) {
+                        histogram = histogram_t<input_type, result_type>(
+                                0.0, log(k), entropy_histogram_3_counts);
+                }
+                else {
+                        assert(false);
+                }
         }
 
         template<class Engine>
