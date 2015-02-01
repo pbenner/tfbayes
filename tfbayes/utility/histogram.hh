@@ -24,6 +24,7 @@
 
 #include <ostream>
 #include <vector>
+#include <stdexcept>
 #include <cassert>
 #include <cmath>
 
@@ -66,6 +67,9 @@ public:
                         m_midpoints[i] = m_width/2.0 + i*m_width;
                         // sum number of counts
                         m_total += counts[i];
+                }
+                if (std::isnan(m_total)) {
+                        throw std::runtime_error("Histogram count overflow!");
                 }
         }
 

@@ -23,6 +23,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <fstream>
+#include <stdexcept>
 #include <string>
 
 #include <boost/math/distributions/beta.hpp>
@@ -32,6 +33,7 @@
 
 #include <tfbayes/entropy/entropy-approximation-2.hh>
 #include <tfbayes/entropy/entropy-approximation-3.hh>
+#include <tfbayes/entropy/entropy-approximation-4.hh>
 #include <tfbayes/entropy/entropy.hh>
 #include <tfbayes/utility/histogram.hh>
 #include <tfbayes/utility/boost-random-shuffle.hh>
@@ -57,8 +59,12 @@ public:
                         histogram = histogram_t<input_type, result_type>(
                                 0.0, log(k), entropy_histogram_3_counts);
                 }
+                else if (k == 4) {
+                        histogram = histogram_t<input_type, result_type>(
+                                0.0, log(k), entropy_histogram_4_counts);
+                }
                 else {
-                        assert(false);
+                        throw std::runtime_error("Invalid cardinality!");
                 }
         }
 
