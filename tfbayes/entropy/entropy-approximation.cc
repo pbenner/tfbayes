@@ -93,7 +93,7 @@ approximate_distribution(size_t k, size_t minimum_counts, size_t bins)
 int
 main(void)
 {
-        vector<size_t> n = {0, 0, 100000, 100, 100, 1};
+        vector<size_t> n = {0, 0, 100000, 1000, 100, 10};
 
         for (size_t k = 2; k < n.size(); k++) {
                 cerr << boost::format("Sampling entropies on simplices of dimension %d...") % k
