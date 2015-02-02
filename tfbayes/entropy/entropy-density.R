@@ -9,36 +9,44 @@ source("entropy-sampler.R")
 # compute volumes
 ################################################################################
 
-n <- 1000000
-k <- 3
-volume.samples <- rdirichlet(n, rep(1, k))
-volume.samples.entropy <- apply(volume.samples, 1, entropy)
-rm(volume.samples)
+volume.data <- list(
+            NULL,
+            read.table("entropy-approximation-2.csv"),
+            read.table("entropy-approximation-3.csv"),
+            read.table("entropy-approximation-4.csv"),
+            read.table("entropy-approximation-5.csv"))
 
-volume.estimate <- kde(volume.samples.entropy, h=0.01, xmin=0, xmax=log(k))
-
-volume <- function(theta) {
-  predict(volume.estimate, x=entropy(theta))
+volume.f <- function(h, k) {
+  t <- volume.data[[k]]
+  n <- nrow(t)
+  v.min <- 0
+  v.max <- log(k)
+  v.width <- (v.max-v.min)/n
+  if (h == log(k)) {
+    # no linear interpolation in this case
+    t[i,2];
+  }
+  else {
+    i <- floor((h-v.min)/v.width)+1
+    # interpolate the result
+    x1 <- t[i,  1];
+    y1 <- t[i,  2];
+    y2 <- t[i+1,2];
+    y1 + (y2 - y1)*(h - x1)/v.width;
+  }
 }
-
-## volume.histogram         <- hist(volume.samples.entropy, 100, plot=F)
-## volume.histogram$mids    <- c(0, volume.histogram$mids,    log(k))
-## volume.histogram$density <- c(0, volume.histogram$density, 0)
-
-## volume <- function(theta) {
-##   f <- approxfun(volume.histogram$mids, volume.histogram$density)
-##   f(entropy(theta))
-## }
 
 # define densities
 ################################################################################
 
-dentropy <- function(h, a1 = 100, a2 = 20, ...) {
-  dbeta(h/log(3), shape1 = a1, shape2 = a2)/log(3)
+dentropy <- function(h, k, a1 = 1, a2 = 1, ...) {
+  dbeta(h/log(k), shape1 = a1, shape2 = a2)
 }
 
 dentropy.simplex <- function(theta, ...) {
-  dentropy(entropy(theta), ...)/volume(theta)
+  h <- entropy(theta)
+  k <- length(theta)
+  dentropy(h, k, ...)/volume.f(h, k)
 }
 
 rentropy.simplex <- function(n, k, ..., sampler.options=list()) {
