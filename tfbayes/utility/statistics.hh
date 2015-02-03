@@ -66,6 +66,7 @@ double mbeta_log(
         return sum2 - boost::math::lgamma(sum1);
 }
 
+static inline
 double mbeta_log(
         const std::vector<double>& alpha)
 {
@@ -80,6 +81,7 @@ double mbeta_log(
         return sum2 - boost::math::lgamma(sum1);
 }
 
+static inline
 double mbeta_log(
         const std::vector<double>& extra,
         const std::vector<double>& alpha)
