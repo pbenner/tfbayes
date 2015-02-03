@@ -88,39 +88,42 @@ simplex.sampler.ham <- function(n, f, k, epsilon=0.01, L=10, ...) {
   stopifnot(k > 1)
   # initial state
   result <- rbind(NULL, rdirichlet(1, rep(1, k)))
-  for (i in 1:n) {
+  while (nrow(result) < n) {
+    i <- nrow(result)
     current_q <- result[i,]
     current_p <- c(rnorm(k-1, 0, 1), 0)
     q <- current_q
     p <- current_p
     r <- TRUE
     # make a half step for the momentum
-    p <- p - epsilon*simplex.sampler.ham.grad(q)
+    p <- p - epsilon*simplex.sampler.ham.grad(q)/2
     for (l in 1:L) {
       # make a full step for the position
       q <- q + epsilon*p
       # renormalize
       q[k] <- 1-sum(q[-k])
       # check if still within the probability simplex
-      if (q[k] < 0.0) {
-        continue
-      }
+      if (min(q) < 0.0) break
     }
+    # reject if the proposal is outside the simplex
+    if (min(q) < 0.0) next
+    # make half a step for the momentum
+    p <- p - epsilon*simplex.sampler.ham.grad(q)/2
+    # negate momentum to make the proposal symmetric
+    p <- -p
+    # evaluate potential and kinetic energy
+     current_K <- sum(current_p^2)/2
+    proposed_K <- sum(        p^2)/2
+    # permute proposal
+    q <- gtools::permute(q)
     # accept or reject
-    if (f(q) == 0 || runif(1) <= min(1, f(p)/f(q))) {
-      q <- p
-      r <- FALSE
-    }
-    # propose a permutation
-    p <- gtools::permute(q)
-    # save result
-    result <- rbind(result, q)
-    # mark if sample was rejected
-    if (r) {
-      row.names(result)[i+1] <- "x"
+    if (f(current_q) == 0 || runif(1) <= f(q)/f(current_q)*exp(current_K-proposed_K)) {
+      result <- rbind(result, q)
+      row.names(result)[i+1] <- ""
     }
     else {
-      row.names(result)[i+1] <- ""
+      result <- rbind(result, current_q)
+      row.names(result)[i+1] <- "x"
     }
   }
   result
