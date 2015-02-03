@@ -40,7 +40,7 @@ samples.entropy <- apply(samples, 1, entropy)
 
 hist(samples.entropy, 100, prob=T, xlim=c(0, log(k)))
 par(new=TRUE)
-curve(dentropy(x, k, a1, a2), 0, log(l), xaxt="n", yaxt="n")
+curve(dentropy(x, k, a1, a2), 0, log(k), xaxt="n", yaxt="n")
 axis(4)
 
 simplex.contour(samples, filled=TRUE)
