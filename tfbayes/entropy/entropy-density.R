@@ -22,18 +22,13 @@ volume.f <- function(h, k) {
   v.min <- 0
   v.max <- log(k)
   v.width <- (v.max-v.min)/n
-  if (h == log(k)) {
-    # no linear interpolation in this case
-    t[i,2];
-  }
-  else {
-    i <- floor((h-v.min)/v.width)+1
-    # interpolate the result
-    x1 <- t[i,  1];
-    y1 <- t[i,  2];
-    y2 <- t[i+1,2];
-    y1 + (y2 - y1)*(h - x1)/v.width;
-  }
+  i <- floor((h-v.min)/v.width)+1
+  i <- if(i == n) i-1 else i
+  # interpolate the result
+  x1 <- t[i,  1];
+  y1 <- t[i,  2];
+  y2 <- t[i+1,2];
+  y1 + (y2 - y1)*(h - x1)/v.width;
 }
 
 # define densities
