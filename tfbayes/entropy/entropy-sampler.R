@@ -32,7 +32,7 @@ simplex.sampler.dir <- function(n, f, k) {
   result
 }
 
-simplex.sampler.norm <- function(n, f, k, sd=0.05, ...) {
+simplex.sampler.norm <- function(n, f, k, sd=0.05, permute=TRUE, ...) {
   stopifnot(k > 1)
   rprop  <- function(qj) rnorm(1, mean=qj, sd=sd)
   # initial state
@@ -57,11 +57,8 @@ simplex.sampler.norm <- function(n, f, k, sd=0.05, ...) {
       }
     }
     # propose a permutation
-    p <- gtools::permute(q)
-    # accept or reject
-    ## if (f(q) == 0 || runif(1) <= min(1, f(p)/f(q))) {
-    ##   q <- p
-    ## }
+    if (permute)
+      p <- gtools::permute(q)
     # save result
     result <- rbind(result, q)
     # mark if sample was rejected
@@ -84,7 +81,7 @@ simplex.sampler.ham.grad <- function(q) {
   g
 }
 
-simplex.sampler.ham <- function(n, f, k, epsilon=0.01, L=10, ...) {
+simplex.sampler.ham <- function(n, f, k, epsilon=0.01, L=10, permute=TRUE,...) {
   stopifnot(k > 1)
   # initial state
   result <- rbind(NULL, rdirichlet(1, rep(1, k)))
@@ -115,7 +112,8 @@ simplex.sampler.ham <- function(n, f, k, epsilon=0.01, L=10, ...) {
      current_K <- sum(current_p^2)/2
     proposed_K <- sum(        p^2)/2
     # permute proposal
-    q <- gtools::permute(q)
+    if (permute)
+      q <- gtools::permute(q)
     # accept or reject
     if (f(current_q) == 0 || runif(1) <= f(q)/f(current_q)*exp(current_K-proposed_K)) {
       result <- rbind(result, q)
