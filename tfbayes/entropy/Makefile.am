@@ -3,15 +3,18 @@
 AM_CPPFLAGS = -I$(top_srcdir)
 AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
-noinst_PROGRAMS = entropy-test entropy-approximation entropy-distribution-test
+noinst_PROGRAMS = entropy-test entropy-approximation entropy-approximation-test entropy-distribution-test
 
 entropy_test_SOURCES = entropy-test.cc
 
-entropy_distribution_test_SOURCES = entropy-distribution-test.cc
-entropy_distribution_test_LDADD = $(BOOST_SERIALIZATION_LIB)
-
 entropy_approximation_SOURCES = entropy-approximation.cc
 entropy_approximation_LDADD = $(BOOST_SERIALIZATION_LIB)
+
+entropy_approximation_test_SOURCES = entropy-approximation-test.cc
+entropy_approximation_test_LDADD = $(BOOST_SERIALIZATION_LIB)
+
+entropy_distribution_test_SOURCES = entropy-distribution-test.cc
+entropy_distribution_test_LDADD = $(BOOST_SERIALIZATION_LIB)
 
 ## headers
 noinst_HEADERS = \

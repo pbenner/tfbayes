@@ -74,27 +74,20 @@ public:
         }
 
         void add(input_type value) {
-                size_t i = value == m_max ? m_n-1 : std::floor((value-m_min)/m_width);
-                assert(value <= m_max);
+                size_t i = std::abs(value - m_max) < 1e-8 ? m_n-1 : std::floor((value-m_min)/m_width);
                 assert(i < base_t::size());
                 base_t::operator[](i) += 1.0;
                 m_total += 1.0;
         }
         result_type pdf(input_type value) const {
-                size_t i = value == m_max ? m_n-1 : std::floor((value-m_min)/m_width);
-                result_type m = m_total;
-                result_type w = m_width;
-                result_type n;
-                if (i == m_n-1) {
-                        // no linear interpolation in this case
-                        n = base_t::operator[](i);
-                }
-                else {
-                        // interpolate the result
-                        const input_type y1 = base_t::operator[](i);
-                        const input_type y2 = base_t::operator[](i+1);
-                        n = y1 + (y2 - y1)*(value - m_midpoints[i])/m_width;
-                }
+                const size_t i = std::min(m_n-2.0, std::floor((value-m_min)/m_width));
+                const result_type m = m_total;
+                const result_type w = m_width;
+                // interpolate the result
+                const input_type y1 = base_t::operator[](i);
+                const input_type y2 = base_t::operator[](i+1);
+                const result_type n = y1 + (y2 - y1)*(value - m_midpoints[i])/m_width;
+
                 return n/(m*w);
         }
 
