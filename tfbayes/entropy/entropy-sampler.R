@@ -56,9 +56,6 @@ simplex.sampler.norm <- function(n, f, k, sd=0.05, permute=TRUE, ...) {
         r <- FALSE
       }
     }
-    # propose a permutation
-    if (permute)
-      p <- gtools::permute(q)
     # save result
     result <- rbind(result, q)
     # mark if sample was rejected
@@ -68,6 +65,9 @@ simplex.sampler.norm <- function(n, f, k, sd=0.05, permute=TRUE, ...) {
     else {
       row.names(result)[i+1] <- ""
     }
+    # permute result
+    if (permute)
+      result[i+1,] <- gtools::permute(result[i+1,])
   }
   result
 }
@@ -111,9 +111,6 @@ simplex.sampler.ham <- function(n, f, k, epsilon=0.01, L=10, permute=TRUE,...) {
     # evaluate potential and kinetic energy
      current_K <- sum(current_p^2)/2
     proposed_K <- sum(        p^2)/2
-    # permute proposal
-    if (permute)
-      q <- gtools::permute(q)
     # accept or reject
     if (f(current_q) == 0 || runif(1) <= f(q)/f(current_q)*exp(current_K-proposed_K)) {
       result <- rbind(result, q)
@@ -123,6 +120,9 @@ simplex.sampler.ham <- function(n, f, k, epsilon=0.01, L=10, permute=TRUE,...) {
       result <- rbind(result, current_q)
       row.names(result)[i+1] <- "x"
     }
+    # permute result
+    if (permute)
+      result[i+1,] <- gtools::permute(result[i+1,])
   }
   result
 }
