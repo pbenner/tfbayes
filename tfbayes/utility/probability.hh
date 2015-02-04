@@ -132,6 +132,9 @@ public:
                 sign = 1;
                 return *this;
         }
+        bool isnan() const {
+                return std::isnan(log_p);
+        }
         // define operators here so that they can be used by member functions
         friend
         probability_t operator+(const probability_t& p, const probability_t& q) {
@@ -178,6 +181,9 @@ protected:
 };
 
 namespace std {
+        bool isnan(const probability_t& p) {
+                return p.isnan();
+        }
         double log(const probability_t& p) {
                 return p.log();
         }

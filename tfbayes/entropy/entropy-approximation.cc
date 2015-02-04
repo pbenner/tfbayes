@@ -47,8 +47,8 @@ save_table(const prob_histogram_t& histogram, size_t k)
 {
         ofstream ofs((boost::format("entropy-approximation-%d.csv") % k).str());
 
-        BOOST_FOREACH(const double& v, histogram.midpoints()) {
-                ofs << boost::format("%0.8f %0.8f") % v % histogram.pdf(v)
+        BOOST_FOREACH(const double& x, histogram.x()) {
+                ofs << boost::format("%0.8f %0.8f") % x % histogram.pdf(x)
                     << endl;
         }
 }

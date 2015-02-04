@@ -35,9 +35,9 @@
 #include <tfbayes/utility/probability.hh>
 
 template <class input_type = double, class result_type = input_type>
-class histogram_t : public std::vector<input_type>
+class histogram_t : public std::vector<result_type>
 {
-        typedef std::vector<input_type> base_t;
+        typedef std::vector<result_type> base_t;
 public:
         histogram_t()
                 : base_t()
@@ -49,22 +49,23 @@ public:
                   m_max      (max),
                   m_width    ((max-min)/n),
                   m_total    (0.0),
-                  m_midpoints(n, 0.0) {
+                  m_x        (n, 0.0) {
                 for (size_t i = 0; i < n; i++) {
-                        m_midpoints[i] = m_width/2.0 + i*m_width;
+                        m_x[i] = m_width/2.0 + i*m_width;
                 }
         }
-        histogram_t(input_type min, input_type max, const base_t& counts)
-                : base_t     (counts),
+        template <class T>
+        histogram_t(input_type min, input_type max, const std::vector<T>& counts)
+                : base_t     (counts.begin(), counts.end()),
                   m_n        (counts.size()),
                   m_min      (min),
                   m_max      (max),
                   m_width    ((max-min)/counts.size()),
                   m_total    (0.0),
-                  m_midpoints(counts.size(), 0.0) {
+                  m_x        (counts.size(), 0.0) {
                 for (size_t i = 0; i < counts.size(); i++) {
                         // compute midpoints
-                        m_midpoints[i] = m_width/2.0 + i*m_width;
+                        m_x[i] = m_width/2.0 + i*m_width;
                         // sum number of counts
                         m_total += counts[i];
                 }
@@ -72,25 +73,23 @@ public:
                         throw std::runtime_error("Histogram count overflow!");
                 }
         }
-
-        void add(input_type value) {
-                size_t i = std::abs(value - m_max) < 1e-8 ? m_n-1 : std::floor((value-m_min)/m_width);
-                assert(i < base_t::size());
-                base_t::operator[](i) += 1.0;
-                m_total += 1.0;
+        void add(input_type x, result_type v = 1.0) {
+                size_t i = std::abs(x - m_max) < 1e-8 ? m_n-1 : std::floor((x-m_min)/m_width);
+                assert(i < m_n);
+                m_total += v;
+                base_t::operator[](i) += v;
         }
-        result_type pdf(input_type value) const {
-                const size_t i = std::min(m_n-2.0, std::floor((value-m_min)/m_width));
+        result_type pdf(input_type x) const {
+                const size_t i = std::min(m_n-2.0, std::floor((x-m_min)/m_width));
                 const result_type m = m_total;
                 const result_type w = m_width;
                 // interpolate the result
-                const input_type y1 = base_t::operator[](i);
-                const input_type y2 = base_t::operator[](i+1);
-                const result_type n = y1 + (y2 - y1)*(value - m_midpoints[i])/m_width;
+                const result_type y1 = base_t::operator[](i+0);
+                const result_type y2 = base_t::operator[](i+1);
+                const result_type n  = y1 + (y2 - y1)*static_cast<result_type>((x - m_x[i])/m_width);
 
                 return n/(m*w);
         }
-
         const size_t& n() const {
                 return m_n;
         }
@@ -103,10 +102,9 @@ public:
         const input_type& width() const {
                 return m_width;
         }
-        const std::vector<input_type>& midpoints() const {
-                return m_midpoints;
+        const std::vector<input_type>& x() const {
+                return m_x;
         }
-
         friend
         std::ostream& operator<<(std::ostream& o, const histogram_t& hist) {
                 input_type min = hist.m_min;
@@ -115,7 +113,7 @@ public:
                   << std::endl;
                 for (size_t i = 0; i < hist.m_n; i++) {
                         o << boost::format("%0.8f %0.8f %0.8f %d")
-                                % min % max % hist.m_midpoints[i] % hist[i]
+                                % min % max % hist.m_x[i] % hist[i]
                           << std::endl;
                         min += hist.m_width;
                         max += hist.m_width;
@@ -133,7 +131,7 @@ private:
                 ar & m_max;
                 ar & m_width;
                 ar & m_total;
-                ar & m_midpoints;
+                ar & m_x;
         }
 
 protected:
@@ -141,8 +139,8 @@ protected:
         input_type m_min;
         input_type m_max;
         input_type m_width;
-        input_type m_total;
-        std::vector<input_type> m_midpoints;
+        result_type m_total;
+        std::vector<input_type> m_x;
 };
 
 #endif /* __TFBAYES_UTILITY_HISTOGRAM_HH__ */
