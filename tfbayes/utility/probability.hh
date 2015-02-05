@@ -128,6 +128,12 @@ public:
                         ? log_p
                         : std::numeric_limits<double>::quiet_NaN();
         }
+        probability_t& pow(const probability_t& x) {
+                assert(  sign == 1);
+                assert(x.sign == 1);
+                log_p *= std::exp(x.log_p);
+                return *this;
+        }
         probability_t& abs() {
                 sign = 1;
                 return *this;
@@ -186,6 +192,10 @@ namespace std {
         }
         double log(const probability_t& p) {
                 return p.log();
+        }
+        probability_t pow(const probability_t& p, const probability_t& q) {
+                probability_t tmp = p;
+                return tmp.pow(q);
         }
         probability_t abs(const probability_t& p) {
                 probability_t tmp = p;

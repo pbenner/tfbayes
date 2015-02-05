@@ -56,19 +56,20 @@ template <class RealType = double,
 class dirichlet_distribution
 {
 public:
-        dirichlet_distribution(const std::vector<RealType>& alpha)
-                : m_alpha(alpha)
+        template <class T>
+        dirichlet_distribution(const std::vector<T>& alpha)
+                : m_alpha(alpha.begin(), alpha.end())
                 { }
 
         const std::vector<RealType>& alpha() const {
                 return m_alpha;
         }
 private:
-        std::vector<double> m_alpha;
+        std::vector<RealType> m_alpha;
 };
 
-template <class RealType, class Policy>
-inline RealType log_pdf(const dirichlet_distribution<RealType, Policy>& dist, const std::vector<probability_t>& x)
+template <class RealType, class Policy, class T>
+inline RealType log_pdf(const dirichlet_distribution<RealType, Policy>& dist, const std::vector<T>& x)
 {
         std::vector<RealType> alpha = dist.alpha();
         RealType tmp = 0.0;
@@ -80,8 +81,8 @@ inline RealType log_pdf(const dirichlet_distribution<RealType, Policy>& dist, co
         return tmp - mbeta_log(alpha);
 }
 
-template <class RealType, class Policy>
-inline RealType pdf(const dirichlet_distribution<RealType, Policy>& dist, const std::vector<probability_t> x)
+template <class RealType, class Policy, class T>
+inline T pdf(const dirichlet_distribution<RealType, Policy>& dist, const std::vector<T>& x)
 {
         return std::exp(log_pdf(dist, x));
 }
@@ -95,17 +96,18 @@ template <class input_type = double, class result_type = input_type>
 class dirichlet_distribution
 {
 public:
-        dirichlet_distribution(const std::vector<input_type>& alpha) :
+        template <class T>
+        dirichlet_distribution(const std::vector<T>& alpha) :
                 m_size(alpha.size()) {
-                BOOST_FOREACH(const input_type& a, alpha) {
+                BOOST_FOREACH(const T& a, alpha) {
                         m_distributions.push_back(
-                                gamma_distribution<input_type>(a));
+                                gamma_distribution<input_type>(static_cast<input_type>(a)));
                 }
         }
 
         template<class Engine>
         std::vector<result_type> operator()(Engine& eng) {
-                result_type sum;
+                result_type sum = 0.0;
                 std::vector<result_type> result(m_size, 0.0);
                 for (size_t i = 0; i < m_size; i++) {
                         result[i] = m_distributions[i](eng);

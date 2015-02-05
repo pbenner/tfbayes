@@ -39,16 +39,16 @@ main(void)
         boost::random::mt19937 gen;
 
         vector<double> alpha(5, 1.0);
-        vector<probability_t> x(5, probability_t(1.0/5.0));
+        vector<double> x(5, 1.0/5.0);
 
-        boost::math  ::dirichlet_distribution<> dist(alpha);
-        boost::random::dirichlet_distribution<double, probability_t> rdist(alpha);
+        boost::math  ::dirichlet_distribution<> ddir(alpha);
+        boost::random::dirichlet_distribution<> rdir(alpha);
 
-        cout << boost::math::log_pdf(dist, x)
+        cout << boost::math::log_pdf(ddir, x)
              << endl;
 
         for (size_t i = 0; i < 100; i++) {
-                vector<probability_t> tmp = rdist(gen);
+                vector<double> tmp = rdir(gen);
                 cout << tmp << endl;
         }
 }

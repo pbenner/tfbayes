@@ -49,25 +49,27 @@ public:
                   m_max      (max),
                   m_width    ((max-min)/n),
                   m_total    (0.0),
-                  m_x        (n, 0.0) {
+                  m_x        (n, 0.0),
+                  m_counts   (n, 0.0) {
                 for (size_t i = 0; i < n; i++) {
                         m_x[i] = m_width/2.0 + i*m_width;
                 }
         }
         template <class T>
-        histogram_t(input_type min, input_type max, const std::vector<T>& counts)
-                : base_t     (counts.begin(), counts.end()),
-                  m_n        (counts.size()),
+        histogram_t(input_type min, input_type max, const std::vector<T>& y)
+                : base_t     (y.begin(), y.end()),
+                  m_n        (y.size()),
                   m_min      (min),
                   m_max      (max),
-                  m_width    ((max-min)/counts.size()),
+                  m_width    ((max-min)/y.size()),
                   m_total    (0.0),
-                  m_x        (counts.size(), 0.0) {
-                for (size_t i = 0; i < counts.size(); i++) {
+                  m_x        (y.size(), 0.0),
+                  m_counts   (y.size(), 0.0) {
+                for (size_t i = 0; i < y.size(); i++) {
                         // compute midpoints
                         m_x[i] = m_width/2.0 + i*m_width;
                         // sum number of counts
-                        m_total += counts[i];
+                        m_total += y[i];
                 }
                 if (std::isnan(m_total)) {
                         throw std::runtime_error("Histogram count overflow!");
@@ -76,7 +78,8 @@ public:
         void add(input_type x, result_type v = 1.0) {
                 size_t i = std::abs(x - m_max) < 1e-8 ? m_n-1 : std::floor((x-m_min)/m_width);
                 assert(i < m_n);
-                m_total += v;
+                m_total     += v;
+                m_counts[i] += 1.0;
                 base_t::operator[](i) += v;
         }
         result_type pdf(input_type x) const {
@@ -104,6 +107,12 @@ public:
         }
         const std::vector<input_type>& x() const {
                 return m_x;
+        }
+        const std::vector<input_type>& counts() const {
+                return m_counts;
+        }
+        input_type min_counts() const {
+                return *std::min_element(m_counts.begin(), m_counts.end());
         }
         friend
         std::ostream& operator<<(std::ostream& o, const histogram_t& hist) {
@@ -141,6 +150,7 @@ protected:
         input_type m_width;
         result_type m_total;
         std::vector<input_type> m_x;
+        std::vector<input_type> m_counts;
 };
 
 #endif /* __TFBAYES_UTILITY_HISTOGRAM_HH__ */
