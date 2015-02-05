@@ -146,7 +146,6 @@ approximate_distribution(const parameters_t& parameters, size_t minimum_counts, 
 
         for (size_t i = 0; histogram.min_counts() < minimum_counts; i++) {
                 vector<probability_t> theta = proposal_distribution(gen);
-                cout << theta << endl;
                 histogram.add(entropy(theta), 1.0/proposal_distribution.pdf(theta));
                 if ((i+1) % 100000 == 0) {
                         std::vector<double>::const_iterator it =
@@ -169,7 +168,7 @@ main(void)
 //                { 5, 1.0, 0.2, 5.0 },
 //                { 6, 1.0, 0.15, 3.0 },
 //                { 7, 0.8, 0.08, 10.0 },
-                { 50, 0.6, 0.01, 10.0 },
+                { 50, 1.0, 0.01, 0.9 },
                 { 0, 0, 0, 0 }
         };
 

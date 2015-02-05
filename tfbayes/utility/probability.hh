@@ -51,7 +51,7 @@ public:
                         p -= q.abs();
                 }
                 else {
-                        p.abs(); p -= q; sign *= -1;
+                        p = p.abs(); p -= q; p.sign *= -1;
                 }
                 return *this;
         }
@@ -64,14 +64,14 @@ public:
                         }
                         else {
                                 p.log_p = logsub(q.log_p, p.log_p);
-                                sign *= -1;
+                                p.sign *= -1;
                         }
                 }
                 else if (p.sign > q.sign) {
                         p += q.abs();
                 }
                 else {
-                        p.abs(); p += q; sign = -1;
+                        p = p.abs(); p += q; p.sign = -1;
                 }
                 return *this;
         }
@@ -101,9 +101,10 @@ public:
                 }
                 return *this;
         }
-        probability_t& operator-() {
-                sign *= -1;
-                return *this;
+        probability_t operator-() const {
+                probability_t p = *this;
+                p.sign *= -1;
+                return p;
         }
         bool operator==(const probability_t& p) const {
                 return sign == p.sign && log_p == p.log_p;
@@ -131,15 +132,26 @@ public:
                         ? log_p
                         : std::numeric_limits<double>::quiet_NaN();
         }
-        probability_t& pow(const probability_t& x) {
-                assert(  sign == 1);
-                assert(x.sign == 1);
-                log_p *= std::exp(x.log_p);
-                return *this;
+        double exp() const {
+                return sign == 1
+                        ? std::exp( std::exp(log_p))
+                        : std::exp(-std::exp(log_p));
         }
-        probability_t& abs() {
-                sign = 1;
-                return *this;
+        probability_t pow(const probability_t& q) const {
+                probability_t p(*this);
+                assert(p.sign == 1);
+                if (q.sign == 1) {
+                        p.log_p *= std::exp(q.log_p);
+                }
+                else {
+                        p.log_p /= std::exp(q.log_p);
+                }
+                return p;
+        }
+        probability_t abs() const {
+                probability_t p(*this);
+                p.sign = 1;
+                return p;
         }
         bool isnan() const {
                 return std::isnan(log_p);
@@ -196,13 +208,14 @@ namespace std {
         double log(const probability_t& p) {
                 return p.log();
         }
+        double exp(const probability_t& p) {
+                return p.exp();
+        }
         probability_t pow(const probability_t& p, const probability_t& q) {
-                probability_t tmp = p;
-                return tmp.pow(q);
+                return p.pow(q);
         }
         probability_t abs(const probability_t& p) {
-                probability_t tmp = p;
-                return tmp.abs();
+                return p.abs();
         }
 }
 

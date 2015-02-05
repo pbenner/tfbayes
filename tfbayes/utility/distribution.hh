@@ -93,15 +93,60 @@ inline RealType pdf(const dirichlet_distribution<RealType, Policy>& dist, const 
 namespace boost { namespace random {
 
 template <class input_type = double, class result_type = input_type>
+class gamma_distribution_prime
+{
+        input_type m_shape;
+        gamma_distribution<input_type> m_gamma;
+        uniform_01<input_type> m_runif;
+
+        template<class Engine>
+        result_type random_variate(Engine& eng) {
+                result_type u = m_runif(eng);
+                result_type b = (std::exp(1.0) + m_shape)/std::exp(1.0);
+                result_type p = b*u;
+                if (p <= 1.0) {
+                        result_type x = std::pow(p, 1.0/m_shape);
+                        assert(x != 0.0);
+                        if (m_runif(eng) > std::exp(-x)) {
+                                return random_variate(eng);
+                        }
+                        return x;
+                }
+                else {
+                        result_type x = -std::log((b-p)/m_shape);
+                        assert(x != 0.0);
+                        if (static_cast<result_type>(m_runif(eng)) > std::pow(x, m_shape-1.0)) {
+                                return random_variate(eng);
+                        }
+                        return x;
+                }
+        }
+public:
+        gamma_distribution_prime(input_type shape)
+                : m_shape(shape),
+                  m_gamma(shape, 1.0)
+                { }
+
+        template<class Engine>
+        result_type operator()(Engine& eng) {
+                if (m_shape >= 1.0) {
+                        return m_gamma(eng);
+                }
+                return random_variate(eng);
+        }
+};
+
+template <class input_type = double, class result_type = input_type>
 class dirichlet_distribution
 {
+        typedef gamma_distribution_prime<input_type, result_type> gamma_distribution_t;
 public:
         template <class T>
         dirichlet_distribution(const std::vector<T>& alpha) :
                 m_size(alpha.size()) {
                 BOOST_FOREACH(const T& a, alpha) {
                         m_rgamma.push_back(
-                                gamma_distribution<input_type>(static_cast<input_type>(a)));
+                                gamma_distribution_t(static_cast<input_type>(a)));
                 }
         }
 
@@ -120,7 +165,7 @@ public:
         }
 
 private:
-        std::vector<gamma_distribution<input_type> > m_rgamma;
+        std::vector<gamma_distribution_t> m_rgamma;
         size_t m_size;
 };
 

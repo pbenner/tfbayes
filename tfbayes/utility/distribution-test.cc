@@ -18,8 +18,17 @@
 #include <iostream>
 
 #include <boost/random/mersenne_twister.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <tfbayes/utility/distribution.hh>
+
+template <typename T>
+void seed_rng(T& rng)
+{
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        rng.seed(tv.tv_sec*tv.tv_usec);
+}
 
 using namespace std;
 
@@ -36,7 +45,7 @@ ostream& operator<<(ostream& o, vector<T>& v) {
 int
 main(void)
 {
-        boost::random::mt19937 gen;
+        boost::random::mt19937 gen; seed_rng(gen);
 
         vector<double> alpha(5, 1.0);
         vector<double> x(5, 1.0/5.0);
@@ -44,11 +53,17 @@ main(void)
         boost::math  ::dirichlet_distribution<> ddir(alpha);
         boost::random::dirichlet_distribution<> rdir(alpha);
 
+        boost::random::gamma_distribution_prime<double, probability_t> rgamma(0.01);
+
         cout << boost::math::log_pdf(ddir, x)
              << endl;
 
-        for (size_t i = 0; i < 100; i++) {
+        for (size_t i = 0; i < 10; i++) {
                 vector<double> tmp = rdir(gen);
                 cout << tmp << endl;
+        }
+        for (size_t i = 0; i < 10; i++) {
+                cout << scientific << rgamma(gen)
+                     << endl;
         }
 }

@@ -77,6 +77,8 @@ test4()
 
         cout << "a >= 0: " << (a>=0) << endl;
         cout << "b >= 0: " << (b>=0) << endl;
+        cout << "exp(a): " << exp(a) << endl;
+        cout << "b^0.34: " << pow(b, 0.34) << endl;
 }
 
 int
