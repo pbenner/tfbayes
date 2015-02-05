@@ -82,7 +82,7 @@ inline RealType log_pdf(const dirichlet_distribution<RealType, Policy>& dist, co
 }
 
 template <class RealType, class Policy, class T>
-inline T pdf(const dirichlet_distribution<RealType, Policy>& dist, const std::vector<T>& x)
+inline RealType pdf(const dirichlet_distribution<RealType, Policy>& dist, const std::vector<T>& x)
 {
         return std::exp(log_pdf(dist, x));
 }
@@ -100,7 +100,7 @@ public:
         dirichlet_distribution(const std::vector<T>& alpha) :
                 m_size(alpha.size()) {
                 BOOST_FOREACH(const T& a, alpha) {
-                        m_distributions.push_back(
+                        m_rgamma.push_back(
                                 gamma_distribution<input_type>(static_cast<input_type>(a)));
                 }
         }
@@ -110,7 +110,7 @@ public:
                 result_type sum = 0.0;
                 std::vector<result_type> result(m_size, 0.0);
                 for (size_t i = 0; i < m_size; i++) {
-                        result[i] = m_distributions[i](eng);
+                        result[i] = m_rgamma[i](eng);
                         sum += result[i];
                 }
                 for (size_t i = 0; i < m_size; i++) {
@@ -120,7 +120,7 @@ public:
         }
 
 private:
-        std::vector<gamma_distribution<input_type> > m_distributions;
+        std::vector<gamma_distribution<input_type> > m_rgamma;
         size_t m_size;
 };
 

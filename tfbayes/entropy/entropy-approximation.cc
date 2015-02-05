@@ -42,6 +42,15 @@ void seed_rng(T& rng)
         rng.seed(tv.tv_sec*tv.tv_usec);
 }
 
+template <class T>
+std::ostream& operator<<(std::ostream& o, const std::vector<T>& v) {
+        for (size_t i = 0; i < v.size(); i++) {
+                if (i != 0) o << " ";
+                o << std::fixed << std::setprecision(8) << v[i];
+        }
+        return o;
+}
+
 using namespace std;
 
 void
@@ -84,9 +93,9 @@ proposal_distribution_t
         size_t m_k;
         double m_lambda;
 
-        boost::random::dirichlet_distribution<> m_rdir1;
-        boost::random::dirichlet_distribution<> m_rdir2;
-        boost::random::dirichlet_distribution<> m_rdir3;
+        boost::random::dirichlet_distribution<double, probability_t> m_rdir1;
+        boost::random::dirichlet_distribution<double, probability_t> m_rdir2;
+        boost::random::dirichlet_distribution<double, probability_t> m_rdir3;
         boost::math::dirichlet_distribution<> m_ddir1;
         boost::math::dirichlet_distribution<> m_ddir2;
         boost::math::dirichlet_distribution<> m_ddir3;
@@ -102,7 +111,7 @@ public:
                 { }
 
         template <class Engine>
-        std::vector<double> operator()(Engine& eng) {
+        std::vector<probability_t> operator()(Engine& eng) {
                 boost::random::uniform_int_distribution<> rint(1,3);
                 switch(rint(eng)) {
                 default:
@@ -112,7 +121,7 @@ public:
                 }
         }
 
-        double pdf(std::vector<double> x) {
+        double pdf(std::vector<probability_t> x) {
                 return 1.0/3.0*boost::math::pdf(m_ddir1, x) +
                        1.0/3.0*boost::math::pdf(m_ddir2, x) +
                        1.0/3.0*boost::math::pdf(m_ddir3, x);
@@ -136,7 +145,8 @@ approximate_distribution(const parameters_t& parameters, size_t minimum_counts, 
         prob_histogram_t histogram(0.0, log(parameters.k), bins);
 
         for (size_t i = 0; histogram.min_counts() < minimum_counts; i++) {
-                vector<double> theta = proposal_distribution(gen);
+                vector<probability_t> theta = proposal_distribution(gen);
+                cout << theta << endl;
                 histogram.add(entropy(theta), 1.0/proposal_distribution.pdf(theta));
                 if ((i+1) % 100000 == 0) {
                         std::vector<double>::const_iterator it =

@@ -108,6 +108,9 @@ public:
         bool operator==(const probability_t& p) const {
                 return sign == p.sign && log_p == p.log_p;
         }
+        bool operator!=(const probability_t& p) const {
+                return sign != p.sign || log_p != p.log_p;
+        }
         bool operator>=(const probability_t& p) const {
                 return (sign == p.sign && log_p >= p.log_p) || sign > p.sign;
         }
