@@ -92,7 +92,7 @@ class
 proposal_distribution_t
 {
         typedef boost::random::dirichlet_distribution<double, probability_t> rdirichlet_t;
-        typedef boost::math::dirichlet_distribution<> ddirichlet_t;
+        typedef boost::math  ::dirichlet_distribution<> ddirichlet_t;
 
         // cardinality
         size_t m_k;
