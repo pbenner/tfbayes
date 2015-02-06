@@ -164,7 +164,17 @@ approximate_distribution(size_t k, size_t minimum_counts, size_t bins)
         prob_histogram_t histogram(0.0, log(k), bins);
 
         for (size_t i = 0; histogram.min_counts() < minimum_counts; i++) {
-                vector<probability_t> theta = proposal_distribution(gen);
+                vector<probability_t> theta;
+                while (true) {
+                        try {
+                                theta = proposal_distribution(gen);
+                                break;
+                        }
+                        catch (std::domain_error &e) {
+                                cerr << e.what()
+                                     << endl;;
+                        }
+                }
                 histogram.add(entropy(theta), 1.0/proposal_distribution.pdf(theta));
                 if ((i+1) % 100000 == 0) {
                         std::vector<double>::const_iterator it =

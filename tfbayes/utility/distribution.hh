@@ -23,6 +23,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <vector>
+#include <stdexcept>
 
 #include <boost/foreach.hpp>
 #include <boost/math/distributions/gamma.hpp>
