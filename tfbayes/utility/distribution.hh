@@ -57,6 +57,10 @@ class dirichlet_distribution
 {
 public:
         template <class T>
+        dirichlet_distribution(size_t k, T alpha)
+                : m_alpha(k, alpha)
+                { }
+        template <class T>
         dirichlet_distribution(const std::vector<T>& alpha)
                 : m_alpha(alpha.begin(), alpha.end())
                 { }
@@ -141,6 +145,14 @@ class dirichlet_distribution
 {
         typedef gamma_distribution_prime<input_type, result_type> gamma_distribution_t;
 public:
+        template <class T>
+        dirichlet_distribution(size_t k, T alpha) :
+                m_size(k) {
+                for(size_t i = 0; i < k; i++) {
+                        m_rgamma.push_back(
+                                gamma_distribution_t(static_cast<input_type>(alpha)));
+                }
+        }
         template <class T>
         dirichlet_distribution(const std::vector<T>& alpha) :
                 m_size(alpha.size()) {

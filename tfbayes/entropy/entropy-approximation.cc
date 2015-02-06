@@ -30,6 +30,7 @@
 #include <tfbayes/utility/histogram.hh>
 #include <tfbayes/utility/probability.hh>
 #include <tfbayes/utility/distribution.hh>
+#include <tfbayes/utility/polygamma.hh>
 #include <tfbayes/entropy/entropy.hh>
 
 typedef histogram_t<double> prob_histogram_t;
@@ -90,59 +91,77 @@ save_histogram(const prob_histogram_t& histogram, size_t k)
 class
 proposal_distribution_t
 {
+        typedef boost::random::dirichlet_distribution<double, probability_t> rdirichlet_t;
+        typedef boost::math::dirichlet_distribution<> ddirichlet_t;
+
+        // cardinality
         size_t m_k;
-        double m_lambda;
+        // number of components
+        size_t m_size;
+        // sampling distributions and densities
+        std::vector<rdirichlet_t> m_rdirichlet;
+        std::vector<ddirichlet_t> m_ddirichlet;
 
-        boost::random::dirichlet_distribution<double, probability_t> m_rdir1;
-        boost::random::dirichlet_distribution<double, probability_t> m_rdir2;
-        boost::random::dirichlet_distribution<double, probability_t> m_rdir3;
-        boost::math::dirichlet_distribution<> m_ddir1;
-        boost::math::dirichlet_distribution<> m_ddir2;
-        boost::math::dirichlet_distribution<> m_ddir3;
+        double m_mean(double alpha) {
+                return boost::math::digamma(m_k*alpha + 1.0) - boost::math::digamma(alpha + 1.0);
+        }
+        double m_dmean(double alpha) {
+                return m_k*boost::math::trigamma(m_k*alpha + 1.0) - boost::math::trigamma(alpha + 1.0);
+        }
+        double m_sigma(double alpha) {
+                return std::sqrt((alpha+1.0)/(m_k*alpha+1.0)*boost::math::trigamma(alpha + 1.0)
+                                 - boost::math::trigamma(m_k*alpha + 1.0));
+        }
 public:
-        proposal_distribution_t(size_t k, double alpha, double beta, double gamma)
-                : m_k      (k),
-                  m_rdir1   (std::vector<double>(k, alpha)),
-                  m_rdir2   (std::vector<double>(k, beta )),
-                  m_rdir3   (std::vector<double>(k, gamma)),
-                  m_ddir1   (std::vector<double>(k, alpha)),
-                  m_ddir2   (std::vector<double>(k, beta )),
-                  m_ddir3   (std::vector<double>(k, gamma))
-                { }
-
-        template <class Engine>
-        std::vector<probability_t> operator()(Engine& eng) {
-                boost::random::uniform_int_distribution<> rint(1,3);
-                switch(rint(eng)) {
-                default:
-                case 1: return m_rdir1(eng);
-                case 2: return m_rdir2(eng);
-                case 3: return m_rdir3(eng);
+        proposal_distribution_t(size_t k, double n = 0.5, double alpha_max = 10.0)
+                : m_k(k), m_size(0.0) {
+                // go to lower alpha values
+                for (double alpha = 1.0; alpha > 0.0;) {
+                        cout << boost::format("adding distribution at alpha = %f (with mean entropy %f)")
+                                % alpha % m_mean(alpha) << endl;
+                        m_rdirichlet.push_back(rdirichlet_t(k, alpha));
+                        m_ddirichlet.push_back(ddirichlet_t(k, alpha));
+                        // compute new alpha
+                        alpha -= n*m_sigma(alpha)/m_dmean(alpha);
+                        // increase number of components
+                        m_size += 1;
+                }
+                // go to higher alpha values
+                for (double alpha = 1.0 + m_sigma(1.0)/m_dmean(1.0); alpha < alpha_max;) {
+                        cout << boost::format("adding distribution at alpha = %f (with mean entropy %f)")
+                                % alpha % m_mean(alpha) << endl;
+                        m_rdirichlet.push_back(rdirichlet_t(k, alpha));
+                        m_ddirichlet.push_back(ddirichlet_t(k, alpha));
+                        // compute new alpha
+                        alpha += n*m_sigma(alpha)/m_dmean(alpha);
+                        // increase number of components
+                        m_size += 1;
                 }
         }
 
+        template <class Engine>
+        std::vector<probability_t> operator()(Engine& eng) {
+                boost::random::uniform_int_distribution<> rint(0, m_size-1);
+
+                return m_rdirichlet[rint(eng)](eng);
+        }
+
         double pdf(std::vector<probability_t> x) {
-                return 1.0/3.0*boost::math::pdf(m_ddir1, x) +
-                       1.0/3.0*boost::math::pdf(m_ddir2, x) +
-                       1.0/3.0*boost::math::pdf(m_ddir3, x);
+                double result = 0.0;
+
+                for (size_t i = 0; i < m_size; i++) {
+                        result += boost::math::pdf(m_ddirichlet[i], x);
+                }
+                return result/m_size;
         }
 };
 
-struct parameters_t
-{
-        size_t k;
-        double alpha;
-        double beta;
-        double gamma;
-};
-
 prob_histogram_t
-approximate_distribution(const parameters_t& parameters, size_t minimum_counts, size_t bins)
+approximate_distribution(size_t k, size_t minimum_counts, size_t bins)
 {
         boost::random::mt19937 gen; seed_rng(gen);
-        proposal_distribution_t proposal_distribution(
-                parameters.k, parameters.alpha, parameters.beta, parameters.gamma);
-        prob_histogram_t histogram(0.0, log(parameters.k), bins);
+        proposal_distribution_t proposal_distribution(k);
+        prob_histogram_t histogram(0.0, log(k), bins);
 
         for (size_t i = 0; histogram.min_counts() < minimum_counts; i++) {
                 vector<probability_t> theta = proposal_distribution(gen);
@@ -164,22 +183,14 @@ main(void)
         const size_t minimum_samples = 100000;
         const size_t bins = 100;
 
-        parameters_t parameters[] = {
-//                { 5, 1.0, 0.2, 5.0 },
-//                { 6, 1.0, 0.15, 3.0 },
-//                { 7, 0.8, 0.08, 10.0 },
-                { 50, 1.0, 0.01, 0.9 },
-                { 0, 0, 0, 0 }
-        };
-
-        for (size_t i = 0; parameters[i].k; i++) {
-                cerr << boost::format("Sampling entropies on simplices of dimension %d...") % parameters[i].k
+        for (size_t k = 50; k <= 50; k++) {
+                cerr << boost::format("Sampling entropies for cardinality %d...") % k
                      << endl;
 
-                const prob_histogram_t histogram = approximate_distribution(parameters[i], minimum_samples, bins);
+                const prob_histogram_t histogram = approximate_distribution(k, minimum_samples, bins);
 
-                save_table    (histogram, parameters[i].k);
-                save_histogram(histogram, parameters[i].k);
+                save_table    (histogram, k);
+                save_histogram(histogram, k);
         }
 
 }
