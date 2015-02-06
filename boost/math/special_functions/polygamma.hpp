@@ -16,7 +16,7 @@
   #include <boost/math/special_functions/digamma.hpp>
   #include <boost/math/special_functions/factorials.hpp>
 
-  #include <tfbayes/utility/polygamma_detail.hh>
+  #include "detail/polygamma.hpp"
 
   namespace boost { namespace math {
 

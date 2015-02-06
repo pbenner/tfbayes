@@ -25,12 +25,12 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/bernoulli_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
+#include <boost/math/special_functions/polygamma.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <tfbayes/utility/histogram.hh>
 #include <tfbayes/utility/probability.hh>
 #include <tfbayes/utility/distribution.hh>
-#include <tfbayes/utility/polygamma.hh>
 #include <tfbayes/entropy/entropy.hh>
 
 typedef histogram_t<double> prob_histogram_t;

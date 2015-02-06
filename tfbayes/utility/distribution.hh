@@ -96,7 +96,8 @@ inline RealType pdf(const dirichlet_distribution<RealType, Policy>& dist, const 
 
 namespace boost { namespace random {
 
-template <class input_type = double, class result_type = input_type>
+template <class  input_type = double,
+          class result_type = input_type>
 class gamma_distribution_prime
 {
         input_type m_shape;
@@ -110,7 +111,9 @@ class gamma_distribution_prime
                 result_type p = b*u;
                 if (p <= 1.0) {
                         result_type x = std::pow(p, 1.0/m_shape);
-                        assert(x != 0.0);
+                        if (x == 0.0) {
+                                throw std::domain_error("Invalid random variate.");
+                        }
                         if (m_runif(eng) > std::exp(-x)) {
                                 return random_variate(eng);
                         }
@@ -118,7 +121,9 @@ class gamma_distribution_prime
                 }
                 else {
                         result_type x = -std::log((b-p)/m_shape);
-                        assert(x != 0.0);
+                        if (x == 0.0) {
+                                throw std::domain_error("Invalid random variate.");
+                        }
                         if (static_cast<result_type>(m_runif(eng)) > std::pow(x, m_shape-1.0)) {
                                 return random_variate(eng);
                         }
@@ -140,7 +145,8 @@ public:
         }
 };
 
-template <class input_type = double, class result_type = input_type>
+template <class  input_type = double,
+          class result_type = input_type>
 class dirichlet_distribution
 {
         typedef gamma_distribution_prime<input_type, result_type> gamma_distribution_t;
