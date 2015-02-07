@@ -168,7 +168,7 @@ public:
                         m_rdirichlet.push_back(rdirichlet_t(k, alpha));
                         m_ddirichlet.push_back(ddirichlet_t(k, alpha));
                         // increase index
-                        while (m_mean(alpha) + n*m_sigma(alpha) > histogram.x()[i])
+                        while (m_mean(alpha) + n*m_sigma(alpha) > histogram.x()[i]-histogram.width()/0.6)
                                 i++;
                         // increase number of components
                         m_size += 1;
