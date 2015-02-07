@@ -21,6 +21,8 @@
 #include <cassert>
 #include <cmath>
 
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
 #include <boost/format.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/bernoulli_distribution.hpp>
@@ -53,6 +55,19 @@ std::ostream& operator<<(std::ostream& o, const std::vector<T>& v) {
 }
 
 using namespace std;
+
+double newton(boost::function<double (double)> f,
+              boost::function<double (double)> df,
+              double x, const double y)
+{
+        /* x: current position
+         * y: target value
+         */
+        while (std::abs(f(x) - y) > 1e-8) {
+                x += (y - f(x))/df(x);
+        }
+        return x;
+}
 
 void
 save_table(const prob_histogram_t& histogram, size_t k)
@@ -112,8 +127,13 @@ proposal_distribution_t
                 return std::sqrt((alpha+1.0)/(m_k*alpha+1.0)*boost::math::trigamma(alpha + 1.0)
                                  - boost::math::trigamma(m_k*alpha + 1.0));
         }
+        double compute_alpha(double alpha, double target) {
+                return newton(boost::bind(&proposal_distribution_t::m_mean, this, _1),
+                              boost::bind(&proposal_distribution_t::m_dmean, this, _1),
+                              alpha, target);
+        }
 public:
-        proposal_distribution_t(size_t k, double n = 0.5, double alpha_max = 10.0)
+        proposal_distribution_t(size_t k, double n = 1.0, double alpha_max = 10.0)
                 : m_k(k), m_size(0.0) {
                 // go to lower alpha values
                 for (double alpha = 1.0; alpha > 0.0;) {
@@ -122,7 +142,7 @@ public:
                         m_rdirichlet.push_back(rdirichlet_t(k, alpha));
                         m_ddirichlet.push_back(ddirichlet_t(k, alpha));
                         // compute new alpha
-                        alpha -= n*m_sigma(alpha)/m_dmean(alpha);
+                        alpha = compute_alpha(alpha, m_mean(alpha)-n*m_sigma(alpha));
                         // increase number of components
                         m_size += 1;
                 }
@@ -133,7 +153,7 @@ public:
                         m_rdirichlet.push_back(rdirichlet_t(k, alpha));
                         m_ddirichlet.push_back(ddirichlet_t(k, alpha));
                         // compute new alpha
-                        alpha += n*m_sigma(alpha)/m_dmean(alpha);
+                        alpha = compute_alpha(alpha, m_mean(alpha)+n*m_sigma(alpha));
                         // increase number of components
                         m_size += 1;
                 }
@@ -202,5 +222,4 @@ main(void)
                 save_table    (histogram, k);
                 save_histogram(histogram, k);
         }
-
 }
