@@ -131,12 +131,21 @@ proposal_distribution_t
         std::vector<ddirichlet_t> m_ddirichlet;
 
         double m_mean(double alpha) {
+                if (alpha <= 0.0) {
+                        alpha = 1.0e-10;
+                }
                 return boost::math::digamma(m_k*alpha + 1.0) - boost::math::digamma(alpha + 1.0);
         }
         double m_dmean(double alpha) {
+                if (alpha <= 0.0) {
+                        alpha = 1.0e-10;
+                }
                 return m_k*boost::math::trigamma(m_k*alpha + 1.0) - boost::math::trigamma(alpha + 1.0);
         }
         double m_sigma(double alpha) {
+                if (alpha <= 0.0) {
+                        alpha = 1.0e-10;
+                }
                 return std::sqrt((alpha+1.0)/(m_k*alpha+1.0)*boost::math::trigamma(alpha + 1.0)
                                  - boost::math::trigamma(m_k*alpha + 1.0));
         }
@@ -146,30 +155,25 @@ proposal_distribution_t
                               alpha, target);
         }
 public:
-        proposal_distribution_t(size_t k, double n = 1.0, double alpha_max = 10.0)
+        proposal_distribution_t(size_t k, const prob_histogram_t& histogram, double n = 0.5)
                 : m_k(k), m_size(0.0) {
-                // go to lower alpha values
-                for (double alpha = 1.0; alpha > 0.0;) {
-                        cout << boost::format("adding distribution at alpha = %f (with mean entropy %f)")
+
+                for (size_t i = 0; i < histogram.size();) {
+                        // compute new alpha
+                        double alpha = compute_alpha(1.0, histogram.x()[i]);
+                        // verbose
+                        cout << boost::format("Adding distribution at alpha = %f (with mean entropy %f)")
                                 % alpha % m_mean(alpha) << endl;
+                        // add distributions
                         m_rdirichlet.push_back(rdirichlet_t(k, alpha));
                         m_ddirichlet.push_back(ddirichlet_t(k, alpha));
-                        // compute new alpha
-                        alpha = compute_alpha(alpha, m_mean(alpha)-n*m_sigma(alpha));
+                        // increase index
+                        while (m_mean(alpha) + n*m_sigma(alpha) > histogram.x()[i])
+                                i++;
                         // increase number of components
                         m_size += 1;
                 }
-                // go to higher alpha values
-                for (double alpha = compute_alpha(1.0, m_mean(1.0)+n*m_sigma(1.0)); alpha < alpha_max;) {
-                        cout << boost::format("adding distribution at alpha = %f (with mean entropy %f)")
-                                % alpha % m_mean(alpha) << endl;
-                        m_rdirichlet.push_back(rdirichlet_t(k, alpha));
-                        m_ddirichlet.push_back(ddirichlet_t(k, alpha));
-                        // compute new alpha
-                        alpha = compute_alpha(alpha, m_mean(alpha)+n*m_sigma(alpha));
-                        // increase number of components
-                        m_size += 1;
-                }
+                cout << "Done." << endl;
         }
 
         template <class Engine>
@@ -193,8 +197,8 @@ prob_histogram_t
 approximate_distribution(size_t k, size_t minimum_counts, size_t bins)
 {
         boost::random::mt19937 gen; seed_rng(gen);
-        proposal_distribution_t proposal_distribution(k);
         prob_histogram_t histogram(0.0, log(k), bins);
+        proposal_distribution_t proposal_distribution(k, histogram);
 
         for (size_t i = 0; histogram.min_counts() < minimum_counts; i++) {
                 vector<probability_t> theta;
