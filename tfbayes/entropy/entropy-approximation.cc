@@ -33,7 +33,7 @@
 #include <tfbayes/utility/distribution.hh>
 #include <tfbayes/entropy/entropy.hh>
 
-typedef histogram_t<double> prob_histogram_t;
+typedef histogram_t<double, probability_t> prob_histogram_t;
 
 template <typename T>
 void seed_rng(T& rng)
@@ -60,7 +60,7 @@ save_table(const prob_histogram_t& histogram, size_t k)
         ofstream ofs((boost::format("entropy-approximation-%d.csv") % k).str());
 
         BOOST_FOREACH(const double& x, histogram.x()) {
-                ofs << boost::format("%0.8f %0.8f") % x % histogram.pdf(x)
+                ofs << boost::format("%0.8f %e") % x % histogram.pdf(x)
                     << endl;
         }
 }
