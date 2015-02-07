@@ -160,7 +160,7 @@ public:
                         m_size += 1;
                 }
                 // go to higher alpha values
-                for (double alpha = 1.0 + m_sigma(1.0)/m_dmean(1.0); alpha < alpha_max;) {
+                for (double alpha = compute_alpha(1.0, m_mean(1.0)+n*m_sigma(1.0)); alpha < alpha_max;) {
                         cout << boost::format("adding distribution at alpha = %f (with mean entropy %f)")
                                 % alpha % m_mean(alpha) << endl;
                         m_rdirichlet.push_back(rdirichlet_t(k, alpha));
