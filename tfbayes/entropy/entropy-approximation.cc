@@ -88,11 +88,24 @@ save_histogram(const prob_histogram_t& histogram, size_t k)
 
         ofs << "/* This file was automatically generated. */"
             << endl << endl;
-        ofs << boost::format("std::vector<double> entropy_histogram_%d_counts = {") % k
+        ofs << boost::format("std::vector<double> entropy_histogram_%d = {") % k
             << endl;
         for (size_t i = 0; i < histogram.size(); i++) {
                 ofs << setprecision(100)
                     << "\t" << histogram[i];
+                if (i+1 == histogram.size()) {
+                        ofs << endl;
+                }
+                else {
+                        ofs << "," << endl;
+                }
+        }
+        ofs << "};" << endl;
+        ofs << boost::format("std::vector<double> entropy_histogram_%d_counts = {") % k
+            << endl;
+        for (size_t i = 0; i < histogram.size(); i++) {
+                ofs << setprecision(100)
+                    << "\t" << histogram.counts()[i];
                 if (i+1 == histogram.size()) {
                         ofs << endl;
                 }
@@ -207,13 +220,26 @@ approximate_distribution(size_t k, size_t minimum_counts, size_t bins)
         return histogram;
 }
 
-int
-main(void)
+static
+void print_usage(char *pname, FILE *fp)
 {
+        (void)fprintf(fp, "\nUsage: %s from [to]\n\n", pname);
+}
+
+int
+main(int argc, char *argv[])
+{
+        if (argc != 2 && argc != 3) {
+                print_usage(argv[0], stderr);
+                exit(EXIT_FAILURE);
+        }
+        const size_t from = atoi(argv[1]);
+        const size_t to   = argc == 2 ? from : atoi(argv[2]);
+
         const size_t minimum_samples = 100000;
         const size_t bins = 100;
 
-        for (size_t k = 50; k <= 50; k++) {
+        for (size_t k = from; k <= to; k++) {
                 cerr << boost::format("Sampling entropies for cardinality %d...") % k
                      << endl;
 
