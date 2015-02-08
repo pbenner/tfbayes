@@ -36,7 +36,7 @@
 
 using namespace std;
 
-typedef histogram_t<double, probability_t> prob_histogram_t;
+typedef histogram_t<double, probability_t<> > prob_histogram_t;
 
 int
 main(void)

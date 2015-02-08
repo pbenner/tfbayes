@@ -66,12 +66,12 @@ double mbeta_log(
         return sum2 - boost::math::lgamma(sum1);
 }
 
-static inline
-double mbeta_log(
-        const std::vector<double>& alpha)
+template <class RealType>
+RealType mbeta_log(
+        const std::vector<RealType>& alpha)
 {
-        double sum1 = 0;
-        double sum2 = 0;
+        RealType sum1 = 0;
+        RealType sum2 = 0;
 
         for (size_t i = 0; i < alpha.size(); i++) {
                 sum1 += alpha[i];
@@ -81,15 +81,15 @@ double mbeta_log(
         return sum2 - boost::math::lgamma(sum1);
 }
 
-static inline
-double mbeta_log(
-        const std::vector<double>& extra,
-        const std::vector<double>& alpha)
+template <class RealType>
+RealType mbeta_log(
+        const std::vector<RealType>& extra,
+        const std::vector<RealType>& alpha)
 {
         assert(extra.size() == alpha.size());
 
-        double sum1 = 0;
-        double sum2 = 0;
+        RealType sum1 = 0;
+        RealType sum2 = 0;
 
         for (size_t i = 0; i < alpha.size(); i++) {
                 sum1 += extra[i] + alpha[i];

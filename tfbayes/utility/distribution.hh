@@ -111,7 +111,7 @@ class gamma_distribution_prime
                 result_type b = (std::exp(1.0) + m_shape)/std::exp(1.0);
                 result_type p = b*u;
                 if (p <= 1.0) {
-                        result_type x = std::pow(p, 1.0/m_shape);
+                        result_type x = std::pow(p, static_cast<result_type>(1.0/m_shape));
                         if (x == 0.0) {
                                 throw std::domain_error("Invalid random variate.");
                         }
@@ -125,7 +125,7 @@ class gamma_distribution_prime
                         if (x == 0.0) {
                                 throw std::domain_error("Invalid random variate.");
                         }
-                        if (static_cast<result_type>(m_runif(eng)) > std::pow(x, m_shape-1.0)) {
+                        if (static_cast<result_type>(m_runif(eng)) > std::pow(x, static_cast<result_type>(m_shape-1.0))) {
                                 return random_variate(eng);
                         }
                         return x;

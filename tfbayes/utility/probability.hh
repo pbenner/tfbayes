@@ -30,15 +30,26 @@
 
 #include <tfbayes/utility/logarithmetic.hh>
 
-class probability_t {
+template <class RealType = double>
+class probability_t
+{
+        typedef int8_t   sign_t;
+        typedef RealType real_t;
+
+        real_t log_p;
+        sign_t sign;
 public:
         probability_t()
-                : log_p (-std::numeric_limits<double>::infinity()),
+                : log_p (-std::numeric_limits<real_t>::infinity()),
                   sign  (1)
                 { }
-        probability_t(double p)
+        probability_t(real_t p)
                 : log_p (std::log(std::abs(p))),
                   sign  (p >= 0.0 ? 1 : -1)
+                { }
+        probability_t(real_t p, sign_t sign)
+                : log_p (p),
+                  sign  (sign)
                 { }
 
         probability_t& operator+=(const probability_t& q_) {
@@ -51,7 +62,9 @@ public:
                         p -= q.abs();
                 }
                 else {
-                        p = p.abs(); p -= q; p.sign *= -1;
+                        p  = p.abs();
+                        p -= q;
+                        p.sign *= -1;
                 }
                 return *this;
         }
@@ -71,7 +84,9 @@ public:
                         p += q.abs();
                 }
                 else {
-                        p = p.abs(); p += q; p.sign = -1;
+                        p  = p.abs();
+                        p += q;
+                        p.sign = -1;
                 }
                 return *this;
         }
@@ -124,15 +139,15 @@ public:
         bool operator<(const probability_t& p) const {
                 return (sign == p.sign && log_p < p.log_p) || sign < p.sign;
         }
-        explicit operator double() const {
+        explicit operator real_t() const {
                 return std::exp(log_p);
         }
-        double log() const {
+        real_t log() const {
                 return sign == 1
                         ? log_p
-                        : std::numeric_limits<double>::quiet_NaN();
+                        : std::numeric_limits<real_t>::quiet_NaN();
         }
-        double exp() const {
+        real_t exp() const {
                 return sign == 1
                         ? std::exp( std::exp(log_p))
                         : std::exp(-std::exp(log_p));
@@ -187,7 +202,7 @@ public:
                 if (p.sign == -1) {
                         o << "-";
                 }
-                if (p.log_p == -std::numeric_limits<double>::infinity()) {
+                if (p.log_p == -std::numeric_limits<real_t>::infinity()) {
                         o << 0.0;
                 }
                 else {
@@ -195,26 +210,32 @@ public:
                 }
                 return o;
         }
-
-protected:
-        double log_p;
-        int8_t sign;
 };
 
+template <class RealType>
+probability_t<RealType> from_log_scale(RealType log_p) {
+        return probability_t<RealType>(log_p, 1);
+}
+
 namespace std {
-        bool isnan(const probability_t& p) {
+        template <class RealType>
+        bool isnan(const probability_t<RealType>& p) {
                 return p.isnan();
         }
-        double log(const probability_t& p) {
+        template <class RealType>
+        RealType log(const probability_t<RealType>& p) {
                 return p.log();
         }
-        double exp(const probability_t& p) {
+        template <class RealType>
+        RealType exp(const probability_t<RealType>& p) {
                 return p.exp();
         }
-        probability_t pow(const probability_t& p, const probability_t& q) {
+        template <class RealType>
+        probability_t<RealType> pow(const probability_t<RealType>& p, const probability_t<RealType>& q) {
                 return p.pow(q);
         }
-        probability_t abs(const probability_t& p) {
+        template <class RealType>
+        probability_t<RealType> abs(const probability_t<RealType>& p) {
                 return p.abs();
         }
 }

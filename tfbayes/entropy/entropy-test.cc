@@ -26,7 +26,7 @@ using namespace std;
 int
 main(void)
 {
-        vector<probability_t> v(4, 1.0/4.0);
+        vector<probability_t<> > v(4, 1.0/4.0);
 
         cout << entropy(v) << endl;
 }

@@ -35,7 +35,13 @@
 #include <tfbayes/utility/distribution.hh>
 #include <tfbayes/entropy/entropy.hh>
 
-typedef histogram_t<double, probability_t> prob_histogram_t;
+// type declarations
+////////////////////////////////////////////////////////////////////////////////
+typedef long double real_t;
+typedef probability_t<real_t> p_t;
+typedef std::vector<p_t> p_vector_t;
+typedef histogram_t<real_t, p_t> hist_t;
+////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 void seed_rng(T& rng)
@@ -56,9 +62,10 @@ std::ostream& operator<<(std::ostream& o, const std::vector<T>& v) {
 
 using namespace std;
 
-double newton(boost::function<double (double)> f,
-              boost::function<double (double)> df,
-              double x, const double y)
+template <class RealType>
+RealType newton(boost::function<RealType (RealType)> f,
+                boost::function<RealType (RealType)> df,
+                RealType x, const RealType y)
 {
         /* x: current position
          * y: target value
@@ -70,18 +77,18 @@ double newton(boost::function<double (double)> f,
 }
 
 void
-save_table(const prob_histogram_t& histogram, size_t k)
+save_table(const hist_t& histogram, size_t k)
 {
         ofstream ofs((boost::format("entropy-approximation-%d.csv") % k).str());
 
-        BOOST_FOREACH(const double& x, histogram.x()) {
-                ofs << boost::format("%0.8f %e") % x % histogram.pdf(x)
+        BOOST_FOREACH(const real_t& x, histogram.x()) {
+                ofs << boost::format("%0.8f %e") % x % std::log(histogram.pdf(x))
                     << endl;
         }
 }
 
 void
-save_histogram(const prob_histogram_t& histogram, size_t k)
+save_histogram(const hist_t& histogram, size_t k)
 {
         string filename = (boost::format("entropy-approximation-%d.hh") % k).str();
         ofstream ofs(filename);
@@ -92,7 +99,7 @@ save_histogram(const prob_histogram_t& histogram, size_t k)
             << endl;
         for (size_t i = 0; i < histogram.size(); i++) {
                 ofs << setprecision(100)
-                    << "\t" << histogram[i];
+                    << "\t" << std::log(histogram[i]);
                 if (i+1 == histogram.size()) {
                         ofs << endl;
                 }
@@ -119,8 +126,8 @@ save_histogram(const prob_histogram_t& histogram, size_t k)
 class
 proposal_distribution_t
 {
-        typedef boost::random::dirichlet_distribution<double, probability_t> rdirichlet_t;
-        typedef boost::math  ::dirichlet_distribution<> ddirichlet_t;
+        typedef boost::random::dirichlet_distribution<real_t, p_t> rdirichlet_t;
+        typedef boost::math  ::dirichlet_distribution<real_t     > ddirichlet_t;
 
         // cardinality
         size_t m_k;
@@ -130,37 +137,37 @@ proposal_distribution_t
         std::vector<rdirichlet_t> m_rdirichlet;
         std::vector<ddirichlet_t> m_ddirichlet;
 
-        double m_mean(double alpha) {
+        real_t m_mean(real_t alpha) {
                 if (alpha <= 0.0) {
                         alpha = 1.0e-10;
                 }
                 return boost::math::digamma(m_k*alpha + 1.0) - boost::math::digamma(alpha + 1.0);
         }
-        double m_dmean(double alpha) {
+        real_t m_dmean(real_t alpha) {
                 if (alpha <= 0.0) {
                         alpha = 1.0e-10;
                 }
                 return m_k*boost::math::trigamma(m_k*alpha + 1.0) - boost::math::trigamma(alpha + 1.0);
         }
-        double m_sigma(double alpha) {
+        real_t m_sigma(real_t alpha) {
                 if (alpha <= 0.0) {
                         alpha = 1.0e-10;
                 }
                 return std::sqrt((alpha+1.0)/(m_k*alpha+1.0)*boost::math::trigamma(alpha + 1.0)
                                  - boost::math::trigamma(m_k*alpha + 1.0));
         }
-        double compute_alpha(double alpha, double target) {
-                return newton(boost::bind(&proposal_distribution_t::m_mean, this, _1),
-                              boost::bind(&proposal_distribution_t::m_dmean, this, _1),
-                              alpha, target);
+        real_t compute_alpha(real_t alpha, real_t target) {
+                return newton<real_t>(boost::bind(&proposal_distribution_t::m_mean,  this, _1),
+                                      boost::bind(&proposal_distribution_t::m_dmean, this, _1),
+                                      alpha, target);
         }
 public:
-        proposal_distribution_t(size_t k, const prob_histogram_t& histogram, double n = 0.5)
+        proposal_distribution_t(size_t k, const hist_t& histogram, real_t n = 0.05)
                 : m_k(k), m_size(0.0) {
 
                 for (size_t i = 0; i < histogram.size();) {
                         // compute new alpha
-                        double alpha = compute_alpha(1.0, histogram.x()[i]);
+                        real_t alpha = compute_alpha(1.0, histogram.x()[i]);
                         // verbose
                         cout << boost::format("Adding distribution at alpha = %f (with mean entropy %f)")
                                 % alpha % m_mean(alpha) << endl;
@@ -177,31 +184,31 @@ public:
         }
 
         template <class Engine>
-        std::vector<probability_t> operator()(Engine& eng) {
+        p_vector_t operator()(Engine& eng) {
                 boost::random::uniform_int_distribution<> rint(0, m_size-1);
 
                 return m_rdirichlet[rint(eng)](eng);
         }
 
-        double pdf(std::vector<probability_t> x) {
-                double result = 0.0;
+        p_t pdf(const p_vector_t& x) {
+                p_t result = 0.0;
 
                 for (size_t i = 0; i < m_size; i++) {
-                        result += boost::math::pdf(m_ddirichlet[i], x);
+                        result += from_log_scale(boost::math::log_pdf(m_ddirichlet[i], x));
                 }
-                return result/m_size;
+                return result/p_t(m_size);
         }
 };
 
-prob_histogram_t
+hist_t
 approximate_distribution(size_t k, size_t minimum_counts, size_t bins)
 {
         boost::random::mt19937 gen; seed_rng(gen);
-        prob_histogram_t histogram(0.0, log(k), bins);
+        hist_t histogram(0.0, log(k), bins);
         proposal_distribution_t proposal_distribution(k, histogram);
 
         for (size_t i = 0; histogram.min_counts() < minimum_counts; i++) {
-                vector<probability_t> theta;
+                p_vector_t theta;
                 while (true) {
                         try {
                                 theta = proposal_distribution(gen);
@@ -214,11 +221,14 @@ approximate_distribution(size_t k, size_t minimum_counts, size_t bins)
                 }
                 histogram.add(entropy(theta), 1.0/proposal_distribution.pdf(theta));
                 if ((i+1) % 100000 == 0) {
-                        std::vector<double>::const_iterator it =
+                        vector<real_t>::const_iterator it =
                                 std::min_element(histogram.counts().begin(),
                                                  histogram.counts().end());
                         cout << boost::format("-> min counts: %f at %d") % *it % (it - histogram.counts().begin())
                              << endl;
+                        // save partial results
+                        save_table    (histogram, k);
+                        save_histogram(histogram, k);
                 }
         }
         return histogram;
@@ -240,14 +250,14 @@ main(int argc, char *argv[])
         const size_t from = atoi(argv[1]);
         const size_t to   = argc == 2 ? from : atoi(argv[2]);
 
-        const size_t minimum_samples = 100000;
+        const size_t minimum_samples = 500000;
         const size_t bins = 100;
 
         for (size_t k = from; k <= to; k++) {
                 cerr << boost::format("Sampling entropies for cardinality %d...") % k
                      << endl;
 
-                const prob_histogram_t histogram = approximate_distribution(k, minimum_samples, bins);
+                const hist_t histogram = approximate_distribution(k, minimum_samples, bins);
 
                 save_table    (histogram, k);
                 save_histogram(histogram, k);

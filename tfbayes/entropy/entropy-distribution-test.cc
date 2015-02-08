@@ -24,7 +24,10 @@
 #include <tfbayes/utility/probability.hh>
 #include <tfbayes/entropy/entropy-distribution.hh>
 
-std::ostream& operator<<(std::ostream& o, const std::vector<probability_t>& v) {
+typedef probability_t<> p_t;
+typedef std::vector<p_t> p_vector_t;
+
+std::ostream& operator<<(std::ostream& o, const p_vector_t& v) {
         for (size_t i = 0; i < v.size(); i++) {
                 if (i != 0) o << " ";
                 o << std::fixed << std::setprecision(8) << v[i];
@@ -61,7 +64,7 @@ main(int argc, char *argv[])
         double a2 = atof(argv[4]);
 
         boost::random::mt19937 gen; seed_rng(gen);
-        boost::random::entropy_distribution<double, probability_t> dist(k, a1, a2);
+        boost::random::entropy_distribution<double, p_t> dist(k, a1, a2);
 
         for (size_t i = 0; i < n; i++) {
                 cout << dist(gen, 0.1)

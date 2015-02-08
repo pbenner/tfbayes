@@ -54,19 +54,23 @@ public:
                 m_accepted (0.0) {
                 if (k == 2) {
                         histogram = histogram_t<input_type, result_type>(
-                                0.0, log(k), entropy_histogram_2_counts);
+                                0.0, log(k), entropy_histogram_2,
+                                entropy_histogram_2_counts);
                 }
                 else if (k == 3) {
                         histogram = histogram_t<input_type, result_type>(
-                                0.0, log(k), entropy_histogram_3_counts);
+                                0.0, log(k), entropy_histogram_3,
+                                entropy_histogram_3_counts);
                 }
                 else if (k == 4) {
                         histogram = histogram_t<input_type, result_type>(
-                                0.0, log(k), entropy_histogram_4_counts);
+                                0.0, log(k), entropy_histogram_4,
+                                entropy_histogram_4_counts);
                 }
                 else if (k == 5) {
                         histogram = histogram_t<input_type, result_type>(
-                                0.0, log(k), entropy_histogram_5_counts);
+                                0.0, log(k), entropy_histogram_5,
+                                entropy_histogram_5_counts);
                 }
                 else {
                         throw std::runtime_error("Invalid cardinality!");

@@ -56,7 +56,9 @@ public:
                 }
         }
         template <class T>
-        histogram_t(input_type min, input_type max, const std::vector<T>& y)
+        histogram_t(input_type min, input_type max,
+                    const std::vector<T>& y,
+                    const std::vector<T>& counts = std::vector<T>())
                 : base_t     (y.begin(), y.end()),
                   m_n        (y.size()),
                   m_min      (min),
@@ -74,6 +76,9 @@ public:
                 if (std::isnan(m_total)) {
                         throw std::runtime_error("Histogram count overflow!");
                 }
+                if (counts.size() == y.size()) {
+                        m_counts = std::vector<input_type>(counts.begin(), counts.end());
+                }
         }
         void add(input_type x, result_type v = 1.0) {
                 size_t i = std::abs(x - m_max) < 1e-8 ? m_n-1 : std::floor((x-m_min)/m_width);
@@ -83,7 +88,7 @@ public:
                 base_t::operator[](i) += v;
         }
         result_type pdf(input_type x) const {
-                const size_t i = std::min(m_n-2.0, std::floor((x-m_min)/m_width));
+                const size_t i = std::min(static_cast<input_type>(m_n-2.0), std::floor((x-m_min)/m_width));
                 const result_type m = m_total;
                 const result_type w = m_width;
                 // interpolate the result
