@@ -27,11 +27,11 @@
 
 #include <boost/foreach.hpp>
 
-template <class input_type = double>
-double entropy(const std::vector<input_type>& v) {
-        double result = 0.0;
-        BOOST_FOREACH(const input_type& i, v) {
-                result -= static_cast<double>(i)*std::log(i);
+template <class RealType>
+RealType entropy(const std::vector<RealType>& v) {
+        RealType result = 0.0;
+        BOOST_FOREACH(const RealType& i, v) {
+                result -= static_cast<RealType>(i)*std::log(i);
         }
         return result;
 }

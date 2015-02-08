@@ -219,7 +219,7 @@ approximate_distribution(size_t k, size_t minimum_counts, size_t bins)
                                      << endl;;
                         }
                 }
-                histogram.add(entropy(theta), 1.0/proposal_distribution.pdf(theta));
+                histogram.add(static_cast<real_t>(entropy(theta)), 1.0/proposal_distribution.pdf(theta));
                 if ((i+1) % 100000 == 0) {
                         vector<real_t>::const_iterator it =
                                 std::min_element(histogram.counts().begin(),

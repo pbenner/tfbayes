@@ -163,6 +163,12 @@ public:
                 }
                 return p;
         }
+        probability_t pow(const RealType& q) const {
+                probability_t p(*this);
+                assert(p.sign == 1);
+                p.log_p *= q;
+                return p;
+        }
         probability_t abs() const {
                 probability_t p(*this);
                 p.sign = 1;
@@ -232,6 +238,10 @@ namespace std {
         }
         template <class RealType>
         probability_t<RealType> pow(const probability_t<RealType>& p, const probability_t<RealType>& q) {
+                return p.pow(q);
+        }
+        template <class RealType>
+        probability_t<RealType> pow(const probability_t<RealType>& p, const RealType& q) {
                 return p.pow(q);
         }
         template <class RealType>

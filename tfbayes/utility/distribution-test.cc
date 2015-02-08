@@ -53,7 +53,7 @@ main(void)
         boost::math  ::dirichlet_distribution<> ddir(alpha);
         boost::random::dirichlet_distribution<> rdir(alpha);
 
-        boost::random::gamma_distribution_prime<double, probability_t> rgamma(0.01);
+        boost::random::gamma_distribution_prime<double, probability_t<> > rgamma(0.01);
 
         cout << boost::math::log_pdf(ddir, x)
              << endl;
