@@ -163,21 +163,21 @@ proposal_distribution_t
                                       alpha, target);
         }
 public:
-        proposal_distribution_t(size_t k, const hist_t& histogram, real_t n = 0.05)
+        proposal_distribution_t(size_t k, const hist_t& histogram, real_t n = 0.1)
                 : m_k(k), m_size(0.0) {
 
-                for (size_t i = 0; i < histogram.size();) {
-                        // compute new alpha
-                        real_t alpha = compute_alpha(1.0, histogram.x()[i]);
+                real_t alpha_min = compute_alpha(1.0, histogram.x()[0]);
+                real_t alpha_max = compute_alpha(1.0, histogram.x()[histogram.size()-1]-histogram.width()/0.6);
+
+                for (real_t alpha = alpha_min; alpha < alpha_max;) {
                         // verbose
                         cout << boost::format("Adding distribution at alpha = %f (with mean entropy %f)")
                                 % alpha % m_mean(alpha) << endl;
                         // add distributions
                         m_rdirichlet.push_back(rdirichlet_t(k, alpha));
                         m_ddirichlet.push_back(ddirichlet_t(k, alpha));
-                        // increase index
-                        while (m_mean(alpha) + n*m_sigma(alpha) > histogram.x()[i]-histogram.width()/0.6)
-                                i++;
+                        // compute new alpha
+                        alpha = compute_alpha(alpha, m_mean(alpha) + n*m_sigma(alpha));
                         // increase number of components
                         m_size += 1;
                 }
