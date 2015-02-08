@@ -223,6 +223,21 @@ probability_t<RealType> from_log_scale(RealType log_p) {
         return probability_t<RealType>(log_p, 1);
 }
 
+template <class RealType>
+RealType GCC_ATTRIBUTE_NOAMATH
+kahan_sum(const std::vector<RealType>& input)
+{
+        RealType sum = 0.0;
+        RealType c   = 0.0;
+        for (size_t i = 0; i < input.size(); i++) {
+                RealType y = input[i] - c;
+                RealType t = sum + y;
+                c = (t - sum) - y;
+                sum = t;
+        }
+        return sum;
+}
+
 namespace std {
         template <class RealType>
         bool isnan(const probability_t<RealType>& p) {

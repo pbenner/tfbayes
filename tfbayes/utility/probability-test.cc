@@ -16,6 +16,7 @@
  */
 
 #include <cmath>
+#include <vector>
 
 #include <boost/format.hpp>
 
@@ -25,6 +26,7 @@ using namespace std;
 
 typedef double real_t;
 typedef probability_t<real_t> p_t;
+typedef vector<p_t> p_vector_t;
 
 void
 test1(void)
@@ -82,16 +84,58 @@ test4()
         cout << "b >= 0: " << (b>=0) << endl;
         cout << "exp(a): " << exp(a) << endl;
         cout << "b^0.34: " << pow(b, real_t(0.34)) << endl;
+        cout << endl;
 }
 
 void
-test_accuracy()
+test_accuracy1()
+{
+        double a = 1.0;
+        double b = 1.0e17;
+
+        cout << "double:        (1.0 + 1.0e17) + -1.0e17 = "
+             << (a+b)-b
+             << endl;
+}
+
+void
+test_accuracy2()
+{
+        std::vector<double> v = {1.0, 1.0e17, -1.0e17};
+
+        cout << "double:        (1.0 + 1.0e17) + -1.0e17 = "
+             << kahan_sum(v)
+             << endl;
+}
+
+void
+test_accuracy3()
 {
         p_t a = 1.0;
-        p_t b = 1.0e10;
+        p_t b = 1.0e17;
 
-        cout << "(1.0 + 1.0e10) + -1.0e10 = "
+        cout << "probability_t: (1.0 + 1.0e17) + -1.0e17 = "
              << (a+b)-b
+             << endl;
+}
+
+void
+test_accuracy4()
+{
+        p_vector_t v = {1.0, 1.0e17, -1.0e17};
+
+        cout << "probability_t: (1.0 + 1.0e17) + -1.0e17 = "
+             << kahan_sum(v)
+             << endl;
+}
+
+void
+test_accuracy5()
+{
+        p_vector_t v(100000, from_log_scale(-800.0));
+
+        cout << "100000*exp(-800) = "
+             << std::log(kahan_sum(v))
              << endl;
 }
 
@@ -113,6 +157,10 @@ main(void)
         test3();
         test4();
 
-        test_accuracy();
+        test_accuracy1();
+        test_accuracy2();
+        test_accuracy3();
+        test_accuracy4();
+        test_accuracy5();
 }
 

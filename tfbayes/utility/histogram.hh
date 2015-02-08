@@ -50,7 +50,8 @@ public:
                   m_width    ((max-min)/n),
                   m_total    (0.0),
                   m_x        (n, 0.0),
-                  m_counts   (n, 0.0) {
+                  m_counts   (n, 0.0),
+                  m_kahan    (n, 0.0) {
                 for (size_t i = 0; i < n; i++) {
                         m_x[i] = m_width/2.0 + i*m_width;
                 }
@@ -66,7 +67,8 @@ public:
                   m_width    ((max-min)/y.size()),
                   m_total    (0.0),
                   m_x        (y.size(), 0.0),
-                  m_counts   (y.size(), 0.0) {
+                  m_counts   (y.size(), 0.0),
+                  m_kahan    (y.size(), 0.0) {
                 for (size_t i = 0; i < y.size(); i++) {
                         // compute midpoints
                         m_x[i] = m_width/2.0 + i*m_width;
@@ -80,12 +82,16 @@ public:
                         m_counts = std::vector<input_type>(counts.begin(), counts.end());
                 }
         }
-        void add(input_type x, result_type v = 1.0) {
+        void add(input_type x, result_type v = 1.0) GCC_ATTRIBUTE_NOAMATH {
                 size_t i = std::abs(x - m_max) < 1e-8 ? m_n-1 : std::floor((x-m_min)/m_width);
                 assert(i < m_n);
                 m_total     += v;
                 m_counts[i] += 1.0;
-                base_t::operator[](i) += v;
+                // kahan summation
+                result_type y = v - m_kahan[i];
+                result_type t = base_t::operator[](i) + y;
+                m_kahan[i] = (t - base_t::operator[](i)) - y;
+                base_t::operator[](i) = t;
         }
         result_type pdf(input_type x) const {
                 const size_t i = std::min(static_cast<input_type>(m_n-2.0), std::floor((x-m_min)/m_width));
@@ -154,8 +160,9 @@ protected:
         input_type m_max;
         input_type m_width;
         result_type m_total;
-        std::vector<input_type> m_x;
-        std::vector<input_type> m_counts;
+        std::vector< input_type> m_x;
+        std::vector< input_type> m_counts;
+        std::vector<result_type> m_kahan;
 };
 
 #endif /* __TFBAYES_UTILITY_HISTOGRAM_HH__ */

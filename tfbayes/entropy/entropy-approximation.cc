@@ -191,12 +191,12 @@ public:
         }
 
         p_t pdf(const p_vector_t& x) {
-                p_t result = 0.0;
+                p_vector_t result(m_size, 0.0);
 
                 for (size_t i = 0; i < m_size; i++) {
-                        result += from_log_scale(boost::math::log_pdf(m_ddirichlet[i], x));
+                        result[i] = from_log_scale(boost::math::log_pdf(m_ddirichlet[i], x));
                 }
-                return result/p_t(m_size);
+                return sum(result)/p_t(m_size);
         }
 };
 
