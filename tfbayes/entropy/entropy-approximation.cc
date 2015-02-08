@@ -15,6 +15,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -196,7 +197,9 @@ public:
                 for (size_t i = 0; i < m_size; i++) {
                         result[i] = from_log_scale(boost::math::log_pdf(m_ddirichlet[i], x));
                 }
-                return sum(result)/p_t(m_size);
+                sort(result.begin(), result.end());
+
+                return kahan_sum(result)/p_t(m_size);
         }
 };
 
