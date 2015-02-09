@@ -17,6 +17,7 @@
 
 #include <cmath>
 #include <vector>
+#include <iostream>
 
 #include <boost/format.hpp>
 
@@ -91,9 +92,9 @@ void
 test_accuracy1()
 {
         double a = 1.0;
-        double b = 1.0e17;
+        double b = 1e17;
 
-        cout << "double:        (1.0 + 1.0e17) + -1.0e17 = "
+        cout << "(test 1) double:        (1.0 + 1.0e17) + -1.0e17 = "
              << (a+b)-b
              << endl;
 }
@@ -103,8 +104,8 @@ test_accuracy2()
 {
         std::vector<double> v = {1.0, 1.0e17, -1.0e17};
 
-        cout << "double:        (1.0 + 1.0e17) + -1.0e17 = "
-             << kahan_sum(v)
+        cout << "(test 2) double:        (1.0 + 1.0e17) + -1.0e17 = "
+             << msum(v)
              << endl;
 }
 
@@ -114,7 +115,7 @@ test_accuracy3()
         p_t a = 1.0;
         p_t b = 1.0e17;
 
-        cout << "probability_t: (1.0 + 1.0e17) + -1.0e17 = "
+        cout << "(test 3) probability_t: (1.0 + 1.0e17) + -1.0e17 = "
              << (a+b)-b
              << endl;
 }
@@ -124,8 +125,8 @@ test_accuracy4()
 {
         p_vector_t v = {1.0, 1.0e17, -1.0e17};
 
-        cout << "probability_t: (1.0 + 1.0e17) + -1.0e17 = "
-             << kahan_sum(v)
+        cout << "(test 4) probability_t: (1.0 + 1.0e17) + -1.0e17 = "
+             << msum(v)
              << endl;
 }
 
@@ -134,7 +135,7 @@ test_accuracy5()
 {
         p_vector_t v(100000, from_log_scale(-800.0));
 
-        cout << "100000*exp(-800) = "
+        cout << "(test 5) 100000*exp(-800) = "
              << std::log(kahan_sum(v))
              << endl;
 }

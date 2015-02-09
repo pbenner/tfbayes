@@ -185,10 +185,11 @@ public:
         }
 
         template <class Engine>
-        p_vector_t operator()(Engine& eng) {
+        std::pair<size_t, p_vector_t> operator()(Engine& eng) {
                 boost::random::uniform_int_distribution<> rint(0, m_size-1);
+                size_t i = rint(eng);
 
-                return m_rdirichlet[rint(eng)](eng);
+                return std::make_pair(i, m_rdirichlet[i](eng));
         }
 
         p_t pdf(const p_vector_t& x) {
@@ -201,6 +202,9 @@ public:
 
                 return kahan_sum(result)/p_t(m_size);
         }
+        p_t pdf(const p_vector_t& x, size_t i) {
+                return from_log_scale(boost::math::log_pdf(m_ddirichlet[i], x));
+        }
 };
 
 hist_t
@@ -212,9 +216,12 @@ approximate_distribution(size_t k, size_t minimum_counts, size_t bins)
 
         for (size_t i = 0; histogram.min_counts() < minimum_counts; i++) {
                 p_vector_t theta;
+                size_t component;
                 while (true) {
                         try {
-                                theta = proposal_distribution(gen);
+                                std::pair<size_t, p_vector_t> p = proposal_distribution(gen);
+                                component = p.first;
+                                theta     = p.second;
                                 break;
                         }
                         catch (std::domain_error &e) {
@@ -222,12 +229,13 @@ approximate_distribution(size_t k, size_t minimum_counts, size_t bins)
                                      << endl;;
                         }
                 }
-                histogram.add(static_cast<real_t>(entropy(theta)), 1.0/proposal_distribution.pdf(theta));
+                histogram.add(static_cast<real_t>(entropy(theta)), 1.0/proposal_distribution.pdf(theta, component));
                 if ((i+1) % 100000 == 0) {
                         vector<real_t>::const_iterator it =
                                 std::min_element(histogram.counts().begin(),
                                                  histogram.counts().end());
-                        cout << boost::format("-> min counts: %f at %d") % *it % (it - histogram.counts().begin())
+                        cout << boost::format("-> min counts: %f at %d (%f)")
+                                % *it % (it - histogram.counts().begin()) % histogram.x()[it - histogram.counts().begin()]
                              << endl;
                         // save partial results
                         save_table    (histogram, k);
@@ -254,7 +262,7 @@ main(int argc, char *argv[])
         const size_t to   = argc == 2 ? from : atoi(argv[2]);
 
         const size_t minimum_samples = 500000;
-        const size_t bins = 100;
+        const size_t bins = 500;
 
         for (size_t k = from; k <= to; k++) {
                 cerr << boost::format("Sampling entropies for cardinality %d...") % k
