@@ -69,8 +69,6 @@ public:
                         p -= q;
                         p.sign *= -1;
                 }
-                if (p.log_p == -std::numeric_limits<real_t>::infinity())
-                        p.sign = 1;
                 return *this;
         }
         probability_t& operator-=(const probability_t& q_) {
@@ -93,8 +91,6 @@ public:
                         p += q;
                         p.sign = -1;
                 }
-                if (p.log_p == -std::numeric_limits<real_t>::infinity())
-                        p.sign = 1;
                 return *this;
         }
         probability_t& operator*=(const probability_t& p) {
@@ -121,8 +117,6 @@ public:
                                 p += q;
                         }
                 }
-                if (p.log_p == -std::numeric_limits<real_t>::infinity())
-                        p.sign = 1;
                 return *this;
         }
         probability_t operator-() const {
@@ -150,6 +144,9 @@ public:
         }
         explicit operator real_t() const {
                 return std::exp(log_p);
+        }
+        explicit operator bool() const {
+                return log_p != -std::numeric_limits<real_t>::infinity();
         }
         real_t log() const {
                 return sign == 1
@@ -297,7 +294,7 @@ msum(const std::vector<RealType>& input) {
                         }
                         hi = x + y;
                         lo = y - (hi - x);
-                        if (lo != RealType(0.0)) {
+                        if (lo) {
                                 if (i < partials_tmp.size()) {
                                         partials_tmp[i] = lo;
                                 }
