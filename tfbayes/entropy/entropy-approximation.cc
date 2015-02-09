@@ -185,11 +185,9 @@ public:
         }
 
         template <class Engine>
-        std::pair<size_t, p_vector_t> operator()(Engine& eng) {
+        p_vector_t operator()(Engine& eng) {
                 boost::random::uniform_int_distribution<> rint(0, m_size-1);
-                size_t i = rint(eng);
-
-                return std::make_pair(i, m_rdirichlet[i](eng));
+                return m_rdirichlet[rint(eng)](eng);
         }
 
         p_t pdf(const p_vector_t& x) {
@@ -198,9 +196,8 @@ public:
                 for (size_t i = 0; i < m_size; i++) {
                         result[i] = from_log_scale(boost::math::log_pdf(m_ddirichlet[i], x));
                 }
-                sort(result.begin(), result.end());
 
-                return kahan_sum(result)/p_t(m_size);
+                return msum(result)/p_t(m_size);
         }
         p_t pdf(const p_vector_t& x, size_t i) {
                 return from_log_scale(boost::math::log_pdf(m_ddirichlet[i], x));
@@ -216,12 +213,9 @@ approximate_distribution(size_t k, size_t minimum_counts, size_t bins)
 
         for (size_t i = 0; histogram.min_counts() < minimum_counts; i++) {
                 p_vector_t theta;
-                size_t component;
                 while (true) {
                         try {
-                                std::pair<size_t, p_vector_t> p = proposal_distribution(gen);
-                                component = p.first;
-                                theta     = p.second;
+                                theta = proposal_distribution(gen);
                                 break;
                         }
                         catch (std::domain_error &e) {
@@ -229,7 +223,7 @@ approximate_distribution(size_t k, size_t minimum_counts, size_t bins)
                                      << endl;;
                         }
                 }
-                histogram.add(static_cast<real_t>(entropy(theta)), 1.0/proposal_distribution.pdf(theta, component));
+                histogram.add(static_cast<real_t>(entropy(theta)), 1.0/proposal_distribution.pdf(theta));
                 if ((i+1) % 100000 == 0) {
                         vector<real_t>::const_iterator it =
                                 std::min_element(histogram.counts().begin(),
