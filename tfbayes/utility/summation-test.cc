@@ -39,7 +39,6 @@ test1(void)
              << "msum: " << msum(v)
              << endl;
 }
-
 void
 test2(void)
 {
@@ -49,7 +48,6 @@ test2(void)
              << "msum: " << msum(v)
              << endl;
 }
-
 void
 test3()
 {
@@ -87,9 +85,33 @@ test6()
 void
 test7()
 {
-        p_vector_t v(100000, from_log_scale(-800.0));
-        cout << "(test 5) 100000*exp(-800) = "
-             << std::log(ksum(v))
+        vector<double> v = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7 };
+
+        cout << "naive sum = "
+             << setprecision(20)
+             << std::accumulate(v.begin(), v.end(), double(0.0))
+             << endl;
+        cout << "     ksum = "
+             << ksum(v)
+             << endl;
+        cout << "     msum = "
+             << msum(v)
+             << endl;
+}
+void
+test8()
+{
+        p_vector_t v = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7 };
+
+        cout << "naive sum = "
+             << setprecision(20)
+             << std::accumulate(v.begin(), v.end(), p_t(0.0))
+             << endl;
+        cout << "     ksum = "
+             << ksum(v)
+             << endl;
+        cout << "     msum = "
+             << msum(v)
              << endl;
 }
 
@@ -103,4 +125,5 @@ main(void)
         test5(); cout << endl;
         test6(); cout << endl;
         test7(); cout << endl;
+        test8(); cout << endl;
 }
