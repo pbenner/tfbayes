@@ -39,8 +39,8 @@ RealType entropy(const std::vector<RealType>& v) {
 }
 
 template <class RealType>
-RealType entropy(const std::vector<RealType>& v, bool full_precision) {
-        if (!full_precision) {
+RealType entropy(const std::vector<RealType>& v, bool extended_precision) {
+        if (!extended_precision) {
                 return entropy<RealType>(v);
         }
         std::vector<RealType> result(v.size(), 0.0);

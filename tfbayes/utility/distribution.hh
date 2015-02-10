@@ -88,8 +88,33 @@ inline RealType log_pdf(const dirichlet_distribution<RealType, Policy>& dist, co
 }
 
 template <class RealType, class Policy, class T>
+inline RealType log_pdf(const dirichlet_distribution<RealType, Policy>& dist, const std::vector<T>& x, bool extended_precision)
+{
+        if (!extended_precision) {
+                return log_pdf(dist, x);
+        }
+        std::vector<RealType> alpha = dist.alpha();
+        std::vector<RealType> tmp(alpha.size(), 0.0);
+
+        for (size_t i = 0; i < alpha.size(); i++) {
+                tmp[i] = (alpha[i]-1.0)*std::log(x[i]);
+        }
+
+        return msum(tmp) - mbeta_log(alpha);
+}
+
+template <class RealType, class Policy, class T>
 inline RealType pdf(const dirichlet_distribution<RealType, Policy>& dist, const std::vector<T>& x)
 {
+        return std::exp(log_pdf(dist, x));
+}
+
+template <class RealType, class Policy, class T>
+inline RealType pdf(const dirichlet_distribution<RealType, Policy>& dist, const std::vector<T>& x, bool extended_precision)
+{
+        if (!extended_precision) {
+                return log_pdf(dist, x);
+        }
         return std::exp(log_pdf(dist, x));
 }
 
@@ -184,8 +209,8 @@ public:
                 return result;
         }
         template<class Engine>
-        std::vector<result_type> operator()(Engine& eng, bool full_precision) {
-                if (!full_precision) {
+        std::vector<result_type> operator()(Engine& eng, bool extended_precision) {
+                if (!extended_precision) {
                         return operator()(eng);
                 }
                 result_type sum;
