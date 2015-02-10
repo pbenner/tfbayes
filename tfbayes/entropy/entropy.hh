@@ -30,8 +30,8 @@
 template <class RealType>
 RealType entropy(const std::vector<RealType>& v) {
         RealType result = 0.0;
-        BOOST_FOREACH(const RealType& i, v) {
-                result -= static_cast<RealType>(i)*std::log(i);
+        BOOST_FOREACH(const RealType& x, v) {
+                result += -x*static_cast<RealType>(std::log(x));
         }
         return result;
 }

@@ -169,7 +169,7 @@ public:
                 real_t alpha_min = compute_alpha(1.0, histogram.x()[0]);
                 real_t alpha_max = compute_alpha(1.0, histogram.x()[histogram.size()-1]-histogram.width()/0.6);
 
-                for (real_t alpha = alpha_min; alpha < alpha_max;) {
+                for (real_t alpha = alpha_max; alpha > alpha_min;) {
                         // verbose
                         cout << boost::format("Adding distribution at alpha = %f (with mean entropy %f)")
                                 % alpha % m_mean(alpha) << endl;
@@ -177,7 +177,7 @@ public:
                         m_rdirichlet.push_back(rdirichlet_t(k, alpha));
                         m_ddirichlet.push_back(ddirichlet_t(k, alpha));
                         // compute new alpha
-                        alpha = compute_alpha(alpha, m_mean(alpha) + n*m_sigma(alpha));
+                        alpha = compute_alpha(alpha, m_mean(alpha) - n*m_sigma(alpha));
                         // increase number of components
                         m_size += 1;
                 }
@@ -196,8 +196,9 @@ public:
                 for (size_t i = 0; i < m_size; i++) {
                         result[i] = from_log_scale(boost::math::log_pdf(m_ddirichlet[i], x));
                 }
+                std::sort(result.begin(), result.end());
 
-                return msum(result)/p_t(m_size);
+                return std::accumulate(result.begin(), result.end(), p_t(0.0))/p_t(m_size);
         }
         p_t pdf(const p_vector_t& x, size_t i) {
                 return from_log_scale(boost::math::log_pdf(m_ddirichlet[i], x));
@@ -256,7 +257,7 @@ main(int argc, char *argv[])
         const size_t to   = argc == 2 ? from : atoi(argv[2]);
 
         const size_t minimum_samples = 500000;
-        const size_t bins = 500;
+        const size_t bins = 100;
 
         for (size_t k = from; k <= to; k++) {
                 cerr << boost::format("Sampling entropies for cardinality %d...") % k

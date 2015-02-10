@@ -23,9 +23,11 @@ noinst_HEADERS = \
 	observable.hh \
 	permutation.hh \
 	polynomial.hh \
+	probability.hh \
 	progress.hh \
 	random.hh \
 	statistics.hh \
 	strtools.hh \
+	summation.hh \
 	terminal-codes.hh \
 	thread-pool.hh
