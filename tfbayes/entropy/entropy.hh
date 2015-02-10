@@ -27,6 +27,8 @@
 
 #include <boost/foreach.hpp>
 
+#include <tfbayes/utility/summation.hh>
+
 template <class RealType>
 RealType entropy(const std::vector<RealType>& v) {
         RealType result = 0.0;
@@ -36,5 +38,16 @@ RealType entropy(const std::vector<RealType>& v) {
         return result;
 }
 
+template <class RealType>
+RealType entropy(const std::vector<RealType>& v, bool full_precision) {
+        if (!full_precision) {
+                return entropy<RealType>(v);
+        }
+        std::vector<RealType> result(v.size(), 0.0);
+        for (size_t i = 0; i < v.size(); i++) {
+                result[i] = -v[i]*static_cast<RealType>(std::log(v[i]));
+        }
+        return msum(result);
+}
 
 #endif /* __TFBAYES_ENTROPY_ENTROPY_HH__ */

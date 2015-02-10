@@ -31,6 +31,7 @@
 
 #include <tfbayes/utility/probability.hh>
 #include <tfbayes/utility/statistics.hh>
+#include <tfbayes/utility/summation.hh>
 
 namespace boost { namespace math {
 
@@ -177,6 +178,22 @@ public:
                         result[i] = m_rgamma[i](eng);
                         sum += result[i];
                 }
+                for (size_t i = 0; i < m_size; i++) {
+                        result[i] /= sum;
+                }
+                return result;
+        }
+        template<class Engine>
+        std::vector<result_type> operator()(Engine& eng, bool full_precision) {
+                if (!full_precision) {
+                        return operator()(eng);
+                }
+                result_type sum;
+                std::vector<result_type> result(m_size, 0.0);
+                for (size_t i = 0; i < m_size; i++) {
+                        result[i] = m_rgamma[i](eng);
+                }
+                sum = msum(result);
                 for (size_t i = 0; i < m_size; i++) {
                         result[i] /= sum;
                 }

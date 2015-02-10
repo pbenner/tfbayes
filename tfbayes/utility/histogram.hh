@@ -87,7 +87,11 @@ public:
                 assert(i < m_n);
                 m_total     += v;
                 m_counts[i] += 1.0;
-                base_t::operator[](i) += v;
+                // kahan summation
+                result_type y = v - m_kahan[i];
+                result_type t = base_t::operator[](i) + y;
+                m_kahan[i] = (t - base_t::operator[](i)) - y;
+                base_t::operator[](i) = t;
         }
         result_type pdf(input_type x) const {
                 const size_t i = std::min(static_cast<input_type>(m_n-2.0), std::floor((x-m_min)/m_width));

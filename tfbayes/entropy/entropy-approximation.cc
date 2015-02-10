@@ -34,6 +34,7 @@
 #include <tfbayes/utility/histogram.hh>
 #include <tfbayes/utility/probability.hh>
 #include <tfbayes/utility/distribution.hh>
+#include <tfbayes/utility/summation.hh>
 #include <tfbayes/entropy/entropy.hh>
 
 // type declarations
@@ -196,9 +197,8 @@ public:
                 for (size_t i = 0; i < m_size; i++) {
                         result[i] = from_log_scale(boost::math::log_pdf(m_ddirichlet[i], x));
                 }
-                std::sort(result.begin(), result.end());
 
-                return std::accumulate(result.begin(), result.end(), p_t(0.0))/p_t(m_size);
+                return msum(result)/p_t(m_size);
         }
         p_t pdf(const p_vector_t& x, size_t i) {
                 return from_log_scale(boost::math::log_pdf(m_ddirichlet[i], x));
