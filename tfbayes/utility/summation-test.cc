@@ -20,12 +20,15 @@
 #include <vector>
 #include <iostream>
 
+#include <tfbayes/utility/probability.hh>
 #include <tfbayes/utility/summation.hh>
 
 using namespace std;
 
 typedef double real_t;
+typedef probability_t<double> p_t;
 typedef vector<real_t> real_vector_t;
+typedef vector<p_t> p_vector_t;
 
 void
 test1(void)
@@ -47,9 +50,57 @@ test2(void)
              << endl;
 }
 
+void
+test3()
+{
+        double a = 1.0;
+        double b = 1e17;
+        cout << "(test 1) double: (1.0 + 1.0e17) + -1.0e17 = "
+             << (a+b)-b
+             << endl;
+}
+void
+test4()
+{
+        std::vector<double> v = {1.0, 1.0e17, -1.0e17};
+        cout << "(test 2) double: (1.0 + 1.0e17) + -1.0e17 = "
+             << msum(v)
+             << endl;
+}
+void
+test5()
+{
+        p_t a = 1.0;
+        p_t b = 1.0e17;
+        cout << "(test 3) probability_t: (1.0 + 1.0e17) + -1.0e17 = "
+             << (a+b)-b
+             << endl;
+}
+void
+test6()
+{
+        p_vector_t v = {1.0, 1.0e17, -1.0e17};
+        cout << "(test 4) probability_t: (1.0 + 1.0e17) + -1.0e17 = "
+             << msum(v)
+             << endl;
+}
+void
+test7()
+{
+        p_vector_t v(100000, from_log_scale(-800.0));
+        cout << "(test 5) 100000*exp(-800) = "
+             << std::log(ksum(v))
+             << endl;
+}
+
 int
 main(void)
 {
-        test1();
-        test2();
+        test1(); cout << endl;
+        test2(); cout << endl;
+        test3(); cout << endl;
+        test4(); cout << endl;
+        test5(); cout << endl;
+        test6(); cout << endl;
+        test7(); cout << endl;
 }
