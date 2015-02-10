@@ -22,6 +22,9 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <vector>
+
+#include <boost/foreach.hpp>
 
 template <class RealType>
 RealType GCC_ATTRIBUTE_NOAMATH
@@ -68,12 +71,12 @@ msum(const std::vector<RealType>& input) {
                                 }
                                 else {
                                         partials_tmp.push_back(lo);
-                                        i++;
                                 }
+                                i++;
                         }
                         x = hi;
                 }
-                while (i+1 < partials_tmp.size()) {
+                while (i < partials_tmp.size()) {
                         partials_tmp.pop_back();
                 }
                 partials_tmp.push_back(x);
