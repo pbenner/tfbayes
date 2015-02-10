@@ -163,10 +163,10 @@ proposal_distribution_t
                                       alpha, target);
         }
 public:
-        proposal_distribution_t(size_t k, const hist_t& histogram, real_t n = 0.1)
+        proposal_distribution_t(size_t k, const hist_t& histogram, real_t n = 0.5)
                 : m_k(k), m_size(0.0) {
 
-                real_t alpha_min = compute_alpha(1.0, histogram.x()[0]);
+                real_t alpha_min = std::max(real_t(0.02), compute_alpha(1.0, histogram.x()[0]));
                 real_t alpha_max = compute_alpha(1.0, histogram.x()[histogram.size()-1]-histogram.width()/0.6);
 
                 for (real_t alpha = alpha_max; alpha > alpha_min;) {
