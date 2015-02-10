@@ -35,6 +35,9 @@
 #include <tfbayes/entropy/entropy-approximation-3.hh>
 #include <tfbayes/entropy/entropy-approximation-4.hh>
 #include <tfbayes/entropy/entropy-approximation-5.hh>
+#include <tfbayes/entropy/entropy-approximation-6.hh>
+#include <tfbayes/entropy/entropy-approximation-7.hh>
+#include <tfbayes/entropy/entropy-approximation-10.hh>
 #include <tfbayes/entropy/entropy.hh>
 #include <tfbayes/utility/histogram.hh>
 #include <tfbayes/utility/boost-random-shuffle.hh>
@@ -71,6 +74,21 @@ public:
                         histogram = histogram_t<input_type, result_type>(
                                 0.0, log(k), entropy_histogram_5,
                                 entropy_histogram_5_counts);
+                }
+                else if (k == 6) {
+                        histogram = histogram_t<input_type, result_type>(
+                                0.0, log(k), entropy_histogram_6,
+                                entropy_histogram_6_counts);
+                }
+                else if (k == 7) {
+                        histogram = histogram_t<input_type, result_type>(
+                                0.0, log(k), entropy_histogram_7,
+                                entropy_histogram_7_counts);
+                }
+                else if (k == 10) {
+                        histogram = histogram_t<input_type, result_type>(
+                                0.0, log(k), entropy_histogram_10,
+                                entropy_histogram_10_counts);
                 }
                 else {
                         throw std::runtime_error("Invalid cardinality!");
