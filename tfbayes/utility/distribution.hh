@@ -134,14 +134,14 @@ class gamma_distribution_prime
         template<class Engine>
         result_type random_variate(Engine& eng) {
                 result_type u = m_runif(eng);
-                result_type b = (std::exp(1.0) + m_shape)/std::exp(1.0);
+                result_type b = (input_type(std::exp(1.0)) + input_type(m_shape))/input_type(std::exp(1.0));
                 result_type p = b*u;
                 if (p <= 1.0) {
-                        result_type x = std::pow(p, static_cast<result_type>(1.0/m_shape));
+                        result_type x = std::pow(p, 1.0/m_shape);
                         if (x == 0.0) {
                                 throw std::domain_error("Invalid random variate.");
                         }
-                        if (m_runif(eng) > std::exp(-x)) {
+                        if (result_type(-std::log(m_runif(eng))) < x) {
                                 return random_variate(eng);
                         }
                         return x;
@@ -151,7 +151,7 @@ class gamma_distribution_prime
                         if (x == 0.0) {
                                 throw std::domain_error("Invalid random variate.");
                         }
-                        if (static_cast<result_type>(m_runif(eng)) > std::pow(x, static_cast<result_type>(m_shape-1.0))) {
+                        if (result_type(m_runif(eng)) > std::pow(x, m_shape-1.0)) {
                                 return random_variate(eng);
                         }
                         return x;

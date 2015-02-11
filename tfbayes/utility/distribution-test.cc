@@ -42,18 +42,14 @@ ostream& operator<<(ostream& o, vector<T>& v) {
         return o;
 }
 
-int
-main(void)
+void
+test_dirichlet(boost::random::mt19937& gen)
 {
-        boost::random::mt19937 gen; seed_rng(gen);
-
         vector<double> alpha(5, 1.0);
         vector<double> x(5, 1.0/5.0);
 
         boost::math  ::dirichlet_distribution<> ddir(alpha);
         boost::random::dirichlet_distribution<> rdir(alpha);
-
-        boost::random::gamma_distribution_prime<double, probability_t<> > rgamma(0.01);
 
         cout << boost::math::log_pdf(ddir, x)
              << endl;
@@ -62,8 +58,25 @@ main(void)
                 vector<double> tmp = rdir(gen);
                 cout << tmp << endl;
         }
-        for (size_t i = 0; i < 10; i++) {
+}
+
+void
+test_gamma(boost::random::mt19937& gen)
+{
+        boost::random::gamma_distribution_prime<double, probability_t<> > rgamma(0.5);
+
+        for (size_t i = 0; i < 10000; i++) {
                 cout << scientific << rgamma(gen)
                      << endl;
         }
+}
+
+int
+main(void)
+{
+        boost::random::mt19937 gen;
+        seed_rng(gen);
+
+        //test_dirichlet(gen);
+        test_gamma(gen);
 }
