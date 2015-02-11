@@ -56,15 +56,20 @@ msum(const std::vector<RealType>& input) {
         RealType lo;
         std::vector<RealType> partials;
         std::vector<RealType> partials_tmp;
+        partials.reserve(input.size());
+        partials_tmp.reserve(input.size());
 
         BOOST_FOREACH(RealType x, input) {
                 size_t i = 0;
-                BOOST_FOREACH(RealType y, partials) {
+                BOOST_FOREACH(const RealType& y, partials) {
                         if (std::abs(x) < std::abs(y)) {
-                                std::swap(x,y);
+                                hi = x + y;
+                                lo = x - (hi - y);
                         }
-                        hi = x + y;
-                        lo = y - (hi - x);
+                        else {
+                                hi = x + y;
+                                lo = y - (hi - x);
+                        }
                         if (lo) {
                                 if (i < partials_tmp.size()) {
                                         partials_tmp[i] = lo;
@@ -76,9 +81,7 @@ msum(const std::vector<RealType>& input) {
                         }
                         x = hi;
                 }
-                while (i < partials_tmp.size()) {
-                        partials_tmp.pop_back();
-                }
+                partials_tmp.resize(i);
                 partials_tmp.push_back(x);
                 partials = partials_tmp;
         }
