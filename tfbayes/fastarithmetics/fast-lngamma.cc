@@ -21,7 +21,8 @@
 
 #include <cstdlib>
 
-#include <gsl/gsl_sf_gamma.h>
+#include <boost/math/special_functions/digamma.hpp>
+#include <boost/math/special_functions/gamma.hpp>
 
 #include <fast-lngamma.hh>
 #include <fast-lngamma-table.hh>
@@ -37,6 +38,6 @@ double fast_lngamma(double x)
                 return fast_lngamma_table[n][1];
         }
         else {
-                return gsl_sf_lngamma(x);
+                return boost::math::lgamma(x);
         }
 }

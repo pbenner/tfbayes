@@ -17,4 +17,3 @@ libtfbayes_fastarithmetics_la_SOURCES += fast-lngamma.hh
 libtfbayes_fastarithmetics_la_SOURCES += fast-lngamma-table.cc
 libtfbayes_fastarithmetics_la_SOURCES += fast-lngamma-table.hh
 libtfbayes_fastarithmetics_la_SOURCES += fast-lnbeta.hh
-libtfbayes_fastarithmetics_la_LIBADD   = -lgsl

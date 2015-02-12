@@ -21,7 +21,8 @@
 
 #include <iostream>
 
-#include <gsl/gsl_sf_gamma.h>
+#include <boost/math/special_functions/digamma.hpp>
+#include <boost/math/special_functions/gamma.hpp>
 
 #include <fast-lngamma.hh>
 #include <fast-lnbeta.hh>
@@ -43,8 +44,8 @@ int main(void)
         //              << "},"
         //              << endl;
         // }
-        cout << "     lngamma: " << gsl_sf_lngamma(1000) << endl;
-        cout << "fast_lngamma: " <<   fast_lngamma(1000) << endl;
+        cout << "     lngamma: " << boost::math::lgamma(1000) << endl;
+        cout << "fast_lngamma: " <<        fast_lngamma(1000) << endl;
 
         boost::array<double, 5> alpha;
         alpha[0] = 10;
