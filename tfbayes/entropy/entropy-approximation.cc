@@ -168,10 +168,10 @@ proposal_distribution_t
                                       alpha, target);
         }
 public:
-        proposal_distribution_t(size_t k, const hist_t& histogram, bool extended_precision = false, real_t n = 0.5)
+        proposal_distribution_t(size_t k, const hist_t& histogram, bool extended_precision = false, real_t n = 1.0)
                 : m_k(k), m_size(0.0), m_extended_precision(extended_precision) {
 
-                real_t alpha_min = std::max(real_t(0.02), compute_alpha(1.0, histogram.x()[0]));
+                real_t alpha_min = std::max(real_t(0.05), compute_alpha(1.0, histogram.x()[0]));
                 real_t alpha_max = compute_alpha(1.0, histogram.x()[histogram.size()-1]-histogram.width()/0.6);
 
                 for (real_t alpha = alpha_max; alpha > alpha_min;) {
@@ -219,7 +219,7 @@ public:
 };
 
 hist_t
-approximate_distribution(size_t k, size_t minimum_counts, size_t bins, bool extended_precision = true)
+approximate_distribution(size_t k, size_t minimum_counts, size_t bins, bool extended_precision = false)
 {
         boost::random::mt19937 gen; seed_rng(gen);
         hist_t histogram(0.0, log(k), bins);
