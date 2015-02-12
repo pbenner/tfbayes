@@ -226,6 +226,12 @@ dnl `----------------------------
 AC_CONFIG_HEADER([tfbayes/config.h:tfbayes/config.h.in])
 AC_CONFIG_FILES([
   Makefile
+  boost/Makefile
+  boost/math/Makefile
+  boost/math/special_functions/Makefile
+  boost/math/special_functions/detail/Makefile
+  boost/math/distributions/Makefile
+  boost/random/Makefile
   data/Makefile
   tfbayes/version.h
   tfbayes/Makefile

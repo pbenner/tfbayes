@@ -27,6 +27,7 @@
 #include <cstdlib>
 
 #include <boost/format.hpp>
+#include <boost/random/dirichlet_distribution.hpp>
 #include <boost/random/mersenne_twister.hpp>
 
 #include <tfbayes/alignment/alignment.hh>
@@ -133,24 +134,29 @@ public:
         pattern_t()
                 : matrix<double>(options.m, alphabet_size, 0.0)
                 { }
-        pattern_t(const vector<double>& pseudocounts, gsl_rng * r)
+        template <class Engine>        
+        pattern_t(const vector<double>& pseudocounts, Engine& eng)
                 : matrix<double>(options.m, 0) {
+
+                boost::random::dirichlet_distribution<> rdir(pseudocounts);
+
                 // generate new pattern
                 for (size_t i = 0; i < options.m; i++) {
-                        operator[](i) = dirichlet_sample<alphabet_size>(pseudocounts, r);
+                        operator[](i) = rdir(eng);
                 }
         }
 };
 
 class dirichlet_process_t {
 public:
-        dirichlet_process_t(double alpha, const vector<double>& pseudocounts, gsl_rng * r)
-                : alpha(alpha), n(0), pseudocounts(pseudocounts), r(r) {
+        dirichlet_process_t(double alpha, const vector<double>& pseudocounts)
+                : alpha(alpha), n(0), pseudocounts(pseudocounts) {
         }
-        const pattern_t& operator()() {
+        template <class Engine>
+        const pattern_t& operator()(Engine& eng) {
                 size_t c   = occurrences.size();
                 double sum = 0.0;
-                double ra  = gsl_rng_uniform(r);
+                double ra  = runif(eng);
 
                 // draw from an existing cluster
                 for (size_t i = 0; i < c; i++) {
@@ -162,7 +168,7 @@ public:
                         }
                 }
                 // generate new pattern
-                patterns   .push_back(pattern_t(pseudocounts, r));
+                patterns   .push_back(pattern_t(pseudocounts, eng));
                 occurrences.push_back(1);
                 n += 1.0;
 
@@ -176,7 +182,7 @@ protected:
         vector<double> pseudocounts;
         vector<double> occurrences;
         vector<pattern_t> patterns;
-        gsl_rng * r;
+        boost::random::uniform_01<> runif;
 };
 
 ostream& operator<<(ostream& o, const pattern_t& pattern)
@@ -215,9 +221,10 @@ void insert_observations(alignment_t<>& alignment, size_t i, const vector<alphab
 }
 
 static
-void generate_tfbs_alignment(const pt_root_t& pt_root, gsl_rng * r, boost::random::mt19937& gen)
+void generate_tfbs_alignment(const pt_root_t& pt_root, boost::random::mt19937& gen)
 {
-        dirichlet_process_t dirichlet_process(options.d, options.alpha, r);
+        boost::random::dirichlet_distribution<> rdir(options.beta);
+        dirichlet_process_t dirichlet_process(options.d, options.alpha);
         vector<double> stationary;
         vector<alphabet_code_t> observations;
         // alignment
@@ -227,7 +234,7 @@ void generate_tfbs_alignment(const pt_root_t& pt_root, gsl_rng * r, boost::rando
         for (size_t i = 0; i < options.n; i++) {
                 // generate foreground
                 if ((double)rand()/RAND_MAX <= options.lambda) {
-                        const pattern_t& pattern = dirichlet_process();
+                        const pattern_t& pattern = dirichlet_process(gen);
                         for (size_t j = 0; j < pattern.size() && i+j < options.n; j++) {
                                 observations = pt_generate_observations<alphabet_size, alphabet_code_t>(pt_root, pattern[j], gen);
                                 insert_observations(alignment, i+j, observations);
@@ -236,7 +243,7 @@ void generate_tfbs_alignment(const pt_root_t& pt_root, gsl_rng * r, boost::rando
                 }
                 // generate background
                 else {
-                        stationary   = dirichlet_sample<alphabet_size>(options.beta, r);
+                        stationary   = rdir(gen);
                         observations = pt_generate_observations<alphabet_size, alphabet_code_t>(pt_root, stationary, gen);
                         insert_observations(alignment, i, observations);
                 }
@@ -247,15 +254,15 @@ void generate_tfbs_alignment(const pt_root_t& pt_root, gsl_rng * r, boost::rando
         print_alignment(alignment);
 }
 
-void generate_simple_alignment(const pt_root_t& pt_root, gsl_rng * r, boost::random::mt19937& gen)
+void generate_simple_alignment(const pt_root_t& pt_root, boost::random::mt19937& gen)
 {
+        boost::random::dirichlet_distribution<> rdir(options.alpha);
         // alignment
         alignment_t<> alignment(options.n, pt_root);
 
         // generate
         for (size_t i = 0; i < options.n; i++) {
-                vector<double         > stationary   =
-                        dirichlet_sample<alphabet_size>(options.alpha, r);
+                vector<double         > stationary   = rdir(gen);
                 vector<alphabet_code_t> observations =
                         pt_generate_observations<alphabet_size, alphabet_code_t>(pt_root, stationary, gen);
 
@@ -285,12 +292,6 @@ void generate_alignment(const string& model, const char* treefile)
         gettimeofday(&tv, NULL);
         size_t seed = tv.tv_sec*tv.tv_usec;
 
-        // gsl random number generator
-        gsl_rng_env_setup();
-        const gsl_rng_type * T = gsl_rng_default;
-        gsl_rng * r = gsl_rng_alloc(T);
-        gsl_rng_set(r, seed);
-
         // random number generator for the phylotree library
         boost::random::mt19937 gen;
         gen.seed(seed);
@@ -300,18 +301,15 @@ void generate_alignment(const string& model, const char* treefile)
 
         // switch command
         if (model == "simple") {
-                generate_simple_alignment(pt_root, r, gen);
+                generate_simple_alignment(pt_root, gen);
         }
         else if (model == "tfbs") {
-                generate_tfbs_alignment(pt_root, r, gen);
+                generate_tfbs_alignment(pt_root, gen);
         }
         else {
                 wrong_usage("Invalid statistical model.");
                 exit(EXIT_FAILURE);
         }
-
-        // clean up
-        gsl_rng_free (r);
 }
 
 int main(int argc, char *argv[])

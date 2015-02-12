@@ -31,7 +31,6 @@
 #include <tfbayes/phylotree/gradient.hh>
 #include <tfbayes/phylotree/posterior.hh>
 #include <tfbayes/uipac/alphabet.hh>
-#include <tfbayes/utility/distribution.hh>
 #include <tfbayes/utility/statistics.hh>
 
 /* This is a gradient ascent method to compute the maximum posterior

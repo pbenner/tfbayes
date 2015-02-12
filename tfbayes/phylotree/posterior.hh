@@ -25,11 +25,11 @@
 #include <limits>
 
 #include <boost/array.hpp>
+#include <boost/math/distributions/gamma_extra.hpp>
 
 #include <tfbayes/alignment/alignment.hh>
 #include <tfbayes/phylotree/marginal-likelihood.hh>
 #include <tfbayes/uipac/alphabet.hh>
-#include <tfbayes/utility/distribution.hh>
 #include <tfbayes/utility/statistics.hh>
 #include <tfbayes/utility/thread-pool.hh>
 

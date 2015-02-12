@@ -27,7 +27,6 @@
 
 #include <tfbayes/utility/histogram.hh>
 #include <tfbayes/utility/probability.hh>
-#include <tfbayes/utility/distribution.hh>
 #include <tfbayes/entropy/entropy-approximation-2.hh>
 #include <tfbayes/entropy/entropy-approximation-3.hh>
 #include <tfbayes/entropy/entropy-approximation-4.hh>

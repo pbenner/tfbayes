@@ -25,6 +25,9 @@
 #include <vector>
 #include <cstdlib>
 
+#include <boost/random/categorical_distribution.hpp>
+#include <boost/random/uniform_01.hpp>
+
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/uipac/alphabet.hh>
 #include <tfbayes/utility/statistics.hh>
@@ -41,10 +44,12 @@ void pt_generate_observations(const pt_node_t& node,
                               std::vector<AC>& observations,
                               boost::random::mt19937& gen)
 {
-        double r = (double)rand()/RAND_MAX;
+        boost::random::categorical_distribution<> rcat(stationary);
+        boost::random::uniform_01<> runif;
         AC nucleotide;
-        if (r <= node.mutation_probability()) {
-                nucleotide = categorical_sample<AS, AC>(stationary, gen);
+
+        if (runif(gen) <= node.mutation_probability()) {
+                nucleotide = rcat(gen);
         }
         else {
                 nucleotide = parent_nucleotide;
@@ -67,8 +72,9 @@ std::vector<AC>
 pt_generate_observations(const pt_root_t& tree, const std::vector<double>& stationary,
                          boost::random::mt19937& gen)
 {
+        boost::random::categorical_distribution<> rcat(stationary);
         std::vector<AC> observations(tree.n_leaves, -1);
-        AC nucleotide = categorical_sample<AS, AC>(stationary, gen);
+        AC nucleotide = rcat(gen);
 
         /* check for an outgroup */
         if (tree.outgroup()) {

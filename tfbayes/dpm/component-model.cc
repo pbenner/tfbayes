@@ -24,6 +24,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include <cmath>        // std::exp, std::log
 
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_linalg.h>
@@ -41,13 +42,14 @@
 
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/fastarithmetics/fast-lnbeta.hh>
-#include <tfbayes/utility/distribution.hh>
 #include <tfbayes/utility/logarithmetic.hh>
+#include <tfbayes/utility/multinomial-beta.hh>
 #include <tfbayes/utility/statistics.hh>
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/unordered_map.hpp> 
+#include <boost/math/distributions/gamma_extra.hpp>
 
 using namespace std;
 

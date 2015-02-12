@@ -28,7 +28,7 @@
 #include <tfbayes/phylotree/phylotree.hh>
 #include <tfbayes/phylotree/polynomial.hh>
 #include <tfbayes/phylotree/gradient.hh>
-#include <tfbayes/utility/statistics.hh>
+#include <tfbayes/utility/multinomial-beta.hh>
 #include <tfbayes/utility/logarithmetic.hh>
 #include <tfbayes/utility/polynomial.hh>
 #include <tfbayes/utility/thread-pool.hh>

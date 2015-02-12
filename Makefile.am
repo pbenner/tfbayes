@@ -3,4 +3,5 @@
 ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS  = tfbayes
+SUBDIRS += boost
 SUBDIRS += data

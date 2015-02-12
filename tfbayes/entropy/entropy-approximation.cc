@@ -22,18 +22,20 @@
 #include <cassert>
 #include <cmath>
 
+#include <tfbayes/utility/probability.hh>
+
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/format.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/bernoulli_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
+#include <boost/random/dirichlet_distribution.hpp>
+#include <boost/math/distributions/dirichlet.hpp>
 #include <boost/math/special_functions/polygamma.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <tfbayes/utility/histogram.hh>
-#include <tfbayes/utility/probability.hh>
-#include <tfbayes/utility/distribution.hh>
 #include <tfbayes/utility/summation.hh>
 #include <tfbayes/entropy/entropy.hh>
 
