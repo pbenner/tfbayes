@@ -58,20 +58,23 @@ template <class RealType = double,
 class dirichlet_distribution
 {
 public:
+        typedef RealType  input_type;
+        typedef RealType result_type;
+
         template <class T>
         dirichlet_distribution(size_t k, T alpha)
                 : m_alpha(k, alpha)
                 { }
         template <class T>
-        dirichlet_distribution(const std::vector<T>& alpha)
+        dirichlet_distribution(const T& alpha)
                 : m_alpha(alpha.begin(), alpha.end())
                 { }
 
-        const std::vector<RealType>& alpha() const {
+        const std::vector<input_type>& alpha() const {
                 return m_alpha;
         }
 private:
-        std::vector<RealType> m_alpha;
+        std::vector<input_type> m_alpha;
 };
 
 template <class RealType, class Policy, class T>
@@ -123,14 +126,19 @@ inline RealType pdf(const dirichlet_distribution<RealType, Policy>& dist, const 
 
 namespace boost { namespace random {
 
-template <class  input_type = double,
-          class result_type = input_type>
+template <class RealType = double,
+          class ProbType = RealType>
 class gamma_distribution_prime
 {
+public:
+        typedef RealType  input_type;
+        typedef ProbType result_type;
+protected:
+        // member variables
         input_type m_shape;
         gamma_distribution<input_type> m_gamma;
         uniform_01<input_type> m_runif;
-
+public:
         template<class Engine>
         result_type random_variate(Engine& eng) {
                 result_type u = m_runif(eng);
@@ -157,7 +165,7 @@ class gamma_distribution_prime
                         return x;
                 }
         }
-public:
+
         gamma_distribution_prime(input_type shape)
                 : m_shape(shape),
                   m_gamma(shape, 1.0)
@@ -172,11 +180,19 @@ public:
         }
 };
 
-template <class  input_type = double,
-          class result_type = input_type>
+template <class RealType = double,
+          class ProbType = RealType>
 class dirichlet_distribution
 {
+public:
+        typedef RealType  input_type;
+        typedef ProbType result_type;
+protected:
         typedef gamma_distribution_prime<input_type, result_type> gamma_distribution_t;
+
+        // member variables
+        std::vector<gamma_distribution_t> m_rgamma;
+        size_t m_size;
 public:
         template <class T>
         dirichlet_distribution(size_t k, T alpha) :
@@ -187,9 +203,9 @@ public:
                 }
         }
         template <class T>
-        dirichlet_distribution(const std::vector<T>& alpha) :
+        dirichlet_distribution(const T& alpha) :
                 m_size(alpha.size()) {
-                BOOST_FOREACH(const T& a, alpha) {
+                BOOST_FOREACH(const typename T::value_type& a, alpha) {
                         m_rgamma.push_back(
                                 gamma_distribution_t(static_cast<input_type>(a)));
                 }
@@ -224,10 +240,6 @@ public:
                 }
                 return result;
         }
-
-private:
-        std::vector<gamma_distribution_t> m_rgamma;
-        size_t m_size;
 };
 
 } // namespace random
