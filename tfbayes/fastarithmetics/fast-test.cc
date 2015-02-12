@@ -53,5 +53,5 @@ int main(void)
         alpha[3] = 40;
         alpha[4] = 50;
 
-        cout << "fast_lnbeta : " <<   fast_lnbeta<5>(alpha) << endl;
+        cout << "fast_lnbeta : " <<   fast_lnbeta(alpha) << endl;
 }

@@ -26,14 +26,14 @@
 
 #include <tfbayes/fastarithmetics/fast-lngamma.hh>
 
-template <size_t SIZE>
-double fast_lnbeta(
-        const boost::array<double, SIZE> alpha)
+template <class T>
+typename T::value_type fast_lnbeta(
+        const T& alpha)
 {
-        double sum1 = 0;
-        double sum2 = 0;
+        typename T::value_type sum1 = 0;
+        typename T::value_type sum2 = 0;
 
-        for (size_t i = 0; i < SIZE; i++) {
+        for (size_t i = 0; i < alpha.size(); i++) {
                 sum1 += alpha[i];
                 sum2 += fast_lngamma(alpha[i]);
         }
@@ -41,64 +41,18 @@ double fast_lnbeta(
         return sum2 - fast_lngamma(sum1);
 }
 
-template <size_t SIZE>
-double fast_lnbeta(
-        const boost::array<double, SIZE> extra,
-        const boost::array<double, SIZE> alpha)
+template <class T>
+typename T::value_type fast_lnbeta(
+        const T& counts,
+        const T& alpha)
 {
-        double sum1 = 0;
-        double sum2 = 0;
+        assert(counts.size() == alpha.size());
+        typename T::value_type sum1 = 0;
+        typename T::value_type sum2 = 0;
 
-        for (size_t i = 0; i < SIZE; i++) {
-                sum1 += extra[i] + alpha[i];
-                sum2 += fast_lngamma(extra[i] + alpha[i]);
-        }
-
-        return sum2 - fast_lngamma(sum1);
-}
-
-template <size_t SIZE>
-double fast_lnbeta(
-        const double* alpha)
-{
-        double sum1 = 0;
-        double sum2 = 0;
-
-        for (size_t i = 0; i < SIZE; i++) {
-                sum1 += alpha[i];
-                sum2 += fast_lngamma(alpha[i]);
-        }
-
-        return sum2 - fast_lngamma(sum1);
-}
-
-template <size_t SIZE>
-double fast_lnbeta(
-        const double* extra,
-        const double* alpha)
-{
-        double sum1 = 0;
-        double sum2 = 0;
-
-        for (size_t i = 0; i < SIZE; i++) {
-                sum1 += extra[i] + alpha[i];
-                sum2 += fast_lngamma(extra[i] + alpha[i]);
-        }
-
-        return sum2 - fast_lngamma(sum1);
-}
-
-template <size_t SIZE>
-double fast_lnbeta(
-        const boost::array<double, SIZE> extra,
-        const double* alpha)
-{
-        double sum1 = 0;
-        double sum2 = 0;
-
-        for (size_t i = 0; i < SIZE; i++) {
-                sum1 += extra[i] + alpha[i];
-                sum2 += fast_lngamma(extra[i] + alpha[i]);
+        for (size_t i = 0; i < alpha.size(); i++) {
+                sum1 += counts[i] + alpha[i];
+                sum2 += fast_lngamma(counts[i] + alpha[i]);
         }
 
         return sum2 - fast_lngamma(sum1);

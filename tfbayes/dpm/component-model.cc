@@ -85,8 +85,8 @@ gamma_marginal_f(double * x, size_t dim, void * params)
         }
 
         /* lnbeta(n, a) - lnbeta(a) */
-        result *= exp(fast_lnbeta<data_tfbs_t::alphabet_size>(data->counts, alpha) -
-                      fast_lnbeta<data_tfbs_t::alphabet_size>(alpha));
+        result *= exp(fast_lnbeta(data->counts, alpha) -
+                      fast_lnbeta(alpha));
 
         return result;
 }
@@ -398,8 +398,8 @@ independence_background_t::precompute_marginal(
         for(size_t i = 0; i < data().size(); i++) {
                 for(size_t j = 0; j < data()[i].size(); j++) {
                         _precomputed_marginal[i][j] =
-                                  fast_lnbeta<data_tfbs_t::alphabet_size>(alpha, data()[i][j])
-                                - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha);
+                                  fast_lnbeta(alpha, data()[i][j])
+                                - fast_lnbeta(alpha);
                 }
         }
 }
@@ -966,8 +966,8 @@ double product_dirichlet_t::log_predictive(const range_t& range) {
 
                         /* counts contains the data count statistic
                          * and the pseudo counts alpha */
-                        result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1], data()[index])
-                                - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1]);
+                        result += fast_lnbeta(counts[i%_size1], data()[index])
+                                - fast_lnbeta(counts[i%_size1]);
                 }
         }
         // reverse complement
@@ -977,8 +977,8 @@ double product_dirichlet_t::log_predictive(const range_t& range) {
 
                         /* counts contains the data count statistic
                          * and the pseudo counts alpha */
-                        result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1], complement_data()[index])
-                                - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1]);
+                        result += fast_lnbeta(counts[i%_size1], complement_data()[index])
+                                - fast_lnbeta(counts[i%_size1]);
                 }
         }
 
@@ -1026,8 +1026,8 @@ double product_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
                                 }
                         }
                 }
-                result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1], tmp_counts)
-                        - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1]);
+                result += fast_lnbeta(counts[i%_size1], tmp_counts)
+                        - fast_lnbeta(counts[i%_size1]);
         }
 
         return result;
@@ -1042,8 +1042,8 @@ double product_dirichlet_t::log_likelihood() const {
         for (size_t i = 0; i < _size1; i++) {
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i%_size1])
-                        - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha [i%_size1]);
+                result += fast_lnbeta(counts[i%_size1])
+                        - fast_lnbeta(alpha [i%_size1]);
         }
         return result;
 }
@@ -1103,8 +1103,8 @@ mixture_dirichlet_t::max_component(const seq_index_t& index) const
         for (size_t i = 0; i < _size1; i++) {
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result[i] = fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i], data()[index])
-                          - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i])
+                result[i] = fast_lnbeta(counts[i], data()[index])
+                          - fast_lnbeta(counts[i])
                           + log(weights[i]);
         }
         return distance(result.begin(), max_element(result.begin(), result.end()));
@@ -1260,8 +1260,8 @@ double mixture_dirichlet_t::log_predictive(const index_i& index) {
 
         /* counts contains the data count statistic
          * and the pseudo counts alpha */
-        double result = fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i], data()[index])
-                      - fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i]);
+        double result = fast_lnbeta(counts[i], data()[index])
+                      - fast_lnbeta(counts[i]);
 
         return result;
 }
@@ -1299,8 +1299,8 @@ double mixture_dirichlet_t::log_likelihood() const {
         for (size_t i = 0; i < _size1; i++) {
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result += fast_lnbeta<data_tfbs_t::alphabet_size>(counts[i])
-                        - fast_lnbeta<data_tfbs_t::alphabet_size>(alpha [i]);
+                result += fast_lnbeta(counts[i])
+                        - fast_lnbeta(alpha [i]);
         }
         return result;
 }

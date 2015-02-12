@@ -35,120 +35,56 @@
 
 #include <tfbayes/utility/polynomial.hh>
 
-template <size_t SIZE>
-double mbeta_log(
-        const boost::array<double, SIZE>& alpha)
+template <class T>
+typename T::value_type mbeta_log(
+        const T& alpha)
 {
-        double sum1 = 0;
-        double sum2 = 0;
-
-        for (size_t i = 0; i < SIZE; i++) {
-                sum1 += alpha[i];
-                sum2 += boost::math::lgamma(alpha[i]);
-        }
-
-        return sum2 - boost::math::lgamma(sum1);
-}
-
-template <size_t SIZE>
-double mbeta_log(
-        const boost::array<double, SIZE>& extra,
-        const boost::array<double, SIZE>& alpha)
-{
-        double sum1 = 0;
-        double sum2 = 0;
-
-        for (size_t i = 0; i < SIZE; i++) {
-                sum1 += extra[i] + alpha[i];
-                sum2 += boost::math::lgamma(extra[i] + alpha[i]);
-        }
-
-        return sum2 - boost::math::lgamma(sum1);
-}
-
-template <class RealType>
-RealType mbeta_log(
-        const std::vector<RealType>& alpha)
-{
-        RealType sum1 = 0;
-        RealType sum2 = 0;
+        typename T::value_type sum1 = 0;
+        typename T::value_type sum2 = 0;
 
         for (size_t i = 0; i < alpha.size(); i++) {
                 sum1 += alpha[i];
-                sum2 += boost::math::lgamma(alpha[i]);
+                sum2 += boost::math::lgamma<typename T::value_type>(alpha[i]);
         }
 
-        return sum2 - boost::math::lgamma(sum1);
+        return sum2 - boost::math::lgamma<typename T::value_type>(sum1);
 }
 
-template <class RealType>
-RealType mbeta_log(
-        const std::vector<RealType>& extra,
-        const std::vector<RealType>& alpha)
+template <class T>
+typename T::value_type mbeta_log(
+        const T& counts,
+        const T& alpha)
 {
-        assert(extra.size() == alpha.size());
+        assert(counts.size() == alpha.size());
+        typename T::value_type sum1 = 0;
+        typename T::value_type sum2 = 0;
 
-        RealType sum1 = 0;
-        RealType sum2 = 0;
-
-        for (size_t i = 0; i < alpha.size(); i++) {
-                sum1 += extra[i] + alpha[i];
-                sum2 += boost::math::lgamma(extra[i] + alpha[i]);
+        for (size_t i = 0; i < counts.size(); i++) {
+                sum1 += counts[i] + alpha[i];
+                sum2 += boost::math::lgamma<typename T::value_type>(counts[i] + alpha[i]);
         }
 
-        return sum2 - boost::math::lgamma(sum1);
+        return sum2 - boost::math::lgamma<typename T::value_type>(sum1);
 }
 
-template <size_t AS, typename PC>
-double mbeta_log(
-        const exponent_t<AS, PC>& alpha)
-{
-        double sum1 = 0;
-        double sum2 = 0;
-
-        for (size_t i = 0; i < AS && alpha[i] > 0; i++) {
-                sum1 += alpha[i];
-                sum2 += boost::math::lgamma(alpha[i]);
-        }
-
-        return sum2 - boost::math::lgamma(sum1);
-}
-
-template <size_t AS, typename PC>
-double mbeta_log(
-        const exponent_t<AS, PC>& exponent,
-        const exponent_t<AS, PC>& alpha)
-{
-        double sum1 = 0;
-        double sum2 = 0;
-
-        for (size_t i = 0; i < AS; i++) {
-                if (exponent[i] + alpha[i] > 0) {
-                        sum1 += exponent[i] + alpha[i];
-                        sum2 += boost::math::lgamma(exponent[i] + alpha[i]);
-                }
-        }
-
-        return sum2 - boost::math::lgamma(sum1);
-}
-
-template <size_t AS, typename PC>
-double mbeta_log(
-        const exponent_t<AS, PC>& exponent,
-        const exponent_t<AS, PC>& alpha,
+template <class T>
+typename T::value_type mbeta_log(
+        const T& counts,
+        const T& alpha,
         const size_t from, const size_t to)
 {
-        double sum1 = 0;
-        double sum2 = 0;
+        assert(counts.size() == alpha.size());
+        typename T::value_type sum1 = 0;
+        typename T::value_type sum2 = 0;
 
         for (size_t i = from; i < to && alpha[i] > 0; i++) {
-                if (exponent[i] + alpha[i] > 0) {
-                        sum1 += exponent[i] + alpha[i];
-                        sum2 += boost::math::lgamma(exponent[i] + alpha[i]);
+                if (counts[i] + alpha[i] > 0) {
+                        sum1 += counts[i] + alpha[i];
+                        sum2 += boost::math::lgamma<typename T::value_type>(counts[i] + alpha[i]);
                 }
         }
 
-        return sum2 - boost::math::lgamma(sum1);
+        return sum2 - boost::math::lgamma<typename T::value_type>(sum1);
 }
 
 template <size_t AS, typename PC>
