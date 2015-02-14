@@ -1,4 +1,6 @@
 
+f <- function(t) cbind(t$V1, exp(t$V2))
+
 t2 <- read.table("entropy-approximation-2.csv")
 t3 <- read.table("entropy-approximation-3.csv")
 t4 <- read.table("entropy-approximation-4.csv")
@@ -23,3 +25,16 @@ plot(t20, type="l", log="", xlab="h", ylab="pdf", main="k = 20")
 plot(t30, type="l", log="", xlab="h", ylab="pdf", main="k = 30")
 plot(t40, type="l", log="", xlab="h", ylab="pdf", main="k = 40")
 plot(t50, type="l", log="", xlab="h", ylab="pdf", main="k = 50")
+
+par(mfrow=c(3,3))
+plot(f(t2), type="l", log="", xlab="h", ylab="pdf", main="k = 2")
+plot(f(t3), type="l", log="", xlab="h", ylab="pdf", main="k = 3")
+plot(f(t4), type="l", log="", xlab="h", ylab="pdf", main="k = 4")
+plot(f(t5), type="l", log="", xlab="h", ylab="pdf", main="k = 5")
+#plot(f(t6), type="l", log="", xlab="h", ylab="pdf", main="k = 6")
+#plot(f(t7), type="l", log="", xlab="h", ylab="pdf", main="k = 7")
+plot(f(t10), type="l", log="", xlab="h", ylab="pdf", main="k = 10")
+plot(f(t20), type="l", log="", xlab="h", ylab="pdf", main="k = 20")
+plot(f(t30), type="l", log="", xlab="h", ylab="pdf", main="k = 30")
+plot(f(t40), type="l", log="", xlab="h", ylab="pdf", main="k = 40")
+plot(f(t50), type="l", log="", xlab="h", ylab="pdf", main="k = 50")
