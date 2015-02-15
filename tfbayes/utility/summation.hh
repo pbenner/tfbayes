@@ -56,7 +56,7 @@ msum(const T& input) {
         typename T::value_type lo;
         std::vector<typename T::value_type> partials;
         std::vector<typename T::value_type> partials_tmp;
-        partials.reserve(input.size());
+        partials    .reserve(input.size());
         partials_tmp.reserve(input.size());
 
         BOOST_FOREACH(typename T::value_type x, input) {
