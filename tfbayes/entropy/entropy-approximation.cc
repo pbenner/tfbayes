@@ -25,7 +25,6 @@
 #include <tfbayes/utility/probability.hh>
 
 #include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <boost/format.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/bernoulli_distribution.hpp>
@@ -36,6 +35,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <tfbayes/utility/histogram.hh>
+#include <tfbayes/utility/newton.hh>
 #include <tfbayes/utility/summation.hh>
 #include <tfbayes/entropy/entropy.hh>
 
@@ -65,20 +65,6 @@ std::ostream& operator<<(std::ostream& o, const std::vector<T>& v) {
 }
 
 using namespace std;
-
-template <class RealType>
-RealType newton(boost::function<RealType (RealType)> f,
-                boost::function<RealType (RealType)> df,
-                RealType x, const RealType y)
-{
-        /* x: current position
-         * y: target value
-         */
-        while (std::abs(f(x) - y) > 1e-8) {
-                x += (y - f(x))/df(x);
-        }
-        return x;
-}
 
 void
 save_table(const hist_t& histogram, size_t k)
