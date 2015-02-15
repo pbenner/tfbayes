@@ -38,13 +38,13 @@
 
 
 template <class input_type, class result_type>
-class entropy_distribution;
+class entropy_distribution_t;
 
 template <class input_type, class result_type>
-result_type pdf(const entropy_distribution<input_type, result_type>& dist, const std::vector<result_type>& theta);
+result_type pdf(const entropy_distribution_t<input_type, result_type>& dist, const std::vector<result_type>& theta);
 
 template <class input_type = double, class result_type = input_type>
-class entropy_distribution
+class entropy_distribution_t
 {
         size_t m_k;
         input_type m_a1;
@@ -58,7 +58,7 @@ class entropy_distribution
         double m_samples;
         double m_accepted;
 public:
-        entropy_distribution(size_t k, input_type a1, input_type a2) :
+        entropy_distribution_t(size_t k, input_type a1, input_type a2) :
                 m_k(k), m_a1(a1), m_a2(a2),
                 m_state    (k, 1.0/k),
                 m_beta     (a1, a2),
@@ -67,7 +67,7 @@ public:
                 m_samples  (0.0),
                 m_accepted (0.0)
                 { }
-        entropy_distribution(size_t k, input_type a1, input_type a2,
+        entropy_distribution_t(size_t k, input_type a1, input_type a2,
                              histogram_t<input_type, result_type> histogram) :
                 m_k(k), m_a1(a1), m_a2(a2),
                 m_state    (k, 1.0/k),
@@ -147,7 +147,7 @@ private:
 };
 
 template <class input_type, class result_type>
-result_type pdf(const entropy_distribution<input_type, result_type>& dist, const std::vector<result_type>& theta) {
+result_type pdf(const entropy_distribution_t<input_type, result_type>& dist, const std::vector<result_type>& theta) {
         using boost::math::pdf;
         input_type x = input_type(entropy(theta))/std::log(dist.k());
         return pdf(dist.beta(), x)/pdf(dist.histogram(), x);

@@ -64,7 +64,7 @@ main(int argc, char *argv[])
         double a2 = atof(argv[4]);
 
         boost::random::mt19937 gen; seed_rng(gen);
-        entropy_distribution<double, p_t> dist(k, a1, a2);
+        entropy_distribution_t<double, p_t> dist(k, a1, a2);
 
         for (size_t i = 0; i < n; i++) {
                 cout << dist(gen, 0.1)

@@ -130,21 +130,15 @@ proposal_distribution_t
         std::vector<ddirichlet_t> m_ddirichlet;
 
         real_t m_mean(real_t alpha) {
-                if (alpha <= 0.0) {
-                        alpha = 1.0e-10;
-                }
+                alpha = std::max(alpha, real_t(1.0e-10));
                 return boost::math::digamma(m_k*alpha + 1.0) - boost::math::digamma(alpha + 1.0);
         }
         real_t m_dmean(real_t alpha) {
-                if (alpha <= 0.0) {
-                        alpha = 1.0e-10;
-                }
+                alpha = std::max(alpha, real_t(1.0e-10));
                 return m_k*boost::math::trigamma(m_k*alpha + 1.0) - boost::math::trigamma(alpha + 1.0);
         }
         real_t m_sigma(real_t alpha) {
-                if (alpha <= 0.0) {
-                        alpha = 1.0e-10;
-                }
+                alpha = std::max(alpha, real_t(1.0e-10));
                 return std::sqrt((alpha+1.0)/(m_k*alpha+1.0)*boost::math::trigamma(alpha + 1.0)
                                  - boost::math::trigamma(m_k*alpha + 1.0));
         }
@@ -180,29 +174,25 @@ public:
                 boost::random::uniform_int_distribution<> rint(0, m_size-1);
                 return m_rdirichlet[rint(eng)](eng, m_extended_precision);
         }
-
-        p_t pdf(const p_vector_t& x) {
-                if (m_extended_precision) {
-                        p_vector_t result(m_size, 0.0);
-
-                        for (size_t i = 0; i < m_size; i++) {
-                                result[i] = from_log_scale(boost::math::log_pdf(m_ddirichlet[i], x, m_extended_precision));
-                        }
-                        return msum(result)/p_t(m_size);
-                }
-                else {
-                        p_t result = 0.0;
-
-                        for (size_t i = 0; i < m_size; i++) {
-                                result += from_log_scale(boost::math::log_pdf(m_ddirichlet[i], x, m_extended_precision));
-                        }
-                        return result/p_t(m_size);
-                }
+        const rdirichlet_t& rdirichlet(size_t i) const {
+                return m_rdirichlet[i];
         }
-        p_t pdf(const p_vector_t& x, size_t i) {
-                return from_log_scale(boost::math::log_pdf(m_ddirichlet[i], x, m_extended_precision));
+        const ddirichlet_t& ddirichlet(size_t i) const {
+                return m_ddirichlet[i];
+        }
+        const size_t& size() const {
+                return m_size;
         }
 };
+
+p_t pdf(const proposal_distribution_t& d, const p_vector_t& x) {
+        p_t result = 0.0;
+                
+        for (size_t i = 0; i < d.size(); i++) {
+                result += from_log_scale(boost::math::log_pdf(d.ddirichlet(i), x));
+        }
+        return result/p_t(d.size());
+}
 
 hist_t
 approximate_distribution(size_t k, size_t minimum_counts, size_t bins, bool extended_precision = false)
@@ -225,7 +215,7 @@ approximate_distribution(size_t k, size_t minimum_counts, size_t bins, bool exte
                         }
                 }
                 x = static_cast<real_t>(entropy(theta, extended_precision))/std::log(k);
-                histogram.add(x, 1.0/proposal_distribution.pdf(theta));
+                histogram.add(x, 1.0/pdf(proposal_distribution, theta));
                 if ((i+1) % 100000 == 0) {
                         vector<real_t>::const_iterator it =
                                 std::min_element(histogram.counts().begin(),
