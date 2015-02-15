@@ -72,7 +72,7 @@ save_table(const hist_t& histogram, size_t k)
         ofstream ofs((boost::format("entropy-approximation-%d.csv") % k).str());
 
         BOOST_FOREACH(const real_t& x, histogram.x()) {
-                ofs << boost::format("%0.8f %e") % x % std::log(histogram.pdf(x))
+                ofs << boost::format("%0.8f %e") % (x*std::log(k)) % std::log(histogram.pdf(x))
                     << endl;
         }
 }
@@ -210,9 +210,10 @@ approximate_distribution(size_t k, size_t minimum_counts, size_t bins, bool exte
         boost::random::mt19937 gen; seed_rng(gen);
         hist_t histogram(0.0, log(k), bins);
         proposal_distribution_t proposal_distribution(k, histogram, extended_precision);
+        p_vector_t theta;
+        real_t x;
 
         for (size_t i = 0; histogram.min_counts() < minimum_counts; i++) {
-                p_vector_t theta;
                 while (true) {
                         try {
                                 theta = proposal_distribution(gen);
@@ -223,7 +224,8 @@ approximate_distribution(size_t k, size_t minimum_counts, size_t bins, bool exte
                                      << endl;;
                         }
                 }
-                histogram.add(static_cast<real_t>(entropy(theta, extended_precision)), 1.0/proposal_distribution.pdf(theta));
+                x = static_cast<real_t>(entropy(theta, extended_precision))/std::log(k);
+                histogram.add(x, 1.0/proposal_distribution.pdf(theta));
                 if ((i+1) % 100000 == 0) {
                         vector<real_t>::const_iterator it =
                                 std::min_element(histogram.counts().begin(),

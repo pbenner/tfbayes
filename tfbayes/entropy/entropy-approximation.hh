@@ -24,7 +24,6 @@
 
 #include <array>
 #include <vector>
-#include <cmath>
 
 #include <tfbayes/utility/histogram.hh>
 
@@ -46,15 +45,15 @@ histogram_t<input_type, result_type> entropy_approximation(size_t k)
 
         // construct and return the histogram
         switch(k) {
-        case  2: return hist_t(0.0, std::log(k), entropy_histogram_2,  entropy_histogram_2_counts);
-        case  3: return hist_t(0.0, std::log(k), entropy_histogram_3,  entropy_histogram_3_counts);
-        case  4: return hist_t(0.0, std::log(k), entropy_histogram_4,  entropy_histogram_4_counts);
-        case  5: return hist_t(0.0, std::log(k), entropy_histogram_5,  entropy_histogram_5_counts);
-        case  6: return hist_t(0.0, std::log(k), entropy_histogram_6,  entropy_histogram_6_counts);
-        case  7: return hist_t(0.0, std::log(k), entropy_histogram_7,  entropy_histogram_7_counts);
-        case  8: return hist_t(0.0, std::log(k), entropy_histogram_8,  entropy_histogram_8_counts);
-        case  9: return hist_t(0.0, std::log(k), entropy_histogram_9,  entropy_histogram_9_counts);
-        case 10: return hist_t(0.0, std::log(k), entropy_histogram_10, entropy_histogram_10_counts);
+        case  2: return hist_t(0.0, 1.0, entropy_histogram_2,  entropy_histogram_2_counts);
+        case  3: return hist_t(0.0, 1.0, entropy_histogram_3,  entropy_histogram_3_counts);
+        case  4: return hist_t(0.0, 1.0, entropy_histogram_4,  entropy_histogram_4_counts);
+        case  5: return hist_t(0.0, 1.0, entropy_histogram_5,  entropy_histogram_5_counts);
+        case  6: return hist_t(0.0, 1.0, entropy_histogram_6,  entropy_histogram_6_counts);
+        case  7: return hist_t(0.0, 1.0, entropy_histogram_7,  entropy_histogram_7_counts);
+        case  8: return hist_t(0.0, 1.0, entropy_histogram_8,  entropy_histogram_8_counts);
+        case  9: return hist_t(0.0, 1.0, entropy_histogram_9,  entropy_histogram_9_counts);
+        case 10: return hist_t(0.0, 1.0, entropy_histogram_10, entropy_histogram_10_counts);
         default: throw std::runtime_error("Invalid cardinality!");
         }
 }

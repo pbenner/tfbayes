@@ -119,9 +119,9 @@ private:
                 }
                 boost::random::random_shuffle(m_state.begin(), m_state.end(), eng);
         }
-        result_type f(const std::vector<result_type>& x) {
-                input_type h = input_type(entropy(x));
-                return boost::math::pdf(m_beta, h/std::log(m_k))/m_histogram.pdf(h);
+        result_type f(const std::vector<result_type>& theta) {
+                input_type x = input_type(entropy(theta))/std::log(m_k);
+                return boost::math::pdf(m_beta, x)/m_histogram.pdf(x);
         }
 
         size_t m_k;
