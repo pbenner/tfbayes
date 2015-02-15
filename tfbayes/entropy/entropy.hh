@@ -22,30 +22,30 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <vector>
 #include <cmath>
+#include <vector>
 
 #include <boost/foreach.hpp>
 
 #include <tfbayes/utility/summation.hh>
 
-template <class RealType>
-RealType entropy(const std::vector<RealType>& v) {
-        RealType result = 0.0;
-        BOOST_FOREACH(const RealType& x, v) {
-                result += -x*static_cast<RealType>(std::log(x));
+template <class T>
+typename T::value_type entropy(const T& v) {
+        typename T::value_type result = 0.0;
+        BOOST_FOREACH(const typename T::value_type& x, v) {
+                result += -x*static_cast<typename T::value_type>(std::log(x));
         }
         return result;
 }
 
-template <class RealType>
-RealType entropy(const std::vector<RealType>& v, bool extended_precision) {
+template <class T>
+typename T::value_type entropy(const T& v, bool extended_precision) {
         if (!extended_precision) {
-                return entropy<RealType>(v);
+                return entropy(v);
         }
-        std::vector<RealType> result(v.size(), 0.0);
+        std::vector<typename T::value_type> result(v.size(), 0.0);
         for (size_t i = 0; i < v.size(); i++) {
-                result[i] = -v[i]*static_cast<RealType>(std::log(v[i]));
+                result[i] = -v[i]*static_cast<typename T::value_type>(std::log(v[i]));
         }
         return msum(result);
 }
