@@ -46,12 +46,21 @@ public:
                 m_k(k), m_a1(a1), m_a2(a2),
                 m_state    (k, 1.0/k),
                 m_beta     (a1, a2),
+                m_histogram(entropy_approximation<input_type, result_type>(k)),
                 m_burnin   (false),
                 m_samples  (0.0),
-                m_accepted (0.0) {
-
-                histogram = entropy_approximation<input_type, result_type>(k);
-        }
+                m_accepted (0.0)
+                { }
+        entropy_distribution(size_t k, input_type a1, input_type a2,
+                             histogram_t<input_type, result_type> histogram) :
+                m_k(k), m_a1(a1), m_a2(a2),
+                m_state    (k, 1.0/k),
+                m_beta     (a1, a2),
+                m_histogram(histogram),
+                m_burnin   (false),
+                m_samples  (0.0),
+                m_accepted (0.0)
+                { }
 
         template<class Engine>
         const std::vector<result_type>& operator()(Engine& eng, input_type sigma = 0.01, size_t burnin = 1000) {
@@ -112,7 +121,7 @@ private:
         }
         result_type f(const std::vector<result_type>& x) {
                 input_type h = input_type(entropy(x));
-                return boost::math::pdf(m_beta, h/std::log(m_k))/histogram.pdf(h);
+                return boost::math::pdf(m_beta, h/std::log(m_k))/m_histogram.pdf(h);
         }
 
         size_t m_k;
@@ -121,7 +130,7 @@ private:
         std::vector<result_type> m_state;
         std::vector<result_type> m_proposal;
         boost::math::beta_distribution<input_type> m_beta;
-        histogram_t<input_type, result_type> histogram;
+        histogram_t<input_type, result_type> m_histogram;
         bool m_burnin;
         // record some statistics
         double m_samples;
