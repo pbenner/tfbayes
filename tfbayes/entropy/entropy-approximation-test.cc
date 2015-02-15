@@ -59,7 +59,7 @@ main(void)
         }
 
         for (double v = 0.0; v <= log(k); v += 0.001) {
-                cout << boost::format("%f %f") % v % histogram.pdf(v)
+                cout << boost::format("%f %f") % v % pdf(histogram, v)
                      << endl;
         }
 }

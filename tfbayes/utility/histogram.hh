@@ -38,6 +38,15 @@ template <class input_type = double, class result_type = input_type>
 class histogram_t : public std::vector<result_type>
 {
         typedef std::vector<result_type> base_t;
+
+        size_t m_n;
+        input_type m_min;
+        input_type m_max;
+        input_type m_width;
+        result_type m_total;
+        std::vector< input_type> m_x;
+        std::vector< input_type> m_counts;
+        std::vector<result_type> m_kahan;
 public:
         histogram_t()
                 : base_t()
@@ -93,17 +102,6 @@ public:
                 m_kahan[i] = (t - base_t::operator[](i)) - y;
                 base_t::operator[](i) = t;
         }
-        result_type pdf(input_type x) const {
-                const size_t i = std::min(static_cast<input_type>(m_n-2.0), std::floor((x-m_min)/m_width));
-                const result_type m = m_total;
-                const result_type w = m_width;
-                // interpolate the result
-                const result_type y1 = base_t::operator[](i+0);
-                const result_type y2 = base_t::operator[](i+1);
-                const result_type n  = y1 + (y2 - y1)*static_cast<result_type>((x - m_x[i])/m_width);
-
-                return n/(m*w);
-        }
         const size_t& n() const {
                 return m_n;
         }
@@ -115,6 +113,9 @@ public:
         }
         const input_type& width() const {
                 return m_width;
+        }
+        const result_type& total() const {
+                return m_total;
         }
         const std::vector<input_type>& x() const {
                 return m_x;
@@ -153,16 +154,19 @@ private:
                 ar & m_total;
                 ar & m_x;
         }
-
-protected:
-        size_t m_n;
-        input_type m_min;
-        input_type m_max;
-        input_type m_width;
-        result_type m_total;
-        std::vector< input_type> m_x;
-        std::vector< input_type> m_counts;
-        std::vector<result_type> m_kahan;
 };
+
+template <class input_type, class result_type>
+result_type pdf(const histogram_t<input_type, result_type> histogram, input_type x) {
+        const size_t i = std::min(static_cast<input_type>(histogram.n()-2.0), std::floor((x-histogram.min())/histogram.width()));
+        const result_type m = histogram.total();
+        const result_type w = histogram.width();
+        // interpolate the result
+        const result_type y1 = histogram[i+0];
+        const result_type y2 = histogram[i+1];
+        const result_type n  = y1 + (y2 - y1)*static_cast<result_type>((x - histogram.x()[i])/histogram.width());
+
+        return n/(m*w);
+}
 
 #endif /* __TFBAYES_UTILITY_HISTOGRAM_HH__ */

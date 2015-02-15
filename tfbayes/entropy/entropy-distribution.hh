@@ -36,11 +36,27 @@
 #include <tfbayes/utility/histogram.hh>
 #include <tfbayes/utility/boost-random-shuffle.hh>
 
-namespace boost { namespace random {
+
+template <class input_type, class result_type>
+class entropy_distribution;
+
+template <class input_type, class result_type>
+result_type pdf(const entropy_distribution<input_type, result_type>& dist, const std::vector<result_type>& theta);
 
 template <class input_type = double, class result_type = input_type>
 class entropy_distribution
 {
+        size_t m_k;
+        input_type m_a1;
+        input_type m_a2;
+        std::vector<result_type> m_state;
+        std::vector<result_type> m_proposal;
+        boost::math::beta_distribution<input_type> m_beta;
+        histogram_t<input_type, result_type> m_histogram;
+        bool m_burnin;
+        // record some statistics
+        double m_samples;
+        double m_accepted;
 public:
         entropy_distribution(size_t k, input_type a1, input_type a2) :
                 m_k(k), m_a1(a1), m_a2(a2),
@@ -77,7 +93,15 @@ public:
         double acceptance_ratio() const {
                 return m_accepted/m_samples;
         }
-
+        const histogram_t<input_type, result_type>& histogram() const {
+                return m_histogram;
+        }
+        const boost::math::beta_distribution<input_type>& beta() const {
+                return m_beta;
+        }
+        const size_t& k() const {
+                return m_k;
+        }
 private:
         result_type sum_proposal(size_t except_i) {
                 result_type result = 0.0;
@@ -97,8 +121,8 @@ private:
         template<class Engine>
         void draw_sample(Engine& eng, input_type sigma) {
                 // initialize proposal distribution
-                normal_distribution<input_type> rnorm(0.0, sigma);
-                uniform_01<input_type> runif;
+                boost::random::normal_distribution<input_type> rnorm(0.0, sigma);
+                boost::random::uniform_01<input_type> runif;
                 for (size_t i = 0; i < m_k; i++) {
                         // copy the old state
                         m_proposal = m_state;
@@ -110,7 +134,8 @@ private:
                         m_proposal[i] = (m_state[i] + r*rnorm(eng)) % r;
                         m_proposal[j] = 1.0 - sum_proposal(j);
                         // accept or reject
-                        if (static_cast<result_type>(runif(eng)) <= std::min(static_cast<result_type>(1.0), f(m_proposal)/f(m_state))) {
+                        if (static_cast<result_type>(runif(eng)) <= std::min(
+                                    static_cast<result_type>(1.0), pdf(*this, m_proposal)/pdf(*this, m_state))) {
                                 m_state = m_proposal;
                                 // update statistics
                                 m_accepted += 1.0;
@@ -119,26 +144,13 @@ private:
                 }
                 boost::random::random_shuffle(m_state.begin(), m_state.end(), eng);
         }
-        result_type f(const std::vector<result_type>& theta) {
-                input_type x = input_type(entropy(theta))/std::log(m_k);
-                return boost::math::pdf(m_beta, x)/m_histogram.pdf(x);
-        }
-
-        size_t m_k;
-        input_type m_a1;
-        input_type m_a2;
-        std::vector<result_type> m_state;
-        std::vector<result_type> m_proposal;
-        boost::math::beta_distribution<input_type> m_beta;
-        histogram_t<input_type, result_type> m_histogram;
-        bool m_burnin;
-        // record some statistics
-        double m_samples;
-        double m_accepted;
 };
 
-} // namespace random
-} // namespace boost
-
+template <class input_type, class result_type>
+result_type pdf(const entropy_distribution<input_type, result_type>& dist, const std::vector<result_type>& theta) {
+        using boost::math::pdf;
+        input_type x = input_type(entropy(theta))/std::log(dist.k());
+        return pdf(dist.beta(), x)/pdf(dist.histogram(), x);
+}
 
 #endif /* __TFBAYES_ENTROPY_DISTRIBUTION_HH__ */
