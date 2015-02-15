@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __TFBAYES_ENTROPY_SAMPLER_HH__
-#define __TFBAYES_ENTROPY_SAMPLER_HH__
+#ifndef __TFBAYES_ENTROPY_DISTRIBUTION_HH__
+#define __TFBAYES_ENTROPY_DISTRIBUTION_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -31,14 +31,8 @@
 #include <boost/random/uniform_int_distribution.hpp>
 #include <boost/random/uniform_01.hpp>
 
-#include <tfbayes/entropy/entropy-approximation-2.hh>
-#include <tfbayes/entropy/entropy-approximation-3.hh>
-#include <tfbayes/entropy/entropy-approximation-4.hh>
-#include <tfbayes/entropy/entropy-approximation-5.hh>
-#include <tfbayes/entropy/entropy-approximation-6.hh>
-#include <tfbayes/entropy/entropy-approximation-7.hh>
-#include <tfbayes/entropy/entropy-approximation-10.hh>
 #include <tfbayes/entropy/entropy.hh>
+#include <tfbayes/entropy/entropy-approximation.hh>
 #include <tfbayes/utility/histogram.hh>
 #include <tfbayes/utility/boost-random-shuffle.hh>
 
@@ -55,44 +49,8 @@ public:
                 m_burnin   (false),
                 m_samples  (0.0),
                 m_accepted (0.0) {
-                if (k == 2) {
-                        histogram = histogram_t<input_type, result_type>(
-                                0.0, log(k), entropy_histogram_2,
-                                entropy_histogram_2_counts);
-                }
-                else if (k == 3) {
-                        histogram = histogram_t<input_type, result_type>(
-                                0.0, log(k), entropy_histogram_3,
-                                entropy_histogram_3_counts);
-                }
-                else if (k == 4) {
-                        histogram = histogram_t<input_type, result_type>(
-                                0.0, log(k), entropy_histogram_4,
-                                entropy_histogram_4_counts);
-                }
-                else if (k == 5) {
-                        histogram = histogram_t<input_type, result_type>(
-                                0.0, log(k), entropy_histogram_5,
-                                entropy_histogram_5_counts);
-                }
-                else if (k == 6) {
-                        histogram = histogram_t<input_type, result_type>(
-                                0.0, log(k), entropy_histogram_6,
-                                entropy_histogram_6_counts);
-                }
-                else if (k == 7) {
-                        histogram = histogram_t<input_type, result_type>(
-                                0.0, log(k), entropy_histogram_7,
-                                entropy_histogram_7_counts);
-                }
-                else if (k == 10) {
-                        histogram = histogram_t<input_type, result_type>(
-                                0.0, log(k), entropy_histogram_10,
-                                entropy_histogram_10_counts);
-                }
-                else {
-                        throw std::runtime_error("Invalid cardinality!");
-                }
+
+                histogram = entropy_approximation<input_type, result_type>(k);
         }
 
         template<class Engine>
@@ -174,4 +132,4 @@ private:
 } // namespace boost
 
 
-#endif /* __TFBAYES_ENTROPY_SAMPLER_HH__ */
+#endif /* __TFBAYES_ENTROPY_DISTRIBUTION_HH__ */

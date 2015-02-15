@@ -18,5 +18,15 @@ entropy_distribution_test_LDADD = $(BOOST_SERIALIZATION_LIB)
 
 ## headers
 noinst_HEADERS = \
+	entropy-approximation.hh \
+	entropy-approximation-2.hh \
+	entropy-approximation-3.hh \
+	entropy-approximation-4.hh \
+	entropy-approximation-5.hh \
+	entropy-approximation-6.hh \
+	entropy-approximation-7.hh \
+	entropy-approximation-8.hh \
+	entropy-approximation-9.hh \
+	entropy-approximation-10.hh \
 	entropy-distribution.hh \
 	entropy.hh
