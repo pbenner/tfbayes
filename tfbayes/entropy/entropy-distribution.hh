@@ -157,11 +157,15 @@ private:
         }
         template<class Engine>
         void draw_sample(Engine& eng) {
+                // select the second coordinate at random
+                size_t j = draw_coordinate(eng);
+                return draw_sample(eng, j);
+        }
+        template<class Engine>
+        void draw_sample(Engine& eng, size_t j) {
                 // copy the old state
                 m_proposal_theta = m_theta;
                 m_proposal_phi   = m_phi;
-                // select the second coordinate at random
-                size_t j = draw_coordinate(eng);
                 // proposal distribution
                 rdirichlet_t rbeta(ivector_t({1.0, m_k-j-1.0}));
                 // draw a proposal
