@@ -116,6 +116,7 @@ save_histogram(const hist_t& histogram, size_t k)
 struct parameters_t {
         double alpha_min;
         double alpha_max;
+        double n_sigma;
         size_t bins;
         size_t minimum_counts;
         bool extended_precision;
@@ -156,7 +157,7 @@ proposal_distribution_t
                                       alpha, target);
         }
 public:
-        proposal_distribution_t(size_t k, const parameters_t& parameters, real_t n = 1.0)
+        proposal_distribution_t(size_t k, const parameters_t& parameters)
                 : m_k(k), m_size(0.0), m_extended_precision(parameters.extended_precision) {
 
                 real_t alpha_min = parameters.alpha_min;
@@ -170,8 +171,8 @@ public:
                         m_rdirichlet.push_back(rdirichlet_t(k, alpha));
                         m_ddirichlet.push_back(ddirichlet_t(k, alpha));
                         // compute new alpha
-                        alpha = m_mean(alpha) - n*m_sigma(alpha) > 0.0 ?
-                                compute_alpha(alpha, m_mean(alpha) - n*m_sigma(alpha)) :
+                        alpha = m_mean(alpha) - parameters.n_sigma*m_sigma(alpha) > 0.0 ?
+                                compute_alpha(alpha, m_mean(alpha) - parameters.n_sigma*m_sigma(alpha)) :
                                 0.0;
                         // increase number of components
                         m_size += 1;
@@ -252,7 +253,11 @@ default_parameters()
 {
         map<size_t, parameters_t> m;
 
-        m[2] = {1.0, 1.0, 100, 500000, false};
+        // alpha_min, alpha_max, sigma_n, bins, samples, precision
+        m[2] = {1.0, 1.0, 1.0, 100, 500000, false};
+        m[3] = {1.0, 1.0, 1.0, 100, 500000, false};
+        m[4] = {0.1, 1.5, 1.0, 200, 500000, false};
+        m[5] = {0.1, 3.0, 1.0, 200, 500000, false};
 
         return m;
 }

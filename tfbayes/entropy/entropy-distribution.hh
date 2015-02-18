@@ -158,8 +158,10 @@ private:
         template<class Engine>
         void draw_sample(Engine& eng) {
                 // select the second coordinate at random
-                size_t j = draw_coordinate(eng);
-                return draw_sample(eng, j);
+                for (size_t j = 0; j < m_k-1; j++) {
+                        draw_sample(eng, j);
+                }
+                return draw_sample(eng, draw_coordinate(eng));
         }
         template<class Engine>
         void draw_sample(Engine& eng, size_t j) {
