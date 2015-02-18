@@ -22,16 +22,37 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <algorithm>    // std::transform
 #include <array>
 #include <vector>
 
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
+
 #include <tfbayes/utility/histogram.hh>
+#include <tfbayes/utility/probability.hh>
+
+template <class input_type, class result_type>
+histogram_t<input_type, result_type> entropy_approximation(
+        const std::vector<double>& y,
+        const std::vector<double>& counts)
+{
+        using namespace boost::lambda;
+        // allocate a new vector for y
+        std::vector<result_type> tmp_y     (y     .size(), 0.0);
+        std::vector<result_type> tmp_counts(counts.size(), 0.0);
+
+        std::transform(y.begin(), y.end(), tmp_y.begin(),
+                       bind(from_log_scale<input_type>, _1));
+        std::transform(counts.begin(), counts.end(), tmp_counts.begin(),
+                       bind(from_log_scale<input_type>, _1));
+
+        return histogram_t<input_type, result_type>(0.0, 1.0, tmp_y, tmp_counts);
+}
 
 template <class input_type, class result_type>
 histogram_t<input_type, result_type> entropy_approximation(size_t k)
 {
-        typedef histogram_t<input_type, result_type> hist_t;
-
         // load data
         #include <tfbayes/entropy/entropy-approximation-2.hh>
         #include <tfbayes/entropy/entropy-approximation-3.hh>
@@ -45,15 +66,15 @@ histogram_t<input_type, result_type> entropy_approximation(size_t k)
 
         // construct and return the histogram
         switch(k) {
-        case  2: return hist_t(0.0, 1.0, entropy_histogram_2,  entropy_histogram_2_counts);
-        case  3: return hist_t(0.0, 1.0, entropy_histogram_3,  entropy_histogram_3_counts);
-        case  4: return hist_t(0.0, 1.0, entropy_histogram_4,  entropy_histogram_4_counts);
-        case  5: return hist_t(0.0, 1.0, entropy_histogram_5,  entropy_histogram_5_counts);
-        case  6: return hist_t(0.0, 1.0, entropy_histogram_6,  entropy_histogram_6_counts);
-        case  7: return hist_t(0.0, 1.0, entropy_histogram_7,  entropy_histogram_7_counts);
-        case  8: return hist_t(0.0, 1.0, entropy_histogram_8,  entropy_histogram_8_counts);
-        case  9: return hist_t(0.0, 1.0, entropy_histogram_9,  entropy_histogram_9_counts);
-        case 10: return hist_t(0.0, 1.0, entropy_histogram_10, entropy_histogram_10_counts);
+        case  2: return entropy_approximation<input_type, result_type>(entropy_histogram_2,  entropy_histogram_2_counts);
+        case  3: return entropy_approximation<input_type, result_type>(entropy_histogram_3,  entropy_histogram_3_counts);
+        case  4: return entropy_approximation<input_type, result_type>(entropy_histogram_4,  entropy_histogram_4_counts);
+        case  5: return entropy_approximation<input_type, result_type>(entropy_histogram_5,  entropy_histogram_5_counts);
+        case  6: return entropy_approximation<input_type, result_type>(entropy_histogram_6,  entropy_histogram_6_counts);
+        case  7: return entropy_approximation<input_type, result_type>(entropy_histogram_7,  entropy_histogram_7_counts);
+        case  8: return entropy_approximation<input_type, result_type>(entropy_histogram_8,  entropy_histogram_8_counts);
+        case  9: return entropy_approximation<input_type, result_type>(entropy_histogram_9,  entropy_histogram_9_counts);
+        case 10: return entropy_approximation<input_type, result_type>(entropy_histogram_10, entropy_histogram_10_counts);
         default: throw std::runtime_error("Invalid cardinality!");
         }
 }

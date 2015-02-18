@@ -27,10 +27,7 @@
 
 #include <tfbayes/utility/histogram.hh>
 #include <tfbayes/utility/probability.hh>
-#include <tfbayes/entropy/entropy-approximation-2.hh>
-#include <tfbayes/entropy/entropy-approximation-3.hh>
-#include <tfbayes/entropy/entropy-approximation-4.hh>
-#include <tfbayes/entropy/entropy-approximation-5.hh>
+#include <tfbayes/entropy/entropy-approximation.hh>
 #include <tfbayes/entropy/entropy.hh>
 
 using namespace std;
@@ -41,22 +38,7 @@ int
 main(void)
 {
         size_t k = 3;
-        prob_histogram_t histogram;
-
-        switch (k) {
-        case 2:
-                histogram = prob_histogram_t(0.0, log(k), entropy_histogram_2_counts);
-                break;
-        case 3:
-                histogram = prob_histogram_t(0.0, log(k), entropy_histogram_3_counts);
-                break;
-        case 4:
-                histogram = prob_histogram_t(0.0, log(k), entropy_histogram_4_counts);
-                break;
-        case 5:
-                histogram = prob_histogram_t(0.0, log(k), entropy_histogram_5_counts);
-                break;
-        }
+        prob_histogram_t histogram = entropy_approximation<double, probability_t<> >(k);
 
         for (double v = 0.0; v <= log(k); v += 0.001) {
                 cout << boost::format("%f %f") % v % pdf(histogram, v)
