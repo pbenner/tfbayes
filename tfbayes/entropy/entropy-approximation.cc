@@ -113,6 +113,14 @@ save_histogram(const hist_t& histogram, size_t k)
         ofs << "};" << endl;
 }
 
+struct parameters_t {
+        double alpha_min;
+        double alpha_max;
+        size_t bins;
+        size_t minimum_counts;
+        bool extended_precision;
+};
+
 class
 proposal_distribution_t
 {
@@ -148,13 +156,13 @@ proposal_distribution_t
                                       alpha, target);
         }
 public:
-        proposal_distribution_t(size_t k, const hist_t& histogram, bool extended_precision = false, real_t n = 1.0)
-                : m_k(k), m_size(0.0), m_extended_precision(extended_precision) {
+        proposal_distribution_t(size_t k, const parameters_t& parameters, real_t n = 1.0)
+                : m_k(k), m_size(0.0), m_extended_precision(parameters.extended_precision) {
 
-                real_t alpha_min = std::max(real_t(0.05), compute_alpha(1.0, histogram.x()[0]));
-                real_t alpha_max = compute_alpha(1.0, histogram.x()[histogram.size()-1]-histogram.width()/0.6);
+                real_t alpha_min = parameters.alpha_min;
+                real_t alpha_max = parameters.alpha_max;
 
-                for (real_t alpha = alpha_max; alpha > alpha_min;) {
+                for (real_t alpha = alpha_max; alpha >= alpha_min;) {
                         // verbose
                         cout << boost::format("Adding distribution at alpha = %f (with mean entropy %f)")
                                 % alpha % m_mean(alpha) << endl;
@@ -162,7 +170,9 @@ public:
                         m_rdirichlet.push_back(rdirichlet_t(k, alpha));
                         m_ddirichlet.push_back(ddirichlet_t(k, alpha));
                         // compute new alpha
-                        alpha = compute_alpha(alpha, m_mean(alpha) - n*m_sigma(alpha));
+                        alpha = m_mean(alpha) - n*m_sigma(alpha) > 0.0 ?
+                                compute_alpha(alpha, m_mean(alpha) - n*m_sigma(alpha)) :
+                                0.0;
                         // increase number of components
                         m_size += 1;
                 }
@@ -195,15 +205,15 @@ p_t pdf(const proposal_distribution_t& d, const p_vector_t& x) {
 }
 
 hist_t
-approximate_distribution(size_t k, size_t minimum_counts, size_t bins, bool extended_precision = false)
+approximate_distribution(size_t k, const parameters_t& parameters)
 {
         boost::random::mt19937 gen; seed_rng(gen);
-        hist_t histogram(0.0, log(k), bins);
-        proposal_distribution_t proposal_distribution(k, histogram, extended_precision);
+        hist_t histogram(0.0, 1.0, parameters.bins);
+        proposal_distribution_t proposal_distribution(k, parameters);
         p_vector_t theta;
         real_t x;
 
-        for (size_t i = 0; histogram.min_counts() < minimum_counts; i++) {
+        for (size_t i = 0; histogram.min_counts() < parameters.minimum_counts; i++) {
                 while (true) {
                         try {
                                 theta = proposal_distribution(gen);
@@ -214,7 +224,7 @@ approximate_distribution(size_t k, size_t minimum_counts, size_t bins, bool exte
                                      << endl;;
                         }
                 }
-                x = static_cast<real_t>(entropy(theta, extended_precision))/std::log(k);
+                x = static_cast<real_t>(entropy(theta, parameters.extended_precision))/std::log(k);
                 histogram.add(x, 1.0/pdf(proposal_distribution, theta));
                 if ((i+1) % 100000 == 0) {
                         vector<real_t>::const_iterator it =
@@ -237,6 +247,16 @@ void print_usage(char *pname, FILE *fp)
         (void)fprintf(fp, "\nUsage: %s from [to]\n\n", pname);
 }
 
+map<size_t, parameters_t>
+default_parameters()
+{
+        map<size_t, parameters_t> m;
+
+        m[2] = {1.0, 1.0, 100, 500000, false};
+
+        return m;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -247,14 +267,13 @@ main(int argc, char *argv[])
         const size_t from = atoi(argv[1]);
         const size_t to   = argc == 2 ? from : atoi(argv[2]);
 
-        const size_t minimum_samples = 500000;
-        const size_t bins = 100;
+        map<size_t, parameters_t> parameters = default_parameters();
 
         for (size_t k = from; k <= to; k++) {
                 cerr << boost::format("Sampling entropies for cardinality %d...") % k
                      << endl;
 
-                const hist_t histogram = approximate_distribution(k, minimum_samples, bins);
+                const hist_t histogram = approximate_distribution(k, parameters[k]);
 
                 save_table    (histogram, k);
                 save_histogram(histogram, k);

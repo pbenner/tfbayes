@@ -27,7 +27,9 @@
 #include <string>
 
 #include <boost/math/distributions/beta.hpp>
-#include <boost/random/normal_distribution.hpp>
+#include <boost/math/distributions/dirichlet.hpp>
+#include <boost/random/beta_distribution.hpp>
+#include <boost/random/dirichlet_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
 #include <boost/random/uniform_01.hpp>
 
@@ -46,49 +48,74 @@ result_type pdf(const entropy_distribution_t<input_type, result_type>& dist, con
 template <class input_type = double, class result_type = input_type>
 class entropy_distribution_t
 {
+        // type definitions
+        ////////////////////////////////////////////////////////////////////////
+        typedef std::vector< input_type> ivector_t;
+        typedef std::vector<result_type> rvector_t;
+        typedef boost::math  ::beta_distribution<input_type> dbeta_t;
+        typedef boost::random::dirichlet_distribution<input_type, result_type> rdirichlet_t;
+        // member variables
+        ////////////////////////////////////////////////////////////////////////
         size_t m_k;
-        input_type m_a1;
-        input_type m_a2;
-        std::vector<result_type> m_state;
-        std::vector<result_type> m_proposal;
-        boost::math::beta_distribution<input_type> m_beta;
+        // point in the probability simplex
+        std::vector<result_type> m_theta;
+        // transformed coordinates in the unit interval
+        std::vector<result_type> m_phi;
+        // same for drawing a proposal
+        std::vector<result_type> m_proposal_theta;
+        std::vector<result_type> m_proposal_phi;
+        // prior density function
+        boost::math::beta_distribution<input_type> m_dbeta;
+        // weight function
         histogram_t<input_type, result_type> m_histogram;
-        bool m_burnin;
+        // is this the first sample?
+        bool m_first_sample;
         // record some statistics
         double m_samples;
         double m_accepted;
+        // sampling distributions
+        boost::random::uniform_01<input_type> m_runif;
+        ////////////////////////////////////////////////////////////////////////
 public:
         entropy_distribution_t(size_t k, input_type a1, input_type a2) :
-                m_k(k), m_a1(a1), m_a2(a2),
-                m_state    (k, 1.0/k),
-                m_beta     (a1, a2),
-                m_histogram(entropy_approximation<input_type, result_type>(k)),
-                m_burnin   (false),
-                m_samples  (0.0),
-                m_accepted (0.0)
+                m_k              (k),
+                m_theta          (k, 0.0),
+                m_phi            (k, 1.0),
+                m_proposal_theta (k, 0.0),
+                m_proposal_phi   (k, 0.0),
+                m_dbeta          (a1, a2),
+                m_histogram      (entropy_approximation<input_type, result_type>(k)),
+                m_first_sample   (true),
+                m_samples        (0.0),
+                m_accepted       (0.0)
                 { }
         entropy_distribution_t(size_t k, input_type a1, input_type a2,
-                             histogram_t<input_type, result_type> histogram) :
-                m_k(k), m_a1(a1), m_a2(a2),
-                m_state    (k, 1.0/k),
-                m_beta     (a1, a2),
-                m_histogram(histogram),
-                m_burnin   (false),
-                m_samples  (0.0),
-                m_accepted (0.0)
+                               histogram_t<input_type, result_type> histogram) :
+                m_k              (k),
+                m_theta          (k, 0.0),
+                m_phi            (k, 1.0),
+                m_proposal_theta (k, 0.0),
+                m_proposal_phi   (k, 0.0),
+                m_dbeta          (a1, a2),
+                m_histogram      (histogram),
+                m_first_sample   (true),
+                m_samples        (0.0),
+                m_accepted       (0.0)
                 { }
 
         template<class Engine>
-        const std::vector<result_type>& operator()(Engine& eng, input_type sigma = 0.01, size_t burnin = 1000) {
-                if (!m_burnin) {
-                        for (size_t i = 0; i < burnin; i++) {
-                                draw_sample(eng, sigma);
-                        }
-                        m_burnin = true;
+        const rvector_t& operator()(Engine& eng) {
+                if (m_first_sample) {
+                        rdirichlet_t rdirichlet(ivector_t(m_k, 1.0));
+                        m_theta = rdirichlet(eng);
+                        transform_backward(m_phi, m_theta);
+                        m_first_sample = false;
                 }
-                draw_sample(eng, sigma);
+                else {
+                        draw_sample(eng);
+                }
 
-                return m_state;
+                return m_theta;
         }
         double acceptance_ratio() const {
                 return m_accepted/m_samples;
@@ -97,53 +124,86 @@ public:
                 return m_histogram;
         }
         const boost::math::beta_distribution<input_type>& beta() const {
-                return m_beta;
+                return m_dbeta;
         }
         const size_t& k() const {
                 return m_k;
         }
 private:
-        result_type sum_proposal(size_t except_i) {
-                result_type result = 0.0;
+        rvector_t& transform_forward(
+                rvector_t& theta,
+                rvector_t& phi) {
+                result_type sum = 0.0;
                 for (size_t i = 0; i < m_k; i++) {
-                        if (i != except_i) {
-                                result += m_proposal[i];
-                        }
+                        theta[i] = phi[i]*(result_type(1.0) - sum);
+                        sum     += theta[i];
                 }
-                return result;
+                return theta;
+        }
+        rvector_t& transform_backward(
+                rvector_t& phi,
+                rvector_t& theta) {
+                result_type sum = 0.0;
+                for (size_t i = 0; i < m_k-1; i++) {
+                        phi[i] = theta[i]/(result_type(1.0) - sum);
+                        sum   += theta[i];
+                }
+                return theta;
         }
         template<class Engine>
-        size_t draw_coordinate(Engine& eng, size_t except_i) {
+        size_t draw_coordinate(Engine& eng) {
                 boost::random::uniform_int_distribution<> dist(0,m_k-2);
-                size_t result = dist(eng);
-                return result >= except_i ? result+1 : result;
+                return dist(eng);
         }
         template<class Engine>
-        void draw_sample(Engine& eng, input_type sigma) {
-                // initialize proposal distribution
-                boost::random::normal_distribution<input_type> rnorm(0.0, sigma);
-                boost::random::uniform_01<input_type> runif;
-                for (size_t i = 0; i < m_k; i++) {
-                        // copy the old state
-                        m_proposal = m_state;
-                        // select the second coordinate at random
-                        size_t j = draw_coordinate(eng, i);
-                        // compute the range
-                        result_type r = m_state[i] + m_state[j];
-                        // draw a proposal
-                        m_proposal[i] = (m_state[i] + r*rnorm(eng)) % r;
-                        m_proposal[j] = 1.0 - sum_proposal(j);
-                        // accept or reject
-                        if (static_cast<result_type>(runif(eng)) <= std::min(
-                                    static_cast<result_type>(1.0), pdf(*this, m_proposal)/pdf(*this, m_state))) {
-                                m_state = m_proposal;
-                                // update statistics
-                                m_accepted += 1.0;
-                        }
-                        m_samples += 1.0;
+        void draw_sample(Engine& eng) {
+                // copy the old state
+                m_proposal_theta = m_theta;
+                m_proposal_phi   = m_phi;
+                // select the second coordinate at random
+                size_t j = draw_coordinate(eng);
+                // proposal distribution
+                rdirichlet_t rbeta(ivector_t({1.0, m_k-j-1.0}));
+                // draw a proposal
+                m_proposal_phi[j] = rbeta(eng)[0];
+                transform_forward(m_proposal_theta, m_proposal_phi);
+                // accept or reject
+                if (static_cast<result_type>(m_runif(eng)) <= std::min(
+                            static_cast<result_type>(1.0), pdf(*this, m_proposal_theta)/pdf(*this, m_theta))) {
+                        m_theta = m_proposal_theta;
+                        m_phi   = m_proposal_phi;
+                        // update statistics
+                        m_accepted += 1.0;
                 }
-                boost::random::random_shuffle(m_state.begin(), m_state.end(), eng);
+                m_samples += 1.0;
+                boost::random::random_shuffle(m_theta.begin(), m_theta.end(), eng);
+                transform_backward(m_phi, m_theta);
         }
+        // template<class Engine>
+        // void draw_sample(Engine& eng, input_type sigma) {
+        //         // initialize proposal distribution
+        //         boost::random::normal_distribution<input_type> rnorm(0.0, sigma);
+        //         boost::random::uniform_01<input_type> runif;
+        //         for (size_t i = 0; i < m_k; i++) {
+        //                 // copy the old state
+        //                m_proposal = m_state;
+        //                 // select the second coordinate at random
+        //                 size_t j = draw_coordinate(eng, i);
+        //                 // compute the range
+        //                 result_type r = m_state[i] + m_state[j];
+        //                 // draw a proposal
+        //                 m_proposal[i] = (m_state[i] + r*rnorm(eng)) % r;
+        //                 m_proposal[j] = 1.0 - sum_proposal(j);
+        //                 // accept or reject
+        //                 if (static_cast<result_type>(runif(eng)) <= std::min(
+        //                             static_cast<result_type>(1.0), pdf(*this, m_proposal)/pdf(*this, m_state))) {
+        //                         m_state = m_proposal;
+        //                         // update statistics
+        //                         m_accepted += 1.0;
+        //                 }
+        //                 m_samples += 1.0;
+        //         }
+        // }
 };
 
 template <class input_type, class result_type>

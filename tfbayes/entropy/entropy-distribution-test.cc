@@ -44,14 +44,12 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 struct options_t {
-        double variance;
         double a1;
         double a2;
         bool print_entropy;
         bool verbose;
         options_t()
-                : variance      (0.1),
-                  a1            (1.0),
+                : a1            (1.0),
                   a2            (1.0),
                   print_entropy (false),
                   verbose       (false)
@@ -121,13 +119,13 @@ sample(size_t samples, size_t k)
 
         if (options.print_entropy) {
                 for (size_t i = 0; i < samples; i++) {
-                        cout << entropy(d(gen, options.variance))
+                        cout << entropy(d(gen))
                              << endl;
                 }
         }
         else {
                 for (size_t i = 0; i < samples; i++) {
-                        cout << d(gen, options.variance)
+                        cout << d(gen)
                              << endl;
                 }
         }
@@ -151,7 +149,6 @@ int main(int argc, char *argv[])
                 static struct option long_options[] = {
                         { "counts",               1, 0, 'a' },
                         { "print-entropy",        0, 0, 'b' },
-                        { "variance",             1, 0, 'c' },
                         { "help",                 0, 0, 'h' },
                         { "version",              0, 0, 'x' },
                         { 0,                      0, 0,  0  }
@@ -175,9 +172,6 @@ int main(int argc, char *argv[])
                         break;
                 case 'b':
                         options.print_entropy = true;
-                        break;
-                case 'c':
-                        options.variance = atof(optarg);
                         break;
                 case 'v':
                         options.verbose = true;
