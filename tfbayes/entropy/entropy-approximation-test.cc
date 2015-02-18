@@ -40,8 +40,8 @@ main(void)
         size_t k = 3;
         prob_histogram_t histogram = entropy_approximation<double, probability_t<> >(k);
 
-        for (double v = 0.0; v <= log(k); v += 0.001) {
-                cout << boost::format("%f %f") % v % pdf(histogram, v)
+        for (double v = 0.0; v <= 1; v += 0.001) {
+                cout << boost::format("%f %f") % (v*log(k)) % pdf(histogram, v)
                      << endl;
         }
 }

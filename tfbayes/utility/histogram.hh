@@ -164,10 +164,10 @@ result_type pdf(const histogram_t<input_type, result_type> histogram, const inpu
         const result_type m = histogram.total();
         const result_type w = histogram.width();
         // no interpolation in these cases
-        if (x < histogram.x().front()) {
+        if (x <= histogram.x().front()) {
                 return histogram.front()/(m*w);
         }
-        if (x > histogram.x().back()) {
+        if (x >= histogram.x().back()) {
                 return histogram.back()/(m*w);
         }
         // select bins for the interpolation

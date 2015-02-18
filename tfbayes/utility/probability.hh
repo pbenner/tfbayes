@@ -54,7 +54,7 @@ public:
         probability_t(real_t p, sign_t sign)
                 : log_p (p),
                   sign  (sign)
-                { }
+                { assert(sign == 1 || sign == -1); }
 
         probability_t& operator+=(const probability_t& q_) {
                 probability_t& p = *this;
