@@ -91,8 +91,8 @@ public:
                         m_counts = std::vector<input_type>(counts.begin(), counts.end());
                 }
         }
-        void add(input_type x, result_type v = 1.0) GCC_ATTRIBUTE_NOAMATH {
-                size_t i = std::abs(x - m_max) < 1e-8 ? m_n-1 : std::floor((x-m_min)/m_width);
+        void add(const input_type& x, const result_type& v = 1.0) GCC_ATTRIBUTE_NOAMATH {
+                size_t i = which_bin(x);
                 assert(i < m_n);
                 m_total     += v;
                 m_counts[i] += 1.0;
@@ -101,6 +101,9 @@ public:
                 result_type t = base_t::operator[](i) + y;
                 m_kahan[i] = (t - base_t::operator[](i)) - y;
                 base_t::operator[](i) = t;
+        }
+        size_t which_bin(const input_type& x) const {
+                return std::abs(x - m_max) < 1e-8*m_width ? m_n-1 : std::floor((x-m_min)/m_width);
         }
         const size_t& n() const {
                 return m_n;
@@ -157,14 +160,30 @@ private:
 };
 
 template <class input_type, class result_type>
-result_type pdf(const histogram_t<input_type, result_type> histogram, input_type x) {
-        const size_t i = std::min(static_cast<input_type>(histogram.n()-2.0), std::floor((x-histogram.min())/histogram.width()));
+result_type pdf(const histogram_t<input_type, result_type> histogram, const input_type& x) {
         const result_type m = histogram.total();
         const result_type w = histogram.width();
-        // interpolate the result
-        const result_type y1 = histogram[i+0];
-        const result_type y2 = histogram[i+1];
-        const result_type n  = y1 + (y2 - y1)*static_cast<result_type>((x - histogram.x()[i])/histogram.width());
+        // no interpolation in these cases
+        if (x < histogram.x().front()) {
+                return histogram.front()/(m*w);
+        }
+        if (x > histogram.x().back()) {
+                return histogram.back()/(m*w);
+        }
+        // select bins for the interpolation
+        size_t j, i = histogram.which_bin(x);
+        if (x > histogram.x()[i]) {
+                j = i+1;
+        }
+        else {
+                j = i;
+                i = i-1;
+        }
+        // compute interpolation
+        const  input_type x1 = histogram.x()[i];
+        const result_type y1 = histogram[i];
+        const result_type y2 = histogram[j];
+        const result_type n  = y1 + (y2 - y1)*static_cast<result_type>((x - x1)/histogram.width());
 
         return n/(m*w);
 }
