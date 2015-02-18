@@ -45,7 +45,7 @@ histogram_t<input_type, result_type> entropy_approximation(
         std::transform(y.begin(), y.end(), tmp_y.begin(),
                        bind(from_log_scale<input_type>, _1));
         std::transform(counts.begin(), counts.end(), tmp_counts.begin(),
-                       bind(from_log_scale<input_type>, _1));
+                       _1);
 
         return histogram_t<input_type, result_type>(0.0, 1.0, tmp_y, tmp_counts);
 }
