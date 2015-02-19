@@ -89,7 +89,7 @@ public:
                         throw std::runtime_error("Histogram count overflow!");
                 }
                 if (counts.size() == y.size()) {
-                        std::copy(counts.begin(), counts.end(), m_counts.end());
+                        std::copy(counts.begin(), counts.end(), m_counts.begin());
                 }
         }
         void add(const input_type& x, const result_type& v = 1.0) GCC_ATTRIBUTE_NOAMATH {
