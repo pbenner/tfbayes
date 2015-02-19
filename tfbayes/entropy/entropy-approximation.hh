@@ -40,7 +40,7 @@ histogram_t<input_type, result_type> entropy_approximation(
         using namespace boost::lambda;
         // allocate a new vector for y
         std::vector<result_type> tmp_y     (y     .size(), 0.0);
-        std::vector<result_type> tmp_counts(counts.size(), 0.0);
+        std::vector< input_type> tmp_counts(counts.size(), 0.0);
 
         std::transform(y.begin(), y.end(), tmp_y.begin(),
                        bind(from_log_scale<input_type>, _1));

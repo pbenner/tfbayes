@@ -22,6 +22,7 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <algorithm>
 #include <ostream>
 #include <vector>
 #include <stdexcept>
@@ -65,10 +66,10 @@ public:
                         m_x[i] = m_width/2.0 + i*m_width;
                 }
         }
-        template <class T>
+        template <class T, class S = input_type>
         histogram_t(input_type min, input_type max,
                     const std::vector<T>& y,
-                    const std::vector<T>& counts = std::vector<T>())
+                    const std::vector<S>& counts = std::vector<S>())
                 : base_t     (y.begin(), y.end()),
                   m_n        (y.size()),
                   m_min      (min),
@@ -88,7 +89,7 @@ public:
                         throw std::runtime_error("Histogram count overflow!");
                 }
                 if (counts.size() == y.size()) {
-                        m_counts = std::vector<input_type>(counts.begin(), counts.end());
+                        std::copy(counts.begin(), counts.end(), m_counts.end());
                 }
         }
         void add(const input_type& x, const result_type& v = 1.0) GCC_ATTRIBUTE_NOAMATH {
