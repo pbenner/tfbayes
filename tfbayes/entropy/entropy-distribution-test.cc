@@ -44,15 +44,18 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 struct options_t {
+        double alpha;
         double a1;
         double a2;
         bool print_entropy;
         bool verbose;
+        // default constructor
         options_t()
-                : a1            (1.0),
-                  a2            (1.0),
-                  print_entropy (false),
-                  verbose       (false)
+                : alpha         (1.0)
+                , a1            (1.0)
+                , a2            (1.0)
+                , print_entropy (false)
+                , verbose       (false)
                 { }
 };
 
@@ -67,6 +70,7 @@ void print_usage(char *pname, FILE *fp)
         (void)fprintf(fp, "\nUsage: %s [OPTION] SAMPLES CARDINALITY\n\n", pname);
         (void)fprintf(fp,
                       "Options:\n"
+                      "      --alpha=float             - parameter of the dirichlet proposal distribution\n"
                       "      --counts=A1:A2            - pseudocounts for the beta prior\n"
                       "      --print-entropy           - print entropy instead of the distributions\n"
                       "      --variance=float          - variance of the proposal distribution\n"
@@ -119,13 +123,13 @@ sample(size_t samples, size_t k)
 
         if (options.print_entropy) {
                 for (size_t i = 0; i < samples; i++) {
-                        cout << entropy(d(gen))
+                        cout << entropy(d(gen, options.alpha))
                              << endl;
                 }
         }
         else {
                 for (size_t i = 0; i < samples; i++) {
-                        cout << d(gen)
+                        cout << d(gen, options.alpha)
                              << endl;
                 }
         }
@@ -147,8 +151,9 @@ int main(int argc, char *argv[])
         for(;;) {
                 int c, option_index = 0;
                 static struct option long_options[] = {
-                        { "counts",               1, 0, 'a' },
-                        { "print-entropy",        0, 0, 'b' },
+                        { "alpha",                1, 0, 'a' },
+                        { "counts",               1, 0, 'b' },
+                        { "print-entropy",        0, 0, 'c' },
                         { "help",                 0, 0, 'h' },
                         { "version",              0, 0, 'x' },
                         { 0,                      0, 0,  0  }
@@ -163,6 +168,9 @@ int main(int argc, char *argv[])
 
                 switch(c) {
                 case 'a':
+                        options.alpha = atof(optarg);
+                        break;
+                case 'b':
                         tokens = token(string(optarg), ':');
                         if (tokens.size() != 2) {
                                 wrong_usage(argv[0], "Invalid number of pseudocounts.");
@@ -170,7 +178,7 @@ int main(int argc, char *argv[])
                         options.a1 = atof(tokens[0].c_str());
                         options.a2 = atof(tokens[1].c_str());
                         break;
-                case 'b':
+                case 'c':
                         options.print_entropy = true;
                         break;
                 case 'v':

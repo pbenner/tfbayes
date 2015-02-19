@@ -12,11 +12,11 @@ dentropy <- function(h, k, a1 = 100, a2 = 20, ...) {
 
 n  <- 100000
 k  <- 3
-a1 <- 1
-a2 <- 1
+a1 <- 100
+a2 <- 20
 
 # execute sampler
-system(sprintf("./entropy-distribution-test -v --counts=%d:%d %d %d > entropy-distribution-test.csv", a1, a2, n, k))
+system(sprintf("./entropy-distribution-test -v --alpha=2 --counts=%d:%d %d %d > entropy-distribution-test.csv", a1, a2, n, k))
 # load result
 samples <- read.table("entropy-distribution-test.csv")
 samples.entropy <- apply(samples, 1, entropy)

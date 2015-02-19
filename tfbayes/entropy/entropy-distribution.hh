@@ -104,7 +104,7 @@ public:
                 { }
 
         template<class Engine>
-        const rvector_t& operator()(Engine& eng) {
+        const rvector_t& operator()(Engine& eng, const input_type& alpha = 1.0) {
                 if (m_first_sample) {
                         rdirichlet_t rdirichlet(ivector_t(m_k, 1.0));
                         m_theta = rdirichlet(eng);
@@ -112,7 +112,7 @@ public:
                         m_first_sample = false;
                 }
                 else {
-                        draw_sample(eng);
+                        draw_sample(eng, alpha);
                 }
 
                 return m_theta;
@@ -156,20 +156,20 @@ private:
                 return dist(eng);
         }
         template<class Engine>
-        void draw_sample(Engine& eng) {
+        void draw_sample(Engine& eng, const input_type& alpha) {
                 // select the second coordinate at random
                 for (size_t j = 0; j < m_k-1; j++) {
-                        draw_sample(eng, j);
+                        draw_sample(eng, alpha, j);
                 }
-                return draw_sample(eng, draw_coordinate(eng));
+                return draw_sample(eng, alpha, draw_coordinate(eng));
         }
         template<class Engine>
-        void draw_sample(Engine& eng, size_t j) {
+        void draw_sample(Engine& eng, const input_type& alpha, size_t j) {
                 // copy the old state
                 m_proposal_theta = m_theta;
                 m_proposal_phi   = m_phi;
                 // proposal distribution
-                rdirichlet_t rbeta(ivector_t({1.0, m_k-j-1.0}));
+                rdirichlet_t rbeta(ivector_t({alpha, (m_k-j-1.0)*alpha}));
                 // draw a proposal
                 m_proposal_phi[j] = rbeta(eng)[0];
                 transform_forward(m_proposal_theta, m_proposal_phi);
