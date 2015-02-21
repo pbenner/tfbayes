@@ -53,6 +53,7 @@ class entropy_distribution_t
         typedef std::vector< input_type> ivector_t;
         typedef std::vector<result_type> rvector_t;
         typedef boost::math  ::beta_distribution<input_type> dbeta_t;
+        typedef boost::math  ::dirichlet_distribution<input_type, result_type> ddirichlet_t;
         typedef boost::random::dirichlet_distribution<input_type, result_type> rdirichlet_t;
         // member variables
         ////////////////////////////////////////////////////////////////////////
@@ -156,28 +157,31 @@ private:
                 return dist(eng);
         }
         template<class Engine>
-        void draw_sample(Engine& eng, const input_type& alpha) {
+        void draw_sample(Engine& eng) {
                 // select the second coordinate at random
                 for (size_t j = 0; j < m_k-1; j++) {
-                        draw_sample(eng, alpha, j);
+                        draw_sample(eng, j);
                 }
-                return draw_sample(eng, alpha, draw_coordinate(eng));
+                return draw_sample(eng, draw_coordinate(eng));
         }
         template<class Engine>
-        void draw_sample(Engine& eng, const input_type& alpha, size_t j) {
+        void draw_sample(Engine& eng, size_t j) {
+                using std::exp; using std::log; using std::min;
+                using boost::math::log_pdf;
                 // copy the old state
                 m_proposal_theta = m_theta;
                 m_proposal_phi   = m_phi;
                 // proposal distribution
-                rdirichlet_t rbeta(ivector_t({alpha, (m_k-j-1.0)*alpha}));
+                rdirichlet_t rbeta(ivector_t({1.0, m_k-j-1.0}));
                 // draw a proposal
                 m_proposal_phi[j] = rbeta(eng)[0];
                 transform_forward(m_proposal_theta, m_proposal_phi);
                 // accept or reject
-                if (static_cast<result_type>(m_runif(eng)) <= std::min(
-                            static_cast<result_type>(1.0), pdf(*this, m_proposal_theta)/pdf(*this, m_theta))) {
-                        m_theta = m_proposal_theta;
-                        m_phi   = m_proposal_phi;
+                if (result_type(m_runif(eng)) <= min(
+                            result_type(1.0),
+                            pdf(*this, m_proposal_theta)/pdf(*this, m_theta))) {
+                         m_theta = m_proposal_theta;
+                         m_phi   = m_proposal_phi;
                         // update statistics
                         m_accepted += 1.0;
                 }
@@ -217,6 +221,13 @@ result_type pdf(const entropy_distribution_t<input_type, result_type>& dist, con
         using boost::math::pdf;
         input_type x = input_type(entropy(theta))/std::log(dist.k());
         return pdf(dist.beta(), x)/pdf(dist.histogram(), x);
+}
+
+template <class input_type, class result_type>
+result_type log_pdf(const entropy_distribution_t<input_type, result_type>& dist, const std::vector<result_type>& theta) {
+        using boost::math::log_pdf;
+        input_type x = input_type(entropy(theta))/std::log(dist.k());
+        return std::log(pdf(dist.beta(), x)) - log_pdf(dist.histogram(), x);
 }
 
 #endif /* __TFBAYES_ENTROPY_DISTRIBUTION_HH__ */

@@ -189,4 +189,9 @@ result_type pdf(const histogram_t<input_type, result_type> histogram, const inpu
         return n/(m*w);
 }
 
+template <class input_type, class result_type>
+result_type log_pdf(const histogram_t<input_type, result_type> histogram, const input_type& x) {
+        return std::log(pdf(histogram, x));
+}
+
 #endif /* __TFBAYES_UTILITY_HISTOGRAM_HH__ */

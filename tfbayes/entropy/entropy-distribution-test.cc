@@ -44,15 +44,13 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 struct options_t {
-        double alpha;
         double a1;
         double a2;
         bool print_entropy;
         bool verbose;
         // default constructor
         options_t()
-                : alpha         (1.0)
-                , a1            (1.0)
+                : a1            (1.0)
                 , a2            (1.0)
                 , print_entropy (false)
                 , verbose       (false)
@@ -123,13 +121,13 @@ sample(size_t samples, size_t k)
 
         if (options.print_entropy) {
                 for (size_t i = 0; i < samples; i++) {
-                        cout << entropy(d(gen, options.alpha))
+                        cout << entropy(d(gen))
                              << endl;
                 }
         }
         else {
                 for (size_t i = 0; i < samples; i++) {
-                        cout << d(gen, options.alpha)
+                        cout << d(gen)
                              << endl;
                 }
         }
@@ -151,7 +149,6 @@ int main(int argc, char *argv[])
         for(;;) {
                 int c, option_index = 0;
                 static struct option long_options[] = {
-                        { "alpha",                1, 0, 'a' },
                         { "counts",               1, 0, 'b' },
                         { "print-entropy",        0, 0, 'c' },
                         { "help",                 0, 0, 'h' },
@@ -167,9 +164,6 @@ int main(int argc, char *argv[])
                 }
 
                 switch(c) {
-                case 'a':
-                        options.alpha = atof(optarg);
-                        break;
                 case 'b':
                         tokens = token(string(optarg), ':');
                         if (tokens.size() != 2) {
