@@ -47,15 +47,16 @@ main(void)
         std::vector<real_t> counts2({46.0,  1.0,  1.0,  1.0,  1.0});
 
         // put mass on higher entropies
-        entropy_multinomial_distribution_t<real_t, p_t> ecat(theta.size(), 10, 1);
+        entropy_multinomial_distribution_t<real_t, p_t> ecat1(theta.size(), 10,  1);
+        entropy_multinomial_distribution_t<real_t, p_t> ecat2(theta.size(), 10, 10);
 
-        cout << "joint: " << pdf(ecat, theta, counts1)
+        cout << "joint: " << pdf(ecat1, theta, counts1)
              << endl
-             << "marginal: " << marginalize(ecat, counts1, gen)
+             << "marginal: " << marginalize(ecat1, counts1, gen)
              << endl;
 
-        cout << "joint: " << pdf(ecat, theta, counts2)
+        cout << "joint: " << pdf(ecat2, theta, counts1)
              << endl
-             << "marginal: " << marginalize(ecat, counts2, gen)
+             << "marginal: " << marginalize(ecat2, counts1, gen)
              << endl;
 }
