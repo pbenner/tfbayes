@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __TFBAYES_ENTROPY_DISTRIBUTION_HH__
-#define __TFBAYES_ENTROPY_DISTRIBUTION_HH__
+#ifndef __TFBAYES_ENTROPY_ENTROPY_DISTRIBUTION_HH__
+#define __TFBAYES_ENTROPY_ENTROPY_DISTRIBUTION_HH__
 
 #ifdef HAVE_CONFIG_H
 #include <tfbayes/config.h>
@@ -105,7 +105,7 @@ public:
                 { }
 
         template<class Engine>
-        const rvector_t& operator()(Engine& eng, const input_type& alpha = 1.0) {
+        const rvector_t& operator()(Engine& eng) {
                 if (m_first_sample) {
                         rdirichlet_t rdirichlet(ivector_t(m_k, 1.0));
                         m_theta = rdirichlet(eng);
@@ -113,7 +113,7 @@ public:
                         m_first_sample = false;
                 }
                 else {
-                        draw_sample(eng, alpha);
+                        draw_sample(eng);
                 }
 
                 return m_theta;
@@ -130,7 +130,7 @@ public:
         const size_t& k() const {
                 return m_k;
         }
-private:
+protected:
         rvector_t& transform_forward(
                 rvector_t& theta,
                 rvector_t& phi) {
@@ -230,4 +230,4 @@ result_type log_pdf(const entropy_distribution_t<input_type, result_type>& dist,
         return std::log(pdf(dist.beta(), x)) - log_pdf(dist.histogram(), x);
 }
 
-#endif /* __TFBAYES_ENTROPY_DISTRIBUTION_HH__ */
+#endif /* __TFBAYES_ENTROPY_ENTROPY_DISTRIBUTION_HH__ */

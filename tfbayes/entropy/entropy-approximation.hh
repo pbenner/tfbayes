@@ -28,6 +28,7 @@
 
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
+#include <boost/lambda/casts.hpp>
 
 #include <tfbayes/utility/histogram.hh>
 #include <tfbayes/utility/probability.hh>
@@ -43,7 +44,7 @@ histogram_t<input_type, result_type> entropy_approximation(
         std::vector< input_type> tmp_counts(counts.size(), 0.0);
 
         std::transform(y.begin(), y.end(), tmp_y.begin(),
-                       bind(from_log_scale<input_type>, _1));
+                       ll_static_cast<result_type>(bind(from_log_scale<input_type>, _1)));
         std::transform(counts.begin(), counts.end(), tmp_counts.begin(),
                        _1);
 

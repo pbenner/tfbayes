@@ -12,7 +12,7 @@ dentropy <- function(h, k, a1 = 100, a2 = 20, ...) {
 
 n  <- 100000
 k  <- 3
-a1 <- 100
+a1 <- 20
 a2 <- 20
 
 # execute sampler
