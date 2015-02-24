@@ -22,6 +22,7 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <algorithm>
 #include <vector>
 
 #include <boost/foreach.hpp>
