@@ -12,8 +12,8 @@ dentropy <- function(h, k, a1 = 100, a2 = 20, ...) {
 
 n  <- 100000
 k  <- 3
-a1 <- 20
-a2 <- 20
+a1 <- 10
+a2 <- 1
 
 # execute sampler
 system(sprintf("./entropy-distribution-test -v --counts=%d:%d %d %d > entropy-distribution-test.csv", a1, a2, n, k))

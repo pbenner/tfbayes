@@ -21,9 +21,13 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <entropy-multinomial-distribution.hh>
+#include <tfbayes/utility/probability.hh>
+#include <tfbayes/entropy/entropy-multinomial-distribution.hh>
 
 using namespace std;
+
+typedef double real_t;
+typedef probability_t<double> p_t;
 
 template <typename T>
 void seed_rng(T& rng)
@@ -38,13 +42,20 @@ main(void)
 {
         boost::random::mt19937 gen; seed_rng(gen);
 
-        std::vector<double> counts({3.0, 1.0, 2.0, 3.0, 3.0});
-        std::vector<double> theta ({0.1, 0.1, 0.1, 0.2, 0.5});
+        std::vector<p_t   > theta  ({ 0.5,  0.1,  0.1,  0.2,  0.1});
+        std::vector<real_t> counts1({10.0, 10.0, 11.0, 10.0,  9.0});
+        std::vector<real_t> counts2({46.0,  1.0,  1.0,  1.0,  1.0});
 
-        entropy_multinomial_distribution_t<> ecat(counts.size(), 10, 20);
+        // put mass on higher entropies
+        entropy_multinomial_distribution_t<real_t, p_t> ecat(theta.size(), 10, 1);
 
-        cout << "join: " << pdf(ecat, theta, counts)
+        cout << "joint: " << pdf(ecat, theta, counts1)
+             << endl
+             << "marginal: " << marginalize(ecat, counts1, gen)
              << endl;
-        cout << "marginal: " << marginalize(ecat, counts, gen)
+
+        cout << "joint: " << pdf(ecat, theta, counts2)
+             << endl
+             << "marginal: " << marginalize(ecat, counts2, gen)
              << endl;
 }

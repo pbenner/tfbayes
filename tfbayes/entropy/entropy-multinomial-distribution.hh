@@ -87,7 +87,18 @@ result_type marginalize(entropy_multinomial_distribution_t<input_type, result_ty
         for (size_t i = 0; i < samples; i++) {
                 proposal = dist.entropy_distribution()(eng);
                 // accept or reject
-                if (runif(eng) <= std::min(1.0, pdf(dist, proposal, counts)/pdf(dist, theta, counts))) {
+                if (result_type(runif(eng)) <= std::min(
+                            result_type(1.0),
+                            pdf(dist, proposal, counts)/pdf(dist, theta, counts))) {
+                        theta = proposal;
+                }
+        }
+        for (size_t i = 0; i < samples; i++) {
+                proposal = dist.entropy_distribution()(eng);
+                // accept or reject
+                if (result_type(runif(eng)) <= std::min(
+                            result_type(1.0),
+                            pdf(dist, proposal, counts)/pdf(dist, theta, counts))) {
                         theta = proposal;
                 }
                 // compute marginal
