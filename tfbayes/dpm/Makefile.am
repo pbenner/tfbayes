@@ -34,7 +34,11 @@ lib_LTLIBRARIES = libtfbayes-dpm.la
 libtfbayes_dpm_la_SOURCES =		\
 	cluster.cc			\
 	cluster.hh			\
-	component-model.cc		\
+	component-model_bivariate.cc    \
+	component-model_default.cc      \
+	component-model_independence.cc \
+	component-model_mixture.cc      \
+	component-model_product.cc      \
 	component-model.hh		\
 	datatypes.hh			\
 	data.hh				\
