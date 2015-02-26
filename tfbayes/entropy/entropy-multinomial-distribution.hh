@@ -45,6 +45,8 @@ protected:
         ////////////////////////////////////////////////////////////////////////
         edist_t m_entropy_distribution;
 public:
+        entropy_multinomial_distribution_t()
+                { }
         entropy_multinomial_distribution_t(size_t k, input_type a1, input_type a2)
                 : m_entropy_distribution (k, a1, a2)
                 { }
@@ -88,6 +90,9 @@ class marginal_entropy_distribution_t : public entropy_multinomial_distribution_
         {
                 typedef std::vector<T> base_t;
         public:
+                samples_cache_t()
+                        : base_t()
+                        { }
                 samples_cache_t(size_t n)
                         : base_t(n, T())
                         { }
@@ -99,6 +104,9 @@ protected:
         ////////////////////////////////////////////////////////////////////////
         samples_cache_t<typename base_t::rvector_t> m_cache;
 public:
+        marginal_entropy_distribution_t()
+                : base_t()
+                { }
         template <class Engine>
         marginal_entropy_distribution_t(size_t k, input_type a1, input_type a2, size_t n, Engine& eng)
                 : base_t  (k, a1, a2)

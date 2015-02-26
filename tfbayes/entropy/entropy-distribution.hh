@@ -78,6 +78,12 @@ class entropy_distribution_t
         boost::random::uniform_01<input_type> m_runif;
         ////////////////////////////////////////////////////////////////////////
 public:
+        entropy_distribution_t() :
+                m_k              (0),
+                m_first_sample   (true),
+                m_samples        (0.0),
+                m_accepted       (0.0)
+                { }
         entropy_distribution_t(size_t k, input_type a1, input_type a2) :
                 m_k              (k),
                 m_theta          (k, 0.0),

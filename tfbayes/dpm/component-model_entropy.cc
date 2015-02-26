@@ -20,6 +20,7 @@
 #include <vector>
 
 #include <boost/format.hpp>
+#include <boost/function.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -31,14 +32,6 @@
 #include <tfbayes/fastarithmetics/fast-lnbeta.hh>
 
 using namespace std;
-
-template <typename T>
-void seed_rng(T& rng)
-{
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        rng.seed(tv.tv_sec*tv.tv_usec);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -191,48 +184,60 @@ entropy_background_t::save_marginal(
         return false;
 }
 
+class precompute_marginal_functor
+{
+        template <typename T>
+        void seed_rng(T& rng) {
+                struct timeval tv;
+                gettimeofday(&tv, NULL);
+                rng.seed(tv.tv_sec*tv.tv_usec);
+        }
+        typedef double real_t;
+        // the marginal entropy distribution requires a special
+        // probability type
+        typedef probability_t<real_t> p_t;
+public:
+        typedef real_t result_type;
+
+        precompute_marginal_functor(const vector<real_t>& parameters) {
+
+                boost::random::mt19937 gen;
+                seed_rng(gen);
+
+                m_dist = marginal_entropy_distribution_t<double, p_t>(
+                        data_tfbs_t::alphabet_size, parameters[0], parameters[1], 100000, gen);
+        }
+
+        template <class county_type>
+        result_type operator()(const county_type& counts) const {
+                return log(pdf(m_dist, counts));
+        }
+protected:
+        marginal_entropy_distribution_t<real_t, p_t> m_dist;
+};
+
 void
 entropy_background_t::precompute_marginal(
         const vector<double>& parameters,
         thread_pool_t& thread_pool)
 {
+        precompute_marginal_functor functor(parameters);
+
         flockfile(stderr);
         cerr << boost::format("Background beta pseudocounts: %f, %f")
                               % parameters[0] % parameters[1]
              << endl;
         funlockfile(stderr);
 
-        // the marginal entropy distribution requires a special
-        // probability type
-        typedef probability_t<double> p_t;
-
-        // random number generator for the approximation of the
-        // marginal entropy distribution
-        boost::random::mt19937 gen;
-        seed_rng(gen);
-        // typedef double (*pdf_type)(const counts_t&, const counts_t&,
-        //                       const vector<double>&,
-        //                       boost::unordered_map<counts_t, double>&,
-        //                       boost::shared_mutex&);
-
-        // marginal of the entropy-multinomial distribution
-        marginal_entropy_distribution_t<double, p_t> edist(
-                data_tfbs_t::alphabet_size, parameters[0], parameters[1], 100000, gen);
-
-        /* go through the data and precompute
-         * lnbeta(n + alpha) - lnbeta(alpha) */
+        // go through the data and precompute the marginal distribution
         for(size_t i = 0; i < data().size(); i++) {
                 future_vector_t<double> futures(data()[i].size());
 
                 for(size_t j = 0; j < data()[i].size(); j++) {
-                        // boost::function<double ()> f = boost::bind(
-                        //         static_cast<hgm>(&hashed_gamma_marginal),
-                        //         boost::cref(data()[i][j]),
-                        //         boost::cref(alpha),
-                        //         boost::cref(parameters),
-                        //         boost::ref(map), boost::ref(mutex));
+                        boost::function<double ()> f = boost::bind(
+                                functor, boost::cref(data()[i][j]));
 
-                        //futures[j] = thread_pool.schedule(f);
+                        futures[j] = thread_pool.schedule(f);
                 }
                 for(size_t j = 0; j < data()[i].size(); j++) {
                         /* compute percentage by linearly
