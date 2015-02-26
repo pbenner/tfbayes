@@ -1,4 +1,14 @@
 
+
+plot.entropy <- function(k, t, addHlines=TRUE, ...) {
+  plot(t, type="l", xlab="h", ylab="pdf", main=sprintf("k = %d", k), ...)
+  if (addHlines && k > 2) {
+    for (i in 2:(k-1)) {
+      abline(v=log(i))
+    }
+  }
+}
+
 f <- function(t) cbind(t$V1, exp(t$V2))
 
 t2 <- read.table("entropy-approximation-2.csv")
@@ -25,6 +35,26 @@ t40 <- read.table("entropy-approximation-40.csv")
 t50 <- read.table("entropy-approximation-50.csv")
 
 par(mfrow=c(4,5))
+plot.entropy(2, t2, log="")
+plot.entropy(3, t3, log="")
+plot.entropy(4, t4, log="")
+plot.entropy(5, t5, log="")
+plot.entropy(6, t6, log="")
+plot.entropy(7, t7, log="")
+plot.entropy(8, t8, log="")
+plot.entropy(9, t9, log="")
+plot.entropy(10, t10, log="")
+plot.entropy(11, t11, log="")
+plot.entropy(12, t12, log="")
+plot.entropy(13, t13, log="")
+plot.entropy(14, t14, log="")
+plot.entropy(15, t15, log="")
+plot.entropy(16, t16, log="")
+plot.entropy(17, t17, log="")
+plot.entropy(18, t18, log="")
+plot.entropy(19, t19, log="")
+plot.entropy(20, t20, log="")
+
 plot(t2, type="l", log="", xlab="h", ylab="pdf", main="k = 2")
 plot(t3, type="l", log="", xlab="h", ylab="pdf", main="k = 3")
 plot(t4, type="l", log="", xlab="h", ylab="pdf", main="k = 4")

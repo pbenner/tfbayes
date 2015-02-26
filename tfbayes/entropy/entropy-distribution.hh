@@ -166,8 +166,6 @@ protected:
         }
         template<class Engine>
         void draw_sample(Engine& eng, size_t j) {
-                using std::exp; using std::log; using std::min;
-                using boost::math::log_pdf;
                 // copy the old state
                 m_proposal_theta = m_theta;
                 m_proposal_phi   = m_phi;
