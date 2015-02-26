@@ -166,6 +166,78 @@ protected:
         const sequence_data_t<data_tfbs_t::code_t>* _data;
 };
 
+// Entropy Background Model
+////////////////////////////////////////////////////////////////////////////////
+
+class entropy_background_t : public component_model_t {
+public:
+         entropy_background_t(
+                 const std::vector<double>& parameters,
+                 const sequence_data_t<data_tfbs_t::code_t>& data,
+                 const sequence_data_t<cluster_tag_t>& cluster_assignments,
+                 thread_pool_t& thread_pool,
+                 const std::string& cachefile = "",
+                 boost::optional<const alignment_set_t<>&> alignment_set =
+                 boost::optional<const alignment_set_t<>&>());
+         entropy_background_t(const entropy_background_t& distribution);
+        ~entropy_background_t();
+
+        entropy_background_t* clone() const;
+
+        friend void swap(entropy_background_t& first, entropy_background_t& second) {
+                using std::swap;
+                swap(static_cast<component_model_t&>(first),
+                     static_cast<component_model_t&>(second));
+                swap(first._size,                 second._size);
+                swap(first._bg_cluster_tag,       second._bg_cluster_tag);
+                swap(first._precomputed_marginal, second._precomputed_marginal);
+                swap(first._data,                 second._data);
+        }
+
+        entropy_background_t& operator=(const component_model_t& component_model);
+
+        // datatypes
+        typedef data_tfbs_t::code_t counts_t;
+
+        bool load_marginal(
+                const std::vector<double>& parameters,
+                const std::string& cachefile);
+        bool save_marginal(
+                const std::vector<double>& parameters,
+                const std::string& cachefile);
+        void precompute_marginal(
+                const std::vector<double>& parameters,
+                thread_pool_t& thread_pool);
+        size_t add(const range_t& range);
+        size_t remove(const range_t& range);
+        size_t count(const range_t& range);
+        double predictive(const range_t& range);
+        double predictive(const std::vector<range_t>& range_set);
+        double log_predictive(const range_t& range);
+        double log_predictive(const std::vector<range_t>& range_set);
+        double log_likelihood() const;
+        std::string print_counts() const;
+        void set_bg_cluster_tag(cluster_tag_t cluster_tag);
+
+        const sequence_data_t<cluster_tag_t>& cluster_assignments() const {
+                return static_cast<const sequence_data_t<cluster_tag_t>&>(component_model_t::cluster_assignments());
+        }
+        const sequence_data_t<data_tfbs_t::code_t>& data() {
+                return *_data;
+        }
+
+        friend std::ostream& operator<< (std::ostream& o, const entropy_background_t& pd);
+
+protected:
+        size_t _size;
+
+        cluster_tag_t _bg_cluster_tag;
+
+        sequence_data_t<double> _precomputed_marginal;
+
+        const sequence_data_t<data_tfbs_t::code_t>* _data;
+};
+
 // Default Background Model
 ////////////////////////////////////////////////////////////////////////////////
 

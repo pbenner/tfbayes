@@ -36,6 +36,7 @@ libtfbayes_dpm_la_SOURCES =		\
 	cluster.hh			\
 	component-model_bivariate.cc    \
 	component-model_default.cc      \
+	component-model_entropy.cc      \
 	component-model_independence.cc \
 	component-model_mixture.cc      \
 	component-model_product.cc      \

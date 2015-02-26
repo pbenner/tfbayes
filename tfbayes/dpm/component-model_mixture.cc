@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/format.hpp>
+
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/fastarithmetics/fast-lnbeta.hh>
 

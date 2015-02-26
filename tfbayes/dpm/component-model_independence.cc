@@ -22,6 +22,7 @@
 #include <gsl/gsl_monte.h>
 #include <gsl/gsl_monte_miser.h>
 
+#include <boost/format.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 
