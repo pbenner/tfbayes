@@ -25,27 +25,32 @@
 #include <vector>
 #include <cmath>
 
+
 template <class result_type = double>
-class multinomial_distribution_t
+class multinomial_distribution_t : public std::vector<result_type>
 {
+        // derive multinomial_distribution_t from std::vector to allow
+        // static_casts
 public:
-        typedef std::vector<result_type> theta_t;
-protected:
-        theta_t m_theta;
-public:
-        multinomial_distribution_t(const theta_t& theta)
-                : m_theta(theta)
+        typedef std::vector<result_type> base_t;
+
+        multinomial_distribution_t(const base_t& theta)
+                : base_t(theta)
                 { }
         template <class T>
         multinomial_distribution_t(const T& theta)
-                : m_theta(theta.begin(), theta.end())
+                : base_t(theta.begin(), theta.end())
+                { }
+
+        multinomial_distribution_t(const multinomial_distribution_t& m)
+                : base_t(m.begin(), m.end())
                 { }
 
         size_t k() const {
-                return m_theta.size();
+                return base_t::size();
         }
-        const theta_t& theta() const {
-                return m_theta;
+        const base_t& theta() const {
+                return *this;
         }
 };
 

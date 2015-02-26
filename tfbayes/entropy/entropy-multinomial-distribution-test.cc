@@ -28,6 +28,7 @@ using namespace std;
 
 typedef double real_t;
 typedef probability_t<double> p_t;
+typedef vector<p_t> pvector_t;
 
 template <typename T>
 void seed_rng(T& rng)
@@ -50,13 +51,16 @@ main(void)
         entropy_multinomial_distribution_t<real_t, p_t> ecat1(theta.size(), 10,  1);
         entropy_multinomial_distribution_t<real_t, p_t> ecat2(theta.size(), 10, 10);
 
+        samples_cache_t<pvector_t> cache(100000);
+        marginalize_fill_cache(ecat1, cache, gen);
+
         cout << "joint: " << pdf(ecat1, theta, counts1)
              << endl
-             << "marginal: " << marginalize(ecat1, counts1, gen)
+             << "marginal: " << marginalize(ecat1, counts1, cache)
              << endl;
 
         cout << "joint: " << pdf(ecat2, theta, counts1)
              << endl
-             << "marginal: " << marginalize(ecat2, counts1, gen)
+             << "marginal: " << marginalize(ecat2, counts1, cache)
              << endl;
 }

@@ -28,6 +28,7 @@
 
 #include <tfbayes/entropy/entropy-distribution.hh>
 #include <tfbayes/entropy/multinomial-distribution.hh>
+#include <tfbayes/utility/linalg.hh>
 
 template <class input_type = double, class result_type = input_type>
 class entropy_multinomial_distribution_t
@@ -67,7 +68,9 @@ result_type pdf(const entropy_multinomial_distribution_t<input_type, result_type
         assert(dist.k() == theta .size());
         assert(dist.k() == counts.size());
 
-        multinomial_distribution_t<result_type> m(theta);
+        // use static_cast to avoid constructing a temporary object
+        const multinomial_distribution_t<result_type>& m =
+                static_cast<const multinomial_distribution_t<result_type>&>(theta);
 
         return pdf(m, counts)*pdf(dist.entropy_distribution(), theta);
 }
@@ -75,36 +78,48 @@ result_type pdf(const entropy_multinomial_distribution_t<input_type, result_type
 template <class input_type, class result_type, class counts_type, class Engine>
 result_type marginalize(entropy_multinomial_distribution_t<input_type, result_type>& dist,
                         const std::vector<counts_type>& counts,
-                        Engine& eng, const size_t samples = 10000)
+                        size_t samples, Engine& eng)
 {
-        std::vector<result_type> theta = dist.entropy_distribution()(eng);
-        std::vector<result_type> proposal;
-        // uniform distribution
-        boost::random::uniform_01<input_type> runif;
-        // marginal probability
         result_type result = 0.0;
 
         for (size_t i = 0; i < samples; i++) {
-                proposal = dist.entropy_distribution()(eng);
-                // accept or reject
-                if (result_type(runif(eng)) <= std::min(
-                            result_type(1.0),
-                            pdf(dist, proposal, counts)/pdf(dist, theta, counts))) {
-                        theta = proposal;
-                }
-        }
-        for (size_t i = 0; i < samples; i++) {
-                proposal = dist.entropy_distribution()(eng);
-                // accept or reject
-                if (result_type(runif(eng)) <= std::min(
-                            result_type(1.0),
-                            pdf(dist, proposal, counts)/pdf(dist, theta, counts))) {
-                        theta = proposal;
-                }
-                // compute marginal
-                result += pdf(dist, theta, counts);
+                result += pdf(dist, dist.entropy_distribution()(eng), counts);
         }
         return result/samples;
 }
+
+template <class input_type, class result_type, class counts_type, class cache_type>
+result_type marginalize(const entropy_multinomial_distribution_t<input_type, result_type>& dist,
+                        const std::vector<counts_type>& counts,
+                        const cache_type& samples_cache)
+{
+        result_type result = 0.0;
+
+        for (typename cache_type::const_iterator it = samples_cache.begin();
+             it != samples_cache.end(); it++) {
+                result += pdf(dist, *it, counts);
+        }
+        return result/samples_cache.size();
+}
+
+template <class input_type, class result_type, class cache_type, class Engine>
+void marginalize_fill_cache(entropy_multinomial_distribution_t<input_type, result_type>& dist,
+                            cache_type& samples_cache, Engine& eng)
+{
+        for (typename cache_type::iterator it = samples_cache.begin();
+             it != samples_cache.end(); it++) {
+                *it = dist.entropy_distribution()(eng);
+        }
+}
+
+template <class T>
+class samples_cache_t : public std::vector<T>
+{
+        typedef std::vector<T> base_t;
+public:
+        samples_cache_t(size_t n)
+                : base_t(n, T())
+                { }
+};
 
 #endif /* __TFBAYES_ENTROPY_ENTROPY_MULTINOMIAL_DISTRIBUTION_HH__ */
