@@ -46,7 +46,7 @@ histogram_t<input_type, result_type> entropy_approximation(
                        boost::lambda::ll_static_cast<result_type>(
                                boost::lambda::bind(from_log_scale<input_type>, boost::lambda::_1)));
         std::transform(counts.begin(), counts.end(), tmp_counts.begin(),
-                       _1);
+                       boost::lambda::_1);
 
         return histogram_t<input_type, result_type>(0.0, 1.0, tmp_y, tmp_counts);
 }
