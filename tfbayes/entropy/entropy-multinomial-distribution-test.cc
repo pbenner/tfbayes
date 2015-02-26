@@ -44,8 +44,8 @@ main(void)
         boost::random::mt19937 gen; seed_rng(gen);
 
         std::vector<p_t   > theta  ({ 0.5,  0.1,  0.1,  0.2,  0.1});
-        std::vector<real_t> counts1({10.0, 10.0, 11.0, 10.0,  9.0});
-        std::vector<real_t> counts2({46.0,  1.0,  1.0,  1.0,  1.0});
+        std::vector<real_t> counts({10.0, 10.0, 11.0, 10.0,  9.0});
+        //std::vector<real_t> counts({46.0,  1.0,  1.0,  1.0,  1.0});
 
         // put mass on higher entropies
         entropy_multinomial_distribution_t<real_t, p_t> ecat1(theta.size(), 10,  1);
@@ -54,13 +54,13 @@ main(void)
         marginal_entropy_distribution_t<real_t, p_t> mcat1(theta.size(), 10,  1, 100000, gen);
         marginal_entropy_distribution_t<real_t, p_t> mcat2(theta.size(), 10, 10, 100000, gen);
 
-        cout << "joint: " << pdf(ecat1, theta, counts1)
+        cout << "joint: " << pdf(ecat1, theta, counts)
              << endl
-             << "marginal: " << pdf(mcat1, counts1)
+             << "marginal: " << pdf(mcat1, counts)
              << endl;
 
-        cout << "joint: " << pdf(ecat2, theta, counts1)
+        cout << "joint: " << pdf(ecat2, theta, counts)
              << endl
-             << "marginal: " << pdf(mcat2, counts1)
+             << "marginal: " << pdf(mcat2, counts)
              << endl;
 }
