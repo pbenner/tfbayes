@@ -54,8 +54,8 @@ public:
         }
 };
 
-template <class result_type, class T>
-result_type pdf(const multinomial_distribution_t<result_type>& dist, const T& counts)
+template <class result_type, class counts_type>
+result_type pdf(const multinomial_distribution_t<result_type>& dist, const counts_type& counts)
 {
         assert(dist.k() == counts.size());
 

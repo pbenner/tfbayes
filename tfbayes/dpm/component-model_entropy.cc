@@ -22,6 +22,8 @@
 #include <boost/format.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/random/mersenne_twister.hpp>
 
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/utility/probability.hh>
@@ -29,6 +31,14 @@
 #include <tfbayes/fastarithmetics/fast-lnbeta.hh>
 
 using namespace std;
+
+template <typename T>
+void seed_rng(T& rng)
+{
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        rng.seed(tv.tv_sec*tv.tv_usec);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -102,6 +112,8 @@ entropy_background_t::entropy_background_t(
           _precomputed_marginal(_data.sizes(), 0),
           _data(&_data)
 {
+        assert(parameters.size() == 2);
+
         // at least one pseudocount has to be integrated
         if (!load_marginal(parameters, cachefile)) {
                 precompute_marginal(parameters, thread_pool);
@@ -184,16 +196,29 @@ entropy_background_t::precompute_marginal(
         const vector<double>& parameters,
         thread_pool_t& thread_pool)
 {
-        // typedef double (*hgm)(const counts_t&, const counts_t&,
-        //                       const vector<double>&,
-        //                       boost::unordered_map<counts_t, double>&,
-        //                       boost::shared_mutex&);
-
         flockfile(stderr);
         cerr << boost::format("Background beta pseudocounts: %f, %f")
                               % parameters[0] % parameters[1]
              << endl;
         funlockfile(stderr);
+
+        // the marginal entropy distribution requires a special
+        // probability type
+        typedef probability_t<double> p_t;
+
+        // random number generator for the approximation of the
+        // marginal entropy distribution
+        boost::random::mt19937 gen;
+        seed_rng(gen);
+        // typedef double (*pdf_type)(const counts_t&, const counts_t&,
+        //                       const vector<double>&,
+        //                       boost::unordered_map<counts_t, double>&,
+        //                       boost::shared_mutex&);
+
+        // marginal of the entropy-multinomial distribution
+        marginal_entropy_distribution_t<double, p_t> edist(
+                data_tfbs_t::alphabet_size, parameters[0], parameters[1], 100000, gen);
+
         /* go through the data and precompute
          * lnbeta(n + alpha) - lnbeta(alpha) */
         for(size_t i = 0; i < data().size(); i++) {

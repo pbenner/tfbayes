@@ -63,7 +63,7 @@ public:
 template <class input_type, class result_type, class counts_type>
 result_type pdf(const entropy_multinomial_distribution_t<input_type, result_type>& dist,
                 const std::vector<result_type>& theta,
-                const std::vector<counts_type>& counts)
+                const counts_type& counts)
 {
         assert(dist.k() == theta .size());
         assert(dist.k() == counts.size());
@@ -116,7 +116,7 @@ public:
 
 template <class input_type, class result_type, class counts_type>
 result_type pdf(const marginal_entropy_distribution_t<input_type, result_type>& dist,
-                const std::vector<counts_type>& counts)
+                const counts_type& counts)
 {
         const entropy_multinomial_distribution_t<input_type, result_type>& base
                 = static_cast<const entropy_multinomial_distribution_t<input_type, result_type>&>(dist);
