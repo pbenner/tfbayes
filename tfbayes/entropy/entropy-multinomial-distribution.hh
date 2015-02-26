@@ -106,7 +106,7 @@ public:
 
                 for (typename cache_t::iterator it = m_cache.begin();
                      it != m_cache.end(); it++) {
-                        *it = m_entropy_distribution(eng);
+                        *it = base_t::m_entropy_distribution(eng);
                 }
         }
         const cache_t& cache() const {

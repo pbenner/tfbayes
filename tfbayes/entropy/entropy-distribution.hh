@@ -175,7 +175,7 @@ protected:
                 m_proposal_phi[j] = rbeta(eng)[0];
                 transform_forward(m_proposal_theta, m_proposal_phi);
                 // accept or reject
-                if (result_type(m_runif(eng)) <= min(
+                if (result_type(m_runif(eng)) <= std::min(
                             result_type(1.0),
                             pdf(*this, m_proposal_theta)/pdf(*this, m_theta))) {
                          m_theta = m_proposal_theta;
