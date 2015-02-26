@@ -24,6 +24,8 @@
 #include <boost/archive/binary_iarchive.hpp>
 
 #include <tfbayes/dpm/component-model.hh>
+#include <tfbayes/utility/probability.hh>
+#include <tfbayes/entropy/entropy-multinomial-distribution.hh>
 #include <tfbayes/fastarithmetics/fast-lnbeta.hh>
 
 using namespace std;
