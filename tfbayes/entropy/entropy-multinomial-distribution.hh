@@ -33,6 +33,7 @@
 template <class input_type = double, class result_type = input_type>
 class entropy_multinomial_distribution_t
 {
+protected:
         // type definitions
         ////////////////////////////////////////////////////////////////////////
         typedef std::vector< input_type> ivector_t;
@@ -42,7 +43,7 @@ public:
 protected:
         // member variables
         ////////////////////////////////////////////////////////////////////////
-        entropy_distribution_t<input_type, result_type> m_entropy_distribution;
+        edist_t m_entropy_distribution;
 public:
         entropy_multinomial_distribution_t(size_t k, input_type a1, input_type a2)
                 : m_entropy_distribution (k, a1, a2)
@@ -57,7 +58,6 @@ public:
         const size_t& k() const {
                 return m_entropy_distribution.k();
         }
-protected:
 };
 
 template <class input_type, class result_type, class counts_type>
@@ -75,51 +75,59 @@ result_type pdf(const entropy_multinomial_distribution_t<input_type, result_type
         return pdf(m, counts)*pdf(dist.entropy_distribution(), theta);
 }
 
-template <class input_type, class result_type, class counts_type, class Engine>
-result_type marginalize(entropy_multinomial_distribution_t<input_type, result_type>& dist,
-                        const std::vector<counts_type>& counts,
-                        size_t samples, Engine& eng)
+
+template <class input_type = double, class result_type = input_type>
+class marginal_entropy_distribution_t : public entropy_multinomial_distribution_t<input_type, result_type>
 {
-        result_type result = 0.0;
+        // type definitions
+        ////////////////////////////////////////////////////////////////////////
+        typedef entropy_multinomial_distribution_t<input_type, result_type> base_t;
 
-        for (size_t i = 0; i < samples; i++) {
-                result += pdf(dist, dist.entropy_distribution()(eng), counts);
-        }
-        return result/samples;
-}
-
-template <class input_type, class result_type, class counts_type, class cache_type>
-result_type marginalize(const entropy_multinomial_distribution_t<input_type, result_type>& dist,
-                        const std::vector<counts_type>& counts,
-                        const cache_type& samples_cache)
-{
-        result_type result = 0.0;
-
-        for (typename cache_type::const_iterator it = samples_cache.begin();
-             it != samples_cache.end(); it++) {
-                result += pdf(dist, *it, counts);
-        }
-        return result/samples_cache.size();
-}
-
-template <class input_type, class result_type, class cache_type, class Engine>
-void marginalize_fill_cache(entropy_multinomial_distribution_t<input_type, result_type>& dist,
-                            cache_type& samples_cache, Engine& eng)
-{
-        for (typename cache_type::iterator it = samples_cache.begin();
-             it != samples_cache.end(); it++) {
-                *it = dist.entropy_distribution()(eng);
-        }
-}
-
-template <class T>
-class samples_cache_t : public std::vector<T>
-{
-        typedef std::vector<T> base_t;
+        template <class T>
+        class samples_cache_t : public std::vector<T>
+        {
+                typedef std::vector<T> base_t;
+        public:
+                samples_cache_t(size_t n)
+                        : base_t(n, T())
+                        { }
+        };
 public:
-        samples_cache_t(size_t n)
-                : base_t(n, T())
-                { }
+        typedef samples_cache_t<typename base_t::rvector_t> cache_t;
+protected:
+        // member variables
+        ////////////////////////////////////////////////////////////////////////
+        samples_cache_t<typename base_t::rvector_t> m_cache;
+public:
+        template <class Engine>
+        marginal_entropy_distribution_t(size_t k, input_type a1, input_type a2, size_t n, Engine& eng)
+                : base_t  (k, a1, a2)
+                , m_cache (n) {
+
+                for (typename cache_t::iterator it = m_cache.begin();
+                     it != m_cache.end(); it++) {
+                        *it = m_entropy_distribution(eng);
+                }
+        }
+        const cache_t& cache() const {
+                return m_cache;
+        }
 };
+
+template <class input_type, class result_type, class counts_type>
+result_type pdf(const marginal_entropy_distribution_t<input_type, result_type>& dist,
+                const std::vector<counts_type>& counts)
+{
+        const entropy_multinomial_distribution_t<input_type, result_type>& base
+                = static_cast<const entropy_multinomial_distribution_t<input_type, result_type>&>(dist);
+
+        result_type result = 0.0;
+
+        for (typename marginal_entropy_distribution_t<input_type, result_type>::cache_t::const_iterator it = dist.cache().begin();
+             it != dist.cache().end(); it++) {
+                result += pdf(base, *it, counts);
+        }
+        return result/dist.cache().size();
+}
 
 #endif /* __TFBAYES_ENTROPY_ENTROPY_MULTINOMIAL_DISTRIBUTION_HH__ */
