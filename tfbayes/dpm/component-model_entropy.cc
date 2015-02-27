@@ -232,7 +232,7 @@ entropy_background_t::precompute_marginal(
         precompute_marginal_functor functor(parameters);
 
         flockfile(stderr);
-        cerr << boost::format("Background beta pseudocounts: %f, %f")
+        cerr << boost::format("Background beta pseudocounts: %g, %g")
                               % parameters[0] % parameters[1]
              << endl;
         funlockfile(stderr);

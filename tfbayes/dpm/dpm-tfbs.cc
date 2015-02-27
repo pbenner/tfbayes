@@ -88,7 +88,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                 assert(options.background_beta.size() == 2);
                 assert(options.threads >= 1);
                 thread_pool_t thread_pool(options.threads);
-                default_background_t* bg = new default_background_t(
+                entropy_background_t* bg = new entropy_background_t(
                         options.background_beta, data,
                         _state.cluster_assignments(), thread_pool, options.background_cache,
                         alignment_set);
