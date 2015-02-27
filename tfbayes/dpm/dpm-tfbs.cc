@@ -84,6 +84,17 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                 cluster_tag_t tag = _state.add_background_cluster(*bg);
                 bg->set_bg_cluster_tag(tag);
         }
+        else if (options.background_model == "entropy-background") {
+                assert(options.background_beta.size() == 2);
+                assert(options.threads >= 1);
+                thread_pool_t thread_pool(options.threads);
+                default_background_t* bg = new default_background_t(
+                        options.background_beta, data,
+                        _state.cluster_assignments(), thread_pool, options.background_cache,
+                        alignment_set);
+                cluster_tag_t tag = _state.add_background_cluster(*bg);
+                bg->set_bg_cluster_tag(tag);
+        }
         else if (options.background_model == "dirichlet") {
                 /* multiple dirichlet-compound distribution for all
                  * nucleotides in the background */

@@ -41,24 +41,31 @@ private:
 
         template<class Archive>
         void serialize(Archive & ar, const unsigned int version) {
+                ar & id;
                 ar & parameters;
                 ar & data;
                 ar & precomputed_marginal;
         }
 public:
         background_cache_t()
+                : id("entropy")
                 { }
         background_cache_t(
                 const vector<double>& parameters,
                 const sequence_data_t<data_tfbs_t::code_t>& data,
                 const sequence_data_t<double>& precomputed_marginal)
-                : parameters(parameters)
-                , data(data)
+                : id         ("entropy")
+                , parameters (parameters)
+                , data       (data)
                 , precomputed_marginal(precomputed_marginal)
                 { }
         bool consistent(
                 const vector<double>& parameters,
                 const sequence_data_t<data_tfbs_t::code_t>& data) {
+                // id
+                if (this->id != "entropy") {
+                        return false;
+                }
                 // parameters
                 if (this->parameters.size() != parameters.size()) {
                         return false;
@@ -82,6 +89,7 @@ public:
                 return true;
         }
 
+        string id;
         vector<double> parameters;
         sequence_data_t<data_tfbs_t::code_t> data;
         sequence_data_t<double> precomputed_marginal;

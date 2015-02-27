@@ -43,6 +43,7 @@ def default_sampler_config():
     sampler_config.process_prior        = 'pitman-yor process'
     sampler_config.background_model     = 'independence-dirichlet'
     sampler_config.background_alpha     = [[1, 1, 1, 1, 5]]
+    sampler_config.background_beta      = [10.0, 10.0]
     sampler_config.background_gamma     = [5.0, 0.2]
     sampler_config.background_cache     = ''
     sampler_config.background_context   = 2
@@ -117,6 +118,10 @@ def parse_sampler_config(config_file, sampler_config):
             if float(x) < 0.0: raise IOError("Illegal background pseudocounts")
             return float(x)
         sampler_config.background_alpha = tr(read_matrix(config_parser, 'TFBS-Sampler', 'background-alpha', convert_pseudocount))
+    if config_parser.has_option('TFBS-Sampler', 'background-beta'):
+        sampler_config.background_beta = read_vector(config_parser, 'TFBS-Sampler', 'background-beta', float)
+        if (len(sampler_config.background_beta) != 2):
+            raise IOError("Invalid background beta parameters")
     if config_parser.has_option('TFBS-Sampler', 'background-gamma'):
         sampler_config.background_gamma = read_vector(config_parser, 'TFBS-Sampler', 'background-gamma', float)
         if (len(sampler_config.background_gamma) != 2):

@@ -49,6 +49,7 @@ typedef struct {
         std::string background_model;
         std::matrix<double> background_alpha;
         size_t background_context;
+        std::vector<double> background_beta;
         std::vector<double> background_gamma;
         std::string background_cache;
         std::vector<double> background_weights;
