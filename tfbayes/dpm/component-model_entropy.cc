@@ -235,7 +235,7 @@ entropy_background_t::precompute_marginal(
 
                 for(size_t j = 0; j < data()[i].size(); j++) {
                         boost::function<double ()> f = boost::bind(
-                                functor, boost::cref(data()[i][j]));
+                                boost::cref(functor), boost::cref(data()[i][j]));
 
                         futures[j] = thread_pool.schedule(f);
                 }
