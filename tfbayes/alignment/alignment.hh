@@ -387,6 +387,7 @@ public:
                                 occurred.clear();
                                 // start new alignment
                                 sequences = std::matrix<AC>(n, 0);
+                                continue;
                         }
                         if (line == "") {
                                 std::cerr << "Warning: empty sequence found... skipping."
