@@ -126,14 +126,16 @@ template <class input_type, class result_type, class counts_type>
 result_type pdf(const marginal_entropy_distribution_t<input_type, result_type>& dist,
                 const counts_type& counts)
 {
-        const entropy_multinomial_distribution_t<input_type, result_type>& base
-                = static_cast<const entropy_multinomial_distribution_t<input_type, result_type>&>(dist);
-
         result_type result = 0.0;
 
         for (typename marginal_entropy_distribution_t<input_type, result_type>::cache_t::const_iterator it = dist.cache().begin();
              it != dist.cache().end(); it++) {
-                result += pdf(base, *it, counts);
+
+                // use static_cast to avoid constructing a temporary object
+                const multinomial_distribution_t<result_type>& m =
+                        static_cast<const multinomial_distribution_t<result_type>&>(*it);
+
+                result += pdf(m, counts);
         }
         return result/dist.cache().size();
 }

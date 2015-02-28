@@ -213,7 +213,7 @@ public:
                 seed_rng(gen);
 
                 m_dist = marginal_entropy_distribution_t<double, p_t>(
-                        data_tfbs_t::alphabet_size, parameters[0], parameters[1], 100000, gen);
+                        data_tfbs_t::alphabet_size, parameters[0], parameters[1], 200000, gen);
         }
 
         template <class county_type>
