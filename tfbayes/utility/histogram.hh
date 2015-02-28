@@ -162,8 +162,8 @@ private:
 
 template <class input_type, class result_type>
 result_type pdf(const histogram_t<input_type, result_type> histogram, const input_type& x) {
-        const result_type m = histogram.total();
-        const result_type w = histogram.width();
+        const result_type& m = histogram.total();
+        const result_type& w = histogram.width();
         // no interpolation in these cases
         if (x <= histogram.x().front()) {
                 return histogram.front()/(m*w);
@@ -181,9 +181,9 @@ result_type pdf(const histogram_t<input_type, result_type> histogram, const inpu
                 i = i-1;
         }
         // compute interpolation
-        const  input_type x1 = histogram.x()[i];
-        const result_type y1 = histogram[i];
-        const result_type y2 = histogram[j];
+        const  input_type& x1 = histogram.x()[i];
+        const result_type& y1 = histogram[i];
+        const result_type& y2 = histogram[j];
         const result_type n  = y1 + (y2 - y1)*static_cast<result_type>((x - x1)/histogram.width());
 
         return n/(m*w);
