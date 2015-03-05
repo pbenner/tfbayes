@@ -22,7 +22,7 @@ from plot        import *
 from tools       import *
 
 from ..alignment import select_subsequence
-from ..dpm       import range_t, seq_index_t, dpm_subset_t
+from ..dpm       import range_t, index_t, dpm_subset_t
 
 # basic class to store cluster
 # ------------------------------------------------------------------------------
@@ -83,10 +83,10 @@ class cluster_t():
         sites      = dpm_subset_t(self.sites.dpm_subset_tag())
         for site in self.sites:
             if not site.reverse():
-                index = seq_index_t(site.index()[0], site.index()[1]+s.start)
+                index = index_t(site.index()[0], site.index()[1]+s.start)
                 sites.insert(range_t(index, s.stop-s.start, site.reverse()))
             else:
-                index = seq_index_t(site.index()[0], site.index()[1]+site.length()-s.start-(s.stop-s.start))
+                index = index_t(site.index()[0], site.index()[1]+site.length()-s.start-(s.stop-s.start))
                 sites.insert(range_t(index, s.stop-s.start, site.reverse()))
         return cluster_t(counts, counts_gap, alpha, alpha_gap, self.components, self.identifier, self.cluster_type, sites = sites)
     def posterior_counts(self):

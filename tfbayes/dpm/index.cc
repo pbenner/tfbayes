@@ -21,28 +21,29 @@
 
 #include <tfbayes/dpm/index.hh>
 
+#include <boost/format.hpp>
+
 std::ostream&
 operator<< (std::ostream& o, const index_t& index) {
-        o << "(" << index._x0 << ")";
-
-        return o;
-}
-
-std::ostream&
-operator<< (std::ostream& o, const seq_index_t& index) {
-        o << "(" << index._x[0] << ", " << index._x[1] << ")";
-
+        if (index.m_x[1] == -1) {
+                o << boost::format("(%d)")
+                        % index.m_x[0];
+        }
+        else {
+                o << boost::format("(%d, %d)")
+                        % index.m_x[0] % index.m_x[1];
+        }
         return o;
 }
 
 std::ostream&
 operator<< (std::ostream& o, const range_t& range) {
-        if (typeid(range.index()) == typeid(seq_index_t)) {
-                o << static_cast<const seq_index_t&>(range.index())
+        if (typeid(range.index()) == typeid(index_t)) {
+                o << range.index()
                   << ":" << range.length();
         }
         else {
-                o << static_cast<const index_t&>(range.index())
+                o << range.index()
                   << ":" << range.length();
         }
         return o;

@@ -56,7 +56,7 @@ mixture_dirichlet_t::mixture_dirichlet_t(
 }
 
 ssize_t
-mixture_dirichlet_t::max_component(const seq_index_t& index) const
+mixture_dirichlet_t::max_component(const index_t& index) const
 {
         vector<double> result(_size1, 0.0);
 
@@ -78,7 +78,7 @@ mixture_dirichlet_t::precompute_component_assignments_loop()
         /* optimize assignments */
         for (size_t i = 0; i < data().size(); i++) {
                 for (size_t j = 0; j < data()[i].size(); j++) {
-                        seq_index_t index(i, j);
+                        index_t index(i, j);
                         /* remove counts if possible */
                         if (_component_assignments[index] != -1) {
                                 remove(index);
@@ -149,7 +149,7 @@ mixture_dirichlet_t::operator=(const component_model_t& component_model)
 }
 
 size_t
-mixture_dirichlet_t::add(const index_i& index)
+mixture_dirichlet_t::add(const index_t& index)
 {
         size_t i = _component_assignments[index];
 
@@ -169,13 +169,13 @@ mixture_dirichlet_t::add(const range_t& range)
         const size_t length   = range.length();
 
         for (size_t i = 0; i < length; i++) {
-                add(seq_index_t(sequence, position+i));
+                add(index_t(sequence, position+i));
         }
         return length;
 }
 
 size_t
-mixture_dirichlet_t::remove(const index_i& index)
+mixture_dirichlet_t::remove(const index_t& index)
 {
         size_t i = _component_assignments[index];
 
@@ -195,7 +195,7 @@ mixture_dirichlet_t::remove(const range_t& range)
         const size_t length   = range.length();
 
         for (size_t i = 0; i < length; i++) {
-                remove(seq_index_t(sequence, position+i));
+                remove(index_t(sequence, position+i));
         }
         return length;
 }
@@ -216,7 +216,7 @@ double mixture_dirichlet_t::predictive(const vector<range_t>& range_set) {
         return exp(log_predictive(range_set));
 }
 
-double mixture_dirichlet_t::log_predictive(const index_i& index) {
+double mixture_dirichlet_t::log_predictive(const index_t& index) {
         size_t i = _component_assignments[index];
 
         /* counts contains the data count statistic
@@ -234,7 +234,7 @@ double mixture_dirichlet_t::log_predictive(const range_t& range) {
         double result = 0;
 
         for (size_t i = 0; i < length; i++) {
-                result += log_predictive(seq_index_t(sequence, position+i));
+                result += log_predictive(index_t(sequence, position+i));
         }
 
         return result;
@@ -394,7 +394,7 @@ markov_chain_mixture_t::max_from_context(const range_t& range) const
         const size_t position = range.index()[1];
         ssize_t from = position;
 
-        for (size_t i = 0; i < _max_context && from > 0 && cluster_assignments()[seq_index_t(sequence, from-1)] == _cluster_tag; i++) {
+        for (size_t i = 0; i < _max_context && from > 0 && cluster_assignments()[index_t(sequence, from-1)] == _cluster_tag; i++) {
                 from--;
         }
 
@@ -410,7 +410,7 @@ markov_chain_mixture_t::max_to_context(const range_t& range) const
         const ssize_t sequence_length = _data.size(sequence);
         ssize_t to = position+length-1;
 
-        for (size_t i = 0; i < _max_context && to < sequence_length-1 && cluster_assignments()[seq_index_t(sequence, to + 1)] == _cluster_tag; i++) {
+        for (size_t i = 0; i < _max_context && to < sequence_length-1 && cluster_assignments()[index_t(sequence, to + 1)] == _cluster_tag; i++) {
                 to++;
         }
 

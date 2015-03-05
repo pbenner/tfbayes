@@ -62,7 +62,7 @@ dpm_partition_t dpm_partition(const dpm_gaussian_t& dpm) {
         return dpm.state().partition();
 }
 
-std::vector<double> data_get_point(const data_gaussian_t& data, const index_i& index) {
+std::vector<double> data_get_point(const data_gaussian_t& data, const index_t& index) {
         return data[index];
 }
 

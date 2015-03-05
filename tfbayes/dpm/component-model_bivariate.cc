@@ -38,7 +38,7 @@ bivariate_normal_t::bivariate_normal_t(
         const std::matrix<double>& arg_Sigma_0,
         const std::vector<double>& arg_mu_0,
         const data_t<vector<double> >& data)
-        : component_model_t(),
+        : component_model_t({"standard", 1}),
           _N               (0),
           _dimension       (2),
           _data            (&data)

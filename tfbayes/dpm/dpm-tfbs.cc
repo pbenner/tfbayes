@@ -136,7 +136,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
              it != data.end(); it++) {
                 // cannot use _state.add() here because we need to add
                 // sites of length one to the background
-                range_t range(**it, 1);
+                range_t range(*it, 1);
                 _state[*_state.bg_cluster_tags.begin()].add_observations(range);
         }
         _state[*_state.bg_cluster_tags.begin()].update();

@@ -49,7 +49,7 @@ data_tfbs_t::data_tfbs_t(const string& phylogenetic_input)
                 // loop over elements in a sequence
                 for(size_t j = 0; j < operator[](i).size(); j++) {
                         // generate an index of this position
-                        seq_index_t index(i,j);
+                        index_t index(i,j);
                         for (size_t k = 0; k < alphabet_size; k++) {
                                 _complements[index][alphabet.complement(k)]
                                         = operator[](index)[k];
@@ -61,47 +61,17 @@ data_tfbs_t::data_tfbs_t(const string& phylogenetic_input)
                 // loop over elements in a sequence
                 for(size_t j = 0; j < operator[](i).size(); j++) {
                         // generate an index of this position
-                        seq_index_t index(i,j);
+                        index_t index(i,j);
                         // push a new index to the list of indices
-                        indices.push_back(new seq_index_t(index));
+                        indices.push_back(index);
                         // push it also to the list of
                         // sampling indices
-                        sampling_indices.push_back(new seq_index_t(index));
+                        sampling_indices.push_back(index);
                 }
                 // increment the number of nucleotides
                 _elements++;
         }
         shuffle();
-}
-
-data_tfbs_t::data_tfbs_t(const data_tfbs_t& data)
-        : sequence_data_t<code_t>(*this),
-          _complements (data._complements),
-          _n_sequences (data._n_sequences),
-          _elements    (data._elements)
-{
-        for (indexer_t::const_iterator it = data.begin(); it != data.end(); it++) {
-                index_i* index = (**it).clone();
-                indices.push_back(index);
-        }
-        for (indexer_t::sampling_iterator it = data.sampling_begin();
-             it != data.sampling_end(); it++)
-        {
-                index_i* index = (**it).clone();
-                sampling_indices.push_back(index);
-        }
-        shuffle();
-}
-
-data_tfbs_t::~data_tfbs_t()
-{
-        for (indexer_t::iterator it = begin(); it != end(); it++) {
-                delete(*it);
-        }
-        for (indexer_t::sampling_iterator it = sampling_begin();
-             it != sampling_end(); it++) {
-                delete(*it);
-        }
 }
 
 void

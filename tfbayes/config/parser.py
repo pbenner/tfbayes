@@ -61,7 +61,7 @@ def parse_partition_elements(subset_str):
                 raise IOError('Invalid partition.')
             length = int(m.groups()[0])
             rc     = m.groups()[1] == "!"
-            yield range_t(seq_index_t(int(index[0]), int(index[1])), length, rc)
+            yield range_t(index_t(int(index[0]), int(index[1])), length, rc)
 
 def parse_partition(partition_str):
     partition = dpm_partition_t()

@@ -68,75 +68,77 @@ template <typename T>
 class iterator_t : public std::iterator<std::forward_iterator_tag, T>
 {
 public:
-        iterator_t(data_i<T>& data, const index_i& index, size_t length)
-                : _data(data), _index(index), _pos(*index.clone()), _length(length), _i(0) {
-        }
-        ~iterator_t() {
-                delete(&_pos);
+        iterator_t(data_i<T>& data, const index_t& index, size_t length)
+                : m_data  (&data)
+                , m_index (index)
+                , m_pos   (index)
+                , m_length(length)
+                , m_i     (0) {
         }
 
         const T& operator*() const {
-                return _data[_pos];
+                return (*m_data)[m_pos];
         }
         T& operator*() {
-                return _data[_pos];
+                return (*m_data)[m_pos];
         }
         bool operator++(int i) {
-                if (_i+1 < _length) {
-                        _pos++; _i++;
+                if (m_i+1 < m_length) {
+                        m_pos++; m_i++;
                         return true;
                 }
                 return false;
         }
         bool operator==(const iterator_t& it) const {
-                return (_index == it._index) &&
-                       (_pos   == it._pos  );
+                return (m_index == it.m_index) &&
+                       (m_pos   == it.m_pos  );
         }
         bool operator!=(const iterator_t& it) const {
-                return (_index != it._index) ||
-                       (_pos   != it._pos  );
+                return (m_index != it.m_index) ||
+                       (m_pos   != it.m_pos  );
         }
 protected:
-        data_i<T>& _data;
-        const index_i& _index;
-        index_i& _pos;
-        size_t _length, _i;
+        data_i<T>* m_data;
+        index_t m_index;
+        index_t m_pos;
+        size_t m_length, m_i;
 };
 
 template <typename T>
 class const_iterator_t : public std::iterator<std::forward_iterator_tag, const T>
 {
 public:
-        const_iterator_t(const data_i<T>& data, const index_i& index, size_t length)
-                : _data(data), _index(index), _pos(*index.clone()), _length(length), _i(0) {
-        }
-        ~const_iterator_t() {
-                delete(&_pos);
+        const_iterator_t(const data_i<T>& data, const index_t& index, size_t length)
+                : m_data  (&data)
+                , m_index (index)
+                , m_pos   (index)
+                , m_length(length)
+                , m_i     (0) {
         }
 
         const T& operator*() const {
-                return _data[_pos];
+                return (*m_data)[m_pos];
         }
         bool operator++(int i) {
-                if (_i+1 < _length) {
-                        _pos++; _i++;
+                if (m_i+1 < m_length) {
+                        m_pos++; m_i++;
                         return true;
                 }
                 return false;
         }
         bool operator==(const const_iterator_t& it) const {
-                return (_index == it._index) &&
-                       (_pos   == it._pos  );
+                return (m_index == it.m_index) &&
+                       (m_pos   == it.m_pos  );
         }
         bool operator!=(const const_iterator_t& it) const {
-                return (_index != it._index) ||
-                       (_pos   != it._pos  );
+                return (m_index != it.m_index) ||
+                       (m_pos   != it.m_pos  );
         }
 protected:
-        const data_i<T>& _data;
-        const index_i& _index;
-        index_i& _pos;
-        size_t _length, _i;
+        const data_i<T>* m_data;
+        index_t m_index;
+        index_t m_pos;
+        size_t m_length, m_i;
 };
 
 template <typename T>
@@ -146,8 +148,8 @@ public:
         virtual data_i<T>& operator=(const data_i<T>& data) = 0;
         virtual const_iterator_t<T> operator[](const range_t& range) const = 0;
         virtual iterator_t<T> operator[](const range_t& range) = 0;
-        virtual const T& operator[](const index_i& index) const = 0;
-        virtual T& operator[](const index_i& index) = 0;
+        virtual const T& operator[](const index_t& index) const = 0;
+        virtual T& operator[](const index_t& index) = 0;
 };
 
 template <typename T>
@@ -200,10 +202,10 @@ public:
         virtual inline iterator_t<T> operator[](const range_t& range) GCC_ATTRIBUTE_HOT {
                 return iterator_t<T>(*this, range.index(), range.length());
         }
-        virtual inline const T& operator[](const index_i& index) const GCC_ATTRIBUTE_HOT {
+        virtual inline const T& operator[](const index_t& index) const GCC_ATTRIBUTE_HOT {
                 return base_t::operator[](index[0]);
         }
-        virtual inline T& operator[](const index_i& index) GCC_ATTRIBUTE_HOT {
+        virtual inline T& operator[](const index_t& index) GCC_ATTRIBUTE_HOT {
                 return base_t::operator[](index[0]);
         }
         friend std::ostream& operator<< <> (std::ostream& o, const data_t<T>& sd);
@@ -269,10 +271,10 @@ public:
         virtual inline iterator_t<T> operator[](const range_t& range) GCC_ATTRIBUTE_HOT {
                 return iterator_t<T>(*this, range.index(), range.length());
         }
-        virtual inline const T& operator[](const index_i& index) const GCC_ATTRIBUTE_HOT {
+        virtual inline const T& operator[](const index_t& index) const GCC_ATTRIBUTE_HOT {
                 return base_t::operator[](index[0])[index[1]];
         }
-        virtual inline T& operator[](const index_i& index) GCC_ATTRIBUTE_HOT {
+        virtual inline T& operator[](const index_t& index) GCC_ATTRIBUTE_HOT {
                 return base_t::operator[](index[0])[index[1]];
         }
         virtual size_t size(size_t i) const {

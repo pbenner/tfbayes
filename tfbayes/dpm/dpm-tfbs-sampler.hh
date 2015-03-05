@@ -76,7 +76,7 @@ protected:
         size_t _sample(size_t i, size_t n, bool is_burnin);
         size_t _sample(size_t i, size_t n, double temp, bool optimize);
         using gibbs_sampler_t::_gibbs_sample;
-        bool   _gibbs_sample(const index_i& index, double temp, bool optimize);
+        bool   _gibbs_sample(const index_t& index, double temp, bool optimize);
         size_t _gibbs_sample(double temp = 1.0, bool optimize = false);
         void _block_sample(double temp, bool optimize);
         void _block_sample(cluster_t& cluster, double temp, bool optimize);

@@ -210,8 +210,8 @@ public:
         void update();
         void precompute_marginal();
 
-        double gradient(const seq_index_t& index, size_t k, double alpha_sum);
-        void   gradient(const seq_index_t& index, double alpha_sum, std::vector<double>& result);
+        double gradient(const index_t& index, size_t k, double alpha_sum);
+        void   gradient(const index_t& index, double alpha_sum, std::vector<double>& result);
         void   gradient(std::vector<double>& result);
 
         void gradient_ascent();
@@ -285,14 +285,14 @@ public:
         // datatypes
         typedef data_tfbs_t::code_t counts_t;
 
-        size_t add(const index_i& index);
+        size_t add(const index_t& index);
         size_t add(const range_t& range);
-        size_t remove(const index_i& index);
+        size_t remove(const index_t& index);
         size_t remove(const range_t& range);
         size_t count(const range_t& range);
         double predictive(const range_t& range);
         double predictive(const std::vector<range_t>& range);
-        double log_predictive(const index_i& index);
+        double log_predictive(const index_t& index);
         double log_predictive(const range_t& range);
         double log_predictive(const std::vector<range_t>& range);
         double log_likelihood() const;
@@ -307,7 +307,7 @@ public:
 protected:
         bool precompute_component_assignments_loop();
         void precompute_component_assignments();
-        ssize_t max_component(const seq_index_t& index) const;
+        ssize_t max_component(const index_t& index) const;
 
         std::vector<counts_t> alpha;
         std::vector<counts_t> counts;

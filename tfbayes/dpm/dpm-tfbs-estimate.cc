@@ -31,15 +31,6 @@
 
 using namespace std;
 
-// utility
-// -----------------------------------------------------------------------------
-
-static
-size_t hash_value(const seq_index_t& seq_index)
-{
-        return seq_index.hash();
-}
-
 // utilities for computing means and medians
 // -----------------------------------------------------------------------------
 
@@ -57,7 +48,7 @@ init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data
              it != partition.end(); it++, k++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& index = static_cast<const seq_index_t&>(is->index());
+                        const index_t& index = is->index();
                         for (size_t i = 0; i < is->length(); i++) {
                                 data[index[0]][index[1]+i] = k*is->length()+i+1;
                         }
@@ -72,7 +63,7 @@ clean_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& dat
              it != partition.end(); it++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& index = static_cast<const seq_index_t&>(is->index());
+                        const index_t& index = is->index();
                         for (size_t i = 0; i < is->length(); i++) {
                                 data[index[0]][index[1]+i] = 0;
                         }
@@ -91,7 +82,7 @@ naive_distance(const dpm_partition_t& pi_a,
                sequence_data_t<cluster_tag_t>& b,
                const dpm_tfbs_t& dpm)
 {
-        boost::unordered_set<seq_index_t> indices;
+        boost::unordered_set<index_t> indices;
         // resulting distance
         size_t d = 0;
 
@@ -103,8 +94,8 @@ naive_distance(const dpm_partition_t& pi_a,
              it != dpm.data().end(); it++) {
                 for (indexer_t::const_iterator is = it+1;
                      is != dpm.data().end(); is++) {
-                        const seq_index_t& i = static_cast<const seq_index_t&>(**it);
-                        const seq_index_t& j = static_cast<const seq_index_t&>(**is);
+                        const index_t& i = *it;
+                        const index_t& j = *is;
                         if ((a[i] == a[j] && b[i] != b[j]) ||
                             (a[i] != a[j] && b[i] == b[j])) {
                                 d += 1;
@@ -125,16 +116,16 @@ naive_distance(const dpm_partition_t& pi_a,
 
 GCC_ATTRIBUTE_UNUSED
 static size_t
-distance1(const boost::unordered_set<seq_index_t>& indices,
+distance1(const boost::unordered_set<index_t>& indices,
           const sequence_data_t<cluster_tag_t>& a,
           const sequence_data_t<cluster_tag_t>& b,
           size_t bg_size)
 {
         size_t d = 0, bg = 0;
 
-        for (boost::unordered_set<seq_index_t>::const_iterator it = indices.begin();
+        for (boost::unordered_set<index_t>::const_iterator it = indices.begin();
              it != indices.end(); it++) {
-                for (boost::unordered_set<seq_index_t>::const_iterator is = it;
+                for (boost::unordered_set<index_t>::const_iterator is = it;
                      is != indices.end(); is++) {
                         if ((a[*it] == a[*is] && b[*it] != b[*is]) ||
                             (a[*it] != a[*is] && b[*it] == b[*is])) {
@@ -154,7 +145,7 @@ distance1(const boost::unordered_set<seq_index_t>& indices,
 // -----------------------------------------------------------------------------
 
 static double
-distance2(const boost::unordered_set<seq_index_t>& indices,
+distance2(const boost::unordered_set<index_t>& indices,
           const dpm_partition_t& pi_a,
           const dpm_partition_t& pi_b,
           const sequence_data_t<cluster_tag_t>& a,
@@ -184,7 +175,7 @@ distance2(const boost::unordered_set<seq_index_t>& indices,
         std::vector<double> ma(la, 0.0);
         std::vector<double> mb(lb, 0.0);
 
-        for (boost::unordered_set<seq_index_t>::const_iterator it = indices.begin();
+        for (boost::unordered_set<index_t>::const_iterator it = indices.begin();
              it != indices.end(); it++) {
                 m(a[*it], b[*it]) += 1.0;
                 ma[a[*it]] += 1.0;
@@ -216,7 +207,7 @@ distance(const dpm_partition_t& pi_a,
          const dpm_tfbs_t& dpm)
 {
         // set of indices that are actually used in clusters
-        boost::unordered_set<seq_index_t> indices;
+        boost::unordered_set<index_t> indices;
 
         // initialize auxiliary cluster information
         init_data(pi_a, a);
@@ -228,9 +219,9 @@ distance(const dpm_partition_t& pi_a,
              it != pi_a.end(); it++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& tmp = static_cast<const seq_index_t&>(is->index());
+                        const index_t& tmp = is->index();
                         for (size_t i = 0; i < is->length(); i++) {
-                                indices.insert(seq_index_t(tmp[0], tmp[1]+i));
+                                indices.insert(index_t(tmp[0], tmp[1]+i));
                         }
                 }
         }
@@ -240,9 +231,9 @@ distance(const dpm_partition_t& pi_a,
              it != pi_b.end(); it++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
-                        const seq_index_t& tmp = static_cast<const seq_index_t&>(is->index());
+                        const index_t& tmp = is->index();
                         for (size_t i = 0; i < is->length(); i++) {
-                                indices.insert(seq_index_t(tmp[0], tmp[1]+i));
+                                indices.insert(index_t(tmp[0], tmp[1]+i));
                         }
                 }
         }
@@ -616,7 +607,7 @@ map_local_optimization(cluster_t& cluster, dpm_tfbs_t& dpm, bool verbose)
 }
 
 static bool
-map_local_optimization(const index_i& index, dpm_tfbs_t& dpm, bool verbose) {
+map_local_optimization(const index_t& index, dpm_tfbs_t& dpm, bool verbose) {
         size_t length;
         if (dpm.state().get_free_range(index, length)) {
                 return false;
@@ -653,7 +644,7 @@ map_local_optimization(const index_i& index, dpm_tfbs_t& dpm, bool verbose) {
                 dpm.state().add(range2, new_cluster_tag);
         }
         if (verbose && new_cluster_tag != old_cluster_tag) {
-                cout << "Moving " << (const seq_index_t&)index
+                cout << "Moving " << (const index_t&)index
                      << " from cluster " << old_cluster_tag
                      << " to cluster "   << new_cluster_tag
                      << endl;
@@ -678,7 +669,7 @@ map_local_optimization(dpm_tfbs_t& dpm, bool verbose) {
                 /* optimize single positions */
                 for (indexer_t::const_iterator it = dpm.data().sampling_begin();
                      it != dpm.data().sampling_end(); it++) {
-                        optimized |= map_local_optimization(**it, dpm, verbose);
+                        optimized |= map_local_optimization(*it, dpm, verbose);
                 }
 
 

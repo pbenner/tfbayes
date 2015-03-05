@@ -38,12 +38,12 @@ using namespace boost::python;
 // tools
 // -----------------------------------------------------------------------------
 
-size_t index_i_getitem(index_i& index, size_t i)
+size_t index_t_getitem(index_t& index, size_t i)
 {
         return index[i];
 }
 
-void index_i_setitem(index_i& index, size_t i, size_t d)
+void index_t_setitem(index_t& index, size_t i, size_t d)
 {
         index[i] = d;
 }
@@ -66,7 +66,7 @@ void dpm_subset_t_insert(dpm_subset_t& dpm_subset, const range_t& range)
 
 const bool&    (range_t::*range_t_get_reverse)() const = &range_t::reverse;
 const size_t&  (range_t::*range_t_get_length)()  const = &range_t::length;
-const index_i& (range_t::*range_t_get_index)()   const = &range_t::index;
+const index_t& (range_t::*range_t_get_index)()   const = &range_t::index;
 
 BOOST_PYTHON_MODULE(interface)
 {
@@ -80,22 +80,14 @@ BOOST_PYTHON_MODULE(interface)
                 .def_readwrite("temperature",         &sampling_history_t::temperature)
                 .def_readwrite("partitions",          &sampling_history_t::partitions)
                 ;
-        class_<index_i, index_i*, boost::noncopyable>("index_i", no_init)
-                .def("__getitem__", index_i_getitem)
-                .def("__setitem__", index_i_setitem)
-                ;
-        class_<index_t, bases<index_i> >("index_t")
+        class_<index_t>("index_t")
                 .def(init<size_t>())
+                .def(init<size_t, size_t>())
                 .def("__str__",  to_string<index_t>)
                 .def("__repr__", to_string<index_t>)
                 ;
-        class_<seq_index_t, bases<index_i> >("seq_index_t")
-                .def(init<size_t, size_t>())
-                .def("__str__",  to_string<seq_index_t>)
-                .def("__repr__", to_string<seq_index_t>)
-                ;
         class_<range_t>("range_t", no_init)
-                .def(init<index_i&, size_t, bool>())
+                .def(init<index_t&, size_t, bool>())
                 .def("__str__",  to_string<range_t>)
                 .def("__repr__", to_string<range_t>)
                 .def("reverse",  range_t_get_reverse,  return_value_policy<copy_const_reference>())

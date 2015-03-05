@@ -96,11 +96,11 @@ char alignment_getitem(alignment_t<>& a, boost::python::tuple index)
         size_t j = extract<size_t>(index[1]);
         if (i >= a.n_species()) raise_IndexError();
         if (j >= a.length   ()) raise_IndexError();
-        if (a[seq_index_t(i,j)] == a.alphabet().code('N')) {
+        if (a[index_t(i,j)] == a.alphabet().code('N')) {
                 return 'N';
         }
         else {
-                return a.alphabet().decode(a[seq_index_t(i,j)]);
+                return a.alphabet().decode(a[index_t(i,j)]);
         }
 }
 
@@ -110,7 +110,7 @@ void alignment_setitem(alignment_t<>& a, boost::python::tuple index, alphabet_co
         size_t j = extract<size_t>(index[1]);
         if (i >= a.n_species()) raise_IndexError();
         if (j >= a.length   ()) raise_IndexError();
-        a[seq_index_t(i,j)] = a.alphabet().code(d);
+        a[index_t(i,j)] = a.alphabet().code(d);
 }
 
 std::vector<double> alignment_getcolumn(alignment_t<>& a, size_t i)

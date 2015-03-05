@@ -148,22 +148,16 @@ public:
         // use the access operator from base class to read/write columns
         using base_t::operator[];
         // define new access operators to access individual cells
-        const std::vector<AC>& operator[](const index_t& index) const {
-                return base_t::operator[](index[0]);
-        }
-              std::vector<AC>& operator[](const index_t& index) {
-                return base_t::operator[](index[0]);
-        }
-        const AC& operator[](const seq_index_t& index) const {
+        const AC& operator[](const index_t& index) const {
                 return base_t::operator[](index[1])[index[0]];
         }
-              AC& operator[](const seq_index_t& index) {
+              AC& operator[](const index_t& index) {
                 return base_t::operator[](index[1])[index[0]];
         }
         alignment_t<AC> operator[](const range_t& range) const {
                 assert(typeid(range.index()) == typeid(index_t));
                 base_t sequences;
-                index_t index = static_cast<const index_t&>(range.index());
+                const index_t& index = range.index();
                 for (size_t i = 0; i < range.length(); i++) {
                         sequences.push_back(base_t::operator[](index[0]+i));
                 }
@@ -413,7 +407,6 @@ public:
         // use the access operator from base class to read/write columns
         using base_t::operator[];
         alignment_t<AC> operator[](const range_t& range) const {
-                assert(typeid(range.index()) == typeid(seq_index_t));
                 index_t index(range.index()[1]);
                 range_t tmp(index, range.length());
                 return base_t::operator[](range.index()[0])[tmp];

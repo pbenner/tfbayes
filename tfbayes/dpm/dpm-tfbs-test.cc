@@ -33,12 +33,12 @@ using namespace std;
 
 void
 dpm_tfbs_t::test_moves() {
-        range_t range1(seq_index_t(0, 0), 10, true);
-        range_t range2(seq_index_t(0,10), 10, true);
-        range_t range3(seq_index_t(1,10), 10, true);
-        range_t range4(seq_index_t(1,20), 10, true);
-        range_t range5(seq_index_t(0,13), 10, true);
-        range_t range6(seq_index_t(0,22), 10, true);
+        range_t range1(index_t(0, 0), 10, true);
+        range_t range2(index_t(0,10), 10, true);
+        range_t range3(index_t(1,10), 10, true);
+        range_t range4(index_t(1,20), 10, true);
+        range_t range5(index_t(0,13), 10, true);
+        range_t range6(index_t(0,22), 10, true);
 
         cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
@@ -67,12 +67,12 @@ dpm_tfbs_t::test_moves() {
 
 void
 dpm_tfbs_t::test_background() {
-        range_t range1(seq_index_t(0, 0), 10, true);
-        range_t range2(seq_index_t(0,10), 10, true);
-        range_t range3(seq_index_t(1,10), 10, true);
-        range_t range4(seq_index_t(1,20), 10, true);
-        range_t range5(seq_index_t(0,13), 10, true);
-        range_t range6(seq_index_t(0,22), 10, true);
+        range_t range1(index_t(0, 0), 10, true);
+        range_t range2(index_t(0,10), 10, true);
+        range_t range3(index_t(1,10), 10, true);
+        range_t range4(index_t(1,20), 10, true);
+        range_t range5(index_t(0,13), 10, true);
+        range_t range6(index_t(0,22), 10, true);
 
         cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
@@ -146,10 +146,10 @@ dpm_tfbs_t::test() {
         gettimeofday(&tv, NULL);
         gen.seed(tv.tv_sec*tv.tv_usec);
 
-        range_t range1(seq_index_t(0,0), 10, true);
-        range_t range2(seq_index_t(1,0), 10, true);
-        range_t range3(seq_index_t(2,0), 10, true);
-        range_t range4(seq_index_t(3,0), 10, true);
+        range_t range1(index_t(0,0), 10, true);
+        range_t range2(index_t(1,0), 10, true);
+        range_t range3(index_t(2,0), 10, true);
+        range_t range4(index_t(3,0), 10, true);
 
         cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();

@@ -156,7 +156,7 @@ string print_probabilities(
 #endif
 
 bool
-dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, double temp, bool optimize) {
+dpm_tfbs_sampler_t::_gibbs_sample(const index_t& index, double temp, bool optimize) {
         size_t length;
         if (!dpm().state().get_free_range(index, length)) {
                 return false;
@@ -190,7 +190,7 @@ dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, double temp, bool optimi
         }
 #ifdef DEBUG
         if (old_cluster_tag != cluster_tags1[result.second]) {
-                cout << "Moving " << static_cast<const seq_index_t&>(index)
+                cout << "Moving " << static_cast<const index_t&>(index)
                      << " from "  << old_cluster_tag
                      << " to "    << cluster_tags1[result.second]
                      << endl;
@@ -219,12 +219,12 @@ dpm_tfbs_sampler_t::_gibbs_sample(double temp, bool optimize) {
         // the indexer needs to be constant since it is shared between
         // processes, so to shuffle the indices we first need to
         // obtain a copy
-        vector<index_i*> indices(_indexer->sampling_begin(), _indexer->sampling_end());
+        vector<index_t> indices(_indexer->sampling_begin(), _indexer->sampling_end());
         random_shuffle(indices.begin(), indices.end());
         // now sample
-        for (vector<index_i*>::iterator it = indices.begin();
+        for (vector<index_t>::const_iterator it = indices.begin();
              it != indices.end(); it++) {
-                if(_gibbs_sample(**it, temp, optimize)) sum+=1;
+                if(_gibbs_sample(*it, temp, optimize)) sum+=1;
         }
         return sum;
 }

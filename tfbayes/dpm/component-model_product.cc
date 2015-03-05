@@ -88,7 +88,7 @@ product_dirichlet_t::add(const range_t& range) {
 
         if (!range.reverse()) {
                 for (size_t i = 0; i < length; i++) {
-                        const seq_index_t index(sequence, position+i);
+                        const index_t index(sequence, position+i);
                         for (size_t k = 0; k < data_tfbs_t::alphabet_size; k++) {
                                 counts[i][k] += data()[index][k];
                         }
@@ -97,7 +97,7 @@ product_dirichlet_t::add(const range_t& range) {
         // reverse complement
         else {
                 for (size_t i = 0; i < length; i++) {
-                        const seq_index_t index(sequence, position+length-i-1);
+                        const index_t index(sequence, position+length-i-1);
                         for (size_t k = 0; k < data_tfbs_t::alphabet_size; k++) {
                                 counts[i][k] += complement_data()[index][k];
                         }
@@ -116,7 +116,7 @@ product_dirichlet_t::remove(const range_t& range) {
 
         if (!range.reverse()) {
                 for (size_t i = 0; i < length; i++) {
-                        const seq_index_t index(sequence, position+i);
+                        const index_t index(sequence, position+i);
                         for (size_t k = 0; k < data_tfbs_t::alphabet_size; k++) {
                                 counts[i][k] -= data()[index][k];
                                 assert(counts[i][k] >= 0.0);
@@ -126,7 +126,7 @@ product_dirichlet_t::remove(const range_t& range) {
         // reverse complement
         else {
                 for (size_t i = 0; i < length; i++) {
-                        const seq_index_t index(sequence, position+length-i-1);
+                        const index_t index(sequence, position+length-i-1);
                         for (size_t k = 0; k < data_tfbs_t::alphabet_size; k++) {
                                 counts[i][k] -= complement_data()[index][k];
                                 assert(counts[i][k] >= 0.0);
@@ -164,7 +164,7 @@ double product_dirichlet_t::log_predictive(const range_t& range) {
         }
         if (!range.reverse()) {
                 for (size_t i = 0; i < length; i++) {
-                        const seq_index_t index(sequence, position+i);
+                        const index_t index(sequence, position+i);
 
                         /* counts contains the data count statistic
                          * and the pseudo counts alpha */
@@ -175,7 +175,7 @@ double product_dirichlet_t::log_predictive(const range_t& range) {
         // reverse complement
         else {
                 for (size_t i = 0; i < length; i++) {
-                        const seq_index_t index(sequence, position+length-i-1);
+                        const index_t index(sequence, position+length-i-1);
 
                         /* counts contains the data count statistic
                          * and the pseudo counts alpha */
@@ -208,7 +208,7 @@ double product_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
                         if (!range_set[k].reverse()) {
                                 const size_t sequence = range_set[k].index()[0];
                                 const size_t position = range_set[k].index()[1];
-                                const seq_index_t index(sequence, position+i);
+                                const index_t index(sequence, position+i);
 
                                 /* add counts of this subsequence to tmp_counts */
                                 for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
@@ -222,7 +222,7 @@ double product_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
                         if (range_set[k].reverse()) {
                                 const size_t sequence = range_set[k].index()[0];
                                 const size_t position = range_set[k].index()[1];
-                                const seq_index_t index(sequence, position+length-i-1);
+                                const index_t index(sequence, position+length-i-1);
 
                                 /* add counts of this subsequence to tmp_counts */
                                 for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {

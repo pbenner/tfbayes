@@ -102,7 +102,7 @@ dpm_tfbs_state_t::operator=(const mixture_state_t& state)
 bool
 dpm_tfbs_state_t::valid_tfbs_position(const range_t& range) const
 {
-        seq_index_t current_index = static_cast<const seq_index_t&>(range.index());
+        index_t current_index = range.index();
 
         // at the first position there either has to be background or
         // the beginning of a tfbs
@@ -126,9 +126,9 @@ dpm_tfbs_state_t::valid_tfbs_position(const range_t& range) const
 }
 
 bool
-dpm_tfbs_state_t::get_free_range(const index_i& index, size_t& length)
+dpm_tfbs_state_t::get_free_range(const index_t& index, size_t& length)
 {
-        seq_index_t current_index = static_cast<const seq_index_t&>(index);
+        index_t current_index = index;
 
         // at the first position there either has to be background or
         // the beginning of a tfbs
@@ -192,7 +192,7 @@ dpm_tfbs_state_t::add(const range_t& range, cluster_tag_t cluster_tag)
 void
 dpm_tfbs_state_t::remove(const range_t& range)
 {
-        const index_i& index = range.index();
+        const index_t& index = range.index();
         // cluster of the foreground model starting at the
         // first position
         cluster_tag_t cluster_tag = operator[](index);
@@ -362,13 +362,13 @@ dpm_tfbs_state_t::set_partition(const dpm_partition_t& partition)
 }
 
 bool
-dpm_tfbs_state_t::is_tfbs_start_position(const index_i& index) const
+dpm_tfbs_state_t::is_tfbs_start_position(const index_t& index) const
 {
         return tfbs_start_positions[index] != 0;
 }
 
 bool
-dpm_tfbs_state_t::is_background(const index_i& index) const
+dpm_tfbs_state_t::is_background(const index_t& index) const
 {
         return cluster_assignments()[index] == 0;
 }

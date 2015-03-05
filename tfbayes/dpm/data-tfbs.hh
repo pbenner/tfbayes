@@ -53,28 +53,8 @@ public:
         // constructors
         ////////////////////////////////////////////////////////////////////////
 
-         data_tfbs_t(const std::string& phylogenetic_input);
-         data_tfbs_t(const data_tfbs_t& data);
-        ~data_tfbs_t();
+        data_tfbs_t(const std::string& phylogenetic_input);
 
-        friend void swap(data_tfbs_t& first, data_tfbs_t& second) {
-                using std::swap;
-                swap(static_cast<sequence_data_t<__CODE_TYPE__>&>(first),
-                     static_cast<sequence_data_t<__CODE_TYPE__>&>(second));
-                swap(first.indices,          second.indices);
-                swap(first.sampling_indices, second.sampling_indices);
-                swap(first._n_sequences,     second._n_sequences);
-                swap(first._elements,        second._elements);
-        }
-
-        // operators
-        ////////////////////////////////////////////////////////////////////////
-        virtual data_tfbs_t& operator=(const data_i<code_t>& data) {
-                using std::swap;
-                data_tfbs_t tmp(static_cast<const data_tfbs_t&>(data));
-                swap(*this, tmp);
-                return *this;
-        }
         // iterators
         ////////////////////////////////////////////////////////////////////////
 
@@ -103,8 +83,8 @@ public:
 
 private:
         // all nucleotide positions in a vector (used for the gibbs sampler)
-        std::vector<index_i*> indices;
-        std::vector<index_i*> sampling_indices;
+        std::vector<index_t> indices;
+        std::vector<index_t> sampling_indices;
         // complements
         sequence_data_t<__CODE_TYPE__> _complements;
 

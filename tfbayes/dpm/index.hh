@@ -28,203 +28,116 @@
 #include <boost/utility.hpp>
 #include <boost/functional/hash.hpp> 
 
-#include <tfbayes/utility/clonable.hh>
-
 // index_t and range_t
 ////////////////////////////////////////////////////////////////////////////////
 
-class index_i : public virtual clonable {
-public:
-        virtual index_i* clone() const = 0;
-        virtual const ssize_t& operator[](size_t i) const = 0;
-        virtual ssize_t& operator[](size_t i) = 0;
-        virtual bool operator==(const index_i& index) const = 0;
-        virtual bool operator!=(const index_i& index) const = 0;
-        virtual index_i& operator=(const index_i& index) = 0;
-        virtual void operator++(int i) = 0;
-        virtual bool operator<(const index_i& index) const = 0;
-        virtual size_t hash() const = 0;
-};
 
-inline size_t hash_value(const index_i& index) {
-        return index.hash();
-}
-inline index_i* new_clone(const index_i& index)
-{
-    return index.clone();
-}
-
-class index_t : public index_i {
+class index_t {
 public:
         inline index_t() {
         }
-        inline explicit index_t(ssize_t x0) GCC_ATTRIBUTE_HOT
-                : _x0(x0) {
+        inline index_t(ssize_t x0) GCC_ATTRIBUTE_HOT {
+                m_x[0] = x0;
+                m_x[1] = -1;
         }
-        inline index_t(const index_t& index) GCC_ATTRIBUTE_HOT
-                : _x0(index._x0) {
+        inline index_t(ssize_t x0, ssize_t x1) GCC_ATTRIBUTE_HOT {
+                m_x[0] = x0;
+                m_x[1] = x1;
         }
-
-        virtual index_t* clone() const GCC_ATTRIBUTE_HOT {
-                return new index_t(*this);
+        inline index_t(const index_t& index) GCC_ATTRIBUTE_HOT {
+                m_x[0] = index[0];
+                m_x[1] = index[1];
         }
 
         friend std::ostream& operator<< (std::ostream& o, const index_t& index);
 
-        virtual inline const ssize_t& operator[](size_t i) const GCC_ATTRIBUTE_HOT {
-                return _x0;
+        inline const ssize_t& operator[](size_t i) const GCC_ATTRIBUTE_HOT {
+                return m_x[i];
         }
-        virtual inline ssize_t& operator[](size_t i) GCC_ATTRIBUTE_HOT {
-                return _x0;
+        inline ssize_t& operator[](size_t i) GCC_ATTRIBUTE_HOT {
+                return m_x[i];
         }
-        virtual inline bool operator==(const index_i& index) const GCC_ATTRIBUTE_HOT {
-                return _x0 == index[0];
+        inline void operator++(int i) {
+                if (m_x[1] == -1) m_x[0]++;
+                else              m_x[1]++;
         }
-        virtual inline bool operator!=(const index_i& index) const GCC_ATTRIBUTE_HOT {
-                return _x0 != index[0];
+        inline bool operator==(const index_t& index) const GCC_ATTRIBUTE_HOT {
+                return m_x[0] == index[0] && m_x[1] == index[1];
         }
-        virtual inline index_t& operator=(const index_i& index) GCC_ATTRIBUTE_HOT {
-                _x0 = index[0];
-                return *this;
+        inline bool operator!=(const index_t& index) const GCC_ATTRIBUTE_HOT {
+                return m_x[0] != index[0] || m_x[1] != index[1];
         }
-        virtual inline void operator++(int i) {
-                _x0++;
+        inline bool operator<(const index_t& index) const {
+                return m_x[0] < index[0] || (m_x[0] == index[0] && m_x[1] < index[1]);
         }
-        virtual inline bool operator<(const index_i& index) const {
-                return _x0 < index[0];
+        inline size_t dim() const {
+                if (m_x[1] == -1) return 1;
+                else              return 2;
         }
-        virtual size_t hash() const {
-                boost::hash<size_t> hasher;
-
-                return hasher(_x0);
-        }
-
-protected:
-        ssize_t _x0;
-};
-
-class seq_index_t : public index_i {
-public:
-        inline seq_index_t() {
-        }
-        inline seq_index_t(ssize_t x0, ssize_t x1) GCC_ATTRIBUTE_HOT {
-                _x[0] = x0;
-                _x[1] = x1;
-        }
-        inline seq_index_t(const seq_index_t& seq_index) GCC_ATTRIBUTE_HOT {
-                _x[0] = seq_index[0];
-                _x[1] = seq_index[1];
-        }
-
-        virtual seq_index_t* clone() const GCC_ATTRIBUTE_HOT {
-                return new seq_index_t(*this);
-        }
-
-        friend std::ostream& operator<< (std::ostream& o, const seq_index_t& seq_index);
-
-        virtual inline const ssize_t& operator[](size_t i) const GCC_ATTRIBUTE_HOT {
-                return _x[i];
-        }
-        virtual inline ssize_t& operator[](size_t i) GCC_ATTRIBUTE_HOT {
-                return _x[i];
-        }
-        virtual inline bool operator==(const index_i& seq_index) const GCC_ATTRIBUTE_HOT {
-                return _x[0] == seq_index[0] && _x[1] == seq_index[1];
-        }
-        virtual inline bool operator!=(const index_i& seq_index) const GCC_ATTRIBUTE_HOT {
-                return _x[0] != seq_index[0] || _x[1] != seq_index[1];
-        }
-        virtual inline seq_index_t& operator=(const index_i& seq_index) GCC_ATTRIBUTE_HOT {
-                _x[0] = seq_index[0];
-                _x[1] = seq_index[1];
-                return *this;
-        }
-        virtual inline void operator++(int i) {
-                _x[1]++;
-        }
-        virtual inline bool operator<(const index_i& seq_index) const {
-                return _x[0] < seq_index[0] || (_x[0] == seq_index[0] && _x[1] < seq_index[1]);
-        }
-        virtual size_t hash() const {
+        size_t hash() const {
                 size_t seed = 0; 
                 boost::hash<size_t> hasher;
-                boost::hash_combine(seed, hasher(_x[0]));
-                boost::hash_combine(seed, hasher(_x[1]));
+                boost::hash_combine(seed, hasher(m_x[0]));
+                boost::hash_combine(seed, hasher(m_x[1]));
                 return seed;
         }
 
 protected:
-        ssize_t _x[2];
+        ssize_t m_x[2];
 };
 
-class range_t : public virtual clonable {
+class range_t {
 public:
-        range_t(const index_i& index, size_t length, bool reverse) GCC_ATTRIBUTE_HOT
-                : _index(index.clone()), _length(length), _reverse(reverse) {
+        range_t(const index_t& index, size_t length, bool reverse) GCC_ATTRIBUTE_HOT
+                : m_index  (index)
+                , m_length (length)
+                , m_reverse(reverse) {
         }
-        range_t(const index_i& index, size_t length) GCC_ATTRIBUTE_HOT
-                : _index(index.clone()), _length(length), _reverse(false) {
-        }
-        range_t(const range_t& range) GCC_ATTRIBUTE_HOT
-                : _index  (range.index().clone()),
-                  _length (range.length()),
-                  _reverse(range.reverse()) {
-        }
-        ~range_t() GCC_ATTRIBUTE_HOT {
-                delete(_index);
-        }
-
-        virtual range_t* clone() const GCC_ATTRIBUTE_HOT {
-                return new range_t(*this);
+        range_t(const index_t& index, size_t length) GCC_ATTRIBUTE_HOT
+                : m_index  (index)
+                , m_length (length)
+                , m_reverse(false) {
         }
 
         friend std::ostream& operator<< (std::ostream& o, const range_t& range);
 
-        range_t& operator=(const range_t& range) GCC_ATTRIBUTE_HOT {
-                range_t tmp(range);
-                swap(*this, tmp);
-                return *this;
-        }
-        friend void swap(range_t& first, range_t& second) {
-                using std::swap;
-                swap(first._index,   second._index  );
-                swap(first._length,  second._length );
-                swap(first._reverse, second._reverse);
-        }
         bool operator==(const range_t& range) const GCC_ATTRIBUTE_HOT {
-                return range.index  () == *_index  &&
-                       range.length () ==  _length &&
+                return range.index  () == m_index  &&
+                       range.length () == m_length &&
                        range.reverse() == range.reverse();
         }
         bool operator!=(const range_t& range) const GCC_ATTRIBUTE_HOT {
                 return !operator==(range);
         }
-        const index_i& index() const GCC_ATTRIBUTE_HOT {
-                return *_index;
+        const index_t& index() const GCC_ATTRIBUTE_HOT {
+                return m_index;
         }
-              index_i& index() GCC_ATTRIBUTE_HOT {
-                return *_index;
+              index_t& index() GCC_ATTRIBUTE_HOT {
+                return m_index;
         }
         const size_t& length() const GCC_ATTRIBUTE_HOT {
-                return _length;
+                return m_length;
         }
               size_t& length() GCC_ATTRIBUTE_HOT {
-                return _length;
+                return m_length;
         }
         const bool& reverse() const GCC_ATTRIBUTE_HOT {
-                return _reverse;
+                return m_reverse;
         }
               bool& reverse() GCC_ATTRIBUTE_HOT {
-                return _reverse;
+                return m_reverse;
         }
 protected:
-        index_i* _index;
-        size_t _length;
-        bool _reverse;
+        index_t m_index;
+        size_t  m_length;
+        bool    m_reverse;
 };
 
-static inline
-size_t hash_value(const range_t& range)
+inline size_t hash_value(const index_t& index) {
+        return index.hash();
+}
+
+inline size_t hash_value(const range_t& range)
 {
         return range.index().hash();
 }

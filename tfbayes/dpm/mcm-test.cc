@@ -141,9 +141,9 @@ _main_(const string& fasta_file) {
                                      cluster_assignments, 1);
 
         for (size_t i = 0; i < data.size()-1; i++) {
-                range_t range(seq_index_t(i, 0), data[i].size());
+                range_t range(index_t(i, 0), data[i].size());
         }
-        range_t range(seq_index_t(data.size()-1, 0), data[data.size()-1].size());
+        range_t range(index_t(data.size()-1, 0), data[data.size()-1].size());
         cout << "Log predictive: "
              << model.predictive(range)
              << endl;

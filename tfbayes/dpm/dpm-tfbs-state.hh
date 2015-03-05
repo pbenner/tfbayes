@@ -58,7 +58,7 @@ public:
         void remove(const range_t& range);
 
         bool valid_tfbs_position(const range_t& range) const;
-        bool get_free_range(const index_i& index, size_t& length);
+        bool get_free_range(const index_t& index, size_t& length);
 
         bool move_left (cluster_t& cluster, cluster_tag_t bg_cluster_tag, size_t n = 1);
         bool move_right(cluster_t& cluster, cluster_tag_t bg_cluster_tag, size_t n = 1);
@@ -77,8 +77,8 @@ public:
 
         dpm_partition_t partition() const;
         void set_partition(const dpm_partition_t& partition);
-        bool is_tfbs_start_position(const index_i& index) const;
-        bool is_background(const index_i& index) const;
+        bool is_tfbs_start_position(const index_t& index) const;
+        bool is_background(const index_t& index) const;
         bool is_background(cluster_tag_t tag) const;
         bool is_background(const cluster_t& cluster) const;
         cluster_tag_t add_background_cluster(component_model_t& component_model);

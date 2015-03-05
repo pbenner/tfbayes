@@ -102,7 +102,7 @@ default_background_t::precompute_marginal()
 
 double
 default_background_t::gradient(
-        const seq_index_t& index, size_t k,
+        const index_t& index, size_t k,
         double alpha_sum)
 {
         double sum = accumulate(data()[index].begin(), data()[index].end(), 0.0);
@@ -112,7 +112,7 @@ default_background_t::gradient(
 
 void
 default_background_t::gradient(
-        const seq_index_t& index,
+        const index_t& index,
         double alpha_sum,
         vector<double>& result)
 {
@@ -130,7 +130,7 @@ default_background_t::gradient(vector<double>& result)
         // likelihood
         for (size_t i = 0; i < data().size(); i++) {
                 for (size_t j = 0; j < data()[i].size(); j++) {
-                        seq_index_t index(i, j);
+                        index_t index(i, j);
                         if (cluster_assignments()[index] == _bg_cluster_tag) {
                                 gradient(index, alpha_sum, result);
                                 n += 1.0;
@@ -235,7 +235,7 @@ double default_background_t::log_predictive(const range_t& range) {
         double result = 0;
 
         for (size_t i = 0; i < length; i++) {
-                const seq_index_t index(sequence, position+i);
+                const index_t index(sequence, position+i);
 
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
@@ -257,7 +257,7 @@ double default_background_t::log_predictive(const vector<range_t>& range_set) {
 
                         const size_t sequence = range_set[k].index()[0];
                         const size_t position = range_set[k].index()[1];
-                        const seq_index_t index(sequence, position+i);
+                        const index_t index(sequence, position+i);
 
                         /* all positions in the alignment are fully
                          * independent, hence we do not need to sum
@@ -280,7 +280,7 @@ double default_background_t::log_likelihood() const {
         for(size_t i = 0; i < cluster_assignments().size(); i++) {
                 for(size_t j = 0; j < cluster_assignments()[i].size(); j++) {
                         if (cluster_assignments()[i][j] == _bg_cluster_tag) {
-                                const seq_index_t index(i, j);
+                                const index_t index(i, j);
                                 result += _precomputed_marginal[index];
                         }
                 }

@@ -83,7 +83,7 @@ data_gaussian_t::data_gaussian_t(
 
         /* initialize indices */
         for (size_t i = 0; i < samples; i++) {
-                index_t* index = new index_t(i);
+                index_t index(i);
                 indices.push_back(index);
                 sampling_indices.push_back(index);
         }
@@ -91,28 +91,6 @@ data_gaussian_t::data_gaussian_t(
 
         /* free random number generator */
         gsl_rng_free (_r);
-}
-
-data_gaussian_t::data_gaussian_t(const data_gaussian_t& data)
-        : _elements(data._elements),
-          _cluster (data._cluster),
-          _mu      (data._mu),
-          _initial_cluster_assignments(data._initial_cluster_assignments)
-{
-        // generate a randomized list of indices
-        for (indexer_t::const_iterator it = data.begin(); it != data.end(); it++) {
-                index_i* index = (**it).clone();
-                indices.push_back(index);
-                sampling_indices.push_back(index);
-        }
-        shuffle();
-}
-
-data_gaussian_t::~data_gaussian_t()
-{
-        for (indexer_t::iterator it = begin(); it != end(); it++) {
-                delete(*it);
-        }
 }
 
 void

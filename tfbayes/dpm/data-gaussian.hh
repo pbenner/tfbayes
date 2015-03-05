@@ -33,24 +33,10 @@
 
 class data_gaussian_t : public data_t<std::vector<double> >, public indexer_t {
 public:
-         data_gaussian_t(size_t samples,
-                         const std::matrix<double>& Sigma,
-                         const std::vector<double>& pi);
-         data_gaussian_t(const data_gaussian_t& data);
-        ~data_gaussian_t();
+        data_gaussian_t(size_t samples,
+                        const std::matrix<double>& Sigma,
+                        const std::vector<double>& pi);
 
-        friend void swap(data_gaussian_t& first, data_gaussian_t& second) {
-                using std::swap;
-                swap(static_cast<data_t<std::vector<double> >&>(first),
-                     static_cast<data_t<std::vector<double> >&>(second));
-                swap(first.indices,          second.indices);
-                swap(first.sampling_indices, second.sampling_indices);
-                swap(first._elements,        second._elements);
-                swap(first._cluster,         second._cluster);
-                swap(first._mu,              second._mu);
-                swap(first. _initial_cluster_assignments,
-                     second._initial_cluster_assignments);
-        }
         // operators
         ////////////////////////////////////////////////////////////////////////
         virtual data_gaussian_t& operator=(const data_i<std::vector<double> >& data) {
@@ -80,8 +66,8 @@ public:
         const std::vector<double>& initial_cluster_assignments() const;
 
 private:
-        std::vector<index_i*> indices;
-        std::vector<index_i*> sampling_indices;
+        std::vector<index_t> indices;
+        std::vector<index_t> sampling_indices;
 
         size_t _elements;
         size_t _cluster;

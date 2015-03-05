@@ -41,7 +41,7 @@ dpm_gaussian_t::dpm_gaussian_t(
         cluster_tag_t cluster_tag = gibbs_state_t::get_free_cluster(_baseline_tag).cluster_tag();
         for (indexer_t::const_iterator it = _data->begin();
              it != _data->end(); it++) {
-                gibbs_state_t::operator[](cluster_tag).add_observations(range_t(**it,1));
+                gibbs_state_t::operator[](cluster_tag).add_observations(range_t(*it,1));
         }
 }
 
