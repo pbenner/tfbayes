@@ -77,7 +77,7 @@ def compute_mean(command):
     results_config = default_results_config()
     parse_results_config(sampler_config.save, results_config)
     # inititialize data
-    data_tfbs = data_tfbs_t(sampler_config.phylogenetic_file, sampler_config.tfbs_length)
+    data_tfbs = data_tfbs_t(sampler_config.phylogenetic_file)
     # initialize dpm
     dpm_tfbs  =  dpm_tfbs_t(sampler_config, data_tfbs)
     # compute mean or median

@@ -111,7 +111,7 @@ gibbs_sampler_t::_gibbs_sample(const index_i& index)
         ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
         cluster_tag_t old_cluster_tag = state()[index];
-        state().remove(range, old_cluster_tag);
+        state().remove(range);
         size_t components = _dpm->mixture_components() + _dpm->baseline_components();
         double log_weights[components];
         cluster_tag_t cluster_tags[components];
@@ -204,9 +204,8 @@ gibbs_sampler_t::operator()(size_t n, size_t burnin) {
         for (size_t i = 0; i < burnin; i++) {
                 flockfile(stdout);
                 cout << _name << ": "
-                     << "Burn in... [" << i+1 << "]"
-                     << "[ Cluster: " << state() << "]"
-                     << endl;
+                     << "Burnin step " << i+1 << ":" << endl
+                     << state() << endl;
                 fflush(stdout);
                 funlockfile(stdout);
                 _update_sampling_history(_sample(i, burnin, true));
@@ -216,9 +215,8 @@ gibbs_sampler_t::operator()(size_t n, size_t burnin) {
                 // loop through all elements
                 flockfile(stdout);
                 cout << _name << ": "
-                     << "Sampling... [" << i+1 << "]"
-                     << "[ Cluster: " << state() << "]"
-                     << endl;
+                     << "Sampling step " << i+1 << ":" << endl
+                     << state() << endl;
                 fflush(stdout);
                 funlockfile(stdout);
                 _update_sampling_history(_sample(i, n, false));

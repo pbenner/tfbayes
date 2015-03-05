@@ -25,21 +25,23 @@ using namespace std;
 
 dpm_tfbs_state_t::dpm_tfbs_state_t(
         const std::vector<size_t>& sizes,
-        size_t tfbs_length,
-        const data_tfbs_t& data)
+        const data_tfbs_t& data,
+        const std::vector<double>& tfbs_length)
         : gibbs_state_t(sequence_data_t<cluster_tag_t>(sizes, -1)),
           // starting positions of tfbs
           tfbs_start_positions(sizes, 0),
           // number of transcription factor binding sites
           num_tfbs(0),
+          // minimum and maximum lengths of tfbs
+          min_tfbs_length(tfbs_length[0]),
+          max_tfbs_length(tfbs_length[1]),
           // auxiliary variables
           num_tfbs_p(0),
           cluster_assignments_p(sizes, -1),
           tfbs_start_positions_p(sizes, 0),
           cluster_p(NULL),
           cluster_bg_p(NULL),
-          _data(&data),
-          tfbs_length(tfbs_length)
+          _data(&data)
 { }
 
 dpm_tfbs_state_t::~dpm_tfbs_state_t() {
@@ -55,6 +57,9 @@ dpm_tfbs_state_t::dpm_tfbs_state_t(const dpm_tfbs_state_t& state)
         : gibbs_state_t(state),
           tfbs_start_positions(state.tfbs_start_positions),
           num_tfbs(state.num_tfbs),
+          // length of tfbs
+          min_tfbs_length(state.min_tfbs_length),
+          max_tfbs_length(state.max_tfbs_length),
           // auxiliary variables
           num_tfbs_p(0),
           cluster_assignments_p(state.tfbs_start_positions.sizes(), -1),
@@ -62,7 +67,6 @@ dpm_tfbs_state_t::dpm_tfbs_state_t(const dpm_tfbs_state_t& state)
           cluster_p(NULL),
           cluster_bg_p(NULL),
           _data(state._data),
-          tfbs_length(state.tfbs_length),
           bg_cluster_tags(state.bg_cluster_tags)
 { }
 
@@ -72,12 +76,13 @@ void swap(dpm_tfbs_state_t& first, dpm_tfbs_state_t& second)
              static_cast<gibbs_state_t&>(second));
         swap(first.tfbs_start_positions,   second.tfbs_start_positions);
         swap(first.num_tfbs,               second.num_tfbs);
+        swap(first.min_tfbs_length,        second.min_tfbs_length);
+        swap(first.max_tfbs_length,        second.max_tfbs_length);
         swap(first.cluster_assignments_p,  second.cluster_assignments_p);
         swap(first.tfbs_start_positions_p, second.tfbs_start_positions_p);
         swap(first.cluster_p,              second.cluster_p);
         swap(first.cluster_bg_p,           second.cluster_bg_p);
         swap(first._data,                  second._data);
-        swap(first.tfbs_length,            second.tfbs_length);
         swap(first.bg_cluster_tags,        second.bg_cluster_tags);
 }
 
@@ -95,54 +100,140 @@ dpm_tfbs_state_t::operator=(const mixture_state_t& state)
 }
 
 bool
-dpm_tfbs_state_t::valid_tfbs_position(const index_i& index) const
+dpm_tfbs_state_t::valid_tfbs_position(const range_t& range) const
 {
-        // check if there is a tfbs starting here, if not check
-        // succeeding positions
-        if (tfbs_start_positions[index] == 0) {
-                const size_t sequence = index[0];
-                const size_t position = index[1];
-                // check if this element belongs to a tfbs that starts
-                // earlier in the sequence
-                for (size_t i = 0; i < tfbs_length; i++) {
-                        if (!is_background(operator[](seq_index_t(sequence, position+i)))) {
-                                return false;
-                        }
+        seq_index_t current_index = static_cast<const seq_index_t&>(range.index());
+
+        // at the first position there either has to be background or
+        // the beginning of a tfbs
+        if (!is_background(current_index) && !is_tfbs_start_position(current_index)) {
+                return false;
+        }
+        // check if there is no tfbs starting at later positions
+        for (size_t i = 1; i < range.length(); i++) {
+                current_index[1] = range.index()[1]+i;
+
+                // check if index is out of range
+                if (size_t(current_index[1]) >= (*_data)[current_index[0]].size()) {
+                        return false;
+                }
+                // check for a tfbs
+                if (is_tfbs_start_position(current_index)) {
+                        return false;
                 }
         }
         return true;
 }
 
-void
-dpm_tfbs_state_t::add(const range_t& range, cluster_tag_t tag)
+bool
+dpm_tfbs_state_t::get_free_range(const index_i& index, size_t& length)
 {
-        operator[](tag).add_observations(range);
+        seq_index_t current_index = static_cast<const seq_index_t&>(index);
 
-        if (!is_background(tag)) {
+        // at the first position there either has to be background or
+        // the beginning of a tfbs
+        if (!is_background(index) && !is_tfbs_start_position(index)) {
+                length = 0;
+                return false;
+        }
+        // check if there is no tfbs starting at later positions
+        for (size_t i = 1; i < max_tfbs_length; i++) {
+                current_index[1] = index[1]+i;
+
+                // check if index is out of range
+                if (size_t(current_index[1]) >= (*_data)[current_index[0]].size()) {
+                        length = i;
+                        return i >= min_tfbs_length;
+                }
+                // check for a tfbs
+                if (is_tfbs_start_position(current_index)) {
+                        length = i;
+                        return i >= min_tfbs_length;
+                }
+        }
+        length = max_tfbs_length;
+        return true;
+}
+
+void
+dpm_tfbs_state_t::add(const range_t& range, cluster_tag_t cluster_tag)
+{
+        if (is_background(cluster_tag)) {
+                operator[](cluster_tag).add_observations(range);
+        }
+        else {
+                // cluster of the foreground model starting at the
+                // first position
+                cluster_t& cluster = operator[](cluster_tag);
+                // get the length of the foreground model
+                size_t cluster_length = cluster.model().id().length;
+                if (cluster_length < range.length()) {
+                        // split range in two
+                        range_t range1(range);
+                        range_t range2(range);
+                        range1.length()     = cluster_length;
+                        range2.index ()[1] += cluster_length;
+                        range2.length()    -= cluster_length;
+                        // add observations to the foreground
+                        // model
+                        cluster.add_observations(range1);
+                        // add remaining observations to the
+                        // background model
+                        add(range2, bg_cluster_tags[0]);
+                }
+                else {
+                        cluster.add_observations(range);
+                }
                 tfbs_start_positions[range.index()] = range.reverse() ? -1 : 1;
                 num_tfbs++;
         }
 }
 
 void
-dpm_tfbs_state_t::remove(const range_t& range, cluster_tag_t tag)
+dpm_tfbs_state_t::remove(const range_t& range)
 {
-        operator[](tag).remove_observations(range);
-
-        if (!is_background(tag)) {
-                assert((range.reverse() == 0 && tfbs_start_positions[range.index()] ==  1) ||
-                       (range.reverse() == 1 && tfbs_start_positions[range.index()] == -1));
-                num_tfbs--;
-                tfbs_start_positions[range.index()] = 0;
+        const index_i& index = range.index();
+        // cluster of the foreground model starting at the
+        // first position
+        cluster_tag_t cluster_tag = operator[](index);
+        cluster_t&    cluster     = operator[](cluster_tag);
+        // if there is background at the first position, we know that
+        // the range is accurate for the background model
+        if (is_background(index)) {
+                cluster.remove_observations(range);
         }
-}
-
-void
-dpm_tfbs_state_t::remove(const index_i& index, cluster_tag_t tag)
-{
-        range_t range(index, tfbs_length, tfbs_start_positions[index] == -1);
-
-        remove(range, tag);
+        // otherwise, we might have to split the range into foreground
+        // and background part
+        else {
+                assert(is_tfbs_start_position(range.index()));
+                // get the length of the foreground model
+                size_t cluster_length = cluster.model().id().length;
+                // check if the length of the foreground model is
+                // shorter than the range
+                if (cluster_length < range.length()) {
+                        // split range in two
+                        range_t range1(range);
+                        range_t range2(range);
+                        range1.reverse()    = tfbs_start_positions[index] == -1;
+                        range1.length()     = cluster_length;
+                        range2.index ()[1] += cluster_length;
+                        range2.length()    -= cluster_length;
+                        // remove observations from the foreground
+                        // model
+                        cluster.remove_observations(range1);
+                        // remove remaining observations
+                        remove(range2);
+                }
+                else {
+                        range_t range1(range);
+                        range1.reverse()    = tfbs_start_positions[index] == -1;
+                        cluster.remove_observations(range1);
+                }
+                // tfbs_start_position is required earliner, so reset
+                // it here
+                tfbs_start_positions[index] = 0;
+                num_tfbs--;
+        }
 }
 
 void
@@ -183,14 +274,13 @@ dpm_tfbs_state_t::move_left(cluster_t& cluster, cluster_tag_t bg_cluster_tag, si
                       range_t  new_range(old_range);
                 // one position to the left
                 new_range.index()[1] -= n;
-                remove(old_range, cluster.cluster_tag());
+                remove(old_range);
                 add   (old_range, bg_cluster_tag);
-                if (new_range.index()[1] > 0 && valid_tfbs_position(new_range.index())) {
-                        remove(new_range, bg_cluster_tag);
+                if (new_range.index()[1] > 0 && valid_tfbs_position(new_range)) {
+                        remove(new_range);
                         add   (new_range, cluster.cluster_tag());
                 }
         }
-
         return true;
 }
 
@@ -209,11 +299,11 @@ dpm_tfbs_state_t::move_right(cluster_t& cluster, cluster_tag_t bg_cluster_tag, s
                 const size_t sequence_length = _data->size(old_range.index()[0]);
                 // one position to the left
                 new_range.index()[1] += n;
-                remove(old_range, cluster.cluster_tag());
+                remove(old_range);
                 add   (old_range, bg_cluster_tag);
                 if (new_range.index()[1]+new_range.length() <= sequence_length &&
-                    valid_tfbs_position(new_range.index())) {
-                        remove(new_range, bg_cluster_tag);
+                    valid_tfbs_position(new_range)) {
+                        remove(new_range);
                         add   (new_range, cluster.cluster_tag());
                 }
         }
@@ -229,7 +319,8 @@ dpm_tfbs_state_t::partition() const
         for (dpm_tfbs_state_t::const_iterator it = begin(); it != end(); it++) {
                 const cluster_t& cluster = **it;
                 if (!is_background(cluster)) {
-                        dpm_partition.add_component(cluster.baseline_tag());
+                        model_id_t id = cluster.model().id();
+                        dpm_partition.add_component(id);
                         // loop through cluster elements
                         for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
                                 dpm_partition.back().insert(*is);
@@ -250,7 +341,7 @@ dpm_tfbs_state_t::set_partition(const dpm_partition_t& partition)
                 if (cluster.cluster_tag() != bg_cluster_tags[0]) {
                         // loop through cluster elements
                         for (cl_iterator is = cluster.begin(); is != cluster.end(); is++) {
-                                remove(*is, cluster.cluster_tag());
+                                remove(*is);
                                 add   (*is, bg_cluster_tags[0]);
                         }
                 }
@@ -259,15 +350,27 @@ dpm_tfbs_state_t::set_partition(const dpm_partition_t& partition)
         // set state to given partition
         for (dpm_partition_t::const_iterator it = partition.begin(); it != partition.end(); it++) {
                 const dpm_subset_t& subset(*it);
-                cluster_t& cluster = get_free_cluster(subset.dpm_subset_tag());
+                cluster_t& cluster = get_free_cluster(subset.model_id());
 
                 for (dpm_subset_t::const_iterator is = subset.begin(); is != subset.end(); is++) {
-                        assert(valid_tfbs_position(is->index()));
+                        assert(valid_tfbs_position(*is));
                         assert(operator[](is->index()) == bg_cluster_tags[0]);
-                        remove(*is, bg_cluster_tags[0]);
+                        remove(*is);
                         add   (*is, cluster.cluster_tag());
                 }
         }
+}
+
+bool
+dpm_tfbs_state_t::is_tfbs_start_position(const index_i& index) const
+{
+        return tfbs_start_positions[index] != 0;
+}
+
+bool
+dpm_tfbs_state_t::is_background(const index_i& index) const
+{
+        return cluster_assignments()[index] == 0;
 }
 
 bool

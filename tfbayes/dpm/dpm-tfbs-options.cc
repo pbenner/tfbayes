@@ -15,6 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <boost/format.hpp>
+
 #include <tfbayes/dpm/dpm-tfbs-options.hh>
 
 using namespace std;
@@ -30,7 +32,8 @@ operator<<(ostream& o, const tfbs_options_t& options) {
           << "-> optimize             = " << options.optimize             << endl
           << "-> optimize period      = " << options.optimize_period      << endl
           << "-> initial temperature  = " << options.initial_temperature  << endl
-          << "-> tfbs_length          = " << options.tfbs_length          << endl
+          << boost::format("-> tfbs_length          = %d-%d")
+                % options.tfbs_length[0] % options.tfbs_length[1]         << endl
           << "-> process prior        = " << options.process_prior        << endl
           << "-> background model     = " << options.background_model     << endl
           << "-> background context   = " << options.background_context   << endl

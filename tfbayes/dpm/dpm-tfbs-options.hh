@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2013 Philipp Benner
+/* Copyright (C) 2011-2015 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,12 +30,13 @@
 #include <tfbayes/dpm/dpm-partition.hh>
 
 typedef std::list<std::matrix<double> > baseline_priors_t;
-typedef std::list<std::string> baseline_tags_t;
+typedef std::list<std::string>          baseline_tags_t;
+typedef std::vector<double>             baseline_weights_t;
 
 typedef struct {
         std::string phylogenetic_file;
         std::string alignment_file;
-        size_t tfbs_length;
+        std::vector<double> tfbs_length;
         double alpha;
         double discount;
         double lambda;
@@ -53,9 +54,9 @@ typedef struct {
         std::vector<double> background_gamma;
         std::string background_cache;
         std::vector<double> background_weights;
-        std::vector<double> baseline_weights;
-        baseline_priors_t baseline_priors;
-        baseline_tags_t baseline_tags;
+        baseline_weights_t baseline_weights;
+        baseline_priors_t  baseline_priors;
+        baseline_tags_t    baseline_tags;
         size_t population_size;
         size_t threads;
         std::string socket_file;

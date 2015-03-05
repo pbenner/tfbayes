@@ -36,6 +36,12 @@ ostream& operator<< (ostream& o, const dpm_subset_t& dpm_subset)
         return o;
 }
 
+ostream& operator<< (ostream& o, const model_id_t& id)
+{
+        o << id.name << ":" << id.length;
+        return o;
+}
+
 ostream& operator<< (ostream& o, const dpm_partition_t& partition)
 {
         for (dpm_partition_t::const_iterator it = partition.begin();
@@ -43,7 +49,7 @@ ostream& operator<< (ostream& o, const dpm_partition_t& partition)
                 if (it != partition.begin()) {
                         o << ", ";
                 }
-                o << it->dpm_subset_tag() << ":{"
+                o << it->model_id() << ":{"
                   << *it << "}";
         }
         return o;

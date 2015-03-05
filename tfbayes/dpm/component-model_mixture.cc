@@ -31,7 +31,7 @@ mixture_dirichlet_t::mixture_dirichlet_t(
         const matrix<double>& _alpha,
         const vector<double>& _weights,
         const sequence_data_t<data_tfbs_t::code_t>& data)
-        : component_model_t(),
+        : component_model_t({"background", 1}),
           weights(normalize(_weights)),
           _size1 (_alpha.size()),
           _size2 (_alpha[0].size()),
@@ -290,7 +290,7 @@ markov_chain_mixture_t::markov_chain_mixture_t(
         const sequence_data_t<data_tfbs_t::code_t>& data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
         cluster_tag_t cluster_tag)
-        : component_model_t(cluster_assignments),
+        : component_model_t({"background", 1}, cluster_assignments),
           _data(data),
           _cluster_tag(cluster_tag),
           _max_context(options.background_context),

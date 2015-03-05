@@ -35,7 +35,7 @@ default_background_t::default_background_t(
         thread_pool_t& thread_pool,
         const string& cachefile,
         boost::optional<const alignment_set_t<>&> alignment_set)
-        : component_model_t(cluster_assignments),
+        : component_model_t({"background", 1}, cluster_assignments),
           prior_distribution(parameters[0], parameters[1]),
           _size(data_tfbs_t::alphabet_size),
           _bg_cluster_tag(0),

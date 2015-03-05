@@ -37,8 +37,7 @@ dpm_gaussian_t::dpm_gaussian_t(
           // strength parameter for the dirichlet process
           _alpha(alpha)
 {
-        _baseline_tag = "baseline";
-        gibbs_state_t::add_baseline_model(new bivariate_normal_t(Sigma, Sigma_0, mu_0, data), _baseline_tag);
+        _baseline_tag = gibbs_state_t::add_baseline_model(new bivariate_normal_t(Sigma, Sigma_0, mu_0, data));
         cluster_tag_t cluster_tag = gibbs_state_t::get_free_cluster(_baseline_tag).cluster_tag();
         for (indexer_t::const_iterator it = _data->begin();
              it != _data->end(); it++) {
@@ -86,15 +85,11 @@ dpm_gaussian_t::add(const range_t& range, cluster_tag_t cluster_tag)
 }
 
 void
-dpm_gaussian_t::remove(const range_t& range, cluster_tag_t cluster_tag)
+dpm_gaussian_t::remove(const range_t& range)
 {
-        gibbs_state_t::operator[](cluster_tag).remove_observations(range);
-}
+        cluster_tag_t cluster_tag = state()[range.index()];
 
-void
-dpm_gaussian_t::remove(const index_i& index, cluster_tag_t cluster_tag)
-{
-        gibbs_state_t::operator[](cluster_tag).remove_observations(range_t(index, 1));
+        gibbs_state_t::operator[](cluster_tag).remove_observations(range);
 }
 
 size_t

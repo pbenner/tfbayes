@@ -94,7 +94,7 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
                 .def("append",  &baseline_tags_push_back)
                 ;
         class_<data_tfbs_t>("data_tfbs_t", no_init)
-                .def(init<const std::string&, size_t>())
+                .def(init<const std::string&>())
                 ;
         class_<dpm_tfbs_t>("dpm_tfbs_t", no_init)
                 .def(init<const tfbs_options_t&, const data_tfbs_t&>())

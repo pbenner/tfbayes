@@ -38,25 +38,7 @@ using namespace std;
 
 const alphabet_t data_tfbs_t::alphabet = nucleotide_alphabet_t();
 
-bool
-data_tfbs_t::valid_sampling_index(const index_i& index, size_t tfbs_length) const
-{
-        // return false if the sequence ends before a tfbs could fit here
-        if (operator[](index[0]).size() - index[1] < tfbs_length) {
-                return false;
-        }
-        // check that all the elements in the range are not blank
-        for (size_t i = 0; i < tfbs_length; i++) {
-                seq_index_t tmp(index[0], index[1]+i);
-                if (is_blank(tmp)) {
-                        return false;
-                }
-        }
-        // otherwise use this as a valid sampling index
-        return true;
-}
-
-data_tfbs_t::data_tfbs_t(const string& phylogenetic_input, size_t tfbs_length)
+data_tfbs_t::data_tfbs_t(const string& phylogenetic_input)
         : sequence_data_t<code_t>(read_fasta(phylogenetic_input)),
           _n_sequences(size()),
           _elements(0)
@@ -80,21 +62,14 @@ data_tfbs_t::data_tfbs_t(const string& phylogenetic_input, size_t tfbs_length)
                 for(size_t j = 0; j < operator[](i).size(); j++) {
                         // generate an index of this position
                         seq_index_t index(i,j);
-                        // if there is a nucleotide at this position
-                        if (!is_blank(index)) {
-                                // push a new index to the list of indices
-                                indices.push_back(new seq_index_t(index));
-                                // if this index is also valid for
-                                // sampling, i.e. a tfbs could fit here
-                                if (valid_sampling_index(index, tfbs_length)) {
-                                        // push it also to the list of
-                                        // sampling indices
-                                        sampling_indices.push_back(new seq_index_t(index));
-                                }
-                                // increment the number of nucleotides
-                                _elements++;
-                        }
+                        // push a new index to the list of indices
+                        indices.push_back(new seq_index_t(index));
+                        // push it also to the list of
+                        // sampling indices
+                        sampling_indices.push_back(new seq_index_t(index));
                 }
+                // increment the number of nucleotides
+                _elements++;
         }
         shuffle();
 }
@@ -132,19 +107,6 @@ data_tfbs_t::~data_tfbs_t()
 void
 data_tfbs_t::shuffle() {
         random_shuffle(sampling_indices.begin(), sampling_indices.end());
-}
-
-bool
-data_tfbs_t::is_blank(const index_i& index) const
-{
-        // the position at index is blank if all counts of the
-        // multinomial distribution are zero
-        for (size_t i = 0; i < alphabet_size; i++) {
-                if (operator[](index)[i] != 0.0) {
-                        return false;
-                }
-        }
-        return true;
 }
 
 const sequence_data_t<__CODE_TYPE__>&

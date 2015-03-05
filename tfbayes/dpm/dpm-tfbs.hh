@@ -73,6 +73,8 @@ public:
         ////////////////////////////////////////////////////////////////////////
         size_t mixture_components() const;
         size_t baseline_components() const;
+        double background_mixture_weight(const range_t& range, cluster_t& cluster);
+        double foreground_mixture_weight(const range_t& range, cluster_t& cluster);
         // override pure functions
         void   mixture_weights(const range_t& range, double log_weights[], cluster_tag_t tags[]) {
                 // set default temperature
@@ -85,6 +87,7 @@ public:
         void   mixture_weights(const std::vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[],
                                const double temp = 1.0,
                                const bool include_background = true);
+
         double likelihood() const;
         double posterior() const;
 
@@ -100,10 +103,6 @@ public:
         void test_background();
         void test_moves();
 
-        // constants
-        ////////////////////////////////////////////////////////////////////////
-        static const size_t BG_LENGTH = 1;
-
 protected:
         // baseline models
         std::vector<double> _baseline_weights;
@@ -118,7 +117,6 @@ protected:
         double _lambda;
         double _lambda_log;
         double _lambda_inv_log;
-        size_t _tfbs_length;
 
         // process priors
         dpm_tfbs_prior_t* _process_prior;

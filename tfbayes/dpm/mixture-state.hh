@@ -24,6 +24,7 @@
 
 #include <list>
 #include <map>
+#include <string>
 #include <vector>
 
 #include <tfbayes/dpm/cluster.hh>
@@ -74,19 +75,23 @@ public:
         ////////////////////////////////////////////////////////////////////////
         void update(Observed<cluster_event_t>* cluster, cluster_event_t event);
         void update(Observed<cluster_event_t>* cluster, cluster_event_t event, const range_t& range);
-        void add_baseline_model(component_model_t* distribution, const baseline_tag_t& baseline_tag);
+        baseline_tag_t add_baseline_model(component_model_t* distribution);
         cluster_tag_t add_cluster(baseline_tag_t baseline_tag);
         cluster_tag_t add_cluster(component_model_t* distribution);
         cluster_t& get_free_cluster(baseline_tag_t baseline_tag);
+        cluster_t& get_free_cluster(const model_id_t& model_id);
         inline size_t size() const { return used_clusters_size; }
         // access to cluster assignments, the data type might be
         // different in child classes, so make this virtual
-        virtual data_i<cluster_tag_t>& cluster_assignments() { return *_cluster_assignments; }
-        virtual const data_i<cluster_tag_t>& cluster_assignments() const { return *_cluster_assignments; }
+        virtual data_i<cluster_tag_t>& cluster_assignments() {
+                return *_cluster_assignments; }
+        virtual const data_i<cluster_tag_t>& cluster_assignments() const {
+                return *_cluster_assignments; }
         // also provide a function to generate a partition from
         // cluster assignments
         virtual dpm_partition_t partition() const;
 
+        friend std::ostream& operator<< (std::ostream& o, const mixture_state_t& state);
 protected:
         std::vector<cluster_t*> clusters;
         std::list<cluster_t*> used_clusters;
@@ -98,7 +103,7 @@ protected:
         size_t free_clusters_size;
 
         // distributions that make up the baseline measure for the dirichlet process
-        std::map<baseline_tag_t,component_model_t*> baseline_models;
+        std::map<baseline_tag_t, component_model_t*> baseline_models;
 
         // assignments to clusters
         data_i<cluster_tag_t>* _cluster_assignments;

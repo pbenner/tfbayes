@@ -66,7 +66,10 @@ def parse_partition_elements(subset_str):
 def parse_partition(partition_str):
     partition = dpm_partition_t()
     for identifier, subset in parse_partition_subsets(partition_str):
-        dpm_subset = dpm_subset_t(identifier)
+        model_id        = model_id_t()
+        model_id.name   = identifier.split(":")[0]
+        model_id.length = int(identifier.split(":")[1])
+        dpm_subset = dpm_subset_t(model_id)
         for r in parse_partition_elements(subset):
             dpm_subset.insert(r)
         partition.append(dpm_subset)

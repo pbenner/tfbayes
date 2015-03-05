@@ -41,6 +41,9 @@ libtfbayes_dpm_la_SOURCES =		\
 	component-model_mixture.cc      \
 	component-model_product.cc      \
 	component-model.hh		\
+	component-model_foreground.hh	\
+	component-model_background.hh	\
+	component-model_gaussian.hh	\
 	datatypes.hh			\
 	data.hh				\
 	data-tfbs.cc			\

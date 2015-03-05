@@ -33,8 +33,21 @@
 // cluster structures
 ////////////////////////////////////////////////////////////////////////////////
 
+// data types for identifying clusters and baseline models (internal
+// use only!)
 typedef ssize_t cluster_tag_t;
-typedef std::string baseline_tag_t;
+typedef ssize_t baseline_tag_t;
+
+// a model can be identified by its name and length (this holds for
+// baseline and background models)
+struct model_id_t {
+        std::string name;
+        size_t length;
+
+        friend bool operator==(const model_id_t& lhs, const model_id_t& rhs) {
+                return lhs.name == rhs.name && lhs.length == rhs.length;
+        }
+};
 
 typedef enum {
         cluster_event_empty, cluster_event_nonempty,

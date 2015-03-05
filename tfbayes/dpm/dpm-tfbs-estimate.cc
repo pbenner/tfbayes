@@ -44,8 +44,7 @@ size_t hash_value(const seq_index_t& seq_index)
 // -----------------------------------------------------------------------------
 
 static void
-init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data,
-          size_t tfbs_length)
+init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data)
 {
         /* Cluster labeling convention:
          * The kth cluster gets all labels from k*tfbs_length + 1 to
@@ -59,23 +58,22 @@ init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
                         const seq_index_t& index = static_cast<const seq_index_t&>(is->index());
-                        for (size_t i = 0; i < tfbs_length; i++) {
-                                data[index[0]][index[1]+i] = k*tfbs_length+i+1;
+                        for (size_t i = 0; i < is->length(); i++) {
+                                data[index[0]][index[1]+i] = k*is->length()+i+1;
                         }
                 }
         }
 }
 
 static void
-clean_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data,
-          size_t tfbs_length)
+clean_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data)
 {
         for (dpm_partition_t::const_iterator it = partition.begin();
              it != partition.end(); it++) {
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
                         const seq_index_t& index = static_cast<const seq_index_t&>(is->index());
-                        for (size_t i = 0; i < tfbs_length; i++) {
+                        for (size_t i = 0; i < is->length(); i++) {
                                 data[index[0]][index[1]+i] = 0;
                         }
                 }
@@ -91,7 +89,6 @@ naive_distance(const dpm_partition_t& pi_a,
                const dpm_partition_t& pi_b,
                sequence_data_t<cluster_tag_t>& a,
                sequence_data_t<cluster_tag_t>& b,
-               size_t tfbs_length,
                const dpm_tfbs_t& dpm)
 {
         boost::unordered_set<seq_index_t> indices;
@@ -99,8 +96,8 @@ naive_distance(const dpm_partition_t& pi_a,
         size_t d = 0;
 
         // initialize auxiliary cluster information
-        init_data(pi_a, a, tfbs_length);
-        init_data(pi_b, b, tfbs_length);
+        init_data(pi_a, a);
+        init_data(pi_b, b);
 
         for (indexer_t::const_iterator it = dpm.data().begin();
              it != dpm.data().end(); it++) {
@@ -116,8 +113,8 @@ naive_distance(const dpm_partition_t& pi_a,
         }
 
         // clean data
-        clean_data(pi_a, a, tfbs_length);
-        clean_data(pi_b, b, tfbs_length);
+        clean_data(pi_a, a);
+        clean_data(pi_b, b);
 
         return d;
 }
@@ -162,7 +159,6 @@ distance2(const boost::unordered_set<seq_index_t>& indices,
           const dpm_partition_t& pi_b,
           const sequence_data_t<cluster_tag_t>& a,
           const sequence_data_t<cluster_tag_t>& b,
-          size_t tfbs_length,
           size_t bg_size)
 {
         // boost sparse matrices
@@ -172,8 +168,16 @@ distance2(const boost::unordered_set<seq_index_t>& indices,
         double result = 0;
 
         // number of clusters
-        size_t la = pi_a.size()*tfbs_length+1;
-        size_t lb = pi_b.size()*tfbs_length+1;
+        size_t la = 1; // start at one for the
+        size_t lb = 1; // background model
+        for (dpm_partition_t::const_iterator it = pi_a.begin();
+             it != pi_a.end(); it++) {
+                la += it->begin()->length();
+        }
+        for (dpm_partition_t::const_iterator it = pi_b.begin();
+             it != pi_b.end(); it++) {
+                lb += it->begin()->length();
+        }
 
         // contingency table
         mapped_matrix<double> m(la, lb);
@@ -211,15 +215,12 @@ distance(const dpm_partition_t& pi_a,
          sequence_data_t<cluster_tag_t>& b,
          const dpm_tfbs_t& dpm)
 {
-        // get tfbs length from dpm state
-        size_t tfbs_length = dpm.state().tfbs_length;
-
         // set of indices that are actually used in clusters
         boost::unordered_set<seq_index_t> indices;
 
         // initialize auxiliary cluster information
-        init_data(pi_a, a, tfbs_length);
-        init_data(pi_b, b, tfbs_length);
+        init_data(pi_a, a);
+        init_data(pi_b, b);
 
         // go through subsets of partition a and record all positions
         // that are assigned to a cluster
@@ -228,7 +229,7 @@ distance(const dpm_partition_t& pi_a,
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
                         const seq_index_t& tmp = static_cast<const seq_index_t&>(is->index());
-                        for (size_t i = 0; i < tfbs_length; i++) {
+                        for (size_t i = 0; i < is->length(); i++) {
                                 indices.insert(seq_index_t(tmp[0], tmp[1]+i));
                         }
                 }
@@ -240,7 +241,7 @@ distance(const dpm_partition_t& pi_a,
                 for (dpm_subset_t::const_iterator is = it->begin();
                      is != it->end(); is++) {
                         const seq_index_t& tmp = static_cast<const seq_index_t&>(is->index());
-                        for (size_t i = 0; i < tfbs_length; i++) {
+                        for (size_t i = 0; i < is->length(); i++) {
                                 indices.insert(seq_index_t(tmp[0], tmp[1]+i));
                         }
                 }
@@ -250,11 +251,11 @@ distance(const dpm_partition_t& pi_a,
 
         // compute the distance
 //        size_t d = distance1(indices, a, b, bg_size);
-        double d = distance2(indices, pi_a, pi_b, a, b, tfbs_length, bg_size);
+        double d = distance2(indices, pi_a, pi_b, a, b, bg_size);
 
         // clean data
-        clean_data(pi_a, a, tfbs_length);
-        clean_data(pi_b, b, tfbs_length);
+        clean_data(pi_a, a);
+        clean_data(pi_b, b);
 
         return d;
 }
@@ -565,7 +566,7 @@ map_local_optimization_block(cluster_t& cluster, dpm_tfbs_t& dpm, bool verbose)
         {
                 const range_t& range = *it;
 
-                dpm.state().remove(range, old_cluster_tag);
+                dpm.state().remove(range);
         }
         ////////////////////////////////////////////////////////////////////////
         // obtian the mixture probabilities
@@ -616,24 +617,23 @@ map_local_optimization(cluster_t& cluster, dpm_tfbs_t& dpm, bool verbose)
 
 static bool
 map_local_optimization(const index_i& index, dpm_tfbs_t& dpm, bool verbose) {
-        ////////////////////////////////////////////////////////////////////////
-        // check if we can sample this element
-        if (!dpm.state().valid_tfbs_position(index)) {
+        size_t length;
+        if (dpm.state().get_free_range(index, length)) {
                 return false;
         }
+        range_t range1(index, length, false);
+        range_t range2(index, length, true );
         ////////////////////////////////////////////////////////////////////////
         // first release the element from its cluster
         cluster_tag_t old_cluster_tag = dpm.state()[index];
         cluster_tag_t new_cluster_tag;
-        dpm.state().remove(index, old_cluster_tag);
+        dpm.state().remove(range1);
         ////////////////////////////////////////////////////////////////////////
         size_t components = dpm.mixture_components() + dpm.baseline_components();
         double log_weights1[components];
         double log_weights2[components];
         cluster_tag_t cluster_tags1[components];
         cluster_tag_t cluster_tags2[components];
-        range_t range1(index, dpm.state().tfbs_length, false);
-        range_t range2(index, dpm.state().tfbs_length, true );
         ////////////////////////////////////////////////////////////////////////
         // compute weights
         dpm.mixture_weights(range1, log_weights1, cluster_tags1, 1.0, true);

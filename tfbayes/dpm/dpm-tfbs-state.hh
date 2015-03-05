@@ -35,8 +35,8 @@
 class dpm_tfbs_state_t : public gibbs_state_t {
 public:
          dpm_tfbs_state_t(const std::vector<size_t>& sizes,
-                          size_t tfbs_length,
-                          const data_tfbs_t& data);
+                          const data_tfbs_t& data,
+                          const std::vector<double>& tfbs_length);
          dpm_tfbs_state_t(const dpm_tfbs_state_t& state);
         ~dpm_tfbs_state_t();
 
@@ -55,16 +55,16 @@ public:
         // methods
         ////////////////////////////////////////////////////////////////////////
         void add   (const range_t& range, cluster_tag_t tag);
-        void remove(const range_t& range, cluster_tag_t tag);
-        void remove(const index_i& index, cluster_tag_t tag);
+        void remove(const range_t& range);
+
+        bool valid_tfbs_position(const range_t& range) const;
+        bool get_free_range(const index_i& index, size_t& length);
 
         bool move_left (cluster_t& cluster, cluster_tag_t bg_cluster_tag, size_t n = 1);
         bool move_right(cluster_t& cluster, cluster_tag_t bg_cluster_tag, size_t n = 1);
 
         void save(cluster_tag_t cluster_tag, cluster_tag_t bg_cluster_tag);
         void restore();
-
-        bool valid_tfbs_position(const index_i& index) const;
 
         // access to cluster assignments, the data type might be
         // different in child classes, so make this virtual
@@ -77,6 +77,8 @@ public:
 
         dpm_partition_t partition() const;
         void set_partition(const dpm_partition_t& partition);
+        bool is_tfbs_start_position(const index_i& index) const;
+        bool is_background(const index_i& index) const;
         bool is_background(cluster_tag_t tag) const;
         bool is_background(const cluster_t& cluster) const;
         cluster_tag_t add_background_cluster(component_model_t& component_model);
@@ -89,6 +91,9 @@ public:
 
         // keep track of the number of transcription factor binding sites
         size_t num_tfbs;
+        // minimum and maximum lengths of tfbs
+        size_t min_tfbs_length;
+        size_t max_tfbs_length;
 
         // auxiliary variables to save the current state
         size_t num_tfbs_p;
@@ -99,8 +104,6 @@ public:
 
         const data_tfbs_t* _data;
 
-        // constants
-        size_t tfbs_length;
         // the bg_cluster_tag is determined after the state is
         // initialize, so this can't be a constant
         typedef std::vector<cluster_tag_t> bg_cluster_tags_t;

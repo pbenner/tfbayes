@@ -107,7 +107,7 @@ entropy_background_t::entropy_background_t(
         thread_pool_t& thread_pool,
         const string& cachefile,
         boost::optional<const alignment_set_t<>&> alignment_set)
-        : component_model_t(cluster_assignments),
+        : component_model_t({"background", 1}, cluster_assignments),
           _size(data_tfbs_t::alphabet_size),
           _bg_cluster_tag(0),
           _precomputed_marginal(_data.sizes(), 0),

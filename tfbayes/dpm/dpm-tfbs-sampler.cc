@@ -19,7 +19,7 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <cmath> /* abs */
+#include <cmath> /* abs, ceil */
 
 #include <boost/random/uniform_01.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
@@ -157,23 +157,22 @@ string print_probabilities(
 
 bool
 dpm_tfbs_sampler_t::_gibbs_sample(const index_i& index, double temp, bool optimize) {
-        ////////////////////////////////////////////////////////////////////////
-        // check if we can sample this element
-        if (!dpm().state().valid_tfbs_position(index)) {
+        size_t length;
+        if (!dpm().state().get_free_range(index, length)) {
                 return false;
         }
+        range_t range1(index, length, false);
+        range_t range2(index, length, true );
         ////////////////////////////////////////////////////////////////////////
         // first release the element from its cluster
         cluster_tag_t old_cluster_tag = dpm().state()[index];
-        state().remove(index, old_cluster_tag);
+        state().remove(range1);
         ////////////////////////////////////////////////////////////////////////
         size_t components = dpm().mixture_components() + dpm().baseline_components();
         double log_weights1[components];
         double log_weights2[components];
         cluster_tag_t cluster_tags1[components];
         cluster_tag_t cluster_tags2[components];
-        range_t range1(index, dpm().state().tfbs_length, false);
-        range_t range2(index, dpm().state().tfbs_length, true );
         ////////////////////////////////////////////////////////////////////////
         // compute weights
         dpm().mixture_weights(range1, log_weights1, cluster_tags1, temp, true);
@@ -253,7 +252,7 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, double temp, bool optimize
         {
                 const range_t& range = *it;
 
-                dpm().state().remove(range, old_cluster_tag);
+                dpm().state().remove(range);
         }
         ////////////////////////////////////////////////////////////////////////
         // obtian the mixture probabilities
@@ -327,7 +326,8 @@ dpm_tfbs_sampler_t::_metropolis_proposal(cluster_t& cluster, stringstream& ss)
         }
         boost::random::uniform_int_distribution<> dist   (0, 1);
         boost::random::uniform_int_distribution<> dist_bg(0, dpm().state().bg_cluster_tags.size()-1);
-        boost::random::uniform_int_distribution<> steps  (1, cluster.elements().begin()->length()/2);
+        boost::random::uniform_int_distribution<> steps  (
+                1, ceil(double(cluster.model().id().length)/2));
         size_t n = steps(gen());
         // select a background component at random
         cluster_tag_t bg_cluster_tag = dpm().state().bg_cluster_tags[dist_bg(gen())];
@@ -496,7 +496,7 @@ dpm_tfbs_pmcmc_t::dpm_tfbs_pmcmc_t(
         const sampling_history_t& history)
         : population_mcmc_t(options.population_size, history),
           _options(options),
-          _data(options.phylogenetic_file, options.tfbs_length),
+          _data(options.phylogenetic_file),
           _alignment_set(options.alignment_file, boost::optional<const pt_root_t&>(),
                          nucleotide_alphabet_t(), options.verbose),
           _socket_file(options.socket_file),

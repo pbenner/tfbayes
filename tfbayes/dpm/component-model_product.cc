@@ -1,4 +1,4 @@
-/* Copyright (C) 2011-2013 Philipp Benner
+/* Copyright (C) 2011-2015 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,23 +27,26 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 product_dirichlet_t::product_dirichlet_t(
+        const model_id_t& model_id,
         const matrix<double>& _alpha,
         const sequence_data_t<data_tfbs_t::code_t>& data,
-        const sequence_data_t<data_tfbs_t::code_t>& complement_data,
-        bool complement)
-        : component_model_t(),
-          _size1(_alpha.size()),
-          _size2(_alpha[0].size()),
+        const sequence_data_t<data_tfbs_t::code_t>& complement_data)
+        : component_model_t(model_id),
+          _size1(model_id.length),
+          _size2(data_tfbs_t::alphabet_size),
           _data(&data),
-          _complement_data(&complement_data),
-          _complement(complement)
+          _complement_data(&complement_data)
 {
-        for (size_t i = 0; i < _alpha.size(); i++) {
+        // make sure the counts vector has a single column
+        assert(_alpha.size() == 1);
+        assert(_alpha[0].size() == data_tfbs_t::alphabet_size);
+
+        for (size_t i = 0; i < _size1; i++) {
                 alpha .push_back(counts_t());
                 counts.push_back(counts_t());
                 for (size_t j = 0; j < data_tfbs_t::alphabet_size; j++) {
-                        alpha [i][j] = _alpha[i][j];
-                        counts[i][j] = _alpha[i][j];
+                        alpha [i][j] = _alpha[0][j];
+                        counts[i][j] = _alpha[0][j];
                 }
         }
 }
@@ -55,8 +58,7 @@ product_dirichlet_t::product_dirichlet_t(const product_dirichlet_t& distribution
           _size1(distribution._size1),
           _size2(distribution._size2),
           _data (distribution._data),
-          _complement_data(distribution._complement_data),
-          _complement(distribution._complement)
+          _complement_data(distribution._complement_data)
 {
 }
 
@@ -81,26 +83,27 @@ product_dirichlet_t::add(const range_t& range) {
         const size_t sequence = range.index()[0];
         const size_t position = range.index()[1];
         const size_t length   = range.length();
-        size_t i, k;
 
-        if (!range.reverse() || _complement == false) {
-                for (i = 0; i < length; i++) {
+        assert(length == _size1);
+
+        if (!range.reverse()) {
+                for (size_t i = 0; i < length; i++) {
                         const seq_index_t index(sequence, position+i);
-                        for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
-                                counts[i%_size1][k] += data()[index][k];
+                        for (size_t k = 0; k < data_tfbs_t::alphabet_size; k++) {
+                                counts[i][k] += data()[index][k];
                         }
                 }
         }
         // reverse complement
         else {
-                for (i = 0; i < length; i++) {
+                for (size_t i = 0; i < length; i++) {
                         const seq_index_t index(sequence, position+length-i-1);
-                        for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
-                                counts[i%_size1][k] += complement_data()[index][k];
+                        for (size_t k = 0; k < data_tfbs_t::alphabet_size; k++) {
+                                counts[i][k] += complement_data()[index][k];
                         }
                 }
         }
-        return i/_size1;
+        return 1;
 }
 
 size_t
@@ -108,26 +111,29 @@ product_dirichlet_t::remove(const range_t& range) {
         const size_t sequence = range.index()[0];
         const size_t position = range.index()[1];
         const size_t length   = range.length();
-        size_t i, k;
 
-        if (!range.reverse() || _complement == false) {
-                for (i = 0; i < length; i++) {
+        assert(length == _size1);
+
+        if (!range.reverse()) {
+                for (size_t i = 0; i < length; i++) {
                         const seq_index_t index(sequence, position+i);
-                        for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
-                                counts[i%_size1][k] -= data()[index][k];
+                        for (size_t k = 0; k < data_tfbs_t::alphabet_size; k++) {
+                                counts[i][k] -= data()[index][k];
+                                assert(counts[i][k] >= 0.0);
                         }
                 }
         }
         // reverse complement
         else {
-                for (i = 0; i < length; i++) {
+                for (size_t i = 0; i < length; i++) {
                         const seq_index_t index(sequence, position+length-i-1);
-                        for (k = 0; k < data_tfbs_t::alphabet_size; k++) {
-                                counts[i%_size1][k] -= complement_data()[index][k];
+                        for (size_t k = 0; k < data_tfbs_t::alphabet_size; k++) {
+                                counts[i][k] -= complement_data()[index][k];
+                                assert(counts[i][k] >= 0.0);
                         }
                 }
         }
-        return i/_size1;
+        return 1;
 }
 
 size_t
@@ -152,14 +158,18 @@ double product_dirichlet_t::log_predictive(const range_t& range) {
         const size_t length   = range.length();
         double result = 0;
 
-        if (!range.reverse() || _complement == false) {
+        // return zero if the length does not match
+        if (length != _size1) {
+                return -std::numeric_limits<double>::infinity();
+        }
+        if (!range.reverse()) {
                 for (size_t i = 0; i < length; i++) {
                         const seq_index_t index(sequence, position+i);
 
                         /* counts contains the data count statistic
                          * and the pseudo counts alpha */
-                        result += fast_lnbeta(counts[i%_size1], data()[index])
-                                - fast_lnbeta(counts[i%_size1]);
+                        result += fast_lnbeta(counts[i], data()[index])
+                                - fast_lnbeta(counts[i]);
                 }
         }
         // reverse complement
@@ -169,8 +179,8 @@ double product_dirichlet_t::log_predictive(const range_t& range) {
 
                         /* counts contains the data count statistic
                          * and the pseudo counts alpha */
-                        result += fast_lnbeta(counts[i%_size1], complement_data()[index])
-                                - fast_lnbeta(counts[i%_size1]);
+                        result += fast_lnbeta(counts[i], complement_data()[index])
+                                - fast_lnbeta(counts[i]);
                 }
         }
 
@@ -183,6 +193,8 @@ double product_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
         const size_t length = range_set[0].length();
         double result = 0;
 
+        assert(length == _size1);
+
         for (size_t i = 0; i < length; i++) {
 
                 /* set all tmp_counts to zero */
@@ -193,7 +205,7 @@ double product_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
                 /* loop through all ranges */
                 for (size_t k = 0; k < range_set.size(); k++) {
 
-                        if (!range_set[k].reverse() || _complement == false) {
+                        if (!range_set[k].reverse()) {
                                 const size_t sequence = range_set[k].index()[0];
                                 const size_t position = range_set[k].index()[1];
                                 const seq_index_t index(sequence, position+i);
@@ -207,7 +219,7 @@ double product_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
                 /* reverse complements */
                 for (size_t k = 0; k < range_set.size(); k++) {
 
-                        if (range_set[k].reverse() && _complement == true) {
+                        if (range_set[k].reverse()) {
                                 const size_t sequence = range_set[k].index()[0];
                                 const size_t position = range_set[k].index()[1];
                                 const seq_index_t index(sequence, position+length-i-1);
@@ -218,8 +230,8 @@ double product_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
                                 }
                         }
                 }
-                result += fast_lnbeta(counts[i%_size1], tmp_counts)
-                        - fast_lnbeta(counts[i%_size1]);
+                result += fast_lnbeta(counts[i], tmp_counts)
+                        - fast_lnbeta(counts[i]);
         }
 
         return result;
@@ -234,8 +246,8 @@ double product_dirichlet_t::log_likelihood() const {
         for (size_t i = 0; i < _size1; i++) {
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result += fast_lnbeta(counts[i%_size1])
-                        - fast_lnbeta(alpha [i%_size1]);
+                result += fast_lnbeta(counts[i])
+                        - fast_lnbeta(alpha [i]);
         }
         return result;
 }

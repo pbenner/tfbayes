@@ -152,7 +152,9 @@ operator<< (ostream& o, const cluster_t& cluster)
         return o << "("
                  << cluster._cluster_tag
                  << ":"
-                 << cluster._baseline_tag
+                 << cluster.model().id().name
+                 << ":"
+                 << cluster.model().id().length
                  << "):"
                  << cluster._size;
 }

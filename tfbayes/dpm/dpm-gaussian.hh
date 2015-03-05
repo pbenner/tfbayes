@@ -55,8 +55,7 @@ public:
         size_t mixture_components() const;
         void   mixture_weights(const range_t& range, double log_weights[], cluster_tag_t tags[]);
         void   add   (const range_t& range, cluster_tag_t tag);
-        void   remove(const range_t& range, cluster_tag_t tag);
-        void   remove(const index_i& index, cluster_tag_t tag);
+        void   remove(const range_t& range);
         double likelihood() const;
         double posterior() const;
         std::matrix<double> means() const;

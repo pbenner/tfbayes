@@ -31,20 +31,16 @@ using namespace std;
 dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                        const data_tfbs_t& data,
                        boost::optional<const alignment_set_t<>&> alignment_set)
-        : // baseline
-          _baseline_weights(options.baseline_weights),
-          // phylogenetic information
+        : // phylogenetic information
           _data(&data),
           // coded nucleotide sequences
           _alignment_set(NULL),
           // cluster manager
-          _state(data.sizes(), options.tfbs_length, data),
+          _state(data.sizes(), data, options.tfbs_length),
           // mixture weight for the dirichlet process
           _lambda(options.lambda),
           _lambda_log(log(options.lambda)),
-          _lambda_inv_log(log(1-options.lambda)),
-          // length of tfbs
-          _tfbs_length(options.tfbs_length)
+          _lambda_inv_log(log(1-options.lambda))
 {
         ////////////////////////////////////////////////////////////////////////////////
         // check that the alignment data matches the phylogenetic data
@@ -95,14 +91,6 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                 cluster_tag_t tag = _state.add_background_cluster(*bg);
                 bg->set_bg_cluster_tag(tag);
         }
-        else if (options.background_model == "dirichlet") {
-                /* multiple dirichlet-compound distribution for all
-                 * nucleotides in the background */
-                assert(options.background_alpha.size() == 1);
-                product_dirichlet_t* bg = new product_dirichlet_t(
-                        options.background_alpha, data, data.complements(), false);
-                _state.add_background_cluster(*bg);
-        }
         else if (options.background_model == "dirichlet-mixture") {
                 /* multiple dirichlet-compound distribution for all
                  * nucleotides in the background */
@@ -124,18 +112,23 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                 exit(EXIT_FAILURE);
         }
         // baseline weights are already initialized
-        baseline_priors_t::const_iterator it = options.baseline_priors.begin();
-        baseline_tags_t  ::const_iterator is = options.baseline_tags  .begin();
-        for (;
-             it != options.baseline_priors.end() &&
-             is != options.baseline_tags  .end(); it++, is++) {
-                assert(it->size() == options.tfbs_length);
-                for (size_t j = 0; j < options.tfbs_length; j++) {
-                        assert((*it)[j].size() == data_tfbs_t::alphabet_size);
+        assert(options.tfbs_length.size() == 2);
+        assert(options.tfbs_length[0] >  0);
+        assert(options.tfbs_length[0] <= options.tfbs_length[1]);
+        baseline_priors_t ::const_iterator it = options.baseline_priors .begin();
+        baseline_tags_t   ::const_iterator is = options.baseline_tags   .begin();
+        baseline_weights_t::const_iterator ir = options.baseline_weights.begin();
+        assert(options.baseline_priors.size() == options.baseline_tags   .size());
+        assert(options.baseline_priors.size() == options.baseline_weights.size());
+        for (; it != options.baseline_priors.end(); it++, is++, ir++) {
+                assert(it->size() == 1);
+                // add a baseline_prior for each tfbs length
+                for (size_t length = options.tfbs_length[0]; length < options.tfbs_length[1]; length++) {
+                        model_id_t model_id = {*is, length};
+                        product_dirichlet_t* dirichlet = new product_dirichlet_t(model_id, *it, data, data.complements());
+                        _baseline_tags   .push_back(_state.add_baseline_model(dirichlet));
+                        _baseline_weights.push_back(*ir);
                 }
-                product_dirichlet_t* dirichlet = new product_dirichlet_t(*it, data, data.complements());
-                _state.add_baseline_model(dirichlet, *is);
-                _baseline_tags.push_back(*is);
         }
         ////////////////////////////////////////////////////////////////////////////////
         // assign all elements to the background
@@ -183,8 +176,6 @@ dpm_tfbs_t::dpm_tfbs_t(const dpm_tfbs_t& dpm)
           _lambda(dpm._lambda),
           _lambda_log(dpm._lambda_log),
           _lambda_inv_log(dpm._lambda_inv_log),
-          // length of tfbs
-          _tfbs_length(dpm._tfbs_length),
           // process prios
           _process_prior(dpm._process_prior->clone())
 { }
@@ -209,7 +200,6 @@ swap(dpm_tfbs_t& first, dpm_tfbs_t& second)
         swap(first._lambda,           second._lambda);
         swap(first._lambda_log,       second._lambda_log);
         swap(first._lambda_inv_log,   second._lambda_inv_log);
-        swap(first._tfbs_length,      second._tfbs_length);
         swap(first._process_prior,    second._process_prior);
 }
 
@@ -233,6 +223,38 @@ dpm_tfbs_t::baseline_components() const
         return _baseline_tags.size();
 }
 
+double
+dpm_tfbs_t::background_mixture_weight(const range_t& range, cluster_t& cluster)
+{
+        return cluster.model().log_predictive(range);
+}
+
+double
+dpm_tfbs_t::foreground_mixture_weight(const range_t& range, cluster_t& cluster)
+{
+        double result;
+        // get the length of the foreground model
+        size_t cluster_length = cluster.model().id().length;
+        if (cluster_length < range.length()) {
+                cluster_t& bg_cluster = _state[*_state.bg_cluster_tags.begin()];
+                // split range in two
+                range_t range1(range);
+                range_t range2(range);
+                range1.length()     = cluster_length;
+                range2.index ()[1] += cluster_length;
+                range2.length()    -= cluster_length;
+                // compute log_predictives
+                result = cluster.model().log_predictive(range1);
+                // remaining positions are assigned to the background
+                // model
+                result += background_mixture_weight(range2, bg_cluster);
+        }
+        else {
+                result = cluster.model().log_predictive(range);
+        }
+        return result;
+}
+
 GCC_ATTRIBUTE_HOT
 void
 dpm_tfbs_t::mixture_weights(
@@ -250,13 +272,13 @@ dpm_tfbs_t::mixture_weights(
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
                         if (include_background) {
-                                sum = logadd(sum, (_lambda_inv_log + cluster.model().log_predictive(range))/temp);
+                                sum = logadd(sum, (_lambda_inv_log + background_mixture_weight(range, cluster))/temp);
                         }
                 }
                 else {
                         ////////////////////////////////////////////////////////
                         // mixture component 2: dirichlet process
-                        sum = logadd(sum, (_lambda_log + _process_prior->log_predictive(cluster, _state) + cluster.model().log_predictive(range))/temp);
+                        sum = logadd(sum, (_lambda_log + _process_prior->log_predictive(cluster, _state) + foreground_mixture_weight(range, cluster))/temp);
                 }
                 log_weights [i] = sum;
                 cluster_tags[i] = cluster.cluster_tag();
@@ -266,7 +288,7 @@ dpm_tfbs_t::mixture_weights(
         for (size_t j = 0; j < baseline_components(); j++, i++) {
                 cluster_t& cluster = _state.get_free_cluster(_baseline_tags[j]);
                 sum = logadd(sum, (_lambda_log + _process_prior->log_predictive(cluster, _state) + log(_baseline_weights[j]) +
-                                   cluster.model().log_predictive(range))/temp);
+                                   foreground_mixture_weight(range, cluster))/temp);
                 log_weights [i] = sum;
                 cluster_tags[i] = cluster.cluster_tag();
         }

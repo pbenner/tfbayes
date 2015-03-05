@@ -53,7 +53,7 @@ public:
         // constructors
         ////////////////////////////////////////////////////////////////////////
 
-         data_tfbs_t(const std::string& phylogenetic_input, size_t tfbs_length);
+         data_tfbs_t(const std::string& phylogenetic_input);
          data_tfbs_t(const data_tfbs_t& data);
         ~data_tfbs_t();
 
@@ -95,11 +95,8 @@ public:
 
         // methods
         ////////////////////////////////////////////////////////////////////////
-        // true if there is no nucleotide at position given by index
-        bool is_blank(const index_i& index) const;
         size_t elements() const { return _elements; };
         void shuffle();
-        bool valid_sampling_index(const index_i& index, size_t tfbs_length) const;
         const sequence_data_t<__CODE_TYPE__>& complements() const;
 
         static sequence_data_t<data_tfbs_t::code_t> read_fasta(const std::string& file_name);

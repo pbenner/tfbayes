@@ -22,12 +22,12 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <utility> // std::pair
+
 #include <boost/unordered_set.hpp>
 
 #include <tfbayes/dpm/index.hh>
 #include <tfbayes/dpm/datatypes.hh>
-
-typedef std::string dpm_subset_tag_t;
 
 class dpm_subset_t : public virtual clonable, public boost::unordered_set<range_t> {
 public:
@@ -39,13 +39,13 @@ public:
 
         // constructors
         ////////////////////////////////////////////////////////////////////////
-        dpm_subset_t(const dpm_subset_tag_t& dpm_subset_tag)
-                : base_t(),
-                  _dpm_subset_tag(dpm_subset_tag)
+        dpm_subset_t(const model_id_t& model_id)
+                : base_t()
+                , _model_id(model_id)
                 {}
         dpm_subset_t(const dpm_subset_t& dpm_subset)
                 : base_t(dpm_subset),
-                  _dpm_subset_tag(dpm_subset._dpm_subset_tag) {
+                  _model_id(dpm_subset._model_id) {
         }
         virtual ~dpm_subset_t() {
         }
@@ -58,7 +58,7 @@ public:
                 using std::swap;
                 swap(static_cast<base_t&>(left),
                      static_cast<base_t&>(right));
-                swap(left._dpm_subset_tag, right._dpm_subset_tag);
+                swap(left._model_id, right._model_id);
         }
 
         // operators
@@ -72,11 +72,11 @@ public:
         // methods
         ////////////////////////////////////////////////////////////////////////
         // each subset represents a cluster with a specific model
-        const dpm_subset_tag_t dpm_subset_tag() const {
-                return _dpm_subset_tag;
+        const model_id_t model_id() const {
+                return _model_id;
         }
 protected:
-        dpm_subset_tag_t _dpm_subset_tag;
+        model_id_t _model_id;
 };
 
 class dpm_partition_t : public std::vector<dpm_subset_t> {
@@ -88,8 +88,8 @@ public:
         dpm_partition_t (InputIterator first, InputIterator last)
                 : std::vector<dpm_subset_t>(first, last) { }
 
-        void add_component(const dpm_subset_tag_t& dpm_subset_tag) {
-                this->push_back(dpm_subset_t(dpm_subset_tag));
+        void add_component(const model_id_t& model_id) {
+                this->push_back(dpm_subset_t(model_id));
         }
 };
 

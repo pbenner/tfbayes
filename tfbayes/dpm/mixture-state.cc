@@ -22,8 +22,12 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <map>
+#include <set>
 #include <list>
 #include <assert.h>
+
+#include <boost/foreach.hpp>
 
 #include <tfbayes/dpm/mixture-state.hh>
 
@@ -111,7 +115,7 @@ mixture_state_t::add_cluster(component_model_t* model)
         // of free clusters, so we do not need to observe it
         // and we can simply push it to the list of used
         // clusters
-        cluster_t* c = new cluster_t(model, cluster_tag, "background", this, false, false);
+        cluster_t* c = new cluster_t(model, cluster_tag, -1, this, false, false);
         clusters.push_back(c);
         used_clusters.push_back(clusters.back());
         used_clusters_size++;
@@ -123,9 +127,12 @@ mixture_state_t::add_cluster(component_model_t* model)
 cluster_tag_t
 mixture_state_t::add_cluster(baseline_tag_t baseline_tag)
 {
+        // generate a new cluster tag
         cluster_tag_t cluster_tag = clusters.size();
 
-        cluster_t* c = new cluster_t(baseline_models[baseline_tag]->clone(), cluster_tag, baseline_tag, this, true, true);
+        component_model_t* model  = baseline_models[baseline_tag]->clone();
+
+        cluster_t* c = new cluster_t(model, cluster_tag, baseline_tag, this, true, true);
         clusters.push_back(c);
         // this cluster is empty, so place it into the list
         // of free clusters
@@ -135,11 +142,14 @@ mixture_state_t::add_cluster(baseline_tag_t baseline_tag)
         return cluster_tag;
 }
 
-void
-mixture_state_t::add_baseline_model(component_model_t* distribution, const baseline_tag_t& baseline_tag)
+baseline_tag_t
+mixture_state_t::add_baseline_model(component_model_t* distribution)
 {
+        baseline_tag_t baseline_tag = baseline_models.size();
         // add a baseline model to the list of distributions
         baseline_models[baseline_tag] = distribution;
+        // return the new tag
+        return baseline_tag;
 }
 
 cluster_t&
@@ -155,6 +165,18 @@ mixture_state_t::get_free_cluster(baseline_tag_t baseline_tag) {
         cluster_tag_t cluster_tag = add_cluster(baseline_tag);
 
         return operator[](cluster_tag);
+}
+
+cluster_t&
+mixture_state_t::get_free_cluster(const model_id_t& model_id) {
+        // check free clusters
+        for (std::list<cluster_t*>::iterator it = free_clusters.begin();
+             it != free_clusters.end(); it++) {
+                if ((*it)->model().id() == model_id) {
+                        return **it;
+                }
+        }
+        assert(false);
 }
 
 void
@@ -214,7 +236,8 @@ mixture_state_t::partition() const
         // loop through all clusters
         for (const_iterator it = begin(); it != end(); it++) {
                 const cluster_t& cluster = **it;
-                dpm_partition.add_component(cluster.baseline_tag());
+                model_id_t id = cluster.model().id();
+                dpm_partition.add_component(id);
                 // loop through cluster elements
                 for (cluster_t::const_iterator is = cluster.begin();
                      is != cluster.end(); is++) {
@@ -226,10 +249,28 @@ mixture_state_t::partition() const
 
 ostream& operator<< (ostream& o, const mixture_state_t& state)
 {
-        o << "(" << state.size() << "): ";
-        for (mixture_state_t::const_iterator it = state.begin();
-             it != state.end(); it++) {
-                o << **it << " ";
+        typedef map<size_t, set<size_t> > map1_t;
+        typedef map<std::string, map1_t>  map2_t;
+
+        map2_t map;
+
+        BOOST_FOREACH(const cluster_t* cluster, state) {
+                model_id_t id = cluster->model().id();
+
+                map[id.name][id.length].insert(
+                        cluster->size());
+        }
+        for (map2_t::iterator it = map.begin(); it != map.end(); it++) {
+
+                o << boost::format(" clusters with baseline model `%s\':") % it->first
+                  << endl;
+                for (map1_t::iterator is = it->second.begin(); is != it->second.end(); is++) {
+                        o << boost::format(" -> and length %d have number of elements: ") % is->first;
+                        BOOST_FOREACH(const size_t& length, is->second) {
+                                o << length << " ";
+                        }
+                        o << endl;
+                }
         }
         return o;
 }
