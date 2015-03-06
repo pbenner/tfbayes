@@ -123,7 +123,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
         for (; it != options.baseline_priors.end(); it++, is++, ir++) {
                 assert(it->size() == 1);
                 // add a baseline_prior for each tfbs length
-                for (size_t length = options.tfbs_length[0]; length < options.tfbs_length[1]; length++) {
+                for (size_t length = options.tfbs_length[0]; length <= options.tfbs_length[1]; length++) {
                         model_id_t model_id = {*is, length};
                         product_dirichlet_t* dirichlet = new product_dirichlet_t(model_id, *it, data, data.complements());
                         _baseline_tags   .push_back(_state.add_baseline_model(dirichlet));
