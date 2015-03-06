@@ -159,21 +159,24 @@ public:
         using base_t::size;
         using base_t::push_back;
         using base_t::operator[];
-        using base_t::operator=;
 
         data_t() : base_t() {
         }
         data_t(size_t n, T init)
                 : base_t(n, init) {
         }
-        data_t(const base_t& data)
-                : base_t(data) {
-        }
+        data_t(const data_t& data)
+                : base_t(data)
+                { }
 
         virtual data_t<T>* clone() const {
                 return new data_t<T>(*this);
         }
 
+        data_t& operator=(const data_t& data) {
+                base_t::operator=(data);
+                return *this;
+        }
         virtual inline const_iterator_t<T> operator[](const range_t& range) const GCC_ATTRIBUTE_HOT {
                 return const_iterator_t<T>(*this, range.index(), range.length());
         }
@@ -213,14 +216,18 @@ public:
                         push_back(std::vector<T>(n[i], init));
                 }
         }
-        sequence_data_t(const base_t& data)
-                : base_t(data) {
-        }
+        sequence_data_t(const sequence_data_t& sequence_data)
+                : base_t(sequence_data)
+                { }
 
         virtual sequence_data_t<T>* clone() const {
                 return new sequence_data_t<T>(*this);
         }
 
+        sequence_data_t& operator=(const sequence_data_t& sequence_data) {
+                base_t::operator=(sequence_data);
+                return *this;
+        }
         virtual inline const_iterator_t<T> operator[](const range_t& range) const GCC_ATTRIBUTE_HOT {
                 return const_iterator_t<T>(*this, range.index(), range.length());
         }

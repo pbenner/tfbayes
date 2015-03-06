@@ -30,9 +30,9 @@ data_gaussian_t::data_gaussian_t(
         size_t samples,
         const matrix<double>& Sigma,
         const vector<double>& pi)
-        : data_t<std::vector<double> >(),
-          _elements(samples),
-          _cluster (pi.size())
+        : base_t    ()
+        , _elements (samples)
+        , _cluster  (pi.size())
 {
         gsl_rng* _r = gsl_rng_alloc (gsl_rng_default);
 
@@ -49,7 +49,7 @@ data_gaussian_t::data_gaussian_t(
         double rho     = Sigma[0][1]/(sigma_x*sigma_y);
 
         /* final samples */
-        matrix<double> data;
+        base_t data;
 
         /* temporary storage */
         size_t j;
@@ -79,7 +79,7 @@ data_gaussian_t::data_gaussian_t(
         gsl_ran_discrete_free(gdd);
 
         /* copy data */
-        data_t<std::vector<double> >::operator=(data);
+        base_t::operator=(data);
 
         /* initialize indices */
         for (size_t i = 0; i < samples; i++) {

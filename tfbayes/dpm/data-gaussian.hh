@@ -32,6 +32,7 @@
 #include <tfbayes/dpm/indexer.hh>
 
 class data_gaussian_t : public data_t<std::vector<double> >, public indexer_t {
+        typedef data_t<std::vector<double> > base_t;
 public:
         data_gaussian_t(size_t samples,
                         const std::matrix<double>& Sigma,
