@@ -262,7 +262,7 @@ ostream& operator<< (ostream& o, const mixture_state_t& state)
         }
         for (map2_t::iterator it = map.begin(); it != map.end(); it++) {
 
-                o << boost::format(" clusters with baseline model `%s\':") % it->first
+                o << boost::format(" clusters with model `%s\':") % it->first
                   << endl;
                 for (map1_t::iterator is = it->second.begin(); is != it->second.end(); is++) {
                         o << boost::format(" -> and length %d have number of elements: ") % is->first;
