@@ -242,17 +242,13 @@ dpm_tfbs_sampler_t::_block_sample(cluster_t& cluster, double temp, bool optimize
         // fill range_set
         for (cluster_t::iterator it = cluster.begin(); it != cluster.end(); it++)
         {
-                const range_t& range = *it;
-
-                range_set.push_back(range);
+                range_set.push_back(*it);
         }
         ////////////////////////////////////////////////////////////////////////
         // release all elemente from the cluster
         for (vector<range_t>::iterator it = range_set.begin(); it != range_set.end(); it++)
         {
-                const range_t& range = *it;
-
-                dpm().state().remove(range);
+                dpm().state().remove(*it);
         }
         ////////////////////////////////////////////////////////////////////////
         // obtian the mixture probabilities

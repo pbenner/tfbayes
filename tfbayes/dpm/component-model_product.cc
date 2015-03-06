@@ -193,8 +193,10 @@ double product_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
         const size_t length = range_set[0].length();
         double result = 0;
 
-        assert(length == _size1);
-
+        // return zero if the length does not match
+        if (length != _size1) {
+                return -std::numeric_limits<double>::infinity();
+        }
         for (size_t i = 0; i < length; i++) {
 
                 /* set all tmp_counts to zero */

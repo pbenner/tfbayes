@@ -145,7 +145,6 @@ template <typename T>
 class data_i : public virtual clonable {
 public:
         virtual data_i<T>* clone() const = 0;
-        virtual data_i<T>& operator=(const data_i<T>& data) = 0;
         virtual const_iterator_t<T> operator[](const range_t& range) const = 0;
         virtual iterator_t<T> operator[](const range_t& range) = 0;
         virtual const T& operator[](const index_t& index) const = 0;
@@ -170,32 +169,11 @@ public:
         data_t(const base_t& data)
                 : base_t(data) {
         }
-        data_t(const data_t& data)
-                : base_t(data) {
-        }
-        virtual ~data_t() {}
 
-        friend void swap(data_t<T>& first, data_t<T>& second) {
-                using std::swap;
-                swap(static_cast<base_t&>(first),
-                     static_cast<base_t&>(second));
-        }
         virtual data_t<T>* clone() const {
                 return new data_t<T>(*this);
         }
-        /* override abstract assignment operator */
-        virtual data_t<T>& operator=(const data_i<T>& data) {
-                base_t::operator=(
-                        static_cast<const data_t<T>&>(data));
-                return *this;
-        }
-        /* prevent the default assignment operator to call
-         * abstract assignment operator from data_i<T> */
-        virtual data_t<T>& operator=(const data_t<T>& data) {
-                base_t::operator=(
-                        static_cast<const data_t<T>&>(data));
-                return *this;
-        }
+
         virtual inline const_iterator_t<T> operator[](const range_t& range) const GCC_ATTRIBUTE_HOT {
                 return const_iterator_t<T>(*this, range.index(), range.length());
         }
@@ -238,33 +216,11 @@ public:
         sequence_data_t(const base_t& data)
                 : base_t(data) {
         }
-        sequence_data_t(const sequence_data_t& data)
-                : base_t(data) {
-        }
-        virtual ~sequence_data_t() {
-        }
 
-        void swap(sequence_data_t<T>& first, sequence_data_t<T>& second) {
-                using std::swap;
-                swap(static_cast<base_t&>(first),
-                     static_cast<base_t&>(second));
-        }
         virtual sequence_data_t<T>* clone() const {
                 return new sequence_data_t<T>(*this);
         }
-        /* override abstract assignment operator */
-        virtual sequence_data_t<T>& operator=(const data_i<T>& data) {
-                base_t::operator=(
-                        static_cast<const sequence_data_t<T>&>(data));
-                return *this;
-        }
-        /* prevent the default assignment operator to call
-         * abstract assignment operator from data_i<T> */
-        virtual sequence_data_t<T>& operator=(const sequence_data_t<T>& data) {
-                base_t::operator=(
-                        static_cast<const sequence_data_t<T>&>(data));
-                return *this;
-        }
+
         virtual inline const_iterator_t<T> operator[](const range_t& range) const GCC_ATTRIBUTE_HOT {
                 return const_iterator_t<T>(*this, range.index(), range.length());
         }

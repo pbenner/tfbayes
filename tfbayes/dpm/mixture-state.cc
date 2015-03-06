@@ -191,16 +191,16 @@ mixture_state_t::update(Observed<cluster_event_t>* observed, cluster_event_t eve
                         free_clusters.push_back(cluster);
                         used_clusters_size--;
                         free_clusters_size++;
-                        break;
                 }
+                break;
         case cluster_event_nonempty:
                 if (cluster->destructible()) {
                         used_clusters.push_back(cluster);
                         free_clusters.remove(cluster);
                         used_clusters_size++;
                         free_clusters_size--;
-                        break;
                 }
+                break;
         default:
                 break;
         }

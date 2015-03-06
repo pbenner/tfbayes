@@ -26,45 +26,68 @@
 
 #include <tfbayes/dpm/cluster.hh>
 
+#include <boost/format.hpp>
+
 using namespace std;
 
 cluster_t::cluster_t(component_model_t* model, cluster_tag_t cluster_tag, baseline_tag_t baseline_tag,
                  bool destructible, bool record)
-        : _model(model), _cluster_tag(cluster_tag), _baseline_tag(baseline_tag),
-          _destructible(destructible), _record(record), _size(0)
+        : base_t         ()
+        , m_model        (model)
+        , m_cluster_tag  (cluster_tag)
+        , m_baseline_tag (baseline_tag)
+        , m_destructible (destructible)
+        , m_record       (record)
+        , m_elements     ()
+        , m_size         (0)
 { }
 
 cluster_t::cluster_t(component_model_t* model, cluster_tag_t cluster_tag, baseline_tag_t baseline_tag,
-                 Observer<cluster_event_t>* observer, bool destructible, bool record)
-        : _model(model), _cluster_tag(cluster_tag), _baseline_tag(baseline_tag),
-          _destructible(destructible), _record(record), _size(0)
+                     Observer<cluster_event_t>* observer, bool destructible, bool record)
+        : base_t         ()
+        , m_model        (model)
+        , m_cluster_tag  (cluster_tag)
+        , m_baseline_tag (baseline_tag)
+        , m_destructible (destructible)
+        , m_record       (record)
+        , m_elements     ()
+        , m_size         (0)
 {
         set_observer(observer);
 }
 
 cluster_t::cluster_t(const cluster_t& cluster)
-        : _model(NULL),
-          _cluster_tag(cluster._cluster_tag),
-          _baseline_tag(cluster._baseline_tag),
-          _destructible(cluster._destructible),
-          _record(cluster._record)
+        : base_t         (cluster)
+        , m_model        (cluster.m_model->clone())
+        , m_cluster_tag  (cluster.m_cluster_tag)
+        , m_baseline_tag (cluster.m_baseline_tag)
+        , m_destructible (cluster.m_destructible)
+        , m_record       (cluster.m_record)
+        , m_elements     (cluster.m_elements)
+        , m_size         (cluster.m_size)
 {
-        operator=(cluster);
+        set_observer(cluster.observer);
 }
 
 cluster_t::~cluster_t() {
-        delete(_model);
+        if (m_model) {
+                delete(m_model);
+        }
 }
 
 cluster_t&
 cluster_t::operator=(const cluster_t& cluster)
 {
-        if (_model) {
-                delete(_model);
+        if (m_model) {
+                delete(m_model);
         }
-        _model    = cluster._model->clone();
-        _elements = cluster._elements;
-        _size     = cluster._size;
+        m_model        = cluster.m_model->clone();
+        m_cluster_tag  = cluster.m_cluster_tag;
+        m_baseline_tag = cluster.m_baseline_tag;
+        m_destructible = cluster.m_destructible;
+        m_record       = cluster.m_record;
+        m_elements     = cluster.m_elements;
+        m_size         = cluster.m_size;
 
         set_observer(cluster.observer);
 
@@ -74,32 +97,32 @@ cluster_t::operator=(const cluster_t& cluster)
 void
 cluster_t::add_observations(const range_t& range)
 {
-        if (_size == 0) {
-                _size += _model->add(range);
+        if (m_size == 0) {
+                m_size += m_model->add(range);
                 notify(cluster_event_nonempty);
         }
         else {
-                _size += _model->add(range);
+                m_size += m_model->add(range);
         }
         notify(cluster_event_add_word, range);
 
-        if (_record) {
-                _elements.insert(range);
+        if (m_record) {
+                m_elements.insert(range);
         }
 }
 
 void
 cluster_t::remove_observations(const range_t& range)
 {
-        if (_size >= _model->count(range)) {
-                _size -= _model->remove(range);
-                if (_size == 0) {
+        if (m_size >= m_model->count(range)) {
+                m_size -= m_model->remove(range);
+                if (m_size == 0) {
                         notify(cluster_event_empty);
                 }
                 notify(cluster_event_remove_word, range);
 
-                if (_record) {
-                        _elements.erase(range);
+                if (m_record) {
+                        m_elements.erase(range);
                 }
         }
 }
@@ -107,54 +130,54 @@ cluster_t::remove_observations(const range_t& range)
 cluster_t::elements_t
 cluster_t::elements() const
 {
-        return _elements;
+        return m_elements;
 }
 
 size_t
 cluster_t::size() const
 {
-        return _size;
+        return m_size;
 }
 
 cluster_tag_t
 cluster_t::cluster_tag() const
 {
-        return _cluster_tag;
+        return m_cluster_tag;
 }
 
 baseline_tag_t
 cluster_t::baseline_tag() const
 {
-        return _baseline_tag;
+        return m_baseline_tag;
 }
 
 bool
 cluster_t::destructible() const
 {
-        return _destructible;
+        return m_destructible;
 }
 
 component_model_t&
 cluster_t::model()
 {
-        return *_model;
+        return *m_model;
 }
 
 const component_model_t&
 cluster_t::model() const
 {
-        return *_model;
+        return *m_model;
 }
 
 ostream&
 operator<< (ostream& o, const cluster_t& cluster)
 {
-        return o << "("
-                 << cluster._cluster_tag
-                 << ":"
-                 << cluster.model().id().name
-                 << ":"
-                 << cluster.model().id().length
-                 << "):"
-                 << cluster._size;
+        o << boost::format("Cluster %d:\n"         ) % cluster.cluster_tag()
+          << boost::format(" -> model name  : %s\n") % cluster.model().id().name
+          << boost::format(" -> model length: %d\n") % cluster.model().id().length
+          << boost::format(" -> elements    : ");
+        for (cluster_t::iterator it = cluster.begin(); it != cluster.end(); it++) {
+                o << *it << " ";
+        }
+        return o << endl;
 }

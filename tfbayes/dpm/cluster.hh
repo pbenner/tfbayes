@@ -41,6 +41,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 class cluster_t : public Observed<cluster_event_t> {
+
+        typedef Observed<cluster_event_t> base_t;
 public:
          cluster_t(component_model_t* model, cluster_tag_t cluster_tag, baseline_tag_t baseline_tag,
                    bool destructible = true, bool record = false);
@@ -56,8 +58,8 @@ public:
         typedef elements_t::const_iterator const_iterator;
 
         // iterators
-        const_iterator begin() const { return _elements.begin(); }
-        const_iterator end()   const { return _elements.end();   }
+        const_iterator begin() const { return m_elements.begin(); }
+        const_iterator end()   const { return m_elements.end();   }
 
         // friends
         friend std::ostream& operator<< (std::ostream& o, const cluster_t& cluster);
@@ -78,15 +80,15 @@ public:
         void update() { model().update(); }
 
 private:
-        component_model_t* _model;
-        const cluster_tag_t _cluster_tag;
-        const baseline_tag_t _baseline_tag;
-        const bool _destructible;
-        const bool _record;
-        elements_t _elements;
+        component_model_t* m_model;
+        cluster_tag_t m_cluster_tag;
+        baseline_tag_t m_baseline_tag;
+        bool m_destructible;
+        bool m_record;
+        elements_t m_elements;
 
         // number of elements in the cluster
-        size_t _size;
+        size_t m_size;
 };
 
 #endif /* __TFBAYES_DPM_CLUSTER_HH__ */

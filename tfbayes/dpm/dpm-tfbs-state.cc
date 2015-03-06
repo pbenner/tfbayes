@@ -222,6 +222,7 @@ dpm_tfbs_state_t::remove(const range_t& range)
                         // model
                         cluster.remove_observations(range1);
                         // remove remaining observations
+                        assert(is_background(range2.index()));
                         remove(range2);
                 }
                 else {
@@ -271,12 +272,14 @@ dpm_tfbs_state_t::move_left(cluster_t& cluster, cluster_tag_t bg_cluster_tag, si
                         return false;
                 }
                 const range_t& old_range(*is);
-                      range_t  new_range(old_range);
+                      range_t  new_range(*is);
                 // one position to the left
                 new_range.index()[1] -= n;
                 remove(old_range);
                 add   (old_range, bg_cluster_tag);
-                if (new_range.index()[1] > 0 && valid_tfbs_position(new_range)) {
+                if (new_range.index()[1] > 0
+                    && valid_tfbs_position(new_range)
+                    && !is_tfbs_start_position(new_range.index())) {
                         remove(new_range);
                         add   (new_range, cluster.cluster_tag());
                 }
@@ -295,14 +298,15 @@ dpm_tfbs_state_t::move_right(cluster_t& cluster, cluster_tag_t bg_cluster_tag, s
                         return false;
                 }
                 const range_t& old_range(*is);
-                      range_t  new_range(old_range);
+                      range_t  new_range(*is);
                 const size_t sequence_length = _data->size(old_range.index()[0]);
                 // one position to the left
                 new_range.index()[1] += n;
                 remove(old_range);
                 add   (old_range, bg_cluster_tag);
-                if (new_range.index()[1]+new_range.length() <= sequence_length &&
-                    valid_tfbs_position(new_range)) {
+                if (new_range.index()[1]+new_range.length() <= sequence_length
+                    && valid_tfbs_position(new_range)
+                    && !is_tfbs_start_position(new_range.index())) {
                         remove(new_range);
                         add   (new_range, cluster.cluster_tag());
                 }
