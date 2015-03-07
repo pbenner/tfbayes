@@ -38,8 +38,8 @@ using namespace std;
 typedef struct _options_t {
         size_t samples;
         size_t burnin;
-        size_t tfbs_length_min;
-        size_t tfbs_length_max;
+        size_t foreground_length_min;
+        size_t foreground_length_max;
         double alpha;
         double discount;
         double lambda;
@@ -52,8 +52,8 @@ typedef struct _options_t {
         _options_t()
                 : samples(1000),
                   burnin(100),
-                  tfbs_length_min( 8),
-                  tfbs_length_max(10),
+                  foreground_length_min( 8),
+                  foreground_length_max(10),
                   alpha(0.05),
                   discount(0.0),
                   lambda(0.01),
@@ -74,8 +74,8 @@ operator<<(std::ostream& o, const _options_t& options) {
           << "-> alpha               = " << options.alpha               << endl
           << "-> discount            = " << options.discount            << endl
           << "-> lambda              = " << options.lambda              << endl
-          << "-> tfbs length min     = " << options.tfbs_length_min     << endl
-          << "-> tfbs length max     = " << options.tfbs_length_max     << endl
+          << "-> foreground length min     = " << options.foreground_length_min     << endl
+          << "-> foreground length max     = " << options.foreground_length_max     << endl
           << "-> process prior       = " << options.process_prior       << endl
           << "-> background model    = " << options.background_model    << endl
           << "-> background_alpha    = " << options.background_alpha    << endl
@@ -160,15 +160,13 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options.alpha               = options.alpha;
         tfbs_options.lambda              = options.lambda;
         tfbs_options.discount            = options.discount;
-        tfbs_options.tfbs_length.push_back(options.tfbs_length_min);
-        tfbs_options.tfbs_length.push_back(options.tfbs_length_max);
         tfbs_options.population_size     = options.population_size;
         tfbs_options.process_prior       = options.process_prior;
         tfbs_options.background_model    = options.background_model;
         tfbs_options.background_gamma    = vector<double>(2,1);
         tfbs_options.background_context  = options.background_context;
         tfbs_options.baseline_weights    = vector<double>(1,1);
-        tfbs_options.baseline_tags.push_back("baseline_default");
+        tfbs_options.baseline_names.push_back("baseline_default");
         tfbs_options.block_samples       = false;
         tfbs_options.block_samples_period= 1;
         tfbs_options.metropolis_proposals= 4;
@@ -177,6 +175,10 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options.initial_temperature = 1.0;
         tfbs_options.threads             = 1;
         tfbs_options.verbose             = true;
+        tfbs_options.baseline_lengths.push_back(vector<double>());
+        for (size_t i = options.foreground_length_min; i <= options.foreground_length_max; i++) {
+                tfbs_options.baseline_lengths[0].push_back(i);
+        }
 
         // create data, dpm, and sampler objects
         dpm_tfbs_pmcmc_t pmcmc(tfbs_options);
@@ -249,12 +251,12 @@ int main(int argc, char *argv[])
                 case 't':
                         tokens = token(string(optarg), ':');
                         if (tokens.size() == 1) {
-                                options.tfbs_length_min = atoi(tokens[0].c_str());
-                                options.tfbs_length_max = atoi(tokens[0].c_str());
+                                options.foreground_length_min = atoi(tokens[0].c_str());
+                                options.foreground_length_max = atoi(tokens[0].c_str());
                         }
                         else if (tokens.size() == 2) {
-                                options.tfbs_length_min = atoi(tokens[0].c_str());
-                                options.tfbs_length_max = atoi(tokens[1].c_str());
+                                options.foreground_length_min = atoi(tokens[0].c_str());
+                                options.foreground_length_max = atoi(tokens[1].c_str());
                         }
                         else {
                                 wrong_usage(NULL);

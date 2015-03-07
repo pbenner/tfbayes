@@ -22,6 +22,8 @@
 #include <sstream>
 #include <limits>
 
+#include <boost/foreach.hpp>
+
 #include <tfbayes/dpm/dpm-tfbs.hh>
 #include <tfbayes/utility/statistics.hh>
 #include <tfbayes/utility/logarithmetic.hh>
@@ -36,7 +38,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
           // coded nucleotide sequences
           _alignment_set(NULL),
           // cluster manager
-          _state(data.sizes(), data, options.tfbs_length),
+          _state(options, data),
           // mixture weight for the dirichlet process
           _lambda(options.lambda),
           _lambda_log(log(options.lambda)),
@@ -112,19 +114,21 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                 exit(EXIT_FAILURE);
         }
         // baseline weights are already initialized
-        assert(options.tfbs_length.size() == 2);
-        assert(options.tfbs_length[0] >  0);
-        assert(options.tfbs_length[0] <= options.tfbs_length[1]);
-        baseline_priors_t ::const_iterator it = options.baseline_priors .begin();
-        baseline_tags_t   ::const_iterator is = options.baseline_tags   .begin();
-        baseline_weights_t::const_iterator ir = options.baseline_weights.begin();
-        assert(options.baseline_priors.size() == options.baseline_tags   .size());
+        assert(options.baseline_priors.size() > 0);
+        assert(options.baseline_priors.size() == options.baseline_lengths.size());
+        assert(options.baseline_priors.size() == options.baseline_names  .size());
         assert(options.baseline_priors.size() == options.baseline_weights.size());
-        for (; it != options.baseline_priors.end(); it++, is++, ir++) {
+        baseline_priors_t ::const_iterator it = options.baseline_priors .begin();
+        baseline_names_t  ::const_iterator is = options.baseline_names  .begin();
+        baseline_weights_t::const_iterator ir = options.baseline_weights.begin();
+        baseline_lengths_t::const_iterator iq = options.baseline_lengths.begin();
+        for (; it != options.baseline_priors.end(); it++, is++, ir++, iq++) {
                 assert(it->size() == 1);
-                // add a baseline_prior for each tfbs length
-                for (size_t length = options.tfbs_length[0]; length <= options.tfbs_length[1]; length++) {
-                        model_id_t model_id = {*is, length};
+                // add a baseline_prior for each foreground length
+                BOOST_FOREACH(const double& length, *iq) {
+                        cerr << boost::format("Adding baseline model `%s' of length %d.")
+                                % *is % length << endl;
+                        model_id_t model_id = {*is, size_t(length)};
                         product_dirichlet_t* dirichlet = new product_dirichlet_t(model_id, *it, data, data.complements());
                         _baseline_tags   .push_back(_state.add_baseline_model(dirichlet));
                         _baseline_weights.push_back(*ir);

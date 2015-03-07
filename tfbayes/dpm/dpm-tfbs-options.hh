@@ -29,14 +29,14 @@
 
 #include <tfbayes/dpm/dpm-partition.hh>
 
+typedef std::matrix<double>             baseline_lengths_t;
+typedef std::list<std::string>          baseline_names_t;
 typedef std::list<std::matrix<double> > baseline_priors_t;
-typedef std::list<std::string>          baseline_tags_t;
 typedef std::vector<double>             baseline_weights_t;
 
 typedef struct {
         std::string phylogenetic_file;
         std::string alignment_file;
-        std::vector<double> tfbs_length;
         double alpha;
         double discount;
         double lambda;
@@ -54,9 +54,10 @@ typedef struct {
         std::vector<double> background_gamma;
         std::string background_cache;
         std::vector<double> background_weights;
-        baseline_weights_t baseline_weights;
+        baseline_lengths_t baseline_lengths;
+        baseline_names_t   baseline_names;
         baseline_priors_t  baseline_priors;
-        baseline_tags_t    baseline_tags;
+        baseline_weights_t baseline_weights;
         size_t population_size;
         size_t threads;
         std::string socket_file;

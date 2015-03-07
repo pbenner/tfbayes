@@ -46,5 +46,8 @@ operator<< (std::ostream& o, const range_t& range) {
                 o << range.index()
                   << ":" << range.length();
         }
+        if (range.reverse()) {
+                o << "!";
+        }
         return o;
 }

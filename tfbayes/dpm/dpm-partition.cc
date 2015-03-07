@@ -27,8 +27,7 @@ ostream& operator<< (ostream& o, const dpm_subset_t& dpm_subset)
                 if (is != dpm_subset.begin()) {
                         o << ", ";
                 }
-                o << is->index()
-                  << ":" << is->length();
+                o << is->index();
                 if (is->reverse()) {
                         o << "!";
                 }

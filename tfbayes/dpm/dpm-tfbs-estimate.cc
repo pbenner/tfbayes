@@ -38,8 +38,8 @@ static void
 init_data(const dpm_partition_t& partition, sequence_data_t<cluster_tag_t>& data)
 {
         /* Cluster labeling convention:
-         * The kth cluster gets all labels from k*tfbs_length + 1 to
-         * k*tfbs_length + tfbs_length. Hence, each site in a
+         * The kth cluster gets all labels from k*foreground_length + 1 to
+         * k*foreground_length + foreground_length. Hence, each site in a
          * cluster gets a unique label. The label 0 is reserved for
          * the background */
         cluster_tag_t k = 0;

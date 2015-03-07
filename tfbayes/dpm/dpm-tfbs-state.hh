@@ -34,9 +34,8 @@
 
 class dpm_tfbs_state_t : public gibbs_state_t {
 public:
-         dpm_tfbs_state_t(const std::vector<size_t>& sizes,
-                          const data_tfbs_t& data,
-                          const std::vector<double>& tfbs_length);
+         dpm_tfbs_state_t(const tfbs_options_t& options,
+                          const data_tfbs_t& data);
          dpm_tfbs_state_t(const dpm_tfbs_state_t& state);
         ~dpm_tfbs_state_t();
 
@@ -92,8 +91,8 @@ public:
         // keep track of the number of transcription factor binding sites
         size_t num_tfbs;
         // minimum and maximum lengths of tfbs
-        size_t min_tfbs_length;
-        size_t max_tfbs_length;
+        size_t min_foreground_length;
+        size_t max_foreground_length;
 
         // auxiliary variables to save the current state
         size_t num_tfbs_p;

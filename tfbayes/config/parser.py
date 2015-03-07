@@ -47,7 +47,7 @@ def parse_partition_subsets(partition_str):
             identifier = parse_partition_identifier(partition_str, start)
             yield identifier, partition_str[start + 1: i]
 
-def parse_partition_elements(subset_str):
+def parse_partition_elements(subset_str, length):
     """Split the string of a subset into its elements and parse them."""
     stack = []
     for i, c in enumerate(subset_str):
@@ -56,11 +56,7 @@ def parse_partition_elements(subset_str):
         elif c == ')' and stack:
             start  = stack.pop()
             index  = subset_str[start + 1: i].split(',')
-            m      = re.match(":([0-9]+)(!?)", subset_str[i+1:len(subset_str)])
-            if m == None:
-                raise IOError('Invalid partition.')
-            length = int(m.groups()[0])
-            rc     = m.groups()[1] == "!"
+            rc     = len(subset_str) > i+1 and subset_str[i+1] == '!'
             yield range_t(index_t(int(index[0]), int(index[1])), length, rc)
 
 def parse_partition(partition_str):
@@ -70,7 +66,7 @@ def parse_partition(partition_str):
         model_id.name   = identifier.split(":")[0]
         model_id.length = int(identifier.split(":")[1])
         dpm_subset = dpm_subset_t(model_id)
-        for r in parse_partition_elements(subset):
+        for r in parse_partition_elements(subset, model_id.length):
             dpm_subset.insert(r)
         partition.append(dpm_subset)
     return partition

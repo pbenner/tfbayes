@@ -19,30 +19,38 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <algorithm>
+
 #include <tfbayes/dpm/dpm-tfbs-state.hh>
 
 using namespace std;
 
 dpm_tfbs_state_t::dpm_tfbs_state_t(
-        const std::vector<size_t>& sizes,
-        const data_tfbs_t& data,
-        const std::vector<double>& tfbs_length)
-        : gibbs_state_t(sequence_data_t<cluster_tag_t>(sizes, -1)),
+        const tfbs_options_t& options,
+        const data_tfbs_t& data)
+        : gibbs_state_t(sequence_data_t<cluster_tag_t>(data.sizes(), -1)),
           // starting positions of tfbs
-          tfbs_start_positions(sizes, 0),
+          tfbs_start_positions(data.sizes(), 0),
           // number of transcription factor binding sites
           num_tfbs(0),
-          // minimum and maximum lengths of tfbs
-          min_tfbs_length(tfbs_length[0]),
-          max_tfbs_length(tfbs_length[1]),
           // auxiliary variables
           num_tfbs_p(0),
-          cluster_assignments_p(sizes, -1),
-          tfbs_start_positions_p(sizes, 0),
+          cluster_assignments_p(data.sizes(), -1),
+          tfbs_start_positions_p(data.sizes(), 0),
           cluster_p(NULL),
           cluster_bg_p(NULL),
           _data(&data)
-{ }
+{
+        assert(options.baseline_lengths.size() > 0);
+        // find minimum and maximum lengths of the foreground model
+        vector<size_t> baseline_lengths;
+        for (size_t i = 0; i < options.baseline_lengths.size(); i++) {
+                copy(options.baseline_lengths[i].begin(), options.baseline_lengths[i].end(),
+                     back_inserter(baseline_lengths));
+        }
+        min_foreground_length = *min_element(baseline_lengths.begin(), baseline_lengths.end());
+        max_foreground_length = *max_element(baseline_lengths.begin(), baseline_lengths.end());
+}
 
 dpm_tfbs_state_t::~dpm_tfbs_state_t() {
         if (cluster_p != NULL) {
@@ -58,8 +66,8 @@ dpm_tfbs_state_t::dpm_tfbs_state_t(const dpm_tfbs_state_t& state)
           tfbs_start_positions(state.tfbs_start_positions),
           num_tfbs(state.num_tfbs),
           // length of tfbs
-          min_tfbs_length(state.min_tfbs_length),
-          max_tfbs_length(state.max_tfbs_length),
+          min_foreground_length(state.min_foreground_length),
+          max_foreground_length(state.max_foreground_length),
           // auxiliary variables
           num_tfbs_p(0),
           cluster_assignments_p(state.tfbs_start_positions.sizes(), -1),
@@ -76,8 +84,8 @@ void swap(dpm_tfbs_state_t& first, dpm_tfbs_state_t& second)
              static_cast<gibbs_state_t&>(second));
         swap(first.tfbs_start_positions,   second.tfbs_start_positions);
         swap(first.num_tfbs,               second.num_tfbs);
-        swap(first.min_tfbs_length,        second.min_tfbs_length);
-        swap(first.max_tfbs_length,        second.max_tfbs_length);
+        swap(first.min_foreground_length,        second.min_foreground_length);
+        swap(first.max_foreground_length,        second.max_foreground_length);
         swap(first.cluster_assignments_p,  second.cluster_assignments_p);
         swap(first.tfbs_start_positions_p, second.tfbs_start_positions_p);
         swap(first.cluster_p,              second.cluster_p);
@@ -137,21 +145,21 @@ dpm_tfbs_state_t::get_free_range(const index_t& index, size_t& length)
                 return false;
         }
         // check if there is no tfbs starting at later positions
-        for (size_t i = 1; i < max_tfbs_length; i++) {
+        for (size_t i = 1; i < max_foreground_length; i++) {
                 current_index[1] = index[1]+i;
 
                 // check if index is out of range
                 if (size_t(current_index[1]) >= (*_data)[current_index[0]].size()) {
                         length = i;
-                        return i >= min_tfbs_length;
+                        return i >= min_foreground_length;
                 }
                 // check for a tfbs
                 if (is_tfbs_start_position(current_index)) {
                         length = i;
-                        return i >= min_tfbs_length;
+                        return i >= min_foreground_length;
                 }
         }
-        length = max_tfbs_length;
+        length = max_foreground_length;
         return true;
 }
 

@@ -44,11 +44,11 @@ void baseline_priors_push_back(
         baseline_priors.push_back(m);
 }
 
-void baseline_tags_push_back(
-        baseline_tags_t& baseline_tags,
+void baseline_names_push_back(
+        baseline_names_t& baseline_names,
         const std::string& s)
 {
-        baseline_tags.push_back(s);
+        baseline_names.push_back(s);
 }
 
 // interface
@@ -59,7 +59,6 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
         class_<tfbs_options_t>("tfbs_options_t")
                 .def_readwrite("phylogenetic_file",    &tfbs_options_t::phylogenetic_file)
                 .def_readwrite("alignment_file",       &tfbs_options_t::alignment_file)
-                .def_readwrite("tfbs_length",          &tfbs_options_t::tfbs_length)
                 .def_readwrite("alpha",                &tfbs_options_t::alpha)
                 .def_readwrite("discount",             &tfbs_options_t::discount)
                 .def_readwrite("_lambda_",             &tfbs_options_t::lambda)
@@ -77,21 +76,22 @@ BOOST_PYTHON_MODULE(dpm_tfbs_interface)
                 .def_readwrite("background_gamma",     &tfbs_options_t::background_gamma)
                 .def_readwrite("background_cache",     &tfbs_options_t::background_cache)
                 .def_readwrite("background_weights",   &tfbs_options_t::background_weights)
+                .def_readwrite("baseline_names",       &tfbs_options_t::baseline_names)
+                .def_readwrite("baseline_lengths",     &tfbs_options_t::baseline_lengths)
                 .def_readwrite("baseline_priors",      &tfbs_options_t::baseline_priors)
                 .def_readwrite("baseline_weights",     &tfbs_options_t::baseline_weights)
-                .def_readwrite("baseline_tags",        &tfbs_options_t::baseline_tags)
                 .def_readwrite("population_size",      &tfbs_options_t::population_size)
                 .def_readwrite("threads",              &tfbs_options_t::threads)
                 .def_readwrite("socket_file",          &tfbs_options_t::socket_file)
                 .def_readwrite("verbose",              &tfbs_options_t::verbose)
                 ;
+        class_<baseline_names_t>("baseline_names_t")
+                .def("__iter__", boost::python::iterator<baseline_names_t>())
+                .def("append",  &baseline_names_push_back)
+                ;
         class_<baseline_priors_t>("baseline_priors_t")
                 .def("__iter__", boost::python::iterator<baseline_priors_t>())
                 .def("append", &baseline_priors_push_back)
-                ;
-        class_<baseline_tags_t>("baseline_tags_t")
-                .def("__iter__", boost::python::iterator<baseline_tags_t>())
-                .def("append",  &baseline_tags_push_back)
                 ;
         class_<data_tfbs_t>("data_tfbs_t", no_init)
                 .def(init<const std::string&>())

@@ -18,6 +18,7 @@
 
 import copy
 import ConfigParser
+import re
 
 from tools import *
 
@@ -49,10 +50,10 @@ def default_sampler_config():
     sampler_config.background_context   = 2
     sampler_config.background_weights   = []
     sampler_config.population_size      = 1
-    sampler_config.tfbs_length          = [10,10]
-    sampler_config.baseline_tags        = []
-    sampler_config.baseline_weights     = []
+    sampler_config.baseline_lengths     = []
+    sampler_config.baseline_names       = []
     sampler_config.baseline_priors      = []
+    sampler_config.baseline_weights     = []
     sampler_config.socket_file          = ""
     sampler_config.samples              = (1000,100)
     sampler_config.threads              = 1
@@ -126,14 +127,6 @@ def parse_sampler_config(config_file, sampler_config):
         sampler_config.background_context = config_parser.get('TFBS-Sampler', 'background-context')
     if config_parser.has_option('TFBS-Sampler', 'background-weights'):
         sampler_config.background_weights = read_vector(config_parser, 'TFBS-Sampler', 'background-weights', float)
-    if config_parser.has_option('TFBS-Sampler', 'tfbs-length'):
-        tmp = read_vector(config_parser, 'TFBS-Sampler', 'tfbs-length', float)
-        if (len(tmp) == 1):
-            sampler_config.tfbs_length = [tmp[0], tmp[0]]
-        elif (len(tmp) == 2):
-            sampler_config.tfbs_length = tmp
-        else:
-            raise IOError("Invalid tfbs length")
     if config_parser.has_option('TFBS-Sampler', 'median-partition'):
         sampler_config.median_partition = str2bool(config_parser.get('TFBS-Sampler', 'median-partition'))
     if config_parser.has_option('TFBS-Sampler', 'population-size'):
@@ -149,13 +142,29 @@ def parse_sampler_config(config_file, sampler_config):
     if config_parser.has_option('TFBS-Sampler', 'baseline-priors'):
         sampler_config.baseline_priors  = []
         sampler_config.baseline_weights = []
-        sampler_config.baseline_tags    = read_vector(config_parser, 'TFBS-Sampler', 'baseline-priors', str)
-        for prior_name in sampler_config.baseline_tags:
+        sampler_config.baseline_names   = read_vector(config_parser, 'TFBS-Sampler', 'baseline-priors', str)
+        sampler_config.baseline_length  = []
+        for prior_name in sampler_config.baseline_names:
+            # read the pseudocounts matrix
             sampler_config.baseline_priors.append(tr(read_matrix(config_parser, 'TFBS-Sampler', prior_name, float)))
+            # the baseline weights if they are specified
             if config_parser.has_option('TFBS-Sampler', '%s_weight' % prior_name):
                 sampler_config.baseline_weights.append(config_parser.get('TFBS-Sampler', '%s_weight' % prior_name))
             else:
                 sampler_config.baseline_weights.append(1.0)
+            # and the baseline length
+            if not config_parser.has_option('TFBS-Sampler', '%s_length' % prior_name):
+                raise IOError("Baseline length required for `%s'" % prior_name)
+            # the length can be given as a range
+            m = re.match("\s*([0-9]+)\s*-\s*([0-9]+)\s*",
+                         config_parser.get('TFBS-Sampler', '%s_length' % prior_name))
+            # if length is a range
+            if m:
+                sampler_config.baseline_lengths.append(range(int(m.group(1)), int(m.group(2))+1))
+            # otherwise it is a vector of lengths
+            else:
+                sampler_config.baseline_lengths.append(
+                    read_vector(config_parser, 'TFBS-Sampler', '%s_length' % prior_name, int))
         normalize_weights(sampler_config.baseline_weights)
     else:
         generate_baseline(sampler_config)
