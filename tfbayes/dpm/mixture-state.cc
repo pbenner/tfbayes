@@ -22,9 +22,10 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <functional>
+#include <list>
 #include <map>
 #include <set>
-#include <list>
 #include <assert.h>
 
 #include <boost/foreach.hpp>
@@ -249,10 +250,12 @@ mixture_state_t::partition() const
 
 ostream& operator<< (ostream& o, const mixture_state_t& state)
 {
-        typedef map<size_t, set<size_t> > map1_t;
+        typedef map<size_t, multiset<size_t, greater<size_t> > > map1_t;
         typedef map<std::string, map1_t>  map2_t;
 
         map2_t map;
+
+        o << " -> number of clusters: " << state.size() << endl;
 
         BOOST_FOREACH(const cluster_t* cluster, state) {
                 model_id_t id = cluster->model().id();
