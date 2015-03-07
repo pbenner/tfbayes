@@ -69,19 +69,19 @@ typedef struct _options_t {
 ostream&
 operator<<(std::ostream& o, const _options_t& options) {
         o << "Options:"              << endl
-          << "-> samples             = " << options.samples             << endl
-          << "-> burnin              = " << options.burnin              << endl
-          << "-> alpha               = " << options.alpha               << endl
-          << "-> discount            = " << options.discount            << endl
-          << "-> lambda              = " << options.lambda              << endl
-          << "-> foreground length min     = " << options.foreground_length_min     << endl
-          << "-> foreground length max     = " << options.foreground_length_max     << endl
-          << "-> process prior       = " << options.process_prior       << endl
-          << "-> background model    = " << options.background_model    << endl
-          << "-> background_alpha    = " << options.background_alpha    << endl
-          << "-> background_context  = " << options.background_context  << endl
-          << "-> population_size     = " << options.population_size     << endl
-          << "-> save                = " << options.save                << endl;
+          << "-> samples               = " << options.samples                << endl
+          << "-> burnin                = " << options.burnin                 << endl
+          << "-> alpha                 = " << options.alpha                  << endl
+          << "-> discount              = " << options.discount               << endl
+          << "-> lambda                = " << options.lambda                 << endl
+          << "-> foreground length min = " << options.foreground_length_min  << endl
+          << "-> foreground length max = " << options.foreground_length_max  << endl
+          << "-> process prior         = " << options.process_prior          << endl
+          << "-> background model      = " << options.background_model       << endl
+          << "-> background_alpha      = " << options.background_alpha       << endl
+          << "-> background_context    = " << options.background_context     << endl
+          << "-> population_size       = " << options.population_size        << endl
+          << "-> save                  = " << options.save                   << endl;
         return o;
 }
 
