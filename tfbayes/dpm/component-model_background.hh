@@ -100,6 +100,71 @@ protected:
         const sequence_data_t<data_tfbs_t::code_t>* _data;
 };
 
+// Independence Background Model
+////////////////////////////////////////////////////////////////////////////////
+
+class independence_mixture_background_t : public component_model_t {
+public:
+         independence_mixture_background_t(
+                 const std::matrix<double>& alpha,
+                 const std::vector<double>& weights,
+                 const sequence_data_t<data_tfbs_t::code_t>& data,
+                 const sequence_data_t<cluster_tag_t>& cluster_assignments,
+                 boost::optional<const alignment_set_t<>&> alignment_set =
+                 boost::optional<const alignment_set_t<>&>());
+         independence_mixture_background_t(const independence_mixture_background_t& distribution);
+        ~independence_mixture_background_t();
+
+        independence_mixture_background_t* clone() const;
+
+        friend void swap(independence_mixture_background_t& first, independence_mixture_background_t& second) {
+                using std::swap;
+                swap(static_cast<component_model_t&>(first),
+                     static_cast<component_model_t&>(second));
+                swap(first._size,                 second._size);
+                swap(first._bg_cluster_tag,       second._bg_cluster_tag);
+                swap(first._precomputed_marginal, second._precomputed_marginal);
+                swap(first._data,                 second._data);
+        }
+
+        independence_mixture_background_t& operator=(const component_model_t& component_model);
+
+        // datatypes
+        typedef data_tfbs_t::code_t counts_t;
+
+        void precompute_marginal(
+                const std::vector<counts_t>& alpha,
+                const std::vector<double  >& weights);
+        size_t add(const range_t& range);
+        size_t remove(const range_t& range);
+        size_t count(const range_t& range);
+        double predictive(const range_t& range);
+        double predictive(const std::vector<range_t>& range_set);
+        double log_predictive(const range_t& range);
+        double log_predictive(const std::vector<range_t>& range_set);
+        double log_likelihood() const;
+        std::string print_counts() const;
+        void set_bg_cluster_tag(cluster_tag_t cluster_tag);
+
+        const sequence_data_t<cluster_tag_t>& cluster_assignments() const {
+                return static_cast<const sequence_data_t<cluster_tag_t>&>(component_model_t::cluster_assignments());
+        }
+        const sequence_data_t<data_tfbs_t::code_t>& data() {
+                return *_data;
+        }
+
+        friend std::ostream& operator<< (std::ostream& o, const independence_mixture_background_t& pd);
+
+protected:
+        size_t _size;
+
+        cluster_tag_t _bg_cluster_tag;
+
+        sequence_data_t<double> _precomputed_marginal;
+
+        const sequence_data_t<data_tfbs_t::code_t>* _data;
+};
+
 // Entropy Background Model
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -23,6 +23,7 @@
 
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/fastarithmetics/fast-lnbeta.hh>
+#include <tfbayes/utility/linalg.hh> // normalize
 
 using namespace std;
 

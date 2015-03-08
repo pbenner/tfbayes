@@ -71,6 +71,13 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                 cluster_tag_t tag = _state.add_background_cluster(*bg);
                 bg->set_bg_cluster_tag(tag);
         }
+        else if (options.background_model == "independence-mixture-dirichlet") {
+                independence_mixture_background_t* bg = new independence_mixture_background_t(
+                        options.background_alpha, options.background_weights, data,
+                        _state.cluster_assignments(), alignment_set);
+                cluster_tag_t tag = _state.add_background_cluster(*bg);
+                bg->set_bg_cluster_tag(tag);
+        }
         else if (options.background_model == "default-background") {
                 assert(options.background_gamma.size() == 2);
                 assert(options.threads >= 1);
