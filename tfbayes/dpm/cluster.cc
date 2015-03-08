@@ -31,7 +31,7 @@
 using namespace std;
 
 cluster_t::cluster_t(component_model_t* model, cluster_tag_t cluster_tag, baseline_tag_t baseline_tag,
-                 bool destructible, bool record)
+                     bool destructible, bool record)
         : base_t         ()
         , m_model        (model)
         , m_cluster_tag  (cluster_tag)
