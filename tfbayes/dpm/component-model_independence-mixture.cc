@@ -22,7 +22,6 @@
 
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/fastarithmetics/fast-lnbeta.hh>
-#include <tfbayes/utility/linalg.hh> // normalize
 
 using namespace std;
 
@@ -57,7 +56,7 @@ independence_mixture_background_t::independence_mixture_background_t(
                         alpha[i][j] = _alpha[i][j];
                 }
         }
-        precompute_marginal(alpha, normalize(weights));
+        precompute_marginal(alpha, weights);
 }
 
 independence_mixture_background_t::independence_mixture_background_t(const independence_mixture_background_t& distribution)
@@ -92,25 +91,25 @@ independence_mixture_background_t::precompute_marginal(
         const vector<double  >& weights)
 {
         // marginals for each component
-        vector<double> marginals (weights.size(), 0.0);
+        vector<double> tmp(alpha.size(), 0.0);
         // keep track of the number of positions assigned to each
         // component
-        vector<size_t> statistics(weights.size(), 0  );
+        vector<size_t> statistics(alpha.size(), 0);
         size_t n = 0;
         /* go through the data and precompute
          * lnbeta(n + alpha) - lnbeta(alpha) */
         for(size_t i = 0; i < data().size(); i++) {
                 for(size_t j = 0; j < data()[i].size(); j++) {
                         for (size_t c = 0; c < alpha.size(); c++) {
-                                marginals[c] = fast_lnbeta(alpha[c], data()[i][j])
-                                             - fast_lnbeta(alpha[c])
-                                             + log(weights[c]);
+                                tmp[c] = fast_lnbeta(alpha[c], data()[i][j])
+                                       - fast_lnbeta(alpha[c])
+                                       + log(weights[c]);
                         }
-                        vector<double>::iterator it = max_element(marginals.begin(), marginals.end());
-                        _precomputed_marginal[i][j] = *it;
+                        size_t c = distance(tmp.begin(),
+                                            max_element(tmp.begin(), tmp.end()));
+                        _precomputed_marginal[i][j] = tmp[c] - log(weights[c]);
                         // increment count statistics
-                        statistics[distance(marginals.begin(), it)]++;
-                        n++;
+                        statistics[c]++; n++;
                 }
         }
         flockfile(stderr);
