@@ -113,7 +113,8 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                 cerr << "Unknown background model." << endl;
                 exit(EXIT_FAILURE);
         }
-        // baseline weights are already initialized
+        ////////////////////////////////////////////////////////////////////////////////
+        // add the foreground models
         assert(options.baseline_priors.size() > 0);
         assert(options.baseline_priors.size() == options.baseline_lengths.size());
         assert(options.baseline_priors.size() == options.baseline_names  .size());
