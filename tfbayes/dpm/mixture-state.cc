@@ -35,8 +35,9 @@
 using namespace std;
 
 mixture_state_t::mixture_state_t(const data_i<cluster_tag_t>& cluster_assignments)
-        : used_clusters_size(0), free_clusters_size(0),
-          _cluster_assignments(cluster_assignments.clone())
+        : used_clusters_size    (0)
+        , free_clusters_size    (0)
+        , m_cluster_assignments (cluster_assignments.clone())
 {
 }
 
@@ -51,18 +52,18 @@ mixture_state_t::~mixture_state_t() {
              it != baseline_models.end(); it++) {
                 delete(it->second);
         }
-        delete(_cluster_assignments);
+        delete(m_cluster_assignments);
 }
 
 mixture_state_t::mixture_state_t(const mixture_state_t& cm)
-        : used_clusters_size(cm.used_clusters_size),
-          free_clusters_size(cm.free_clusters_size),
-          _cluster_assignments(cm._cluster_assignments->clone())
+        : used_clusters_size    (cm.used_clusters_size)
+        , free_clusters_size    (cm.free_clusters_size)
+        , m_cluster_assignments (cm.m_cluster_assignments->clone())
 {
         for (size_t i = 0; i < cm.clusters.size(); i++) {
                 cluster_t* c = new cluster_t(*cm.clusters[i]);
                 c->set_observer(this);
-                c->model().set_cluster_assignments(*_cluster_assignments);
+                c->model().set_cluster_assignments(*m_cluster_assignments);
                 clusters.push_back(c);
                 if (c->size() == 0 && c->destructible()) {
                         free_clusters.push_back(c);
@@ -74,7 +75,7 @@ mixture_state_t::mixture_state_t(const mixture_state_t& cm)
         for (map<baseline_tag_t, component_model_t*>::const_iterator it = cm.baseline_models.begin();
              it != cm.baseline_models.end(); it++) {
                 baseline_models[it->first] = it->second->clone();
-                baseline_models[it->first]->set_cluster_assignments(*_cluster_assignments);
+                baseline_models[it->first]->set_cluster_assignments(*m_cluster_assignments);
         }
 }
 
@@ -86,13 +87,13 @@ mixture_state_t::clone() const
 
 void swap(mixture_state_t& first, mixture_state_t& second)
 {
-        swap(first.clusters,             second.clusters);
-        swap(first.used_clusters,        second.used_clusters);
-        swap(first.free_clusters,        second.free_clusters);
-        swap(first.used_clusters_size,   second.used_clusters_size);
-        swap(first.free_clusters_size,   second.free_clusters_size);
-        swap(first.baseline_models,      second.baseline_models);
-        swap(first._cluster_assignments, second._cluster_assignments);
+        swap(first.clusters,              second.clusters);
+        swap(first.used_clusters,         second.used_clusters);
+        swap(first.free_clusters,         second.free_clusters);
+        swap(first.used_clusters_size,    second.used_clusters_size);
+        swap(first.free_clusters_size,    second.free_clusters_size);
+        swap(first.baseline_models,       second.baseline_models);
+        swap(first.m_cluster_assignments, second.m_cluster_assignments);
 }
 
 mixture_state_t&

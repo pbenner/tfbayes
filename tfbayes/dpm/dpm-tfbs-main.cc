@@ -131,10 +131,10 @@ void wrong_usage(const char *msg)
 }
 
 ostream& operator<< (ostream& o, const product_dirichlet_t& pd) {
-        for (size_t j = 0; j < pd.alpha[0].size() - 1; j++) {
+        for (size_t j = 0; j < pd.m_alpha[0].size() - 1; j++) {
                 o << "\t";
-                for (size_t i = 0; i < pd.alpha.size(); i++) {
-                        o << pd.alpha[i][j] + pd.counts[i][j] << " ";
+                for (size_t i = 0; i < pd.m_alpha.size(); i++) {
+                        o << pd.m_alpha[i][j] + pd.m_counts[i][j] << " ";
                 }
                 o << endl;
         }

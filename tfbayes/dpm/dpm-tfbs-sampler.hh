@@ -73,28 +73,30 @@ public:
         const sequence_data_t<data_tfbs_t::code_t>* phylogenetic_data;
 
 protected:
-        size_t _sample(size_t i, size_t n, bool is_burnin);
-        size_t _sample(size_t i, size_t n, double temp, bool optimize);
-        using gibbs_sampler_t::_gibbs_sample;
-        bool   _gibbs_sample(const index_t& index, double temp, bool optimize);
-        size_t _gibbs_sample(double temp = 1.0, bool optimize = false);
-        void _block_sample(double temp, bool optimize);
-        void _block_sample(cluster_t& cluster, double temp, bool optimize);
-        bool _metropolis_proposal(cluster_t& cluster, std::stringstream& ss);
-        bool _metropolis_sample(double temp, bool optimize);
-        bool _metropolis_sample(cluster_t& cluster, double temp, bool optimize);
-        void _update_sampling_history(size_t switches);
-        save_queue_t<command_t*> _command_queue;
-        save_queue_t<std::string>* _output_queue;
+        size_t m_sample(size_t i, size_t n, bool is_burnin);
+        size_t m_sample(size_t i, size_t n, double temp, bool optimize);
+        using gibbs_sampler_t::m_gibbs_sample;
+        bool   m_gibbs_sample(const index_t& index, double temp, bool optimize);
+        size_t m_gibbs_sample(double temp = 1.0, bool optimize = false);
+        void m_block_sample(double temp, bool optimize);
+        void m_block_sample(cluster_t& cluster, double temp, bool optimize);
+        bool m_metropolis_proposal_size(cluster_t& cluster, std::stringstream& ss);
+        bool m_metropolis_proposal_move(cluster_t& cluster, std::stringstream& ss);
+        bool m_metropolis_sample(double temp, bool optimize);
+        bool m_metropolis_sample(cluster_t& cluster, double temp, bool optimize,
+                                 boost::function<bool (std::stringstream& ss)> f);
+        void m_update_sampling_history(size_t switches);
+        save_queue_t<command_t*> m_command_queue;
+        save_queue_t<std::string>* m_output_queue;
 
         // initial temperature for simulated annealing
-        double _t0;
-        bool   _block_samples;
-        size_t _block_samples_period;
-        size_t _metropolis_proposals;
-        bool   _optimize;
-        size_t _optimize_period;
-        bool   _verbose;
+        double m_t0;
+        bool   m_block_samples;
+        size_t m_block_samples_period;
+        size_t m_metropolis_proposals;
+        bool   m_optimize;
+        size_t m_optimize_period;
+        bool   m_verbose;
 };
 
 #include <pmcmc.hh>
@@ -118,9 +120,9 @@ public:
         // operators
         ////////////////////////////////////////////////////////////////////////
         virtual       dpm_tfbs_sampler_t& operator[](size_t i)
-                { return *static_cast<      dpm_tfbs_sampler_t*>(_population[i]); }
+                { return *static_cast<      dpm_tfbs_sampler_t*>(m_population[i]); }
         virtual const dpm_tfbs_sampler_t& operator[](size_t i) const
-                { return *static_cast<const dpm_tfbs_sampler_t*>(_population[i]); }
+                { return *static_cast<const dpm_tfbs_sampler_t*>(m_population[i]); }
 
         dpm_tfbs_pmcmc_t& operator=(const sampler_t& sampler);
 
@@ -134,20 +136,20 @@ public:
         void save(const std::string& filename) const;
 
 protected:
-        void _start_server();
-        void _stop_server();
+        void m_start_server();
+        void m_stop_server();
 
-        tfbs_options_t _options;
+        tfbs_options_t m_options;
 
-        data_tfbs_t _data;
-        alignment_set_t<> _alignment_set;
+        data_tfbs_t m_data;
+        alignment_set_t<> m_alignment_set;
 
-        std::string _socket_file;
-        boost::asio::io_service _ios;
-        server_t* _server;
-        boost::thread* _bt;
+        std::string m_socket_file;
+        boost::asio::io_service m_ios;
+        server_t* m_server;
+        boost::thread* m_bt;
 
-        save_queue_t<std::string> _output_queue;
+        save_queue_t<std::string> m_output_queue;
 };
 
 std::ostream& operator<< (std::ostream& o, const dpm_tfbs_pmcmc_t& pmcmc);

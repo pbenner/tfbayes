@@ -35,14 +35,14 @@ class sampler_t : public virtual clonable {
 public:
         sampler_t(const std::string& name = "");
         sampler_t(const sampler_t& sampler)
-                : _name(sampler._name),
-                  _gen (sampler._gen) { }
+                : m_name(sampler.m_name)
+                , m_gen (sampler.m_gen) { }
 
         virtual sampler_t* clone() const = 0;
 
         friend void swap(sampler_t& first, sampler_t& second) {
-                std::swap(first._name, second._name);
-                std::swap(first._gen,  second._gen);
+                std::swap(first.m_name, second.m_name);
+                std::swap(first.m_gen,  second.m_gen);
         }
 
         virtual sampler_t& operator=(const sampler_t& sampler) = 0;
@@ -51,12 +51,12 @@ public:
 
         virtual const sampling_history_t& sampling_history() const = 0;
         virtual       sampling_history_t& sampling_history() = 0;
-        virtual const std::string& name() const { return _name; }
-        virtual       std::string& name()       { return _name; }
-        virtual boost::random::mt19937& gen()   { return _gen;  }
+        virtual const std::string& name() const { return m_name; }
+        virtual       std::string& name()       { return m_name; }
+        virtual boost::random::mt19937& gen()   { return m_gen;  }
 protected:
-        std::string _name;
-        boost::random::mt19937 _gen;
+        std::string m_name;
+        boost::random::mt19937 m_gen;
 };
 
 class gibbs_sampler_t : public sampler_t {
@@ -90,17 +90,17 @@ public:
 
 protected:
         // private methods
-        virtual size_t _sample(size_t i, size_t n, bool is_burnin);
-        virtual bool   _gibbs_sample(const index_t& index);
-        virtual size_t _gibbs_sample();
-        virtual void   _update_sampling_history(size_t switches);
+        virtual size_t m_sample(size_t i, size_t n, bool is_burnin);
+        virtual bool   m_gibbs_sample(const index_t& index);
+        virtual size_t m_gibbs_sample();
+        virtual void   m_update_sampling_history(size_t switches);
         // the mixture model
-        mixture_model_t* _dpm;
+        mixture_model_t* m_dpm;
 
-        const indexer_t* _indexer;
+        const indexer_t* m_indexer;
 
         // gibbs sampler history
-        sampling_history_t _sampling_history;
+        sampling_history_t m_sampling_history;
 };
 
 #endif /* __TFBAYES_DPM_SAMPLER_HH__ */

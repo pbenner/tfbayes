@@ -64,13 +64,13 @@ public:
               mixture_state_t& state();
 
 private:
-        baseline_tag_t _baseline_tag;
+        baseline_tag_t m_baseline_tag;
 
         // data and clusters
-        const data_gaussian_t* _data;
+        const data_gaussian_t* m_data;
 
         // parameters
-        double _alpha;
+        double m_alpha;
 };
 
 #endif /* __TFBAYES_DPM_DPM_GAUSSIAN_HH__ */

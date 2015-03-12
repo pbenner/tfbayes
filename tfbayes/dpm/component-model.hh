@@ -49,15 +49,15 @@
 class component_model_t : public virtual clonable {
 public:
         component_model_t()
-                : _cluster_assignments(NULL)
+                : m_cluster_assignments(NULL)
                 { }
         component_model_t(const model_id_t& model_id)
-                : _model_id           (model_id)
-                , _cluster_assignments(NULL)
+                : m_model_id           (model_id)
+                , m_cluster_assignments(NULL)
                 { }
         component_model_t(const model_id_t& model_id, const data_i<cluster_tag_t>& cluster_assignments)
-                : _model_id           (model_id)
-                , _cluster_assignments(&cluster_assignments)
+                : m_model_id           (model_id)
+                , m_cluster_assignments(&cluster_assignments)
                 { }
         virtual ~component_model_t() { };
 
@@ -65,8 +65,8 @@ public:
 
         friend void swap(component_model_t& first, component_model_t& second) {
                 using std::swap;
-                swap(first._model_id,            second._model_id);
-                swap(first._cluster_assignments, second._cluster_assignments);
+                swap(first.m_model_id,            second.m_model_id);
+                swap(first.m_cluster_assignments, second.m_cluster_assignments);
         }
 
         virtual component_model_t& operator=(const component_model_t& component_model) = 0;
@@ -82,19 +82,19 @@ public:
         virtual double log_likelihood() const = 0;
         virtual std::string print_counts() const { return std::string(); }
         virtual void update() { }
-        virtual const model_id_t& id() const { return _model_id; }
-        virtual       model_id_t& id()       { return _model_id; }
+        virtual const model_id_t& id() const { return m_model_id; }
+        virtual       model_id_t& id()       { return m_model_id; }
 
         virtual const data_i<cluster_tag_t>& cluster_assignments() const {
-                return *_cluster_assignments;
+                return *m_cluster_assignments;
         }
         virtual void set_cluster_assignments(const data_i<cluster_tag_t>& cluster_assignments) {
-                _cluster_assignments = &cluster_assignments;
+                m_cluster_assignments = &cluster_assignments;
         }
 
 protected:
-        model_id_t _model_id;
-        const data_i<cluster_tag_t>* _cluster_assignments;
+        model_id_t m_model_id;
+        const data_i<cluster_tag_t>* m_cluster_assignments;
 };
 
 #include <tfbayes/dpm/component-model_foreground.hh>

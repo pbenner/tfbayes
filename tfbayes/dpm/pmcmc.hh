@@ -39,8 +39,8 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-        virtual       sampler_t& operator[](size_t i)       { return *_population[i]; }
-        virtual const sampler_t& operator[](size_t i) const { return *_population[i]; }
+        virtual       sampler_t& operator[](size_t i)       { return *m_population[i]; }
+        virtual const sampler_t& operator[](size_t i) const { return *m_population[i]; }
 
         virtual population_mcmc_t& operator=(const sampler_t& sampler);
 
@@ -53,9 +53,9 @@ public:
 
         size_t size() const;
 protected:
-        std::vector<sampler_t*> _population;
-        size_t _size;
-        sampling_history_t _sampling_history;
+        std::vector<sampler_t*> m_population;
+        size_t m_size;
+        sampling_history_t m_sampling_history;
 
         // protected methods
         ////////////////////////////////////////////////////////////////////////

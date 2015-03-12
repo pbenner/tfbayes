@@ -84,9 +84,9 @@ public:
         // access to cluster assignments, the data type might be
         // different in child classes, so make this virtual
         virtual data_i<cluster_tag_t>& cluster_assignments() {
-                return *_cluster_assignments; }
+                return *m_cluster_assignments; }
         virtual const data_i<cluster_tag_t>& cluster_assignments() const {
-                return *_cluster_assignments; }
+                return *m_cluster_assignments; }
         // also provide a function to generate a partition from
         // cluster assignments
         virtual dpm_partition_t partition() const;
@@ -106,7 +106,7 @@ protected:
         std::map<baseline_tag_t, component_model_t*> baseline_models;
 
         // assignments to clusters
-        data_i<cluster_tag_t>* _cluster_assignments;
+        data_i<cluster_tag_t>* m_cluster_assignments;
 };
 
 std::ostream& operator<< (std::ostream& o, const mixture_state_t& state);

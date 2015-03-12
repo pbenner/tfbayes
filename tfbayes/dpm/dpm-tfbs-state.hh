@@ -56,7 +56,7 @@ public:
         void add   (const range_t& range, cluster_tag_t tag);
         void remove(const range_t& range);
 
-        bool valid_tfbs_position(const range_t& range) const;
+        bool valid_foreground_position(const range_t& range) const;
         bool get_free_range(const index_t& index, size_t& length);
 
         bool move_left (cluster_t& cluster, cluster_tag_t bg_cluster_tag, size_t n = 1);
@@ -81,6 +81,7 @@ public:
         bool is_background(cluster_tag_t tag) const;
         bool is_background(const cluster_t& cluster) const;
         cluster_tag_t add_background_cluster(component_model_t& component_model);
+        bool set_length(cluster_t& cluster, cluster_tag_t bg_cluster_tag, size_t n);
 
         // data
         ////////////////////////////////////////////////////////////////////////
@@ -101,7 +102,7 @@ public:
         cluster_t* cluster_p;
         cluster_t* cluster_bg_p;
 
-        const data_tfbs_t* _data;
+        const data_tfbs_t* m_data;
 
         // the bg_cluster_tag is determined after the state is
         // initialize, so this can't be a constant

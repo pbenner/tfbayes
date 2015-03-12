@@ -33,16 +33,16 @@ using namespace std;
 dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                        const data_tfbs_t& data,
                        boost::optional<const alignment_set_t<>&> alignment_set)
-        : // phylogenetic information
-          _data(&data),
+          // phylogenetic information
+        : _data           (&data)
           // coded nucleotide sequences
-          _alignment_set(NULL),
+        , _alignment_set  (NULL)
           // cluster manager
-          _state(options, data),
+        , _state          (options, data)
           // mixture weight for the dirichlet process
-          _lambda(options.lambda),
-          _lambda_log(log(options.lambda)),
-          _lambda_inv_log(log(1-options.lambda))
+        , _lambda         (options.lambda)
+        , _lambda_log     (log(options.lambda))
+        , _lambda_inv_log (log(1-options.lambda))
 {
         ////////////////////////////////////////////////////////////////////////////////
         // check that the alignment data matches the phylogenetic data
@@ -137,7 +137,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                         cerr << boost::format("Adding baseline model `%s' of length %d.")
                                 % *is % length << endl;
                         model_id_t model_id = {*is, size_t(length)};
-                        product_dirichlet_t* dirichlet = new product_dirichlet_t(model_id, *it, data, data.complements());
+                        product_dirichlet_t* dirichlet = new product_dirichlet_t(model_id, *it, *iq, data, data.complements());
                         _baseline_tags   .push_back(_state.add_baseline_model(dirichlet));
                         _baseline_weights.push_back(*ir);
                 }

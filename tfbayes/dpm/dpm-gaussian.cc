@@ -32,24 +32,24 @@ dpm_gaussian_t::dpm_gaussian_t(
         const matrix<double>& Sigma_0,
         const vector<double>& mu_0,
         const data_gaussian_t& data)
-        : gibbs_state_t(data_t<cluster_tag_t>(data.elements(), -1)),
-          _data(&data),
-          // strength parameter for the dirichlet process
-          _alpha(alpha)
+        : gibbs_state_t(data_t<cluster_tag_t>(data.elements(), -1))
+        ,  m_data(&data)
+           // strength parameter for the dirichlet process
+        ,  m_alpha(alpha)
 {
-        _baseline_tag = gibbs_state_t::add_baseline_model(new bivariate_normal_t(Sigma, Sigma_0, mu_0, data));
-        cluster_tag_t cluster_tag = gibbs_state_t::get_free_cluster(_baseline_tag).cluster_tag();
-        for (indexer_t::const_iterator it = _data->begin();
-             it != _data->end(); it++) {
+        m_baseline_tag = gibbs_state_t::add_baseline_model(new bivariate_normal_t(Sigma, Sigma_0, mu_0, data));
+        cluster_tag_t cluster_tag = gibbs_state_t::get_free_cluster(m_baseline_tag).cluster_tag();
+        for (indexer_t::const_iterator it = m_data->begin();
+             it != m_data->end(); it++) {
                 gibbs_state_t::operator[](cluster_tag).add_observations(range_t(*it,1));
         }
 }
 
 dpm_gaussian_t::dpm_gaussian_t(const dpm_gaussian_t& dpm)
-        : gibbs_state_t(dpm),
-          _baseline_tag(dpm._baseline_tag),
-          _data        (dpm._data),
-          _alpha       (dpm._alpha)
+        : gibbs_state_t  (dpm)
+        , m_baseline_tag (dpm.m_baseline_tag)
+        , m_data         (dpm.m_data)
+        , m_alpha        (dpm.m_alpha)
 {
 }
 
@@ -60,9 +60,9 @@ void swap(dpm_gaussian_t& first, dpm_gaussian_t& second)
 {
         swap(static_cast<gibbs_state_t&>(first),
              static_cast<gibbs_state_t&>(second));
-        swap(first._baseline_tag, second._baseline_tag);
-        swap(first._data,         second._data);
-        swap(first._alpha,        second._alpha);
+        swap(first.m_baseline_tag, second.m_baseline_tag);
+        swap(first.m_data,         second.m_data);
+        swap(first.m_alpha,        second.m_alpha);
 }
 
 dpm_gaussian_t*
@@ -103,7 +103,7 @@ dpm_gaussian_t::mixture_weights(const range_t& range, double log_weights[], clus
 {
         size_t components = mixture_components();
         double sum        = -numeric_limits<double>::infinity();
-        double N          = _data->elements() - 1;
+        double N          = m_data->elements() - 1;
 
         cluster_tag_t i = 0;
         for (mixture_state_t::const_iterator it = gibbs_state_t::begin(); it != gibbs_state_t::end(); it++) {
@@ -111,14 +111,14 @@ dpm_gaussian_t::mixture_weights(const range_t& range, double log_weights[], clus
                 cluster_tags[i] = cluster.cluster_tag();
                 double num_elements = (double)cluster.size();
                 // normalization constant
-                sum = logadd(sum, log(num_elements/(_alpha + N)) + cluster.model().log_predictive(range));
+                sum = logadd(sum, log(num_elements/(m_alpha + N)) + cluster.model().log_predictive(range));
                 log_weights[i] = sum;
                 i++;
         }
         ////////////////////////////////////////////////////////////////////////
         // add the tag of a new class and compute their weight
-        cluster_tags[components] = gibbs_state_t::get_free_cluster(_baseline_tag).cluster_tag();
-        sum = logadd(sum, log(_alpha/(_alpha + N)) + gibbs_state_t::operator[](cluster_tags[components]).model().log_predictive(range));
+        cluster_tags[components] = gibbs_state_t::get_free_cluster(m_baseline_tag).cluster_tag();
+        sum = logadd(sum, log(m_alpha/(m_alpha + N)) + gibbs_state_t::operator[](cluster_tags[components]).model().log_predictive(range));
         log_weights[components] = sum;
 }
 

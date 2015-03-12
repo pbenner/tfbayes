@@ -35,8 +35,8 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 sampler_t::sampler_t(const string& name)
-        : _name(name),
-          _gen() {
+        : m_name (name)
+        , m_gen  () {
         if (name != "")
                 cerr << name << ": ";
         cerr << "Initializing thread-safe random number generator."
@@ -47,7 +47,7 @@ sampler_t::sampler_t(const string& name)
         /* seed generator */
         struct timeval tv;
         gettimeofday(&tv, NULL);
-        _gen.seed(tv.tv_sec*tv.tv_usec);
+        m_gen.seed(tv.tv_sec*tv.tv_usec);
 }
 
 // Gibbs Sampler
@@ -56,39 +56,39 @@ sampler_t::sampler_t(const string& name)
 gibbs_sampler_t::gibbs_sampler_t(const mixture_model_t& dpm,
                                  const indexer_t& indexer,
                                  const string name)
-        : sampler_t(name),
-          _dpm(dpm.clone()),
-          _indexer(&indexer)
+        : sampler_t  (name)
+        ,  m_dpm     (dpm.clone())
+        ,  m_indexer (&indexer)
 {
         // for sampling statistics
-        _sampling_history.switches.   push_back(vector<double>());
-        _sampling_history.likelihood. push_back(vector<double>());
-        _sampling_history.posterior.  push_back(vector<double>());
-        _sampling_history.components. push_back(vector<double>());
-        _sampling_history.temperature.push_back(vector<double>());
+        m_sampling_history.switches.   push_back(vector<double>());
+        m_sampling_history.likelihood. push_back(vector<double>());
+        m_sampling_history.posterior.  push_back(vector<double>());
+        m_sampling_history.components. push_back(vector<double>());
+        m_sampling_history.temperature.push_back(vector<double>());
 }
 
 gibbs_sampler_t::gibbs_sampler_t(const gibbs_sampler_t& sampler)
-        : sampler_t        (sampler),
-          _dpm             (sampler._dpm->clone()),
-          _indexer         (sampler._indexer),
-          _sampling_history(sampler._sampling_history)
+        : sampler_t          (sampler)
+        , m_dpm              (sampler.m_dpm->clone())
+        , m_indexer          (sampler.m_indexer)
+        , m_sampling_history (sampler.m_sampling_history)
 {
 }
 
 gibbs_sampler_t::~gibbs_sampler_t()
 {
-        delete(_dpm);
+        delete(m_dpm);
 }
 
 void
 swap(gibbs_sampler_t& first, gibbs_sampler_t& second)
 {
         swap(static_cast<sampler_t&>(first), static_cast<sampler_t&>(second));
-        swap(first._dpm,              second._dpm);
-        swap(first._name,             second._name);
-        swap(first._indexer,          second._indexer);
-        swap(first._sampling_history, second._sampling_history);
+        swap(first.m_dpm,              second.m_dpm);
+        swap(first.m_name,             second.m_name);
+        swap(first.m_indexer,          second.m_indexer);
+        swap(first.m_sampling_history, second.m_sampling_history);
 }
 
 gibbs_sampler_t*
@@ -105,17 +105,17 @@ gibbs_sampler_t::operator=(const sampler_t& sampler)
 }
 
 bool
-gibbs_sampler_t::_gibbs_sample(const index_t& index)
+gibbs_sampler_t::m_gibbs_sample(const index_t& index)
 {
         range_t range(index,1);
         ////////////////////////////////////////////////////////////////////////
         // release the element from its cluster
         cluster_tag_t old_cluster_tag = state()[index];
         state().remove(range);
-        size_t components = _dpm->mixture_components() + _dpm->baseline_components();
+        size_t components = m_dpm->mixture_components() + m_dpm->baseline_components();
         double log_weights[components];
         cluster_tag_t cluster_tags[components];
-        _dpm->mixture_weights(range, log_weights, cluster_tags);
+        m_dpm->mixture_weights(range, log_weights, cluster_tags);
 
         ////////////////////////////////////////////////////////////////////////
         // draw a new cluster for the element and assign the element
@@ -129,72 +129,72 @@ gibbs_sampler_t::_gibbs_sample(const index_t& index)
 }
 
 size_t
-gibbs_sampler_t::_gibbs_sample() {
+gibbs_sampler_t::m_gibbs_sample() {
         size_t sum = 0;
         // the indexer needs to be constant since it is shared between
         // processes, so to shuffle the indices we first need to
         // obtain a copy
-        vector<index_t> indices(_indexer->sampling_begin(), _indexer->sampling_end());
+        vector<index_t> indices(m_indexer->sampling_begin(), m_indexer->sampling_end());
         random_shuffle(indices.begin(), indices.end());
         // now sample
         for (vector<index_t>::const_iterator it = indices.begin();
              it != indices.end(); it++) {
-                if(_gibbs_sample(*it)) sum+=1;
+                if(m_gibbs_sample(*it)) sum+=1;
         }
         return sum;
 }
 
 size_t
-gibbs_sampler_t::_sample(size_t i, size_t n, bool is_burnin) {
-        return _gibbs_sample();
+gibbs_sampler_t::m_sample(size_t i, size_t n, bool is_burnin) {
+        return m_gibbs_sample();
 }
 
 const sampling_history_t&
 gibbs_sampler_t::sampling_history() const {
-        return _sampling_history;
+        return m_sampling_history;
 }
 
 sampling_history_t&
 gibbs_sampler_t::sampling_history() {
-        return _sampling_history;
+        return m_sampling_history;
 }
 
 const mixture_model_t&
 gibbs_sampler_t::dpm() const
 {
-        return *_dpm;
+        return *m_dpm;
 }
 
 mixture_model_t&
 gibbs_sampler_t::dpm()
 {
-        return *_dpm;
+        return *m_dpm;
 }
 
 const gibbs_state_t&
 gibbs_sampler_t::state() const {
-        return static_cast<const gibbs_state_t&>(_dpm->state());
+        return static_cast<const gibbs_state_t&>(m_dpm->state());
 }
 
 gibbs_state_t&
 gibbs_sampler_t::state() {
-        return static_cast<gibbs_state_t&>(_dpm->state());
+        return static_cast<gibbs_state_t&>(m_dpm->state());
 }
 
 void
-gibbs_sampler_t::_update_sampling_history(size_t switches)
+gibbs_sampler_t::m_update_sampling_history(size_t switches)
 {
         vector<double> tmp;
 
-        BOOST_FOREACH(const cluster_t* cluster, _dpm->state()) {
+        BOOST_FOREACH(const cluster_t* cluster, m_dpm->state()) {
                 tmp.push_back(cluster->size());
         }
-        _sampling_history.switches  [0].push_back(switches);
-        _sampling_history.likelihood[0].push_back(_dpm->likelihood());
-        _sampling_history.posterior [0].push_back(_dpm->posterior());
-        _sampling_history.components[0].push_back(_dpm->mixture_components());
-        _sampling_history.partitions   .push_back(_dpm->state().partition());
-        _sampling_history.cluster_sizes.push_back(tmp);
+        m_sampling_history.switches  [0].push_back(switches);
+        m_sampling_history.likelihood[0].push_back(m_dpm->likelihood());
+        m_sampling_history.posterior [0].push_back(m_dpm->posterior());
+        m_sampling_history.components[0].push_back(m_dpm->mixture_components());
+        m_sampling_history.partitions   .push_back(m_dpm->state().partition());
+        m_sampling_history.cluster_sizes.push_back(tmp);
 }
 
 void
@@ -203,22 +203,22 @@ gibbs_sampler_t::operator()(size_t n, size_t burnin) {
         // burn in sampling
         for (size_t i = 0; i < burnin; i++) {
                 flockfile(stdout);
-                cout << _name << ": "
+                cout << m_name << ": "
                      << "Burnin step " << i+1 << ":" << endl
                      << state() << endl;
                 fflush(stdout);
                 funlockfile(stdout);
-                _update_sampling_history(_sample(i, burnin, true));
+                m_update_sampling_history(m_sample(i, burnin, true));
         }
         // sample `n' times
         for (size_t i = 0; i < n; i++) {
                 // loop through all elements
                 flockfile(stdout);
-                cout << _name << ": "
+                cout << m_name << ": "
                      << "Sampling step " << i+1 << ":" << endl
                      << state() << endl;
                 fflush(stdout);
                 funlockfile(stdout);
-                _update_sampling_history(_sample(i, n, false));
+                m_update_sampling_history(m_sample(i, n, false));
         }
 }
