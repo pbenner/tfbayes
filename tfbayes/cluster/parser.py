@@ -57,7 +57,7 @@ def generate_cluster(sequences, dpm_subset, idx, sampler_config, index_error = T
     counts_gap     = [ 0.0 ] * length
     baseline_prior = get_baseline_prior(dpm_subset.model_id(), sampler_config)
     alpha          = [ [ baseline_prior[i][0] for j in range(length) ] for i in range(4) ]
-    alpha_gap      = baseline_prior[4]   * length
+    alpha_gap      = baseline_prior[4] * length
     components     = len(dpm_subset)
     for r in dpm_subset:
         s = r.index()[0]
