@@ -47,6 +47,9 @@ struct model_id_t {
         friend bool operator==(const model_id_t& lhs, const model_id_t& rhs) {
                 return lhs.name == rhs.name && lhs.length == rhs.length;
         }
+        friend bool operator!=(const model_id_t& lhs, const model_id_t& rhs) {
+                return !(lhs == rhs);
+        }
 };
 
 typedef enum {

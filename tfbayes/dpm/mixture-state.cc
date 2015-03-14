@@ -187,7 +187,7 @@ mixture_state_t::get_free_cluster(const model_id_t& model_id) {
 baseline_tag_t
 mixture_state_t::get_baseline_tag(const model_id_t& model_id) const
 {
-        for (std::map<baseline_tag_t, component_model_t*>::const_iterator it = baseline_models.begin();
+        for (map<baseline_tag_t, component_model_t*>::const_iterator it = baseline_models.begin();
              it != baseline_models.end(); it++) {
                 if (it->second->id() == model_id) {
                         return it->first;

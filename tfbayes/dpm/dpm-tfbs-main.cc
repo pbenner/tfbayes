@@ -166,7 +166,7 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options.background_gamma    = vector<double>(2,1);
         tfbs_options.background_context  = options.background_context;
         tfbs_options.baseline_weights    = vector<double>(1,1);
-        tfbs_options.baseline_names.push_back("baseline_default");
+        tfbs_options.baseline_names.push_back("baseline-default");
         tfbs_options.block_samples       = false;
         tfbs_options.block_samples_period= 1;
         tfbs_options.metropolis_proposals= 4;

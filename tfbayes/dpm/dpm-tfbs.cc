@@ -141,7 +141,6 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                         _baseline_tags   .push_back(_state.add_baseline_model(dirichlet));
                         _baseline_weights.push_back(*ir);
                 }
-                cout << _state << endl;
         }
         ////////////////////////////////////////////////////////////////////////////////
         // assign all elements to the background
