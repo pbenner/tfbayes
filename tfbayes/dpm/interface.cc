@@ -83,6 +83,8 @@ BOOST_PYTHON_MODULE(interface)
         class_<index_t>("index_t")
                 .def(init<size_t>())
                 .def(init<size_t, size_t>())
+                .def("__getitem__", index_t_getitem)
+                .def("__setitem__", index_t_setitem)
                 .def("__str__",  to_string<index_t>)
                 .def("__repr__", to_string<index_t>)
                 ;

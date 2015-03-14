@@ -110,8 +110,6 @@ def plot_cluster_list(cluster_list, command):
 def main(command, sampler_config_file):
     parse_sampler_config(sampler_config_file, sampler_config)
     # check if all required options are specified
-    if not sampler_config.tfbs_length:
-        raise IOError('tfbs length is unknown')
     if not sampler_config.save:
         raise IOError('no result file specified')
     if not sampler_config.phylogenetic_file:

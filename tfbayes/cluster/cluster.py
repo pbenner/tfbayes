@@ -80,7 +80,7 @@ class cluster_t():
         counts_gap = self.counts_gap[s]
         alpha      = tr(tr(self.alpha )[s])
         alpha_gap  = self.alpha_gap[s]
-        sites      = dpm_subset_t(self.sites.dpm_subset_tag())
+        sites      = dpm_subset_t(self.sites.model_id())
         for site in self.sites:
             if not site.reverse():
                 index = index_t(site.index()[0], site.index()[1]+s.start)
@@ -112,7 +112,7 @@ class cluster_t():
         counts_gap = [ self.counts_gap[-j-1] for j in range(self.m) ]
         alpha      = revcomp(self.alpha, self.n, self.m)
         alpha_gap  = [ self.alpha_gap[-j-1] for j in range(self.m) ]
-        sites      = dpm_subset_t(self.sites.dpm_subset_tag())
+        sites      = dpm_subset_t(self.sites.model_id())
         for site in self.sites:
             sites.insert(range_t(site.index(), site.length(), not site.reverse()))
         return cluster_t(counts, counts_gap, alpha, alpha_gap, self.components, self.identifier, self.cluster_type, sites = sites)

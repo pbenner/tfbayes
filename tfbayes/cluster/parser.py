@@ -44,20 +44,20 @@ def sort_cluster_list(cluster_list):
 # generate motifs
 # ------------------------------------------------------------------------------
 
-def get_baseline_prior(tag, sampler_config):
-    for baseline_prior, baseline_tag in zip(sampler_config.baseline_priors,
-                                            sampler_config.baseline_tags):
-        if tag == baseline_tag:
+def get_baseline_prior(id, sampler_config):
+    for baseline_prior, baseline_name in zip(sampler_config.baseline_priors,
+                                             sampler_config.baseline_names):
+        if id.name == baseline_name:
             return map(list, zip(*baseline_prior))
     raise IOError("Baseline prior not found!")
 
 def generate_cluster(sequences, dpm_subset, idx, sampler_config, index_error = True):
-    length         = max([r.length() for r in dpm_subset])
+    length         = dpm_subset.model_id().length
     counts         = [ [ 0.0 for j in range(length) ] for i in range(4) ]
     counts_gap     = [ 0.0 ] * length
-    baseline_prior = get_baseline_prior(dpm_subset.dpm_subset_tag(), sampler_config)
-    alpha          = baseline_prior[0:4]
-    alpha_gap      = baseline_prior[4]
+    baseline_prior = get_baseline_prior(dpm_subset.model_id(), sampler_config)
+    alpha          = [ [ baseline_prior[i][0] for j in range(length) ] for i in range(4) ]
+    alpha_gap      = baseline_prior[4]   * length
     components     = len(dpm_subset)
     for r in dpm_subset:
         s = r.index()[0]
@@ -86,7 +86,7 @@ def generate_cluster(sequences, dpm_subset, idx, sampler_config, index_error = T
                 for i in range(4):
                     counts[i][j] += sequences[s][p+j][i]
             counts_gap[j] += sequences[s][p+j][4]
-    return cluster_t(counts, counts_gap, alpha, alpha_gap, components, idx, dpm_subset.dpm_subset_tag(), sites=dpm_subset)
+    return cluster_t(counts, counts_gap, alpha, alpha_gap, components, idx, dpm_subset.model_id(), sites=dpm_subset)
 
 def generate_cluster_list(sequences, sampler_config, results_config, which = 'map'):
     """Loop through the partition and for each subset generate a motif."""
