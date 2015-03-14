@@ -125,7 +125,6 @@ mixture_state_t::add_cluster(component_model_t* model)
         return cluster_tag;
 }
 
-// add cluster with default model
 cluster_tag_t
 mixture_state_t::add_cluster(baseline_tag_t baseline_tag)
 {
@@ -176,6 +175,22 @@ mixture_state_t::get_free_cluster(const model_id_t& model_id) {
              it != free_clusters.end(); it++) {
                 if ((*it)->model().id() == model_id) {
                         return **it;
+                }
+        }
+        // create new cluster
+        cluster_tag_t cluster_tag = add_cluster(
+                get_baseline_tag(model_id));
+
+        return operator[](cluster_tag);
+}
+
+baseline_tag_t
+mixture_state_t::get_baseline_tag(const model_id_t& model_id) const
+{
+        for (std::map<baseline_tag_t, component_model_t*>::const_iterator it = baseline_models.begin();
+             it != baseline_models.end(); it++) {
+                if (it->second->id() == model_id) {
+                        return it->first;
                 }
         }
         assert(false);

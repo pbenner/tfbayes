@@ -80,6 +80,7 @@ public:
         cluster_tag_t add_cluster(component_model_t* distribution);
         cluster_t& get_free_cluster(baseline_tag_t baseline_tag);
         cluster_t& get_free_cluster(const model_id_t& model_id);
+        baseline_tag_t get_baseline_tag(const model_id_t& model_id) const;
         inline size_t size() const { return used_clusters_size; }
         // access to cluster assignments, the data type might be
         // different in child classes, so make this virtual

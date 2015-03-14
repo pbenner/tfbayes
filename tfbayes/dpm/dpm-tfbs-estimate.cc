@@ -671,8 +671,6 @@ map_local_optimization(dpm_tfbs_t& dpm, bool verbose) {
                      it != dpm.data().sampling_end(); it++) {
                         optimized |= map_local_optimization(*it, dpm, verbose);
                 }
-
-
                 // since clusters are modified it is not possible to simply
                 // loop through the list of clusters, we need to be a bit more
                 // careful here!
@@ -773,7 +771,6 @@ dpm_tfbs_t::map(const sampling_history_t& history, bool optimize, bool verbose) 
         if (verbose) {
                 cout << "Computing map partition: ";
         }
-
         return compute_map(history, dpm, optimize, verbose);
 }
 
