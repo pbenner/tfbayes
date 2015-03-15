@@ -714,6 +714,8 @@ compute_map(const sampling_history_t& history, dpm_tfbs_t& dpm, bool optimize, b
         /* number of samples for each sampler */
         size_t m = history.temperature[0].size();
 
+        assert(m*n == history.partitions.size());
+
         /* number of partitions that were discarded */
         size_t discarded = 0;
 

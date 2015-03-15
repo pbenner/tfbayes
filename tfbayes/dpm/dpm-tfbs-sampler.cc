@@ -667,9 +667,10 @@ ostream& operator<< (ostream& o, const matrix<double>& m)
 {
         for (size_t i = 0; i < m.size(); i++) {
                 o << "\t";
-                for (size_t j = 0; j < m[i].size(); j++) {
+                if (m[i].size() == 0)
+                        o << "-";
+                for (size_t j = 0; j < m[i].size(); j++)
                         o << m[i][j] << " ";
-                }
                 o << endl;
         }
         return o;

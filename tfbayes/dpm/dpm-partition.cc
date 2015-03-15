@@ -43,6 +43,9 @@ ostream& operator<< (ostream& o, const model_id_t& id)
 
 ostream& operator<< (ostream& o, const dpm_partition_t& partition)
 {
+        if (partition.begin() == partition.end()) {
+                o << "-";
+        }
         for (dpm_partition_t::const_iterator it = partition.begin();
              it != partition.end(); it++) {
                 if (it != partition.begin()) {

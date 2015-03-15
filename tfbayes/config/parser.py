@@ -61,6 +61,8 @@ def parse_partition_elements(subset_str, length):
 
 def parse_partition(partition_str):
     partition = dpm_partition_t()
+    if (partition_str.strip() == "-"):
+        return partition
     for identifier, subset in parse_partition_subsets(partition_str):
         model_id        = model_id_t()
         model_id.name   = identifier.split(":")[0]
@@ -77,8 +79,6 @@ def parse_partition(partition_str):
 def parse_partition_list(partition_list_str):
     partition_list = dpm_partition_list_t()
     for partition_str in partition_list_str.split('\n'):
-        partition = parse_partition(partition_str)
-        # there might be empty lines, filter them out...
-        if partition:
-            partition_list.append(partition)
+        if (partition_str.strip() != ""):
+            partition_list.append(parse_partition(partition_str))
     return partition_list

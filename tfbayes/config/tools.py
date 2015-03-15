@@ -33,6 +33,10 @@ def read_matrix(config_parser, section, option, converter):
     matrix_str = config_parser.get(section, option)
     matrix     = []
     for line in matrix_str.split('\n'):
+        # empty lines are coded as a single dash
+        if (line.strip() == "-"):
+            matrix.append([])
+            continue
         line = ' '.join(line.split())
         if line != '':
             matrix.append([converter(a) for a in line.split(' ')])

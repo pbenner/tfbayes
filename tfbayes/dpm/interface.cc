@@ -99,7 +99,7 @@ BOOST_PYTHON_MODULE(interface)
         class_<model_id_t>("model_id_t")
                 .def_readwrite("name",   &model_id_t::name)
                 .def_readwrite("length", &model_id_t::length)
-        ;
+                ;
         class_<dpm_subset_t>("dpm_subset_t", init<model_id_t>())
                 .def("__iter__", boost::python::iterator<dpm_subset_t, return_internal_reference<> >())
                 .def("__str__",  to_string<dpm_subset_t>)
