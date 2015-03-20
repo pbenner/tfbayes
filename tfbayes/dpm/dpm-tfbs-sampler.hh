@@ -96,7 +96,7 @@ protected:
         size_t m_metropolis_proposals;
         bool   m_optimize;
         size_t m_optimize_period;
-        bool   m_verbose;
+        size_t m_verbose;
 };
 
 #include <pmcmc.hh>

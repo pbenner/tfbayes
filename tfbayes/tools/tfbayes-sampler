@@ -37,8 +37,7 @@ sampler_config = default_sampler_config()
 results_config = default_results_config()
 
 options = {
-    'resume'              : None,
-    'verbose'             : False
+    'resume' : None,
     }
 
 # usage
@@ -61,7 +60,7 @@ def usage():
     print "                                     of a previous sampling run"
     print
     print "   -h, --help                      - print help"
-    print "   -v, --verbose                   - be verbose"
+    print "   -v                              - increase verbose level"
     print
 
 # sample
@@ -103,8 +102,7 @@ def __main__():
     for o, a in opts:
         if o in ("-v", "--verbose"):
             sys.stderr.write("Verbose mode turned on.\n")
-            options["verbose"] = True
-            sampler_config.verbose = True
+            sampler_config.verbose += 1
         if o in ("-h", "--help"):
             usage()
             return 0

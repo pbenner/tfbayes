@@ -177,7 +177,8 @@ public:
                  thread_pool_t& thread_pool,
                  const std::string& cachefile = "",
                  boost::optional<const alignment_set_t<>&> alignment_set =
-                 boost::optional<const alignment_set_t<>&>());
+                 boost::optional<const alignment_set_t<>&>(),
+                 size_t verbose = 0);
          entropy_background_t(const entropy_background_t& distribution);
         ~entropy_background_t();
 
@@ -187,10 +188,10 @@ public:
                 using std::swap;
                 swap(static_cast<component_model_t&>(first),
                      static_cast<component_model_t&>(second));
-                swap(first._size,                 second._size);
-                swap(first._bg_cluster_tag,       second._bg_cluster_tag);
-                swap(first._precomputed_marginal, second._precomputed_marginal);
-                swap(first._data,                 second._data);
+                swap(first.m_size,                 second.m_size);
+                swap(first.m_bg_cluster_tag,       second.m_bg_cluster_tag);
+                swap(first.m_precomputed_marginal, second.m_precomputed_marginal);
+                swap(first.m_data,                 second.m_data);
         }
 
         entropy_background_t& operator=(const component_model_t& component_model);
@@ -222,19 +223,21 @@ public:
                 return static_cast<const sequence_data_t<cluster_tag_t>&>(component_model_t::cluster_assignments());
         }
         const sequence_data_t<data_tfbs_t::code_t>& data() {
-                return *_data;
+                return *m_data;
         }
 
         friend std::ostream& operator<< (std::ostream& o, const entropy_background_t& pd);
 
 protected:
-        size_t _size;
+        size_t m_size;
 
-        cluster_tag_t _bg_cluster_tag;
+        cluster_tag_t m_bg_cluster_tag;
 
-        sequence_data_t<double> _precomputed_marginal;
+        sequence_data_t<double> m_precomputed_marginal;
 
-        const sequence_data_t<data_tfbs_t::code_t>* _data;
+        const sequence_data_t<data_tfbs_t::code_t>* m_data;
+
+        size_t m_verbose;
 };
 
 // Default Background Model
@@ -249,7 +252,8 @@ public:
                  thread_pool_t& thread_pool,
                  const std::string& cachefile = "",
                  boost::optional<const alignment_set_t<>&> alignment_set =
-                 boost::optional<const alignment_set_t<>&>());
+                 boost::optional<const alignment_set_t<>&>(),
+                 size_t verbose = 0);
          default_background_t(const default_background_t& distribution);
         ~default_background_t();
 
@@ -259,12 +263,13 @@ public:
                 using std::swap;
                 swap(static_cast<component_model_t&>(first),
                      static_cast<component_model_t&>(second));
-                swap(first.alpha,                 second.alpha);
-                swap(first.prior_distribution,    second.prior_distribution);
-                swap(first._size,                 second._size);
-                swap(first._bg_cluster_tag,       second._bg_cluster_tag);
-                swap(first._precomputed_marginal, second._precomputed_marginal);
-                swap(first._data,                 second._data);
+                swap(first.alpha,                  second.alpha);
+                swap(first.prior_distribution,     second.prior_distribution);
+                swap(first.m_size,                 second.m_size);
+                swap(first.m_bg_cluster_tag,       second.m_bg_cluster_tag);
+                swap(first.m_precomputed_marginal, second.m_precomputed_marginal);
+                swap(first.m_data,                 second.m_data);
+                swap(first.m_verbose,              second.m_verbose);
         }
 
         default_background_t& operator=(const component_model_t& component_model);
@@ -302,7 +307,7 @@ public:
                 return static_cast<const sequence_data_t<cluster_tag_t>&>(component_model_t::cluster_assignments());
         }
         const sequence_data_t<data_tfbs_t::code_t>& data() {
-                return *_data;
+                return *m_data;
         }
 
         friend std::ostream& operator<< (std::ostream& o, const default_background_t& pd);
@@ -311,12 +316,14 @@ protected:
         counts_t alpha;
         boost::math::gamma_distribution<> prior_distribution;
 
-        size_t _size;
+        size_t m_size;
 
-        cluster_tag_t _bg_cluster_tag;
+        cluster_tag_t m_bg_cluster_tag;
 
-        sequence_data_t<double> _precomputed_marginal;
-        const sequence_data_t<data_tfbs_t::code_t>* _data;
+        sequence_data_t<double> m_precomputed_marginal;
+        const sequence_data_t<data_tfbs_t::code_t>* m_data;
+
+        size_t m_verbose;
 };
 
 // Multinomial/Dirichlet Mixture Model

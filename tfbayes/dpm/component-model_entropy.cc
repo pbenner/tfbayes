@@ -102,16 +102,18 @@ public:
  * is used to integrate them out. */
 entropy_background_t::entropy_background_t(
         const vector<double>& parameters,
-        const sequence_data_t<data_tfbs_t::code_t>& _data,
+        const sequence_data_t<data_tfbs_t::code_t>& data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
         thread_pool_t& thread_pool,
         const string& cachefile,
-        boost::optional<const alignment_set_t<>&> alignment_set)
-        : component_model_t({"background", 1}, cluster_assignments),
-          _size(data_tfbs_t::alphabet_size),
-          _bg_cluster_tag(0),
-          _precomputed_marginal(_data.sizes(), 0),
-          _data(&_data)
+        boost::optional<const alignment_set_t<>&> alignment_set,
+        size_t verbose)
+        : component_model_t      ({"background", 1}, cluster_assignments)
+        , m_size                 (data_tfbs_t::alphabet_size)
+        , m_bg_cluster_tag       (0)
+        , m_precomputed_marginal (data.sizes(), 0)
+        , m_data                 (&data)
+        , m_verbose              (verbose)
 {
         assert(parameters.size() == 2);
 
@@ -123,13 +125,13 @@ entropy_background_t::entropy_background_t(
 }
 
 entropy_background_t::entropy_background_t(const entropy_background_t& distribution)
-        : component_model_t(distribution),
-          _size(distribution._size),
-          _bg_cluster_tag(distribution._bg_cluster_tag),
-          _precomputed_marginal(distribution._precomputed_marginal),
-          _data(distribution._data)
-{
-}
+        : component_model_t      (distribution)
+        , m_size                 (distribution.m_size)
+        , m_bg_cluster_tag       (distribution.m_bg_cluster_tag)
+        , m_precomputed_marginal (distribution.m_precomputed_marginal)
+        , m_data                 (distribution.m_data)
+        , m_verbose              (distribution.m_verbose)
+{ }
 
 entropy_background_t::~entropy_background_t() {
 }
@@ -161,13 +163,16 @@ entropy_background_t::load_marginal(
                 boost::archive::binary_iarchive ia(ifs);
                 ia >> background_cache;
                 if (background_cache.consistent(parameters, data())) {
-                        _precomputed_marginal = background_cache.precomputed_marginal;
+                        m_precomputed_marginal = background_cache.precomputed_marginal;
                         return true;
                 }
-                flockfile(stderr);
-                cerr << "Background cache is inconsistent... recomputing!"
-                     << endl;
-                funlockfile(stderr);
+                if (m_verbose >= 1) {
+                        flockfile(stderr);
+                        cerr << "Background cache is inconsistent... recomputing!"
+                             << endl;
+                        fflush(stderr);
+                        funlockfile(stderr);
+                }
         }
         return false;
 }
@@ -180,13 +185,15 @@ entropy_background_t::save_marginal(
         std::ofstream ofs(cachefile);
         if (ofs) {
                 boost::archive::binary_oarchive oa(ofs);
-                const background_cache_t tmp(parameters, data(), _precomputed_marginal);
+                const background_cache_t tmp(parameters, data(), m_precomputed_marginal);
                 oa << tmp;
-                flockfile(stderr);
-                cerr << boost::format("Background cache saved to `%s'.") % cachefile
-                     << endl;
-                funlockfile(stderr);
-
+                if (m_verbose >= 1) {
+                        flockfile(stderr);
+                        cerr << boost::format("Background cache saved to `%s'.") % cachefile
+                             << endl;
+                        fflush(stderr);
+                        funlockfile(stderr);
+                }
                 return true;
         }
         return false;
@@ -231,12 +238,14 @@ entropy_background_t::precompute_marginal(
 {
         precompute_marginal_functor functor(parameters);
 
-        flockfile(stderr);
-        cerr << boost::format("Background beta pseudocounts: %g, %g")
-                              % parameters[0] % parameters[1]
-             << endl;
-        funlockfile(stderr);
-
+        if (m_verbose >= 1) {
+                flockfile(stderr);
+                cerr << boost::format("Background beta pseudocounts: %g, %g")
+                        % parameters[0] % parameters[1]
+                     << endl;
+                fflush(stderr);
+                funlockfile(stderr);
+        }
         // go through the data and precompute the marginal distribution
         for(size_t i = 0; i < data().size(); i++) {
                 future_vector_t<double> futures(data()[i].size());
@@ -253,18 +262,23 @@ entropy_background_t::precompute_marginal(
                         const double p = j/(double)data()[i].size();
                         const double q = (p*(i+1.0) + (1.0-p)*i)/(double)data().size();
 
-                        flockfile(stderr);
-                        cerr.precision(2);
-                        cerr << "\rPrecomputing background... " << setw(6) << fixed
-                             << q*100.0 << "%"                  << flush;
-                        funlockfile(stderr);
-
-                        _precomputed_marginal[i][j] = futures[j].get();
+                        if (m_verbose >= 1) {
+                                flockfile(stderr);
+                                cerr.precision(2);
+                                cerr << "\rPrecomputing background... " << setw(6) << fixed
+                                     << q*100.0 << "%"                  << flush;
+                                fflush(stderr);
+                                funlockfile(stderr);
+                        }
+                        m_precomputed_marginal[i][j] = futures[j].get();
                 }
         }
-        flockfile(stderr);
-        cerr << "\rPrecomputing background...   done." << endl << flush;
-        funlockfile(stderr);
+        if (m_verbose >= 1) {
+                flockfile(stderr);
+                cerr << "\rPrecomputing background...   done." << endl << flush;
+                fflush(stderr);
+                funlockfile(stderr);
+        }
 }
 
 size_t
@@ -304,7 +318,7 @@ double entropy_background_t::log_predictive(const range_t& range) {
 
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result += _precomputed_marginal[index];
+                result += m_precomputed_marginal[index];
         }
 
         return result;
@@ -327,7 +341,7 @@ double entropy_background_t::log_predictive(const vector<range_t>& range_set) {
                         /* all positions in the alignment are fully
                          * independent, hence we do not need to sum
                          * any counts */
-                        result += _precomputed_marginal[index];
+                        result += m_precomputed_marginal[index];
                 }
         }
 
@@ -344,9 +358,9 @@ double entropy_background_t::log_likelihood() const {
          * and the pseudo counts alpha */
         for(size_t i = 0; i < cluster_assignments().size(); i++) {
                 for(size_t j = 0; j < cluster_assignments()[i].size(); j++) {
-                        if (cluster_assignments()[i][j] == _bg_cluster_tag) {
+                        if (cluster_assignments()[i][j] == m_bg_cluster_tag) {
                                 const index_t index(i, j);
-                                result += _precomputed_marginal[index];
+                                result += m_precomputed_marginal[index];
                         }
                 }
         }
@@ -361,5 +375,5 @@ entropy_background_t::print_counts() const {
 
 void
 entropy_background_t::set_bg_cluster_tag(cluster_tag_t bg_cluster_tag) {
-        _bg_cluster_tag = bg_cluster_tag;
+        m_bg_cluster_tag = bg_cluster_tag;
 }

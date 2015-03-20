@@ -41,7 +41,7 @@ dpm_tfbs_sampler_t::dpm_tfbs_sampler_t(
         const dpm_tfbs_t& dpm_tfbs,
         const data_tfbs_t& data,
         save_queue_t<string>& output_queue)
-        : gibbs_sampler_t        (dpm_tfbs, data)
+        : gibbs_sampler_t        (dpm_tfbs, data, "", options.verbose)
         , phylogenetic_data      (&data)
         , m_output_queue         (&output_queue)
         , m_t0                   (options.initial_temperature)
@@ -190,15 +190,15 @@ dpm_tfbs_sampler_t::m_gibbs_sample(const index_t& index, double temp, bool optim
         }
 #ifdef DEBUG
         if (old_cluster_tag != cluster_tags1[result.second]) {
-                cout << "Moving " << static_cast<const index_t&>(index)
+                cerr << "Moving " << static_cast<const index_t&>(index)
                      << " from "  << old_cluster_tag
                      << " to "    << cluster_tags1[result.second]
                      << endl;
-                cout << "Probabilities: "
+                cerr << "Probabilities: "
                      << print_probabilities(log_weights1, log_weights2,
                                             cluster_tags1, cluster_tags2, components)
                      << endl;
-                cout << print_alignment_pretty(dpm().alignment_set()[range1])
+                cerr << print_alignment_pretty(dpm().alignment_set()[range1])
                      << endl;
         }
 #endif
@@ -269,16 +269,16 @@ dpm_tfbs_sampler_t::m_block_sample(cluster_t& cluster, double temp, bool optimiz
         }
 
         ////////////////////////////////////////////////////////////////////////
-        // print some information to stdout
-        flockfile(stdout);
-        if (state()[new_cluster_tag].size() != 0) {
-                cout << boost::format("%s: cluster %d merged with cluster %d (%d + %d)")
+        // print some information to stderr
+        flockfile(stderr);
+        if (state()[new_cluster_tag].size() != 0 && m_verbose >= 2) {
+                cerr << boost::format("%s: cluster %d merged with cluster %d (%d + %d)")
                         % m_name % old_cluster_tag % new_cluster_tag
                         % state()[new_cluster_tag].size() % range_set.size()
                      << endl;
         }
-        fflush(stdout);
-        funlockfile(stdout);
+        fflush(stderr);
+        funlockfile(stderr);
 
         ////////////////////////////////////////////////////////////////////////
         // move all elements to the new cluster
@@ -406,12 +406,14 @@ dpm_tfbs_sampler_t::m_metropolis_sample(cluster_t& cluster, double temp, bool op
         return false;
 
 accepted:
-        flockfile(stdout);
-        cout << boost::format("%s: cluster %d: %s accepted (%d -> %d)")
-                % m_name % cluster.cluster_tag() % ss.str() % size % cluster.size()
-             << endl;
-        fflush(stdout);
-        funlockfile(stdout);
+        if (m_verbose >= 2) {
+                flockfile(stderr);
+                cerr << boost::format("%s: cluster %d: %s accepted (%d -> %d)")
+                        % m_name % cluster.cluster_tag() % ss.str() % size % cluster.size()
+                     << endl;
+                fflush(stderr);
+                funlockfile(stderr);
+        }
 
         return true;
 }
@@ -458,18 +460,18 @@ dpm_tfbs_sampler_t::m_sample(size_t i, size_t n, double temp, bool optimize) {
         for (cl_iterator it = dpm().state().begin(); it != dpm().state().end(); it++) {
                 (**it).update();
         }
-        // we are done with sampling here, now process commands
-        flockfile(stdout);
-        if (m_verbose) {
-                BOOST_FOREACH(cluster_tag_t& tag, dpm().state().bg_cluster_tags) {
-                        cout << dpm().state()[tag].model().print_counts()
-                             << endl;
+        if (m_verbose >= 3) {
+                flockfile(stderr);
+                if (m_verbose >= 2) {
+                        BOOST_FOREACH(cluster_tag_t& tag, dpm().state().bg_cluster_tags) {
+                                cerr << dpm().state()[tag].model().print_counts()
+                                     << endl;
+                        }
                 }
+                fflush(stderr);
+                funlockfile(stderr);
         }
-        cout << boost::format("%s: Processing commands.") % m_name
-             << endl;
-        fflush(stdout);
-        funlockfile(stdout);
+        // we are done with sampling here, now process commands
         while (!m_command_queue.empty()) {
                 stringstream ss;
                 command_t* command = m_command_queue.front();
@@ -490,11 +492,13 @@ dpm_tfbs_sampler_t::m_sample(size_t i, size_t n, bool is_burnin) {
                 // geometric decline of the temperature
                 temp = m_t0*pow((1.0/m_t0), (double)i/n);
         }
-        flockfile(stdout);
-        cout << m_name << ": "
-             << "temperature is " << temp << endl;
-        fflush(stdout);
-        funlockfile(stdout);
+        if (m_verbose >= 1) {
+                flockfile(stderr);
+                cerr << m_name << ": "
+                     << "temperature is " << temp << endl;
+                fflush(stderr);
+                funlockfile(stderr);
+        }
         // save temperature
         m_sampling_history.temperature[0].push_back(temp);
         if (!is_burnin && m_optimize && i % m_optimize_period == 0) {
@@ -504,10 +508,15 @@ dpm_tfbs_sampler_t::m_sample(size_t i, size_t n, bool is_burnin) {
                         result += m_sample(i, n, temp, true);
                         old_posterior = new_posterior;
                         new_posterior = dpm().posterior();
-                        cout << m_name << ": "
-                             << "Posterior: "   << new_posterior
-                             << " (increment: " << abs(old_posterior - new_posterior) << ")"
-                             << endl;
+                        if (m_verbose >= 1) {
+                                flockfile(stderr);
+                                cerr << m_name << ": "
+                                     << "Posterior: "   << new_posterior
+                                     << " (increment: " << abs(old_posterior - new_posterior) << ")"
+                                     << endl;
+                                fflush(stderr);
+                                funlockfile(stderr);
+                        }
                 } while (abs(old_posterior - new_posterior) > 1e-4);
         }
         else {

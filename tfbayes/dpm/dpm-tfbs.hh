@@ -105,21 +105,21 @@ public:
 
 protected:
         // baseline models
-        std::vector<double> _baseline_weights;
-        std::vector<baseline_tag_t> _baseline_tags;
+        std::vector<double> m_baseline_weights;
+        std::vector<baseline_tag_t> m_baseline_tags;
 
         // data and clusters
-        const data_tfbs_t* _data;
-        const alignment_set_t<>* _alignment_set;
-        dpm_tfbs_state_t _state;
+        const data_tfbs_t* m_data;
+        const alignment_set_t<>* m_alignment_set;
+        dpm_tfbs_state_t m_state;
 
         // parameters
-        double _lambda;
-        double _lambda_log;
-        double _lambda_inv_log;
+        double m_lambda;
+        double m_lambda_log;
+        double m_lambda_inv_log;
 
         // process priors
-        dpm_tfbs_prior_t* _process_prior;
+        dpm_tfbs_prior_t* m_process_prior;
 };
 
 #endif /* __TFBAYES_DPM_DPM_TFBS_HH__ */

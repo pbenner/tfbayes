@@ -40,27 +40,27 @@ dpm_tfbs_t::test_moves() {
         range_t range5(index_t(0,13), 10, true);
         range_t range6(index_t(0,22), 10, true);
 
-        cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
+        cluster_t& cluster1 = m_state.get_free_cluster(m_baseline_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
 
-        _state.remove(range1);
-        _state.add(range1, cluster_tag1);
+        m_state.remove(range1);
+        m_state.add(range1, cluster_tag1);
 
-        _state.remove(range2);
-        _state.add(range2, cluster_tag1);
+        m_state.remove(range2);
+        m_state.add(range2, cluster_tag1);
 
-        _state.remove(range3);
-        _state.add(range3, cluster_tag1);
+        m_state.remove(range3);
+        m_state.add(range3, cluster_tag1);
 
-        cluster_t& cluster2 = _state.get_free_cluster(_baseline_tags[0]);
+        cluster_t& cluster2 = m_state.get_free_cluster(m_baseline_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
 
-        _state.remove(range4);
-        _state.add(range4, cluster_tag2);
+        m_state.remove(range4);
+        m_state.add(range4, cluster_tag2);
 
-        cout << _state.cluster_assignments() << endl;
-        _state.move_left(cluster1, _state.bg_cluster_tags[0]);
-        cout << _state.cluster_assignments() << endl;
+        cout << m_state.cluster_assignments() << endl;
+        m_state.move_left(cluster1, m_state.bg_cluster_tags[0]);
+        cout << m_state.cluster_assignments() << endl;
 
         exit(EXIT_SUCCESS);
 }
@@ -74,51 +74,51 @@ dpm_tfbs_t::test_background() {
         range_t range5(index_t(0,13), 10, true);
         range_t range6(index_t(0,22), 10, true);
 
-        cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
+        cluster_t& cluster1 = m_state.get_free_cluster(m_baseline_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
         cout << "Adding range1 to cluster:" << cluster_tag1 << endl;
-        _state.remove(range1);
-        _state.add(range1, cluster_tag1);
+        m_state.remove(range1);
+        m_state.add(range1, cluster_tag1);
         cout << "Adding range6 to cluster:" << cluster_tag1 << endl;
-        _state.remove(range6);
-        _state.add(range6, cluster_tag1);
+        m_state.remove(range6);
+        m_state.add(range6, cluster_tag1);
         cout << endl;
 
-        cout << _state.cluster_assignments() << endl;
+        cout << m_state.cluster_assignments() << endl;
 
-        cluster_t& cluster2 = _state.get_free_cluster(_baseline_tags[0]);
+        cluster_t& cluster2 = m_state.get_free_cluster(m_baseline_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
 
         cout << "Adding range2 to cluster:" << cluster_tag2 << endl;
-        _state.remove(range2);
-        _state.add(range2, cluster_tag2);
-        cout << _state.cluster_assignments();
-        _state.remove(range2);
-        _state.add(range2, _state.bg_cluster_tags[0]);
+        m_state.remove(range2);
+        m_state.add(range2, cluster_tag2);
+        cout << m_state.cluster_assignments();
+        m_state.remove(range2);
+        m_state.add(range2, m_state.bg_cluster_tags[0]);
         cout << "Removing range2 from cluster:" << cluster_tag2 << endl << endl;
 
         cout << "Adding range3 to cluster:" << cluster_tag2 << endl;
-        _state.remove(range3);
-        _state.add(range3, cluster_tag2);
-        cout << _state.cluster_assignments();
-        _state.remove(range3);
-        _state.add(range3, _state.bg_cluster_tags[0]);
+        m_state.remove(range3);
+        m_state.add(range3, cluster_tag2);
+        cout << m_state.cluster_assignments();
+        m_state.remove(range3);
+        m_state.add(range3, m_state.bg_cluster_tags[0]);
         cout << "Removing range3 from cluster:" << cluster_tag2 << endl << endl;
 
         cout << "Adding range4 to cluster:" << cluster_tag2 << endl;
-        _state.remove(range4);
-        _state.add(range4, cluster_tag2);
-        cout << _state.cluster_assignments();
-        _state.remove(range4);
-        _state.add(range4, _state.bg_cluster_tags[0]);
+        m_state.remove(range4);
+        m_state.add(range4, cluster_tag2);
+        cout << m_state.cluster_assignments();
+        m_state.remove(range4);
+        m_state.add(range4, m_state.bg_cluster_tags[0]);
         cout << "Removing range4 from cluster:" << cluster_tag2 << endl << endl;
 
         cout << "Adding range5 to cluster:" << cluster_tag2 << endl;
-        _state.remove(range5);
-        _state.add(range5, cluster_tag2);
-        cout << _state.cluster_assignments();
-        _state.remove(range5);
-        _state.add(range5, _state.bg_cluster_tags[0]);
+        m_state.remove(range5);
+        m_state.add(range5, cluster_tag2);
+        cout << m_state.cluster_assignments();
+        m_state.remove(range5);
+        m_state.add(range5, m_state.bg_cluster_tags[0]);
         cout << "Removing range5 from cluster:" << cluster_tag2 << endl;
 
         exit(EXIT_SUCCESS);
@@ -151,14 +151,14 @@ dpm_tfbs_t::test() {
         range_t range3(index_t(2,0), 10, true);
         range_t range4(index_t(3,0), 10, true);
 
-        cluster_t& cluster1 = _state.get_free_cluster(_baseline_tags[0]);
+        cluster_t& cluster1 = m_state.get_free_cluster(m_baseline_tags[0]);
         cluster_tag_t cluster_tag1 = cluster1.cluster_tag();
         cout << "Adding range1 to cluster:" << cluster_tag1 << endl;
-        _state.add(range1, cluster_tag1);
-        cluster_t& cluster2 = _state.get_free_cluster(_baseline_tags[0]);
+        m_state.add(range1, cluster_tag1);
+        cluster_t& cluster2 = m_state.get_free_cluster(m_baseline_tags[0]);
         cluster_tag_t cluster_tag2 = cluster2.cluster_tag();
         cout << "Adding range2 to cluster:" << cluster_tag2 << endl;
-        _state.add(range2, cluster_tag2);
+        m_state.add(range2, cluster_tag2);
 
         cout << "Components: " << mixture_components() << " + " << baseline_components() << endl;
         size_t components = mixture_components() + baseline_components();

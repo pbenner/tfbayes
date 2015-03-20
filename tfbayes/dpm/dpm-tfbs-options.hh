@@ -61,7 +61,7 @@ typedef struct {
         size_t population_size;
         size_t threads;
         std::string socket_file;
-        bool verbose;
+        size_t verbose;
 } tfbs_options_t;
 
 std::ostream& operator<<(std::ostream& o, const tfbs_options_t& options);

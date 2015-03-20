@@ -63,7 +63,8 @@ class gibbs_sampler_t : public sampler_t {
 public:
          gibbs_sampler_t(const mixture_model_t& dpm,
                          const indexer_t& indexer,
-                         const std::string name = "");
+                         const std::string name = "",
+                         bool verbose = false);
          gibbs_sampler_t(const gibbs_sampler_t& sampler);
         ~gibbs_sampler_t();
 
@@ -101,6 +102,9 @@ protected:
 
         // gibbs sampler history
         sampling_history_t m_sampling_history;
+
+        // print sampling status
+        bool m_verbose;
 };
 
 #endif /* __TFBAYES_DPM_SAMPLER_HH__ */

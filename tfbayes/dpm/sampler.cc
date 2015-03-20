@@ -37,10 +37,6 @@ using namespace std;
 sampler_t::sampler_t(const string& name)
         : m_name (name)
         , m_gen  () {
-        if (name != "")
-                cerr << name << ": ";
-        cerr << "Initializing thread-safe random number generator."
-             << endl;
         /* sleep for a millisecond to make sure that we get
          * a unique seed */
         boost::this_thread::sleep(boost::posix_time::milliseconds(1));
@@ -55,10 +51,12 @@ sampler_t::sampler_t(const string& name)
 
 gibbs_sampler_t::gibbs_sampler_t(const mixture_model_t& dpm,
                                  const indexer_t& indexer,
-                                 const string name)
+                                 const string name,
+                                 bool verbose)
         : sampler_t  (name)
-        ,  m_dpm     (dpm.clone())
-        ,  m_indexer (&indexer)
+        , m_dpm     (dpm.clone())
+        , m_indexer (&indexer)
+        , m_verbose (verbose)
 {
         // for sampling statistics
         m_sampling_history.switches.   push_back(vector<double>());
@@ -73,6 +71,7 @@ gibbs_sampler_t::gibbs_sampler_t(const gibbs_sampler_t& sampler)
         , m_dpm              (sampler.m_dpm->clone())
         , m_indexer          (sampler.m_indexer)
         , m_sampling_history (sampler.m_sampling_history)
+        , m_verbose          (sampler.m_verbose)
 {
 }
 
@@ -89,6 +88,7 @@ swap(gibbs_sampler_t& first, gibbs_sampler_t& second)
         swap(first.m_name,             second.m_name);
         swap(first.m_indexer,          second.m_indexer);
         swap(first.m_sampling_history, second.m_sampling_history);
+        swap(first.m_verbose,          second.m_verbose);
 }
 
 gibbs_sampler_t*
@@ -202,23 +202,27 @@ gibbs_sampler_t::operator()(size_t n, size_t burnin) {
         // temperature for simulated annealing
         // burn in sampling
         for (size_t i = 0; i < burnin; i++) {
-                flockfile(stdout);
-                cout << m_name << ": "
-                     << "Burnin step " << i+1 << ":" << endl
-                     << state() << endl;
-                fflush(stdout);
-                funlockfile(stdout);
+                if (m_verbose) {
+                        flockfile(stderr);
+                        cerr << m_name << ": "
+                             << "Burnin step " << i+1 << ":" << endl
+                             << state() << endl;
+                        fflush(stderr);
+                        funlockfile(stderr);
+                }
                 m_update_sampling_history(m_sample(i, burnin, true));
         }
         // sample `n' times
         for (size_t i = 0; i < n; i++) {
                 // loop through all elements
-                flockfile(stdout);
-                cout << m_name << ": "
-                     << "Sampling step " << i+1 << ":" << endl
-                     << state() << endl;
-                fflush(stdout);
-                funlockfile(stdout);
+                if (m_verbose) {
+                        flockfile(stderr);
+                        cerr << m_name << ": "
+                             << "Sampling step " << i+1 << ":" << endl
+                             << state() << endl;
+                        fflush(stderr);
+                        funlockfile(stderr);
+                }
                 m_update_sampling_history(m_sample(i, n, false));
         }
 }
