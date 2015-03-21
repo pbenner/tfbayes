@@ -22,6 +22,7 @@
 #include <cmath> /* abs, ceil */
 
 #include <boost/function.hpp>
+#include <boost/format.hpp>
 #include <boost/lambda/bind.hpp>
 #include <boost/random/uniform_01.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
@@ -464,7 +465,8 @@ dpm_tfbs_sampler_t::m_sample(size_t i, size_t n, double temp, bool optimize) {
                 flockfile(stderr);
                 if (m_verbose >= 2) {
                         BOOST_FOREACH(cluster_tag_t& tag, dpm().state().bg_cluster_tags) {
-                                cerr << dpm().state()[tag].model().print_counts()
+                                cerr << m_name << ": "
+                                     << dpm().state()[tag].model().print_counts()
                                      << endl;
                         }
                 }
@@ -510,13 +512,15 @@ dpm_tfbs_sampler_t::m_sample(size_t i, size_t n, bool is_burnin) {
                         new_posterior = dpm().posterior();
                         if (m_verbose >= 1) {
                                 flockfile(stderr);
-                                cerr << m_name << ": "
-                                     << "Posterior: "   << new_posterior
-                                     << " (increment: " << abs(old_posterior - new_posterior) << ")"
+                                cerr << boost::format("%s: Optimizing... new posterior value: %f (increment: %f)")
+                                        % m_name % new_posterior % abs(old_posterior - new_posterior)
                                      << endl;
                                 fflush(stderr);
                                 funlockfile(stderr);
                         }
+                        // make sure the posterior increased, but
+                        // allow some small error
+                        assert(new_posterior > old_posterior || abs(old_posterior - new_posterior) < 1.0e-4);
                 } while (abs(old_posterior - new_posterior) > 1e-4);
         }
         else {
