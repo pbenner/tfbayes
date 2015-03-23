@@ -22,8 +22,8 @@
 #include <boost/format.hpp>
 
 #include <tfbayes/dpm/component-model.hh>
-#include <tfbayes/fastarithmetics/fast-lnbeta.hh>
 #include <tfbayes/utility/linalg.hh> // normalize
+#include <tfbayes/utility/multinomial-beta.hh>
 
 using namespace std;
 
@@ -65,8 +65,8 @@ mixture_dirichlet_t::max_component(const index_t& index) const
         for (size_t i = 0; i < _size1; i++) {
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result[i] = fast_lnbeta(counts[i], data()[index])
-                          - fast_lnbeta(counts[i])
+                result[i] = mbeta_log(counts[i], data()[index])
+                          - mbeta_log(counts[i])
                           + log(weights[i]);
         }
         return distance(result.begin(), max_element(result.begin(), result.end()));
@@ -222,8 +222,8 @@ double mixture_dirichlet_t::log_predictive(const index_t& index) {
 
         /* counts contains the data count statistic
          * and the pseudo counts alpha */
-        double result = fast_lnbeta(counts[i], data()[index])
-                      - fast_lnbeta(counts[i]);
+        double result = mbeta_log(counts[i], data()[index])
+                      - mbeta_log(counts[i]);
 
         return result;
 }
@@ -261,8 +261,8 @@ double mixture_dirichlet_t::log_likelihood() const {
         for (size_t i = 0; i < _size1; i++) {
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result += fast_lnbeta(counts[i])
-                        - fast_lnbeta(alpha [i]);
+                result += mbeta_log(counts[i])
+                        - mbeta_log(alpha [i]);
         }
         return result;
 }

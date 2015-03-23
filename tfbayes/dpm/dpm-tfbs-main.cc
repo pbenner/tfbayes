@@ -170,11 +170,11 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options.block_samples       = false;
         tfbs_options.block_samples_period= 1;
         tfbs_options.metropolis_proposals= 4;
-        tfbs_options.optimize            = false;
-        tfbs_options.optimize_period     = 1;
+        tfbs_options.optimize            = true;
+        tfbs_options.optimize_period     = 2;
         tfbs_options.initial_temperature = 1.0;
         tfbs_options.threads             = 1;
-        tfbs_options.verbose             = true;
+        tfbs_options.verbose             = 3;
         tfbs_options.baseline_lengths.push_back(vector<double>());
         for (size_t i = options.foreground_length_min; i <= options.foreground_length_max; i++) {
                 tfbs_options.baseline_lengths[0].push_back(i);

@@ -19,7 +19,10 @@
 #include <tfbayes/config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <gsl/gsl_sf_gamma.h>
+#include <cmath>
+
+#include <boost/math/special_functions/digamma.hpp>
+#include <boost/math/special_functions/gamma.hpp>
 
 #include <tfbayes/dpm/dpm-tfbs-prior.hh>
 
@@ -43,15 +46,16 @@ pitman_yor_prior::clone() const {
 double
 pitman_yor_prior::log_predictive(const cluster_t& cluster, const dpm_tfbs_state_t& state, size_t n) const
 {
+        const double N = state.num_tfbs;
         const double K = state.size() - state.bg_cluster_tags.size();
         double result = 0.0;
 
         for (size_t i = 0; i < n; i++) {
                 if (cluster.size() + i == 0) {
-                        result += log(alpha + discount*K) - log(state.num_tfbs + i + alpha);
+                        result += log(alpha + discount*K) - log(N + i + alpha);
                 }
                 else {
-                        result += log(cluster.size() + i - discount) - log(state.num_tfbs + i + alpha);
+                        result += log(cluster.size() + i - discount) - log(N + i + alpha);
                 }
         }
         return result;
@@ -61,13 +65,14 @@ double
 pitman_yor_prior::joint(const dpm_tfbs_state_t& state) const
 {
         const double N = state.num_tfbs;
+        const double K = state.size() - state.bg_cluster_tags.size();
 
-        double sum = gsl_sf_lngamma(alpha) - gsl_sf_lngamma(N + alpha);
+        double sum = K*log(alpha) + boost::math::lgamma<double>(alpha) - boost::math::lgamma<double>(N + alpha);
 
         for (cl_iterator it = state.begin(); it != state.end(); it++) {
                 const cluster_t& cluster = **it;
                 if (!state.is_background(cluster)) {
-                        sum += gsl_sf_lngamma(cluster.size());
+                        sum += boost::math::lgamma<double>(cluster.size());
                 }
         }
 

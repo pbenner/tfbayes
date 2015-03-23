@@ -242,7 +242,7 @@ dpm_tfbs_t::baseline_components() const
 double
 dpm_tfbs_t::background_mixture_weight(const range_t& range, cluster_t& cluster)
 {
-        return cluster.model().log_predictive(range);
+        return range.length()*m_lambda_inv_log + cluster.model().log_predictive(range);
 }
 
 double
@@ -260,13 +260,13 @@ dpm_tfbs_t::foreground_mixture_weight(const range_t& range, cluster_t& cluster)
                 range2.index ()[1] += cluster_length;
                 range2.length()    -= cluster_length;
                 // compute log_predictives
-                result = cluster.model().log_predictive(range1);
+                result = m_lambda_log + cluster.model().log_predictive(range1);
                 // remaining positions are assigned to the background
                 // model
                 result += background_mixture_weight(range2, bg_cluster);
         }
         else {
-                result = cluster.model().log_predictive(range);
+                result = m_lambda_log + cluster.model().log_predictive(range);
         }
         return result;
 }
@@ -288,13 +288,13 @@ dpm_tfbs_t::mixture_weights(
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
                         if (include_background) {
-                                sum = logadd(sum, (m_lambda_inv_log + background_mixture_weight(range, cluster))/temp);
+                                sum = logadd(sum, background_mixture_weight(range, cluster)/temp);
                         }
                 }
                 else {
                         ////////////////////////////////////////////////////////
                         // mixture component 2: dirichlet process
-                        sum = logadd(sum, (m_lambda_log + m_process_prior->log_predictive(cluster, m_state) + foreground_mixture_weight(range, cluster))/temp);
+                        sum = logadd(sum, (m_process_prior->log_predictive(cluster, m_state) + foreground_mixture_weight(range, cluster))/temp);
                 }
                 log_weights [i] = sum;
                 cluster_tags[i] = cluster.cluster_tag();
@@ -303,7 +303,7 @@ dpm_tfbs_t::mixture_weights(
         // add the tag of a new class and compute their weight
         for (size_t j = 0; j < baseline_components(); j++, i++) {
                 cluster_t& cluster = m_state.get_free_cluster(m_baseline_tags[j]);
-                sum = logadd(sum, (m_lambda_log + m_process_prior->log_predictive(cluster, m_state) + log(m_baseline_weights[j]) +
+                sum = logadd(sum, (m_process_prior->log_predictive(cluster, m_state) + log(m_baseline_weights[j]) +
                                    foreground_mixture_weight(range, cluster))/temp);
                 log_weights [i] = sum;
                 cluster_tags[i] = cluster.cluster_tag();

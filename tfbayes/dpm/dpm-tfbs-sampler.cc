@@ -415,7 +415,6 @@ accepted:
                 fflush(stderr);
                 funlockfile(stderr);
         }
-
         return true;
 }
 
@@ -513,14 +512,18 @@ dpm_tfbs_sampler_t::m_sample(size_t i, size_t n, bool is_burnin) {
                         if (m_verbose >= 1) {
                                 flockfile(stderr);
                                 cerr << boost::format("%s: Optimizing... new posterior value: %f (increment: %f)")
-                                        % m_name % new_posterior % abs(old_posterior - new_posterior)
+                                        % m_name % new_posterior % (new_posterior - old_posterior)
                                      << endl;
                                 fflush(stderr);
                                 funlockfile(stderr);
                         }
-                        // make sure the posterior increased, but
-                        // allow some small error
-                        assert(new_posterior > old_posterior || abs(old_posterior - new_posterior) < 1.0e-4);
+                        // During optimization, local gibbs moves are
+                        // used which in some cases might be
+                        // incongruent with the global posterior
+                        // probabilities, caused by the approximation
+                        // of the gamma functions. Hence, we cannot
+                        // assume that the posterior probability
+                        // always increases!
                 } while (abs(old_posterior - new_posterior) > 1e-4);
         }
         else {
