@@ -32,6 +32,34 @@
 using namespace std;
 
 void
+dpm_tfbs_t::test_posterior(cluster_t& cluster, const range_t& range, double weight)
+{
+        double tmp1 = 0;
+        double tmp2 = 0;
+
+        if (state().is_background(cluster)) {
+                tmp1 = background_mixture_weight(range, cluster);
+        }
+        else {
+                if (cluster.model().id().length > range.length()) {
+                        return;
+                }
+                tmp1 = process_prior().log_predictive(cluster, m_state) + foreground_mixture_weight(range, cluster) + weight;
+        }
+        state().add(range, cluster.cluster_tag());
+        tmp2 += posterior();
+        state().remove(range);
+        tmp2 -= posterior();
+        // allow some error caused by the numerical approximations
+        if (abs(tmp1-tmp2) > 0.5) {
+                cerr << "ERROR: posterior probability is inconsistent!" << endl;
+                cerr << "-> tmp1: " << tmp1 << endl;
+                cerr << "-> tmp2: " << tmp2 << endl;
+                exit(EXIT_FAILURE);
+        }
+}
+
+void
 dpm_tfbs_t::test_moves() {
         range_t range1(index_t(0, 0), 10, true);
         range_t range2(index_t(0,10), 10, true);

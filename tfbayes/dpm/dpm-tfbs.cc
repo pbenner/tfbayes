@@ -271,31 +271,6 @@ dpm_tfbs_t::foreground_mixture_weight(const range_t& range, cluster_t& cluster)
         return result;
 }
 
-#ifdef DEBUG
-void check_posterior(dpm_tfbs_t& dpm, cluster_t& cluster, double weight = 0.0)
-{
-        double tmp1 = 0;
-        double tmp2 = 0;
-
-        if (m_state.is_background(cluster)) {
-                tmp1 = background_mixture_weight(range, cluster);
-        }
-        else {
-                tmp1 = m_process_prior->log_predictive(cluster, m_state) + foreground_mixture_weight(range, cluster) + weight;
-        }
-        dpm.state().add(range, cluster.cluster_tag());
-        tmp2 +=  posterior();
-        dpm.state().remove(range);
-        tmp2 -= -posterior();
-        if (abs(tmp1-tmp2) > 0.001) {
-                cerr << "ERROR: posterior probability is inconsistent!" << endl;
-                cerr << "-> tmp1: " << tmp1 << endl;
-                cerr << "-> tmp2: " << tmp2 << endl;
-                exit(EXIT_FAILURE);
-        }
-}
-#endif
-
 GCC_ATTRIBUTE_HOT
 void
 dpm_tfbs_t::mixture_weights(
@@ -316,7 +291,7 @@ dpm_tfbs_t::mixture_weights(
                                 sum = logadd(sum, background_mixture_weight(range, cluster)/temp);
                         }
 #ifdef DEBUG
-                        check_posterior(*this, cluster);
+                        test_posterior(cluster, range);
 #endif
                 }
                 else {
@@ -324,7 +299,7 @@ dpm_tfbs_t::mixture_weights(
                         // mixture component 2: dirichlet process
                         sum = logadd(sum, (m_process_prior->log_predictive(cluster, m_state) + foreground_mixture_weight(range, cluster))/temp);
 #ifdef DEBUG
-                        check_posterior(*this, cluster);
+                        test_posterior(cluster, range);
 #endif
                 }
                 log_weights [i] = sum;
@@ -337,7 +312,7 @@ dpm_tfbs_t::mixture_weights(
                 sum = logadd(sum, (m_process_prior->log_predictive(cluster, m_state) + log(m_baseline_weights[j]) +
                                    foreground_mixture_weight(range, cluster))/temp);
 #ifdef DEBUG
-                check_posterior(*this, cluster, log(m_baseline_weights[j]));
+                test_posterior(cluster, range, log(m_baseline_weights[j]));
 #endif
                 log_weights [i] = sum;
                 cluster_tags[i] = cluster.cluster_tag();
@@ -437,6 +412,11 @@ dpm_tfbs_t::data() const {
 const alignment_set_t<>&
 dpm_tfbs_t::alignment_set() const {
         return *m_alignment_set;
+}
+
+const dpm_tfbs_prior_t&
+dpm_tfbs_t::process_prior() const {
+        return *m_process_prior;
 }
 
 // misc methods

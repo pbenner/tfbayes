@@ -69,6 +69,8 @@ public:
 
         const alignment_set_t<>& alignment_set() const;
 
+        const dpm_tfbs_prior_t& process_prior() const;
+
         // methods
         ////////////////////////////////////////////////////////////////////////
         size_t mixture_components() const;
@@ -102,6 +104,7 @@ public:
         void test();
         void test_background();
         void test_moves();
+        void test_posterior(cluster_t& cluster, const range_t& range, double weight = 0.0);
 
 protected:
         // baseline models
