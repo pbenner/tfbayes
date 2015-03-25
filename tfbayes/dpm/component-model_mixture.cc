@@ -237,7 +237,14 @@ double mixture_dirichlet_t::log_predictive(const range_t& range) {
         for (size_t i = 0; i < length; i++) {
                 result += log_predictive(index_t(sequence, position+i));
         }
-
+        // use high precision in debug mode
+#ifdef DEBUG
+        result = 0;
+        add(range);
+        result += log_likelihood();
+        remove(range);
+        result -= log_likelihood();
+#endif
         return result;
 }
 

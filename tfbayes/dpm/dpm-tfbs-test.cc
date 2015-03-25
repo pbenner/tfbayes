@@ -50,8 +50,7 @@ dpm_tfbs_t::test_posterior(cluster_t& cluster, const range_t& range, double weig
         tmp2 += posterior();
         state().remove(range);
         tmp2 -= posterior();
-        // allow some error caused by the numerical approximations
-        if (abs(tmp1-tmp2) > 0.5) {
+        if (abs(tmp1-tmp2) > 0.001) {
                 cerr << "ERROR: posterior probability is inconsistent!" << endl;
                 cerr << "-> tmp1: " << tmp1 << endl;
                 cerr << "-> tmp2: " << tmp2 << endl;
