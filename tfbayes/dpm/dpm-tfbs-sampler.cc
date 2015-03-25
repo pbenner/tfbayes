@@ -329,15 +329,19 @@ dpm_tfbs_sampler_t::m_metropolis_proposal_move(cluster_t& cluster, stringstream&
         size_t n = steps(gen());
         // select a background component at random
         cluster_tag_t bg_cluster_tag = dpm().state().bg_cluster_tags[dist_bg(gen())];
+        // save old cluster size
+        size_t size = cluster.size();
 
         dpm().state().save(cluster.cluster_tag(), bg_cluster_tag);
 
         if (dist(gen()) == 0) {
-                ss << boost::format("move %d steps to the right") % n;
+                ss << boost::format("%s: cluster %d: move %d steps to the right accepted (%d -> %d)")
+                        % m_name % cluster.cluster_tag() % n % size % cluster.size();
                 return dpm().state().move_right(cluster, bg_cluster_tag, n);
         }
         else {
-                ss << boost::format("move %d steps to the left") % n;
+                ss << boost::format("%s: cluster %d: move %d steps to the left accepted (%d -> %d)")
+                        % m_name % cluster.cluster_tag() % n % size % cluster.size();
                 return dpm().state().move_left(cluster, bg_cluster_tag, n);
         }
 }
@@ -373,11 +377,13 @@ dpm_tfbs_sampler_t::m_metropolis_proposal_size(cluster_t& cluster, stringstream&
 
 increase:
         it++;
-        ss << boost::format("decreasing length to %d") % *it;
+        ss << boost::format("%s: cluster %d: increasing length to %d accepted")
+                % m_name % cluster.cluster_tag() % *it;
         return dpm().state().set_length(cluster, bg_cluster_tag, *it);
 decrease:
         it--;
-        ss << boost::format("increasing length to %d") % *it;
+        ss << boost::format("%s: cluster %d: decreasing length to %d accepted")
+                % m_name % cluster.cluster_tag() % *it;
         return dpm().state().set_length(cluster, bg_cluster_tag, *it);
 }
 
@@ -388,7 +394,6 @@ dpm_tfbs_sampler_t::m_metropolis_sample(cluster_tag_t cluster_tag, double temp, 
         double posterior_ref = dpm().posterior();
         double posterior_tmp;
         stringstream ss;
-        size_t size = cluster.size();
 
         /* allocate a uniform distribution on the unit inverval */
         boost::random::uniform_01<> dist;
@@ -414,17 +419,18 @@ dpm_tfbs_sampler_t::m_metropolis_sample(cluster_tag_t cluster_tag, double temp, 
 accepted:
         if (m_verbose >= 2) {
                 flockfile(stderr);
-                cerr << boost::format("%s: cluster %d: %s accepted (%d -> %d)")
-                        % m_name % cluster.cluster_tag() % ss.str() % size % cluster.size()
-                     << endl;
+                cerr << ss.str() << endl;
                 fflush(stderr);
                 funlockfile(stderr);
         }
         return true;
 }
 
-bool
-dpm_tfbs_sampler_t::m_metropolis_sample(double temp, bool optimize) {
+void
+dpm_tfbs_sampler_t::m_metropolis_sample(
+        double temp, bool optimize,
+        boost::function<bool (cluster_t& cluster, stringstream& ss)> f)
+{
         // the cluster list ist altered by metropolis samplers, hence
         // it is necessary to work with the list of cluster tags
         vector<cluster_tag_t> cluster_tags;
@@ -433,17 +439,20 @@ dpm_tfbs_sampler_t::m_metropolis_sample(double temp, bool optimize) {
                         cluster_tags.push_back((*it)->cluster_tag());
                 }
         }
+        for (vector<cluster_tag_t>::iterator it = cluster_tags.begin(); it != cluster_tags.end(); it++) {
+                m_metropolis_sample(*it, temp, optimize, f);
+        }
+}
+
+void
+dpm_tfbs_sampler_t::m_metropolis_sample(double temp, bool optimize) {
         // sample multiple times
         for (size_t i = 0; i < m_metropolis_proposals; i++) {
-                for (vector<cluster_tag_t>::iterator it = cluster_tags.begin(); it != cluster_tags.end(); it++) {
-                        m_metropolis_sample(
-                                *it, temp, optimize, boost::bind(&dpm_tfbs_sampler_t::m_metropolis_proposal_size, this, _1, _2));
-                        m_metropolis_sample(
-                                *it, temp, optimize, boost::bind(&dpm_tfbs_sampler_t::m_metropolis_proposal_move, this, _1, _2));
-                }
+                m_metropolis_sample(
+                        temp, optimize, boost::bind(&dpm_tfbs_sampler_t::m_metropolis_proposal_size, this, _1, _2));
+                m_metropolis_sample(
+                        temp, optimize, boost::bind(&dpm_tfbs_sampler_t::m_metropolis_proposal_move, this, _1, _2));
         }
-
-        return true;
 }
 
 // Main

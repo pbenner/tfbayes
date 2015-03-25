@@ -91,7 +91,6 @@ public:
         double log_predictive(const std::vector<range_t>& range);
         double log_likelihood() const;
         std::string print_counts() const;
-        void set_length(size_t length);
 
         const std::vector<size_t>& lengths() const {
                 return m_lengths;

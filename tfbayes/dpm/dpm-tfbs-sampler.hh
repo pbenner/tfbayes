@@ -82,7 +82,9 @@ protected:
         void m_block_sample(cluster_tag_t cluster_tag, double temp, bool optimize);
         bool m_metropolis_proposal_size(cluster_t& cluster, std::stringstream& ss);
         bool m_metropolis_proposal_move(cluster_t& cluster, std::stringstream& ss);
-        bool m_metropolis_sample(double temp, bool optimize);
+        void m_metropolis_sample(double temp, bool optimize);
+        void m_metropolis_sample(double temp, bool optimize,
+                                 boost::function<bool (cluster_t& cluster, std::stringstream& ss)> f);
         bool m_metropolis_sample(cluster_tag_t cluster_tag, double temp, bool optimize,
                                  boost::function<bool (cluster_t& cluster, std::stringstream& ss)> f);
         void m_update_sampling_history(size_t switches);

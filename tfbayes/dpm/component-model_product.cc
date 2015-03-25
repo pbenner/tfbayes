@@ -245,11 +245,3 @@ product_dirichlet_t::print_counts() const {
         }
         return ss.str();
 }
-
-void
-product_dirichlet_t::set_length(size_t length)
-{
-        component_model_t::id().length = length;
-        m_alpha .resize(length, m_alpha_default);
-        m_counts.resize(length, m_alpha_default);
-}
