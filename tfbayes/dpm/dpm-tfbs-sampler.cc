@@ -28,6 +28,7 @@
 #include <boost/random/uniform_int_distribution.hpp>
 
 #include <tfbayes/dpm/dpm-tfbs-sampler.hh>
+#include <tfbayes/utility/logarithmetic.hh>
 #include <tfbayes/utility/statistics.hh>
 
 using namespace std;
@@ -130,29 +131,29 @@ dpm_tfbs_sampler_t::dpm() const
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef DEBUG
-string print_probabilities(
+void
+print_weights(
+        size_t n,
         double log_weights1[],
         double log_weights2[],
         cluster_tag_t cluster_tags1[],
-        cluster_tag_t cluster_tags2[],
-        size_t components)
+        cluster_tag_t cluster_tags2[])
 {
-        double prev = -std::numeric_limits<double>::infinity();
-        stringstream ss;
+        double ref = -std::numeric_limits<double>::infinity();
 
-        for (size_t i = 0; i < components; i++) {
-                ss << cluster_tags1[i] << ":"
-                   << exp(log_weights1[i] - log_weights2[components-1]) - exp(prev - log_weights2[components-1])
-                   << " ";
-                prev = log_weights1[i];
+        cerr << "log weights: " << endl;
+        for (size_t i = 0; i < n; i++) {
+                cerr << boost::format("-> cluster %d has weight: %f (%f)") % cluster_tags1[i] % 
+                        log(exp(log_weights1[i] - log_weights2[n-1]) - exp(ref - log_weights2[n-1])) % log_weights1[i]
+                     << endl;
+                ref = log_weights1[i];
         }
-        for (size_t i = 0; i < components; i++) {
-                ss << cluster_tags1[i] << ":"
-                   << exp(log_weights2[i] - log_weights2[components-1]) - exp(prev - log_weights2[components-1])
-                   << " ";
-                prev = log_weights2[i];
+        for (size_t i = 0; i < n; i++) {
+                cerr << boost::format("-> cluster %d has weight (reversed): %f (%f)") % cluster_tags2[i] %
+                        log(exp(log_weights2[i] - log_weights2[n-1]) - exp(ref - log_weights2[n-1])) % log_weights2[i]
+                     << endl;
+                ref = log_weights2[i];
         }
-        return ss.str();
 }
 #endif
 
@@ -195,9 +196,10 @@ dpm_tfbs_sampler_t::m_gibbs_sample(const index_t& index, double temp, bool optim
                      << " from "  << old_cluster_tag
                      << " to "    << cluster_tags1[result.second]
                      << endl;
-                cerr << "Probabilities: "
-                     << print_probabilities(log_weights1, log_weights2,
-                                            cluster_tags1, cluster_tags2, components)
+                cerr << "Weights: "
+                     << print_weights(components,
+                                      log_weights1, log_weights2,
+                                      cluster_tags1, cluster_tags2)
                      << endl;
                 cerr << print_alignment_pretty(dpm().alignment_set()[range1])
                      << endl;
@@ -234,11 +236,16 @@ dpm_tfbs_sampler_t::m_gibbs_sample(double temp, bool optimize) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void
-dpm_tfbs_sampler_t::m_block_sample(cluster_t& cluster, double temp, bool optimize)
+dpm_tfbs_sampler_t::m_block_sample(cluster_tag_t cluster_tag, double temp, bool optimize)
 {
+        cluster_t& cluster = state()[cluster_tag];
         vector<range_t> range_set;
         cluster_tag_t old_cluster_tag = cluster.cluster_tag();
 
+        ////////////////////////////////////////////////////////////////////////
+        if (cluster.size() == 0) {
+                return;
+        }
         ////////////////////////////////////////////////////////////////////////
         // fill range_set
         for (cluster_t::iterator it = cluster.begin(); it != cluster.end(); it++)
@@ -305,10 +312,7 @@ dpm_tfbs_sampler_t::m_block_sample(double temp, bool optimize)
         // go through the list of used clusters and if they are still
         // used then generate a block sample
         for (vector<cluster_tag_t>::const_iterator it = used_clusters.begin(); it != used_clusters.end(); it++) {
-                cluster_t& cluster = state()[*it];
-                if (cluster.size() != 0) {
-                        m_block_sample(cluster, temp, optimize);
-                }
+                m_block_sample(*it, temp, optimize);
         }
 }
 
@@ -378,8 +382,9 @@ decrease:
 }
 
 bool
-dpm_tfbs_sampler_t::m_metropolis_sample(cluster_t& cluster, double temp, bool optimize,
-                                        boost::function<bool (stringstream& ss)> f) {
+dpm_tfbs_sampler_t::m_metropolis_sample(cluster_tag_t cluster_tag, double temp, bool optimize,
+                                        boost::function<bool (cluster_t& cluster, stringstream& ss)> f) {
+        cluster_t& cluster = state()[cluster_tag];
         double posterior_ref = dpm().posterior();
         double posterior_tmp;
         stringstream ss;
@@ -388,7 +393,7 @@ dpm_tfbs_sampler_t::m_metropolis_sample(cluster_t& cluster, double temp, bool op
         /* allocate a uniform distribution on the unit inverval */
         boost::random::uniform_01<> dist;
 
-        if (f(ss)) {
+        if (f(cluster, ss)) {
                 posterior_tmp = dpm().posterior();
 
                 /* posterior value is on log scale! */
@@ -431,11 +436,10 @@ dpm_tfbs_sampler_t::m_metropolis_sample(double temp, bool optimize) {
         // sample multiple times
         for (size_t i = 0; i < m_metropolis_proposals; i++) {
                 for (vector<cluster_tag_t>::iterator it = cluster_tags.begin(); it != cluster_tags.end(); it++) {
-                        cluster_t& cluster = state()[*it];
                         m_metropolis_sample(
-                                cluster, temp, optimize, boost::bind(&dpm_tfbs_sampler_t::m_metropolis_proposal_size, this, boost::ref(cluster), _1));
+                                *it, temp, optimize, boost::bind(&dpm_tfbs_sampler_t::m_metropolis_proposal_size, this, _1, _2));
                         m_metropolis_sample(
-                                cluster, temp, optimize, boost::bind(&dpm_tfbs_sampler_t::m_metropolis_proposal_move, this, boost::ref(cluster), _1));
+                                *it, temp, optimize, boost::bind(&dpm_tfbs_sampler_t::m_metropolis_proposal_move, this, _1, _2));
                 }
         }
 

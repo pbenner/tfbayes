@@ -28,18 +28,14 @@ using namespace std;
 dpm_tfbs_state_t::dpm_tfbs_state_t(
         const tfbs_options_t& options,
         const data_tfbs_t& data)
-        : gibbs_state_t(sequence_data_t<cluster_tag_t>(data.sizes(), -1)),
+        : gibbs_state_t        (sequence_data_t<cluster_tag_t>(data.sizes(), -1))
           // starting positions of tfbs
-          tfbs_start_positions(data.sizes(), 0),
+        , tfbs_start_positions (data.sizes(), 0)
           // number of transcription factor binding sites
-          num_tfbs(0),
+        , num_tfbs             (0)
           // auxiliary variables
-          num_tfbs_p(0),
-          cluster_assignments_p(data.sizes(), -1),
-          tfbs_start_positions_p(data.sizes(), 0),
-          cluster_p(NULL),
-          cluster_bg_p(NULL),
-          m_data(&data)
+        , state_p              (NULL)
+        , m_data               (&data)
 {
         assert(options.baseline_lengths.size() > 0);
         // find minimum and maximum lengths of the foreground model
@@ -52,31 +48,24 @@ dpm_tfbs_state_t::dpm_tfbs_state_t(
         max_foreground_length = *max_element(baseline_lengths.begin(), baseline_lengths.end());
 }
 
+dpm_tfbs_state_t::dpm_tfbs_state_t(const dpm_tfbs_state_t& state)
+        : gibbs_state_t         (state)
+        , tfbs_start_positions  (state.tfbs_start_positions)
+        , num_tfbs              (state.num_tfbs)
+          // length of tfbs
+        , min_foreground_length (state.min_foreground_length)
+        , max_foreground_length (state.max_foreground_length)
+          // initialize saved state to NULL
+        , state_p               (NULL)
+        , m_data                (state.m_data)
+        , bg_cluster_tags       (state.bg_cluster_tags)
+{ }
+
 dpm_tfbs_state_t::~dpm_tfbs_state_t() {
-        if (cluster_p != NULL) {
-                delete(cluster_p);
-        }
-        if (cluster_bg_p != NULL) {
-                delete(cluster_bg_p);
+        if (state_p != NULL) {
+                delete(state_p);
         }
 }
-
-dpm_tfbs_state_t::dpm_tfbs_state_t(const dpm_tfbs_state_t& state)
-        : gibbs_state_t(state),
-          tfbs_start_positions(state.tfbs_start_positions),
-          num_tfbs(state.num_tfbs),
-          // length of tfbs
-          min_foreground_length(state.min_foreground_length),
-          max_foreground_length(state.max_foreground_length),
-          // auxiliary variables
-          num_tfbs_p(0),
-          cluster_assignments_p(state.tfbs_start_positions.sizes(), -1),
-          tfbs_start_positions_p(state.tfbs_start_positions.sizes(), 0),
-          cluster_p(NULL),
-          cluster_bg_p(NULL),
-          m_data(state.m_data),
-          bg_cluster_tags(state.bg_cluster_tags)
-{ }
 
 void swap(dpm_tfbs_state_t& first, dpm_tfbs_state_t& second)
 {
@@ -86,10 +75,6 @@ void swap(dpm_tfbs_state_t& first, dpm_tfbs_state_t& second)
         swap(first.num_tfbs,               second.num_tfbs);
         swap(first.min_foreground_length,  second.min_foreground_length);
         swap(first.max_foreground_length,  second.max_foreground_length);
-        swap(first.cluster_assignments_p,  second.cluster_assignments_p);
-        swap(first.tfbs_start_positions_p, second.tfbs_start_positions_p);
-        swap(first.cluster_p,              second.cluster_p);
-        swap(first.cluster_bg_p,           second.cluster_bg_p);
         swap(first.m_data,                 second.m_data);
         swap(first.bg_cluster_tags,        second.bg_cluster_tags);
 }
@@ -100,7 +85,7 @@ dpm_tfbs_state_t::clone() const {
 }
 
 dpm_tfbs_state_t&
-dpm_tfbs_state_t::operator=(const mixture_state_t& state)
+dpm_tfbs_state_t::operator=(const dpm_tfbs_state_t& state)
 {
         dpm_tfbs_state_t tmp(static_cast<const dpm_tfbs_state_t&>(state));
         swap(*this, tmp);
@@ -247,26 +232,15 @@ dpm_tfbs_state_t::remove(const range_t& range)
 
 void
 dpm_tfbs_state_t::save(cluster_tag_t cluster_tag, cluster_tag_t bg_cluster_tag) {
-        if (cluster_p != NULL) {
-                delete(cluster_p);
+        if (state_p != NULL) {
+                delete(state_p);
         }
-        if (cluster_bg_p != NULL) {
-                delete(cluster_bg_p);
-        }
-        num_tfbs_p             = num_tfbs;
-        cluster_assignments_p  = cluster_assignments();
-        tfbs_start_positions_p = tfbs_start_positions;
-        cluster_p              = new cluster_t(operator[](   cluster_tag));
-        cluster_bg_p           = new cluster_t(operator[](bg_cluster_tag));
+        state_p = this->clone();
 }
 
 void
 dpm_tfbs_state_t::restore() {
-        num_tfbs              = num_tfbs_p;
-        cluster_assignments() = cluster_assignments_p;
-        tfbs_start_positions  = tfbs_start_positions_p;
-        operator[](cluster_p   ->cluster_tag()) = *cluster_p;
-        operator[](cluster_bg_p->cluster_tag()) = *cluster_bg_p;
+        operator=(*state_p);
 }
 
 bool
@@ -323,12 +297,12 @@ dpm_tfbs_state_t::move_right(cluster_t& cluster, cluster_tag_t bg_cluster_tag, s
 }
 
 bool
-dpm_tfbs_state_t::set_length(cluster_t& cluster, cluster_tag_t bg_cluster_tag, size_t n)
+dpm_tfbs_state_t::set_length(cluster_t& old_cluster, cluster_tag_t bg_cluster_tag, size_t n)
 {
-        const cluster_t::elements_t old_elements(cluster.elements());
+        const cluster_t::elements_t old_elements(old_cluster.elements());
               cluster_t::elements_t new_elements;
 
-        // remove elements from the cluster
+        // remove elements from the old_cluster
         for (cl_iterator is = old_elements.begin(); is != old_elements.end(); is++) {
                 const range_t range(is->index(), n, is->reverse());
                 // since only the length was changed, it is not
@@ -346,12 +320,13 @@ dpm_tfbs_state_t::set_length(cluster_t& cluster, cluster_tag_t bg_cluster_tag, s
                 remove(*is);
                 add   (*is, bg_cluster_tag);
         }
-        // set the model length
-        static_cast<product_dirichlet_t&>(cluster.model()).set_length(n);
+        // get cluster with length n
+        model_id_t id(old_cluster.model().id()); id.length = n;
+        cluster_t& new_cluster = get_free_cluster(id);
         // add elements to the cluster
         for (cl_iterator is = new_elements.begin(); is != new_elements.end(); is++) {
                 remove(*is);
-                add   (*is, cluster.cluster_tag());
+                add   (*is, new_cluster.cluster_tag());
         }
         return true;
 }

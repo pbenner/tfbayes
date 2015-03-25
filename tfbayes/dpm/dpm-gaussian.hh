@@ -47,7 +47,7 @@ public:
         ////////////////////////////////////////////////////////////////////////
         friend std::ostream& operator<<(std::ostream& o, const dpm_gaussian_t& dpm);
 
-        virtual dpm_gaussian_t& operator=(const mixture_model_t& mixture_model);
+        dpm_gaussian_t& operator=(const dpm_gaussian_t& dpm_gaussian);
 
         // methods
         ////////////////////////////////////////////////////////////////////////

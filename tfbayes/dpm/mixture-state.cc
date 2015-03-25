@@ -62,7 +62,9 @@ mixture_state_t::mixture_state_t(const mixture_state_t& cm)
 {
         for (size_t i = 0; i < cm.clusters.size(); i++) {
                 cluster_t* c = new cluster_t(*cm.clusters[i]);
-                c->set_observer(this);
+                if (cm.clusters[i]->is_observed()) {
+                        c->set_observer(this);
+                }
                 c->model().set_cluster_assignments(*m_cluster_assignments);
                 clusters.push_back(c);
                 if (c->size() == 0 && c->destructible()) {
@@ -94,6 +96,17 @@ void swap(mixture_state_t& first, mixture_state_t& second)
         swap(first.free_clusters_size,    second.free_clusters_size);
         swap(first.baseline_models,       second.baseline_models);
         swap(first.m_cluster_assignments, second.m_cluster_assignments);
+        // refresh observers
+        BOOST_FOREACH(cluster_t* cluster, first.clusters) {
+                if (cluster->is_observed()) {
+                        cluster->set_observer(&first);
+                }
+        }
+        BOOST_FOREACH(cluster_t* cluster, second.clusters) {
+                if (cluster->is_observed()) {
+                        cluster->set_observer(&second);
+                }
+        }
 }
 
 mixture_state_t&

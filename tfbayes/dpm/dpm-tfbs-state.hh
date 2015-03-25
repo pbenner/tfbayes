@@ -49,7 +49,7 @@ public:
 
         // operators
         ////////////////////////////////////////////////////////////////////////
-        virtual dpm_tfbs_state_t& operator=(const mixture_state_t& state);
+        dpm_tfbs_state_t& operator=(const dpm_tfbs_state_t& state);
 
         // methods
         ////////////////////////////////////////////////////////////////////////
@@ -96,11 +96,7 @@ public:
         size_t max_foreground_length;
 
         // auxiliary variables to save the current state
-        size_t num_tfbs_p;
-        sequence_data_t<cluster_tag_t> cluster_assignments_p;
-        sequence_data_t<short> tfbs_start_positions_p;
-        cluster_t* cluster_p;
-        cluster_t* cluster_bg_p;
+        dpm_tfbs_state_t* state_p;
 
         const data_tfbs_t* m_data;
 

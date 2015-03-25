@@ -71,9 +71,9 @@ dpm_gaussian_t::clone() const {
 }
 
 dpm_gaussian_t&
-dpm_gaussian_t::operator=(const mixture_model_t& mixture_model)
+dpm_gaussian_t::operator=(const dpm_gaussian_t& dpm_gaussian)
 {
-        dpm_gaussian_t tmp(static_cast<const dpm_gaussian_t&>(mixture_model));
+        dpm_gaussian_t tmp(static_cast<const dpm_gaussian_t&>(dpm_gaussian));
         swap(*this, tmp);
         return *this;
 }

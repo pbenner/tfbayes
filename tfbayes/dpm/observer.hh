@@ -43,6 +43,9 @@ public:
         void set_observer(Observer<E>* observer) {
                 this->observer = observer;
         }
+        bool is_observed() const {
+                return observer != NULL;
+        }
 
 protected:
         void notify(E event) {

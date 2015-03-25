@@ -79,12 +79,12 @@ protected:
         bool   m_gibbs_sample(const index_t& index, double temp, bool optimize);
         size_t m_gibbs_sample(double temp = 1.0, bool optimize = false);
         void m_block_sample(double temp, bool optimize);
-        void m_block_sample(cluster_t& cluster, double temp, bool optimize);
+        void m_block_sample(cluster_tag_t cluster_tag, double temp, bool optimize);
         bool m_metropolis_proposal_size(cluster_t& cluster, std::stringstream& ss);
         bool m_metropolis_proposal_move(cluster_t& cluster, std::stringstream& ss);
         bool m_metropolis_sample(double temp, bool optimize);
-        bool m_metropolis_sample(cluster_t& cluster, double temp, bool optimize,
-                                 boost::function<bool (std::stringstream& ss)> f);
+        bool m_metropolis_sample(cluster_tag_t cluster_tag, double temp, bool optimize,
+                                 boost::function<bool (cluster_t& cluster, std::stringstream& ss)> f);
         void m_update_sampling_history(size_t switches);
         save_queue_t<command_t*> m_command_queue;
         save_queue_t<std::string>* m_output_queue;
