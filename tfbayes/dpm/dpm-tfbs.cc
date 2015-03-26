@@ -294,23 +294,20 @@ dpm_tfbs_t::mixture_weights(
         // loop through existing clusters
         for (cm_iterator it = m_state.begin(); it != m_state.end(); it++, i++) {
                 cluster_t& cluster = **it;
+#ifdef DEBUG
+                test_posterior(cluster, range);
+#endif
                 if (m_state.is_background(cluster)) {
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
                         if (include_background) {
                                 sum = logadd(sum, background_mixture_weight(range, cluster)/temp);
                         }
-#ifdef DEBUG
-                        test_posterior(cluster, range);
-#endif
                 }
                 else {
                         ////////////////////////////////////////////////////////
                         // mixture component 2: dirichlet process
                         sum = logadd(sum, foreground_mixture_weight(range, cluster)/temp);
-#ifdef DEBUG
-                        test_posterior(cluster, range);
-#endif
                 }
                 log_weights [i] = sum;
                 cluster_tags[i] = cluster.cluster_tag();
@@ -329,30 +326,62 @@ dpm_tfbs_t::mixture_weights(
         assert(static_cast<size_t>(i) == mixture_components() + baseline_components());
 }
 
+double
+dpm_tfbs_t::background_mixture_weight(const vector<range_t>& range_set, cluster_t& cluster)
+{
+        double result = 0.0;
+
+        // background weight
+        result += range_set.size()*m_lambda_inv_log;
+        // predictive distribution
+        result += cluster.model().log_predictive(range_set);
+
+        return result;
+}
+
+double
+dpm_tfbs_t::foreground_mixture_weight(const vector<range_t>& range_set, cluster_t& cluster)
+{
+        double result = 0.0;
+
+        // foreground weight
+        result += range_set.size()*m_lambda_log;
+        // baseline weight
+        result += range_set.size()*m_baseline_weights[cluster.baseline_tag()];
+        // process prior
+        result += m_process_prior->log_predictive(cluster, m_state, range_set.size());
+        // predictive distribution
+        result += cluster.model().log_predictive(range_set);
+
+        return result;
+}
+
 GCC_ATTRIBUTE_HOT
 void
 dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights[], cluster_tag_t cluster_tags[],
                             const double temp, const bool include_background)
 {
         double sum = -numeric_limits<double>::infinity();
-        size_t n   = range_set.size();
 
         cluster_tag_t i = 0;
         ////////////////////////////////////////////////////////////////////////
         // loop through existing clusters
         for (cm_iterator it = m_state.begin(); it != m_state.end(); it++, i++) {
                 cluster_t& cluster = **it;
+#ifdef DEBUG
+                test_posterior(cluster, range_set);
+#endif
                 if (m_state.is_background(cluster)) {
                         ////////////////////////////////////////////////////////
                         // mixture component 1: background model
                         if (include_background) {
-                                sum = logadd(sum, (n*m_lambda_inv_log + cluster.model().log_predictive(range_set))/temp);
+                                sum = logadd(sum, background_mixture_weight(range_set, cluster)/temp);
                         }
                 }
                 else {
                         ////////////////////////////////////////////////////////
                         // mixture component 2: dirichlet process
-                        sum = logadd(sum, (n*m_lambda_log + m_process_prior->log_predictive(cluster, m_state, n) + cluster.model().log_predictive(range_set))/temp);
+                        sum = logadd(sum, foreground_mixture_weight(range_set, cluster)/temp);
                 }
                 log_weights [i] = sum;
                 cluster_tags[i] = cluster.cluster_tag();
@@ -361,8 +390,10 @@ dpm_tfbs_t::mixture_weights(const vector<range_t>& range_set, double log_weights
         // add the tag of a new class and compute their weight
         for (size_t j = 0; j < baseline_components(); j++, i++) {
                 cluster_t& cluster = m_state.get_free_cluster(m_baseline_tags[j]);
-                sum = logadd(sum, (n*m_lambda_log + m_process_prior->log_predictive(cluster, m_state, n) + log(m_baseline_weights[j]) +
-                                   cluster.model().log_predictive(range_set))/temp);
+#ifdef DEBUG
+                test_posterior(cluster, range_set);
+#endif
+                sum = logadd(sum, foreground_mixture_weight(range_set, cluster)/temp);
                 log_weights [i] = sum;
                 cluster_tags[i] = cluster.cluster_tag();
         }

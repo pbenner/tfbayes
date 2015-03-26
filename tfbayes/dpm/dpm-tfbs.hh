@@ -77,6 +77,8 @@ public:
         size_t baseline_components() const;
         double background_mixture_weight(const range_t& range, cluster_t& cluster);
         double foreground_mixture_weight(const range_t& range, cluster_t& cluster);
+        double background_mixture_weight(const std::vector<range_t>& range_set, cluster_t& cluster);
+        double foreground_mixture_weight(const std::vector<range_t>& range_set, cluster_t& cluster);
         // override pure functions
         void   mixture_weights(const range_t& range, double log_weights[], cluster_tag_t tags[]) {
                 // set default temperature
@@ -105,6 +107,7 @@ public:
         void test_background();
         void test_moves();
         void test_posterior(cluster_t& cluster, const range_t& range);
+        void test_posterior(cluster_t& cluster, const std::vector<range_t>& range_set);
 
 protected:
         // baseline models

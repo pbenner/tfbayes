@@ -59,6 +59,37 @@ dpm_tfbs_t::test_posterior(cluster_t& cluster, const range_t& range)
 }
 
 void
+dpm_tfbs_t::test_posterior(cluster_t& cluster, const vector<range_t>& range_set)
+{
+        double tmp1 = 0;
+        double tmp2 = 0;
+
+        if (state().is_background(cluster)) {
+                tmp1 = background_mixture_weight(range_set, cluster);
+        }
+        else {
+                if (cluster.model().id().length > range_set[0].length()) {
+                        return;
+                }
+                tmp1 = foreground_mixture_weight(range_set, cluster);
+        }
+        BOOST_FOREACH(const range_t& range, range_set) {
+                state().add(range, cluster.cluster_tag());
+        }
+        tmp2 += posterior();
+        BOOST_FOREACH(const range_t& range, range_set) {
+                state().remove(range);
+        }
+        tmp2 -= posterior();
+        if (abs(tmp1-tmp2) > 0.001) {
+                cerr << "ERROR: posterior probability is inconsistent!" << endl;
+                cerr << "-> tmp1: " << tmp1 << endl;
+                cerr << "-> tmp2: " << tmp2 << endl;
+                exit(EXIT_FAILURE);
+        }
+}
+
+void
 dpm_tfbs_t::test_moves() {
         range_t range1(index_t(0, 0), 10, true);
         range_t range2(index_t(0,10), 10, true);
