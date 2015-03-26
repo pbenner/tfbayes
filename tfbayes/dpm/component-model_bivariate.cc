@@ -201,7 +201,7 @@ bivariate_normal_t::update()
 size_t
 bivariate_normal_t::add(const range_t& range)
 {
-        const_iterator_t<vector<double> > iterator = data()[range];
+        data_t<vector<double> >::const_iterator_t iterator = data()[range];
 
         do {
                 for (size_t i = 0; i < _dimension; i++) {
@@ -218,7 +218,7 @@ bivariate_normal_t::add(const range_t& range)
 size_t
 bivariate_normal_t::remove(const range_t& range)
 {
-        const_iterator_t<vector<double> > iterator = data()[range];
+        data_t<vector<double> >::const_iterator_t iterator = data()[range];
 
         do {
                 for (size_t i = 0; i < _dimension; i++) {
@@ -243,7 +243,7 @@ bivariate_normal_t::count(const range_t& range) {
 }
 
 double bivariate_normal_t::predictive(const range_t& range) {
-        const_iterator_t<vector<double> > iterator = data()[range];
+        data_t<vector<double> >::const_iterator_t iterator = data()[range];
 
         double mu_x    = gsl_vector_get(_mu_N, 0);
         double mu_y    = gsl_vector_get(_mu_N, 1);

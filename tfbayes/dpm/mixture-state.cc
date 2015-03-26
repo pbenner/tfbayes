@@ -240,7 +240,7 @@ void
 mixture_state_t::update(Observed<cluster_event_t>* observed, cluster_event_t event, const range_t& range)
 {
         cluster_t* cluster = (cluster_t*)observed;
-        iterator_t<cluster_tag_t> iterator = cluster_assignments()[range];
+        data_i<cluster_tag_t>::iterator_t iterator = cluster_assignments()[range];
 
         switch (event) {
         case cluster_event_add_word:

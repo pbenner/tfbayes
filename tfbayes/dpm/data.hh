@@ -65,88 +65,86 @@ operator<< (std::ostream& o, const sequence_data_t<T>& sd) {
 }
 
 template <typename T>
-class iterator_t : public std::iterator<std::forward_iterator_tag, T>
-{
-public:
-        iterator_t(data_i<T>& data, const index_t& index, size_t length)
-                : m_data  (&data)
-                , m_index (index)
-                , m_pos   (index)
-                , m_length(length)
-                , m_i     (0) {
-        }
-
-        const T& operator*() const {
-                return (*m_data)[m_pos];
-        }
-        T& operator*() {
-                return (*m_data)[m_pos];
-        }
-        bool operator++(int i) {
-                if (m_i+1 < m_length) {
-                        m_pos++; m_i++;
-                        return true;
-                }
-                return false;
-        }
-        bool operator==(const iterator_t& it) const {
-                return (m_index == it.m_index) &&
-                       (m_pos   == it.m_pos  );
-        }
-        bool operator!=(const iterator_t& it) const {
-                return (m_index != it.m_index) ||
-                       (m_pos   != it.m_pos  );
-        }
-protected:
-        data_i<T>* m_data;
-        index_t m_index;
-        index_t m_pos;
-        size_t m_length, m_i;
-};
-
-template <typename T>
-class const_iterator_t : public std::iterator<std::forward_iterator_tag, const T>
-{
-public:
-        const_iterator_t(const data_i<T>& data, const index_t& index, size_t length)
-                : m_data  (&data)
-                , m_index (index)
-                , m_pos   (index)
-                , m_length(length)
-                , m_i     (0) {
-        }
-
-        const T& operator*() const {
-                return (*m_data)[m_pos];
-        }
-        bool operator++(int i) {
-                if (m_i+1 < m_length) {
-                        m_pos++; m_i++;
-                        return true;
-                }
-                return false;
-        }
-        bool operator==(const const_iterator_t& it) const {
-                return (m_index == it.m_index) &&
-                       (m_pos   == it.m_pos  );
-        }
-        bool operator!=(const const_iterator_t& it) const {
-                return (m_index != it.m_index) ||
-                       (m_pos   != it.m_pos  );
-        }
-protected:
-        const data_i<T>* m_data;
-        index_t m_index;
-        index_t m_pos;
-        size_t m_length, m_i;
-};
-
-template <typename T>
 class data_i : public virtual clonable {
 public:
+        class iterator_t : public std::iterator<std::forward_iterator_tag, T>
+        {
+        public:
+                iterator_t(data_i<T>& data, const index_t& index, size_t length)
+                        : m_data  (&data)
+                        , m_index (index)
+                        , m_pos   (index)
+                        , m_length(length)
+                        , m_i     (0) {
+                }
+
+                const T& operator*() const {
+                        return (*m_data)[m_pos];
+                }
+                T& operator*() {
+                        return (*m_data)[m_pos];
+                }
+                bool operator++(int i) {
+                        if (m_i+1 < m_length) {
+                                m_pos++; m_i++;
+                                return true;
+                        }
+                        return false;
+                }
+                bool operator==(const iterator_t& it) const {
+                        return (m_index == it.m_index) &&
+                                (m_pos   == it.m_pos  );
+                }
+                bool operator!=(const iterator_t& it) const {
+                        return (m_index != it.m_index) ||
+                                (m_pos   != it.m_pos  );
+                }
+        protected:
+                data_i<T>* m_data;
+                index_t m_index;
+                index_t m_pos;
+                size_t m_length, m_i;
+        };
+
+        class const_iterator_t : public std::iterator<std::forward_iterator_tag, const T>
+        {
+        public:
+                const_iterator_t(const data_i<T>& data, const index_t& index, size_t length)
+                        : m_data  (&data)
+                        , m_index (index)
+                        , m_pos   (index)
+                        , m_length(length)
+                        , m_i     (0) {
+                }
+
+                const T& operator*() const {
+                        return (*m_data)[m_pos];
+                }
+                bool operator++(int i) {
+                        if (m_i+1 < m_length) {
+                                m_pos++; m_i++;
+                                return true;
+                        }
+                        return false;
+                }
+                bool operator==(const const_iterator_t& it) const {
+                        return (m_index == it.m_index) &&
+                                (m_pos   == it.m_pos  );
+                }
+                bool operator!=(const const_iterator_t& it) const {
+                        return (m_index != it.m_index) ||
+                                (m_pos   != it.m_pos  );
+                }
+        protected:
+                const data_i<T>* m_data;
+                index_t m_index;
+                index_t m_pos;
+                size_t m_length, m_i;
+        };
+
         virtual data_i<T>* clone() const = 0;
-        virtual const_iterator_t<T> operator[](const range_t& range) const = 0;
-        virtual iterator_t<T> operator[](const range_t& range) = 0;
+        virtual const_iterator_t operator[](const range_t& range) const = 0;
+        virtual iterator_t operator[](const range_t& range) = 0;
         virtual const T& operator[](const index_t& index) const = 0;
         virtual T& operator[](const index_t& index) = 0;
 };
@@ -156,6 +154,8 @@ class data_t : public data_i<T>, public std::vector<T>
 {
 public:
         typedef std::vector<T> base_t;
+        typedef typename data_i<T>::iterator_t iterator_t;
+        typedef typename data_i<T>::const_iterator_t const_iterator_t;
         using base_t::size;
         using base_t::push_back;
         using base_t::operator[];
@@ -177,11 +177,11 @@ public:
                 base_t::operator=(data);
                 return *this;
         }
-        virtual inline const_iterator_t<T> operator[](const range_t& range) const GCC_ATTRIBUTE_HOT {
-                return const_iterator_t<T>(*this, range.index(), range.length());
+        virtual inline const_iterator_t operator[](const range_t& range) const GCC_ATTRIBUTE_HOT {
+                return const_iterator_t(*this, range.index(), range.length());
         }
-        virtual inline iterator_t<T> operator[](const range_t& range) GCC_ATTRIBUTE_HOT {
-                return iterator_t<T>(*this, range.index(), range.length());
+        virtual inline iterator_t operator[](const range_t& range) GCC_ATTRIBUTE_HOT {
+                return iterator_t(*this, range.index(), range.length());
         }
         virtual inline const T& operator[](const index_t& index) const GCC_ATTRIBUTE_HOT {
                 return base_t::operator[](index[0]);
@@ -203,6 +203,8 @@ class sequence_data_t : public data_i<T>, public std::vector<std::vector<T> >
 {
 public:
         typedef std::vector<std::vector<T> > base_t;
+        typedef typename data_i<T>::iterator_t iterator_t;
+        typedef typename data_i<T>::const_iterator_t const_iterator_t;
         using base_t::size;
         using base_t::push_back;
         using base_t::operator[];
@@ -228,11 +230,11 @@ public:
                 base_t::operator=(sequence_data);
                 return *this;
         }
-        virtual inline const_iterator_t<T> operator[](const range_t& range) const GCC_ATTRIBUTE_HOT {
-                return const_iterator_t<T>(*this, range.index(), range.length());
+        virtual inline const_iterator_t operator[](const range_t& range) const GCC_ATTRIBUTE_HOT {
+                return const_iterator_t(*this, range.index(), range.length());
         }
-        virtual inline iterator_t<T> operator[](const range_t& range) GCC_ATTRIBUTE_HOT {
-                return iterator_t<T>(*this, range.index(), range.length());
+        virtual inline iterator_t operator[](const range_t& range) GCC_ATTRIBUTE_HOT {
+                return iterator_t(*this, range.index(), range.length());
         }
         virtual inline const T& operator[](const index_t& index) const GCC_ATTRIBUTE_HOT {
                 return base_t::operator[](index[0])[index[1]];
