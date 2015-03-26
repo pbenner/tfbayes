@@ -104,7 +104,7 @@ public:
         void test();
         void test_background();
         void test_moves();
-        void test_posterior(cluster_t& cluster, const range_t& range, double weight = 0.0);
+        void test_posterior(cluster_t& cluster, const range_t& range);
 
 protected:
         // baseline models

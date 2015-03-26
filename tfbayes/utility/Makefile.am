@@ -20,6 +20,7 @@ noinst_HEADERS = \
 	logarithmetic.hh \
 	multinomial-beta.hh \
 	named-ptr.hh \
+	normalize.hh \
 	observable.hh \
 	permutation.hh \
 	polynomial.hh \

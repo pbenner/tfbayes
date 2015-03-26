@@ -75,20 +75,6 @@ namespace std {
         };
 }
 
-#include <boost/foreach.hpp>
-
-template <typename T>
-std::vector<T> normalize(const std::vector<T>& container)
-{
-        std::vector<T> tmp(container);
-        T sum = std::accumulate(tmp.begin(), tmp.end(), static_cast<T>(0));
-
-        BOOST_FOREACH(T &n, tmp) {
-                n /= sum;
-        }
-        return tmp;
-}
-
 // gsl vector/matrix conversion
 ////////////////////////////////////////////////////////////////////////////////
 

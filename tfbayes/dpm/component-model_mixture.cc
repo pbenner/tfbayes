@@ -22,7 +22,7 @@
 #include <boost/format.hpp>
 
 #include <tfbayes/dpm/component-model.hh>
-#include <tfbayes/utility/linalg.hh> // normalize
+#include <tfbayes/utility/normalize.hh>
 #include <tfbayes/utility/multinomial-beta.hh>
 
 using namespace std;

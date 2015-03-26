@@ -27,6 +27,7 @@
 #include <tfbayes/dpm/dpm-tfbs.hh>
 #include <tfbayes/utility/statistics.hh>
 #include <tfbayes/utility/logarithmetic.hh>
+#include <tfbayes/utility/normalize.hh>
 
 using namespace std;
 
@@ -144,9 +145,18 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                         model_id_t model_id = {*is, size_t(length)};
                         product_dirichlet_t* dirichlet = new product_dirichlet_t(model_id, *it, *iq, data, data.complements());
                         m_baseline_tags   .push_back(m_state.add_baseline_model(dirichlet));
-                        m_baseline_weights.push_back(*ir);
+                        // the weight consists of the individual
+                        // weight of the baseline component and a
+                        // normalization for the number of lenths
+                        m_baseline_weights.push_back(log(*ir) + log(1.0/iq->size()));
+                        // assume that the baseline tag is simply the
+                        // size of the vector, so that we can easily
+                        // index the baseline weights
+                        assert(m_baseline_tags.back() == m_baseline_tags.size()-1);
                 }
         }
+        // the baseline weights have to be normalized!
+        m_baseline_weights = log_normalize(m_baseline_weights);
         ////////////////////////////////////////////////////////////////////////////////
         // assign all elements to the background
         for (da_iterator it = data.begin();
@@ -248,7 +258,7 @@ dpm_tfbs_t::background_mixture_weight(const range_t& range, cluster_t& cluster)
 double
 dpm_tfbs_t::foreground_mixture_weight(const range_t& range, cluster_t& cluster)
 {
-        double result;
+        double result = m_lambda_log + m_baseline_weights[cluster.baseline_tag()] + m_process_prior->log_predictive(cluster, m_state);
         // get the length of the foreground model
         size_t cluster_length = cluster.model().id().length;
         if (cluster_length < range.length()) {
@@ -260,13 +270,13 @@ dpm_tfbs_t::foreground_mixture_weight(const range_t& range, cluster_t& cluster)
                 range2.index ()[1] += cluster_length;
                 range2.length()    -= cluster_length;
                 // compute log_predictives
-                result = m_lambda_log + cluster.model().log_predictive(range1);
+                result += cluster.model().log_predictive(range1);
                 // remaining positions are assigned to the background
                 // model
                 result += background_mixture_weight(range2, bg_cluster);
         }
         else {
-                result = m_lambda_log + cluster.model().log_predictive(range);
+                result += cluster.model().log_predictive(range);
         }
         return result;
 }
@@ -297,7 +307,7 @@ dpm_tfbs_t::mixture_weights(
                 else {
                         ////////////////////////////////////////////////////////
                         // mixture component 2: dirichlet process
-                        sum = logadd(sum, (m_process_prior->log_predictive(cluster, m_state) + foreground_mixture_weight(range, cluster))/temp);
+                        sum = logadd(sum, foreground_mixture_weight(range, cluster)/temp);
 #ifdef DEBUG
                         test_posterior(cluster, range);
 #endif
@@ -309,10 +319,9 @@ dpm_tfbs_t::mixture_weights(
         // add the tag of a new class and compute their weight
         for (size_t j = 0; j < baseline_components(); j++, i++) {
                 cluster_t& cluster = m_state.get_free_cluster(m_baseline_tags[j]);
-                sum = logadd(sum, (m_process_prior->log_predictive(cluster, m_state) + log(m_baseline_weights[j]) +
-                                   foreground_mixture_weight(range, cluster))/temp);
+                sum = logadd(sum, foreground_mixture_weight(range, cluster)/temp);
 #ifdef DEBUG
-                test_posterior(cluster, range, log(m_baseline_weights[j]));
+                test_posterior(cluster, range);
 #endif
                 log_weights [i] = sum;
                 cluster_tags[i] = cluster.cluster_tag();
@@ -363,10 +372,8 @@ double
 dpm_tfbs_t::likelihood() const {
         double result = 0;
 
-        for (cm_iterator it = m_state.begin();
-             it != m_state.end(); it++) {
-                const cluster_t& cluster = **it;
-                result += cluster.model().log_likelihood();
+        BOOST_FOREACH (const cluster_t* cluster, m_state) {
+                result += cluster->model().log_likelihood();
         }
         assert(!std::isnan(result));
 
@@ -380,12 +387,17 @@ double
 dpm_tfbs_t::posterior() const {
         double result = likelihood();
 
-        // background prior
-        BOOST_FOREACH (const cluster_tag_t& cluster_tag, m_state.bg_cluster_tags) {
-                result += m_state[cluster_tag].size()*m_lambda_inv_log;
+        BOOST_FOREACH (const cluster_t* cluster, m_state) {
+                if (m_state.is_background(*cluster)) {
+                        // background prior
+                        result += cluster->size()*m_lambda_inv_log;
+                }
+                else {
+                        // foreground weight
+                        result += cluster->size()*m_lambda_log;
+                        result += cluster->size()*m_baseline_weights[cluster->baseline_tag()];
+                }
         }
-        // tfbs prior
-        result += m_state.num_tfbs*m_lambda_log;
         // process prior
         result += m_process_prior->joint(m_state);
 

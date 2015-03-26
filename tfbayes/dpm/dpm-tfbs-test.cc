@@ -32,7 +32,7 @@
 using namespace std;
 
 void
-dpm_tfbs_t::test_posterior(cluster_t& cluster, const range_t& range, double weight)
+dpm_tfbs_t::test_posterior(cluster_t& cluster, const range_t& range)
 {
         double tmp1 = 0;
         double tmp2 = 0;
@@ -44,7 +44,7 @@ dpm_tfbs_t::test_posterior(cluster_t& cluster, const range_t& range, double weig
                 if (cluster.model().id().length > range.length()) {
                         return;
                 }
-                tmp1 = process_prior().log_predictive(cluster, m_state) + foreground_mixture_weight(range, cluster) + weight;
+                tmp1 = foreground_mixture_weight(range, cluster);
         }
         state().add(range, cluster.cluster_tag());
         tmp2 += posterior();
@@ -153,7 +153,7 @@ dpm_tfbs_t::test_background() {
 
 #include <tfbayes/utility/logarithmetic.hh>
 
-void normalize(size_t components, double *log_weights)
+void normalize_weights(size_t components, double *log_weights)
 {
         double sum = -numeric_limits<double>::infinity();
 
@@ -195,7 +195,7 @@ dpm_tfbs_t::test() {
 
         cout << "Sampling range3" << endl;
         mixture_weights(range3, log_weights, cluster_tags);
-        normalize(components, log_weights);
+        normalize_weights(components, log_weights);
         for (size_t i = 0; i < components; i++) {
                 cout << "weight " << i << ": " << exp(log_weights[i]) << endl;
         }
