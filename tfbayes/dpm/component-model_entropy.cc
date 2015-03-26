@@ -111,6 +111,7 @@ entropy_background_t::entropy_background_t(
         , m_size                 (data_tfbs_t::alphabet_size)
         , m_bg_cluster_tag       (0)
         , m_precomputed_marginal (data.sizes(), 0)
+        , m_log_likelihood       (0.0)
         , m_data                 (&data)
         , m_verbose              (verbose)
 {
@@ -128,6 +129,7 @@ entropy_background_t::entropy_background_t(const entropy_background_t& distribut
         , m_size                 (distribution.m_size)
         , m_bg_cluster_tag       (distribution.m_bg_cluster_tag)
         , m_precomputed_marginal (distribution.m_precomputed_marginal)
+        , m_log_likelihood       (distribution.m_log_likelihood)
         , m_data                 (distribution.m_data)
         , m_verbose              (distribution.m_verbose)
 { }
@@ -282,12 +284,30 @@ entropy_background_t::precompute_marginal(
 
 size_t
 entropy_background_t::add(const range_t& range) {
-        return range.length();
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
+
+        for (size_t i = 0; i < length; i++) {
+                const index_t index(sequence, position+i);
+                m_log_likelihood += m_precomputed_marginal[index];
+        }
+
+        return length;
 }
 
 size_t
 entropy_background_t::remove(const range_t& range) {
-        return range.length();
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
+
+        for (size_t i = 0; i < length; i++) {
+                const index_t index(sequence, position+i);
+                m_log_likelihood -= m_precomputed_marginal[index];
+        }
+
+        return length;
 }
 
 size_t
@@ -351,20 +371,7 @@ double entropy_background_t::log_predictive(const vector<range_t>& range_set) {
  *  p(x) = Beta(n(x) + alpha) / Beta(alpha)
  */
 double entropy_background_t::log_likelihood() const {
-        double result = 0;
-
-        /* counts contains the data count statistic
-         * and the pseudo counts alpha */
-        for(size_t i = 0; i < cluster_assignments().size(); i++) {
-                for(size_t j = 0; j < cluster_assignments()[i].size(); j++) {
-                        if (cluster_assignments()[i][j] == m_bg_cluster_tag) {
-                                const index_t index(i, j);
-                                result += m_precomputed_marginal[index];
-                        }
-                }
-        }
-
-        return result;
+        return m_log_likelihood;
 }
 
 string

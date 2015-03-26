@@ -191,6 +191,7 @@ public:
                 swap(first.m_size,                 second.m_size);
                 swap(first.m_bg_cluster_tag,       second.m_bg_cluster_tag);
                 swap(first.m_precomputed_marginal, second.m_precomputed_marginal);
+                swap(first.m_log_likelihood,       second.m_log_likelihood);
                 swap(first.m_data,                 second.m_data);
         }
 
@@ -234,6 +235,8 @@ protected:
         cluster_tag_t m_bg_cluster_tag;
 
         sequence_data_t<double> m_precomputed_marginal;
+
+        double m_log_likelihood;
 
         const sequence_data_t<data_tfbs_t::code_t>* m_data;
 
