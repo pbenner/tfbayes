@@ -68,7 +68,7 @@ dpm_tfbs_t::test_posterior(cluster_t& cluster, const vector<range_t>& range_set)
                 tmp1 = background_mixture_weight(range_set, cluster);
         }
         else {
-                if (cluster.model().id().length > range_set[0].length()) {
+                if (cluster.model().id().length != range_set[0].length()) {
                         return;
                 }
                 tmp1 = foreground_mixture_weight(range_set, cluster);

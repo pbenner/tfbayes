@@ -332,7 +332,7 @@ dpm_tfbs_t::background_mixture_weight(const vector<range_t>& range_set, cluster_
         double result = 0.0;
 
         // background weight
-        result += range_set.size()*m_lambda_inv_log;
+        result += range_set.size()*range_set[0].length()*m_lambda_inv_log;
         // predictive distribution
         result += cluster.model().log_predictive(range_set);
 

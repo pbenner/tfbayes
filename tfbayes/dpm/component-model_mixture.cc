@@ -255,6 +255,18 @@ double mixture_dirichlet_t::log_predictive(const vector<range_t>& range_set) {
         BOOST_FOREACH(const range_t& range, range_set) {
                 result += log_predictive(range);
         }
+        // use high precision in debug mode
+#ifdef DEBUG
+        result = 0;
+        BOOST_FOREACH(const range_t& range, range_set) {
+                add(range);
+        }
+        result += log_likelihood();
+        BOOST_FOREACH(const range_t& range, range_set) {
+                remove(range);
+        }
+        result -= log_likelihood();
+#endif
 
         return result;
 }
