@@ -77,7 +77,7 @@ public:
         component_model_t& model();
         const component_model_t& model() const;
         elements_t elements() const;
-        void update() { model().update(); }
+        void update(const std::string& msg_prefix = "") { model().update(msg_prefix); }
 
 private:
         component_model_t* m_model;

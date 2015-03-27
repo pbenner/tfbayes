@@ -471,7 +471,7 @@ dpm_tfbs_sampler_t::m_sample(size_t i, size_t n, double temp, bool optimize) {
         }
         // update clusters
         for (cl_iterator it = dpm().state().begin(); it != dpm().state().end(); it++) {
-                (**it).update();
+                (**it).update(m_name);
         }
         if (m_verbose >= 3) {
                 flockfile(stderr);

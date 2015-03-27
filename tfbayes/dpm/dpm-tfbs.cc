@@ -152,7 +152,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                         // assume that the baseline tag is simply the
                         // size of the vector, so that we can easily
                         // index the baseline weights
-                        assert(m_baseline_tags.back() == m_baseline_tags.size()-1);
+                        assert(m_baseline_tags.back() == baseline_tag_t(m_baseline_tags.size())-1);
                 }
         }
         // the baseline weights have to be normalized!

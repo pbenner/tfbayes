@@ -84,10 +84,24 @@ default_background_t::operator=(const component_model_t& component_model)
 }
 
 void
-default_background_t::update()
+default_background_t::update(const string& msg_prefix)
 {
         gradient_ascent();
         precompute_marginal();
+
+        if (m_verbose >= 1) {
+                flockfile(stderr);
+                if (msg_prefix != "") {
+                        cerr << msg_prefix << ": ";
+                }
+                cerr << "Background pseudocounts: ";
+                for (size_t k = 0; k < m_size; k++) {
+                        cerr << alpha[k] << " ";
+                }
+                cerr << endl;
+                fflush(stderr);
+                funlockfile(stderr);
+        }
 }
 
 void
@@ -196,16 +210,6 @@ default_background_t::gradient_ascent()
 
         for (double sum = 1.0; sum > 0.1;) {
                 sum = gradient_ascent(g, g_prev, epsilon);
-        }
-        if (m_verbose >= 1) {
-                flockfile(stderr);
-                cerr << "Background pseudocounts: ";
-                for (size_t k = 0; k < m_size; k++) {
-                        cerr << alpha[k] << " ";
-                }
-                cerr << endl;
-                fflush(stderr);
-                funlockfile(stderr);
         }
 }
 

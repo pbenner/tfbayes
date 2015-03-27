@@ -280,7 +280,7 @@ public:
         // datatypes
         typedef data_tfbs_t::code_t counts_t;
 
-        void update();
+        void update(const std::string& msg_prefix = "");
         void precompute_marginal();
 
         double gradient(const index_t& index, size_t k, double alpha_sum);
