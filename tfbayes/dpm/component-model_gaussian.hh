@@ -100,7 +100,7 @@ protected:
         gsl_vector* _tmp2;
 
         void inverse(gsl_matrix* dst, const gsl_matrix* src);
-        void update();
+        void update(const std::string& msg_prefix = "");
 
         const data_t<std::vector<double> >* _data;
 };
