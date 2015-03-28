@@ -297,11 +297,13 @@ ostream& operator<< (ostream& o, const mixture_state_t& state)
                 o << boost::format(" clusters with model `%s\':") % it->first
                   << endl;
                 for (map1_t::iterator is = it->second.begin(); is != it->second.end(); is++) {
+                        if (is != it->second.begin()) {
+                                o << endl;
+                        }
                         o << boost::format(" -> and length %d have number of elements: ") % is->first;
                         BOOST_FOREACH(const size_t& length, is->second) {
                                 o << length << " ";
                         }
-                        o << endl;
                 }
         }
         return o;

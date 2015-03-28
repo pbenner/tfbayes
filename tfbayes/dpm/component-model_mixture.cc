@@ -290,13 +290,15 @@ string
 mixture_dirichlet_t::print_counts() const {
         stringstream ss;
         for (size_t k = 0; k < _size2; k++) {
-                ss << nucleotide_alphabet_t().decode(k) << " ";
+                ss << " -> " << nucleotide_alphabet_t().decode(k) << " ";
                 for (size_t j = 0; j < _size1; j++) {
                         ss.width(10);
                         ss.precision(2);
                         ss << fixed << counts[j][k] << " ";
                 }
-                ss << endl;
+                if (k+1 != _size2) {
+                        ss << endl;
+                }
         }
         return ss.str();
 }
