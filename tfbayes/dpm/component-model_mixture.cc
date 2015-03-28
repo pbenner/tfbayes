@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 
 #include <tfbayes/dpm/component-model.hh>
