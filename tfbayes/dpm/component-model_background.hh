@@ -346,13 +346,13 @@ public:
                 using std::swap;
                 swap(static_cast<component_model_t&>(first),
                      static_cast<component_model_t&>(second));
-                swap(first.alpha,            second.alpha);
-                swap(first.counts,           second.counts);
-                swap(first.weights,          second.weights);
-                swap(first._size1,           second._size1);
-                swap(first._size2,           second._size2);
-                swap(first._data,            second._data);
-                swap(first._component_assignments, second._component_assignments);
+                swap(first.alpha,                   second.alpha);
+                swap(first.counts,                  second.counts);
+                swap(first.weights,                 second.weights);
+                swap(first.m_size1,                 second.m_size1);
+                swap(first.m_size2,                 second.m_size2);
+                swap(first.m_data,                  second.m_data);
+                swap(first.m_component_assignments, second.m_component_assignments);
         }
 
         mixture_dirichlet_t& operator=(const component_model_t& component_model);
@@ -374,7 +374,7 @@ public:
         std::string print_counts() const;
 
         const sequence_data_t<data_tfbs_t::code_t>& data() const {
-                return *_data;
+                return *m_data;
         }
 
         friend std::ostream& operator<< (std::ostream& o, const mixture_dirichlet_t& pd);
@@ -388,11 +388,11 @@ protected:
         std::vector<counts_t> counts;
         std::vector<double> weights;
 
-        size_t _size1;
-        size_t _size2;
+        size_t m_size1;
+        size_t m_size2;
 
-        const sequence_data_t<data_tfbs_t::code_t>* _data;
-        sequence_data_t<ssize_t> _component_assignments;
+        const sequence_data_t<data_tfbs_t::code_t>* m_data;
+        sequence_data_t<ssize_t> m_component_assignments;
 };
 
 // Markov Chain Mixture
