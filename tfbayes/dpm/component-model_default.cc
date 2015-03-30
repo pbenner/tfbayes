@@ -57,13 +57,13 @@ default_background_t::default_background_t(
 
 default_background_t::default_background_t(const default_background_t& distribution)
         : component_model_t       (distribution)
-        ,  alpha                  (distribution.alpha)
-        ,  prior_distribution     (distribution.prior_distribution)
-        ,  m_size                 (distribution.m_size)
-        ,  m_bg_cluster_tag       (distribution.m_bg_cluster_tag)
-        ,  m_precomputed_marginal (distribution.m_precomputed_marginal)
-        ,  m_data                 (distribution.m_data)
-        ,  m_verbose              (distribution.m_verbose)
+        , alpha                  (distribution.alpha)
+        , prior_distribution     (distribution.prior_distribution)
+        , m_size                 (distribution.m_size)
+        , m_bg_cluster_tag       (distribution.m_bg_cluster_tag)
+        , m_precomputed_marginal (distribution.m_precomputed_marginal)
+        , m_data                 (distribution.m_data)
+        , m_verbose              (distribution.m_verbose)
 { }
 
 default_background_t::~default_background_t() {
