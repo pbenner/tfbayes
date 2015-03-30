@@ -56,7 +56,7 @@ default_background_t::default_background_t(
 }
 
 default_background_t::default_background_t(const default_background_t& distribution)
-        : component_model_t       (distribution)
+        : component_model_t      (distribution)
         , alpha                  (distribution.alpha)
         , prior_distribution     (distribution.prior_distribution)
         , m_size                 (distribution.m_size)
