@@ -148,7 +148,7 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options_t tfbs_options;
 
         // background alpha
-        tfbs_options.background_alpha.push_back(vector<double>(data_tfbs_t::alphabet_size, options.background_alpha));
+        //tfbs_options.background_alpha.push_back(vector<double>(data_tfbs_t::alphabet_size, options.background_alpha));
 
         // baseline prior
         tfbs_options.baseline_priors.push_back(matrix<double>());
@@ -165,7 +165,7 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options.background_model    = options.background_model;
         tfbs_options.background_gamma    = vector<double>(2,1);
         tfbs_options.background_context  = options.background_context;
-        tfbs_options.background_weights  = vector<double>(2,0.5);
+        tfbs_options.background_weights  = vector<double>(1,1);
         tfbs_options.baseline_weights    = vector<double>(1,1);
         tfbs_options.baseline_names.push_back("baseline-default");
         tfbs_options.block_samples       = false;

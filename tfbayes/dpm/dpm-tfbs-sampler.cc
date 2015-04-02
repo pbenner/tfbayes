@@ -477,9 +477,11 @@ dpm_tfbs_sampler_t::m_sample(size_t i, size_t n, double temp, bool optimize) {
                 flockfile(stderr);
                 if (m_verbose >= 2) {
                         BOOST_FOREACH(cluster_tag_t& tag, dpm().state().bg_cluster_tags) {
-                                cerr << m_name << ": " << endl
-                                     << dpm().state()[tag].model().print_counts()
-                                     << endl;
+                                string msg = dpm().state()[tag].model().print_counts();
+                                if (msg != "") {
+                                        cerr << m_name << ": " << endl
+                                             << msg            << endl;
+                                }
                         }
                 }
                 fflush(stderr);
