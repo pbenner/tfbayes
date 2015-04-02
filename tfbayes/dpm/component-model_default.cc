@@ -15,12 +15,17 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <algorithm>    // std::accumulate
 #include <cmath>        // std::exp, std::log
 #include <string>
+#include <sstream>
 #include <vector>
+
+#include <boost/format.hpp>
 
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/utility/multinomial-beta.hh>
+#include <tfbayes/utility/normalize.hh>
 
 #include <boost/math/distributions/gamma_extra.hpp>
 
@@ -30,40 +35,70 @@ using namespace std;
 
 default_background_t::default_background_t(
         const vector<double>& parameters,
-        const sequence_data_t<data_tfbs_t::code_t>& _data,
+        const vector<double>& weights,
+        const sequence_data_t<data_tfbs_t::code_t>& data,
         const sequence_data_t<cluster_tag_t>& cluster_assignments,
         thread_pool_t& thread_pool,
         const string& cachefile,
         boost::optional<const alignment_set_t<>&> alignment_set,
         size_t verbose)
-        : component_model_t      ({"background", 1}, cluster_assignments)
-        , prior_distribution     (parameters[0], parameters[1])
-        , m_size                 (data_tfbs_t::alphabet_size)
-        , m_bg_cluster_tag       (0)
-        , m_precomputed_marginal (_data.sizes(), 0)
-        , m_data                 (&_data)
-        , m_verbose              (verbose)
+        : component_model_t       ({"background", 1}, cluster_assignments)
+        , m_alpha                 (weights.size(), counts_t())
+        , m_weights               (normalize(weights))
+        , m_prior_distribution    (parameters[0], parameters[1])
+        , m_size1                 (weights.size())
+        , m_size2                 (data_tfbs_t::alphabet_size)
+        , m_bg_cluster_tag        (0)
+        , m_log_likelihood        (0.0)
+        , m_marginal_probability  (data.sizes(),  0)
+        , m_component_assignments (data.sizes(), -1)
+        , m_data                  (&data)
+        , m_verbose               (verbose)
 {
-        fill(alpha.begin(), alpha.end(), 0.5);
+        // if no weights are given, assume the model should consist of
+        // a single component
+        if (m_size1 == 0) {
+                m_size1 = 1;
+                m_alpha  .push_back(counts_t());
+                m_weights.push_back(1.0);
+        }
+        // initialize parameters differently for each component
+        for (size_t i = 0; i < m_alpha.size(); i++) {
+                fill(m_alpha[i].begin(), m_alpha[i].end(), i+1);
+        }
 
         if (m_verbose >= 1) {
                 flockfile(stderr);
                 cerr << "Background gamma shape: " << parameters[0] << endl
-                     << "Background gamma scale: " << parameters[1] << endl;
+                     << "Background gamma scale: " << parameters[1] << endl
+                     << "Background components : " << m_size1       << endl;
                 fflush(stderr);
                 funlockfile(stderr);
         }
+        // initialize gradients
+        m_g       = matrix<double>(m_size1, m_size2, 1.0);
+        m_g_prev  = matrix<double>(m_size1, m_size2, 0.0);
+        m_epsilon = matrix<double>(m_size1, m_size2, 1.0e-2);
+        m_n       = vector<double>(m_size1, 0.0);
 }
 
 default_background_t::default_background_t(const default_background_t& distribution)
-        : component_model_t      (distribution)
-        , alpha                  (distribution.alpha)
-        , prior_distribution     (distribution.prior_distribution)
-        , m_size                 (distribution.m_size)
-        , m_bg_cluster_tag       (distribution.m_bg_cluster_tag)
-        , m_precomputed_marginal (distribution.m_precomputed_marginal)
-        , m_data                 (distribution.m_data)
-        , m_verbose              (distribution.m_verbose)
+        : component_model_t       (distribution)
+        , m_alpha                 (distribution.m_alpha)
+        , m_weights               (distribution.m_weights)
+        , m_prior_distribution    (distribution.m_prior_distribution)
+        , m_size1                 (distribution.m_size1)
+        , m_size2                 (distribution.m_size2)
+        , m_bg_cluster_tag        (distribution.m_bg_cluster_tag)
+        , m_log_likelihood        (distribution.m_log_likelihood)
+        , m_marginal_probability  (distribution.m_marginal_probability)
+        , m_component_assignments (distribution.m_component_assignments)
+        , m_data                  (distribution.m_data)
+        , m_verbose               (distribution.m_verbose)
+        , m_g                     (distribution.m_g)
+        , m_g_prev                (distribution.m_g_prev)
+        , m_epsilon               (distribution.m_epsilon)
+        , m_n                     (distribution.m_n)
 { }
 
 default_background_t::~default_background_t() {
@@ -73,7 +108,7 @@ default_background_t*
 default_background_t::clone() const {
         return new default_background_t(*this);
 }
-
+ 
 default_background_t&
 default_background_t::operator=(const component_model_t& component_model)
 {
@@ -84,143 +119,273 @@ default_background_t::operator=(const component_model_t& component_model)
 }
 
 void
-default_background_t::update(const string& msg_prefix)
+default_background_t::compute_marginal()
 {
-        gradient_ascent();
-        precompute_marginal();
+        /* also update the log likelihood */
+        m_log_likelihood = 0.0;
 
-        if (m_verbose >= 1) {
-                flockfile(stderr);
-                if (msg_prefix != "") {
-                        cerr << msg_prefix << ": ";
-                }
-                cerr << "Background pseudocounts: ";
-                for (size_t k = 0; k < m_size; k++) {
-                        cerr << alpha[k] << " ";
-                }
-                cerr << endl;
-                fflush(stderr);
-                funlockfile(stderr);
-        }
-}
-
-void
-default_background_t::precompute_marginal()
-{
         /* go through the data and precompute
          * lnbeta(n + alpha) - lnbeta(alpha) */
         for(size_t i = 0; i < data().size(); i++) {
                 for(size_t j = 0; j < data()[i].size(); j++) {
-                        m_precomputed_marginal[i][j] =
-                                  mbeta_log(alpha, data()[i][j])
-                                - mbeta_log(alpha);
+                        const index_t index(i,j);
+                        /* get mixture component */
+                        const size_t k = m_component_assignments[index];
+                        /* recompute marginal at this position */
+                        m_marginal_probability[index] =
+                                  mbeta_log(m_alpha[k], data()[index])
+                                - mbeta_log(m_alpha[k]);
+                        /* if this position is assigned to the
+                         * background, update the log likelihood */
+                        if (cluster_assignments()[index] == m_bg_cluster_tag) {
+                                m_log_likelihood += m_marginal_probability[index];
+                        }
                 }
         }
-}
-
-double
-default_background_t::gradient(
-        const index_t& index, size_t k,
-        double alpha_sum)
-{
-        double sum = accumulate(data()[index].begin(), data()[index].end(), 0.0);
-
-        return boost::math::digamma(data()[index][k]+alpha[k]) - boost::math::digamma(sum+alpha_sum);
 }
 
 void
 default_background_t::gradient(
         const index_t& index,
-        double alpha_sum,
-        vector<double>& result)
+        size_t i, size_t j,
+        double alpha_sum)
 {
-        for (size_t k = 0; k < m_size; k++) {
-                result[k] += gradient(index, k, alpha_sum);
+        const double sum = accumulate(data()[index].begin(), data()[index].end(), 0.0);
+
+        m_g[i][j] += boost::math::digamma(data()[index][j]+m_alpha[i][j])
+                - boost::math::digamma(sum+alpha_sum);
+}
+
+void
+default_background_t::gradient(
+        const index_t& index,
+        size_t i,
+        double alpha_sum)
+{
+        for (size_t j = 0; j < m_size2; j++) {
+                gradient(index, i, j, alpha_sum);
         }
 }
 
 void
-default_background_t::gradient(vector<double>& result)
+default_background_t::gradient()
 {
-        double alpha_sum = accumulate(alpha.begin(), alpha.end(), 0.0);
-        double n = 0.0;
+        // precompute pseudocount sums for each component
+        vector<double> alpha_sum;
+        for (size_t i = 0; i < m_size1; i++) {
+                alpha_sum.push_back(accumulate(m_alpha[i].begin(), m_alpha[i].end(), 0.0));
+        };
 
         // likelihood
         for (size_t i = 0; i < data().size(); i++) {
                 for (size_t j = 0; j < data()[i].size(); j++) {
                         index_t index(i, j);
+                        /* the gradient should consider only those
+                         * positions that are currently assigned to the
+                         * background */
                         if (cluster_assignments()[index] == m_bg_cluster_tag) {
-                                gradient(index, alpha_sum, result);
-                                n += 1.0;
+                                const ssize_t k = m_component_assignments[index];
+                                assert(k != -1);
+
+                                gradient(index, k, alpha_sum[k]);
                         }
                 }
         }
-        for (size_t k = 0; k < m_size; k++) {
-                result[k] -= n*(boost::math::digamma(alpha[k]) - boost::math::digamma(alpha_sum));
+        for (size_t i = 0; i < m_size1; i++) {
+                for (size_t j = 0; j < m_size2; j++) {
+                        m_g[i][j] -= m_n[i]*(boost::math::digamma(m_alpha[i][j]) - boost::math::digamma(alpha_sum[i]));
+                }
         }
         // prior
-        for (size_t k = 0; k < m_size; k++) {
-                result[k] += boost::math::log_pdf_derivative(prior_distribution, alpha[k]);
+        for (size_t i = 0; i < m_size1; i++) {
+                for (size_t j = 0; j < m_size2; j++) {
+                        m_g[i][j] += boost::math::log_pdf_derivative(m_prior_distribution, m_alpha[i][j]);
+                }
         }
 }
 
 double
-default_background_t::gradient_ascent(
-        vector<double>& g,
-        vector<double>& g_prev,
-        vector<double>& epsilon,
+default_background_t::gradient_ascent_loop(
         double eta,
         double min_alpha)
 {
         double result = 0.0;
 
         /* save old gradient and compute the new one */
-        g_prev = g; fill(g.begin(), g.end(), 0.0);
-        gradient(g);
+        m_g_prev = m_g;
+        /* reset gradient */
+        for (size_t i = 0; i < m_size1; i++) {
+                fill(m_g[i].begin(), m_g[i].end(), 0.0);
+        }
+        /* recompute gradient */
+        gradient();
 
-        for (size_t k = 0; k < m_size; k++) {
-                double step = g[k] >= 0.0 ?
-                        epsilon[k] : -epsilon[k];
+        /* recompute step size and
+         * update alpha pseudocounts*/
+        for (size_t i = 0; i < m_size1; i++) {
+                for (size_t j = 0; j < m_size2; j++) {
+                        double step = m_g[i][j] >= 0.0 ?
+                                m_epsilon[i][j] : -m_epsilon[i][j];
 
-                if (g[k] == 0.0)
-                        continue;
-                if (alpha[k] + step > 0.0) {
-                        alpha[k] += step;
-                        if (g_prev[k]*g[k] > 0.0) {
-                                epsilon[k] *= 1.0+eta;
+                        if (m_g[i][j] == 0.0)
+                                continue;
+                        if (m_alpha[i][j] + step > 0.0) {
+                                m_alpha[i][j] += step;
+                                if (m_g_prev[i][j]*m_g[i][j] > 0.0) {
+                                        m_epsilon[i][j] *= 1.0+eta;
+                                }
+                                if (m_g_prev[i][j]*m_g[i][j] < 0.0) {
+                                        m_epsilon[i][j] *= 1.0-eta;
+                                }
                         }
-                        if (g_prev[k]*g[k] < 0.0) {
-                                epsilon[k] *= 1.0-eta;
+                        else {
+                                m_alpha[i][j] = min_alpha;
+                        }
+                        result += abs(m_g[i][j]);
+                }
+        }
+        return result;
+}
+
+bool
+default_background_t::gradient_ascent()
+{
+        bool optimized = false;
+
+        for (double sum = 1.0; sum > 0.1;) {
+                sum = gradient_ascent_loop();
+                /* record of parameters changed */
+                if (sum > 0.1) {
+                        optimized = true;
+                }
+        }
+        return optimized;
+}
+
+ssize_t
+default_background_t::max_component(const index_t& index) const
+{
+        vector<double> result(m_size1, 0.0);
+
+        /* find component with highest predictive value */
+        for (size_t i = 0; i < m_size1; i++) {
+                /* counts contains the data count statistic
+                 * and the pseudo counts alpha */
+                result[i] = mbeta_log(m_alpha[i], data()[index])
+                          - mbeta_log(m_alpha[i])
+                          + log(m_weights[i]);
+        }
+        return distance(result.begin(), max_element(result.begin(), result.end()));
+}
+
+bool
+default_background_t::compute_component_assignments_loop()
+{
+        bool optimized = false;
+        /* optimize assignments */
+        for (size_t i = 0; i < data().size(); i++) {
+                for (size_t j = 0; j < data()[i].size(); j++) {
+                        index_t index(i, j);
+                        /* update count statistics */
+                        if (cluster_assignments()[index] == m_bg_cluster_tag && 
+                            m_component_assignments[index] != -1) {
+                                m_n[m_component_assignments[index]] -= 1.0;
+                        }
+                        /* get best assignment */
+                        ssize_t k = max_component(index);
+                        /* check if assigment changed */
+                        if (k != m_component_assignments[index]) {
+                                optimized = true;
+                        }
+                        /* save assignemnt */
+                        m_component_assignments[index] = k;
+                        /* update count statistics */
+                        if (cluster_assignments()[index] == m_bg_cluster_tag) {
+                                m_n[k] += 1.0;
                         }
                 }
-                else {
-                        alpha[k] = min_alpha;
-                }
-                result += abs(g[k]);
+        }
+        return optimized;
+}
+
+bool
+default_background_t::compute_component_assignments()
+{
+        bool optimized = true;
+        bool result    = false;
+        /* iterate until reaching a fixed point */
+        for (size_t i = 0; optimized; i++) {
+                optimized = compute_component_assignments_loop();
+                result |= optimized;
         }
         return result;
 }
 
 void
-default_background_t::gradient_ascent()
+default_background_t::update(const string& msg_prefix)
 {
-        vector<double> g      (m_size, 1.0);
-        vector<double> g_prev (m_size, 0.0);
-        vector<double> epsilon(m_size, 1.0e-2);
+        bool optimized;
 
-        for (double sum = 1.0; sum > 0.1;) {
-                sum = gradient_ascent(g, g_prev, epsilon);
+        do {
+                optimized = false;
+                /* given the pseucodounts, recompute component
+                 * assignments */
+                optimized |= compute_component_assignments();
+                /* optimized pseudocounts */
+                optimized |= gradient_ascent();
+        } while (optimized);
+
+        /* recompute marginal probabilities and the log likelihood */
+        compute_marginal();
+
+        if (m_verbose >= 1) {
+                flockfile(stderr);
+                if (msg_prefix != "") {
+                        cerr << msg_prefix << ": ";
+                }
+                cerr << "Background pseudocounts: "
+                     << endl;
+                cerr << print_pseudocounts()
+                     << endl;
+                fflush(stderr);
+                funlockfile(stderr);
         }
 }
 
 size_t
 default_background_t::add(const range_t& range) {
-        return range.length();
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
+
+        for (size_t i = 0; i < length; i++) {
+                const index_t index(sequence, position+i);
+                m_log_likelihood += m_marginal_probability[index];
+                /* update count statistics */
+                if (m_component_assignments[index] != -1) {
+                        m_n[m_component_assignments[index]] += 1.0;
+                }
+        }
+
+        return length;
 }
 
 size_t
 default_background_t::remove(const range_t& range) {
-        return range.length();
+        const size_t sequence = range.index()[0];
+        const size_t position = range.index()[1];
+        const size_t length   = range.length();
+
+        for (size_t i = 0; i < length; i++) {
+                const index_t index(sequence, position+i);
+                m_log_likelihood -= m_marginal_probability[index];
+                /* update count statistics */
+                if (m_component_assignments[index] != -1) {
+                        m_n[m_component_assignments[index]] -= 1.0;
+                }
+        }
+
+        return length;
 }
 
 size_t
@@ -250,7 +415,7 @@ double default_background_t::log_predictive(const range_t& range) {
 
                 /* counts contains the data count statistic
                  * and the pseudo counts alpha */
-                result += m_precomputed_marginal[index];
+                result += m_marginal_probability[index];
         }
 
         return result;
@@ -273,7 +438,7 @@ double default_background_t::log_predictive(const vector<range_t>& range_set) {
                         /* all positions in the alignment are fully
                          * independent, hence we do not need to sum
                          * any counts */
-                        result += m_precomputed_marginal[index];
+                        result += m_marginal_probability[index];
                 }
         }
 
@@ -284,24 +449,31 @@ double default_background_t::log_predictive(const vector<range_t>& range_set) {
  *  p(x) = Beta(n(x) + alpha) / Beta(alpha)
  */
 double default_background_t::log_likelihood() const {
-        double result = 0;
+        double result = m_log_likelihood;
 
-        /* counts contains the data count statistic
-         * and the pseudo counts alpha */
-        for(size_t i = 0; i < cluster_assignments().size(); i++) {
-                for(size_t j = 0; j < cluster_assignments()[i].size(); j++) {
-                        if (cluster_assignments()[i][j] == m_bg_cluster_tag) {
-                                const index_t index(i, j);
-                                result += m_precomputed_marginal[index];
-                        }
+        /* pseudocount probability */
+        for (size_t i = 0; i < m_size1; i++) {
+                for (size_t j = 0; j < m_size2; j++) {
+                        result += std::log(boost::math::pdf(m_prior_distribution, m_alpha[i][j]));
                 }
-        }
-        /* prior probability for the pseudocounts*/
-        for (size_t k = 0; k < m_size; k++) {
-                result += std::log(boost::math::pdf(prior_distribution, alpha[k]));
         }
 
         return result;
+}
+
+string
+default_background_t::print_pseudocounts() const {
+        stringstream ss;
+
+        for (size_t i = 0; i < m_size1; i++) {
+                if (i != 0) ss << endl;
+                ss << " -> ";
+                for (size_t j = 0; j < m_size2; j++) {
+                        ss << boost::format("%7.4f ") % m_alpha[i][j];
+                }
+                ss << boost::format("(%0.2f%%)") % (m_n[i]/accumulate(m_n.begin(), m_n.end(), 0.0));
+        }
+        return ss.str();
 }
 
 string

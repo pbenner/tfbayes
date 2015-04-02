@@ -58,7 +58,7 @@ typedef struct _options_t {
                   discount(0.0),
                   lambda(0.01),
                   process_prior("pitman-yor process"),
-                  background_model("dirichlet-mixture"),
+                  background_model("default-background"),
                   background_alpha(1),
                   background_context(2),
                   population_size(1),
@@ -165,6 +165,7 @@ void run_dpm(const char* phylogenetic_data_file, const char* fasta_alignment_fil
         tfbs_options.background_model    = options.background_model;
         tfbs_options.background_gamma    = vector<double>(2,1);
         tfbs_options.background_context  = options.background_context;
+        tfbs_options.background_weights  = vector<double>(2,0.5);
         tfbs_options.baseline_weights    = vector<double>(1,1);
         tfbs_options.baseline_names.push_back("baseline-default");
         tfbs_options.block_samples       = false;

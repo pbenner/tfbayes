@@ -84,7 +84,7 @@ public:
         const sequence_data_t<cluster_tag_t>& cluster_assignments() const {
                 return static_cast<const sequence_data_t<cluster_tag_t>&>(component_model_t::cluster_assignments());
         }
-        const sequence_data_t<data_tfbs_t::code_t>& data() {
+        const sequence_data_t<data_tfbs_t::code_t>& data() const {
                 return *_data;
         }
 
@@ -149,7 +149,7 @@ public:
         const sequence_data_t<cluster_tag_t>& cluster_assignments() const {
                 return static_cast<const sequence_data_t<cluster_tag_t>&>(component_model_t::cluster_assignments());
         }
-        const sequence_data_t<data_tfbs_t::code_t>& data() {
+        const sequence_data_t<data_tfbs_t::code_t>& data() const {
                 return *_data;
         }
 
@@ -223,7 +223,7 @@ public:
         const sequence_data_t<cluster_tag_t>& cluster_assignments() const {
                 return static_cast<const sequence_data_t<cluster_tag_t>&>(component_model_t::cluster_assignments());
         }
-        const sequence_data_t<data_tfbs_t::code_t>& data() {
+        const sequence_data_t<data_tfbs_t::code_t>& data() const {
                 return *m_data;
         }
 
@@ -250,6 +250,7 @@ class default_background_t : public component_model_t {
 public:
          default_background_t(
                  const std::vector<double>& parameters,
+                 const std::vector<double>& weights,
                  const sequence_data_t<data_tfbs_t::code_t>& data,
                  const sequence_data_t<cluster_tag_t>& cluster_assignments,
                  thread_pool_t& thread_pool,
@@ -266,13 +267,21 @@ public:
                 using std::swap;
                 swap(static_cast<component_model_t&>(first),
                      static_cast<component_model_t&>(second));
-                swap(first.alpha,                  second.alpha);
-                swap(first.prior_distribution,     second.prior_distribution);
-                swap(first.m_size,                 second.m_size);
-                swap(first.m_bg_cluster_tag,       second.m_bg_cluster_tag);
-                swap(first.m_precomputed_marginal, second.m_precomputed_marginal);
-                swap(first.m_data,                 second.m_data);
-                swap(first.m_verbose,              second.m_verbose);
+                swap(first.m_alpha,                 second.m_alpha);
+                swap(first.m_weights,               second.m_weights);
+                swap(first.m_prior_distribution,    second.m_prior_distribution);
+                swap(first.m_size1,                 second.m_size1);
+                swap(first.m_size2,                 second.m_size2);
+                swap(first.m_bg_cluster_tag,        second.m_bg_cluster_tag);
+                swap(first.m_log_likelihood,        second.m_log_likelihood);
+                swap(first.m_marginal_probability,  second.m_marginal_probability);
+                swap(first.m_component_assignments, second.m_component_assignments);
+                swap(first.m_data,                  second.m_data);
+                swap(first.m_verbose,               second.m_verbose);
+                swap(first.m_g,                     second.m_g);
+                swap(first.m_g_prev,                second.m_g_prev);
+                swap(first.m_epsilon,               second.m_epsilon);
+                swap(first.m_n,                     second.m_n);
         }
 
         default_background_t& operator=(const component_model_t& component_model);
@@ -281,17 +290,19 @@ public:
         typedef data_tfbs_t::code_t counts_t;
 
         void update(const std::string& msg_prefix = "");
-        void precompute_marginal();
 
-        double gradient(const index_t& index, size_t k, double alpha_sum);
-        void   gradient(const index_t& index, double alpha_sum, std::vector<double>& result);
-        void   gradient(std::vector<double>& result);
+        ssize_t max_component(const index_t& index) const;
 
-        void gradient_ascent();
-        double gradient_ascent(
-                std::vector<double>& g,
-                std::vector<double>& g_prev,
-                std::vector<double>& epsilon,
+        bool compute_component_assignments_loop();
+        bool compute_component_assignments();
+        void compute_marginal();
+
+        void gradient(const index_t& index, size_t i, size_t j, double alpha_sum);
+        void gradient(const index_t& index, size_t i, double alpha_sum);
+        void gradient();
+
+        bool   gradient_ascent();
+        double gradient_ascent_loop(
                 double eta = 0.1,
                 double min_alpha = 1.0e-20);
 
@@ -304,29 +315,41 @@ public:
         double log_predictive(const std::vector<range_t>& range_set);
         double log_likelihood() const;
         std::string print_counts() const;
+        std::string print_pseudocounts() const;
         void set_bg_cluster_tag(cluster_tag_t cluster_tag);
 
         const sequence_data_t<cluster_tag_t>& cluster_assignments() const {
                 return static_cast<const sequence_data_t<cluster_tag_t>&>(component_model_t::cluster_assignments());
         }
-        const sequence_data_t<data_tfbs_t::code_t>& data() {
+        const sequence_data_t<data_tfbs_t::code_t>& data() const {
                 return *m_data;
         }
 
         friend std::ostream& operator<< (std::ostream& o, const default_background_t& pd);
 
 protected:
-        counts_t alpha;
-        boost::math::gamma_distribution<> prior_distribution;
+        std::vector<counts_t> m_alpha;
+        std::vector<double  > m_weights;
+        boost::math::gamma_distribution<> m_prior_distribution;
 
-        size_t m_size;
+        size_t m_size1;
+        size_t m_size2;
 
         cluster_tag_t m_bg_cluster_tag;
 
-        sequence_data_t<double> m_precomputed_marginal;
+        double m_log_likelihood;
+        sequence_data_t<double > m_marginal_probability;
+        sequence_data_t<ssize_t> m_component_assignments;
         const sequence_data_t<data_tfbs_t::code_t>* m_data;
 
         size_t m_verbose;
+
+        /* gradients */
+        std::matrix<double> m_g;
+        std::matrix<double> m_g_prev;
+        std::matrix<double> m_epsilon;
+        /* number of positions assigned to each component */
+        std::vector<double> m_n;
 };
 
 // Multinomial/Dirichlet Mixture Model

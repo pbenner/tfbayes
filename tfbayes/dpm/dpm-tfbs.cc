@@ -84,7 +84,7 @@ dpm_tfbs_t::dpm_tfbs_t(const tfbs_options_t& options,
                 assert(options.threads >= 1);
                 thread_pool_t thread_pool(options.threads);
                 default_background_t* bg = new default_background_t(
-                        options.background_gamma, data,
+                        options.background_gamma, options.background_weights, data,
                         m_state.cluster_assignments(), thread_pool, options.background_cache,
                         alignment_set, options.verbose);
                 cluster_tag_t tag = m_state.add_background_cluster(*bg);
