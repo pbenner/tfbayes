@@ -37,6 +37,7 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 default_background_t::default_background_t(
+        const matrix<double>& alpha,
         const vector<double>& parameters,
         const vector<double>& weights,
         const sequence_data_t<data_tfbs_t::code_t>& data,
@@ -58,9 +59,6 @@ default_background_t::default_background_t(
         , m_data                  (&data)
         , m_verbose               (verbose)
 {
-        boost::random::mt19937 gen; seed_rng(gen);
-        // distribution for generating noise
-        boost::random::normal_distribution<> dist(0.0, 0.001);
         // if no weights are given, assume the model should consist of
         // a single component
         if (m_size1 == 0) {
@@ -68,10 +66,25 @@ default_background_t::default_background_t(
                 m_alpha  .push_back(counts_t());
                 m_weights.push_back(1.0);
         }
-        // initialize parameters differently for each component
-        for (size_t i = 0; i < m_size1; i++) {
-                for (size_t j = 0; j < m_size2; j++) {
-                        m_alpha[i][j] = 0.5 + dist(gen);
+        // initialize pseudocounts
+        if (alpha.size() == 0) {
+                boost::random::mt19937 gen; seed_rng(gen);
+                // distribution for generating noise
+                boost::random::normal_distribution<> dist(0.0, 0.001);
+                // no initial parameters given, initialize randomly
+                for (size_t i = 0; i < m_size1; i++) {
+                        for (size_t j = 0; j < m_size2; j++) {
+                                m_alpha[i][j] = 0.5 + dist(gen);
+                        }
+                }
+        }
+        else {
+                assert(alpha.size() == m_size1);
+                for (size_t i = 0; i < m_size1; i++) {
+                        assert(alpha[i].size() == m_size2);
+                        for (size_t j = 0; j < m_size2; j++) {
+                                m_alpha[i][j] = alpha[i][j];
+                        }
                 }
         }
 
@@ -212,12 +225,12 @@ default_background_t::gradient()
         }
 }
 
-double
+bool
 default_background_t::gradient_ascent_loop(
         double eta,
         double min_alpha)
 {
-        double result = 0.0;
+        double sum = 0.0;
 
         /* save old gradient and compute the new one */
         m_g_prev = m_g;
@@ -228,6 +241,15 @@ default_background_t::gradient_ascent_loop(
         /* recompute gradient */
         gradient();
 
+        /* check if abort condition is met */
+        for (size_t i = 0; i < m_size1; i++) {
+                for (size_t j = 0; j < m_size2; j++) {
+                        sum += abs(m_g[i][j]);
+                }
+        }
+        if (sum < 0.1) {
+                return false;
+        }
         /* recompute step size and
          * update alpha pseudocounts*/
         for (size_t i = 0; i < m_size1; i++) {
@@ -249,25 +271,24 @@ default_background_t::gradient_ascent_loop(
                         else {
                                 m_alpha[i][j] = min_alpha;
                         }
-                        result += abs(m_g[i][j]);
                 }
         }
-        return result;
+        return true;
 }
 
 bool
 default_background_t::gradient_ascent()
 {
-        bool optimized = false;
+        bool optimized;
+        bool result = false;
 
-        for (double sum = 1.0; sum > 0.1;) {
-                sum = gradient_ascent_loop();
-                /* record of parameters changed */
-                if (sum > 0.1) {
-                        optimized = true;
-                }
-        }
-        return optimized;
+        do {
+                optimized = gradient_ascent_loop();
+                /* record if there was at least one update */
+                result |= optimized;
+        } while (optimized);
+
+        return result;
 }
 
 ssize_t

@@ -249,6 +249,7 @@ protected:
 class default_background_t : public component_model_t {
 public:
          default_background_t(
+                 const std::matrix<double>& alpha,
                  const std::vector<double>& parameters,
                  const std::vector<double>& weights,
                  const sequence_data_t<data_tfbs_t::code_t>& data,
@@ -301,8 +302,8 @@ public:
         void gradient(const index_t& index, size_t i, double alpha_sum);
         void gradient();
 
-        bool   gradient_ascent();
-        double gradient_ascent_loop(
+        bool gradient_ascent();
+        bool gradient_ascent_loop(
                 double eta = 0.1,
                 double min_alpha = 1.0e-20);
 
