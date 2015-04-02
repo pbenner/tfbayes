@@ -22,10 +22,13 @@
 #include <vector>
 
 #include <boost/format.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/normal_distribution.hpp>
 
 #include <tfbayes/dpm/component-model.hh>
 #include <tfbayes/utility/multinomial-beta.hh>
 #include <tfbayes/utility/normalize.hh>
+#include <tfbayes/utility/random.hh>
 
 #include <boost/math/distributions/gamma_extra.hpp>
 
@@ -55,6 +58,9 @@ default_background_t::default_background_t(
         , m_data                  (&data)
         , m_verbose               (verbose)
 {
+        boost::random::mt19937 gen; seed_rng(gen);
+        // distribution for generating noise
+        boost::random::normal_distribution<> dist(0.0, 0.001);
         // if no weights are given, assume the model should consist of
         // a single component
         if (m_size1 == 0) {
@@ -63,8 +69,10 @@ default_background_t::default_background_t(
                 m_weights.push_back(1.0);
         }
         // initialize parameters differently for each component
-        for (size_t i = 0; i < m_alpha.size(); i++) {
-                fill(m_alpha[i].begin(), m_alpha[i].end(), i+1);
+        for (size_t i = 0; i < m_size1; i++) {
+                for (size_t j = 0; j < m_size2; j++) {
+                        m_alpha[i][j] = 0.5 + dist(gen);
+                }
         }
 
         if (m_verbose >= 1) {
