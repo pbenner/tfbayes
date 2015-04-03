@@ -290,7 +290,7 @@ public:
         // datatypes
         typedef data_tfbs_t::code_t counts_t;
 
-        void update(const std::string& msg_prefix = "");
+        void update();
 
         ssize_t max_component(const index_t& index) const;
 
@@ -316,7 +316,6 @@ public:
         double log_predictive(const std::vector<range_t>& range_set);
         double log_likelihood() const;
         std::string print_counts() const;
-        std::string print_pseudocounts() const;
         void set_bg_cluster_tag(cluster_tag_t cluster_tag);
 
         const sequence_data_t<cluster_tag_t>& cluster_assignments() const {

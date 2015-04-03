@@ -173,7 +173,7 @@ bivariate_normal_t::inverse(gsl_matrix* dst, const gsl_matrix* src) {
 }
 
 void
-bivariate_normal_t::update(const std::string& msg_prefix)
+bivariate_normal_t::update()
 {
         // update _mu_N and _Sigma_N
 

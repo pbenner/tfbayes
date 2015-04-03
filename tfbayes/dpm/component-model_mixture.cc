@@ -290,6 +290,10 @@ double mixture_dirichlet_t::log_likelihood() const {
 string
 mixture_dirichlet_t::print_counts() const {
         stringstream ss;
+
+        ss << "Background counts: "
+           << endl;
+
         for (size_t k = 0; k < m_size2; k++) {
                 ss << " -> " << nucleotide_alphabet_t().decode(k) << " ";
                 for (size_t j = 0; j < m_size1; j++) {

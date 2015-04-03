@@ -351,7 +351,7 @@ default_background_t::compute_component_assignments()
 }
 
 void
-default_background_t::update(const string& msg_prefix)
+default_background_t::update()
 {
         bool optimized;
 
@@ -366,19 +366,6 @@ default_background_t::update(const string& msg_prefix)
 
         /* recompute marginal probabilities and the log likelihood */
         compute_marginal();
-
-        if (m_verbose >= 1) {
-                flockfile(stderr);
-                if (msg_prefix != "") {
-                        cerr << msg_prefix << ": ";
-                }
-                cerr << "Background pseudocounts: "
-                     << endl;
-                cerr << print_pseudocounts()
-                     << endl;
-                fflush(stderr);
-                funlockfile(stderr);
-        }
 }
 
 size_t
@@ -491,8 +478,11 @@ double default_background_t::log_likelihood() const {
 }
 
 string
-default_background_t::print_pseudocounts() const {
+default_background_t::print_counts() const {
         stringstream ss;
+
+        ss << "Background pseudocounts: "
+           << endl;
 
         for (size_t i = 0; i < m_size1; i++) {
                 if (i != 0) ss << endl;
@@ -503,11 +493,6 @@ default_background_t::print_pseudocounts() const {
                 ss << boost::format("(%0.2f%%)") % (m_n[i]/accumulate(m_n.begin(), m_n.end(), 0.0));
         }
         return ss.str();
-}
-
-string
-default_background_t::print_counts() const {
-        return string();
 }
 
 void

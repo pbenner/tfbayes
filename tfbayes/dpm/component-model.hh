@@ -81,7 +81,7 @@ public:
         virtual double log_predictive(const std::vector<range_t>& range_set) = 0;
         virtual double log_likelihood() const = 0;
         virtual std::string print_counts() const { return std::string(); }
-        virtual void update(const std::string& msg_prefix = "") { }
+        virtual void update() { }
         virtual const model_id_t& id() const { return m_model_id; }
         virtual       model_id_t& id()       { return m_model_id; }
 
