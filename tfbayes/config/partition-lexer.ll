@@ -24,10 +24,15 @@
 %option nounput
 
 %{
-#include <stdio.h>
 #include <tfbayes/config/partition-parser.hh>
 
 #define YY_USER_ACTION \
+	std::cout << "current line number: " << yyget_lineno(yyscanner) << std::endl; \
+	std::cerr << "YY_CURRENT_BUFFER: " << YY_CURRENT_BUFFER << std::endl; \
+	std::cerr << "YY_CURRENT_BUFFER_LVALUE: " << YY_CURRENT_BUFFER_LVALUE << std::endl; \
+	std::cerr << "YY_CURRENT_BUFFER_LVALUE->yy_buffer_status: " << YY_CURRENT_BUFFER_LVALUE->yy_buffer_status << std::endl; \
+	if (!yylineno) { std::cerr << "ERROR 101" << std::endl; } \
+	if (!yycolumn) { std::cerr << "ERROR 102" << std::endl; } \
 	yylloc->first_line   = yylloc->last_line = yylineno; \
 	yylloc->first_column = yycolumn; \
 	yylloc->last_column  = yycolumn + yyleng - 1; \
@@ -58,10 +63,4 @@ WHITESPACE [\ \t]
 -                          { return DASH; }
 .                          { return yytext[0]; }
 %%
-int yywrap(yyscan_t scanner) {
-        return 1;
-}
-void yylex_set_input(yyscan_t scanner, FILE* file) {
-	struct yyguts_t * yyg = (struct yyguts_t*)scanner;
-	yyg->yyin_r = file;
-}
+#include <tfbayes/config/partition-lexer-code.hh>

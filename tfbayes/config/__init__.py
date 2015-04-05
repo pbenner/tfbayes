@@ -22,8 +22,9 @@ from tools import *
 # sampler and results config parser
 # ------------------------------------------------------------------------------
 
-from results import default_results_config
-from results import parse_results_config
-from results import save_results_config
-from sampler import parse_sampler_config
-from sampler import default_sampler_config
+from results   import default_results_config
+from results   import parse_results_config
+from results   import save_results_config
+from sampler   import parse_sampler_config
+from sampler   import default_sampler_config
+from interface import *

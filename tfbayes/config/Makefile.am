@@ -24,9 +24,20 @@ libtfbayes_config_la_SOURCES = \
 	partition-code.hh \
 	partition-code-requires.hh \
 	partition-lexer.ll \
-	partition-main.hh \
-	partition-main.cc \
+	partition-lexer.hh \
+	partition-lexer-code.hh \
 	partition-parser.yy
+
+## interface
+pkgpython_LTLIBRARIES = interface.la
+
+interface_la_CPPFLAGS  = $(AM_CPPFLAGS) $(PYTHON_CPPFLAGS)
+interface_la_SOURCES   = \
+	interface.cc
+interface_la_LIBADD    = libtfbayes-config.la
+interface_la_LIBADD   += $(BOOST_PYTHON_LIB)
+interface_la_LDFLAGS   = -avoid-version
+interface_la_LDFLAGS  += -module
 
 ## set python package name
 pkgpythondir = $(pyexecdir)/tfbayes/config

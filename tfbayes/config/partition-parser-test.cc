@@ -18,7 +18,7 @@
 #include <iostream>
 #include <cstdlib>
 
-#include <tfbayes/config/partition-main.hh>
+#include <tfbayes/config/partition-lexer.hh>
 
 using namespace std;
 
@@ -39,6 +39,8 @@ main(int argc, char *argv[])
                 cout << partition_list[i]
                      << endl;
         }
+
+        parse_partition_list_str("baseline-default:11:{(0, 334), (0, 230), (0, 230)!}, iohf");
 
         return 0;
 }
