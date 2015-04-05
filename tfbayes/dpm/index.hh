@@ -88,6 +88,11 @@ protected:
 
 class range_t {
 public:
+        range_t()
+                : m_index  ()
+                , m_length ()
+                , m_reverse()
+                { }
         range_t(const index_t& index, size_t length, bool reverse) GCC_ATTRIBUTE_HOT
                 : m_index  (index)
                 , m_length (length)

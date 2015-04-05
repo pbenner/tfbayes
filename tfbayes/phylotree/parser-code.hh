@@ -15,23 +15,34 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __TFBAYES_PHYLOTREE_PARSER_CODE_HH__
-#define __TFBAYES_PHYLOTREE_PARSER_CODE_HH__
+#include <new>
+#include <inttypes.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif /* HAVE_CONFIG_H */
+#include <tfbayes/phylotree/parser.hh>
 
-#include <iostream>
+char *yyget_text (yyscan_t scanner);
 
-#include <tfbayes/phylotree/parsetree.hh>
+int yylex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param, yyscan_t scanner);
+int yylex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param, context_t* context) {
+    return yylex(yylval_param, yylloc_param, context->scanner);
+}
 
-#define YYSTYPE pt_parsetree_t *
+int yyerror(YYLTYPE* locp, context_t* context, const char* err) {
+        fprintf(stderr, "parsing error at line %d colum %d near `%s': %s\n",
+		locp->first_line, locp->first_column,
+		yyget_text(context->scanner), err);
+        exit(EXIT_FAILURE);
+}
 
-typedef void* yyscan_t;
-typedef struct {
-	pt_parsetree_t* pt_parsetree;
-	yyscan_t scanner;
-} context_t;
-
-#endif /* __TFBAYES_PHYLOTREE_PARSER_CODE_HH__ */
+#define allocate(result, type) \
+        try { \
+	    result = new type; \
+        } \
+	catch (std::bad_alloc&) { \
+                std::cerr << "Memory allocation failed!" \
+                          << std::endl; \
+                exit(EXIT_FAILURE); \
+        }

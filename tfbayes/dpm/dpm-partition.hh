@@ -39,6 +39,10 @@ public:
 
         // constructors
         ////////////////////////////////////////////////////////////////////////
+        dpm_subset_t()
+                : base_t()
+                , _model_id()
+                {}
         dpm_subset_t(const model_id_t& model_id)
                 : base_t()
                 , _model_id(model_id)

@@ -29,11 +29,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 %code requires {
-#include <tfbayes/phylotree/parser-code.hh>
+#include <tfbayes/phylotree/parser-code-requires.hh>
 }
 
 %code {
-#include <tfbayes/phylotree/parser-code.cc>
+#include <tfbayes/phylotree/parser-code.hh>
 }
 
 // token definitions

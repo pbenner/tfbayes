@@ -1,4 +1,4 @@
-/* Copyright (C) 2013 Philipp Benner
+/* Copyright (C) 2015 Philipp Benner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <tfbayes/phylotree/parser.hh>
+#include <tfbayes/config/partition-parser.hh>
 
 char *yyget_text (yyscan_t scanner);
 
@@ -37,12 +37,33 @@ int yyerror(YYLTYPE* locp, context_t* context, const char* err) {
         exit(EXIT_FAILURE);
 }
 
-#define allocate(result, type) \
-        try { \
-	    result = new type; \
-        } \
-	catch (std::bad_alloc&) { \
-                std::cerr << "Memory allocation failed!" \
-                          << std::endl; \
-                exit(EXIT_FAILURE); \
+#include <boost/format.hpp>
+
+std::ostream&
+operator<< (std::ostream& o, const index_t& index) {
+        if (index.m_x[1] == -1) {
+                o << boost::format("(%d)")
+                        % index.m_x[0];
         }
+        else {
+                o << boost::format("(%d, %d)")
+                        % index.m_x[0] % index.m_x[1];
+        }
+        return o;
+}
+
+std::ostream&
+operator<< (std::ostream& o, const range_t& range) {
+        if (typeid(range.index()) == typeid(index_t)) {
+                o << range.index()
+                  << ":" << range.length();
+        }
+        else {
+                o << range.index()
+                  << ":" << range.length();
+        }
+        if (range.reverse()) {
+                o << "!";
+        }
+        return o;
+}

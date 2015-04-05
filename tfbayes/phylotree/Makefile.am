@@ -62,6 +62,8 @@ libtfbayes_phylotree_la_SOURCES = \
 	model.hh \
 	parser.hh \
 	parser.yy \
+	parser-code.hh \
+	parser-code-requres.hh \
 	parsetree.cc \
 	parsetree.hh \
 	phylotree.cc \
