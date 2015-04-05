@@ -40,7 +40,5 @@ main(int argc, char *argv[])
                      << endl;
         }
 
-        parse_partition_list_str("baseline-default:11:{(0, 334), (0, 230), (0, 230)!}, iohf");
-
         return 0;
 }
