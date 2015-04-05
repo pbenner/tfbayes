@@ -31,6 +31,7 @@ using namespace std;
 int yylex_init   (yyscan_t* scanner);
 int yylex_destroy(yyscan_t  scanner);
 void yylex_set_input(yyscan_t scanner, FILE* file);
+void* yy_scan_string (const char *yy_str, yyscan_t scanner);
 
 dpm_partition_list_t parse_partition_list(FILE * file)
 {
@@ -67,8 +68,32 @@ dpm_partition_list_t parse_partition_list(const string& filename)
                         exit(EXIT_FAILURE);
                 }
         }
-        dpm_partition_list_t partition_list= parse_partition_list(yyin);
+        dpm_partition_list_t partition_list = parse_partition_list(yyin);
         if (yyin) fclose(yyin);
 
         return partition_list;
+}
+
+dpm_partition_list_t parse_partition_list_str(const string& str)
+{
+        context_t context;
+
+        // initialize lexer
+        yylex_init(&context.scanner);
+
+        // read buffer
+        yy_scan_string(str.c_str(), context.scanner);
+
+        // parse input
+        yyparse(&context);
+ 
+        // free lexer memory
+        yylex_destroy(context.scanner);
+
+        return context.partition_list;
+
+        // FILE* yyin = fmemopen(str.c_str(), str.size(), "r");
+        // dpm_partition_list_t partition_list = parse_partition_list(yyin);
+
+        // return partition_list;
 }
