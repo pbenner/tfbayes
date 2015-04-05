@@ -36,34 +36,3 @@ int yyerror(YYLTYPE* locp, context_t* context, const char* err) {
 		yyget_text(context->scanner), err);
         exit(EXIT_FAILURE);
 }
-
-#include <boost/format.hpp>
-
-std::ostream&
-operator<< (std::ostream& o, const index_t& index) {
-        if (index.m_x[1] == -1) {
-                o << boost::format("(%d)")
-                        % index.m_x[0];
-        }
-        else {
-                o << boost::format("(%d, %d)")
-                        % index.m_x[0] % index.m_x[1];
-        }
-        return o;
-}
-
-std::ostream&
-operator<< (std::ostream& o, const range_t& range) {
-        if (typeid(range.index()) == typeid(index_t)) {
-                o << range.index()
-                  << ":" << range.length();
-        }
-        else {
-                o << range.index()
-                  << ":" << range.length();
-        }
-        if (range.reverse()) {
-                o << "!";
-        }
-        return o;
-}
