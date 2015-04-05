@@ -37,25 +37,9 @@ int yylex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param, context_t* context) {
 int yyerror(YYLTYPE* locp, context_t* context, const char* err) {
         std::stringstream ss;
 
-        if (locp) {
-                std::cerr << "locp: " << locp << std::endl;
-                std::cerr << "text: " << yyget_text(context->scanner) << std::endl;
-
-                int i = locp->first_line;
-                int j = locp->first_column;
-                if (i)  {
-                        std::cerr << "ERROR 1" << std::endl;
-                }
-                if (j)  {
-                        std::cerr << "ERROR 2" << std::endl;
-                }
-        }
-
         ss << boost::format("parsing error at line %d column %d near `%s': %s\n")
 		% locp->first_line % locp->first_column
 		% yyget_text(context->scanner) % std::string(err);
-
-        std::cerr << ss.str() << std::endl;
 
         throw std::runtime_error(ss.str());
 }
