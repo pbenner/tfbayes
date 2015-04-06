@@ -120,8 +120,9 @@ def __main__():
         if o == "--take":
             options["take"] = int(a)
         if o in ("-v", "--verbose"):
-            sys.stderr.write("Verbose mode turned on.\n")
+            sys.stderr.write("Increasing verbose level.\n")
             options["verbose"] = True
+            sampler_config.verbose += 1
         if o in ("-h", "--help"):
             usage()
             return 0

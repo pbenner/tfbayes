@@ -20,8 +20,8 @@ import ConfigParser
 
 from tools import *
 
-from parser      import parse_partition
-from parser      import parse_partition_list
+from interface   import parse_partition
+from interface   import parse_partition_list
 from ..interface import *
 from ..dpm       import *
 
