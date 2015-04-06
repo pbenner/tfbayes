@@ -45,10 +45,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 %%
 start:
-      tree_list tree SEMICOLON
-      { allocate(context->pt_parsetree, pt_parsetree_t(TREE_LIST_N, 2, NULL, $1, $2)); }
-    | tree SEMICOLON
-      { allocate(context->pt_parsetree, pt_parsetree_t(TREE_LIST_N, 1, NULL, $1)); }
+      tree_list
+      { context->pt_parsetree = $1; }
     ;
 tree_list:
       tree_list tree SEMICOLON
@@ -56,15 +54,9 @@ tree_list:
     | tree SEMICOLON
       { allocate($$, pt_parsetree_t(TREE_LIST_N, 1, NULL, $1)); }
     ;
-tree: LPAREN node_list COMMA outgroup RPAREN
-      { allocate($$, pt_parsetree_t(TREE_N, 2, NULL, $2, $4)); }
-    ;
 tree: LPAREN node_list RPAREN
       { allocate($$, pt_parsetree_t(TREE_N, 1, NULL, $2)); }
     ;
-outgroup:
-      name COLON distance
-      { allocate($$, pt_parsetree_t(LEAF_N, 2, NULL, $1, $3)); }
 node_list:
       node_list COMMA node
       { allocate($$, pt_parsetree_t(NODE_LIST_N, 2, NULL, $1, $3)); }
