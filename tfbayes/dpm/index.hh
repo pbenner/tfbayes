@@ -109,7 +109,7 @@ public:
         bool operator==(const range_t& range) const GCC_ATTRIBUTE_HOT {
                 return range.index  () == m_index  &&
                        range.length () == m_length &&
-                       range.reverse() == range.reverse();
+                       range.reverse() == m_reverse;
         }
         bool operator!=(const range_t& range) const GCC_ATTRIBUTE_HOT {
                 return !operator==(range);
