@@ -34,4 +34,5 @@ using namespace boost::python;
 BOOST_PYTHON_MODULE(interface)
 {
         def("parse_partition_list", parse_partition_list_str);
+        def("parse_partition",      parse_partition_str);
 }

@@ -25,5 +25,6 @@
 dpm_partition_list_t parse_partition_list(FILE * file);
 dpm_partition_list_t parse_partition_list(const std::string& filename);
 dpm_partition_list_t parse_partition_list_str(const std::string& str);
+dpm_partition_t parse_partition_str(const std::string& str);
 
 #endif /* __TFBAYES_CONFIG_PARTITION_MAIN_HH__ */

@@ -16,6 +16,8 @@
  */
 
 #include <iostream>
+#include <sstream>
+#include <stdexcept>
 #include <cerrno>
 #include <cstring>
 #include <cassert>
@@ -107,4 +109,17 @@ dpm_partition_list_t parse_partition_list_str(const string& str)
         yylex_destroy(context.scanner);
 
         return context.partition_list;
+}
+
+dpm_partition_t parse_partition_str(const string& str)
+{
+        dpm_partition_list_t partition_list = parse_partition_list_str(str);
+
+        if (partition_list.size() != 1) {
+                stringstream ss;
+                ss << boost::format("Error: Found %d partitions but expected one.")
+                        % partition_list.size();
+                throw runtime_error(ss.str());
+        }
+        return *partition_list.begin();
 }
