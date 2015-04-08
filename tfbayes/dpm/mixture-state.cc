@@ -284,7 +284,7 @@ ostream& operator<< (ostream& o, const mixture_state_t& state)
 
         map2_t map;
 
-        o << " -> number of clusters: " << state.size() << endl;
+        o << " -> number of clusters: " << state.size();
 
         BOOST_FOREACH(const cluster_t* cluster, state) {
                 model_id_t id = cluster->model().id();
@@ -294,7 +294,7 @@ ostream& operator<< (ostream& o, const mixture_state_t& state)
         }
         for (map2_t::iterator it = map.begin(); it != map.end(); it++) {
 
-                o << boost::format(" clusters with model `%s\':") % it->first
+                o << boost::format("\n clusters with model `%s\':") % it->first
                   << endl;
                 for (map1_t::iterator is = it->second.begin(); is != it->second.end(); is++) {
                         if (is != it->second.begin()) {
