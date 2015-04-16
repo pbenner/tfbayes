@@ -53,32 +53,33 @@ public:
                 : base_t()
                 { }
         histogram_t(input_type min, input_type max, size_t n)
-                : base_t     (n, 0.0),
-                  m_n        (n),
-                  m_min      (min),
-                  m_max      (max),
-                  m_width    ((max-min)/n),
-                  m_total    (0.0),
-                  m_x        (n, 0.0),
-                  m_counts   (n, 0.0),
-                  m_kahan    (n, 0.0) {
+                : base_t     (n, 0.0)
+                , m_n        (n)
+                , m_min      (min)
+                , m_max      (max)
+                , m_width    ((max-min)/n)
+                , m_total    (0.0)
+                , m_x        (n, 0.0)
+                , m_counts   (n, 0.0)
+                , m_kahan    (n, 0.0) {
                 for (size_t i = 0; i < n; i++) {
                         m_x[i] = m_width/2.0 + i*m_width;
                 }
+                assert(n > 0);
         }
         template <class T, class S = input_type>
         histogram_t(input_type min, input_type max,
                     const std::vector<T>& y,
                     const std::vector<S>& counts = std::vector<S>())
-                : base_t     (y.begin(), y.end()),
-                  m_n        (y.size()),
-                  m_min      (min),
-                  m_max      (max),
-                  m_width    ((max-min)/y.size()),
-                  m_total    (0.0),
-                  m_x        (y.size(), 0.0),
-                  m_counts   (y.size(), 0.0),
-                  m_kahan    (y.size(), 0.0) {
+                : base_t     (y.begin(), y.end())
+                , m_n        (y.size())
+                , m_min      (min)
+                , m_max      (max)
+                , m_width    ((max-min)/y.size())
+                , m_total    (0.0)
+                , m_x        (y.size(), 0.0)
+                , m_counts   (y.size(), 0.0)
+                , m_kahan    (y.size(), 0.0) {
                 for (size_t i = 0; i < y.size(); i++) {
                         // compute midpoints
                         m_x[i] = m_width/2.0 + i*m_width;
@@ -128,6 +129,7 @@ public:
                 return m_counts;
         }
         input_type min_counts() const {
+                assert(m_counts.size() != 0);
                 return *std::min_element(m_counts.begin(), m_counts.end());
         }
         friend

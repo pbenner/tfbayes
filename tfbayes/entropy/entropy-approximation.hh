@@ -38,6 +38,7 @@ histogram_t<input_type, result_type> entropy_approximation(
         const std::vector<double>& y,
         const std::vector<double>& counts)
 {
+        assert(y.size() == counts.size());
         // allocate a new vector for y
         std::vector<result_type> tmp_y     (y     .size(), 0.0);
         std::vector< input_type> tmp_counts(counts.size(), 0.0);

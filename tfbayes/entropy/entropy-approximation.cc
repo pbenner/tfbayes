@@ -181,10 +181,11 @@ default_parameters()
         map<size_t, parameters_t> m;
 
         // alpha_min, alpha_max, sigma_n, bins, samples, precision
-        m[2] = {100, 500000, false, {1.0, 1.0, 1.0}};
-        m[3] = {100, 500000, false, {1.0, 1.0, 1.0}};
-        m[4] = {200, 500000, false, {0.1, 1.5, 1.0}};
-        m[5] = {200, 500000, false, {0.1, 3.0, 1.0}};
+        m[ 2] = {100, 500000, false, {1.0, 1.0, 1.0}};
+        m[ 3] = {100, 500000, false, {1.0, 1.0, 1.0}};
+        m[ 4] = {200, 500000, false, {0.1, 1.5, 1.0}};
+        m[ 5] = {200, 500000, false, {0.1, 3.0, 1.0}};
+        m[11] = {200, 500000, false, {0.1, 3.0, 1.0}};
 
         return m;
 }
@@ -202,6 +203,12 @@ main(int argc, char *argv[])
         map<size_t, parameters_t> parameters = default_parameters();
 
         for (size_t k = from; k <= to; k++) {
+                if (parameters.find(k) == parameters.end()) {
+                        cerr << boost::format("Error: no parameters found for cardinality %d.")
+                                % k
+                             << endl;
+                        exit(EXIT_FAILURE);
+                }
                 cerr << boost::format("Sampling entropies for cardinality %d...") % k
                      << endl;
 
