@@ -7,7 +7,10 @@ noinst_PROGRAMS = entropy-test entropy-approximation entropy-approximation-test 
 
 entropy_test_SOURCES = entropy-test.cc
 
-entropy_approximation_SOURCES = entropy-approximation.cc
+entropy_approximation_SOURCES = \
+	entropy-approximation-mixture.hh \
+	entropy-approximation-recursive.hh \
+	entropy-approximation.cc
 entropy_approximation_LDADD = $(BOOST_SERIALIZATION_LIB)
 
 entropy_approximation_test_SOURCES = entropy-approximation-test.cc
