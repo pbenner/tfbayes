@@ -43,16 +43,16 @@ NEWLINE [\n]
 WHITESPACE [\ \t]
 
 %%
-{WHITESPACE}+              { }
-{NEWLINE}                  { }
-{COLON}                    { return COLON; }
-{COMMA}                    { return COMMA; }
-{SEMICOLON}                { return SEMICOLON; }
-[a-zA-Z_][a-zA-Z0-9_]*     { return NAME; }
-\)                         { return RPAREN; }
-\(                         { return LPAREN; }
--?{DIGIT}+("."{DIGIT}*)?   { return FLOAT; }
-.                          { return yytext[0]; }
+{WHITESPACE}+                             { }
+{NEWLINE}                                 { }
+{COLON}                                   { return COLON; }
+{COMMA}                                   { return COMMA; }
+{SEMICOLON}                               { return SEMICOLON; }
+[a-zA-Z_][a-zA-Z0-9_]*                    { return NAME; }
+\)                                        { return RPAREN; }
+\(                                        { return LPAREN; }
+-?{DIGIT}+("."{DIGIT}*)?([eE]-?{DIGIT}+)? { return FLOAT; }
+.                                         { return yytext[0]; }
 %%
 int yywrap(yyscan_t scanner) {
         return 1;
