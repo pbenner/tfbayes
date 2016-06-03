@@ -27,6 +27,8 @@
 #include <tfbayes/phylotree/parsetree.hh>
 
 #define YYSTYPE pt_parsetree_t *
+#define YYINITDEPTH 100000
+#define YYMAXDEPTH  100000
 
 typedef void* yyscan_t;
 typedef struct {
