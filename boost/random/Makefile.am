@@ -2,7 +2,6 @@
 
 ## headers
 noinst_HEADERS = \
-	beta_distribution.hpp \
 	categorical_distribution.hpp \
 	dirichlet_distribution.hpp \
 	gamma_distribution_prime.hpp
