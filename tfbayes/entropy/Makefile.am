@@ -3,7 +3,7 @@
 AM_CPPFLAGS = -I$(top_srcdir)
 AM_CXXFLAGS = $(CXXFLAGS_NORTTI)
 
-noinst_PROGRAMS = entropy-test entropy-approximation entropy-approximation-test entropy-distribution-test entropy-multinomial-distribution-test
+#noinst_PROGRAMS = entropy-test entropy-approximation entropy-approximation-test entropy-distribution-test entropy-multinomial-distribution-test
 
 entropy_test_SOURCES = entropy-test.cc
 
